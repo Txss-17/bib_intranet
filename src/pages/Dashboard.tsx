@@ -1,0 +1,145 @@
+import { format } from 'date-fns';
+import { Activity, Shield, FileText, TrendingUp } from 'lucide-react';
+import { MetricCard } from '@/components/dashboard/MetricCard';
+import { FeedCard } from '@/components/dashboard/FeedCard';
+import { IncidentCard } from '@/components/dashboard/IncidentCard';
+import { AuditLogItem } from '@/components/dashboard/AuditLogItem';
+import { QuickActions } from '@/components/dashboard/QuickActions';
+import { PoleOverview } from '@/components/dashboard/PoleOverview';
+import { 
+  currentUser, 
+  executiveMetrics, 
+  feedItems, 
+  recentIncidents,
+  recentAuditLogs,
+} from '@/data/mockData';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+export default function Dashboard() {
+  const greeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 18) return 'Good afternoon';
+    return 'Good evening';
+  };
+
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">
+            {greeting()}, {currentUser.firstName}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            {format(new Date(), "EEEE, MMMM d, yyyy")} · Executive Dashboard
+          </p>
+        </div>
+        <div className="flex items-center gap-2 text-sm">
+          <span className="status-dot status-active animate-pulse-subtle" />
+          <span className="text-muted-foreground">All systems operational</span>
+        </div>
+      </div>
+
+      {/* Key Metrics */}
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+            Key Metrics
+          </h2>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+          {executiveMetrics.map((metric) => (
+            <MetricCard key={metric.id} metric={metric} />
+          ))}
+        </div>
+      </section>
+
+      {/* Quick Actions */}
+      <section>
+        <div className="flex items-center gap-2 mb-4">
+          <Activity className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+            Quick Actions
+          </h2>
+        </div>
+        <QuickActions />
+      </section>
+
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Feed & Incidents */}
+        <div className="lg:col-span-2 space-y-6">
+          <Tabs defaultValue="feed" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 mb-4">
+              <TabsTrigger value="feed" className="text-sm">
+                Company Feed
+              </TabsTrigger>
+              <TabsTrigger value="incidents" className="text-sm">
+                Active Incidents
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="feed" className="space-y-4 mt-0">
+              {feedItems.map((item) => (
+                <FeedCard key={item.id} item={item} />
+              ))}
+            </TabsContent>
+            
+            <TabsContent value="incidents" className="space-y-4 mt-0">
+              {recentIncidents.length > 0 ? (
+                recentIncidents.map((incident) => (
+                  <IncidentCard key={incident.id} incident={incident} />
+                ))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Shield className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">No active incidents</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Audit Trail */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-muted-foreground" />
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+                Audit Trail
+              </h2>
+            </div>
+            <a href="/audit" className="text-xs text-accent hover:underline">
+              View all
+            </a>
+          </div>
+          <div className="enterprise-card p-4">
+            {recentAuditLogs.map((log, index) => (
+              <AuditLogItem 
+                key={log.id} 
+                log={log} 
+                isLast={index === recentAuditLogs.length - 1} 
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Poles Overview */}
+      <section>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Shield className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">
+              Poles Overview
+            </h2>
+          </div>
+          <span className="text-xs text-muted-foreground">12 active poles</span>
+        </div>
+        <PoleOverview />
+      </section>
+    </div>
+  );
+}
