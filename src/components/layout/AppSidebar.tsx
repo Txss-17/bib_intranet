@@ -43,11 +43,20 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 };
 
 const transversalModules = [
-  { id: 'gateway', name: 'Gateways & Messages', icon: MessageSquare, path: '/modules/gateway' },
-  { id: 'feed', name: 'Internal Feed', icon: Home, path: '/feed' },
+  { id: 'direction', name: 'Executive', icon: Crown, path: '/modules/direction' },
+  { id: 'finance', name: 'Finance', icon: Wallet, path: '/modules/finance' },
+  { id: 'ops', name: 'Operations', icon: Cog, path: '/modules/ops' },
+  { id: 'tech', name: 'Tech & R&D', icon: Code, path: '/modules/tech' },
+  { id: 'hr', name: 'Human Resources', icon: Users, path: '/modules/hr' },
+  { id: 'supplier', name: 'Supplier & Product', icon: Package, path: '/modules/supplier' },
+  { id: 'audit', name: 'Audit', icon: ClipboardCheck, path: '/modules/audit' },
+  { id: 'compliance', name: 'Compliance & Legal', icon: Scale, path: '/modules/compliance' },
+  { id: 'rse', name: 'RSE / ESG', icon: Leaf, path: '/modules/rse' },
+  { id: 'marketing', name: 'Marketing & Media', icon: Megaphone, path: '/modules/marketing' },
   { id: 'ethics', name: 'Ethics & Whistleblowing', icon: Shield, path: '/modules/ethics' },
-  { id: 'incidents', name: 'Risk & Incidents', icon: AlertTriangle, path: '/modules/incidents' },
-  { id: 'packaging', name: 'Packaging Lifecycle', icon: Recycle, path: '/modules/packaging' },
+  { id: 'lifecycle', name: 'User & Supplier Lifecycle', icon: RefreshCw, path: '/modules/lifecycle' },
+  { id: 'support', name: 'Support & Intelligence', icon: Home, path: '/modules/support' },
+  { id: 'feed', name: 'Internal Feed', icon: MessageSquare, path: '/feed' },
   { id: 'documents', name: 'Documents', icon: FileText, path: '/documents' },
 ];
 
