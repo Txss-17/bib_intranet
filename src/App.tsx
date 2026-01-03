@@ -9,6 +9,8 @@ import PoleDashboard from "./pages/PoleDashboard";
 import InternalFeed from "./pages/InternalFeed";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
+import EthicsModule from "./pages/EthicsModule";
+import GatewayModule from "./pages/GatewayModule";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +28,8 @@ const App = () => (
             <Route path="/feed" element={<InternalFeed />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/modules/ethics" element={<EthicsModule />} />
+            <Route path="/modules/gateway" element={<GatewayModule />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
