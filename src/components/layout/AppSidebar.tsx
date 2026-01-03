@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import {
   Crown,
@@ -12,6 +13,8 @@ import {
   Megaphone,
   ShieldAlert,
   RefreshCw,
+  ChevronDown,
+  ChevronRight,
   Home,
   MessageSquare,
   FileText,
@@ -19,8 +22,6 @@ import {
   Shield,
   Recycle,
   Settings,
-  Mail,
-  BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { poles } from '@/data/poles';
@@ -41,28 +42,14 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   RefreshCw,
 };
 
-// All modules in strict alphabetical order
-const allModules = [
-  { id: 'audit', name: 'Audit', icon: ClipboardCheck, path: '/pole/audit', type: 'pole' },
-  { id: 'compliance', name: 'Compliance & Legal', icon: Scale, path: '/pole/compliance', type: 'pole' },
-  { id: 'dashboard', name: 'Dashboard', icon: Home, path: '/', type: 'module' },
-  { id: 'direction', name: 'Direction', icon: Crown, path: '/pole/direction', type: 'pole' },
-  { id: 'documents', name: 'Documents', icon: FileText, path: '/documents', type: 'module' },
-  { id: 'ethics', name: 'Ethics & Whistleblowing', icon: Shield, path: '/modules/ethics', type: 'module' },
-  { id: 'feed', name: 'Feed Interne', icon: MessageSquare, path: '/feed', type: 'module' },
-  { id: 'finance', name: 'Finance', icon: Wallet, path: '/pole/finance', type: 'pole' },
-  { id: 'gateway', name: 'Gateways & Messages', icon: Mail, path: '/modules/gateway', type: 'module' },
-  { id: 'lifecycle', name: 'Lifecycle & Support', icon: RefreshCw, path: '/pole/lifecycle', type: 'pole' },
-  { id: 'marketing', name: 'Marketing & Media', icon: Megaphone, path: '/pole/marketing', type: 'pole' },
-  { id: 'ops', name: 'Opérations', icon: Cog, path: '/pole/ops', type: 'pole' },
-  { id: 'packaging', name: 'Packaging Lifecycle', icon: Recycle, path: '/modules/packaging', type: 'module' },
-  { id: 'reporting', name: 'Reporting', icon: BarChart3, path: '/modules/reporting', type: 'module' },
-  { id: 'rh', name: 'Ressources Humaines', icon: Users, path: '/pole/rh', type: 'pole' },
-  { id: 'risk', name: 'Risk & Incidents', icon: AlertTriangle, path: '/modules/incidents', type: 'module' },
-  { id: 'rse', name: 'RSE', icon: Leaf, path: '/pole/rse', type: 'pole' },
-  { id: 'supplier', name: 'Supplier & Product', icon: Package, path: '/pole/supplier', type: 'pole' },
-  { id: 'tech', name: 'Tech', icon: Code, path: '/pole/tech', type: 'pole' },
-].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
+const transversalModules = [
+  { id: 'gateway', name: 'Gateways & Messages', icon: MessageSquare, path: '/modules/gateway' },
+  { id: 'feed', name: 'Internal Feed', icon: Home, path: '/feed' },
+  { id: 'ethics', name: 'Ethics & Whistleblowing', icon: Shield, path: '/modules/ethics' },
+  { id: 'incidents', name: 'Risk & Incidents', icon: AlertTriangle, path: '/modules/incidents' },
+  { id: 'packaging', name: 'Packaging Lifecycle', icon: Recycle, path: '/modules/packaging' },
+  { id: 'documents', name: 'Documents', icon: FileText, path: '/documents' },
+];
 
 interface AppSidebarProps {
   collapsed: boolean;
@@ -70,26 +57,30 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed }: AppSidebarProps) {
   const location = useLocation();
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    poles: true,
+    modules: true,
+  });
 
-  const isActive = (path: string) => {
-    if (path === '/') return location.pathname === '/';
-    return location.pathname.startsWith(path);
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
   };
 
-  const getPoleColor = (id: string) => {
-    const pole = poles.find(p => p.id === id);
-    return pole?.color || 'bg-accent';
-  };
+  const isActive = (path: string) => location.pathname === path;
+  const isPoleActive = (poleId: PoleId) => location.pathname.startsWith(`/pole/${poleId}`);
 
   return (
     <aside
       className={cn(
-        'fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300 flex flex-col',
+        'fixed left-0 top-0 z-40 h-screen bg-sidebar border-r border-sidebar-border transition-all duration-300',
         collapsed ? 'w-16' : 'w-64'
       )}
     >
       {/* Logo */}
-      <div className="flex h-16 items-center border-b border-sidebar-border px-4 shrink-0">
+      <div className="flex h-16 items-center border-b border-sidebar-border px-4">
         <Link to="/" className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
             <span className="text-lg font-bold text-accent-foreground">L</span>
@@ -103,45 +94,124 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
         </Link>
       </div>
 
-      {/* Navigation - Alphabetical Order */}
-      <nav className="flex-1 overflow-y-auto p-3">
-        <div className="space-y-0.5">
-          {allModules.map((module) => {
-            const Icon = module.icon;
-            const active = isActive(module.path);
-            const isPole = module.type === 'pole';
-            
-            return (
-              <Link
-                key={module.id}
-                to={module.path}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-                  active
-                    ? 'bg-sidebar-accent text-sidebar-primary'
-                    : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+      {/* Navigation */}
+      <nav className="flex flex-col gap-1 p-3 overflow-y-auto h-[calc(100vh-8rem)]">
+        {/* Dashboard */}
+        <Link
+          to="/"
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+            isActive('/')
+              ? 'bg-sidebar-accent text-sidebar-primary'
+              : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+          )}
+        >
+          <Home className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>Dashboard</span>}
+        </Link>
+
+        {/* Poles Section */}
+        <div className="mt-4">
+          <button
+            onClick={() => toggleSection('poles')}
+            className={cn(
+              'flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-muted',
+              collapsed && 'justify-center'
+            )}
+          >
+            {!collapsed && (
+              <>
+                <span>Poles</span>
+                {expandedSections.poles ? (
+                  <ChevronDown className="ml-auto h-3 w-3" />
+                ) : (
+                  <ChevronRight className="ml-auto h-3 w-3" />
                 )}
-                title={collapsed ? module.name : undefined}
-              >
-                <div className="flex h-5 w-5 items-center justify-center shrink-0">
-                  <Icon className="h-4 w-4" />
-                </div>
-                {!collapsed && (
-                  <>
-                    <span className="truncate flex-1">{module.name}</span>
-                    {isPole && (
-                      <span className={cn('h-2 w-2 rounded-full shrink-0', getPoleColor(module.id))} />
+              </>
+            )}
+          </button>
+
+          {(expandedSections.poles || collapsed) && (
+            <div className="mt-1 space-y-0.5">
+              {poles.map((pole) => {
+                const Icon = iconMap[pole.icon] || Crown;
+                return (
+                  <Link
+                    key={pole.id}
+                    to={`/pole/${pole.id}`}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                      isPoleActive(pole.id)
+                        ? 'bg-sidebar-accent text-sidebar-primary'
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
                     )}
-                  </>
+                    title={collapsed ? pole.name : undefined}
+                  >
+                    <div className={cn('flex h-5 w-5 items-center justify-center')}>
+                      <Icon className="h-4 w-4 shrink-0" />
+                    </div>
+                    {!collapsed && (
+                      <span className="truncate">{pole.shortName}</span>
+                    )}
+                    {!collapsed && (
+                      <span className={cn('ml-auto h-2 w-2 rounded-full', pole.color)} />
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Transversal Modules */}
+        <div className="mt-4">
+          <button
+            onClick={() => toggleSection('modules')}
+            className={cn(
+              'flex w-full items-center gap-2 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-muted',
+              collapsed && 'justify-center'
+            )}
+          >
+            {!collapsed && (
+              <>
+                <span>Modules</span>
+                {expandedSections.modules ? (
+                  <ChevronDown className="ml-auto h-3 w-3" />
+                ) : (
+                  <ChevronRight className="ml-auto h-3 w-3" />
                 )}
-              </Link>
-            );
-          })}
+              </>
+            )}
+          </button>
+
+          {(expandedSections.modules || collapsed) && (
+            <div className="mt-1 space-y-0.5">
+              {transversalModules.map((module) => {
+                const Icon = module.icon;
+                return (
+                  <Link
+                    key={module.id}
+                    to={module.path}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                      isActive(module.path)
+                        ? 'bg-sidebar-accent text-sidebar-primary'
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50'
+                    )}
+                    title={collapsed ? module.name : undefined}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    {!collapsed && <span className="truncate">{module.name}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       </nav>
 
       {/* Settings */}
-      <div className="border-t border-sidebar-border p-3 shrink-0">
+      <div className="absolute bottom-0 left-0 right-0 border-t border-sidebar-border p-3">
         <Link
           to="/settings"
           className={cn(
@@ -152,7 +222,7 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
           )}
         >
           <Settings className="h-4 w-4 shrink-0" />
-          {!collapsed && <span>Paramètres</span>}
+          {!collapsed && <span>Settings</span>}
         </Link>
       </div>
     </aside>

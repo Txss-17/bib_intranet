@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Bell,
   MessageSquare,
@@ -12,8 +12,6 @@ import {
   LogOut,
   User,
   Settings,
-  Wifi,
-  WifiOff,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,9 +23,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
-import { currentUser, tasks } from '@/data/mockData';
-import { getPoleById, poles } from '@/data/poles';
-import { useRealtimeNotifications } from '@/hooks/useRealtimeNotifications';
+import { currentUser, notifications, tasks } from '@/data/mockData';
+import { getPoleById } from '@/data/poles';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -36,50 +33,11 @@ interface TopBarProps {
   onToggleDarkMode: () => void;
 }
 
-// Module-specific actions based on current route
-const moduleActions: Record<string, { label: string; path: string }[]> = {
-  '/': [
-    { label: 'Vue globale', path: '/' },
-    { label: 'Métriques', path: '/#metrics' },
-    { label: 'Activité récente', path: '/#activity' },
-  ],
-  '/modules/ethics': [
-    { label: 'Soumettre', path: '/modules/ethics?tab=submit' },
-    { label: 'Suivre', path: '/modules/ethics?tab=track' },
-  ],
-  '/modules/gateway': [
-    { label: 'Tous les messages', path: '/modules/gateway' },
-    { label: 'En attente', path: '/modules/gateway?status=pending' },
-    { label: 'Validés', path: '/modules/gateway?status=validated' },
-    { label: 'Routés', path: '/modules/gateway?status=routed' },
-  ],
-  '/feed': [
-    { label: 'Tous', path: '/feed' },
-    { label: 'Annonces', path: '/feed?type=announcement' },
-    { label: 'Mises à jour', path: '/feed?type=update' },
-  ],
-  '/documents': [
-    { label: 'Tous', path: '/documents' },
-    { label: 'Contrats', path: '/documents?type=contract' },
-    { label: 'Procédures', path: '/documents?type=procedure' },
-    { label: 'Rapports', path: '/documents?type=report' },
-  ],
-};
-
 export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDarkMode }: TopBarProps) {
-  const location = useLocation();
   const [searchFocused, setSearchFocused] = useState(false);
-  const { notifications, unreadCount, isConnected, markAsRead, markAllAsRead } = useRealtimeNotifications();
   
+  const unreadNotifications = notifications.filter(n => !n.read).length;
   const pendingTasks = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
-
-  // Get current module actions
-  const currentPath = location.pathname;
-  const actions = moduleActions[currentPath] || [];
-
-  // Find if we're on a pole page
-  const poleMatch = currentPath.match(/^\/pole\/(.+)$/);
-  const currentPole = poleMatch ? poles.find(p => p.id === poleMatch[1]) : null;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -101,7 +59,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
         sidebarCollapsed ? 'left-16' : 'left-64'
       )}
     >
-      {/* Left section - Module Actions (OX) */}
+      {/* Left section */}
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
@@ -112,40 +70,15 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           <Menu className="h-5 w-5" />
         </Button>
 
-        {/* Module-specific actions */}
-        {currentPole ? (
-          <div className="flex items-center gap-2">
-            <span className={cn('h-3 w-3 rounded-full', currentPole.color)} />
-            <span className="font-medium text-foreground">{currentPole.name}</span>
-          </div>
-        ) : actions.length > 0 ? (
-          <nav className="hidden md:flex items-center gap-1">
-            {actions.map((action, idx) => (
-              <Link
-                key={idx}
-                to={action.path}
-                className={cn(
-                  'px-3 py-1.5 text-sm rounded-md transition-colors',
-                  location.pathname + location.search === action.path
-                    ? 'bg-secondary text-foreground font-medium'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary/50'
-                )}
-              >
-                {action.label}
-              </Link>
-            ))}
-          </nav>
-        ) : null}
-
         {/* Search */}
-        <div className="relative hidden sm:block">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Rechercher..."
+            placeholder="Search documents, people, modules..."
             className={cn(
               'h-9 rounded-lg border border-input bg-secondary/50 pl-10 pr-4 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-accent focus:ring-1 focus:ring-accent',
-              searchFocused ? 'w-80' : 'w-48'
+              searchFocused ? 'w-80' : 'w-64'
             )}
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
@@ -155,21 +88,6 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
 
       {/* Right section */}
       <div className="flex items-center gap-2">
-        {/* Connection status */}
-        <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground">
-          {isConnected ? (
-            <>
-              <Wifi className="h-3 w-3 text-success" />
-              <span>Connecté</span>
-            </>
-          ) : (
-            <>
-              <WifiOff className="h-3 w-3 text-destructive" />
-              <span>Hors ligne</span>
-            </>
-          )}
-        </div>
-
         {/* Theme toggle */}
         <Button
           variant="ghost"
@@ -185,9 +103,9 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
+              {unreadNotifications > 0 && (
                 <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
-                  {unreadCount > 9 ? '9+' : unreadCount}
+                  {unreadNotifications}
                 </span>
               )}
             </Button>
@@ -195,54 +113,37 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           <DropdownMenuContent align="end" className="w-80">
             <div className="flex items-center justify-between px-3 py-2 border-b border-border">
               <span className="text-sm font-semibold">Notifications</span>
-              <div className="flex gap-2">
-                {unreadCount > 0 && (
-                  <button 
-                    onClick={() => markAllAsRead()}
-                    className="text-xs text-accent hover:underline"
-                  >
-                    Tout marquer lu
-                  </button>
-                )}
-                <Link to="/notifications" className="text-xs text-accent hover:underline">
-                  Voir tout
-                </Link>
-              </div>
+              <Link to="/notifications" className="text-xs text-accent hover:underline">
+                View all
+              </Link>
             </div>
             <div className="max-h-80 overflow-y-auto">
-              {notifications.length === 0 ? (
-                <div className="p-4 text-center text-sm text-muted-foreground">
-                  Aucune notification
-                </div>
-              ) : (
-                notifications.slice(0, 5).map((notification) => {
-                  const pole = notification.pole_id ? getPoleById(notification.pole_id as any) : null;
-                  return (
-                    <DropdownMenuItem
-                      key={notification.id}
-                      className="flex flex-col items-start gap-1 p-3 cursor-pointer"
-                      onClick={() => markAsRead(notification.id)}
-                    >
-                      <div className="flex items-center gap-2 w-full">
-                        <span className={cn('h-2 w-2 rounded-full', getNotificationIcon(notification.type))} />
-                        <span className="text-sm font-medium truncate flex-1">{notification.title}</span>
-                        {!notification.read && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2 pl-4">
-                        {notification.message}
-                      </p>
-                      {pole && (
-                        <div className="flex items-center gap-1 pl-4 mt-1">
-                          <span className={cn('h-1.5 w-1.5 rounded-full', pole.color)} />
-                          <span className="text-[10px] text-muted-foreground">{pole.shortName}</span>
-                        </div>
+              {notifications.slice(0, 5).map((notification) => {
+                const pole = notification.poleId ? getPoleById(notification.poleId) : null;
+                return (
+                  <DropdownMenuItem
+                    key={notification.id}
+                    className="flex flex-col items-start gap-1 p-3 cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2 w-full">
+                      <span className={cn('h-2 w-2 rounded-full', getNotificationIcon(notification.type))} />
+                      <span className="text-sm font-medium truncate flex-1">{notification.title}</span>
+                      {!notification.read && (
+                        <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                       )}
-                    </DropdownMenuItem>
-                  );
-                })
-              )}
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-2 pl-4">
+                      {notification.message}
+                    </p>
+                    {pole && (
+                      <div className="flex items-center gap-1 pl-4 mt-1">
+                        <span className={cn('h-1.5 w-1.5 rounded-full', pole.color)} />
+                        <span className="text-[10px] text-muted-foreground">{pole.shortName}</span>
+                      </div>
+                    )}
+                  </DropdownMenuItem>
+                );
+              })}
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -269,9 +170,9 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <div className="flex items-center justify-between px-3 py-2 border-b border-border">
-              <span className="text-sm font-semibold">Mes Tâches</span>
+              <span className="text-sm font-semibold">My Tasks</span>
               <Link to="/tasks" className="text-xs text-accent hover:underline">
-                Voir tout
+                View all
               </Link>
             </div>
             <div className="max-h-80 overflow-y-auto">
@@ -299,7 +200,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
                         </div>
                       )}
                       <span className="text-[10px] text-muted-foreground">
-                        Échéance: {new Date(task.dueDate).toLocaleDateString('fr-FR')}
+                        Due: {new Date(task.dueDate).toLocaleDateString()}
                       </span>
                     </div>
                   </DropdownMenuItem>
@@ -340,19 +241,19 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
             <DropdownMenuItem asChild>
               <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
                 <User className="h-4 w-4" />
-                <span>Profil</span>
+                <span>Profile</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
                 <Settings className="h-4 w-4" />
-                <span>Paramètres</span>
+                <span>Settings</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="flex items-center gap-2 text-destructive cursor-pointer">
               <LogOut className="h-4 w-4" />
-              <span>Déconnexion</span>
+              <span>Sign out</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
