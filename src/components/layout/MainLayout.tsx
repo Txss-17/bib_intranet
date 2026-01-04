@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation, useParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { AppSidebar } from './AppSidebar';
 import { TopBar } from './TopBar';
+import { ModuleNavigation } from './ModuleNavigation';
+import { PoleId } from '@/types';
 
 export function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+  const location = useLocation();
+  const { poleId, subSection } = useParams<{ poleId?: string; subSection?: string }>();
 
   useEffect(() => {
     if (darkMode) {
@@ -16,6 +20,17 @@ export function MainLayout() {
     }
   }, [darkMode]);
 
+  // Determine if we're on a pole page or transversal module page
+  const isPolePage = location.pathname.startsWith('/pole/');
+  const isTransversalModule = location.pathname.startsWith('/modules/');
+  
+  // Extract transversal module type
+  const transversalModuleMatch = location.pathname.match(/^\/modules\/(ethics|gateway|packaging)/);
+  const transversalModule = transversalModuleMatch?.[1] as 'ethics' | 'gateway' | 'packaging' | undefined;
+
+  // Show OX navigation on pole pages and transversal modules
+  const showModuleNav = isPolePage || isTransversalModule;
+
   return (
     <div className="min-h-screen bg-background">
       <AppSidebar collapsed={sidebarCollapsed} />
@@ -24,11 +39,20 @@ export function MainLayout() {
         sidebarCollapsed={sidebarCollapsed}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
+        activePoleId={isPolePage ? (poleId as PoleId) : undefined}
       />
+      {showModuleNav && (
+        <ModuleNavigation
+          poleId={isPolePage ? (poleId as PoleId) : undefined}
+          transversalModule={transversalModule}
+          sidebarCollapsed={sidebarCollapsed}
+        />
+      )}
       <main
         className={cn(
-          'min-h-screen pt-16 transition-all duration-300',
-          sidebarCollapsed ? 'pl-16' : 'pl-64'
+          'min-h-screen transition-all duration-300',
+          sidebarCollapsed ? 'pl-16' : 'pl-64',
+          showModuleNav ? 'pt-28' : 'pt-16'
         )}
       >
         <div className="p-6">

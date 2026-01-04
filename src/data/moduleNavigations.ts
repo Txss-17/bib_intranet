@@ -1,0 +1,160 @@
+import { PoleId } from '@/types';
+
+export interface SubNavigationItem {
+  id: string;
+  label: string;
+  labelFr: string;
+  path: string;
+}
+
+export type ModuleNavigations = Record<PoleId, SubNavigationItem[]>;
+
+export const moduleNavigations: ModuleNavigations = {
+  // Direction (Executive)
+  direction: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/direction' },
+    { id: 'kpi', label: 'Strategic KPIs', labelFr: 'KPI stratégiques', path: '/pole/direction/kpi' },
+    { id: 'alerts', label: 'Critical Alerts', labelFr: 'Alertes critiques', path: '/pole/direction/alerts' },
+    { id: 'decisions', label: 'Decisions', labelFr: 'Décisions', path: '/pole/direction/decisions' },
+    { id: 'access', label: 'Module Access', labelFr: 'Accès lecture modules', path: '/pole/direction/access' },
+  ],
+
+  // Finance
+  finance: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/finance' },
+    { id: 'cashflow', label: 'Real-time Cashflow', labelFr: 'Cashflow temps réel', path: '/pole/finance/cashflow' },
+    { id: 'transactions', label: 'Transactions', labelFr: 'Transactions', path: '/pole/finance/transactions' },
+    { id: 'subscriptions', label: 'Subscriptions', labelFr: 'Abonnements', path: '/pole/finance/subscriptions' },
+    { id: 'guarantee', label: 'Guarantee Fund', labelFr: 'Fonds de garantie', path: '/pole/finance/guarantee' },
+    { id: 'expenses', label: 'Expenses', labelFr: 'Dépenses', path: '/pole/finance/expenses' },
+    { id: 'reports', label: 'Reports', labelFr: 'Rapports', path: '/pole/finance/reports' },
+  ],
+
+  // Ops
+  ops: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/ops' },
+    { id: 'logistics', label: 'Logistics', labelFr: 'Logistique', path: '/pole/ops/logistics' },
+    { id: 'partners', label: 'Partners', labelFr: 'Partenaires', path: '/pole/ops/partners' },
+    { id: 'incidents', label: 'Incidents', labelFr: 'Incidents', path: '/pole/ops/incidents' },
+    { id: 'shipments', label: 'Shipments', labelFr: 'Expéditions', path: '/pole/ops/shipments' },
+  ],
+
+  // Tech
+  tech: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/tech' },
+    { id: 'deployments', label: 'Deployments', labelFr: 'Déploiements', path: '/pole/tech/deployments' },
+    { id: 'infrastructure', label: 'Infrastructure', labelFr: 'Infra', path: '/pole/tech/infrastructure' },
+    { id: 'security', label: 'Security', labelFr: 'Sécurité', path: '/pole/tech/security' },
+    { id: 'catalog', label: 'Catalog', labelFr: 'Catalogue', path: '/pole/tech/catalog' },
+  ],
+
+  // RH
+  rh: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/rh' },
+    { id: 'employees', label: 'Employees', labelFr: 'Employés', path: '/pole/rh/employees' },
+    { id: 'onboarding', label: 'Onboarding', labelFr: 'Onboarding', path: '/pole/rh/onboarding' },
+    { id: 'attendance', label: 'Attendance', labelFr: 'Pointage', path: '/pole/rh/attendance' },
+    { id: 'leave', label: 'Leave', labelFr: 'Congés', path: '/pole/rh/leave' },
+    { id: 'training', label: 'Training', labelFr: 'Formations', path: '/pole/rh/training' },
+    { id: 'publications', label: 'Publications', labelFr: 'Publications internes', path: '/pole/rh/publications' },
+  ],
+
+  // Supplier & Product
+  supplier: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/supplier' },
+    { id: 'pending', label: 'Pending Products', labelFr: 'Produits en attente', path: '/pole/supplier/pending' },
+    { id: 'validated', label: 'Validated Products', labelFr: 'Produits validés', path: '/pole/supplier/validated' },
+    { id: 'suppliers', label: 'Supplier Files', labelFr: 'Fiches fournisseurs', path: '/pole/supplier/suppliers' },
+    { id: 'certifications', label: 'Certifications', labelFr: 'Certifications', path: '/pole/supplier/certifications' },
+    { id: 'decisions', label: 'Decision History', labelFr: 'Historique décisions', path: '/pole/supplier/decisions' },
+    { id: 'alerts', label: 'Quality Alerts', labelFr: 'Alertes qualité', path: '/pole/supplier/alerts' },
+  ],
+
+  // Audit
+  audit: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/audit' },
+    { id: 'field', label: 'Field Audits', labelFr: 'Audits terrain', path: '/pole/audit/field' },
+    { id: 'supplier', label: 'Supplier Audits', labelFr: 'Audits fournisseurs', path: '/pole/audit/supplier' },
+    { id: 'ops', label: 'Ops Audits', labelFr: 'Audits Ops', path: '/pole/audit/ops' },
+    { id: 'reports', label: 'Reports', labelFr: 'Rapports', path: '/pole/audit/reports' },
+    { id: 'nonconformities', label: 'Non-conformities', labelFr: 'Non-conformités', path: '/pole/audit/nonconformities' },
+    { id: 'sanctions', label: 'Sanctions History', labelFr: 'Historique sanctions', path: '/pole/audit/sanctions' },
+  ],
+
+  // Compliance & Legal
+  compliance: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/compliance' },
+    { id: 'contracts', label: 'Contracts', labelFr: 'Contrats', path: '/pole/compliance/contracts' },
+    { id: 'policies', label: 'Policies', labelFr: 'Politiques', path: '/pole/compliance/policies' },
+    { id: 'disputes', label: 'Disputes', labelFr: 'Litiges', path: '/pole/compliance/disputes' },
+    { id: 'risks', label: 'Risk Register', labelFr: 'Registre des risques', path: '/pole/compliance/risks' },
+  ],
+
+  // RSE
+  rse: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/rse' },
+    { id: 'packaging', label: 'Validated Packaging', labelFr: 'Packaging validés', path: '/pole/rse/packaging' },
+    { id: 'recycling', label: 'Recycling Stats', labelFr: 'Recyclage (stats)', path: '/pole/rse/recycling' },
+    { id: 'points', label: 'Customer Points', labelFr: 'Points clients finaux', path: '/pole/rse/points' },
+    { id: 'co2', label: 'CO₂ Impact', labelFr: 'Impact CO₂', path: '/pole/rse/co2' },
+    { id: 'esg', label: 'ESG Reports', labelFr: 'Rapports ESG', path: '/pole/rse/esg' },
+  ],
+
+  // Marketing & Media
+  marketing: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/marketing' },
+    { id: 'campaigns', label: 'Campaigns', labelFr: 'Campagnes', path: '/pole/marketing/campaigns' },
+    { id: 'content', label: 'Content', labelFr: 'Contenu', path: '/pole/marketing/content' },
+    { id: 'podcasts', label: 'Podcasts', labelFr: 'Podcasts', path: '/pole/marketing/podcasts' },
+    { id: 'analytics', label: 'Analytics', labelFr: 'Analytiques', path: '/pole/marketing/analytics' },
+  ],
+
+  // Risk & Incidents
+  risk: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/risk' },
+    { id: 'active', label: 'Active Incidents', labelFr: 'Incidents actifs', path: '/pole/risk/active' },
+    { id: 'register', label: 'Risk Register', labelFr: 'Registre des risques', path: '/pole/risk/register' },
+    { id: 'history', label: 'History', labelFr: 'Historique', path: '/pole/risk/history' },
+    { id: 'metrics', label: 'Risk Metrics', labelFr: 'Métriques', path: '/pole/risk/metrics' },
+  ],
+
+  // User & Supplier Lifecycle (Pole 12)
+  lifecycle: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/lifecycle' },
+    { id: 'onboarding', label: 'Onboarding', labelFr: 'Onboarding', path: '/pole/lifecycle/onboarding' },
+    { id: 'monitoring', label: 'Activity Monitoring', labelFr: 'Suivi activité', path: '/pole/lifecycle/monitoring' },
+    { id: 'compliance', label: 'Compliance Status', labelFr: 'Statut conformité', path: '/pole/lifecycle/compliance' },
+    { id: 'scoring', label: 'Risk Scoring', labelFr: 'Scoring risque', path: '/pole/lifecycle/scoring' },
+    { id: 'support', label: 'Support Tickets', labelFr: 'Tickets support', path: '/pole/lifecycle/support' },
+  ],
+};
+
+export const getModuleNavigation = (poleId: PoleId): SubNavigationItem[] => {
+  return moduleNavigations[poleId] || [];
+};
+
+// Transversal modules navigation (Ethics, Gateway, etc.)
+export const transversalNavigations = {
+  ethics: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/modules/ethics' },
+    { id: 'received', label: 'Received Reports', labelFr: 'Signalements reçus', path: '/modules/ethics/received' },
+    { id: 'ongoing', label: 'Ongoing Cases', labelFr: 'Dossiers en cours', path: '/modules/ethics/ongoing' },
+    { id: 'closed', label: 'Closed Cases', labelFr: 'Clôturés', path: '/modules/ethics/closed' },
+    { id: 'stats', label: 'Anonymous Stats', labelFr: 'Statistiques anonymisées', path: '/modules/ethics/stats' },
+  ],
+  gateway: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/modules/gateway' },
+    { id: 'inbox', label: 'Inbox', labelFr: 'Réception', path: '/modules/gateway/inbox' },
+    { id: 'validation', label: 'Validation', labelFr: 'Validation', path: '/modules/gateway/validation' },
+    { id: 'routing', label: 'Routing', labelFr: 'Routage', path: '/modules/gateway/routing' },
+    { id: 'responses', label: 'Responses', labelFr: 'Réponses', path: '/modules/gateway/responses' },
+  ],
+  packaging: [
+    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/modules/packaging' },
+    { id: 'submissions', label: 'Submissions', labelFr: 'Soumissions', path: '/modules/packaging/submissions' },
+    { id: 'rse-validation', label: 'RSE Validation', labelFr: 'Validation RSE', path: '/modules/packaging/rse-validation' },
+    { id: 'audit-status', label: 'Audit Status', labelFr: 'Statut audit', path: '/modules/packaging/audit-status' },
+    { id: 'ops-transmission', label: 'Ops Transmission', labelFr: 'Transmission Ops', path: '/modules/packaging/ops-transmission' },
+    { id: 'recycling-resale', label: 'Recycling & Resale', labelFr: 'Recyclage revente', path: '/modules/packaging/recycling-resale' },
+  ],
+};

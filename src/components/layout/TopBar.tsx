@@ -12,6 +12,7 @@ import {
   LogOut,
   User,
   Settings,
+  Circle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -25,19 +26,45 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { currentUser, notifications, tasks } from '@/data/mockData';
 import { getPoleById } from '@/data/poles';
+import { PoleId } from '@/types';
+import { EmployeeStatus } from '@/types/roles';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
   sidebarCollapsed: boolean;
   darkMode: boolean;
   onToggleDarkMode: () => void;
+  activePoleId?: PoleId;
 }
 
-export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDarkMode }: TopBarProps) {
+// Mock current employee data (will be replaced with auth)
+const currentEmployee = {
+  ...currentUser,
+  employeeRole: 'tech_lead' as const,
+  employeeRoleTitle: 'Tech Lead & Architect',
+  status: 'online' as EmployeeStatus,
+};
+
+const statusColors: Record<EmployeeStatus, string> = {
+  online: 'bg-success',
+  absent: 'bg-muted-foreground',
+  busy: 'bg-warning',
+  offline: 'bg-muted-foreground/50',
+};
+
+const statusLabels: Record<EmployeeStatus, string> = {
+  online: 'En ligne',
+  absent: 'Absent',
+  busy: 'Occupé',
+  offline: 'Hors ligne',
+};
+
+export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDarkMode, activePoleId }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
   
   const unreadNotifications = notifications.filter(n => !n.read).length;
   const pendingTasks = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
+  const activePole = activePoleId ? getPoleById(activePoleId) : null;
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -70,15 +97,23 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           <Menu className="h-5 w-5" />
         </Button>
 
+        {/* Active Pole Indicator */}
+        {activePole && (
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50 border border-border">
+            <span className={cn('h-2 w-2 rounded-full', activePole.color)} />
+            <span className="text-sm font-medium text-foreground">{activePole.shortName}</span>
+          </div>
+        )}
+
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Search documents, people, modules..."
+            placeholder="Rechercher..."
             className={cn(
               'h-9 rounded-lg border border-input bg-secondary/50 pl-10 pr-4 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-accent focus:ring-1 focus:ring-accent',
-              searchFocused ? 'w-80' : 'w-64'
+              searchFocused ? 'w-64' : 'w-48'
             )}
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
@@ -88,6 +123,12 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
 
       {/* Right section */}
       <div className="flex items-center gap-2">
+        {/* Employee Status */}
+        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/30">
+          <Circle className={cn('h-2 w-2 fill-current', statusColors[currentEmployee.status])} />
+          <span className="text-xs text-muted-foreground">{statusLabels[currentEmployee.status]}</span>
+        </div>
+
         {/* Theme toggle */}
         <Button
           variant="ghost"
@@ -219,15 +260,15 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
             <Button variant="ghost" className="flex items-center gap-2 px-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-accent-foreground">
                 <span className="text-sm font-medium">
-                  {currentUser.firstName[0]}{currentUser.lastName[0]}
+                  {currentEmployee.firstName[0]}{currentEmployee.lastName[0]}
                 </span>
               </div>
               <div className="hidden md:flex flex-col items-start">
                 <span className="text-sm font-medium">
-                  {currentUser.firstName} {currentUser.lastName}
+                  {currentEmployee.firstName} {currentEmployee.lastName}
                 </span>
-                <span className="text-[10px] text-muted-foreground capitalize">
-                  {currentUser.role}
+                <span className="text-[10px] text-muted-foreground">
+                  {currentEmployee.employeeRoleTitle}
                 </span>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -235,8 +276,9 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-3 py-2 border-b border-border">
-              <p className="text-sm font-medium">{currentUser.firstName} {currentUser.lastName}</p>
-              <p className="text-xs text-muted-foreground">{currentUser.email}</p>
+              <p className="text-sm font-medium">{currentEmployee.firstName} {currentEmployee.lastName}</p>
+              <p className="text-xs text-muted-foreground">{currentEmployee.email}</p>
+              <p className="text-xs text-accent mt-1">{currentEmployee.employeeRoleTitle}</p>
             </div>
             <DropdownMenuItem asChild>
               <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
