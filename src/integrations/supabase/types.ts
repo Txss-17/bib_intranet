@@ -53,6 +53,72 @@ export type Database = {
         }
         Relationships: []
       }
+      certifications: {
+        Row: {
+          certificate_number: string | null
+          created_at: string
+          document_url: string | null
+          expiry_date: string | null
+          id: string
+          issue_date: string | null
+          issuer: string | null
+          name: string
+          product_id: string | null
+          status: string
+          supplier_id: string | null
+          type: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          certificate_number?: string | null
+          created_at?: string
+          document_url?: string | null
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issuer?: string | null
+          name: string
+          product_id?: string | null
+          status?: string
+          supplier_id?: string | null
+          type: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          certificate_number?: string | null
+          created_at?: string
+          document_url?: string | null
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          issuer?: string | null
+          name?: string
+          product_id?: string | null
+          status?: string
+          supplier_id?: string | null
+          type?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "certifications_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "certifications_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       external_messages: {
         Row: {
           content: string
@@ -220,6 +286,115 @@ export type Database = {
         }
         Relationships: []
       }
+      product_decisions: {
+        Row: {
+          decision_at: string
+          decision_by: string
+          decision_type: string
+          details: Json | null
+          id: string
+          new_status: string | null
+          previous_status: string | null
+          product_id: string
+          reason: string
+        }
+        Insert: {
+          decision_at?: string
+          decision_by: string
+          decision_type: string
+          details?: Json | null
+          id?: string
+          new_status?: string | null
+          previous_status?: string | null
+          product_id: string
+          reason: string
+        }
+        Update: {
+          decision_at?: string
+          decision_by?: string
+          decision_type?: string
+          details?: Json | null
+          id?: string
+          new_status?: string | null
+          previous_status?: string | null
+          product_id?: string
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_decisions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string | null
+          created_at: string
+          currency: string | null
+          description: string | null
+          id: string
+          moq: number | null
+          name: string
+          packaging_status: string | null
+          rejection_reason: string | null
+          sku: string | null
+          status: string
+          supplier_id: string
+          unit_price: number | null
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          moq?: number | null
+          name: string
+          packaging_status?: string | null
+          rejection_reason?: string | null
+          sku?: string | null
+          status?: string
+          supplier_id: string
+          unit_price?: number | null
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          id?: string
+          moq?: number | null
+          name?: string
+          packaging_status?: string | null
+          rejection_reason?: string | null
+          sku?: string | null
+          status?: string
+          supplier_id?: string
+          unit_price?: number | null
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -253,6 +428,123 @@ export type Database = {
           poles?: Database["public"]["Enums"]["pole_id"][] | null
           seniority?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      quality_alerts: {
+        Row: {
+          assigned_to: string | null
+          created_at: string
+          description: string
+          id: string
+          product_id: string | null
+          reported_by: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          supplier_id: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          product_id?: string | null
+          reported_by?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity: string
+          status?: string
+          supplier_id?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          product_id?: string | null
+          reported_by?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          supplier_id?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_alerts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_alerts_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      suppliers: {
+        Row: {
+          address: string | null
+          contact_email: string | null
+          contact_name: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          risk_score: number | null
+          status: string
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          address?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          risk_score?: number | null
+          status?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          address?: string | null
+          contact_email?: string | null
+          contact_name?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          risk_score?: number | null
+          status?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
         }
         Relationships: []
       }
