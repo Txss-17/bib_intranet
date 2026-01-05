@@ -53,6 +53,96 @@ export type Database = {
         }
         Relationships: []
       }
+      bugs: {
+        Row: {
+          assigned_to: string | null
+          created_at: string | null
+          description: string
+          environment: string | null
+          id: string
+          reported_by: string | null
+          resolution: string | null
+          resolved_at: string | null
+          severity: string | null
+          status: string | null
+          steps_to_reproduce: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description: string
+          environment?: string | null
+          id?: string
+          reported_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          steps_to_reproduce?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string
+          environment?: string | null
+          id?: string
+          reported_by?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          steps_to_reproduce?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      cashflows: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string | null
+          currency: string | null
+          description: string | null
+          id: string
+          recorded_by: string | null
+          reference: string | null
+          transaction_date: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          recorded_by?: string | null
+          reference?: string | null
+          transaction_date: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string | null
+          currency?: string | null
+          description?: string | null
+          id?: string
+          recorded_by?: string | null
+          reference?: string | null
+          transaction_date?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       certifications: {
         Row: {
           certificate_number: string | null
@@ -119,6 +209,42 @@ export type Database = {
           },
         ]
       }
+      deployments: {
+        Row: {
+          changelog: string | null
+          created_at: string | null
+          deployed_at: string | null
+          deployed_by: string | null
+          environment: string
+          id: string
+          rollback_at: string | null
+          status: string | null
+          version: string
+        }
+        Insert: {
+          changelog?: string | null
+          created_at?: string | null
+          deployed_at?: string | null
+          deployed_by?: string | null
+          environment: string
+          id?: string
+          rollback_at?: string | null
+          status?: string | null
+          version: string
+        }
+        Update: {
+          changelog?: string | null
+          created_at?: string | null
+          deployed_at?: string | null
+          deployed_by?: string | null
+          environment?: string
+          id?: string
+          rollback_at?: string | null
+          status?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       external_messages: {
         Row: {
           content: string
@@ -170,6 +296,57 @@ export type Database = {
         }
         Relationships: []
       }
+      field_audits: {
+        Row: {
+          audit_type: string
+          auditor_id: string | null
+          completed_date: string | null
+          created_at: string | null
+          findings: string | null
+          id: string
+          recommendations: string | null
+          scheduled_date: string | null
+          score: number | null
+          status: string | null
+          target_id: string | null
+          target_name: string | null
+          target_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          audit_type: string
+          auditor_id?: string | null
+          completed_date?: string | null
+          created_at?: string | null
+          findings?: string | null
+          id?: string
+          recommendations?: string | null
+          scheduled_date?: string | null
+          score?: number | null
+          status?: string | null
+          target_id?: string | null
+          target_name?: string | null
+          target_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          audit_type?: string
+          auditor_id?: string | null
+          completed_date?: string | null
+          created_at?: string | null
+          findings?: string | null
+          id?: string
+          recommendations?: string | null
+          scheduled_date?: string | null
+          score?: number | null
+          status?: string | null
+          target_id?: string | null
+          target_name?: string | null
+          target_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       inter_pole_messages: {
         Row: {
           content: string
@@ -203,6 +380,101 @@ export type Database = {
           read?: boolean | null
           subject?: string
           to_pole?: Database["public"]["Enums"]["pole_id"]
+        }
+        Relationships: []
+      }
+      logistics_incidents: {
+        Row: {
+          assigned_to: string | null
+          created_at: string | null
+          description: string
+          id: string
+          incident_type: string
+          order_id: string | null
+          reported_by: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          severity: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          incident_type: string
+          order_id?: string | null
+          reported_by?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          incident_type?: string
+          order_id?: string | null
+          reported_by?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "logistics_incidents_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      logistics_partners: {
+        Row: {
+          api_integrated: boolean | null
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string | null
+          id: string
+          name: string
+          notes: string | null
+          status: string | null
+          type: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          api_integrated?: boolean | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          status?: string | null
+          type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          api_integrated?: boolean | null
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          status?: string | null
+          type?: string | null
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -285,6 +557,131 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      orders: {
+        Row: {
+          created_at: string | null
+          currency: string | null
+          delivered_at: string | null
+          id: string
+          order_number: string
+          ordered_at: string | null
+          shipped_at: string | null
+          shipping_address: string | null
+          shipping_method: string | null
+          status: string | null
+          total_amount: number | null
+          tracking_number: string | null
+          updated_at: string | null
+          user_account_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string | null
+          delivered_at?: string | null
+          id?: string
+          order_number: string
+          ordered_at?: string | null
+          shipped_at?: string | null
+          shipping_address?: string | null
+          shipping_method?: string | null
+          status?: string | null
+          total_amount?: number | null
+          tracking_number?: string | null
+          updated_at?: string | null
+          user_account_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string | null
+          delivered_at?: string | null
+          id?: string
+          order_number?: string
+          ordered_at?: string | null
+          shipped_at?: string | null
+          shipping_address?: string | null
+          shipping_method?: string | null
+          status?: string | null
+          total_amount?: number | null
+          tracking_number?: string | null
+          updated_at?: string | null
+          user_account_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_user_account_id_fkey"
+            columns: ["user_account_id"]
+            isOneToOne: false
+            referencedRelation: "user_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packaging_submissions: {
+        Row: {
+          co2_footprint: number | null
+          created_at: string | null
+          id: string
+          material: string | null
+          packaging_type: string
+          product_id: string | null
+          recyclable: boolean | null
+          recycling_percentage: number | null
+          status: string | null
+          submitted_by: string | null
+          supplier_id: string | null
+          updated_at: string | null
+          validated_by: string | null
+          validation_notes: string | null
+        }
+        Insert: {
+          co2_footprint?: number | null
+          created_at?: string | null
+          id?: string
+          material?: string | null
+          packaging_type: string
+          product_id?: string | null
+          recyclable?: boolean | null
+          recycling_percentage?: number | null
+          status?: string | null
+          submitted_by?: string | null
+          supplier_id?: string | null
+          updated_at?: string | null
+          validated_by?: string | null
+          validation_notes?: string | null
+        }
+        Update: {
+          co2_footprint?: number | null
+          created_at?: string | null
+          id?: string
+          material?: string | null
+          packaging_type?: string
+          product_id?: string | null
+          recyclable?: boolean | null
+          recycling_percentage?: number | null
+          status?: string | null
+          submitted_by?: string | null
+          supplier_id?: string | null
+          updated_at?: string | null
+          validated_by?: string | null
+          validation_notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packaging_submissions_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "packaging_submissions_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_decisions: {
         Row: {
@@ -404,6 +801,7 @@ export type Database = {
           id: string
           last_name: string
           poles: Database["public"]["Enums"]["pole_id"][] | null
+          position: Database["public"]["Enums"]["employee_position"] | null
           seniority: string | null
           updated_at: string | null
         }
@@ -415,6 +813,7 @@ export type Database = {
           id: string
           last_name: string
           poles?: Database["public"]["Enums"]["pole_id"][] | null
+          position?: Database["public"]["Enums"]["employee_position"] | null
           seniority?: string | null
           updated_at?: string | null
         }
@@ -426,6 +825,7 @@ export type Database = {
           id?: string
           last_name?: string
           poles?: Database["public"]["Enums"]["pole_id"][] | null
+          position?: Database["public"]["Enums"]["employee_position"] | null
           seniority?: string | null
           updated_at?: string | null
         }
@@ -548,6 +948,113 @@ export type Database = {
         }
         Relationships: []
       }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string | null
+          created_at: string | null
+          description: string
+          id: string
+          priority: string | null
+          resolution: string | null
+          resolved_at: string | null
+          status: string | null
+          subject: string
+          updated_at: string | null
+          user_account_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string | null
+          created_at?: string | null
+          description: string
+          id?: string
+          priority?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          subject: string
+          updated_at?: string | null
+          user_account_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string
+          id?: string
+          priority?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string | null
+          subject?: string
+          updated_at?: string | null
+          user_account_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_user_account_id_fkey"
+            columns: ["user_account_id"]
+            isOneToOne: false
+            referencedRelation: "user_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_accounts: {
+        Row: {
+          company_name: string
+          contact_email: string
+          contact_name: string | null
+          created_at: string | null
+          id: string
+          last_order_date: string | null
+          notes: string | null
+          payment_status: string | null
+          revenue: number | null
+          risk_level: string | null
+          stock_engaged: number | null
+          subscription_status: string | null
+          trustpilot_rating: number | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          company_name: string
+          contact_email: string
+          contact_name?: string | null
+          created_at?: string | null
+          id?: string
+          last_order_date?: string | null
+          notes?: string | null
+          payment_status?: string | null
+          revenue?: number | null
+          risk_level?: string | null
+          stock_engaged?: number | null
+          subscription_status?: string | null
+          trustpilot_rating?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          company_name?: string
+          contact_email?: string
+          contact_name?: string | null
+          created_at?: string | null
+          id?: string
+          last_order_date?: string | null
+          notes?: string | null
+          payment_status?: string | null
+          revenue?: number | null
+          risk_level?: string | null
+          stock_engaged?: number | null
+          subscription_status?: string | null
+          trustpilot_rating?: number | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -658,6 +1165,15 @@ export type Database = {
         | "analyst"
         | "operator"
         | "viewer"
+      employee_position:
+        | "supplier_manager"
+        | "user_success_manager"
+        | "ops_logistics_manager"
+        | "finance_manager"
+        | "audit_compliance_lead"
+        | "rse_packaging_manager"
+        | "tech_platform_manager"
+        | "ceo"
       message_status:
         | "pending"
         | "validated"
@@ -818,6 +1334,16 @@ export const Constants = {
         "analyst",
         "operator",
         "viewer",
+      ],
+      employee_position: [
+        "supplier_manager",
+        "user_success_manager",
+        "ops_logistics_manager",
+        "finance_manager",
+        "audit_compliance_lead",
+        "rse_packaging_manager",
+        "tech_platform_manager",
+        "ceo",
       ],
       message_status: [
         "pending",
