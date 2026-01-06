@@ -35,6 +35,15 @@ import EmailCampaigns from "./pages/modules/lifecycle/EmailCampaigns";
 import TrustpilotAnalytics from "./pages/modules/lifecycle/TrustpilotAnalytics";
 import SupportTickets from "./pages/modules/lifecycle/SupportTickets";
 
+// Finance module pages
+import FinanceDashboard from "./pages/modules/finance/FinanceDashboard";
+import CashflowRealtime from "./pages/modules/finance/CashflowRealtime";
+import Transactions from "./pages/modules/finance/Transactions";
+import SupplierPayments from "./pages/modules/finance/SupplierPayments";
+import Subscriptions from "./pages/modules/finance/Subscriptions";
+import Salaries from "./pages/modules/finance/Salaries";
+import GuaranteeFund from "./pages/modules/finance/GuaranteeFund";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -76,6 +85,15 @@ const App = () => (
             <Route path="/pole/lifecycle/support" element={<SupportTickets />} />
             <Route path="/pole/lifecycle/scoring" element={<RiskAlerts />} />
             <Route path="/pole/lifecycle/compliance" element={<SubSectionPage />} />
+            
+            {/* Finance module */}
+            <Route path="/pole/finance" element={<FinanceDashboard />} />
+            <Route path="/pole/finance/cashflow" element={<CashflowRealtime />} />
+            <Route path="/pole/finance/transactions" element={<Transactions />} />
+            <Route path="/pole/finance/supplier-payments" element={<SupplierPayments />} />
+            <Route path="/pole/finance/subscriptions" element={<Subscriptions />} />
+            <Route path="/pole/finance/salaries" element={<Salaries />} />
+            <Route path="/pole/finance/guarantee" element={<GuaranteeFund />} />
             
             {/* Other pole routes with generic sub-sections */}
             <Route path="/pole/:poleId" element={<PoleDashboard />} />
