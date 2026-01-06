@@ -21,13 +21,13 @@ export const moduleNavigations: ModuleNavigations = {
 
   // Finance
   finance: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/finance' },
+    { id: 'overview', label: 'Dashboard', labelFr: 'Dashboard', path: '/pole/finance' },
     { id: 'cashflow', label: 'Real-time Cashflow', labelFr: 'Cashflow temps réel', path: '/pole/finance/cashflow' },
     { id: 'transactions', label: 'Transactions', labelFr: 'Transactions', path: '/pole/finance/transactions' },
+    { id: 'supplier-payments', label: 'Supplier Payments', labelFr: 'Paiements fournisseurs', path: '/pole/finance/supplier-payments' },
     { id: 'subscriptions', label: 'Subscriptions', labelFr: 'Abonnements', path: '/pole/finance/subscriptions' },
+    { id: 'salaries', label: 'Salaries & Bonuses', labelFr: 'Salaires & Primes', path: '/pole/finance/salaries' },
     { id: 'guarantee', label: 'Guarantee Fund', labelFr: 'Fonds de garantie', path: '/pole/finance/guarantee' },
-    { id: 'expenses', label: 'Expenses', labelFr: 'Dépenses', path: '/pole/finance/expenses' },
-    { id: 'reports', label: 'Reports', labelFr: 'Rapports', path: '/pole/finance/reports' },
   ],
 
   // Ops

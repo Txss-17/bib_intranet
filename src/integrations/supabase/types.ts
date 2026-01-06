@@ -347,6 +347,95 @@ export type Database = {
         }
         Relationships: []
       }
+      fundraising_rounds: {
+        Row: {
+          close_date: string | null
+          created_at: string | null
+          id: string
+          lead_investor: string | null
+          name: string
+          notes: string | null
+          raised_amount: number | null
+          start_date: string | null
+          status: string | null
+          target_amount: number
+          updated_at: string | null
+          valuation: number | null
+        }
+        Insert: {
+          close_date?: string | null
+          created_at?: string | null
+          id?: string
+          lead_investor?: string | null
+          name: string
+          notes?: string | null
+          raised_amount?: number | null
+          start_date?: string | null
+          status?: string | null
+          target_amount: number
+          updated_at?: string | null
+          valuation?: number | null
+        }
+        Update: {
+          close_date?: string | null
+          created_at?: string | null
+          id?: string
+          lead_investor?: string | null
+          name?: string
+          notes?: string | null
+          raised_amount?: number | null
+          start_date?: string | null
+          status?: string | null
+          target_amount?: number
+          updated_at?: string | null
+          valuation?: number | null
+        }
+        Relationships: []
+      }
+      guarantee_fund: {
+        Row: {
+          amount: number
+          created_at: string | null
+          id: string
+          notes: string | null
+          processed_by: string | null
+          reason: string
+          related_user_id: string | null
+          transaction_date: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          processed_by?: string | null
+          reason: string
+          related_user_id?: string | null
+          transaction_date: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          processed_by?: string | null
+          reason?: string
+          related_user_id?: string | null
+          transaction_date?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guarantee_fund_related_user_id_fkey"
+            columns: ["related_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inter_pole_messages: {
         Row: {
           content: string
@@ -887,6 +976,118 @@ export type Database = {
           },
           {
             foreignKeyName: "quality_alerts_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      salaries: {
+        Row: {
+          bonuses: number | null
+          created_at: string | null
+          deductions: number | null
+          employee_id: string | null
+          gross_amount: number
+          id: string
+          net_amount: number
+          paid_date: string | null
+          period_month: number
+          period_year: number
+          status: string | null
+          updated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          bonuses?: number | null
+          created_at?: string | null
+          deductions?: number | null
+          employee_id?: string | null
+          gross_amount: number
+          id?: string
+          net_amount: number
+          paid_date?: string | null
+          period_month: number
+          period_year: number
+          status?: string | null
+          updated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          bonuses?: number | null
+          created_at?: string | null
+          deductions?: number | null
+          employee_id?: string | null
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          paid_date?: string | null
+          period_month?: number
+          period_year?: number
+          status?: string | null
+          updated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "salaries_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_payments: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string | null
+          due_date: string
+          id: string
+          invoice_number: string
+          notes: string | null
+          paid_date: string | null
+          payment_method: string | null
+          status: string | null
+          supplier_id: string | null
+          updated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string | null
+          due_date: string
+          id?: string
+          invoice_number: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          status?: string | null
+          supplier_id?: string | null
+          updated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string | null
+          due_date?: string
+          id?: string
+          invoice_number?: string
+          notes?: string | null
+          paid_date?: string | null
+          payment_method?: string | null
+          status?: string | null
+          supplier_id?: string | null
+          updated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_payments_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
