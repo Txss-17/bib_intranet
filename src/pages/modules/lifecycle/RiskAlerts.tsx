@@ -1,22 +1,18 @@
 import React from 'react';
 import { 
   AlertTriangle, CreditCard, Package, Clock,
-  TrendingDown, Bell, Filter
+  Bell, Loader2
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-const alerts = [
-  { id: '1', type: 'payment', company: 'SkinCare Plus', message: 'Impayé depuis 45 jours', amount: 2400, severity: 'critical', date: '2026-01-05' },
-  { id: '2', type: 'payment', company: 'CosmetiCare', message: 'Retard paiement 15 jours', amount: 1200, severity: 'high', date: '2026-01-04' },
-  { id: '3', type: 'stock', company: 'Natural Glow', message: 'Stock non écoulé > 90 jours', amount: 0, severity: 'medium', date: '2026-01-03' },
-  { id: '4', type: 'inactivity', company: 'Fresh Face', message: 'Aucune commande depuis 60 jours', amount: 0, severity: 'low', date: '2026-01-02' },
-  { id: '5', type: 'payment', company: 'Bio Essence', message: 'Échéance prochaine dans 5 jours', amount: 3500, severity: 'medium', date: '2026-01-01' },
-];
+import { useRiskAlerts, useUserAccountStats } from '@/hooks/useLifecycle';
 
 const RiskAlerts = () => {
+  const { data: alerts, isLoading } = useRiskAlerts();
+  const { data: stats } = useUserAccountStats();
+
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'critical': return 'bg-destructive text-destructive-foreground';
@@ -36,8 +32,18 @@ const RiskAlerts = () => {
     }
   };
 
-  const criticalCount = alerts.filter(a => a.severity === 'critical').length;
-  const highCount = alerts.filter(a => a.severity === 'high').length;
+  const criticalCount = alerts?.filter(a => a.severity === 'critical').length ?? 0;
+  const highCount = alerts?.filter(a => a.severity === 'high').length ?? 0;
+  const paymentAlerts = alerts?.filter(a => a.type === 'payment') ?? [];
+  const totalAtRisk = paymentAlerts.reduce((sum, a) => sum + (a.amount || 0), 0);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -57,7 +63,7 @@ const RiskAlerts = () => {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-destructive">
+        <Card className={criticalCount > 0 ? "border-destructive" : ""}>
           <CardContent className="p-4">
             <p className="text-3xl font-bold text-destructive">{criticalCount}</p>
             <p className="text-sm text-muted-foreground">Alertes critiques</p>
@@ -71,13 +77,13 @@ const RiskAlerts = () => {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-3xl font-bold">€{alerts.filter(a => a.type === 'payment').reduce((sum, a) => sum + a.amount, 0).toLocaleString()}</p>
+            <p className="text-3xl font-bold">€{totalAtRisk.toLocaleString()}</p>
             <p className="text-sm text-muted-foreground">Montant à risque</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-3xl font-bold">{alerts.length}</p>
+            <p className="text-3xl font-bold">{alerts?.length ?? 0}</p>
             <p className="text-sm text-muted-foreground">Total alertes</p>
           </CardContent>
         </Card>
@@ -86,14 +92,14 @@ const RiskAlerts = () => {
       {/* Alerts List */}
       <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="all">Toutes ({alerts.length})</TabsTrigger>
-          <TabsTrigger value="payment">Paiements ({alerts.filter(a => a.type === 'payment').length})</TabsTrigger>
-          <TabsTrigger value="stock">Stock ({alerts.filter(a => a.type === 'stock').length})</TabsTrigger>
-          <TabsTrigger value="inactivity">Inactivité ({alerts.filter(a => a.type === 'inactivity').length})</TabsTrigger>
+          <TabsTrigger value="all">Toutes ({alerts?.length ?? 0})</TabsTrigger>
+          <TabsTrigger value="payment">Paiements ({paymentAlerts.length})</TabsTrigger>
+          <TabsTrigger value="stock">Stock ({alerts?.filter(a => a.type === 'stock').length ?? 0})</TabsTrigger>
+          <TabsTrigger value="inactivity">Inactivité ({alerts?.filter(a => a.type === 'inactivity').length ?? 0})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="mt-4 space-y-4">
-          {alerts.map(alert => (
+          {alerts?.map(alert => (
             <Card key={alert.id} className={alert.severity === 'critical' ? 'border-destructive' : ''}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -119,6 +125,82 @@ const RiskAlerts = () => {
                       <Button size="sm">Traiter</Button>
                     </div>
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+          {(!alerts || alerts.length === 0) && (
+            <Card>
+              <CardContent className="p-8 text-center text-muted-foreground">
+                Aucune alerte active - Tous les utilisateurs sont en règle
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="payment" className="mt-4 space-y-4">
+          {paymentAlerts.map(alert => (
+            <Card key={alert.id} className={alert.severity === 'critical' ? 'border-destructive' : ''}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-lg ${alert.severity === 'critical' ? 'bg-destructive/10' : 'bg-muted'}`}>
+                      <CreditCard className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold">{alert.company}</h3>
+                        <Badge className={getSeverityColor(alert.severity)}>{alert.severity}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">{alert.message}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-lg font-bold">€{alert.amount.toLocaleString()}</span>
+                    <Button size="sm">Traiter</Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="stock" className="mt-4 space-y-4">
+          {alerts?.filter(a => a.type === 'stock').map(alert => (
+            <Card key={alert.id}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-lg bg-muted">
+                      <Package className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">{alert.company}</h3>
+                      <p className="text-sm text-muted-foreground">{alert.message}</p>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline">Voir détails</Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="inactivity" className="mt-4 space-y-4">
+          {alerts?.filter(a => a.type === 'inactivity').map(alert => (
+            <Card key={alert.id}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 rounded-lg bg-muted">
+                      <Clock className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold">{alert.company}</h3>
+                      <p className="text-sm text-muted-foreground">{alert.message}</p>
+                    </div>
+                  </div>
+                  <Button size="sm" variant="outline">Contacter</Button>
                 </div>
               </CardContent>
             </Card>

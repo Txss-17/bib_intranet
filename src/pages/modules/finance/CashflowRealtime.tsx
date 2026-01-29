@@ -8,47 +8,64 @@ import {
   TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
-  Filter,
-  Download
+  Download,
+  Loader2
 } from "lucide-react";
 import { useState } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-
-// Mock data
-const dailyCashflow = [
-  { date: '01/01', income: 12500, expenses: 8200 },
-  { date: '02/01', income: 8900, expenses: 5600 },
-  { date: '03/01', income: 15200, expenses: 12100 },
-  { date: '04/01', income: 11800, expenses: 7800 },
-  { date: '05/01', income: 21500, expenses: 9400 },
-  { date: '06/01', income: 9200, expenses: 6300 },
-];
-
-const categoryBreakdown = [
-  { category: 'Abonnements', amount: 185000, type: 'income' },
-  { category: 'Services Pro', amount: 43000, type: 'income' },
-  { category: 'Salaires', amount: 85000, type: 'expense' },
-  { category: 'Fournisseurs', amount: 35000, type: 'expense' },
-  { category: 'Ops & Logistique', amount: 18000, type: 'expense' },
-  { category: 'Marketing', amount: 7000, type: 'expense' },
-];
-
-const recentFlows = [
-  { id: 1, type: 'income', category: 'Abonnement', description: 'TechCorp - Enterprise', amount: 8900, date: '2026-01-06', time: '14:32' },
-  { id: 2, type: 'expense', category: 'Fournisseur', description: 'EcoPackaging - Facture #2891', amount: 12800, date: '2026-01-06', time: '11:15' },
-  { id: 3, type: 'income', category: 'Abonnement', description: 'RetailPlus - Premium', amount: 4500, date: '2026-01-06', time: '09:45' },
-  { id: 4, type: 'expense', category: 'Ops', description: 'Byrd Logistics - Jan 2026', amount: 6200, date: '2026-01-05', time: '16:20' },
-  { id: 5, type: 'income', category: 'Abonnement', description: 'SmallBiz - Standard', amount: 2200, date: '2026-01-05', time: '14:08' },
-  { id: 6, type: 'expense', category: 'Marketing', description: 'Campagne LinkedIn Q1', amount: 3500, date: '2026-01-05', time: '10:30' },
-];
+import { useCashflows, useCashflowStats } from "@/hooks/useFinance";
 
 const CashflowRealtime = () => {
-  const [period, setPeriod] = useState('week');
   const [typeFilter, setTypeFilter] = useState('all');
+  
+  const { data: cashflows, isLoading } = useCashflows({ 
+    type: typeFilter !== 'all' ? typeFilter as 'income' | 'expense' : undefined 
+  });
+  const { data: stats } = useCashflowStats();
 
-  const totalIncome = categoryBreakdown.filter(c => c.type === 'income').reduce((sum, c) => sum + c.amount, 0);
-  const totalExpenses = categoryBreakdown.filter(c => c.type === 'expense').reduce((sum, c) => sum + c.amount, 0);
+  // Group by date for daily trend
+  const dailyData = cashflows?.reduce((acc, cf) => {
+    const date = new Date(cf.transaction_date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+    const existing = acc.find(a => a.date === date);
+    if (existing) {
+      if (cf.type === 'income') existing.income += cf.amount;
+      else existing.expenses += cf.amount;
+    } else {
+      acc.push({
+        date,
+        income: cf.type === 'income' ? cf.amount : 0,
+        expenses: cf.type === 'expense' ? cf.amount : 0,
+      });
+    }
+    return acc;
+  }, [] as { date: string; income: number; expenses: number }[]).slice(0, 7).reverse() || [];
+
+  // Group by category
+  const categoryData = cashflows?.reduce((acc, cf) => {
+    const existing = acc.find(a => a.category === cf.category);
+    if (existing) {
+      existing.amount += cf.amount;
+    } else {
+      acc.push({
+        category: cf.category,
+        amount: cf.amount,
+        type: cf.type,
+      });
+    }
+    return acc;
+  }, [] as { category: string; amount: number; type: string }[]) || [];
+
+  const totalIncome = stats?.monthlyIncome ?? 0;
+  const totalExpenses = stats?.monthlyExpense ?? 0;
   const netCashflow = totalIncome - totalExpenses;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -68,18 +85,6 @@ const CashflowRealtime = () => {
 
       {/* Filters */}
       <div className="flex gap-4">
-        <Select value={period} onValueChange={setPeriod}>
-          <SelectTrigger className="w-40">
-            <SelectValue placeholder="Période" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="day">Aujourd'hui</SelectItem>
-            <SelectItem value="week">Cette semaine</SelectItem>
-            <SelectItem value="month">Ce mois</SelectItem>
-            <SelectItem value="quarter">Ce trimestre</SelectItem>
-            <SelectItem value="year">Cette année</SelectItem>
-          </SelectContent>
-        </Select>
         <Select value={typeFilter} onValueChange={setTypeFilter}>
           <SelectTrigger className="w-40">
             <SelectValue placeholder="Type" />
@@ -98,7 +103,7 @@ const CashflowRealtime = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Entrées</p>
+                <p className="text-sm font-medium text-muted-foreground">Entrées (mois)</p>
                 <p className="text-2xl font-bold text-green-500">+€{totalIncome.toLocaleString()}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-green-500/10 flex items-center justify-center">
@@ -112,7 +117,7 @@ const CashflowRealtime = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Sorties</p>
+                <p className="text-sm font-medium text-muted-foreground">Sorties (mois)</p>
                 <p className="text-2xl font-bold text-destructive">-€{totalExpenses.toLocaleString()}</p>
               </div>
               <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
@@ -154,35 +159,41 @@ const CashflowRealtime = () => {
           </CardHeader>
           <CardContent>
             <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={dailyCashflow}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="date" className="text-xs" />
-                  <YAxis className="text-xs" tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`} />
-                  <Tooltip 
-                    formatter={(value: number) => `€${value.toLocaleString()}`}
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="income" 
-                    stroke="hsl(142, 76%, 36%)" 
-                    fill="hsl(142, 76%, 36%, 0.3)" 
-                    name="Entrées"
-                  />
-                  <Area 
-                    type="monotone" 
-                    dataKey="expenses" 
-                    stroke="hsl(var(--destructive))" 
-                    fill="hsl(var(--destructive)/0.3)" 
-                    name="Sorties"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
+              {dailyData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={dailyData}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="date" className="text-xs" />
+                    <YAxis className="text-xs" tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`} />
+                    <Tooltip 
+                      formatter={(value: number) => `€${value.toLocaleString()}`}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="income" 
+                      stroke="hsl(142, 76%, 36%)" 
+                      fill="hsl(142, 76%, 36%, 0.3)" 
+                      name="Entrées"
+                    />
+                    <Area 
+                      type="monotone" 
+                      dataKey="expenses" 
+                      stroke="hsl(var(--destructive))" 
+                      fill="hsl(var(--destructive)/0.3)" 
+                      name="Sorties"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  Aucune donnée disponible
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -194,26 +205,32 @@ const CashflowRealtime = () => {
           </CardHeader>
           <CardContent>
             <div className="h-[280px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={categoryBreakdown} layout="vertical">
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis type="number" className="text-xs" tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`} />
-                  <YAxis type="category" dataKey="category" className="text-xs" width={100} />
-                  <Tooltip 
-                    formatter={(value: number) => `€${value.toLocaleString()}`}
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
-                    }}
-                  />
-                  <Bar 
-                    dataKey="amount" 
-                    fill="hsl(var(--primary))"
-                    radius={[0, 4, 4, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+              {categoryData.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={categoryData} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis type="number" className="text-xs" tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`} />
+                    <YAxis type="category" dataKey="category" className="text-xs" width={100} />
+                    <Tooltip 
+                      formatter={(value: number) => `€${value.toLocaleString()}`}
+                      contentStyle={{ 
+                        backgroundColor: 'hsl(var(--card))',
+                        border: '1px solid hsl(var(--border))',
+                        borderRadius: '8px'
+                      }}
+                    />
+                    <Bar 
+                      dataKey="amount" 
+                      fill="hsl(var(--primary))"
+                      radius={[0, 4, 4, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full text-muted-foreground">
+                  Aucune donnée disponible
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -226,9 +243,7 @@ const CashflowRealtime = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {recentFlows
-              .filter(f => typeFilter === 'all' || f.type === typeFilter)
-              .map((flow) => (
+            {cashflows?.slice(0, 10).map((flow) => (
               <div key={flow.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
                 <div className="flex items-center gap-4">
                   <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
@@ -241,10 +256,10 @@ const CashflowRealtime = () => {
                     )}
                   </div>
                   <div>
-                    <p className="font-medium">{flow.description}</p>
+                    <p className="font-medium">{flow.description || flow.category}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <Badge variant="outline" className="text-xs">{flow.category}</Badge>
-                      <span className="text-xs text-muted-foreground">{flow.date} à {flow.time}</span>
+                      <span className="text-xs text-muted-foreground">{flow.transaction_date}</span>
                     </div>
                   </div>
                 </div>
@@ -255,6 +270,11 @@ const CashflowRealtime = () => {
                 </span>
               </div>
             ))}
+            {(!cashflows || cashflows.length === 0) && (
+              <p className="text-muted-foreground text-center py-8">
+                Aucune transaction trouvée. Les données seront affichées une fois ajoutées à la base.
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>
