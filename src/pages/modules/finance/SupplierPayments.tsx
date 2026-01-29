@@ -11,38 +11,36 @@ import {
   Clock,
   Calendar,
   MoreHorizontal,
-  FileText
+  FileText,
+  Loader2
 } from "lucide-react";
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-// Mock data
-const supplierPayments = [
-  { id: 'PAY-001', supplier: 'EcoPackaging SAS', invoice: 'INV-2891', amount: 12800, dueDate: '2026-01-10', status: 'pending', paymentMethod: 'Virement' },
-  { id: 'PAY-002', supplier: 'GlobalSupply Ltd', invoice: 'INV-2888', amount: 28500, dueDate: '2026-01-02', status: 'overdue', paymentMethod: 'Virement' },
-  { id: 'PAY-003', supplier: 'BioPack Industries', invoice: 'INV-2875', amount: 8400, dueDate: '2026-01-15', status: 'scheduled', paymentMethod: 'Prélèvement' },
-  { id: 'PAY-004', supplier: 'GreenMaterials Co', invoice: 'INV-2870', amount: 15200, dueDate: '2025-12-28', status: 'paid', paymentMethod: 'Virement', paidDate: '2025-12-27' },
-  { id: 'PAY-005', supplier: 'EuroDistrib SA', invoice: 'INV-2865', amount: 22100, dueDate: '2025-12-20', status: 'paid', paymentMethod: 'Virement', paidDate: '2025-12-18' },
-  { id: 'PAY-006', supplier: 'AsiaSupply Corp', invoice: 'INV-2890', amount: 45000, dueDate: '2026-01-20', status: 'pending', paymentMethod: 'Virement' },
-  { id: 'PAY-007', supplier: 'EcoPackaging SAS', invoice: 'INV-2850', amount: 9600, dueDate: '2025-12-15', status: 'paid', paymentMethod: 'Virement', paidDate: '2025-12-14' },
-];
+import { useSupplierPayments, useSupplierPaymentStats, useUpdateSupplierPayment } from "@/hooks/useFinance";
 
 const SupplierPayments = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const filteredPayments = supplierPayments.filter(payment => {
-    const matchesSearch = payment.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         payment.invoice.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || payment.status === statusFilter;
-    return matchesSearch && matchesStatus;
+  const { data: payments, isLoading } = useSupplierPayments({
+    status: statusFilter !== 'all' ? statusFilter : undefined,
   });
+  const { data: stats } = useSupplierPaymentStats();
+  const updatePayment = useUpdateSupplierPayment();
 
-  const pendingAmount = supplierPayments.filter(p => p.status === 'pending').reduce((sum, p) => sum + p.amount, 0);
-  const overdueAmount = supplierPayments.filter(p => p.status === 'overdue').reduce((sum, p) => sum + p.amount, 0);
-  const scheduledAmount = supplierPayments.filter(p => p.status === 'scheduled').reduce((sum, p) => sum + p.amount, 0);
+  const filteredPayments = payments?.filter(payment => {
+    const supplier = (payment.suppliers as any)?.name || '';
+    const matchesSearch = supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         payment.invoice_number.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
+  }) || [];
 
-  const getStatusBadge = (status: string) => {
+  const pendingAmount = stats?.pendingAmount ?? 0;
+  const overdueAmount = stats?.overdueAmount ?? 0;
+  const scheduledAmount = stats?.scheduledAmount ?? 0;
+  const paidAmount = stats?.paidAmount ?? 0;
+
+  const getStatusBadge = (status: string | null) => {
     switch (status) {
       case 'paid':
         return <Badge className="bg-green-500/10 text-green-500 hover:bg-green-500/20">Payé</Badge>;
@@ -53,9 +51,25 @@ const SupplierPayments = () => {
       case 'overdue':
         return <Badge className="bg-destructive/10 text-destructive hover:bg-destructive/20">En retard</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline">{status || 'N/A'}</Badge>;
     }
   };
+
+  const handleMarkAsPaid = (id: string) => {
+    updatePayment.mutate({
+      id,
+      status: 'paid',
+      paid_date: new Date().toISOString().split('T')[0],
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -87,7 +101,7 @@ const SupplierPayments = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-destructive/50">
+        <Card className={overdueAmount > 0 ? "border-destructive/50" : ""}>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center">
@@ -122,8 +136,8 @@ const SupplierPayments = () => {
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Payés ce mois</p>
-                <p className="text-xl font-bold">€46,900</p>
+                <p className="text-sm text-muted-foreground">Payés (total)</p>
+                <p className="text-xl font-bold">€{paidAmount.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -139,7 +153,7 @@ const SupplierPayments = () => {
               <div className="flex-1">
                 <p className="font-medium text-destructive">Paiements en retard</p>
                 <p className="text-sm text-muted-foreground">
-                  {supplierPayments.filter(p => p.status === 'overdue').length} paiement(s) en retard 
+                  {stats?.overdueCount || 0} paiement(s) en retard 
                   pour un total de €{overdueAmount.toLocaleString()}
                 </p>
               </div>
@@ -188,7 +202,6 @@ const SupplierPayments = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
                 <TableHead>Fournisseur</TableHead>
                 <TableHead>Facture</TableHead>
                 <TableHead>Échéance</TableHead>
@@ -201,21 +214,22 @@ const SupplierPayments = () => {
             <TableBody>
               {filteredPayments.map((payment) => (
                 <TableRow key={payment.id} className={payment.status === 'overdue' ? 'bg-destructive/5' : ''}>
-                  <TableCell className="font-mono text-sm">{payment.id}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">{payment.supplier}</span>
+                      <span className="font-medium">
+                        {(payment.suppliers as any)?.name || 'N/A'}
+                      </span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
                       <FileText className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-mono text-sm">{payment.invoice}</span>
+                      <span className="font-mono text-sm">{payment.invoice_number}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{payment.dueDate}</TableCell>
-                  <TableCell>{payment.paymentMethod}</TableCell>
+                  <TableCell>{payment.due_date}</TableCell>
+                  <TableCell>{payment.payment_method || 'Virement'}</TableCell>
                   <TableCell>{getStatusBadge(payment.status)}</TableCell>
                   <TableCell className="text-right font-semibold">
                     €{payment.amount.toLocaleString()}
@@ -223,7 +237,12 @@ const SupplierPayments = () => {
                   <TableCell>
                     <div className="flex gap-1">
                       {payment.status !== 'paid' && (
-                        <Button variant="outline" size="sm">
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => handleMarkAsPaid(payment.id)}
+                          disabled={updatePayment.isPending}
+                        >
                           Payer
                         </Button>
                       )}
@@ -234,6 +253,13 @@ const SupplierPayments = () => {
                   </TableCell>
                 </TableRow>
               ))}
+              {filteredPayments.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    Aucun paiement trouvé
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

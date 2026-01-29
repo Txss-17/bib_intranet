@@ -5,48 +5,46 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Search, 
-  Filter,
   Download,
   ArrowUpRight,
   ArrowDownRight,
-  MoreHorizontal,
-  Eye
+  Eye,
+  Loader2
 } from "lucide-react";
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-// Mock data
-const transactions = [
-  { id: 'TRX-001', date: '2026-01-06', type: 'income', category: 'Abonnement', description: 'TechCorp - Enterprise Plan', amount: 8900, status: 'completed', reference: 'SUB-2891' },
-  { id: 'TRX-002', date: '2026-01-06', type: 'expense', category: 'Fournisseur', description: 'EcoPackaging - Facture #2891', amount: 12800, status: 'completed', reference: 'INV-2891' },
-  { id: 'TRX-003', date: '2026-01-05', type: 'income', category: 'Abonnement', description: 'RetailPlus - Premium Plan', amount: 4500, status: 'completed', reference: 'SUB-2890' },
-  { id: 'TRX-004', date: '2026-01-05', type: 'expense', category: 'Salaires', description: 'Paie Janvier 2026 - Batch', amount: 45000, status: 'completed', reference: 'SAL-0126' },
-  { id: 'TRX-005', date: '2026-01-04', type: 'income', category: 'Services', description: 'Formation Premium - BigRetail', amount: 3200, status: 'pending', reference: 'SRV-0412' },
-  { id: 'TRX-006', date: '2026-01-04', type: 'expense', category: 'Ops', description: 'Byrd Logistics - Décembre', amount: 6200, status: 'completed', reference: 'OPS-1223' },
-  { id: 'TRX-007', date: '2026-01-03', type: 'income', category: 'Abonnement', description: 'SmallBiz Pro - Standard', amount: 2200, status: 'completed', reference: 'SUB-2889' },
-  { id: 'TRX-008', date: '2026-01-03', type: 'expense', category: 'Marketing', description: 'Campagne Google Ads', amount: 4500, status: 'completed', reference: 'MKT-0103' },
-  { id: 'TRX-009', date: '2026-01-02', type: 'expense', category: 'Fournisseur', description: 'GlobalSupply - Produits Q4', amount: 28500, status: 'pending', reference: 'INV-2888' },
-  { id: 'TRX-010', date: '2026-01-02', type: 'income', category: 'Abonnement', description: 'MegaCorp - Enterprise', amount: 12500, status: 'completed', reference: 'SUB-2887' },
-];
+import { useCashflows } from "@/hooks/useFinance";
 
 const Transactions = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
 
-  const filteredTransactions = transactions.filter(tx => {
-    const matchesSearch = tx.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         tx.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         tx.id.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = typeFilter === 'all' || tx.type === typeFilter;
-    const matchesCategory = categoryFilter === 'all' || tx.category === categoryFilter;
-    const matchesStatus = statusFilter === 'all' || tx.status === statusFilter;
-    return matchesSearch && matchesType && matchesCategory && matchesStatus;
+  const { data: transactions, isLoading } = useCashflows({
+    type: typeFilter !== 'all' ? typeFilter as 'income' | 'expense' : undefined,
+    category: categoryFilter !== 'all' ? categoryFilter : undefined,
   });
+
+  const filteredTransactions = transactions?.filter(tx => {
+    const matchesSearch = (tx.description?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                         (tx.reference?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
+                         tx.category.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
+  }) || [];
 
   const totalIncome = filteredTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
   const totalExpenses = filteredTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+  // Get unique categories
+  const categories = [...new Set(transactions?.map(t => t.category) || [])];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -115,22 +113,9 @@ const Transactions = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes</SelectItem>
-                <SelectItem value="Abonnement">Abonnement</SelectItem>
-                <SelectItem value="Fournisseur">Fournisseur</SelectItem>
-                <SelectItem value="Salaires">Salaires</SelectItem>
-                <SelectItem value="Ops">Ops</SelectItem>
-                <SelectItem value="Marketing">Marketing</SelectItem>
-                <SelectItem value="Services">Services</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-36">
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                <SelectItem value="completed">Complété</SelectItem>
-                <SelectItem value="pending">En attente</SelectItem>
+                {categories.map(cat => (
+                  <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -143,12 +128,10 @@ const Transactions = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Catégorie</TableHead>
                 <TableHead>Référence</TableHead>
-                <TableHead>Statut</TableHead>
                 <TableHead className="text-right">Montant</TableHead>
                 <TableHead></TableHead>
               </TableRow>
@@ -156,8 +139,7 @@ const Transactions = () => {
             <TableBody>
               {filteredTransactions.map((tx) => (
                 <TableRow key={tx.id}>
-                  <TableCell className="font-mono text-sm">{tx.id}</TableCell>
-                  <TableCell>{tx.date}</TableCell>
+                  <TableCell>{tx.transaction_date}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
@@ -169,17 +151,14 @@ const Transactions = () => {
                           <ArrowUpRight className="h-4 w-4 text-destructive" />
                         )}
                       </div>
-                      <span className="font-medium">{tx.description}</span>
+                      <span className="font-medium">{tx.description || tx.category}</span>
                     </div>
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{tx.category}</Badge>
                   </TableCell>
-                  <TableCell className="font-mono text-sm text-muted-foreground">{tx.reference}</TableCell>
-                  <TableCell>
-                    <Badge variant={tx.status === 'completed' ? 'default' : 'secondary'}>
-                      {tx.status === 'completed' ? 'Complété' : 'En attente'}
-                    </Badge>
+                  <TableCell className="font-mono text-sm text-muted-foreground">
+                    {tx.reference || '-'}
                   </TableCell>
                   <TableCell className={`text-right font-semibold ${
                     tx.type === 'income' ? 'text-green-500' : 'text-destructive'
@@ -193,6 +172,13 @@ const Transactions = () => {
                   </TableCell>
                 </TableRow>
               ))}
+              {filteredTransactions.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    Aucune transaction trouvée. Les données seront affichées une fois ajoutées.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>

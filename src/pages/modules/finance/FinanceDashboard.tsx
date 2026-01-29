@@ -11,41 +11,73 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Wallet,
-  Building2
+  Building2,
+  Loader2
 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from "recharts";
-
-// Mock data for finance dashboard
-const cashflowData = [
-  { month: 'Jan', income: 145000, expenses: 98000, net: 47000 },
-  { month: 'Feb', income: 162000, expenses: 105000, net: 57000 },
-  { month: 'Mar', income: 178000, expenses: 112000, net: 66000 },
-  { month: 'Apr', income: 195000, expenses: 125000, net: 70000 },
-  { month: 'May', income: 210000, expenses: 132000, net: 78000 },
-  { month: 'Jun', income: 228000, expenses: 145000, net: 83000 },
-];
-
-const recentTransactions = [
-  { id: 1, type: 'income', description: 'Abonnement Premium - TechCorp', amount: 4500, date: '2026-01-05' },
-  { id: 2, type: 'expense', description: 'Paiement fournisseur - EcoPackaging', amount: -12800, date: '2026-01-05' },
-  { id: 3, type: 'income', description: 'Abonnement Standard - RetailPlus', amount: 2200, date: '2026-01-04' },
-  { id: 4, type: 'expense', description: 'Salaires Janvier 2026', amount: -45000, date: '2026-01-03' },
-  { id: 5, type: 'income', description: 'Abonnement Enterprise - BigRetail', amount: 8900, date: '2026-01-02' },
-];
-
-const alerts = [
-  { id: 1, type: 'warning', message: 'Paiement fournisseur en retard - GlobalSupply', dueDate: '2026-01-02' },
-  { id: 2, type: 'critical', message: 'Burn rate élevé ce mois (+15%)', value: '€145,000' },
-  { id: 3, type: 'info', message: 'Levée de fonds Series A - Clôture dans 12 jours', progress: '78%' },
-];
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { useCashflowStats, useCashflows, useSupplierPaymentStats } from "@/hooks/useFinance";
 
 const FinanceDashboard = () => {
-  const currentBalance = 1245000;
-  const burnRate = 145000;
-  const runway = Math.floor(currentBalance / burnRate);
-  const mrr = 228000;
-  const mrrGrowth = 8.5;
+  const { data: stats, isLoading: statsLoading } = useCashflowStats();
+  const { data: recentCashflows, isLoading: cashflowsLoading } = useCashflows({ limit: 5 });
+  const { data: paymentStats } = useSupplierPaymentStats();
+
+  // Transform cashflows for chart (group by month)
+  const cashflowChartData = recentCashflows?.reduce((acc, cf) => {
+    const month = new Date(cf.transaction_date).toLocaleDateString('fr-FR', { month: 'short' });
+    const existing = acc.find(a => a.month === month);
+    if (existing) {
+      if (cf.type === 'income') existing.income += cf.amount;
+      else existing.expenses += cf.amount;
+      existing.net = existing.income - existing.expenses;
+    } else {
+      acc.push({
+        month,
+        income: cf.type === 'income' ? cf.amount : 0,
+        expenses: cf.type === 'expense' ? cf.amount : 0,
+        net: cf.type === 'income' ? cf.amount : -cf.amount,
+      });
+    }
+    return acc;
+  }, [] as { month: string; income: number; expenses: number; net: number }[]) || [];
+
+  // Fallback mock data if no real data
+  const displayChartData = cashflowChartData.length > 0 ? cashflowChartData : [
+    { month: 'Jan', income: 145000, expenses: 98000, net: 47000 },
+    { month: 'Feb', income: 162000, expenses: 105000, net: 57000 },
+    { month: 'Mar', income: 178000, expenses: 112000, net: 66000 },
+  ];
+
+  const currentBalance = stats?.balance ?? 1245000;
+  const burnRate = stats?.burnRate ?? 145000;
+  const runway = stats?.runway ?? 8;
+  const mrr = stats?.monthlyIncome ?? 228000;
+
+  const alerts = [
+    ...(paymentStats?.overdueCount ? [{ 
+      id: 1, 
+      type: 'warning', 
+      message: `${paymentStats.overdueCount} paiement(s) fournisseur en retard`, 
+      value: `€${paymentStats.overdueAmount?.toLocaleString()}` 
+    }] : []),
+    ...(burnRate > 100000 ? [{ 
+      id: 2, 
+      type: 'critical', 
+      message: 'Burn rate élevé ce mois', 
+      value: `€${burnRate.toLocaleString()}` 
+    }] : []),
+  ];
+
+  const isLoading = statsLoading || cashflowsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -60,7 +92,7 @@ const FinanceDashboard = () => {
             <Link to="/pole/finance/transactions">Voir transactions</Link>
           </Button>
           <Button asChild>
-            <Link to="/pole/finance/reports">Générer rapport</Link>
+            <Link to="/pole/finance/cashflow">Cashflow détaillé</Link>
           </Button>
         </div>
       </div>
@@ -103,8 +135,7 @@ const FinanceDashboard = () => {
             </div>
             <div className="flex items-center mt-4 text-sm">
               <ArrowUpRight className="h-4 w-4 text-orange-500 mr-1" />
-              <span className="text-orange-500 font-medium">+15%</span>
-              <span className="text-muted-foreground ml-1">vs mois dernier</span>
+              <span className="text-orange-500 font-medium">Basé sur 3 mois</span>
             </div>
           </CardContent>
         </Card>
@@ -143,8 +174,7 @@ const FinanceDashboard = () => {
             </div>
             <div className="flex items-center mt-4 text-sm">
               <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-              <span className="text-green-500 font-medium">+{mrrGrowth}%</span>
-              <span className="text-muted-foreground ml-1">croissance mensuelle</span>
+              <span className="text-green-500 font-medium">Revenus mensuels</span>
             </div>
           </CardContent>
         </Card>
@@ -157,13 +187,13 @@ const FinanceDashboard = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <DollarSign className="h-5 w-5" />
-              Cashflow - 6 derniers mois
+              Cashflow - Derniers mois
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={cashflowData}>
+                <AreaChart data={displayChartData}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis dataKey="month" className="text-xs" />
                   <YAxis className="text-xs" tickFormatter={(value) => `€${(value / 1000).toFixed(0)}k`} />
@@ -207,29 +237,25 @@ const FinanceDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {alerts.map((alert) => (
-                <div
-                  key={alert.id}
-                  className={`p-3 rounded-lg border ${
-                    alert.type === 'critical'
-                      ? 'bg-destructive/10 border-destructive/20'
-                      : alert.type === 'warning'
-                      ? 'bg-orange-500/10 border-orange-500/20'
-                      : 'bg-blue-500/10 border-blue-500/20'
-                  }`}
-                >
-                  <p className="text-sm font-medium text-foreground">{alert.message}</p>
-                  {alert.dueDate && (
-                    <p className="text-xs text-muted-foreground mt-1">Échéance: {alert.dueDate}</p>
-                  )}
-                  {alert.value && (
-                    <p className="text-xs font-medium mt-1">{alert.value}</p>
-                  )}
-                  {alert.progress && (
-                    <p className="text-xs text-muted-foreground mt-1">Avancement: {alert.progress}</p>
-                  )}
-                </div>
-              ))}
+              {alerts.length === 0 ? (
+                <p className="text-muted-foreground text-sm">Aucune alerte active</p>
+              ) : (
+                alerts.map((alert) => (
+                  <div
+                    key={alert.id}
+                    className={`p-3 rounded-lg border ${
+                      alert.type === 'critical'
+                        ? 'bg-destructive/10 border-destructive/20'
+                        : 'bg-orange-500/10 border-orange-500/20'
+                    }`}
+                  >
+                    <p className="text-sm font-medium text-foreground">{alert.message}</p>
+                    {alert.value && (
+                      <p className="text-xs font-medium mt-1">{alert.value}</p>
+                    )}
+                  </div>
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -247,7 +273,7 @@ const FinanceDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentTransactions.map((tx) => (
+              {recentCashflows?.slice(0, 5).map((tx) => (
                 <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-3">
                     <div className={`h-10 w-10 rounded-full flex items-center justify-center ${
@@ -260,17 +286,22 @@ const FinanceDashboard = () => {
                       )}
                     </div>
                     <div>
-                      <p className="font-medium text-sm">{tx.description}</p>
-                      <p className="text-xs text-muted-foreground">{tx.date}</p>
+                      <p className="font-medium text-sm">{tx.description || tx.category}</p>
+                      <p className="text-xs text-muted-foreground">{tx.transaction_date}</p>
                     </div>
                   </div>
                   <span className={`font-semibold ${
                     tx.type === 'income' ? 'text-green-500' : 'text-destructive'
                   }`}>
-                    {tx.type === 'income' ? '+' : ''}€{Math.abs(tx.amount).toLocaleString()}
+                    {tx.type === 'income' ? '+' : '-'}€{tx.amount.toLocaleString()}
                   </span>
                 </div>
               ))}
+              {(!recentCashflows || recentCashflows.length === 0) && (
+                <p className="text-muted-foreground text-sm text-center py-4">
+                  Aucune transaction récente
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

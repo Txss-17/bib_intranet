@@ -1,44 +1,39 @@
 import React, { useState } from 'react';
 import { 
-  Users, AlertTriangle, TrendingUp, TrendingDown, Star,
-  CreditCard, Package, Mail, MessageSquare, Clock
+  Users, AlertTriangle, TrendingUp, Star,
+  CreditCard, MessageSquare, Clock, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
-const dashboardStats = {
-  totalUsers: 1247,
-  atRiskUsers: 23,
-  pendingPayments: 8,
-  trustpilotScore: 4.6,
-  openTickets: 12,
-  avgResponseTime: '2.4h'
-};
-
-const atRiskUsers = [
-  { id: '1', company: 'BeautyBox Pro', issue: 'Impayé 45 jours', amount: 2400, severity: 'high' },
-  { id: '2', company: 'CosmetiCare', issue: 'Stock non écoulé', amount: 0, severity: 'medium' },
-  { id: '3', company: 'Natural Glow', issue: 'Inactivité 60 jours', amount: 0, severity: 'low' },
-];
-
-const recentTickets = [
-  { id: '1', subject: 'Problème livraison', company: 'SkinCare Plus', status: 'open', priority: 'high' },
-  { id: '2', subject: 'Question facturation', company: 'Bio Beauty', status: 'pending', priority: 'medium' },
-  { id: '3', subject: 'Demande catalogue', company: 'Fresh Face', status: 'open', priority: 'low' },
-];
+import { Link } from 'react-router-dom';
+import { useUserAccountStats, useAtRiskUsers, useSupportTicketStats, useSupportTickets } from '@/hooks/useLifecycle';
 
 const LifecycleDashboard = () => {
-  const getSeverityColor = (severity: string) => {
+  const { data: userStats, isLoading: userStatsLoading } = useUserAccountStats();
+  const { data: atRiskUsers, isLoading: atRiskLoading } = useAtRiskUsers();
+  const { data: ticketStats } = useSupportTicketStats();
+  const { data: recentTickets } = useSupportTickets({ limit: 3 });
+
+  const getSeverityColor = (severity: string | null) => {
     switch (severity) {
-      case 'high': return 'bg-destructive text-destructive-foreground';
+      case 'high':
+      case 'critical': return 'bg-destructive text-destructive-foreground';
       case 'medium': return 'bg-yellow-500 text-black';
       case 'low': return 'bg-muted text-muted-foreground';
       default: return 'bg-muted';
     }
   };
+
+  const isLoading = userStatsLoading || atRiskLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-6">
@@ -57,42 +52,42 @@ const LifecycleDashboard = () => {
         <Card>
           <CardContent className="p-4">
             <Users className="h-5 w-5 text-blue-500 mb-2" />
-            <p className="text-2xl font-bold">{dashboardStats.totalUsers}</p>
+            <p className="text-2xl font-bold">{userStats?.totalUsers ?? 0}</p>
             <p className="text-xs text-muted-foreground">Utilisateurs actifs</p>
           </CardContent>
         </Card>
-        <Card className="border-destructive">
+        <Card className={userStats?.atRiskUsers ? "border-destructive" : ""}>
           <CardContent className="p-4">
             <AlertTriangle className="h-5 w-5 text-destructive mb-2" />
-            <p className="text-2xl font-bold text-destructive">{dashboardStats.atRiskUsers}</p>
+            <p className="text-2xl font-bold text-destructive">{userStats?.atRiskUsers ?? 0}</p>
             <p className="text-xs text-muted-foreground">À risque</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <CreditCard className="h-5 w-5 text-orange-500 mb-2" />
-            <p className="text-2xl font-bold">{dashboardStats.pendingPayments}</p>
+            <p className="text-2xl font-bold">{userStats?.unpaidUsers ?? 0}</p>
             <p className="text-xs text-muted-foreground">Paiements en attente</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <Star className="h-5 w-5 text-yellow-500 mb-2" />
-            <p className="text-2xl font-bold">{dashboardStats.trustpilotScore}</p>
-            <p className="text-xs text-muted-foreground">Trustpilot</p>
+            <p className="text-2xl font-bold">{userStats?.averageRating ?? 0}</p>
+            <p className="text-xs text-muted-foreground">Note moyenne</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <MessageSquare className="h-5 w-5 text-purple-500 mb-2" />
-            <p className="text-2xl font-bold">{dashboardStats.openTickets}</p>
+            <p className="text-2xl font-bold">{ticketStats?.openTickets ?? 0}</p>
             <p className="text-xs text-muted-foreground">Tickets ouverts</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <Clock className="h-5 w-5 text-emerald-500 mb-2" />
-            <p className="text-2xl font-bold">{dashboardStats.avgResponseTime}</p>
+            <p className="text-2xl font-bold">{ticketStats?.avgResponseTime ?? '0h'}</p>
             <p className="text-xs text-muted-foreground">Temps réponse</p>
           </CardContent>
         </Card>
@@ -109,22 +104,30 @@ const LifecycleDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {atRiskUsers.map(user => (
+              {atRiskUsers?.slice(0, 5).map(user => (
                 <div key={user.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
-                    <p className="font-medium">{user.company}</p>
-                    <p className="text-sm text-muted-foreground">{user.issue}</p>
+                    <p className="font-medium">{user.company_name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {user.payment_status === 'overdue' ? 'Paiement en retard' : 
+                       user.risk_level === 'critical' ? 'Risque critique' : 'À surveiller'}
+                    </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    {user.amount > 0 && (
-                      <span className="text-sm font-medium">€{user.amount}</span>
+                    {user.revenue && user.revenue > 0 && (
+                      <span className="text-sm font-medium">€{user.revenue.toLocaleString()}</span>
                     )}
-                    <Badge className={getSeverityColor(user.severity)}>{user.severity}</Badge>
+                    <Badge className={getSeverityColor(user.risk_level)}>{user.risk_level}</Badge>
                   </div>
                 </div>
               ))}
+              {(!atRiskUsers || atRiskUsers.length === 0) && (
+                <p className="text-muted-foreground text-center py-4">Aucun utilisateur à risque</p>
+              )}
             </div>
-            <Button variant="outline" className="w-full mt-4">Voir tous les risques</Button>
+            <Button variant="outline" className="w-full mt-4" asChild>
+              <Link to="/pole/lifecycle/risk-alerts">Voir tous les risques</Link>
+            </Button>
           </CardContent>
         </Card>
 
@@ -138,19 +141,26 @@ const LifecycleDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {recentTickets.map(ticket => (
+              {recentTickets?.slice(0, 5).map(ticket => (
                 <div key={ticket.id} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium">{ticket.subject}</p>
-                    <p className="text-sm text-muted-foreground">{ticket.company}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {(ticket.user_account as any)?.company_name || 'N/A'}
+                    </p>
                   </div>
                   <Badge variant={ticket.status === 'open' ? 'default' : 'secondary'}>
                     {ticket.status}
                   </Badge>
                 </div>
               ))}
+              {(!recentTickets || recentTickets.length === 0) && (
+                <p className="text-muted-foreground text-center py-4">Aucun ticket récent</p>
+              )}
             </div>
-            <Button variant="outline" className="w-full mt-4">Voir tous les tickets</Button>
+            <Button variant="outline" className="w-full mt-4" asChild>
+              <Link to="/pole/lifecycle/support">Voir tous les tickets</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
