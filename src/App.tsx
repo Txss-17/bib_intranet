@@ -20,6 +20,13 @@ import Certifications from "./pages/modules/supplier/Certifications";
 import DecisionHistory from "./pages/modules/supplier/DecisionHistory";
 import QualityAlerts from "./pages/modules/supplier/QualityAlerts";
 
+// Ops module pages
+import OpsDashboard from "./pages/modules/ops/OpsDashboard";
+import Orders from "./pages/modules/ops/Orders";
+import Shipments from "./pages/modules/ops/Shipments";
+import LogisticsIncidents from "./pages/modules/ops/LogisticsIncidents";
+import Partners from "./pages/modules/ops/Partners";
+
 // Direction module pages
 import ExecutiveDashboard from "./pages/modules/direction/ExecutiveDashboard";
 import VisionRoadmap from "./pages/modules/direction/VisionRoadmap";
@@ -94,6 +101,13 @@ const App = () => (
             <Route path="/pole/finance/subscriptions" element={<Subscriptions />} />
             <Route path="/pole/finance/salaries" element={<Salaries />} />
             <Route path="/pole/finance/guarantee" element={<GuaranteeFund />} />
+            
+            {/* Ops module */}
+            <Route path="/pole/ops" element={<OpsDashboard />} />
+            <Route path="/pole/ops/orders" element={<Orders />} />
+            <Route path="/pole/ops/shipments" element={<Shipments />} />
+            <Route path="/pole/ops/incidents" element={<LogisticsIncidents />} />
+            <Route path="/pole/ops/partners" element={<Partners />} />
             
             {/* Other pole routes with generic sub-sections */}
             <Route path="/pole/:poleId" element={<PoleDashboard />} />
