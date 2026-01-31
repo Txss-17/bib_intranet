@@ -32,11 +32,11 @@ export const moduleNavigations: ModuleNavigations = {
 
   // Ops
   ops: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/ops' },
-    { id: 'logistics', label: 'Logistics', labelFr: 'Logistique', path: '/pole/ops/logistics' },
-    { id: 'partners', label: 'Partners', labelFr: 'Partenaires', path: '/pole/ops/partners' },
-    { id: 'incidents', label: 'Incidents', labelFr: 'Incidents', path: '/pole/ops/incidents' },
+    { id: 'overview', label: 'Dashboard', labelFr: 'Dashboard', path: '/pole/ops' },
+    { id: 'orders', label: 'Orders', labelFr: 'Commandes', path: '/pole/ops/orders' },
     { id: 'shipments', label: 'Shipments', labelFr: 'Expéditions', path: '/pole/ops/shipments' },
+    { id: 'incidents', label: 'Incidents', labelFr: 'Incidents', path: '/pole/ops/incidents' },
+    { id: 'partners', label: 'Partners', labelFr: 'Partenaires', path: '/pole/ops/partners' },
   ],
 
   // Tech
