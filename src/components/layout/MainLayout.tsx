@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Outlet, useLocation, useParams } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { AppSidebar } from './AppSidebar';
 import { TopBar } from './TopBar';
@@ -10,7 +10,6 @@ export function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
   const location = useLocation();
-  const { poleId, subSection } = useParams<{ poleId?: string; subSection?: string }>();
 
   useEffect(() => {
     if (darkMode) {
@@ -23,6 +22,10 @@ export function MainLayout() {
   // Determine if we're on a pole page or transversal module page
   const isPolePage = location.pathname.startsWith('/pole/');
   const isTransversalModule = location.pathname.startsWith('/modules/');
+  
+  // Extract poleId from pathname (works for static routes like /pole/ops)
+  const poleIdMatch = location.pathname.match(/^\/pole\/([^/]+)/);
+  const extractedPoleId = poleIdMatch?.[1] as PoleId | undefined;
   
   // Extract transversal module type
   const transversalModuleMatch = location.pathname.match(/^\/modules\/(ethics|gateway|packaging)/);
@@ -39,11 +42,11 @@ export function MainLayout() {
         sidebarCollapsed={sidebarCollapsed}
         darkMode={darkMode}
         onToggleDarkMode={() => setDarkMode(!darkMode)}
-        activePoleId={isPolePage ? (poleId as PoleId) : undefined}
+        activePoleId={isPolePage ? extractedPoleId : undefined}
       />
       {showModuleNav && (
         <ModuleNavigation
-          poleId={isPolePage ? (poleId as PoleId) : undefined}
+          poleId={isPolePage ? extractedPoleId : undefined}
           transversalModule={transversalModule}
           sidebarCollapsed={sidebarCollapsed}
         />
