@@ -51,6 +51,31 @@ import Subscriptions from "./pages/modules/finance/Subscriptions";
 import Salaries from "./pages/modules/finance/Salaries";
 import GuaranteeFund from "./pages/modules/finance/GuaranteeFund";
 
+// Tech module pages
+import TechDashboard from "./pages/modules/tech/TechDashboard";
+import Deployments from "./pages/modules/tech/Deployments";
+import Infrastructure from "./pages/modules/tech/Infrastructure";
+import Security from "./pages/modules/tech/Security";
+import Catalog from "./pages/modules/tech/Catalog";
+
+// RH module pages
+import RHDashboard from "./pages/modules/rh/RHDashboard";
+import Employees from "./pages/modules/rh/Employees";
+import RHOnboarding from "./pages/modules/rh/Onboarding";
+import Attendance from "./pages/modules/rh/Attendance";
+import Leave from "./pages/modules/rh/Leave";
+import Training from "./pages/modules/rh/Training";
+import Publications from "./pages/modules/rh/Publications";
+
+// Audit module pages
+import AuditDashboard from "./pages/modules/audit/AuditDashboard";
+import FieldAudits from "./pages/modules/audit/FieldAudits";
+import SupplierAudits from "./pages/modules/audit/SupplierAudits";
+import OpsAudits from "./pages/modules/audit/OpsAudits";
+import AuditReports from "./pages/modules/audit/Reports";
+import NonConformities from "./pages/modules/audit/NonConformities";
+import Sanctions from "./pages/modules/audit/Sanctions";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -71,6 +96,7 @@ const App = () => (
             <Route path="/pole/direction/vision" element={<VisionRoadmap />} />
             <Route path="/pole/direction/governance" element={<GroupGovernance />} />
             <Route path="/pole/direction/reports" element={<ConsolidatedReports />} />
+            <Route path="/pole/direction/access" element={<SubSectionPage />} />
             
             {/* Supplier module */}
             <Route path="/pole/supplier" element={<PoleDashboard />} />
@@ -108,6 +134,31 @@ const App = () => (
             <Route path="/pole/ops/shipments" element={<Shipments />} />
             <Route path="/pole/ops/incidents" element={<LogisticsIncidents />} />
             <Route path="/pole/ops/partners" element={<Partners />} />
+            
+            {/* Tech module */}
+            <Route path="/pole/tech" element={<TechDashboard />} />
+            <Route path="/pole/tech/deployments" element={<Deployments />} />
+            <Route path="/pole/tech/infrastructure" element={<Infrastructure />} />
+            <Route path="/pole/tech/security" element={<Security />} />
+            <Route path="/pole/tech/catalog" element={<Catalog />} />
+            
+            {/* RH module */}
+            <Route path="/pole/rh" element={<RHDashboard />} />
+            <Route path="/pole/rh/employees" element={<Employees />} />
+            <Route path="/pole/rh/onboarding" element={<RHOnboarding />} />
+            <Route path="/pole/rh/attendance" element={<Attendance />} />
+            <Route path="/pole/rh/leave" element={<Leave />} />
+            <Route path="/pole/rh/training" element={<Training />} />
+            <Route path="/pole/rh/publications" element={<Publications />} />
+            
+            {/* Audit module */}
+            <Route path="/pole/audit" element={<AuditDashboard />} />
+            <Route path="/pole/audit/field" element={<FieldAudits />} />
+            <Route path="/pole/audit/supplier" element={<SupplierAudits />} />
+            <Route path="/pole/audit/ops" element={<OpsAudits />} />
+            <Route path="/pole/audit/reports" element={<AuditReports />} />
+            <Route path="/pole/audit/nonconformities" element={<NonConformities />} />
+            <Route path="/pole/audit/sanctions" element={<Sanctions />} />
             
             {/* Other pole routes with generic sub-sections */}
             <Route path="/pole/:poleId" element={<PoleDashboard />} />
