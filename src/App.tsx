@@ -76,6 +76,35 @@ import AuditReports from "./pages/modules/audit/Reports";
 import NonConformities from "./pages/modules/audit/NonConformities";
 import Sanctions from "./pages/modules/audit/Sanctions";
 
+// Compliance module pages
+import ComplianceDashboard from "./pages/modules/compliance/ComplianceDashboard";
+import Contracts from "./pages/modules/compliance/Contracts";
+import Policies from "./pages/modules/compliance/Policies";
+import Disputes from "./pages/modules/compliance/Disputes";
+import ComplianceRiskRegister from "./pages/modules/compliance/RiskRegister";
+
+// RSE module pages
+import RSEDashboard from "./pages/modules/rse/RSEDashboard";
+import ValidatedPackaging from "./pages/modules/rse/ValidatedPackaging";
+import RecyclingStats from "./pages/modules/rse/RecyclingStats";
+import CustomerPoints from "./pages/modules/rse/CustomerPoints";
+import CO2Impact from "./pages/modules/rse/CO2Impact";
+import ESGReports from "./pages/modules/rse/ESGReports";
+
+// Marketing module pages
+import MarketingDashboard from "./pages/modules/marketing/MarketingDashboard";
+import Campaigns from "./pages/modules/marketing/Campaigns";
+import Content from "./pages/modules/marketing/Content";
+import Podcasts from "./pages/modules/marketing/Podcasts";
+import Analytics from "./pages/modules/marketing/Analytics";
+
+// Risk module pages
+import RiskDashboard from "./pages/modules/risk/RiskDashboard";
+import ActiveIncidents from "./pages/modules/risk/ActiveIncidents";
+import RiskRegisterModule from "./pages/modules/risk/RiskRegisterModule";
+import IncidentHistory from "./pages/modules/risk/IncidentHistory";
+import RiskMetrics from "./pages/modules/risk/RiskMetrics";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -159,6 +188,35 @@ const App = () => (
             <Route path="/pole/audit/reports" element={<AuditReports />} />
             <Route path="/pole/audit/nonconformities" element={<NonConformities />} />
             <Route path="/pole/audit/sanctions" element={<Sanctions />} />
+            
+            {/* Compliance module */}
+            <Route path="/pole/compliance" element={<ComplianceDashboard />} />
+            <Route path="/pole/compliance/contracts" element={<Contracts />} />
+            <Route path="/pole/compliance/policies" element={<Policies />} />
+            <Route path="/pole/compliance/disputes" element={<Disputes />} />
+            <Route path="/pole/compliance/risks" element={<ComplianceRiskRegister />} />
+            
+            {/* RSE module */}
+            <Route path="/pole/rse" element={<RSEDashboard />} />
+            <Route path="/pole/rse/packaging" element={<ValidatedPackaging />} />
+            <Route path="/pole/rse/recycling" element={<RecyclingStats />} />
+            <Route path="/pole/rse/points" element={<CustomerPoints />} />
+            <Route path="/pole/rse/co2" element={<CO2Impact />} />
+            <Route path="/pole/rse/esg" element={<ESGReports />} />
+            
+            {/* Marketing module */}
+            <Route path="/pole/marketing" element={<MarketingDashboard />} />
+            <Route path="/pole/marketing/campaigns" element={<Campaigns />} />
+            <Route path="/pole/marketing/content" element={<Content />} />
+            <Route path="/pole/marketing/podcasts" element={<Podcasts />} />
+            <Route path="/pole/marketing/analytics" element={<Analytics />} />
+            
+            {/* Risk module */}
+            <Route path="/pole/risk" element={<RiskDashboard />} />
+            <Route path="/pole/risk/active" element={<ActiveIncidents />} />
+            <Route path="/pole/risk/register" element={<RiskRegisterModule />} />
+            <Route path="/pole/risk/history" element={<IncidentHistory />} />
+            <Route path="/pole/risk/metrics" element={<RiskMetrics />} />
             
             {/* Other pole routes with generic sub-sections */}
             <Route path="/pole/:poleId" element={<PoleDashboard />} />
