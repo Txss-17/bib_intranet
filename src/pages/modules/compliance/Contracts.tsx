@@ -4,9 +4,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Eye, Download } from 'lucide-react';
+import { Search, Plus, Eye, Download, Edit } from 'lucide-react';
+import { toast } from 'sonner';
+import ContractForm from '@/components/forms/ContractForm';
 
-const contracts = [
+const initialContracts = [
   { id: 'C-2024-089', title: 'Contrat fournisseur ABC', type: 'Fournisseur', startDate: '2024-01-15', endDate: '2025-01-14', status: 'active', value: '45 000 €' },
   { id: 'C-2024-088', title: 'Accord de partenariat XYZ', type: 'Partenariat', startDate: '2024-02-01', endDate: '2026-01-31', status: 'active', value: '120 000 €' },
   { id: 'C-2024-087', title: 'Contrat de service IT', type: 'Service', startDate: '2024-01-01', endDate: '2024-12-31', status: 'expiring', value: '35 000 €' },
@@ -16,11 +18,41 @@ const contracts = [
 
 export default function Contracts() {
   const [search, setSearch] = useState('');
+  const [contracts, setContracts] = useState(initialContracts);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingContract, setEditingContract] = useState<typeof initialContracts[0] | undefined>();
 
   const filtered = contracts.filter(c => 
     c.title.toLowerCase().includes(search.toLowerCase()) ||
     c.id.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleSubmit = (data: any) => {
+    if (editingContract) {
+      setContracts(contracts.map(c => 
+        c.id === editingContract.id ? { ...c, ...data } : c
+      ));
+      toast.success('Contrat modifié avec succès');
+    } else {
+      const newContract = {
+        id: `C-2024-${String(90 + contracts.length).padStart(3, '0')}`,
+        ...data
+      };
+      setContracts([newContract, ...contracts]);
+      toast.success('Contrat créé avec succès');
+    }
+    setEditingContract(undefined);
+  };
+
+  const handleEdit = (contract: typeof initialContracts[0]) => {
+    setEditingContract(contract);
+    setFormOpen(true);
+  };
+
+  const handleNew = () => {
+    setEditingContract(undefined);
+    setFormOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -29,7 +61,7 @@ export default function Contracts() {
           <h1 className="text-2xl font-bold">Contrats</h1>
           <p className="text-muted-foreground">Gestion des contrats et accords</p>
         </div>
-        <Button><Plus className="mr-2 h-4 w-4" /> Nouveau contrat</Button>
+        <Button onClick={handleNew}><Plus className="mr-2 h-4 w-4" /> Nouveau contrat</Button>
       </div>
 
       <Card>
@@ -81,6 +113,7 @@ export default function Contracts() {
                   <TableCell>
                     <div className="flex gap-2">
                       <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(contract)}><Edit className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button>
                     </div>
                   </TableCell>
@@ -90,6 +123,13 @@ export default function Contracts() {
           </Table>
         </CardContent>
       </Card>
+
+      <ContractForm 
+        open={formOpen} 
+        onOpenChange={setFormOpen} 
+        contract={editingContract}
+        onSubmit={handleSubmit}
+      />
     </div>
   );
 }
