@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Leaf, Package, Recycle, Users, TrendingDown } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { PieChart, Pie, Cell, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const stats = [
   { label: 'Empreinte CO₂ (tonnes)', value: '1,245', icon: TrendingDown, trend: '-12%', color: 'text-green-600' },
@@ -15,6 +15,23 @@ const objectives = [
   { name: 'Packaging recyclable', target: 100, current: 89, unit: '%' },
   { name: 'Fournisseurs certifiés', target: 50, current: 38, unit: '' },
   { name: 'Score ESG', target: 85, current: 72, unit: '/100' },
+];
+
+const co2Evolution = [
+  { month: 'Jan', emissions: 145, target: 130 },
+  { month: 'Fév', emissions: 138, target: 128 },
+  { month: 'Mar', emissions: 125, target: 125 },
+  { month: 'Avr', emissions: 118, target: 122 },
+  { month: 'Mai', emissions: 110, target: 120 },
+  { month: 'Juin', emissions: 102, target: 118 },
+];
+
+const emissionsByCategory = [
+  { name: 'Transport', value: 485, color: 'hsl(var(--chart-1))' },
+  { name: 'Production', value: 312, color: 'hsl(var(--chart-2))' },
+  { name: 'Packaging', value: 198, color: 'hsl(var(--chart-3))' },
+  { name: 'Bureaux', value: 150, color: 'hsl(var(--chart-4))' },
+  { name: 'Autres', value: 100, color: 'hsl(var(--chart-5))' },
 ];
 
 export default function RSEDashboard() {
@@ -42,6 +59,83 @@ export default function RSEDashboard() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>Évolution des émissions CO₂</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={280}>
+              <AreaChart data={co2Evolution}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="month" className="text-xs" />
+                <YAxis className="text-xs" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }} 
+                />
+                <Legend />
+                <Area 
+                  type="monotone" 
+                  dataKey="emissions" 
+                  name="Émissions réelles"
+                  stroke="hsl(var(--chart-1))" 
+                  fill="hsl(var(--chart-1))" 
+                  fillOpacity={0.3}
+                />
+                <Area 
+                  type="monotone" 
+                  dataKey="target" 
+                  name="Objectif"
+                  stroke="hsl(var(--chart-2))" 
+                  fill="hsl(var(--chart-2))" 
+                  fillOpacity={0.1}
+                  strokeDasharray="5 5"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Répartition des émissions</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={280}>
+              <PieChart>
+                <Pie
+                  data={emissionsByCategory}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={100}
+                  paddingAngle={2}
+                  dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  labelLine={false}
+                >
+                  {emissionsByCategory.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  formatter={(value: number) => [`${value} tonnes`, 'CO₂']}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))', 
+                    border: '1px solid hsl(var(--border))',
+                    borderRadius: '8px'
+                  }} 
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
