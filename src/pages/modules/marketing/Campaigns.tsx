@@ -4,7 +4,19 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Eye, Edit, BarChart } from 'lucide-react';
+ import { Search, Plus, Eye, Edit, BarChart } from 'lucide-react';
+ import { ExportButtons } from '@/components/ExportButtons';
+ 
+ const campaignColumns = [
+   { header: 'ID', accessor: 'id' },
+   { header: 'Nom', accessor: 'name' },
+   { header: 'Type', accessor: 'type' },
+   { header: 'Date début', accessor: 'startDate' },
+   { header: 'Date fin', accessor: 'endDate' },
+   { header: 'Budget', accessor: 'budget' },
+   { header: 'Dépensé', accessor: 'spent' },
+   { header: 'Statut', accessor: 'status' },
+ ];
 import { toast } from 'sonner';
 import CampaignForm from '@/components/forms/CampaignForm';
 
@@ -63,6 +75,12 @@ export default function Campaigns() {
           <p className="text-muted-foreground">Gestion des campagnes marketing</p>
         </div>
         <Button onClick={handleNew}><Plus className="mr-2 h-4 w-4" /> Nouvelle campagne</Button>
+         <ExportButtons
+           filename="campagnes-marketing"
+           title="Liste des campagnes marketing"
+           columns={campaignColumns}
+           data={filtered}
+         />
       </div>
 
       <Card>

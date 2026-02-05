@@ -1,11 +1,27 @@
 import React from 'react';
-import { 
-  FileBarChart, Download, Calendar, TrendingUp,
+ import { 
+   FileBarChart, Calendar, TrendingUp,
   DollarSign, Users, Package, Leaf
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+ import { Button } from '@/components/ui/button';
+ import { ExportButtons } from '@/components/ExportButtons';
+ 
+ const reportColumns = [
+   { header: 'ID', accessor: 'id' },
+   { header: 'Titre', accessor: 'title' },
+   { header: 'Type', accessor: 'type' },
+   { header: 'Date', accessor: 'date' },
+   { header: 'Statut', accessor: 'status' },
+ ];
+ 
+ const kpiColumns = [
+   { header: 'Métrique', accessor: 'metric' },
+   { header: 'Valeur actuelle', accessor: 'current' },
+   { header: 'Valeur précédente', accessor: 'previous' },
+   { header: 'Évolution (%)', accessor: 'change' },
+ ];
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const reports = [
@@ -53,10 +69,12 @@ const ConsolidatedReports = () => {
           </h1>
           <p className="text-muted-foreground mt-1">Synthèse et rapports multi-pôles</p>
         </div>
-        <Button>
-          <Download className="h-4 w-4 mr-2" />
-          Exporter tout
-        </Button>
+         <ExportButtons
+           filename="rapports-consolides"
+           title="Rapports Consolidés"
+           columns={reportColumns}
+           data={reports}
+         />
       </div>
 
       {/* KPI Summary Cards */}
@@ -162,9 +180,19 @@ const ConsolidatedReports = () => {
                       <Badge variant={report.status === 'ready' ? 'default' : 'secondary'}>
                         {report.status === 'ready' ? 'Prêt' : 'Brouillon'}
                       </Badge>
-                      <Button variant="outline" size="sm">
-                        <Download className="h-4 w-4" />
-                      </Button>
+                       <ExportButtons
+                         filename={`rapport-${report.id}`}
+                         title={report.title}
+                         columns={kpiColumns}
+                         data={[
+                           { metric: 'Revenue', current: `€${(kpiSummary.revenue.current / 1000000).toFixed(2)}M`, previous: `€${(kpiSummary.revenue.previous / 1000000).toFixed(2)}M`, change: `+${kpiSummary.revenue.change}%` },
+                           { metric: 'Utilisateurs', current: kpiSummary.users.current, previous: kpiSummary.users.previous, change: `+${kpiSummary.users.change}%` },
+                           { metric: 'Commandes', current: kpiSummary.orders.current, previous: kpiSummary.orders.previous, change: `+${kpiSummary.orders.change}%` },
+                           { metric: 'Score ESG', current: `${kpiSummary.esg.current}/100`, previous: `${kpiSummary.esg.previous}/100`, change: `+${kpiSummary.esg.change}` },
+                         ]}
+                         variant="outline"
+                         size="sm"
+                       />
                     </div>
                   </div>
                 </CardContent>

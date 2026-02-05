@@ -4,7 +4,18 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Eye, Download } from 'lucide-react';
+ import { Search, Eye } from 'lucide-react';
+ import { ExportButtons } from '@/components/ExportButtons';
+ 
+ const incidentColumns = [
+   { header: 'ID', accessor: 'id' },
+   { header: 'Titre', accessor: 'title' },
+   { header: 'Catégorie', accessor: 'category' },
+   { header: 'Sévérité', accessor: 'severity' },
+   { header: 'Résolu le', accessor: 'resolvedAt' },
+   { header: 'Durée résolution', accessor: 'resolution' },
+   { header: 'Cause racine', accessor: 'rootCause' },
+ ];
 
 const incidents = [
   { id: 'INC-043', title: 'Problème système paiement', category: 'Finance', severity: 'medium', resolvedAt: '2024-02-17 18:30', resolution: '8h', rootCause: 'Erreur configuration API' },
@@ -29,7 +40,12 @@ export default function IncidentHistory() {
           <h1 className="text-2xl font-bold">Historique des incidents</h1>
           <p className="text-muted-foreground">Incidents résolus et analyses post-mortem</p>
         </div>
-        <Button variant="outline"><Download className="mr-2 h-4 w-4" /> Exporter</Button>
+         <ExportButtons
+           filename="historique-incidents"
+           title="Historique des incidents"
+           columns={incidentColumns}
+           data={filtered}
+         />
       </div>
 
       <Card>
