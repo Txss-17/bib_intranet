@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Package, Search, Filter, Loader2, Eye, MoreHorizontal } from "lucide-react";
+import { ExportButtons } from '@/components/ExportButtons';
 import { useOrders, Order } from "@/hooks/useOps";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -60,6 +61,18 @@ const Orders = () => {
           <Package className="h-4 w-4 mr-2" />
           Nouvelle commande
         </Button>
+        <ExportButtons
+          filename="commandes"
+          title="Liste des commandes"
+          columns={[
+            { header: 'N° Commande', accessor: 'order_number' },
+            { header: 'Date', accessor: 'created_at' },
+            { header: 'Montant', accessor: 'total_amount' },
+            { header: 'Destination', accessor: 'shipping_address' },
+            { header: 'Statut', accessor: 'status' },
+          ]}
+          data={filteredOrders}
+        />
       </div>
 
       {/* Filters */}

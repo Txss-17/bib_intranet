@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { 
   MessageSquare, Search, Clock, CheckCircle2,
-  AlertCircle, User, Plus, Loader2
+  AlertCircle, User, Plus, Loader2, Download
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ExportButtons } from '@/components/ExportButtons';
 import { useSupportTickets, useSupportTicketStats } from '@/hooks/useLifecycle';
 
 const SupportTickets = () => {
@@ -69,10 +70,28 @@ const SupportTickets = () => {
           </h1>
           <p className="text-muted-foreground mt-1">Tickets, historique des échanges</p>
         </div>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Nouveau ticket
-        </Button>
+        <div className="flex gap-2">
+          <ExportButtons
+            filename="tickets-support"
+            title="Tickets Support"
+            columns={[
+              { header: 'ID', accessor: 'id' },
+              { header: 'Sujet', accessor: 'subject' },
+              { header: 'Entreprise', accessor: 'companyName' },
+              { header: 'Statut', accessor: 'status' },
+              { header: 'Priorité', accessor: 'priority' },
+              { header: 'Date création', accessor: 'created_at' },
+            ]}
+            data={filteredTickets.map(t => ({
+              ...t,
+              companyName: (t.user_account as any)?.company_name || 'N/A',
+            }))}
+          />
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouveau ticket
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}

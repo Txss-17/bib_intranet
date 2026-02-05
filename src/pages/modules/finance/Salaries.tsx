@@ -2,16 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Users,
-  Wallet,
-  CheckCircle,
-  Clock,
-  Calendar,
-  TrendingUp,
-  Download,
-  Loader2
-} from "lucide-react";
+import { Users, Wallet, CheckCircle, Clock, Calendar, TrendingUp, Loader2 } from "lucide-react";
+import { ExportButtons } from '@/components/ExportButtons';
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -90,10 +82,22 @@ const Salaries = () => {
               <SelectItem value={`11-2025`}>Novembre 2025</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
+          <ExportButtons
+            filename={`salaires-${selectedMonth}-${selectedYear}`}
+            title={`Salaires ${new Date(selectedYear, selectedMonth - 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`}
+            columns={[
+              { header: 'Employé', accessor: 'employeeName' },
+              { header: 'Brut', accessor: 'gross_amount' },
+              { header: 'Net', accessor: 'net_amount' },
+              { header: 'Primes', accessor: 'bonuses' },
+              { header: 'Statut', accessor: 'status' },
+              { header: 'Date paiement', accessor: 'paid_date' },
+            ]}
+            data={(salaries || []).map(s => ({
+              ...s,
+              employeeName: `${(s.employee as any)?.first_name || ''} ${(s.employee as any)?.last_name || ''}`.trim() || 'N/A',
+            }))}
+          />
           <Button>
             <Calendar className="h-4 w-4 mr-2" />
             Traiter paie

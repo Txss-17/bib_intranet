@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ExportButtons } from '@/components/ExportButtons';
 import {
   Dialog,
   DialogContent,
@@ -148,7 +149,7 @@ export default function PendingProducts() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -170,6 +171,21 @@ export default function PendingProducts() {
             ))}
           </SelectContent>
         </Select>
+        <ExportButtons
+          filename="produits-en-attente"
+          title="Produits en attente de validation"
+          columns={[
+            { header: 'Nom', accessor: 'name' },
+            { header: 'SKU', accessor: 'sku' },
+            { header: 'Fournisseur', accessor: 'supplier' },
+            { header: 'Catégorie', accessor: 'category' },
+            { header: 'MOQ', accessor: 'moq' },
+            { header: 'Prix unitaire', accessor: 'unitPrice' },
+            { header: 'Priorité', accessor: 'priority' },
+            { header: 'Statut packaging', accessor: 'packagingStatus' },
+          ]}
+          data={filteredProducts}
+        />
       </div>
 
       {/* Products List */}

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Truck, Search, Filter, Loader2, MapPin, ExternalLink } from "lucide-react";
+import { ExportButtons } from '@/components/ExportButtons';
 import { useShipments, Shipment } from "@/hooks/useOps";
 import { useState } from "react";
 import { format } from "date-fns";
@@ -63,6 +64,20 @@ const Shipments = () => {
           <Truck className="h-4 w-4 mr-2" />
           Nouvelle expédition
         </Button>
+        <ExportButtons
+          filename="expeditions"
+          title="Liste des expéditions"
+          columns={[
+            { header: 'N° Suivi', accessor: 'tracking_number' },
+            { header: 'Transporteur', accessor: 'carrier' },
+            { header: 'Destination', accessor: 'destination_address' },
+            { header: 'Poids (kg)', accessor: 'weight_kg' },
+            { header: 'Livraison prévue', accessor: 'estimated_delivery' },
+            { header: 'Coût', accessor: 'shipping_cost' },
+            { header: 'Statut', accessor: 'status' },
+          ]}
+          data={filteredShipments}
+        />
       </div>
 
       {/* Stats Cards */}

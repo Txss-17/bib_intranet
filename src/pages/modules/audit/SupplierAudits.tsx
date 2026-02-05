@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, Building, Calendar, FileText } from 'lucide-react';
+import { ExportButtons } from '@/components/ExportButtons';
 
 const supplierAudits = [
   { id: 1, supplier: 'FreshFarm Bio', category: 'Produits frais', auditor: 'Paul Lefevre', date: '2025-02-01', status: 'completed', score: 92, findings: 2 },
@@ -49,6 +50,20 @@ export default function SupplierAudits() {
           <Plus className="mr-2 h-4 w-4" />
           Planifier un audit
         </Button>
+        <ExportButtons
+          filename="audits-fournisseurs"
+          title="Audits fournisseurs"
+          columns={[
+            { header: 'Fournisseur', accessor: 'supplier' },
+            { header: 'Catégorie', accessor: 'category' },
+            { header: 'Auditeur', accessor: 'auditor' },
+            { header: 'Date', accessor: 'date' },
+            { header: 'Statut', accessor: 'status' },
+            { header: 'Score', accessor: 'score' },
+            { header: 'Non-conformités', accessor: 'findings' },
+          ]}
+          data={filteredAudits}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">

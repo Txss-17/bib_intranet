@@ -5,12 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Search, 
-  Download,
   ArrowUpRight,
   ArrowDownRight,
   Eye,
   Loader2
 } from "lucide-react";
+import { ExportButtons } from '@/components/ExportButtons';
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useCashflows } from "@/hooks/useFinance";
@@ -54,10 +54,19 @@ const Transactions = () => {
           <h1 className="text-3xl font-bold text-foreground">Transactions</h1>
           <p className="text-muted-foreground mt-1">Historique complet des opérations financières</p>
         </div>
-        <Button variant="outline">
-          <Download className="h-4 w-4 mr-2" />
-          Exporter CSV
-        </Button>
+        <ExportButtons
+          filename="transactions"
+          title="Historique des transactions"
+          columns={[
+            { header: 'Date', accessor: 'transaction_date' },
+            { header: 'Description', accessor: 'description' },
+            { header: 'Catégorie', accessor: 'category' },
+            { header: 'Référence', accessor: 'reference' },
+            { header: 'Type', accessor: 'type' },
+            { header: 'Montant', accessor: 'amount' },
+          ]}
+          data={filteredTransactions}
+        />
       </div>
 
       {/* Summary */}

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, MapPin, Calendar, FileText } from 'lucide-react';
+import { ExportButtons } from '@/components/ExportButtons';
 
 const fieldAudits = [
   { id: 1, location: 'Entrepôt Lyon', type: 'Stockage', auditor: 'Paul Lefevre', scheduledDate: '2025-02-05', status: 'scheduled', score: null },
@@ -42,6 +43,19 @@ export default function FieldAudits() {
           <Plus className="mr-2 h-4 w-4" />
           Planifier un audit
         </Button>
+        <ExportButtons
+          filename="audits-terrain"
+          title="Audits terrain"
+          columns={[
+            { header: 'Lieu', accessor: 'location' },
+            { header: 'Type', accessor: 'type' },
+            { header: 'Auditeur', accessor: 'auditor' },
+            { header: 'Date', accessor: 'scheduledDate' },
+            { header: 'Statut', accessor: 'status' },
+            { header: 'Score', accessor: 'score' },
+          ]}
+          data={filteredAudits}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
