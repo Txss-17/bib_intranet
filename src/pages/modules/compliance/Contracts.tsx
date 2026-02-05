@@ -4,9 +4,20 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Eye, Download, Edit } from 'lucide-react';
+ import { Search, Plus, Eye, Edit } from 'lucide-react';
 import { toast } from 'sonner';
-import ContractForm from '@/components/forms/ContractForm';
+ import ContractForm from '@/components/forms/ContractForm';
+ import { ExportButtons } from '@/components/ExportButtons';
+ 
+ const contractColumns = [
+   { header: 'ID', accessor: 'id' },
+   { header: 'Titre', accessor: 'title' },
+   { header: 'Type', accessor: 'type' },
+   { header: 'Date début', accessor: 'startDate' },
+   { header: 'Date fin', accessor: 'endDate' },
+   { header: 'Valeur', accessor: 'value' },
+   { header: 'Statut', accessor: 'status' },
+ ];
 
 const initialContracts = [
   { id: 'C-2024-089', title: 'Contrat fournisseur ABC', type: 'Fournisseur', startDate: '2024-01-15', endDate: '2025-01-14', status: 'active', value: '45 000 €' },
@@ -62,6 +73,12 @@ export default function Contracts() {
           <p className="text-muted-foreground">Gestion des contrats et accords</p>
         </div>
         <Button onClick={handleNew}><Plus className="mr-2 h-4 w-4" /> Nouveau contrat</Button>
+         <ExportButtons
+           filename="contrats"
+           title="Liste des contrats"
+           columns={contractColumns}
+           data={filtered}
+         />
       </div>
 
       <Card>
@@ -114,7 +131,6 @@ export default function Contracts() {
                     <div className="flex gap-2">
                       <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" onClick={() => handleEdit(contract)}><Edit className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon"><Download className="h-4 w-4" /></Button>
                     </div>
                   </TableCell>
                 </TableRow>
