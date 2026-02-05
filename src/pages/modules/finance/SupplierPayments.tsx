@@ -14,6 +14,7 @@ import {
   FileText,
   Loader2
 } from "lucide-react";
+import { ExportButtons } from '@/components/ExportButtons';
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSupplierPayments, useSupplierPaymentStats, useUpdateSupplierPayment } from "@/hooks/useFinance";
@@ -83,6 +84,22 @@ const SupplierPayments = () => {
           <Calendar className="h-4 w-4 mr-2" />
           Planifier paiement
         </Button>
+        <ExportButtons
+          filename="paiements-fournisseurs"
+          title="Paiements Fournisseurs"
+          columns={[
+            { header: 'Fournisseur', accessor: 'supplierName' },
+            { header: 'Facture', accessor: 'invoice_number' },
+            { header: 'Échéance', accessor: 'due_date' },
+            { header: 'Mode', accessor: 'payment_method' },
+            { header: 'Statut', accessor: 'status' },
+            { header: 'Montant', accessor: 'amount' },
+          ]}
+          data={filteredPayments.map(p => ({
+            ...p,
+            supplierName: (p.suppliers as any)?.name || 'N/A',
+          }))}
+        />
       </div>
 
       {/* Summary Cards */}

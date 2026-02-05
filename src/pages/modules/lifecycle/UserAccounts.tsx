@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { ExportButtons } from '@/components/ExportButtons';
 import { useUserAccounts, useUserAccountStats } from '@/hooks/useLifecycle';
 
 const UserAccounts = () => {
@@ -73,7 +74,21 @@ const UserAccounts = () => {
           </h1>
           <p className="text-muted-foreground mt-1">CA, stock engagé, historique paiements</p>
         </div>
-        <Button>Exporter CSV</Button>
+        <ExportButtons
+          filename="comptes-utilisateurs"
+          title="Comptes Utilisateurs"
+          columns={[
+            { header: 'Entreprise', accessor: 'company_name' },
+            { header: 'Contact', accessor: 'contact_name' },
+            { header: 'Email', accessor: 'contact_email' },
+            { header: 'CA', accessor: 'revenue' },
+            { header: 'Stock engagé', accessor: 'stock_engaged' },
+            { header: 'Paiement', accessor: 'payment_status' },
+            { header: 'Risque', accessor: 'risk_level' },
+            { header: 'Dernière commande', accessor: 'last_order_date' },
+          ]}
+          data={accounts || []}
+        />
       </div>
 
       {/* Stats */}

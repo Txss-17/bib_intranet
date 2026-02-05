@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, Settings, Calendar, FileText } from 'lucide-react';
+import { ExportButtons } from '@/components/ExportButtons';
 
 const opsAudits = [
   { id: 1, process: 'Processus livraison', scope: 'National', auditor: 'Marie Dubois', date: '2025-01-28', status: 'completed', score: 78, recommendations: 4 },
@@ -42,6 +43,20 @@ export default function OpsAudits() {
           <Plus className="mr-2 h-4 w-4" />
           Planifier un audit
         </Button>
+        <ExportButtons
+          filename="audits-ops"
+          title="Audits opérationnels"
+          columns={[
+            { header: 'Processus', accessor: 'process' },
+            { header: 'Périmètre', accessor: 'scope' },
+            { header: 'Auditeur', accessor: 'auditor' },
+            { header: 'Date', accessor: 'date' },
+            { header: 'Statut', accessor: 'status' },
+            { header: 'Score', accessor: 'score' },
+            { header: 'Recommandations', accessor: 'recommendations' },
+          ]}
+          data={filteredAudits}
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -92,7 +107,7 @@ export default function OpsAudits() {
         </Card>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center justify-between gap-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input

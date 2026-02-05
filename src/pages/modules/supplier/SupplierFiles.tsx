@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { ExportButtons } from '@/components/ExportButtons';
 import {
   Select,
   SelectContent,
@@ -181,6 +182,21 @@ export default function SupplierFiles() {
           <Plus className="h-4 w-4 mr-2" />
           Nouveau fournisseur
         </Button>
+        <ExportButtons
+          filename="fournisseurs"
+          title="Liste des fournisseurs"
+          columns={[
+            { header: 'Nom', accessor: 'name' },
+            { header: 'Contact', accessor: 'contactName' },
+            { header: 'Email', accessor: 'email' },
+            { header: 'Téléphone', accessor: 'phone' },
+            { header: 'Pays', accessor: 'country' },
+            { header: 'Statut', accessor: 'status' },
+            { header: 'Score risque', accessor: 'riskScore' },
+            { header: 'Produits', accessor: 'productsCount' },
+          ]}
+          data={filteredSuppliers}
+        />
       </div>
 
       {/* Stats */}

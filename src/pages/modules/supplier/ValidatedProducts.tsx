@@ -31,6 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { ExportButtons } from '@/components/ExportButtons';
 
 // Mock data for validated products
 const mockValidatedProducts = [
@@ -228,6 +229,21 @@ export default function ValidatedProducts() {
             <SelectItem value="stock">Stock ↓</SelectItem>
           </SelectContent>
         </Select>
+        <ExportButtons
+          filename="produits-valides"
+          title="Produits validés"
+          columns={[
+            { header: 'Nom', accessor: 'name' },
+            { header: 'SKU', accessor: 'sku' },
+            { header: 'Fournisseur', accessor: 'supplier' },
+            { header: 'Catégorie', accessor: 'category' },
+            { header: 'Prix', accessor: 'unitPrice' },
+            { header: 'Stock', accessor: 'stock' },
+            { header: 'MOQ', accessor: 'moq' },
+            { header: 'Validé le', accessor: 'validatedAt' },
+          ]}
+          data={filteredProducts}
+        />
       </div>
 
       {/* Products Table */}
