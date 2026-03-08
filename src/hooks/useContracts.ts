@@ -16,17 +16,19 @@ export interface Contract {
   updated_at: string | null;
 }
 
+const from = (table: string) => (supabase as any).from(table);
+
 export const useContracts = (search?: string) => {
   return useQuery({
     queryKey: ['contracts', search],
     queryFn: async () => {
-      let query = supabase.from('contracts').select('*').order('created_at', { ascending: false });
+      let query = from('contracts').select('*').order('created_at', { ascending: false });
       if (search) {
         query = query.or(`title.ilike.%${search}%,contract_number.ilike.%${search}%`);
       }
       const { data, error } = await query;
       if (error) throw error;
-      return data as Contract[];
+      return (data || []) as Contract[];
     },
   });
 };
@@ -35,7 +37,7 @@ export const useCreateContract = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (contract: Omit<Contract, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase.from('contracts').insert(contract).select().single();
+      const { data, error } = await from('contracts').insert(contract).select().single();
       if (error) throw error;
       return data;
     },
@@ -47,7 +49,7 @@ export const useUpdateContract = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Contract> & { id: string }) => {
-      const { data, error } = await supabase.from('contracts').update(updates).eq('id', id).select().single();
+      const { data, error } = await from('contracts').update(updates).eq('id', id).select().single();
       if (error) throw error;
       return data;
     },

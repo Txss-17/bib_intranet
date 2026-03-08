@@ -17,17 +17,19 @@ export interface Dispute {
   updated_at: string | null;
 }
 
+const from = (table: string) => (supabase as any).from(table);
+
 export const useDisputes = (search?: string) => {
   return useQuery({
     queryKey: ['disputes', search],
     queryFn: async () => {
-      let query = supabase.from('disputes').select('*').order('created_at', { ascending: false });
+      let query = from('disputes').select('*').order('created_at', { ascending: false });
       if (search) {
         query = query.or(`subject.ilike.%${search}%,party.ilike.%${search}%`);
       }
       const { data, error } = await query;
       if (error) throw error;
-      return data as Dispute[];
+      return (data || []) as Dispute[];
     },
   });
 };
@@ -36,7 +38,7 @@ export const useCreateDispute = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (dispute: Omit<Dispute, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase.from('disputes').insert(dispute).select().single();
+      const { data, error } = await from('disputes').insert(dispute).select().single();
       if (error) throw error;
       return data;
     },
@@ -48,7 +50,7 @@ export const useUpdateDispute = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Dispute> & { id: string }) => {
-      const { data, error } = await supabase.from('disputes').update(updates).eq('id', id).select().single();
+      const { data, error } = await from('disputes').update(updates).eq('id', id).select().single();
       if (error) throw error;
       return data;
     },

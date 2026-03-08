@@ -18,11 +18,13 @@ export interface ShipmentRecord {
   updated_at: string | null;
 }
 
+const from = (table: string) => (supabase as any).from(table);
+
 export const useShipmentRecords = (options?: { status?: string; carrier?: string }) => {
   return useQuery({
     queryKey: ['shipment-records', options],
     queryFn: async () => {
-      let query = supabase.from('shipments').select('*').order('created_at', { ascending: false });
+      let query = from('shipments').select('*').order('created_at', { ascending: false });
       if (options?.status && options.status !== 'all') {
         query = query.eq('status', options.status);
       }
@@ -31,7 +33,7 @@ export const useShipmentRecords = (options?: { status?: string; carrier?: string
       }
       const { data, error } = await query;
       if (error) throw error;
-      return data as ShipmentRecord[];
+      return (data || []) as ShipmentRecord[];
     },
   });
 };
@@ -40,7 +42,7 @@ export const useCreateShipment = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (shipment: Omit<ShipmentRecord, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase.from('shipments').insert(shipment).select().single();
+      const { data, error } = await from('shipments').insert(shipment).select().single();
       if (error) throw error;
       return data;
     },
@@ -52,7 +54,7 @@ export const useUpdateShipment = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<ShipmentRecord> & { id: string }) => {
-      const { data, error } = await supabase.from('shipments').update(updates).eq('id', id).select().single();
+      const { data, error } = await from('shipments').update(updates).eq('id', id).select().single();
       if (error) throw error;
       return data;
     },

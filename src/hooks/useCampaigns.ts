@@ -18,17 +18,19 @@ export interface Campaign {
   updated_at: string | null;
 }
 
+const from = (table: string) => (supabase as any).from(table);
+
 export const useCampaigns = (search?: string) => {
   return useQuery({
     queryKey: ['campaigns', search],
     queryFn: async () => {
-      let query = supabase.from('campaigns').select('*').order('created_at', { ascending: false });
+      let query = from('campaigns').select('*').order('created_at', { ascending: false });
       if (search) {
         query = query.or(`name.ilike.%${search}%,type.ilike.%${search}%`);
       }
       const { data, error } = await query;
       if (error) throw error;
-      return data as Campaign[];
+      return (data || []) as Campaign[];
     },
   });
 };
@@ -37,7 +39,7 @@ export const useCreateCampaign = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (campaign: Omit<Campaign, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase.from('campaigns').insert(campaign).select().single();
+      const { data, error } = await from('campaigns').insert(campaign).select().single();
       if (error) throw error;
       return data;
     },
@@ -49,7 +51,7 @@ export const useUpdateCampaign = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Campaign> & { id: string }) => {
-      const { data, error } = await supabase.from('campaigns').update(updates).eq('id', id).select().single();
+      const { data, error } = await from('campaigns').update(updates).eq('id', id).select().single();
       if (error) throw error;
       return data;
     },
