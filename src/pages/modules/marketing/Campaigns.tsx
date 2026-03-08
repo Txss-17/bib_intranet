@@ -1,152 +1,62 @@
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
- import { Search, Plus, Eye, Edit, BarChart } from 'lucide-react';
- import { ExportButtons } from '@/components/ExportButtons';
- 
- const campaignColumns = [
-   { header: 'ID', accessor: 'id' },
-   { header: 'Nom', accessor: 'name' },
-   { header: 'Type', accessor: 'type' },
-   { header: 'Date début', accessor: 'startDate' },
-   { header: 'Date fin', accessor: 'endDate' },
-   { header: 'Budget', accessor: 'budget' },
-   { header: 'Dépensé', accessor: 'spent' },
-   { header: 'Statut', accessor: 'status' },
- ];
-import { toast } from 'sonner';
+import { Search, Plus, Eye, Edit, BarChart, Loader2 } from 'lucide-react';
+import { ExportButtons } from '@/components/ExportButtons';
 import CampaignForm from '@/components/forms/CampaignForm';
-
-const initialCampaigns = [
-  { id: 'CMP-001', name: 'Lancement Printemps 2024', type: 'Multi-canal', startDate: '2024-03-01', endDate: '2024-04-30', budget: '15 000 €', spent: '8 500 €', status: 'active' },
-  { id: 'CMP-002', name: 'Newsletter Mensuelle Mars', type: 'Email', startDate: '2024-03-15', endDate: '2024-03-15', budget: '500 €', spent: '500 €', status: 'completed' },
-  { id: 'CMP-003', name: 'Campagne LinkedIn Q1', type: 'Social', startDate: '2024-01-15', endDate: '2024-03-31', budget: '8 000 €', spent: '7 200 €', status: 'active' },
-  { id: 'CMP-004', name: 'Partenariat Influenceurs', type: 'Influence', startDate: '2024-04-01', endDate: '2024-05-31', budget: '25 000 €', spent: '0 €', status: 'planned' },
-  { id: 'CMP-005', name: 'Retargeting Q1', type: 'Display', startDate: '2024-01-01', endDate: '2024-03-31', budget: '5 000 €', spent: '4 850 €', status: 'completed' },
-];
+import { useCampaigns, useCreateCampaign, useUpdateCampaign } from '@/hooks/useCampaigns';
 
 export default function Campaigns() {
   const [search, setSearch] = useState('');
-  const [campaigns, setCampaigns] = useState(initialCampaigns);
   const [formOpen, setFormOpen] = useState(false);
-  const [editingCampaign, setEditingCampaign] = useState<typeof initialCampaigns[0] | undefined>();
+  const [editingCampaign, setEditingCampaign] = useState<any>(undefined);
 
-  const filtered = campaigns.filter(c => 
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.type.toLowerCase().includes(search.toLowerCase())
-  );
+  const { data: campaigns = [], isLoading } = useCampaigns(search || undefined);
+  const createCampaign = useCreateCampaign();
+  const updateCampaign = useUpdateCampaign();
 
   const handleSubmit = (data: any) => {
     if (editingCampaign) {
-      setCampaigns(campaigns.map(c => 
-        c.id === editingCampaign.id ? { ...c, ...data } : c
-      ));
-      toast.success('Campagne modifiée avec succès');
+      updateCampaign.mutate({ id: editingCampaign.id, ...data }, { onSuccess: () => toast.success('Campagne modifiée') });
     } else {
-      const newCampaign = {
-        id: `CMP-${String(6 + campaigns.length).padStart(3, '0')}`,
-        spent: '0 €',
-        ...data
-      };
-      setCampaigns([newCampaign, ...campaigns]);
-      toast.success('Campagne créée avec succès');
+      const num = `CMP-${String(Math.floor(Math.random() * 999)).padStart(3, '0')}`;
+      createCampaign.mutate({ campaign_number: num, spent: '0 €', ...data }, { onSuccess: () => toast.success('Campagne créée') });
     }
     setEditingCampaign(undefined);
   };
 
-  const handleEdit = (campaign: typeof initialCampaigns[0]) => {
-    setEditingCampaign(campaign);
-    setFormOpen(true);
-  };
+  const handleEdit = (c: any) => { setEditingCampaign({ ...c, startDate: c.start_date, endDate: c.end_date }); setFormOpen(true); };
+  const handleNew = () => { setEditingCampaign(undefined); setFormOpen(true); };
 
-  const handleNew = () => {
-    setEditingCampaign(undefined);
-    setFormOpen(true);
-  };
+  if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Campagnes</h1>
-          <p className="text-muted-foreground">Gestion des campagnes marketing</p>
+        <div><h1 className="text-2xl font-bold">Campagnes</h1><p className="text-muted-foreground">Gestion des campagnes marketing</p></div>
+        <div className="flex gap-2">
+          <ExportButtons filename="campagnes-marketing" title="Liste des campagnes marketing" columns={[
+            { header: 'N°', accessor: 'campaign_number' }, { header: 'Nom', accessor: 'name' },
+            { header: 'Type', accessor: 'type' }, { header: 'Début', accessor: 'start_date' },
+            { header: 'Fin', accessor: 'end_date' }, { header: 'Budget', accessor: 'budget' },
+            { header: 'Dépensé', accessor: 'spent' }, { header: 'Statut', accessor: 'status' },
+          ]} data={campaigns} />
+          <Button onClick={handleNew}><Plus className="mr-2 h-4 w-4" />Nouvelle campagne</Button>
         </div>
-        <Button onClick={handleNew}><Plus className="mr-2 h-4 w-4" /> Nouvelle campagne</Button>
-         <ExportButtons
-           filename="campagnes-marketing"
-           title="Liste des campagnes marketing"
-           columns={campaignColumns}
-           data={filtered}
-         />
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Rechercher une campagne..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Période</TableHead>
-                <TableHead>Budget</TableHead>
-                <TableHead>Dépensé</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map((campaign) => (
-                <TableRow key={campaign.id}>
-                  <TableCell className="font-mono">{campaign.id}</TableCell>
-                  <TableCell className="font-medium">{campaign.name}</TableCell>
-                  <TableCell>{campaign.type}</TableCell>
-                  <TableCell className="text-sm">{campaign.startDate} → {campaign.endDate}</TableCell>
-                  <TableCell>{campaign.budget}</TableCell>
-                  <TableCell>{campaign.spent}</TableCell>
-                  <TableCell>
-                    <Badge variant={
-                      campaign.status === 'active' ? 'default' :
-                      campaign.status === 'completed' ? 'secondary' : 'outline'
-                    }>
-                      {campaign.status === 'active' ? 'Actif' :
-                       campaign.status === 'completed' ? 'Terminé' : 'Planifié'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon"><BarChart className="h-4 w-4" /></Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(campaign)}><Edit className="h-4 w-4" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <CampaignForm 
-        open={formOpen} 
-        onOpenChange={setFormOpen} 
-        campaign={editingCampaign}
-        onSubmit={handleSubmit}
-      />
+      <Card><CardHeader><div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Rechercher une campagne..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" /></div></CardHeader>
+        <CardContent><Table><TableHeader><TableRow><TableHead>N°</TableHead><TableHead>Nom</TableHead><TableHead>Type</TableHead><TableHead>Période</TableHead><TableHead>Budget</TableHead><TableHead>Dépensé</TableHead><TableHead>Statut</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
+          <TableBody>{campaigns.map((c) => (
+            <TableRow key={c.id}><TableCell className="font-mono">{c.campaign_number}</TableCell><TableCell className="font-medium">{c.name}</TableCell><TableCell>{c.type}</TableCell><TableCell className="text-sm">{c.start_date} → {c.end_date}</TableCell><TableCell>{c.budget || '-'}</TableCell><TableCell>{c.spent || '-'}</TableCell>
+              <TableCell><Badge variant={c.status === 'active' ? 'default' : c.status === 'completed' ? 'secondary' : 'outline'}>{c.status === 'active' ? 'Actif' : c.status === 'completed' ? 'Terminé' : 'Planifié'}</Badge></TableCell>
+              <TableCell><div className="flex gap-2"><Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => handleEdit(c)}><Edit className="h-4 w-4" /></Button></div></TableCell></TableRow>
+          ))}{campaigns.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucune campagne trouvée</TableCell></TableRow>}</TableBody></Table>
+        </CardContent></Card>
+      <CampaignForm open={formOpen} onOpenChange={setFormOpen} campaign={editingCampaign} onSubmit={handleSubmit} />
     </div>
   );
 }
