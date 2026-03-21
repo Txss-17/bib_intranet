@@ -129,7 +129,7 @@ const App = () => (
             <Route path="/pole/direction/access" element={<SubSectionPage />} />
             
             {/* Supplier module */}
-            <Route path="/pole/supplier" element={<PoleDashboard />} />
+            <Route path="/pole/supplier" element={<SupplierDashboard />} />
             <Route path="/pole/supplier/pending" element={<PendingProducts />} />
             <Route path="/pole/supplier/validated" element={<ValidatedProducts />} />
             <Route path="/pole/supplier/suppliers" element={<SupplierFiles />} />
