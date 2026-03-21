@@ -236,19 +236,19 @@ const App = () => (
             <Route path="/pole/:poleId" element={<PoleDashboard />} />
             <Route path="/pole/:poleId/:subSection" element={<SubSectionPage />} />
             
+            {/* R&D pole */}
+            <Route path="/pole/rd" element={<RDDashboard />} />
+            <Route path="/pole/rd/products" element={<RDProducts />} />
+            <Route path="/pole/rd/shops" element={<RDShops />} />
+            <Route path="/pole/rd/suppliers" element={<RDSuppliers />} />
+            <Route path="/pole/rd/frictions" element={<RDFrictions />} />
+            <Route path="/pole/rd/reports" element={<RDReports />} />
+            
             {/* Transversal modules */}
             <Route path="/modules/gateway" element={<GatewayDashboard />} />
             <Route path="/modules/gateway/:subSection" element={<GatewayDashboard />} />
             <Route path="/modules/ethics" element={<EthicsDashboard />} />
-            <Route path="/modules/rd" element={<RDDashboard />} />
-            <Route path="/modules/rd/products" element={<RDProducts />} />
-            <Route path="/modules/rd/shops" element={<RDShops />} />
-            <Route path="/modules/rd/suppliers" element={<RDSuppliers />} />
-            <Route path="/modules/rd/frictions" element={<RDFrictions />} />
-            <Route path="/modules/rd/reports" element={<RDReports />} />
             <Route path="/modules/ethics/:subSection" element={<EthicsDashboard />} />
-            <Route path="/modules/packaging" element={<PackagingDashboard />} />
-            <Route path="/modules/packaging/:subSection" element={<PackagingDashboard />} />
             <Route path="/modules/:moduleId/:subSection" element={<SubSectionPage />} />
             
             {/* Other routes */}
