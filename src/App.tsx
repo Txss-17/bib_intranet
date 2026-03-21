@@ -13,6 +13,11 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
 import RDDashboard from "./pages/modules/rd/RDDashboard";
+import RDProducts from "./pages/modules/rd/RDProducts";
+import RDShops from "./pages/modules/rd/RDShops";
+import RDSuppliers from "./pages/modules/rd/RDSuppliers";
+import RDFrictions from "./pages/modules/rd/RDFrictions";
+import RDReports from "./pages/modules/rd/RDReports";
 
 // Supplier module pages
 import SupplierDashboard from "./pages/modules/supplier/SupplierDashboard";
