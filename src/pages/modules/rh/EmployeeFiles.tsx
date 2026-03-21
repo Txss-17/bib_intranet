@@ -308,7 +308,9 @@ export default function EmployeeFiles() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeFile | null>(null);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [docDialogOpen, setDocDialogOpen] = useState(false);
   const [newNote, setNewNote] = useState({ type: 'general', content: '' });
+  const [newDoc, setNewDoc] = useState({ name: '', type: 'contrat' as EmployeeDocument['type'] });
   const [employees, setEmployees] = useState(mockEmployees);
   const { toast } = useToast();
 
