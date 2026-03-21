@@ -18,6 +18,11 @@ import RDShops from "./pages/modules/rd/RDShops";
 import RDSuppliers from "./pages/modules/rd/RDSuppliers";
 import RDFrictions from "./pages/modules/rd/RDFrictions";
 import RDReports from "./pages/modules/rd/RDReports";
+import GatewayDashboard from "./pages/modules/gateway/GatewayDashboard";
+import PackagingDashboard from "./pages/modules/packaging/PackagingDashboard";
+import ModuleAccess from "./pages/modules/direction/ModuleAccess";
+import LifecycleOnboarding from "./pages/modules/lifecycle/Onboarding";
+import ComplianceStatusPage from "./pages/modules/lifecycle/ComplianceStatus";
 
 // Supplier module pages
 import SupplierDashboard from "./pages/modules/supplier/SupplierDashboard";
@@ -133,7 +138,7 @@ const App = () => (
             <Route path="/pole/direction/vision" element={<VisionRoadmap />} />
             <Route path="/pole/direction/governance" element={<GroupGovernance />} />
             <Route path="/pole/direction/reports" element={<ConsolidatedReports />} />
-            <Route path="/pole/direction/access" element={<SubSectionPage />} />
+            <Route path="/pole/direction/access" element={<ModuleAccess />} />
             
             {/* Supplier module */}
             <Route path="/pole/supplier" element={<SupplierDashboard />} />
@@ -146,7 +151,7 @@ const App = () => (
             
             {/* Lifecycle (User Success & Risk) module */}
             <Route path="/pole/lifecycle" element={<LifecycleDashboard />} />
-            <Route path="/pole/lifecycle/onboarding" element={<SubSectionPage />} />
+            <Route path="/pole/lifecycle/onboarding" element={<LifecycleOnboarding />} />
             <Route path="/pole/lifecycle/monitoring" element={<UserAccounts />} />
             <Route path="/pole/lifecycle/user-accounts" element={<UserAccounts />} />
             <Route path="/pole/lifecycle/risk-alerts" element={<RiskAlerts />} />
@@ -154,7 +159,7 @@ const App = () => (
             <Route path="/pole/lifecycle/trustpilot" element={<TrustpilotAnalytics />} />
             <Route path="/pole/lifecycle/support" element={<SupportTickets />} />
             <Route path="/pole/lifecycle/scoring" element={<RiskAlerts />} />
-            <Route path="/pole/lifecycle/compliance" element={<SubSectionPage />} />
+            <Route path="/pole/lifecycle/compliance" element={<ComplianceStatusPage />} />
             
             {/* Finance module */}
             <Route path="/pole/finance" element={<FinanceDashboard />} />
@@ -231,7 +236,8 @@ const App = () => (
             <Route path="/pole/:poleId/:subSection" element={<SubSectionPage />} />
             
             {/* Transversal modules */}
-            <Route path="/modules/gateway" element={<SubSectionPage />} />
+            <Route path="/modules/gateway" element={<GatewayDashboard />} />
+            <Route path="/modules/gateway/:subSection" element={<GatewayDashboard />} />
             <Route path="/modules/ethics" element={<EthicsDashboard />} />
             <Route path="/modules/rd" element={<RDDashboard />} />
             <Route path="/modules/rd/products" element={<RDProducts />} />
@@ -240,7 +246,8 @@ const App = () => (
             <Route path="/modules/rd/frictions" element={<RDFrictions />} />
             <Route path="/modules/rd/reports" element={<RDReports />} />
             <Route path="/modules/ethics/:subSection" element={<EthicsDashboard />} />
-            <Route path="/modules/packaging" element={<SubSectionPage />} />
+            <Route path="/modules/packaging" element={<PackagingDashboard />} />
+            <Route path="/modules/packaging/:subSection" element={<PackagingDashboard />} />
             <Route path="/modules/:moduleId/:subSection" element={<SubSectionPage />} />
             
             {/* Other routes */}
