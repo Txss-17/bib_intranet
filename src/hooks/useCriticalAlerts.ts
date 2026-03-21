@@ -131,10 +131,12 @@ export function useCriticalAlerts() {
         };
         setAlerts(prev => [newAlert, ...prev]);
         setLastAlert(newAlert);
-        if (newAlert.severity === 'critical') {
-          playCriticalAlertSound();
-        } else {
-          playHighAlertSound();
+        if (soundEnabled) {
+          if (newAlert.severity === 'critical') {
+            playCriticalAlertSound();
+          } else {
+            playHighAlertSound();
+          }
         }
         timerId = scheduleNext();
       }, delay);

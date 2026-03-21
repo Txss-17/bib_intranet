@@ -141,7 +141,27 @@ export default function Settings() {
                 </div>
                 <Switch checked disabled />
               </div>
-            </div>
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Sons d'alerte</p>
+                  <p className="text-xs text-muted-foreground">Jouer un son lors des alertes critiques Ethics & Gateway</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => playCriticalAlertSound()}
+                    title="Tester le son"
+                  >
+                    <Volume2 className="h-4 w-4" />
+                  </Button>
+                  <Switch
+                    checked={soundEnabled}
+                    onCheckedChange={setSoundEnabled}
+                  />
+                </div>
+              </div>
           </div>
         </TabsContent>
 
