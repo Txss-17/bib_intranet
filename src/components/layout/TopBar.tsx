@@ -324,5 +324,9 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
         </DropdownMenu>
       </div>
     </header>
+    {lastAlert && (
+      <CriticalAlertToast alert={lastAlert} onDismiss={dismissLastAlert} onMarkAsRead={markAsRead} />
+    )}
+    </>
   );
 }
