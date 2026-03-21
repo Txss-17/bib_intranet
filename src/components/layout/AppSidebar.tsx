@@ -22,6 +22,7 @@ import {
   Shield,
   Recycle,
   Settings,
+  FlaskConical,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { poles } from '@/data/poles';
@@ -47,6 +48,7 @@ const transversalModules = [
   { id: 'feed', name: 'Internal Feed', icon: Home, path: '/feed' },
   { id: 'ethics', name: 'Ethics & Whistleblowing', icon: Shield, path: '/modules/ethics' },
   { id: 'incidents', name: 'Risk & Incidents', icon: AlertTriangle, path: '/modules/incidents' },
+  { id: 'rd', name: 'R&D', icon: FlaskConical, path: '/modules/rd' },
   { id: 'packaging', name: 'Packaging Lifecycle', icon: Recycle, path: '/modules/packaging' },
   { id: 'documents', name: 'Documents', icon: FileText, path: '/documents' },
 ];
