@@ -25,6 +25,7 @@ import {
 import { ExportButtons } from '@/components/ExportButtons';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { initialEmployees } from '@/data/employeeData';
 
 type AlertType = 'contract_end' | 'probation_end' | 'leave_return' | 'leave_start' | 'document_expiry';
 type AlertPriority = 'critical' | 'high' | 'medium' | 'low';
@@ -59,59 +60,47 @@ const priorityConfig: Record<AlertPriority, { label: string; variant: 'destructi
   low: { label: 'Basse', variant: 'outline' },
 };
 
-// Simulated employee document data for auto-alert generation
-interface DocAlertSource {
-  employeeName: string;
-  employeePole: string;
-  docName: string;
-  docType: 'identite' | 'medical';
-  expiryDate: string;
-}
-
-const documentSources: DocAlertSource[] = [
-  { employeeName: 'Sophie Martin', employeePole: 'Finance', docName: 'CNI_Sophie_Martin.pdf', docType: 'identite', expiryDate: '2026-04-05' },
-  { employeeName: 'Sophie Martin', employeePole: 'Finance', docName: 'Visite_medicale_2025.pdf', docType: 'medical', expiryDate: '2026-03-25' },
-  { employeeName: 'Émilie Rousseau', employeePole: 'Ops', docName: 'CNI_Emilie_Rousseau.pdf', docType: 'identite', expiryDate: '2026-04-15' },
-  { employeeName: 'Julie Petit', employeePole: 'RH', docName: 'Passeport_Julie_Petit.pdf', docType: 'identite', expiryDate: '2026-05-10' },
-  { employeeName: 'Julie Petit', employeePole: 'RH', docName: 'Certificat_grossesse.pdf', docType: 'medical', expiryDate: '2026-06-20' },
-  { employeeName: 'Émilie Rousseau', employeePole: 'Ops', docName: 'Certificat_medical_aptitude.pdf', docType: 'medical', expiryDate: '2026-08-01' },
-];
-
+// Auto-generate document expiry alerts from actual employee file data
 function generateDocumentAlerts(): HRAlert[] {
   const today = new Date();
-  return documentSources
-    .map((src, i) => {
-      const expiry = new Date(src.expiryDate);
-      const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays > 90) return null; // Only alert within 90 days
+  const alerts: HRAlert[] = [];
 
-      const isIdentite = src.docType === 'identite';
-      const docLabel = isIdentite ? 'Pièce d\'identité' : 'Document médical';
+  initialEmployees.forEach(emp => {
+    emp.employeeDocuments.forEach((doc, i) => {
+      if (!doc.expiryDate) return;
+      if (doc.type !== 'identite' && doc.type !== 'medical') return;
+
+      const expiry = new Date(doc.expiryDate);
+      const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays > 90) return;
+
+      const docLabel = doc.type === 'identite' ? 'Pièce d\'identité' : 'Document médical';
       let priority: AlertPriority = 'low';
-      if (diffDays <= 0) priority = 'critical';
-      else if (diffDays <= 14) priority = 'critical';
+      if (diffDays <= 14) priority = 'critical';
       else if (diffDays <= 30) priority = 'high';
       else if (diffDays <= 60) priority = 'medium';
 
-      return {
-        id: `hra-doc-${i + 1}`,
-        type: 'document_expiry' as AlertType,
+      alerts.push({
+        id: `hra-doc-${emp.id}-${i}`,
+        type: 'document_expiry',
         priority,
-        status: diffDays <= 0 ? 'active' as AlertStatus : 'active' as AlertStatus,
-        employeeName: src.employeeName,
-        employeePole: src.employeePole,
+        status: 'active',
+        employeeName: emp.name,
+        employeePole: emp.pole,
         title: diffDays <= 0
           ? `${docLabel} expiré(e)`
           : `${docLabel} expire dans ${diffDays}j`,
         description: diffDays <= 0
-          ? `Le document "${src.docName}" de ${src.employeeName} a expiré le ${expiry.toLocaleDateString('fr-FR')}. Renouvellement urgent requis.`
-          : `Le document "${src.docName}" de ${src.employeeName} expire le ${expiry.toLocaleDateString('fr-FR')}. Renouvellement à planifier.`,
-        dueDate: src.expiryDate,
+          ? `Le document "${doc.name}" de ${emp.name} a expiré le ${expiry.toLocaleDateString('fr-FR')}. Renouvellement urgent requis.`
+          : `Le document "${doc.name}" de ${emp.name} expire le ${expiry.toLocaleDateString('fr-FR')}. Renouvellement à planifier.`,
+        dueDate: doc.expiryDate,
         daysRemaining: diffDays,
         createdAt: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      } as HRAlert;
-    })
-    .filter(Boolean) as HRAlert[];
+      });
+    });
+  });
+
+  return alerts;
 }
 
 // Generate alerts based on simulated deadlines relative to today
@@ -189,7 +178,7 @@ function generateAlerts(): HRAlert[] {
     },
   ];
 
-  // Auto-generate document expiry alerts
+  // Auto-generate document expiry alerts from employee files
   const docAlerts = generateDocumentAlerts();
 
   return [...manualAlerts, ...docAlerts];
@@ -241,7 +230,7 @@ export default function HRAlerts() {
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-xl font-semibold text-foreground">Alertes RH</h1>
-        <p className="text-sm text-muted-foreground mt-1">Suivi automatique des échéances contractuelles, périodes d'essai et congés</p>
+        <p className="text-sm text-muted-foreground mt-1">Suivi automatique des échéances contractuelles, périodes d'essai, congés et documents expirés</p>
       </div>
 
       {/* KPIs */}
