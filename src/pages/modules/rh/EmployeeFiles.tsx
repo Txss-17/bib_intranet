@@ -58,6 +58,16 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 // Types
+interface EmployeeDocument {
+  id: string;
+  name: string;
+  type: 'contrat' | 'identite' | 'diplome' | 'medical' | 'administratif' | 'autre';
+  uploadDate: string;
+  expiryDate?: string;
+  size: string;
+  uploadedBy: string;
+}
+
 interface EmployeeFile {
   id: string;
   name: string;
@@ -75,6 +85,7 @@ interface EmployeeFile {
   absenceDays: number;
   warnings: number;
   documents: number;
+  employeeDocuments: EmployeeDocument[];
   notes: EmployeeNote[];
   events: EmployeeEvent[];
 }
@@ -93,6 +104,15 @@ interface EmployeeEvent {
   type: 'contract' | 'evaluation' | 'absence' | 'formation' | 'promotion' | 'warning' | 'document';
   label: string;
 }
+
+const docTypeConfig: Record<EmployeeDocument['type'], { label: string; icon: typeof FileText; className: string }> = {
+  contrat: { label: 'Contrat', icon: Briefcase, className: 'bg-primary/10 text-primary' },
+  identite: { label: 'Pièce d\'identité', icon: ShieldCheck, className: 'bg-accent/10 text-accent-foreground' },
+  diplome: { label: 'Diplôme', icon: Award, className: 'bg-success/10 text-success' },
+  medical: { label: 'Médical', icon: FileLock, className: 'bg-warning/10 text-warning' },
+  administratif: { label: 'Administratif', icon: FileCheck, className: 'bg-secondary text-secondary-foreground' },
+  autre: { label: 'Autre', icon: FileText, className: 'bg-muted text-muted-foreground' },
+};
 
 // Mock data
 const mockEmployees: EmployeeFile[] = [
