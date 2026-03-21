@@ -204,6 +204,7 @@ const App = () => (
             <Route path="/pole/rh" element={<RHDashboard />} />
             <Route path="/pole/rh/employees" element={<Employees />} />
             <Route path="/pole/rh/files" element={<EmployeeFiles />} />
+            <Route path="/pole/rh/alerts" element={<HRAlerts />} />
             <Route path="/pole/rh/onboarding" element={<RHOnboarding />} />
             <Route path="/pole/rh/attendance" element={<Attendance />} />
             <Route path="/pole/rh/leave" element={<Leave />} />
