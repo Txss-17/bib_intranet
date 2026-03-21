@@ -70,6 +70,7 @@ import Deployments from "./pages/modules/tech/Deployments";
 import Infrastructure from "./pages/modules/tech/Infrastructure";
 import Security from "./pages/modules/tech/Security";
 import Catalog from "./pages/modules/tech/Catalog";
+import ReceivedProducts from "./pages/modules/tech/ReceivedProducts";
 
 // RH module pages
 import RHDashboard from "./pages/modules/rh/RHDashboard";
