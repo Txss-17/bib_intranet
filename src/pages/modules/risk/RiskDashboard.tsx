@@ -1,48 +1,107 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Shield, Activity, Clock } from 'lucide-react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AlertTriangle, Shield, Activity, Clock, Eye, UserPlus, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-const stats = [
-  { label: 'Incidents actifs', value: 5, icon: AlertTriangle, severity: 'critical' },
-  { label: 'Risques surveillés', value: 23, icon: Shield, severity: 'warning' },
-  { label: 'Score risque global', value: '72/100', icon: Activity, severity: 'info' },
-  { label: 'Temps résolution moy.', value: '4.2h', icon: Clock, severity: 'info' },
+const severityBanner = [
+  { label: 'Critical P1', count: 3, color: 'bg-destructive text-destructive-foreground' },
+  { label: 'Open Incidents', count: 12, color: 'bg-orange-500 text-white' },
+  { label: 'Escalations', count: 5, color: 'bg-muted text-muted-foreground' },
 ];
 
-const recentIncidents = [
-  { id: 'INC-045', title: 'Retard livraison lot #B789', severity: 'high', status: 'investigating', time: 'Il y a 2h' },
-  { id: 'INC-044', title: 'Alerte qualité produit', severity: 'critical', status: 'mitigating', time: 'Il y a 5h' },
-  { id: 'INC-043', title: 'Problème système paiement', severity: 'medium', status: 'resolved', time: 'Hier' },
-  { id: 'INC-042', title: 'Fournisseur non conforme', severity: 'high', status: 'monitoring', time: 'Hier' },
+const incidentOverview = [
+  { name: 'P1 - Critical', value: 3, color: 'hsl(0, 84%, 60%)' },
+  { name: 'P2 - High', value: 5, color: 'hsl(25, 95%, 53%)' },
+  { name: 'P3 - Medium', value: 8, color: 'hsl(48, 96%, 53%)' },
+  { name: 'P4 - Low', value: 12, color: 'hsl(142, 76%, 36%)' },
 ];
 
-const incidentTrend = [
-  { month: 'Jan', critical: 2, high: 5, medium: 8, low: 12 },
-  { month: 'Fév', critical: 1, high: 4, medium: 10, low: 15 },
-  { month: 'Mar', critical: 3, high: 6, medium: 7, low: 11 },
-  { month: 'Avr', critical: 1, high: 3, medium: 9, low: 14 },
-  { month: 'Mai', critical: 2, high: 4, medium: 6, low: 10 },
-  { month: 'Juin', critical: 1, high: 5, medium: 8, low: 13 },
+const incidentTimeline = [
+  { month: 'Jan', P1: 2, P2: 5, P3: 8, P4: 12 },
+  { month: 'Fév', P1: 1, P2: 4, P3: 10, P4: 15 },
+  { month: 'Mar', P1: 3, P2: 6, P3: 7, P4: 11 },
+  { month: 'Avr', P1: 1, P2: 3, P3: 9, P4: 14 },
+  { month: 'Mai', P1: 2, P2: 4, P3: 6, P4: 10 },
+  { month: 'Juin', P1: 3, P2: 5, P3: 8, P4: 13 },
 ];
 
-const resolutionTime = [
-  { month: 'Jan', avgTime: 5.2 },
-  { month: 'Fév', avgTime: 4.8 },
-  { month: 'Mar', avgTime: 5.5 },
-  { month: 'Avr', avgTime: 4.2 },
-  { month: 'Mai', avgTime: 3.8 },
-  { month: 'Juin', avgTime: 4.2 },
+const supplierIncidents = [
+  { id: 'SI-045', issue: 'Retard livraison lot #B789', severity: 'P1', status: 'investigating', action: '' },
+  { id: 'SI-044', issue: 'Non-conformité certificat ISO', severity: 'P2', status: 'mitigating', action: '' },
+  { id: 'SI-043', issue: 'Qualité produit en dessous norme', severity: 'P1', status: 'escalated', action: '' },
 ];
 
-const riskCategories = [
-  { category: 'Opérationnel', score: 72, fullMark: 100 },
-  { category: 'Financier', score: 58, fullMark: 100 },
-  { category: 'Fournisseur', score: 65, fullMark: 100 },
-  { category: 'Qualité', score: 78, fullMark: 100 },
-  { category: 'Réputationnel', score: 82, fullMark: 100 },
-  { category: 'Cyber', score: 70, fullMark: 100 },
+const clientIncidents = [
+  { id: 'CI-089', issue: 'Colis endommagé — réclamation', severity: 'P2', status: 'investigating', action: '' },
+  { id: 'CI-088', issue: 'Produit non conforme reçu', severity: 'P3', status: 'resolved', action: '' },
+  { id: 'CI-087', issue: 'Retard remboursement > 15j', severity: 'P2', status: 'monitoring', action: '' },
 ];
+
+const internalIncidents = [
+  { id: 'INT-034', issue: 'Panne système de paiement', severity: 'P1', status: 'resolved', action: '' },
+  { id: 'INT-033', issue: 'Faille sécurité API détectée', severity: 'P2', status: 'mitigating', action: '' },
+  { id: 'INT-032', issue: 'Surcharge serveur warehouse', severity: 'P3', status: 'monitoring', action: '' },
+];
+
+const getSeverityBadge = (sev: string) => {
+  const map: Record<string, string> = {
+    P1: 'bg-destructive text-destructive-foreground',
+    P2: 'bg-orange-500 text-white',
+    P3: 'bg-yellow-500 text-black',
+    P4: 'bg-muted text-muted-foreground',
+  };
+  return <Badge className={map[sev] || ''}>{sev}</Badge>;
+};
+
+const getStatusLabel = (s: string) => {
+  const map: Record<string, string> = {
+    investigating: 'Investigation',
+    mitigating: 'Mitigation',
+    monitoring: 'Surveillance',
+    resolved: 'Résolu',
+    escalated: 'Escaladé',
+  };
+  return map[s] || s;
+};
+
+const IncidentTable = ({ title, data }: { title: string; data: typeof supplierIncidents }) => (
+  <Card>
+    <CardHeader><CardTitle className="text-base">{title}</CardTitle></CardHeader>
+    <CardContent>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>ID</TableHead>
+            <TableHead>Problème</TableHead>
+            <TableHead>Sévérité</TableHead>
+            <TableHead>Statut</TableHead>
+            <TableHead>Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {data.map(inc => (
+            <TableRow key={inc.id}>
+              <TableCell className="font-medium">{inc.id}</TableCell>
+              <TableCell>{inc.issue}</TableCell>
+              <TableCell>{getSeverityBadge(inc.severity)}</TableCell>
+              <TableCell><Badge variant="outline">{getStatusLabel(inc.status)}</Badge></TableCell>
+              <TableCell>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="sm"><Eye className="h-3 w-3" /></Button>
+                  <Button variant="ghost" size="sm"><UserPlus className="h-3 w-3" /></Button>
+                  <Button variant="ghost" size="sm"><ArrowUpRight className="h-3 w-3" /></Button>
+                  <Button variant="ghost" size="sm"><CheckCircle2 className="h-3 w-3" /></Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </CardContent>
+  </Card>
+);
 
 export default function RiskDashboard() {
   return (
@@ -52,144 +111,75 @@ export default function RiskDashboard() {
         <p className="text-muted-foreground">Surveillance et gestion des risques opérationnels</p>
       </div>
 
+      {/* Severity Banner */}
+      <div className="grid gap-4 md:grid-cols-3">
+        {severityBanner.map(b => (
+          <div key={b.label} className={`${b.color} rounded-lg p-4 flex items-center justify-between`}>
+            <span className="font-medium">{b.label}</span>
+            <span className="text-3xl font-bold">{b.count}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.label}>
+        {[
+          { label: 'Incidents actifs', value: 12, icon: AlertTriangle, color: 'text-destructive' },
+          { label: 'Risques surveillés', value: 23, icon: Shield, color: 'text-yellow-500' },
+          { label: 'Score risque global', value: '72/100', icon: Activity, color: 'text-muted-foreground' },
+          { label: 'Temps résolution moy.', value: '4.2h', icon: Clock, color: 'text-muted-foreground' },
+        ].map(s => (
+          <Card key={s.label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.label}
-              </CardTitle>
-              <stat.icon className={`h-4 w-4 ${
-                stat.severity === 'critical' ? 'text-red-600' :
-                stat.severity === 'warning' ? 'text-yellow-600' : 'text-muted-foreground'
-              }`} />
+              <CardTitle className="text-sm font-medium text-muted-foreground">{s.label}</CardTitle>
+              <s.icon className={`h-4 w-4 ${s.color}`} />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-            </CardContent>
+            <CardContent><div className="text-2xl font-bold">{s.value}</div></CardContent>
           </Card>
         ))}
       </div>
 
+      {/* Incident Overview + Timeline */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader>
-            <CardTitle>Tendance des incidents</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Incident Overview</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={incidentTrend}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="month" className="text-xs" />
-                <YAxis className="text-xs" />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--background))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }} 
-                />
-                <Legend />
-                <Bar dataKey="critical" name="Critique" fill="hsl(0, 84%, 60%)" stackId="a" />
-                <Bar dataKey="high" name="Élevé" fill="hsl(25, 95%, 53%)" stackId="a" />
-                <Bar dataKey="medium" name="Moyen" fill="hsl(48, 96%, 53%)" stackId="a" />
-                <Bar dataKey="low" name="Bas" fill="hsl(142, 76%, 36%)" stackId="a" />
-              </BarChart>
+              <PieChart>
+                <Pie data={incidentOverview} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={3} dataKey="value"
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                  {incidentOverview.map((e, i) => <Cell key={i} fill={e.color} />)}
+                </Pie>
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+              </PieChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Profil de risque</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Incident Timeline</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={280}>
-              <RadarChart data={riskCategories}>
-                <PolarGrid className="stroke-muted" />
-                <PolarAngleAxis dataKey="category" className="text-xs" />
-                <PolarRadiusAxis angle={30} domain={[0, 100]} className="text-xs" />
-                <Radar
-                  name="Score de risque"
-                  dataKey="score"
-                  stroke="hsl(var(--chart-1))"
-                  fill="hsl(var(--chart-1))"
-                  fillOpacity={0.5}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--background))', 
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px'
-                  }} 
-                />
-              </RadarChart>
+              <LineChart data={incidentTimeline}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="month" className="text-xs" />
+                <YAxis className="text-xs" />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                <Legend />
+                <Line type="monotone" dataKey="P1" name="P1 Critical" stroke="hsl(0, 84%, 60%)" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="P2" name="P2 High" stroke="hsl(25, 95%, 53%)" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="P3" name="P3 Medium" stroke="hsl(48, 96%, 53%)" strokeWidth={2} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="P4" name="P4 Low" stroke="hsl(142, 76%, 36%)" strokeWidth={2} dot={{ r: 3 }} />
+              </LineChart>
             </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Temps de résolution moyen (heures)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={resolutionTime}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis dataKey="month" className="text-xs" />
-              <YAxis className="text-xs" domain={[0, 8]} />
-              <Tooltip 
-                formatter={(value: number) => [`${value}h`, 'Temps moyen']}
-                contentStyle={{ 
-                  backgroundColor: 'hsl(var(--background))', 
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px'
-                }} 
-              />
-              <Line 
-                type="monotone" 
-                dataKey="avgTime" 
-                stroke="hsl(var(--chart-2))" 
-                strokeWidth={2}
-                dot={{ fill: 'hsl(var(--chart-2))' }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Incidents récents</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentIncidents.map((incident) => (
-              <div key={incident.id} className="flex items-center justify-between border-b pb-3 last:border-0">
-                <div className="flex items-center gap-3">
-                  <Badge variant={
-                    incident.severity === 'critical' ? 'destructive' :
-                    incident.severity === 'high' ? 'destructive' : 'secondary'
-                  }>
-                    {incident.severity === 'critical' ? 'Critique' :
-                     incident.severity === 'high' ? 'Élevé' : 'Moyen'}
-                  </Badge>
-                  <div>
-                    <p className="font-medium">{incident.title}</p>
-                    <p className="text-sm text-muted-foreground">{incident.id} • {incident.time}</p>
-                  </div>
-                </div>
-                <Badge variant="outline">
-                  {incident.status === 'investigating' ? 'Investigation' :
-                   incident.status === 'mitigating' ? 'Mitigation' :
-                   incident.status === 'monitoring' ? 'Surveillance' : 'Résolu'}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Incident Tables */}
+      <IncidentTable title="Supplier Incidents" data={supplierIncidents} />
+      <IncidentTable title="Client Incidents" data={clientIncidents} />
+      <IncidentTable title="Internal Incidents" data={internalIncidents} />
     </div>
   );
 }
