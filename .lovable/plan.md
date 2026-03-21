@@ -1,58 +1,117 @@
 
-# Plan : Corriger la navigation horizontale pour tous les modules
 
-## Probleme identifie
+# Plan: Enrichir les dashboards et modules selon les maquettes de référence
 
-La navigation horizontale (OX) ne s'affiche pas pour les modules **Ops**, **Finance**, **Direction**, **Supplier**, **Lifecycle** car :
+## Analyse des écarts
 
-1. Les routes sont definies de maniere statique dans `App.tsx` (ex: `/pole/ops`, `/pole/finance`)
-2. Le `MainLayout` utilise `useParams()` pour extraire le `poleId`
-3. Comme ces routes ne contiennent pas le parametre dynamique `:poleId`, `useParams()` retourne `undefined`
-4. Le `ModuleNavigation` recoit `poleId={undefined}` et n'affiche rien
+Comparaison entre l'existant et les 8 maquettes fournies. Voici les fonctionnalités manquantes par module.
 
-## Solution
+### 1. Direction (Executive Dashboard)
+**Existant**: KPIs basiques, alertes, performance pôles, décisions.
+**Manquant par rapport à la maquette**:
+- Section "Performance Générale" avec évolution CA & EBITDA (LineChart)
+- Section "Résultats Commerciaux" (ventes par marché, graphiques)
+- Section "Activités Stratégiques" (IA Produit, initiatives)
+- Section "Opportunités & Risques"
+- Section "Rapports & Suivi Commissaire" avec alertes remontées
+- KPIs reformulés: Revenu Annuel (2,85 M€), Croissance (+18%), EBITDA (450 K€), Rétention Clients (86%)
+- Segmentation National/Global/EU&US
 
-Modifier `MainLayout.tsx` pour extraire le `poleId` directement depuis `location.pathname` au lieu de se fier a `useParams()`.
+### 2. Finance Dashboard
+**Existant**: KPIs Solde/BurnRate/Runway/MRR, graphique cashflow, alertes, transactions récentes.
+**Manquant**:
+- Section "Trésorerie" avec graphique Solde de trésorerie (3 mois) plus détaillé
+- Section "Entrées du Mois" avec PieChart (Abonnements, Ventes Produits, Traditionnels)
+- Section "Objectifs de financement" (Levée Série A, Fonds Garantie Fournisseurs avec Progress bars)
+- Section "Factures & Salaires" avec tableau ID/Type/Pôle/Montant/Échéance/Statut
+- Section "Budget & Primes" (Budget Mensuel, Surplus, Prime Teams)
+- KPIs reformulés: Solde Actuel, Entrées, Sorties, Budget Mensuel
 
-## Changements a effectuer
+### 3. Ops Dashboard
+**Existant**: KPIs commandes/expéditions/taux livraison/incidents, charts, quick access.
+**Manquant**:
+- Section "Commandes en Attente" avec tableau (ID, Client, Date, Montant)
+- Section "Livraison & Tracking" avec carte visuelle et suivi colis
+- Section "Support Clients" avec Demandes Ouvertes + Satisfaction Client (donut)
+- Section "Productivité Warehouse" (85K Produits Expédiés)
+- Section "Performances Ops" (Satisfaction, Retour Produit, Pedisize, Tickets Résolus)
+- Section "Support Clients" tableau en bas (ID, Pôle, Montant, Échéance, Statut)
+- KPIs reformulés: Commandes en Attente, En Cours de Livraison, Taux Intervention, Stock Utilisable
 
-### 1. Modifier `src/components/layout/MainLayout.tsx`
+### 4. RSE Dashboard
+**Existant**: KPIs CO2/packaging/recyclage/points, charts CO2 évolution + répartition, objectifs.
+**Manquant**:
+- Section "Impact Environnemental" avec score ESG circulaire (82) + barres détaillées (Taux Recyclage, Empreinte CO₂, Énergie Renouvelable)
+- Section "Engagement Social" (Projets ONGs avec liste détaillée)
+- Section "Initiative & Certifications" (Amfori BSCI, Global Recycled Standard, Norme ISO 14001)
+- Section "Témoignages Client" (PoissonVert, GreenCampaign, TerroirBio avec scores)
+- Section "Emballages Recyclés" avec barres horizontales détaillées
+- Section "Jaincités & ESC" (Recyclage, Combien CO2/1K, Points Fidélité Final)
+- Section "RSE Rapport" (Recyclage 321KT, Gens impactés, Budget Annuel)
+- KPIs reformulés: Score ESG (82), Taux Recyclage (76%), Points Fidélité (880K), Local Inclusive (4 Projets ONGs)
 
-Remplacer l'extraction du `poleId` via `useParams()` par une extraction depuis le pathname :
+### 5. Risk & Incidents Dashboard
+**Existant**: KPIs incidents/risques/score/temps résolution, charts bar+radar+line, incidents récents.
+**Manquant**:
+- Bannière colorée en haut: Critical P1 Cases (rouge), Open Incidents (orange), Escalations (gris-bleu)
+- Section "Incident Overview" PieChart (P1/P2/P3/P4 avec pourcentages)
+- Section "Incident Timeline" LineChart multi-séries (P1-P4 sur mois)
+- Tableaux séparés: "Supplier Incidents", "Client Incidents", "Internal Incidents" avec colonnes ID/Issue/Severity/Status/Action
+- Boutons d'action par incident: Details, Assign, Escalate, Resolved
+- Badge sévérité P1/P2/P3 colorés
 
-```typescript
-// Avant (ne fonctionne pas pour les routes statiques)
-const { poleId, subSection } = useParams<{ poleId?: string; subSection?: string }>();
+### 6. Fournisseurs Dashboard (actuellement générique PoleDashboard)
+**Existant**: Dashboard générique sans contenu spécifique.
+**Manquant** (tout à créer):
+- KPIs: Nb Fournisseurs (31), Commandes en Cours (14), Stock Réservé (120K), Incidents Signalés (2)
+- Section "Top Fournisseurs" avec liste (nom, drapeau pays, rating étoiles, CA, commandes)
+- Section "Stock Réservé & Dispo" (barres horizontales)
+- Section "Stock par Catégorie" (PieChart: Mode, Accessoires, Maison)
+- Section "Commandes en Cours" tableau (ID, Fournisseur, Articles, Status, Date, Montant)
+- Section "Incidents & Litiges" (liste avec badges)
+- Section "Métriques Logistiques" (MOQ Moyenne, Qualité Fournisseurs, Montant Moyen)
 
-// Apres (fonctionne pour toutes les routes /pole/xxx)
-const poleIdMatch = location.pathname.match(/^\/pole\/([^/]+)/);
-const extractedPoleId = poleIdMatch?.[1] as PoleId | undefined;
-```
-
-Ensuite, utiliser `extractedPoleId` a la place de `poleId` pour :
-- Passer au composant `TopBar` via `activePoleId`
-- Passer au composant `ModuleNavigation` via `poleId`
-
-### 2. Verification
-
-Apres ce changement, tous les modules auront la navigation horizontale :
-- `/pole/ops` -> Navigation: Dashboard, Commandes, Expeditions, Incidents, Partenaires
-- `/pole/finance` -> Navigation: Dashboard, Cashflow, Transactions, etc.
-- `/pole/direction` -> Navigation: Vue globale, KPI strategiques, etc.
-- `/pole/supplier` -> Navigation: Vue globale, Produits en attente, etc.
-- `/pole/lifecycle` -> Navigation: Vue globale, Onboarding, Suivi activite, etc.
+### 7. Supplier Product Review Board (PendingProducts amélioré)
+**Existant**: Liste simple avec filtres et actions valider/refuser.
+**Manquant**:
+- Présentation tableau complet: ID Produit, Fournisseur, Catégorie, Prix Usine, MOQ, Délai Prod, Packaging, Marchés, Statut, Date Soumission
+- Filtres avancés: Catégorie, Pays fournisseur, Score risque, Marché ciblé, Urgence
+- Onglets "En attente" / "En revue" avec compteurs
+- Pagination (1-10 de 56)
+- Section "Projets Tech Actifs" en bas
+- Section "Informations produits" 
+- Section "Historique & traçabilité"
 
 ---
 
-## Details techniques
+## Plan d'implémentation
 
-Le fichier `MainLayout.tsx` sera modifie comme suit :
+### Etape 1: Supplier Dashboard (nouveau)
+Créer `src/pages/modules/supplier/SupplierDashboard.tsx` avec KPIs, Top Fournisseurs, Stock, Commandes en cours, Incidents, Métriques. Mettre à jour la route `/pole/supplier` dans App.tsx.
 
-```text
-Ligne 13: Supprimer useParams ou ne garder que subSection si necessaire
-Lignes 23-32: Ajouter l'extraction du poleId depuis le pathname
-Ligne 42: Utiliser extractedPoleId au lieu de poleId
-Ligne 46: Utiliser extractedPoleId au lieu de poleId
-```
+### Etape 2: Direction Dashboard enrichi
+Refactorer `ExecutiveDashboard.tsx` pour ajouter: Performance Générale (CA & EBITDA chart), Résultats Commerciaux, Activités Stratégiques, Opportunités & Risques, Rapports Commissaire. Reformuler les KPIs.
 
-Aucun autre fichier n'a besoin d'etre modifie. La configuration de navigation dans `moduleNavigations.ts` est deja correcte pour tous les modules.
+### Etape 3: Finance Dashboard enrichi
+Ajouter à `FinanceDashboard.tsx`: Trésorerie détaillée, Entrées du Mois (PieChart), Objectifs de financement, Factures & Salaires tableau, Budget & Primes.
+
+### Etape 4: Ops Dashboard enrichi
+Ajouter à `OpsDashboard.tsx`: Commandes en Attente tableau, Livraison & Tracking, Support Clients (donut), Productivité Warehouse, Performances Ops.
+
+### Etape 5: RSE Dashboard enrichi
+Refactorer `RSEDashboard.tsx`: Score ESG circulaire, Engagement Social (ONGs), Certifications, Témoignages Client, Emballages Recyclés, RSE Rapport.
+
+### Etape 6: Risk Dashboard enrichi
+Refactorer `RiskDashboard.tsx`: Bannière P1/Open/Escalations, Incident Overview PieChart, Incident Timeline, tableaux Supplier/Client/Internal Incidents avec boutons d'action.
+
+### Etape 7: PendingProducts enrichi
+Refactorer `PendingProducts.tsx`: Tableau complet avec toutes les colonnes, filtres avancés, onglets, pagination, sections bas de page.
+
+## Détails techniques
+
+- Tous les dashboards utilisent des données mock enrichies (pas de nouvelles tables DB requises)
+- Composants Recharts existants réutilisés (AreaChart, PieChart, BarChart, LineChart, RadarChart)
+- Respect du design system existant (Card, Badge, Progress, Table)
+- Style inspiré des maquettes: cards avec bordures subtiles, icônes bleues/vertes, badges de statut colorés
+- Responsive grid layout (lg:grid-cols-3 pour les sections multi-colonnes)
+
