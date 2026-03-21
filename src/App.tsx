@@ -151,7 +151,7 @@ const App = () => (
             
             {/* Lifecycle (User Success & Risk) module */}
             <Route path="/pole/lifecycle" element={<LifecycleDashboard />} />
-            <Route path="/pole/lifecycle/onboarding" element={<SubSectionPage />} />
+            <Route path="/pole/lifecycle/onboarding" element={<LifecycleOnboarding />} />
             <Route path="/pole/lifecycle/monitoring" element={<UserAccounts />} />
             <Route path="/pole/lifecycle/user-accounts" element={<UserAccounts />} />
             <Route path="/pole/lifecycle/risk-alerts" element={<RiskAlerts />} />
@@ -159,7 +159,7 @@ const App = () => (
             <Route path="/pole/lifecycle/trustpilot" element={<TrustpilotAnalytics />} />
             <Route path="/pole/lifecycle/support" element={<SupportTickets />} />
             <Route path="/pole/lifecycle/scoring" element={<RiskAlerts />} />
-            <Route path="/pole/lifecycle/compliance" element={<SubSectionPage />} />
+            <Route path="/pole/lifecycle/compliance" element={<ComplianceStatusPage />} />
             
             {/* Finance module */}
             <Route path="/pole/finance" element={<FinanceDashboard />} />
