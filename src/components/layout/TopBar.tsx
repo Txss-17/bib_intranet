@@ -66,6 +66,7 @@ const statusLabels: Record<EmployeeStatus, string> = {
 
 export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDarkMode, activePoleId }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
+  const { alerts, unreadCount, criticalCount, lastAlert, markAsRead, markAllAsRead, dismissLastAlert } = useCriticalAlerts();
   
   const unreadNotifications = notifications.filter(n => !n.read).length;
   const pendingTasks = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
