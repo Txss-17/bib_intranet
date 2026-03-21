@@ -138,7 +138,7 @@ const App = () => (
             <Route path="/pole/direction/vision" element={<VisionRoadmap />} />
             <Route path="/pole/direction/governance" element={<GroupGovernance />} />
             <Route path="/pole/direction/reports" element={<ConsolidatedReports />} />
-            <Route path="/pole/direction/access" element={<SubSectionPage />} />
+            <Route path="/pole/direction/access" element={<ModuleAccess />} />
             
             {/* Supplier module */}
             <Route path="/pole/supplier" element={<SupplierDashboard />} />
