@@ -3,9 +3,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
+import { useTableInteractions } from "@/hooks/useTableInteractions";
 import {
   Package, Truck, AlertTriangle, TrendingUp, Loader2, ArrowRight, Users,
-  Warehouse, HeadphonesIcon, CheckCircle2, RotateCcw, Star
+  Warehouse, HeadphonesIcon, CheckCircle2, RotateCcw, Star, Search
 } from "lucide-react";
 import { useOrders, useShipments, useLogisticsIncidents, useLogisticsPartners, calculateOpsKPIs } from "@/hooks/useOps";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
@@ -44,6 +48,16 @@ const OpsDashboard = () => {
   const { data: incidents = [], isLoading: incidentsLoading } = useLogisticsIncidents();
   const { data: partners = [] } = useLogisticsPartners();
 
+  const ordersTable = useTableInteractions({
+    data: pendingOrdersMock,
+    searchFields: ['id', 'client'],
+  });
+
+  const ticketsTable = useTableInteractions({
+    data: supportTicketsMock,
+    searchFields: ['id', 'subject'],
+  });
+
   const isLoading = ordersLoading || shipmentsLoading || incidentsLoading;
   const kpis = calculateOpsKPIs(orders, shipments, incidents);
 
@@ -55,12 +69,9 @@ const OpsDashboard = () => {
   ];
 
   const weeklyData = [
-    { day: 'Lun', orders: 45, shipments: 38 },
-    { day: 'Mar', orders: 52, shipments: 45 },
-    { day: 'Mer', orders: 48, shipments: 50 },
-    { day: 'Jeu', orders: 61, shipments: 55 },
-    { day: 'Ven', orders: 55, shipments: 52 },
-    { day: 'Sam', orders: 32, shipments: 48 },
+    { day: 'Lun', orders: 45, shipments: 38 }, { day: 'Mar', orders: 52, shipments: 45 },
+    { day: 'Mer', orders: 48, shipments: 50 }, { day: 'Jeu', orders: 61, shipments: 55 },
+    { day: 'Ven', orders: 55, shipments: 52 }, { day: 'Sam', orders: 32, shipments: 48 },
     { day: 'Dim', orders: 18, shipments: 22 },
   ];
 
@@ -115,7 +126,6 @@ const OpsDashboard = () => {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader><CardTitle>Statut des commandes</CardTitle></CardHeader>
           <CardContent>
@@ -139,7 +149,7 @@ const OpsDashboard = () => {
         </Card>
       </div>
 
-      {/* Performances Ops */}
+      {/* Performances */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {performanceMetrics.map(m => (
           <Card key={m.label}>
@@ -163,18 +173,32 @@ const OpsDashboard = () => {
           <Button variant="outline" size="sm" asChild><Link to="/pole/ops/orders">Voir tout</Link></Button>
         </CardHeader>
         <CardContent>
+          <div className="flex gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Rechercher par ID ou client..." value={ordersTable.searchQuery} onChange={e => ordersTable.setSearchQuery(e.target.value)} className="pl-8 h-9" />
+            </div>
+            <Select value={ordersTable.filters.status || 'all'} onValueChange={v => ordersTable.setFilter('status', v)}>
+              <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Statut" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous</SelectItem>
+                <SelectItem value="pending">En attente</SelectItem>
+                <SelectItem value="processing">En traitement</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Montant</TableHead>
+                <SortableTableHead column="id" currentSort={ordersTable.sortColumn as string} direction={ordersTable.sortDirection} onSort={c => ordersTable.toggleSort(c as keyof typeof pendingOrdersMock[0])}>ID</SortableTableHead>
+                <SortableTableHead column="client" currentSort={ordersTable.sortColumn as string} direction={ordersTable.sortDirection} onSort={c => ordersTable.toggleSort(c as keyof typeof pendingOrdersMock[0])}>Client</SortableTableHead>
+                <SortableTableHead column="date" currentSort={ordersTable.sortColumn as string} direction={ordersTable.sortDirection} onSort={c => ordersTable.toggleSort(c as keyof typeof pendingOrdersMock[0])}>Date</SortableTableHead>
+                <SortableTableHead column="amount" currentSort={ordersTable.sortColumn as string} direction={ordersTable.sortDirection} onSort={c => ordersTable.toggleSort(c as keyof typeof pendingOrdersMock[0])}>Montant</SortableTableHead>
                 <TableHead>Statut</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {pendingOrdersMock.map(o => (
+              {ordersTable.processedData.map(o => (
                 <TableRow key={o.id}>
                   <TableCell className="font-medium">{o.id}</TableCell>
                   <TableCell>{o.client}</TableCell>
@@ -187,6 +211,9 @@ const OpsDashboard = () => {
                   </TableCell>
                 </TableRow>
               ))}
+              {ordersTable.processedData.length === 0 && (
+                <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Aucun résultat</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -214,7 +241,24 @@ const OpsDashboard = () => {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Tickets Support</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle>Tickets Support</CardTitle>
+            <div className="flex gap-2 mt-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Rechercher..." value={ticketsTable.searchQuery} onChange={e => ticketsTable.setSearchQuery(e.target.value)} className="pl-8 h-9" />
+              </div>
+              <Select value={ticketsTable.filters.status || 'all'} onValueChange={v => ticketsTable.setFilter('status', v)}>
+                <SelectTrigger className="w-[120px] h-9"><SelectValue placeholder="Statut" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="open">Ouvert</SelectItem>
+                  <SelectItem value="in_progress">En cours</SelectItem>
+                  <SelectItem value="resolved">Résolu</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
@@ -226,7 +270,7 @@ const OpsDashboard = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {supportTicketsMock.map(t => (
+                {ticketsTable.processedData.map(t => (
                   <TableRow key={t.id}>
                     <TableCell className="font-medium">{t.id}</TableCell>
                     <TableCell>{t.pole}</TableCell>
@@ -238,13 +282,16 @@ const OpsDashboard = () => {
                     </TableCell>
                   </TableRow>
                 ))}
+                {ticketsTable.processedData.length === 0 && (
+                  <TableRow><TableCell colSpan={4} className="text-center text-muted-foreground">Aucun résultat</TableCell></TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
       </div>
 
-      {/* Quick Access + Incidents */}
+      {/* Quick Access */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[
           { label: 'Commandes', icon: Package, to: '/pole/ops/orders', value: `${kpis.processingOrders || 8} en traitement` },

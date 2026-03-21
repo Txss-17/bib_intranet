@@ -3,13 +3,16 @@ import {
   TrendingUp, TrendingDown, Users, AlertTriangle,
   DollarSign, Shield, Leaf, BarChart3, Clock,
   Target, Activity, AlertCircle, CheckCircle2, ArrowUpRight,
-  Building2, Globe, Lightbulb, FileText
+  Building2, Globe, Lightbulb, FileText, Search
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTableInteractions } from '@/hooks/useTableInteractions';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 
 const globalKPIs = [
@@ -22,18 +25,12 @@ const globalKPIs = [
 ];
 
 const caEbitdaEvolution = [
-  { month: 'Jan', ca: 210, ebitda: 32 },
-  { month: 'Fév', ca: 225, ebitda: 35 },
-  { month: 'Mar', ca: 248, ebitda: 40 },
-  { month: 'Avr', ca: 235, ebitda: 38 },
-  { month: 'Mai', ca: 260, ebitda: 42 },
-  { month: 'Juin', ca: 275, ebitda: 48 },
-  { month: 'Jul', ca: 252, ebitda: 44 },
-  { month: 'Aoû', ca: 240, ebitda: 41 },
-  { month: 'Sep', ca: 268, ebitda: 46 },
-  { month: 'Oct', ca: 285, ebitda: 50 },
-  { month: 'Nov', ca: 295, ebitda: 52 },
-  { month: 'Déc', ca: 310, ebitda: 55 },
+  { month: 'Jan', ca: 210, ebitda: 32 }, { month: 'Fév', ca: 225, ebitda: 35 },
+  { month: 'Mar', ca: 248, ebitda: 40 }, { month: 'Avr', ca: 235, ebitda: 38 },
+  { month: 'Mai', ca: 260, ebitda: 42 }, { month: 'Juin', ca: 275, ebitda: 48 },
+  { month: 'Jul', ca: 252, ebitda: 44 }, { month: 'Aoû', ca: 240, ebitda: 41 },
+  { month: 'Sep', ca: 268, ebitda: 46 }, { month: 'Oct', ca: 285, ebitda: 50 },
+  { month: 'Nov', ca: 295, ebitda: 52 }, { month: 'Déc', ca: 310, ebitda: 55 },
 ];
 
 const salesByMarket = [
@@ -87,6 +84,16 @@ const commissaireAlerts = [
 
 const ExecutiveDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+
+  const alertsTable = useTableInteractions({
+    data: criticalAlerts,
+    searchFields: ['message', 'pole'],
+  });
+
+  const commissaireTable = useTableInteractions({
+    data: commissaireAlerts,
+    searchFields: ['title'],
+  });
 
   const getSeverityColor = (severity: string) => {
     switch (severity) {
@@ -159,12 +166,9 @@ const ExecutiveDashboard = () => {
         </TabsList>
 
         <TabsContent value="overview" className="mt-4 space-y-6">
-          {/* Performance CA & EBITDA */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Performance CA & EBITDA (K€)</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle>Performance CA & EBITDA (K€)</CardTitle></CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={280}>
                   <LineChart data={caEbitdaEvolution}>
@@ -181,9 +185,7 @@ const ExecutiveDashboard = () => {
             </Card>
 
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Performance des Pôles</CardTitle>
-              </CardHeader>
+              <CardHeader><CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Performance des Pôles</CardTitle></CardHeader>
               <CardContent>
                 <div className="space-y-3">
                   {polePerformance.map(pole => (
@@ -206,13 +208,35 @@ const ExecutiveDashboard = () => {
             </Card>
           </div>
 
-          {/* Alerts + Decisions */}
+          {/* Alerts + Decisions with filters */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
-              <CardHeader><CardTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5" /> Alertes Récentes</CardTitle></CardHeader>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5" /> Alertes Récentes</CardTitle>
+                <div className="flex gap-2 mt-2">
+                  <Select value={alertsTable.filters.severity || 'all'} onValueChange={v => alertsTable.setFilter('severity', v)}>
+                    <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Sévérité" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Toutes</SelectItem>
+                      <SelectItem value="critical">Critique</SelectItem>
+                      <SelectItem value="high">Élevée</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={alertsTable.filters.pole || 'all'} onValueChange={v => alertsTable.setFilter('pole', v)}>
+                    <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Pôle" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Tous les pôles</SelectItem>
+                      <SelectItem value="Finance">Finance</SelectItem>
+                      <SelectItem value="Fournisseurs">Fournisseurs</SelectItem>
+                      <SelectItem value="Ops">Ops</SelectItem>
+                      <SelectItem value="Lifecycle">Lifecycle</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {criticalAlerts.map(alert => (
+                  {alertsTable.processedData.map(alert => (
                     <div key={alert.id} className="flex items-start gap-3 p-3 rounded-lg bg-muted/50">
                       <Badge className={getSeverityColor(alert.severity)}>{alert.severity}</Badge>
                       <div className="flex-1">
@@ -222,6 +246,9 @@ const ExecutiveDashboard = () => {
                       <Button variant="ghost" size="sm"><ArrowUpRight className="h-4 w-4" /></Button>
                     </div>
                   ))}
+                  {alertsTable.processedData.length === 0 && (
+                    <p className="text-center text-muted-foreground py-4">Aucune alerte</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -340,10 +367,25 @@ const ExecutiveDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" /> Rapports & Suivi Commissaire</CardTitle>
               <CardDescription>Suivi des obligations réglementaires et rapports aux commissaires</CardDescription>
+              <div className="flex gap-2 mt-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input placeholder="Rechercher..." value={commissaireTable.searchQuery} onChange={e => commissaireTable.setSearchQuery(e.target.value)} className="pl-8 h-9" />
+                </div>
+                <Select value={commissaireTable.filters.status || 'all'} onValueChange={v => commissaireTable.setFilter('status', v)}>
+                  <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Statut" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous</SelectItem>
+                    <SelectItem value="En attente">En attente</SelectItem>
+                    <SelectItem value="Validé">Validé</SelectItem>
+                    <SelectItem value="En cours">En cours</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {commissaireAlerts.map(r => (
+                {commissaireTable.processedData.map(r => (
                   <div key={r.title} className="flex items-center justify-between p-4 rounded-lg border">
                     <div>
                       <p className="font-medium">{r.title}</p>
@@ -352,29 +394,12 @@ const ExecutiveDashboard = () => {
                     <Badge variant={r.status === 'Validé' ? 'default' : r.status === 'En cours' ? 'secondary' : 'outline'}>{r.status}</Badge>
                   </div>
                 ))}
+                {commissaireTable.processedData.length === 0 && (
+                  <p className="text-center text-muted-foreground py-4">Aucun résultat</p>
+                )}
               </div>
             </CardContent>
           </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {polePerformance.map(pole => (
-              <Card key={pole.id} className="cursor-pointer hover:border-primary transition-colors">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold">{pole.name}</h3>
-                    <span className={`h-3 w-3 rounded-full ${getStatusColor(pole.status)} bg-current`} />
-                  </div>
-                  <div className="text-3xl font-bold mb-2">{pole.score}%</div>
-                  <Progress value={pole.score} className="h-2" />
-                  <div className="flex items-center gap-1 mt-2 text-sm text-muted-foreground">
-                    {pole.trend === 'up' && <><TrendingUp className="h-4 w-4 text-emerald-500" /> En progression</>}
-                    {pole.trend === 'down' && <><TrendingDown className="h-4 w-4 text-destructive" /> En baisse</>}
-                    {pole.trend === 'stable' && <>— Stable</>}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
         </TabsContent>
       </Tabs>
     </div>

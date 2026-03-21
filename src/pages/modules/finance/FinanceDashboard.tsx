@@ -3,9 +3,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SortableTableHead } from "@/components/ui/sortable-table-head";
+import { useTableInteractions } from "@/hooks/useTableInteractions";
 import {
   TrendingUp, TrendingDown, DollarSign, CreditCard, PiggyBank,
-  AlertTriangle, ArrowUpRight, ArrowDownRight, Wallet, Building2, Loader2, Target
+  AlertTriangle, ArrowUpRight, ArrowDownRight, Wallet, Building2, Loader2, Target, Search
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
@@ -30,16 +34,17 @@ const invoicesData = [
   { id: 'FAC-2024-108', type: 'Salaire', pole: 'Tech', amount: '38,600 €', due: '2026-03-30', status: 'validated' },
 ];
 
-const budgetData = {
-  monthly: 185000,
-  surplus: 12500,
-  primeTeams: 8200,
-};
+const budgetData = { monthly: 185000, surplus: 12500, primeTeams: 8200 };
 
 const FinanceDashboard = () => {
   const { data: stats, isLoading: statsLoading } = useCashflowStats();
   const { data: recentCashflows, isLoading: cashflowsLoading } = useCashflows({ limit: 5 });
   const { data: paymentStats } = useSupplierPaymentStats();
+
+  const invoicesTable = useTableInteractions({
+    data: invoicesData,
+    searchFields: ['id', 'pole'],
+  });
 
   const displayChartData = [
     { month: 'Jan', income: 145000, expenses: 98000 },
@@ -124,7 +129,7 @@ const FinanceDashboard = () => {
         </Card>
       </div>
 
-      {/* Trésorerie + Entrées du Mois */}
+      {/* Trésorerie + Entrées */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
           <CardHeader><CardTitle className="flex items-center gap-2"><DollarSign className="h-5 w-5" /> Trésorerie — 6 derniers mois</CardTitle></CardHeader>
@@ -142,7 +147,6 @@ const FinanceDashboard = () => {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader><CardTitle>Entrées du Mois</CardTitle></CardHeader>
           <CardContent>
@@ -177,26 +181,50 @@ const FinanceDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Factures & Salaires */}
+      {/* Factures & Salaires with search/filter/sort */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Factures & Salaires</CardTitle>
           <Button variant="outline" size="sm" asChild><Link to="/pole/finance/transactions">Voir tout</Link></Button>
         </CardHeader>
         <CardContent>
+          <div className="flex gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Rechercher par ID ou pôle..." value={invoicesTable.searchQuery} onChange={e => invoicesTable.setSearchQuery(e.target.value)} className="pl-8 h-9" />
+            </div>
+            <Select value={invoicesTable.filters.type || 'all'} onValueChange={v => invoicesTable.setFilter('type', v)}>
+              <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous types</SelectItem>
+                <SelectItem value="Facture">Facture</SelectItem>
+                <SelectItem value="Salaire">Salaire</SelectItem>
+                <SelectItem value="Fournisseur">Fournisseur</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={invoicesTable.filters.status || 'all'} onValueChange={v => invoicesTable.setFilter('status', v)}>
+              <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Statut" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous</SelectItem>
+                <SelectItem value="pending">En attente</SelectItem>
+                <SelectItem value="validated">Validé</SelectItem>
+                <SelectItem value="overdue">En retard</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
+                <SortableTableHead column="id" currentSort={invoicesTable.sortColumn as string} direction={invoicesTable.sortDirection} onSort={c => invoicesTable.toggleSort(c as keyof typeof invoicesData[0])}>ID</SortableTableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Pôle</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Échéance</TableHead>
+                <SortableTableHead column="amount" currentSort={invoicesTable.sortColumn as string} direction={invoicesTable.sortDirection} onSort={c => invoicesTable.toggleSort(c as keyof typeof invoicesData[0])}>Montant</SortableTableHead>
+                <SortableTableHead column="due" currentSort={invoicesTable.sortColumn as string} direction={invoicesTable.sortDirection} onSort={c => invoicesTable.toggleSort(c as keyof typeof invoicesData[0])}>Échéance</SortableTableHead>
                 <TableHead>Statut</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoicesData.map(inv => (
+              {invoicesTable.processedData.map(inv => (
                 <TableRow key={inv.id}>
                   <TableCell className="font-medium">{inv.id}</TableCell>
                   <TableCell>{inv.type}</TableCell>
@@ -210,6 +238,9 @@ const FinanceDashboard = () => {
                   </TableCell>
                 </TableRow>
               ))}
+              {invoicesTable.processedData.length === 0 && (
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucun résultat</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -237,7 +268,6 @@ const FinanceDashboard = () => {
             </div>
           </CardContent>
         </Card>
-
         <Card>
           <CardHeader><CardTitle>Accès Rapides</CardTitle></CardHeader>
           <CardContent>

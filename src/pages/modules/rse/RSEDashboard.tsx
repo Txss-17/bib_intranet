@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTableInteractions } from '@/hooks/useTableInteractions';
 import { Leaf, Package, Recycle, Users, TrendingDown, Award, Heart, Star, Globe } from 'lucide-react';
 import { PieChart, Pie, Cell, AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
@@ -12,12 +14,9 @@ const stats = [
 ];
 
 const co2Evolution = [
-  { month: 'Jan', emissions: 145, target: 130 },
-  { month: 'Fév', emissions: 138, target: 128 },
-  { month: 'Mar', emissions: 125, target: 125 },
-  { month: 'Avr', emissions: 118, target: 122 },
-  { month: 'Mai', emissions: 110, target: 120 },
-  { month: 'Juin', emissions: 102, target: 118 },
+  { month: 'Jan', emissions: 145, target: 130 }, { month: 'Fév', emissions: 138, target: 128 },
+  { month: 'Mar', emissions: 125, target: 125 }, { month: 'Avr', emissions: 118, target: 122 },
+  { month: 'Mai', emissions: 110, target: 120 }, { month: 'Juin', emissions: 102, target: 118 },
 ];
 
 const emissionsByCategory = [
@@ -70,6 +69,16 @@ const rseRapport = [
 ];
 
 export default function RSEDashboard() {
+  const certsTable = useTableInteractions({
+    data: certifications,
+    searchFields: ['name'],
+  });
+
+  const ongsTable = useTableInteractions({
+    data: ongProjects,
+    searchFields: ['name', 'partner'],
+  });
+
   return (
     <div className="space-y-6">
       <div>
@@ -93,7 +102,7 @@ export default function RSEDashboard() {
         ))}
       </div>
 
-      {/* Score ESG détaillé + CO2 */}
+      {/* Score ESG + CO2 */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
@@ -144,7 +153,7 @@ export default function RSEDashboard() {
         </Card>
       </div>
 
-      {/* Répartition émissions + Emballages recyclés */}
+      {/* Répartition + Emballages */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader><CardTitle>Répartition des émissions</CardTitle></CardHeader>
@@ -179,13 +188,24 @@ export default function RSEDashboard() {
         </Card>
       </div>
 
-      {/* Certifications + ONGs */}
+      {/* Certifications + ONGs with filters */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Certifications</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Award className="h-5 w-5 text-primary" /> Certifications</CardTitle>
+            <Select value={certsTable.filters.status || 'all'} onValueChange={v => certsTable.setFilter('status', v)}>
+              <SelectTrigger className="w-[150px] h-9 mt-2"><SelectValue placeholder="Statut" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Toutes</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="renewal">Renouvellement</SelectItem>
+                <SelectItem value="pending">En cours</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {certifications.map(c => (
+              {certsTable.processedData.map(c => (
                 <div key={c.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                   <div>
                     <p className="font-medium text-sm">{c.name}</p>
@@ -196,15 +216,28 @@ export default function RSEDashboard() {
                   </Badge>
                 </div>
               ))}
+              {certsTable.processedData.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">Aucun résultat</p>
+              )}
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Heart className="h-5 w-5 text-pink-500" /> Engagement Social — ONGs</CardTitle></CardHeader>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2"><Heart className="h-5 w-5 text-pink-500" /> Engagement Social — ONGs</CardTitle>
+            <Select value={ongsTable.filters.status || 'all'} onValueChange={v => ongsTable.setFilter('status', v)}>
+              <SelectTrigger className="w-[130px] h-9 mt-2"><SelectValue placeholder="Statut" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous</SelectItem>
+                <SelectItem value="active">Actif</SelectItem>
+                <SelectItem value="planning">Planifié</SelectItem>
+              </SelectContent>
+            </Select>
+          </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {ongProjects.map(p => (
+              {ongsTable.processedData.map(p => (
                 <div key={p.name} className="flex items-center justify-between p-3 rounded-lg border">
                   <div>
                     <p className="font-medium text-sm">{p.name}</p>
@@ -213,6 +246,9 @@ export default function RSEDashboard() {
                   <Badge variant={p.status === 'active' ? 'default' : 'outline'}>{p.status === 'active' ? 'Actif' : 'Planifié'}</Badge>
                 </div>
               ))}
+              {ongsTable.processedData.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">Aucun résultat</p>
+              )}
             </div>
           </CardContent>
         </Card>

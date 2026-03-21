@@ -1,9 +1,14 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Users, Package, AlertTriangle, ShoppingCart, Star, TrendingUp, Truck, BarChart3 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SortableTableHead } from '@/components/ui/sortable-table-head';
+import { useTableInteractions } from '@/hooks/useTableInteractions';
+import { Users, Package, AlertTriangle, ShoppingCart, Star, TrendingUp, Truck, BarChart3, Search } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link } from 'react-router-dom';
 
@@ -68,6 +73,16 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function SupplierDashboard() {
+  const ordersTable = useTableInteractions({
+    data: activeOrders,
+    searchFields: ['id', 'supplier'],
+  });
+
+  const suppliersTable = useTableInteractions({
+    data: topSuppliers,
+    searchFields: ['name', 'country'],
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -101,10 +116,24 @@ export default function SupplierDashboard() {
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Star className="h-5 w-5 text-yellow-500" /> Top Fournisseurs</CardTitle>
+            <div className="flex gap-2 mt-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input placeholder="Rechercher..." value={suppliersTable.searchQuery} onChange={e => suppliersTable.setSearchQuery(e.target.value)} className="pl-8 h-9" />
+              </div>
+              <Select value={suppliersTable.filters.status || 'all'} onValueChange={v => suppliersTable.setFilter('status', v)}>
+                <SelectTrigger className="w-[130px] h-9"><SelectValue placeholder="Statut" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous</SelectItem>
+                  <SelectItem value="active">Actif</SelectItem>
+                  <SelectItem value="warning">Alerte</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {topSuppliers.map((s) => (
+              {suppliersTable.processedData.map((s) => (
                 <div key={s.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-3">
                     <span className="text-lg">{s.country}</span>
@@ -125,14 +154,15 @@ export default function SupplierDashboard() {
                   </div>
                 </div>
               ))}
+              {suppliersTable.processedData.length === 0 && (
+                <p className="text-center text-muted-foreground py-4">Aucun résultat</p>
+              )}
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Stock par Catégorie</CardTitle>
-          </CardHeader>
+          <CardHeader><CardTitle>Stock par Catégorie</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
@@ -173,19 +203,35 @@ export default function SupplierDashboard() {
           <Button variant="outline" size="sm" asChild><Link to="/pole/supplier/pending">Voir tout</Link></Button>
         </CardHeader>
         <CardContent>
+          <div className="flex gap-2 mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Rechercher par ID ou fournisseur..." value={ordersTable.searchQuery} onChange={e => ordersTable.setSearchQuery(e.target.value)} className="pl-8 h-9" />
+            </div>
+            <Select value={ordersTable.filters.status || 'all'} onValueChange={v => ordersTable.setFilter('status', v)}>
+              <SelectTrigger className="w-[160px] h-9"><SelectValue placeholder="Statut" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les statuts</SelectItem>
+                <SelectItem value="production">En production</SelectItem>
+                <SelectItem value="shipped">Expédié</SelectItem>
+                <SelectItem value="quality_check">Contrôle qualité</SelectItem>
+                <SelectItem value="delivered">Livré</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Fournisseur</TableHead>
-                <TableHead>Articles</TableHead>
+                <SortableTableHead column="id" currentSort={ordersTable.sortColumn as string} direction={ordersTable.sortDirection} onSort={c => ordersTable.toggleSort(c as keyof typeof activeOrders[0])}>ID</SortableTableHead>
+                <SortableTableHead column="supplier" currentSort={ordersTable.sortColumn as string} direction={ordersTable.sortDirection} onSort={c => ordersTable.toggleSort(c as keyof typeof activeOrders[0])}>Fournisseur</SortableTableHead>
+                <SortableTableHead column="items" currentSort={ordersTable.sortColumn as string} direction={ordersTable.sortDirection} onSort={c => ordersTable.toggleSort(c as keyof typeof activeOrders[0])}>Articles</SortableTableHead>
                 <TableHead>Statut</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Montant</TableHead>
+                <SortableTableHead column="date" currentSort={ordersTable.sortColumn as string} direction={ordersTable.sortDirection} onSort={c => ordersTable.toggleSort(c as keyof typeof activeOrders[0])}>Date</SortableTableHead>
+                <SortableTableHead column="amount" currentSort={ordersTable.sortColumn as string} direction={ordersTable.sortDirection} onSort={c => ordersTable.toggleSort(c as keyof typeof activeOrders[0])} className="text-right">Montant</SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {activeOrders.map((o) => (
+              {ordersTable.processedData.map((o) => (
                 <TableRow key={o.id}>
                   <TableCell className="font-medium">{o.id}</TableCell>
                   <TableCell>{o.supplier}</TableCell>
@@ -195,6 +241,9 @@ export default function SupplierDashboard() {
                   <TableCell className="text-right font-medium">{o.amount}</TableCell>
                 </TableRow>
               ))}
+              {ordersTable.processedData.length === 0 && (
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucun résultat</TableCell></TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
