@@ -18,6 +18,11 @@ import {
   Edit,
   Plus,
   Download,
+  Upload,
+  Trash2,
+  ShieldCheck,
+  FileCheck,
+  FileLock,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -53,6 +58,16 @@ import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
 // Types
+interface EmployeeDocument {
+  id: string;
+  name: string;
+  type: 'contrat' | 'identite' | 'diplome' | 'medical' | 'administratif' | 'autre';
+  uploadDate: string;
+  expiryDate?: string;
+  size: string;
+  uploadedBy: string;
+}
+
 interface EmployeeFile {
   id: string;
   name: string;
@@ -70,6 +85,7 @@ interface EmployeeFile {
   absenceDays: number;
   warnings: number;
   documents: number;
+  employeeDocuments: EmployeeDocument[];
   notes: EmployeeNote[];
   events: EmployeeEvent[];
 }
@@ -89,6 +105,15 @@ interface EmployeeEvent {
   label: string;
 }
 
+const docTypeConfig: Record<EmployeeDocument['type'], { label: string; icon: typeof FileText; className: string }> = {
+  contrat: { label: 'Contrat', icon: Briefcase, className: 'bg-primary/10 text-primary' },
+  identite: { label: 'Pièce d\'identité', icon: ShieldCheck, className: 'bg-accent/10 text-accent-foreground' },
+  diplome: { label: 'Diplôme', icon: Award, className: 'bg-success/10 text-success' },
+  medical: { label: 'Médical', icon: FileLock, className: 'bg-warning/10 text-warning' },
+  administratif: { label: 'Administratif', icon: FileCheck, className: 'bg-secondary text-secondary-foreground' },
+  autre: { label: 'Autre', icon: FileText, className: 'bg-muted text-muted-foreground' },
+};
+
 // Mock data
 const mockEmployees: EmployeeFile[] = [
   {
@@ -96,6 +121,13 @@ const mockEmployees: EmployeeFile[] = [
     pole: 'Finance', position: 'Finance Manager', status: 'active', startDate: '2022-03-15',
     contractType: 'CDI', manager: 'Alexandre Dupont', evaluationScore: 4.2, lastEvaluation: '2025-12-01',
     absenceDays: 3, warnings: 0, documents: 12,
+    employeeDocuments: [
+      { id: 'd1', name: 'CDI_Sophie_Martin.pdf', type: 'contrat', uploadDate: '2022-03-15', size: '245 Ko', uploadedBy: 'RH' },
+      { id: 'd2', name: 'CNI_Sophie_Martin.pdf', type: 'identite', uploadDate: '2022-03-10', expiryDate: '2030-05-20', size: '1.2 Mo', uploadedBy: 'RH' },
+      { id: 'd3', name: 'Diplome_Master_Finance.pdf', type: 'diplome', uploadDate: '2022-03-10', size: '890 Ko', uploadedBy: 'RH' },
+      { id: 'd4', name: 'Avenant_promotion_2024.pdf', type: 'contrat', uploadDate: '2024-06-01', size: '180 Ko', uploadedBy: 'RH' },
+      { id: 'd5', name: 'Attestation_SS.pdf', type: 'administratif', uploadDate: '2022-03-10', size: '320 Ko', uploadedBy: 'Sophie Martin' },
+    ],
     notes: [
       { id: 'n1', date: '2026-02-15', author: 'RH', type: 'performance', content: 'Excellente gestion du closing Q4. Propose pour prime exceptionnelle.' },
       { id: 'n2', date: '2025-12-01', author: 'Alexandre Dupont', type: 'general', content: 'Entretien annuel positif. Objectifs 2026 validés.' },
@@ -112,6 +144,11 @@ const mockEmployees: EmployeeFile[] = [
     pole: 'Tech', position: 'Développeur Senior', status: 'active', startDate: '2021-09-01',
     contractType: 'CDI', manager: 'Julien Moreau', evaluationScore: 3.8, lastEvaluation: '2025-12-05',
     absenceDays: 7, warnings: 0, documents: 9,
+    employeeDocuments: [
+      { id: 'd6', name: 'CDI_Lucas_Bernard.pdf', type: 'contrat', uploadDate: '2021-09-01', size: '230 Ko', uploadedBy: 'RH' },
+      { id: 'd7', name: 'Passeport_Lucas_Bernard.pdf', type: 'identite', uploadDate: '2021-08-25', expiryDate: '2028-11-10', size: '1.5 Mo', uploadedBy: 'RH' },
+      { id: 'd8', name: 'Certification_AWS.pdf', type: 'diplome', uploadDate: '2025-11-15', size: '450 Ko', uploadedBy: 'Lucas Bernard' },
+    ],
     notes: [
       { id: 'n3', date: '2026-01-20', author: 'Julien Moreau', type: 'performance', content: 'Contribution majeure au projet de migration API. Très bonne autonomie.' },
     ],
@@ -127,6 +164,11 @@ const mockEmployees: EmployeeFile[] = [
     pole: 'Ops', position: 'Responsable Logistique', status: 'active', startDate: '2023-01-10',
     contractType: 'CDI', manager: 'Nadia Benzema', evaluationScore: 3.5, lastEvaluation: '2025-11-20',
     absenceDays: 12, warnings: 1, documents: 15,
+    employeeDocuments: [
+      { id: 'd9', name: 'CDI_Emilie_Rousseau.pdf', type: 'contrat', uploadDate: '2023-01-10', size: '240 Ko', uploadedBy: 'RH' },
+      { id: 'd10', name: 'CNI_Emilie_Rousseau.pdf', type: 'identite', uploadDate: '2023-01-05', expiryDate: '2029-03-15', size: '1.1 Mo', uploadedBy: 'RH' },
+      { id: 'd11', name: 'Certificat_medical_aptitude.pdf', type: 'medical', uploadDate: '2025-08-01', size: '150 Ko', uploadedBy: 'RH' },
+    ],
     notes: [
       { id: 'n4', date: '2026-03-01', author: 'RH', type: 'disciplinary', content: 'Avertissement écrit suite à 3 retards consécutifs en février.' },
       { id: 'n5', date: '2025-11-20', author: 'Nadia Benzema', type: 'performance', content: 'Bonne gestion du pic de Noël. Points à améliorer sur le reporting.' },
@@ -143,6 +185,10 @@ const mockEmployees: EmployeeFile[] = [
     pole: 'Marketing', position: 'Chargé de communication', status: 'probation', startDate: '2025-11-01',
     contractType: 'CDD', contractEnd: '2026-04-30', manager: 'Claire Fontaine', evaluationScore: undefined,
     lastEvaluation: undefined, absenceDays: 1, warnings: 0, documents: 5,
+    employeeDocuments: [
+      { id: 'd12', name: 'CDD_Karim_Hadj.pdf', type: 'contrat', uploadDate: '2025-11-01', size: '210 Ko', uploadedBy: 'RH' },
+      { id: 'd13', name: 'CNI_Karim_Hadj.pdf', type: 'identite', uploadDate: '2025-10-28', expiryDate: '2031-07-12', size: '1.3 Mo', uploadedBy: 'RH' },
+    ],
     notes: [
       { id: 'n6', date: '2026-02-01', author: 'Claire Fontaine', type: 'general', content: 'Fin de période d\'essai prévue le 01/05. Bilan intermédiaire positif.' },
     ],
@@ -156,6 +202,12 @@ const mockEmployees: EmployeeFile[] = [
     pole: 'RH', position: 'Chargée de recrutement', status: 'leave', startDate: '2020-06-15',
     contractType: 'CDI', manager: 'Marc Lefèvre', evaluationScore: 4.0, lastEvaluation: '2025-12-10',
     absenceDays: 45, warnings: 0, documents: 18,
+    employeeDocuments: [
+      { id: 'd14', name: 'CDI_Julie_Petit.pdf', type: 'contrat', uploadDate: '2020-06-15', size: '220 Ko', uploadedBy: 'RH' },
+      { id: 'd15', name: 'Passeport_Julie_Petit.pdf', type: 'identite', uploadDate: '2020-06-10', expiryDate: '2027-09-01', size: '1.4 Mo', uploadedBy: 'RH' },
+      { id: 'd16', name: 'Certificat_grossesse.pdf', type: 'medical', uploadDate: '2025-12-20', size: '180 Ko', uploadedBy: 'Julie Petit' },
+      { id: 'd17', name: 'Avenant_promotion_senior.pdf', type: 'contrat', uploadDate: '2023-06-15', size: '195 Ko', uploadedBy: 'RH' },
+    ],
     notes: [
       { id: 'n7', date: '2026-01-15', author: 'RH', type: 'medical', content: 'Congé maternité du 15/01 au 15/07/2026. Remplacement assuré par intérim.' },
     ],
@@ -172,6 +224,10 @@ const mockEmployees: EmployeeFile[] = [
     pole: 'Supplier', position: 'Acheteur', status: 'active', startDate: '2024-02-01',
     contractType: 'CDI', manager: 'Marie Dubois', evaluationScore: 3.2, lastEvaluation: '2025-12-08',
     absenceDays: 5, warnings: 0, documents: 8,
+    employeeDocuments: [
+      { id: 'd18', name: 'CDI_Thomas_Girard.pdf', type: 'contrat', uploadDate: '2024-02-01', size: '235 Ko', uploadedBy: 'RH' },
+      { id: 'd19', name: 'CNI_Thomas_Girard.pdf', type: 'identite', uploadDate: '2024-01-28', expiryDate: '2032-01-15', size: '1.2 Mo', uploadedBy: 'RH' },
+    ],
     notes: [
       { id: 'n8', date: '2025-12-08', author: 'Marie Dubois', type: 'performance', content: 'Progrès notables sur la négociation fournisseurs. Formation recommandée en analyse financière.' },
     ],
@@ -186,6 +242,12 @@ const mockEmployees: EmployeeFile[] = [
     pole: 'Compliance', position: 'Juriste', status: 'active', startDate: '2023-09-01',
     contractType: 'CDI', manager: 'Philippe Renard', evaluationScore: 4.5, lastEvaluation: '2025-12-12',
     absenceDays: 2, warnings: 0, documents: 22,
+    employeeDocuments: [
+      { id: 'd20', name: 'CDI_Amira_Belkacem.pdf', type: 'contrat', uploadDate: '2023-09-01', size: '240 Ko', uploadedBy: 'RH' },
+      { id: 'd21', name: 'Passeport_Amira_Belkacem.pdf', type: 'identite', uploadDate: '2023-08-28', expiryDate: '2029-06-20', size: '1.5 Mo', uploadedBy: 'RH' },
+      { id: 'd22', name: 'Certification_DPO.pdf', type: 'diplome', uploadDate: '2025-05-20', size: '520 Ko', uploadedBy: 'Amira Belkacem' },
+      { id: 'd23', name: 'Master_Droit_International.pdf', type: 'diplome', uploadDate: '2023-08-28', size: '780 Ko', uploadedBy: 'RH' },
+    ],
     notes: [
       { id: 'n9', date: '2026-03-10', author: 'Philippe Renard', type: 'performance', content: 'Pilotage exemplaire du dossier RGPD. Candidate pour le poste de Responsable Compliance adjoint.' },
     ],
@@ -201,6 +263,10 @@ const mockEmployees: EmployeeFile[] = [
     pole: 'Tech', position: 'Stagiaire Développeur', status: 'active', startDate: '2026-01-15',
     contractType: 'Stage', contractEnd: '2026-07-15', manager: 'Julien Moreau', evaluationScore: undefined,
     lastEvaluation: undefined, absenceDays: 0, warnings: 0, documents: 3,
+    employeeDocuments: [
+      { id: 'd24', name: 'Convention_stage_Nicolas_Faure.pdf', type: 'contrat', uploadDate: '2026-01-15', size: '310 Ko', uploadedBy: 'RH' },
+      { id: 'd25', name: 'CNI_Nicolas_Faure.pdf', type: 'identite', uploadDate: '2026-01-10', expiryDate: '2033-04-08', size: '1.1 Mo', uploadedBy: 'RH' },
+    ],
     notes: [
       { id: 'n10', date: '2026-03-15', author: 'Julien Moreau', type: 'general', content: 'Bonne intégration. Montée en compétence rapide sur React et TypeScript.' },
     ],
@@ -242,7 +308,9 @@ export default function EmployeeFiles() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedEmployee, setSelectedEmployee] = useState<EmployeeFile | null>(null);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [docDialogOpen, setDocDialogOpen] = useState(false);
   const [newNote, setNewNote] = useState({ type: 'general', content: '' });
+  const [newDoc, setNewDoc] = useState({ name: '', type: 'contrat' as EmployeeDocument['type'] });
   const [employees, setEmployees] = useState(mockEmployees);
   const { toast } = useToast();
 
@@ -273,6 +341,34 @@ export default function EmployeeFiles() {
     setNewNote({ type: 'general', content: '' });
     setNoteDialogOpen(false);
     toast({ title: 'Note ajoutée', description: `Note ajoutée au dossier de ${selectedEmployee.name}.` });
+  };
+
+  const handleAddDoc = () => {
+    if (!selectedEmployee || !newDoc.name.trim()) return;
+    const doc: EmployeeDocument = {
+      id: `d-${Date.now()}`,
+      name: newDoc.name,
+      type: newDoc.type,
+      uploadDate: new Date().toISOString().split('T')[0],
+      size: '— Ko',
+      uploadedBy: 'RH',
+    };
+    setEmployees(prev => prev.map(e =>
+      e.id === selectedEmployee.id ? { ...e, employeeDocuments: [doc, ...e.employeeDocuments], documents: e.documents + 1 } : e
+    ));
+    setSelectedEmployee(prev => prev ? { ...prev, employeeDocuments: [doc, ...prev.employeeDocuments], documents: prev.documents + 1 } : null);
+    setNewDoc({ name: '', type: 'contrat' });
+    setDocDialogOpen(false);
+    toast({ title: 'Document ajouté', description: `Document ajouté au dossier de ${selectedEmployee.name}.` });
+  };
+
+  const handleDeleteDoc = (docId: string) => {
+    if (!selectedEmployee) return;
+    setEmployees(prev => prev.map(e =>
+      e.id === selectedEmployee.id ? { ...e, employeeDocuments: e.employeeDocuments.filter(d => d.id !== docId), documents: e.documents - 1 } : e
+    ));
+    setSelectedEmployee(prev => prev ? { ...prev, employeeDocuments: prev.employeeDocuments.filter(d => d.id !== docId), documents: prev.documents - 1 } : null);
+    toast({ title: 'Document supprimé', description: 'Le document a été retiré du dossier.' });
   };
 
   const activeCount = employees.filter(e => e.status === 'active').length;
@@ -343,18 +439,81 @@ export default function EmployeeFiles() {
 
           {/* Right: Tabs */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <h3 className="text-lg font-semibold text-foreground">Dossier de {emp.name.split(' ')[0]}</h3>
-              <Button size="sm" onClick={() => setNoteDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" />Ajouter une note
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setDocDialogOpen(true)}>
+                  <Upload className="h-4 w-4 mr-1" />Ajouter un document
+                </Button>
+                <Button size="sm" onClick={() => setNoteDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />Ajouter une note
+                </Button>
+              </div>
             </div>
 
-            <Tabs defaultValue="timeline" className="w-full">
+            <Tabs defaultValue="documents" className="w-full">
               <TabsList>
+                <TabsTrigger value="documents">Documents ({emp.employeeDocuments.length})</TabsTrigger>
                 <TabsTrigger value="timeline">Chronologie</TabsTrigger>
                 <TabsTrigger value="notes">Notes ({emp.notes.length})</TabsTrigger>
               </TabsList>
+
+              <TabsContent value="documents" className="mt-4 space-y-3">
+                {/* Doc type summary */}
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {Object.entries(docTypeConfig).map(([key, cfg]) => {
+                    const count = emp.employeeDocuments.filter(d => d.type === key).length;
+                    if (count === 0) return null;
+                    return (
+                      <Badge key={key} className={cn('text-[10px]', cfg.className)}>
+                        {cfg.label} ({count})
+                      </Badge>
+                    );
+                  })}
+                </div>
+
+                {emp.employeeDocuments.map(doc => {
+                  const cfg = docTypeConfig[doc.type];
+                  const DocIcon = cfg.icon;
+                  const isExpired = doc.expiryDate && new Date(doc.expiryDate) < new Date();
+                  const isExpiringSoon = doc.expiryDate && !isExpired && new Date(doc.expiryDate) < new Date(Date.now() + 90 * 86400000);
+                  return (
+                    <div key={doc.id} className="enterprise-card p-4 flex items-center gap-4">
+                      <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', cfg.className)}>
+                        <DocIcon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                          <Badge className={cn('text-[10px]', cfg.className)}>{cfg.label}</Badge>
+                          <span>•</span>
+                          <span>{doc.size}</span>
+                          <span>•</span>
+                          <span>Ajouté le {new Date(doc.uploadDate).toLocaleDateString('fr-FR')}</span>
+                          <span>•</span>
+                          <span>par {doc.uploadedBy}</span>
+                        </div>
+                        {doc.expiryDate && (
+                          <p className={cn('text-xs mt-1', isExpired ? 'text-destructive font-medium' : isExpiringSoon ? 'text-warning' : 'text-muted-foreground')}>
+                            {isExpired ? '⚠ Expiré' : `Expire le ${new Date(doc.expiryDate).toLocaleDateString('fr-FR')}`}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: 'Téléchargement', description: `${doc.name} en cours de téléchargement...` })}>
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteDoc(doc.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {emp.employeeDocuments.length === 0 && (
+                  <div className="text-center text-sm text-muted-foreground py-8">Aucun document dans le dossier</div>
+                )}
+              </TabsContent>
 
               <TabsContent value="timeline" className="mt-4">
                 <div className="enterprise-card p-4 space-y-0">
@@ -434,6 +593,52 @@ export default function EmployeeFiles() {
             <DialogFooter>
               <Button variant="outline" onClick={() => setNoteDialogOpen(false)}>Annuler</Button>
               <Button onClick={handleAddNote} disabled={!newNote.content.trim()}>Ajouter</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Add document dialog */}
+        <Dialog open={docDialogOpen} onOpenChange={setDocDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Ajouter un document</DialogTitle>
+              <DialogDescription>Ajouter un document au dossier de {emp.name}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Type de document</Label>
+                <Select value={newDoc.type} onValueChange={v => setNewDoc(prev => ({ ...prev, type: v as EmployeeDocument['type'] }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contrat">Contrat</SelectItem>
+                    <SelectItem value="identite">Pièce d'identité</SelectItem>
+                    <SelectItem value="diplome">Diplôme / Certification</SelectItem>
+                    <SelectItem value="medical">Document médical</SelectItem>
+                    <SelectItem value="administratif">Administratif</SelectItem>
+                    <SelectItem value="autre">Autre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Nom du fichier</Label>
+                <Input
+                  value={newDoc.name}
+                  onChange={e => setNewDoc(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Ex: CDI_Nom_Prenom.pdf"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Fichier</Label>
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors">
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">Glissez un fichier ici ou cliquez pour parcourir</p>
+                  <p className="text-xs text-muted-foreground mt-1">PDF, JPG, PNG — Max 10 Mo</p>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDocDialogOpen(false)}>Annuler</Button>
+              <Button onClick={handleAddDoc} disabled={!newDoc.name.trim()}>Ajouter</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
