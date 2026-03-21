@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -5,9 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
 import { useTableInteractions } from '@/hooks/useTableInteractions';
-import { FolderOpen, TrendingUp, Users, Clock } from 'lucide-react';
+import { FolderOpen, TrendingUp, Users, Clock, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
-const mockCases = [
+const initialCases = [
   { id: 'ETH-2025-001', type: 'Harcèlement', priority: 'critique', investigator: 'Marie Dupont', status: 'Investigation', opened: '2025-06-10', lastUpdate: '2025-06-18' },
   { id: 'ETH-2025-003', type: 'Fraude', priority: 'critique', investigator: 'Jean-Marc Leroy', status: 'Escaladé', opened: '2025-06-08', lastUpdate: '2025-06-17' },
   { id: 'ETH-2025-005', type: 'Corruption', priority: 'haute', investigator: 'Sophie Martin', status: 'Due diligence', opened: '2025-06-05', lastUpdate: '2025-06-16' },
@@ -28,15 +31,30 @@ const statusColors: Record<string, string> = {
   Investigation: 'bg-primary/15 text-primary',
   Escaladé: 'bg-destructive/15 text-destructive',
   'Due diligence': 'bg-yellow-500/15 text-yellow-700',
+  Clôturé: 'bg-green-500/15 text-green-700',
 };
 
 const EthicsOngoing = () => {
+  const { toast } = useToast();
+  const [cases, setCases] = useState(initialCases);
+
   const { searchQuery, setSearchQuery, sortColumn, sortDirection, toggleSort, filters, setFilter, processedData } = useTableInteractions({
-    data: mockCases,
+    data: cases,
     searchFields: ['id', 'type', 'investigator'],
   });
 
-  const escalatedCount = mockCases.filter(c => c.status === 'Escaladé').length;
+  const handleEscalate = (id: string) => {
+    setCases(prev => prev.map(c => c.id === id ? { ...c, status: 'Escaladé', priority: 'critique' } : c));
+    toast({ title: 'Dossier escaladé', description: `${id} a été escaladé au comité d'éthique.`, variant: 'destructive' });
+  };
+
+  const handleClose = (id: string) => {
+    setCases(prev => prev.map(c => c.id === id ? { ...c, status: 'Clôturé' } : c));
+    toast({ title: 'Dossier clôturé', description: `${id} a été clôturé avec succès.` });
+  };
+
+  const escalatedCount = cases.filter(c => c.status === 'Escaladé').length;
+  const openCount = cases.filter(c => c.status !== 'Clôturé').length;
 
   return (
     <div className="space-y-6">
@@ -46,7 +64,7 @@ const EthicsOngoing = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><FolderOpen className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{mockCases.length}</p><p className="text-xs text-muted-foreground">Dossiers ouverts</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><FolderOpen className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{openCount}</p><p className="text-xs text-muted-foreground">Dossiers ouverts</p></div></div></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Clock className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">12.4j</p><p className="text-xs text-muted-foreground">Durée moyenne</p></div></div></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><TrendingUp className="h-8 w-8 text-destructive" /><div><p className="text-2xl font-bold">{escalatedCount}</p><p className="text-xs text-muted-foreground">Escaladés</p></div></div></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Users className="h-8 w-8 text-orange-500" /><div><p className="text-2xl font-bold">4</p><p className="text-xs text-muted-foreground">Enquêteurs actifs</p></div></div></CardContent></Card>
@@ -64,6 +82,7 @@ const EthicsOngoing = () => {
                 <SelectItem value="Investigation">Investigation</SelectItem>
                 <SelectItem value="Escaladé">Escaladé</SelectItem>
                 <SelectItem value="Due diligence">Due diligence</SelectItem>
+                <SelectItem value="Clôturé">Clôturé</SelectItem>
               </SelectContent>
             </Select>
             <Select value={filters.priority || 'all'} onValueChange={v => setFilter('priority', v)}>
@@ -81,13 +100,13 @@ const EthicsOngoing = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <SortableTableHead column="id" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockCases[0])}>ID</SortableTableHead>
-                <SortableTableHead column="type" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockCases[0])}>Type</SortableTableHead>
-                <SortableTableHead column="priority" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockCases[0])}>Priorité</SortableTableHead>
-                <SortableTableHead column="investigator" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockCases[0])}>Enquêteur</SortableTableHead>
-                <SortableTableHead column="status" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockCases[0])}>Statut</SortableTableHead>
-                <SortableTableHead column="opened" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockCases[0])}>Ouvert le</SortableTableHead>
-                <SortableTableHead column="lastUpdate" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockCases[0])}>Dernière MAJ</SortableTableHead>
+                <SortableTableHead column="id" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialCases[0])}>ID</SortableTableHead>
+                <SortableTableHead column="type" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialCases[0])}>Type</SortableTableHead>
+                <SortableTableHead column="priority" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialCases[0])}>Priorité</SortableTableHead>
+                <SortableTableHead column="investigator" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialCases[0])}>Enquêteur</SortableTableHead>
+                <SortableTableHead column="status" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialCases[0])}>Statut</SortableTableHead>
+                <SortableTableHead column="opened" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialCases[0])}>Ouvert le</SortableTableHead>
+                <SortableTableHead column="id" currentSort={null} direction={null} onSort={() => {}}>Actions</SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -97,9 +116,23 @@ const EthicsOngoing = () => {
                   <TableCell>{c.type}</TableCell>
                   <TableCell><Badge className={priorityColors[c.priority]}>{c.priority}</Badge></TableCell>
                   <TableCell>{c.investigator}</TableCell>
-                  <TableCell><Badge className={statusColors[c.status]}>{c.status}</Badge></TableCell>
+                  <TableCell><Badge className={statusColors[c.status] || 'bg-muted text-muted-foreground'}>{c.status}</Badge></TableCell>
                   <TableCell>{c.opened}</TableCell>
-                  <TableCell>{c.lastUpdate}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {c.status !== 'Escaladé' && c.status !== 'Clôturé' && (
+                        <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={() => handleEscalate(c.id)}>
+                          <ArrowUpRight className="h-3 w-3" /> Escalader
+                        </Button>
+                      )}
+                      {c.status !== 'Clôturé' && (
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => handleClose(c.id)}>
+                          <CheckCircle2 className="h-3 w-3" /> Clôturer
+                        </Button>
+                      )}
+                      {c.status === 'Clôturé' && <span className="text-xs text-green-600">Clôturé ✓</span>}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

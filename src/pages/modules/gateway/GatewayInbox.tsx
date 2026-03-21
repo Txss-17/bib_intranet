@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -5,9 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
 import { useTableInteractions } from '@/hooks/useTableInteractions';
-import { Inbox, Mail, MailOpen, Clock } from 'lucide-react';
+import { Inbox, Mail, MailOpen, Clock, UserPlus, Eye } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
-const mockMessages = [
+const initialMessages = [
   { id: 'GW-2025-101', sender: 'Fournisseur Maroc S.A.', subject: 'Demande certificat Bio', channel: 'Email', category: 'Certification', date: '2025-06-18', status: 'Nouveau' },
   { id: 'GW-2025-102', sender: 'Client Leclerc #412', subject: 'Réclamation colis endommagé', channel: 'Formulaire', category: 'Réclamation', date: '2025-06-18', status: 'Nouveau' },
   { id: 'GW-2025-103', sender: 'Partenaire DHL', subject: 'Mise à jour tarifs Q3', channel: 'Email', category: 'Logistique', date: '2025-06-17', status: 'Lu' },
@@ -23,15 +26,29 @@ const mockMessages = [
 const statusColors: Record<string, string> = {
   Nouveau: 'bg-primary/15 text-primary',
   Lu: 'bg-muted text-muted-foreground',
+  Assigné: 'bg-green-500/15 text-green-700',
 };
 
 const GatewayInbox = () => {
+  const { toast } = useToast();
+  const [messages, setMessages] = useState(initialMessages);
+
   const { searchQuery, setSearchQuery, sortColumn, sortDirection, toggleSort, filters, setFilter, processedData } = useTableInteractions({
-    data: mockMessages,
+    data: messages,
     searchFields: ['id', 'sender', 'subject', 'category'],
   });
 
-  const newCount = mockMessages.filter(m => m.status === 'Nouveau').length;
+  const handleMarkRead = (id: string) => {
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, status: 'Lu' } : m));
+    toast({ title: 'Marqué comme lu', description: `${id} a été marqué comme lu.` });
+  };
+
+  const handleAssign = (id: string) => {
+    setMessages(prev => prev.map(m => m.id === id ? { ...m, status: 'Assigné' } : m));
+    toast({ title: 'Message assigné', description: `${id} a été assigné pour validation.` });
+  };
+
+  const newCount = messages.filter(m => m.status === 'Nouveau').length;
 
   return (
     <div className="space-y-6">
@@ -41,9 +58,9 @@ const GatewayInbox = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Inbox className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{mockMessages.length}</p><p className="text-xs text-muted-foreground">Total en boîte</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Inbox className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{messages.length}</p><p className="text-xs text-muted-foreground">Total en boîte</p></div></div></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Mail className="h-8 w-8 text-destructive" /><div><p className="text-2xl font-bold">{newCount}</p><p className="text-xs text-muted-foreground">Non lus</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><MailOpen className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{mockMessages.length - newCount}</p><p className="text-xs text-muted-foreground">Lus (non traités)</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><MailOpen className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{messages.filter(m => m.status === 'Lu').length}</p><p className="text-xs text-muted-foreground">Lus (non traités)</p></div></div></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Clock className="h-8 w-8 text-orange-500" /><div><p className="text-2xl font-bold">2.1h</p><p className="text-xs text-muted-foreground">Temps moyen lecture</p></div></div></CardContent></Card>
       </div>
 
@@ -82,13 +99,13 @@ const GatewayInbox = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <SortableTableHead column="id" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockMessages[0])}>ID</SortableTableHead>
-                <SortableTableHead column="sender" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockMessages[0])}>Expéditeur</SortableTableHead>
-                <SortableTableHead column="subject" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockMessages[0])}>Objet</SortableTableHead>
-                <SortableTableHead column="channel" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockMessages[0])}>Canal</SortableTableHead>
-                <SortableTableHead column="category" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockMessages[0])}>Catégorie</SortableTableHead>
-                <SortableTableHead column="date" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockMessages[0])}>Date</SortableTableHead>
-                <SortableTableHead column="status" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockMessages[0])}>Statut</SortableTableHead>
+                <SortableTableHead column="id" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialMessages[0])}>ID</SortableTableHead>
+                <SortableTableHead column="sender" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialMessages[0])}>Expéditeur</SortableTableHead>
+                <SortableTableHead column="subject" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialMessages[0])}>Objet</SortableTableHead>
+                <SortableTableHead column="channel" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialMessages[0])}>Canal</SortableTableHead>
+                <SortableTableHead column="category" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialMessages[0])}>Catégorie</SortableTableHead>
+                <SortableTableHead column="status" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialMessages[0])}>Statut</SortableTableHead>
+                <SortableTableHead column="id" currentSort={null} direction={null} onSort={() => {}}>Actions</SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -99,8 +116,22 @@ const GatewayInbox = () => {
                   <TableCell className="max-w-[200px] truncate">{m.subject}</TableCell>
                   <TableCell><Badge variant="outline">{m.channel}</Badge></TableCell>
                   <TableCell><Badge variant="secondary">{m.category}</Badge></TableCell>
-                  <TableCell>{m.date}</TableCell>
-                  <TableCell><Badge className={statusColors[m.status]}>{m.status}</Badge></TableCell>
+                  <TableCell><Badge className={statusColors[m.status] || 'bg-muted text-muted-foreground'}>{m.status}</Badge></TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {m.status === 'Nouveau' && (
+                        <Button size="sm" variant="ghost" className="h-7 text-xs gap-1" onClick={() => handleMarkRead(m.id)}>
+                          <Eye className="h-3 w-3" /> Lire
+                        </Button>
+                      )}
+                      {(m.status === 'Nouveau' || m.status === 'Lu') && (
+                        <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => handleAssign(m.id)}>
+                          <UserPlus className="h-3 w-3" /> Assigner
+                        </Button>
+                      )}
+                      {m.status === 'Assigné' && <span className="text-xs text-green-600">Assigné ✓</span>}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

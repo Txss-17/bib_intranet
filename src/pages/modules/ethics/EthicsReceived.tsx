@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -5,10 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
 import { useTableInteractions } from '@/hooks/useTableInteractions';
-import { AlertTriangle, Clock, Eye, ShieldAlert, UserX } from 'lucide-react';
+import { AlertTriangle, Clock, ShieldAlert, UserX, UserPlus, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/hooks/use-toast';
 
-const mockReports = [
+const initialReports = [
   { id: 'ETH-2025-001', type: 'Harcèlement', priority: 'critique', source: 'Anonyme', channel: 'Formulaire web', date: '2025-06-18', status: 'Nouveau' },
   { id: 'ETH-2025-002', type: 'Conflit d\'intérêts', priority: 'haute', source: 'Identifié', channel: 'Email', date: '2025-06-17', status: 'En attente' },
   { id: 'ETH-2025-003', type: 'Fraude', priority: 'critique', source: 'Anonyme', channel: 'Hotline', date: '2025-06-16', status: 'Nouveau' },
@@ -31,17 +33,32 @@ const priorityColors: Record<string, string> = {
 const statusColors: Record<string, string> = {
   Nouveau: 'bg-primary/15 text-primary',
   'En attente': 'bg-yellow-500/15 text-yellow-700',
+  Assigné: 'bg-green-500/15 text-green-700',
+  Escaladé: 'bg-destructive/15 text-destructive',
 };
 
 const EthicsReceived = () => {
+  const { toast } = useToast();
+  const [reports, setReports] = useState(initialReports);
+
   const { searchQuery, setSearchQuery, sortColumn, sortDirection, toggleSort, filters, setFilter, processedData } = useTableInteractions({
-    data: mockReports,
+    data: reports,
     searchFields: ['id', 'type', 'source', 'channel'],
   });
 
-  const totalReceived = mockReports.length;
-  const anonymousRate = Math.round((mockReports.filter(r => r.source === 'Anonyme').length / totalReceived) * 100);
-  const newCount = mockReports.filter(r => r.status === 'Nouveau').length;
+  const handleAssign = (id: string) => {
+    setReports(prev => prev.map(r => r.id === id ? { ...r, status: 'Assigné' } : r));
+    toast({ title: 'Signalement assigné', description: `${id} a été assigné à un enquêteur.` });
+  };
+
+  const handleEscalate = (id: string) => {
+    setReports(prev => prev.map(r => r.id === id ? { ...r, status: 'Escaladé', priority: 'critique' } : r));
+    toast({ title: 'Signalement escaladé', description: `${id} a été escaladé en priorité critique.`, variant: 'destructive' });
+  };
+
+  const totalReceived = reports.length;
+  const anonymousRate = Math.round((reports.filter(r => r.source === 'Anonyme').length / totalReceived) * 100);
+  const newCount = reports.filter(r => r.status === 'Nouveau').length;
 
   return (
     <div className="space-y-6">
@@ -86,13 +103,13 @@ const EthicsReceived = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <SortableTableHead column="id" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockReports[0])}>ID</SortableTableHead>
-                <SortableTableHead column="type" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockReports[0])}>Type</SortableTableHead>
-                <SortableTableHead column="priority" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockReports[0])}>Priorité</SortableTableHead>
-                <SortableTableHead column="source" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockReports[0])}>Source</SortableTableHead>
-                <SortableTableHead column="channel" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockReports[0])}>Canal</SortableTableHead>
-                <SortableTableHead column="date" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockReports[0])}>Date</SortableTableHead>
-                <SortableTableHead column="status" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockReports[0])}>Statut</SortableTableHead>
+                <SortableTableHead column="id" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialReports[0])}>ID</SortableTableHead>
+                <SortableTableHead column="type" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialReports[0])}>Type</SortableTableHead>
+                <SortableTableHead column="priority" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialReports[0])}>Priorité</SortableTableHead>
+                <SortableTableHead column="source" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialReports[0])}>Source</SortableTableHead>
+                <SortableTableHead column="date" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialReports[0])}>Date</SortableTableHead>
+                <SortableTableHead column="status" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialReports[0])}>Statut</SortableTableHead>
+                <SortableTableHead column="id" currentSort={null} direction={null} onSort={() => {}}>Actions</SortableTableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -102,9 +119,24 @@ const EthicsReceived = () => {
                   <TableCell>{r.type}</TableCell>
                   <TableCell><Badge className={priorityColors[r.priority]}>{r.priority}</Badge></TableCell>
                   <TableCell><Badge variant="outline">{r.source}</Badge></TableCell>
-                  <TableCell>{r.channel}</TableCell>
                   <TableCell>{r.date}</TableCell>
-                  <TableCell><Badge className={statusColors[r.status]}>{r.status}</Badge></TableCell>
+                  <TableCell><Badge className={statusColors[r.status] || 'bg-muted text-muted-foreground'}>{r.status}</Badge></TableCell>
+                  <TableCell>
+                    <div className="flex gap-1">
+                      {(r.status === 'Nouveau' || r.status === 'En attente') && (
+                        <>
+                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => handleAssign(r.id)}>
+                            <UserPlus className="h-3 w-3" /> Assigner
+                          </Button>
+                          <Button size="sm" variant="destructive" className="h-7 text-xs gap-1" onClick={() => handleEscalate(r.id)}>
+                            <ArrowUpRight className="h-3 w-3" /> Escalader
+                          </Button>
+                        </>
+                      )}
+                      {r.status === 'Assigné' && <span className="text-xs text-muted-foreground">En traitement</span>}
+                      {r.status === 'Escaladé' && <span className="text-xs text-destructive">Escaladé ✓</span>}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
