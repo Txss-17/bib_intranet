@@ -6,7 +6,7 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
 interface ModuleNavigationProps {
   poleId?: PoleId;
-  transversalModule?: 'ethics' | 'gateway' | 'packaging';
+  transversalModule?: 'ethics' | 'gateway' | 'packaging' | 'rd';
   sidebarCollapsed: boolean;
 }
 

@@ -35,7 +35,17 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 };
 
 export default function RDProducts() {
-  const { searchQuery, setSearchQuery, sortColumn, sortDirection, handleSort, filters, setFilter } = useTableInteractions();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [filters, setFilters] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setFilters(prev => ({ ...prev, [key]: value }));
+  const toggleSort = (col: string) => {
+    if (sortColumn === col) {
+      if (sortDirection === 'asc') setSortDirection('desc');
+      else { setSortColumn(null); setSortDirection(null); }
+    } else { setSortColumn(col); setSortDirection('asc'); }
+  };
 
   const filtered = products
     .filter(p => {
