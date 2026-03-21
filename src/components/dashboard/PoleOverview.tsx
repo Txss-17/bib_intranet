@@ -12,6 +12,7 @@ import {
   Megaphone,
   ShieldAlert,
   RefreshCw,
+  FlaskConical,
   ArrowRight,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
