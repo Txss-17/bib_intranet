@@ -160,20 +160,4 @@ export const transversalNavigations: Record<string, SubNavigationItem[]> = {
     { id: 'routing', label: 'Routing', labelFr: 'Routage', path: '/modules/gateway/routing' },
     { id: 'responses', label: 'Responses', labelFr: 'Réponses', path: '/modules/gateway/responses' },
   ],
-  packaging: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/modules/packaging' },
-    { id: 'submissions', label: 'Submissions', labelFr: 'Soumissions', path: '/modules/packaging/submissions' },
-    { id: 'rse-validation', label: 'RSE Validation', labelFr: 'Validation RSE', path: '/modules/packaging/rse-validation' },
-    { id: 'audit-status', label: 'Audit Status', labelFr: 'Statut audit', path: '/modules/packaging/audit-status' },
-    { id: 'ops-transmission', label: 'Ops Transmission', labelFr: 'Transmission Ops', path: '/modules/packaging/ops-transmission' },
-    { id: 'recycling-resale', label: 'Recycling & Resale', labelFr: 'Recyclage revente', path: '/modules/packaging/recycling-resale' },
-  ],
-  rd: [
-    { id: 'overview', label: 'Dashboard', labelFr: 'Dashboard', path: '/modules/rd' },
-    { id: 'products', label: 'Product Analysis', labelFr: 'Analyse Produits', path: '/modules/rd/products' },
-    { id: 'shops', label: 'Shop Analysis', labelFr: 'Analyse Boutiques', path: '/modules/rd/shops' },
-    { id: 'suppliers', label: 'Supplier Analysis', labelFr: 'Analyse Fournisseurs', path: '/modules/rd/suppliers' },
-    { id: 'frictions', label: 'System Frictions', labelFr: 'Frictions Système', path: '/modules/rd/frictions' },
-    { id: 'reports', label: 'Reports & Recommendations', labelFr: 'Rapports & Recommandations', path: '/modules/rd/reports' },
-  ],
 };
