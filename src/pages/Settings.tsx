@@ -7,6 +7,7 @@ import {
   Key,
   Globe,
   HelpCircle,
+  Volume2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,12 +15,14 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { currentUser } from '@/data/mockData';
+import { useAlertSoundSetting } from '@/hooks/useAlertSoundSetting';
+import { playCriticalAlertSound } from '@/lib/alertSounds';
 
 export default function Settings() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [twoFactor, setTwoFactor] = useState(false);
-
+  const { soundEnabled, setSoundEnabled } = useAlertSoundSetting();
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
@@ -137,6 +140,27 @@ export default function Settings() {
                   <p className="text-xs text-muted-foreground">Always receive critical alerts</p>
                 </div>
                 <Switch checked disabled />
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Sons d'alerte</p>
+                  <p className="text-xs text-muted-foreground">Jouer un son lors des alertes critiques Ethics & Gateway</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => playCriticalAlertSound()}
+                    title="Tester le son"
+                  >
+                    <Volume2 className="h-4 w-4" />
+                  </Button>
+                  <Switch
+                    checked={soundEnabled}
+                    onCheckedChange={setSoundEnabled}
+                  />
+                </div>
               </div>
             </div>
           </div>

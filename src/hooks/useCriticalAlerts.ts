@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { playCriticalAlertSound, playHighAlertSound } from '@/lib/alertSounds';
+import { useAlertSoundSetting } from '@/hooks/useAlertSoundSetting';
 
 export type AlertSeverity = 'critical' | 'high' | 'medium';
 export type AlertModule = 'ethics' | 'gateway';
@@ -114,6 +115,7 @@ let nextId = 7;
 export function useCriticalAlerts() {
   const [alerts, setAlerts] = useState<CriticalAlert[]>(INITIAL_ALERTS);
   const [lastAlert, setLastAlert] = useState<CriticalAlert | null>(null);
+  const { soundEnabled } = useAlertSoundSetting();
 
   // Simulate incoming alerts every 45-90 seconds
   useEffect(() => {
@@ -129,10 +131,12 @@ export function useCriticalAlerts() {
         };
         setAlerts(prev => [newAlert, ...prev]);
         setLastAlert(newAlert);
-        if (newAlert.severity === 'critical') {
-          playCriticalAlertSound();
-        } else {
-          playHighAlertSound();
+        if (soundEnabled) {
+          if (newAlert.severity === 'critical') {
+            playCriticalAlertSound();
+          } else {
+            playHighAlertSound();
+          }
         }
         timerId = scheduleNext();
       }, delay);
