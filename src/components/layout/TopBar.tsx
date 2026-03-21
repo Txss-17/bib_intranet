@@ -13,6 +13,7 @@ import {
   User,
   Settings,
   Circle,
+  ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,10 +25,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { currentUser, notifications, tasks } from '@/data/mockData';
 import { getPoleById } from '@/data/poles';
 import { PoleId } from '@/types';
 import { EmployeeStatus } from '@/types/roles';
+import { useCriticalAlerts } from '@/hooks/useCriticalAlerts';
+import { CriticalAlertsPanel } from '@/components/notifications/CriticalAlertsPanel';
+import { CriticalAlertToast } from '@/components/notifications/CriticalAlertToast';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -61,6 +66,7 @@ const statusLabels: Record<EmployeeStatus, string> = {
 
 export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDarkMode, activePoleId }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
+  const { alerts, unreadCount, criticalCount, lastAlert, markAsRead, markAllAsRead, dismissLastAlert } = useCriticalAlerts();
   
   const unreadNotifications = notifications.filter(n => !n.read).length;
   const pendingTasks = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
@@ -80,6 +86,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
   };
 
   return (
+    <>
     <header
       className={cn(
         'fixed top-0 right-0 z-30 flex h-16 items-center justify-between border-b border-border bg-background/95 backdrop-blur px-4 transition-all duration-300',
@@ -138,6 +145,23 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
         >
           {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
+
+        {/* Critical Alerts */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className={cn('relative', criticalCount > 0 && 'animate-pulse')}>
+              <ShieldAlert className={cn('h-5 w-5', criticalCount > 0 ? 'text-destructive' : '')} />
+              {unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+                  {unreadCount}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="p-0 w-auto">
+            <CriticalAlertsPanel alerts={alerts} onMarkAsRead={markAsRead} onMarkAllAsRead={markAllAsRead} />
+          </PopoverContent>
+        </Popover>
 
         {/* Notifications */}
         <DropdownMenu>
@@ -301,5 +325,9 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
         </DropdownMenu>
       </div>
     </header>
+    {lastAlert && (
+      <CriticalAlertToast alert={lastAlert} onDismiss={dismissLastAlert} onMarkAsRead={markAsRead} />
+    )}
+    </>
   );
 }
