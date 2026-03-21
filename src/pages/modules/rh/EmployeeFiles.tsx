@@ -596,6 +596,52 @@ export default function EmployeeFiles() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* Add document dialog */}
+        <Dialog open={docDialogOpen} onOpenChange={setDocDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Ajouter un document</DialogTitle>
+              <DialogDescription>Ajouter un document au dossier de {emp.name}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Type de document</Label>
+                <Select value={newDoc.type} onValueChange={v => setNewDoc(prev => ({ ...prev, type: v as EmployeeDocument['type'] }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contrat">Contrat</SelectItem>
+                    <SelectItem value="identite">Pièce d'identité</SelectItem>
+                    <SelectItem value="diplome">Diplôme / Certification</SelectItem>
+                    <SelectItem value="medical">Document médical</SelectItem>
+                    <SelectItem value="administratif">Administratif</SelectItem>
+                    <SelectItem value="autre">Autre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Nom du fichier</Label>
+                <Input
+                  value={newDoc.name}
+                  onChange={e => setNewDoc(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Ex: CDI_Nom_Prenom.pdf"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Fichier</Label>
+                <div className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors">
+                  <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                  <p className="text-sm text-muted-foreground">Glissez un fichier ici ou cliquez pour parcourir</p>
+                  <p className="text-xs text-muted-foreground mt-1">PDF, JPG, PNG — Max 10 Mo</p>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDocDialogOpen(false)}>Annuler</Button>
+              <Button onClick={handleAddDoc} disabled={!newDoc.name.trim()}>Ajouter</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
