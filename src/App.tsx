@@ -13,6 +13,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 // Supplier module pages
+import SupplierDashboard from "./pages/modules/supplier/SupplierDashboard";
 import PendingProducts from "./pages/modules/supplier/PendingProducts";
 import ValidatedProducts from "./pages/modules/supplier/ValidatedProducts";
 import SupplierFiles from "./pages/modules/supplier/SupplierFiles";
