@@ -222,6 +222,7 @@ export default function HRAlerts() {
   const contractEndCount = activeAlerts.filter(a => a.type === 'contract_end').length;
   const probationCount = activeAlerts.filter(a => a.type === 'probation_end').length;
   const leaveCount = activeAlerts.filter(a => a.type === 'leave_return' || a.type === 'leave_start').length;
+  const docExpiryCount = activeAlerts.filter(a => a.type === 'document_expiry').length;
 
   const getDaysLabel = (days: number) => {
     if (days < 0) return `Il y a ${Math.abs(days)}j`;
