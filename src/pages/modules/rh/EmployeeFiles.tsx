@@ -18,6 +18,11 @@ import {
   Edit,
   Plus,
   Download,
+  Upload,
+  Trash2,
+  ShieldCheck,
+  FileCheck,
+  FileLock,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
