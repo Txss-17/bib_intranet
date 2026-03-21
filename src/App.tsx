@@ -118,6 +118,18 @@ import RiskRegisterModule from "./pages/modules/risk/RiskRegisterModule";
 import IncidentHistory from "./pages/modules/risk/IncidentHistory";
 import RiskMetrics from "./pages/modules/risk/RiskMetrics";
 
+// Ethics sub-section pages
+import EthicsReceived from "./pages/modules/ethics/EthicsReceived";
+import EthicsOngoing from "./pages/modules/ethics/EthicsOngoing";
+import EthicsClosed from "./pages/modules/ethics/EthicsClosed";
+import EthicsStats from "./pages/modules/ethics/EthicsStats";
+
+// Gateway sub-section pages
+import GatewayInbox from "./pages/modules/gateway/GatewayInbox";
+import GatewayValidation from "./pages/modules/gateway/GatewayValidation";
+import GatewayRouting from "./pages/modules/gateway/GatewayRouting";
+import GatewayResponses from "./pages/modules/gateway/GatewayResponses";
+
 const queryClient = new QueryClient();
 
 const App = () => (
