@@ -22,6 +22,7 @@ import {
   Shield,
   Recycle,
   Settings,
+  FlaskConical,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { poles } from '@/data/poles';
