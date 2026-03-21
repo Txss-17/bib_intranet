@@ -118,6 +118,18 @@ import RiskRegisterModule from "./pages/modules/risk/RiskRegisterModule";
 import IncidentHistory from "./pages/modules/risk/IncidentHistory";
 import RiskMetrics from "./pages/modules/risk/RiskMetrics";
 
+// Ethics sub-section pages
+import EthicsReceived from "./pages/modules/ethics/EthicsReceived";
+import EthicsOngoing from "./pages/modules/ethics/EthicsOngoing";
+import EthicsClosed from "./pages/modules/ethics/EthicsClosed";
+import EthicsStats from "./pages/modules/ethics/EthicsStats";
+
+// Gateway sub-section pages
+import GatewayInbox from "./pages/modules/gateway/GatewayInbox";
+import GatewayValidation from "./pages/modules/gateway/GatewayValidation";
+import GatewayRouting from "./pages/modules/gateway/GatewayRouting";
+import GatewayResponses from "./pages/modules/gateway/GatewayResponses";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -246,8 +258,16 @@ const App = () => (
             
             {/* Transversal modules */}
             <Route path="/modules/gateway" element={<GatewayDashboard />} />
+            <Route path="/modules/gateway/inbox" element={<GatewayInbox />} />
+            <Route path="/modules/gateway/validation" element={<GatewayValidation />} />
+            <Route path="/modules/gateway/routing" element={<GatewayRouting />} />
+            <Route path="/modules/gateway/responses" element={<GatewayResponses />} />
             <Route path="/modules/gateway/:subSection" element={<GatewayDashboard />} />
             <Route path="/modules/ethics" element={<EthicsDashboard />} />
+            <Route path="/modules/ethics/received" element={<EthicsReceived />} />
+            <Route path="/modules/ethics/ongoing" element={<EthicsOngoing />} />
+            <Route path="/modules/ethics/closed" element={<EthicsClosed />} />
+            <Route path="/modules/ethics/stats" element={<EthicsStats />} />
             <Route path="/modules/ethics/:subSection" element={<EthicsDashboard />} />
             <Route path="/modules/:moduleId/:subSection" element={<SubSectionPage />} />
             
