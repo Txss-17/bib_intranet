@@ -369,6 +369,7 @@ export default function EmployeeFiles() {
     ));
     setSelectedEmployee(prev => prev ? { ...prev, employeeDocuments: prev.employeeDocuments.filter(d => d.id !== docId), documents: prev.documents - 1 } : null);
     toast({ title: 'Document supprimé', description: 'Le document a été retiré du dossier.' });
+  };
 
   const activeCount = employees.filter(e => e.status === 'active').length;
   const onLeaveCount = employees.filter(e => e.status === 'leave').length;
