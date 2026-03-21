@@ -18,6 +18,11 @@ import RDShops from "./pages/modules/rd/RDShops";
 import RDSuppliers from "./pages/modules/rd/RDSuppliers";
 import RDFrictions from "./pages/modules/rd/RDFrictions";
 import RDReports from "./pages/modules/rd/RDReports";
+import GatewayDashboard from "./pages/modules/gateway/GatewayDashboard";
+import PackagingDashboard from "./pages/modules/packaging/PackagingDashboard";
+import ModuleAccess from "./pages/modules/direction/ModuleAccess";
+import LifecycleOnboarding from "./pages/modules/lifecycle/Onboarding";
+import ComplianceStatusPage from "./pages/modules/lifecycle/ComplianceStatus";
 
 // Supplier module pages
 import SupplierDashboard from "./pages/modules/supplier/SupplierDashboard";
