@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
-import { useTableInteractions } from '@/hooks/useTableInteractions';
+import { Search, Package, TrendingDown, Eye, AlertTriangle, BarChart3 } from 'lucide-react';
 import { Search, Package, TrendingDown, Eye, AlertTriangle, BarChart3 } from 'lucide-react';
 
 const products = [
