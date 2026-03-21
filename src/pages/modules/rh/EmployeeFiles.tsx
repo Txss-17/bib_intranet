@@ -73,9 +73,8 @@ const docTypeConfig: Record<EmployeeDocument['type'], { label: string; icon: typ
   autre: { label: 'Autre', icon: FileText, className: 'bg-muted text-muted-foreground' },
 };
 
-// Removed - data now in @/data/employeeData.ts
-// Keep remaining config constants below
-    pole: 'Finance', position: 'Finance Manager', status: 'active', startDate: '2022-03-15',
+
+
     contractType: 'CDI', manager: 'Alexandre Dupont', evaluationScore: 4.2, lastEvaluation: '2025-12-01',
     absenceDays: 3, warnings: 0, documents: 12,
     employeeDocuments: [
