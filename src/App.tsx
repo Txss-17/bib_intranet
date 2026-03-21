@@ -258,8 +258,16 @@ const App = () => (
             
             {/* Transversal modules */}
             <Route path="/modules/gateway" element={<GatewayDashboard />} />
+            <Route path="/modules/gateway/inbox" element={<GatewayInbox />} />
+            <Route path="/modules/gateway/validation" element={<GatewayValidation />} />
+            <Route path="/modules/gateway/routing" element={<GatewayRouting />} />
+            <Route path="/modules/gateway/responses" element={<GatewayResponses />} />
             <Route path="/modules/gateway/:subSection" element={<GatewayDashboard />} />
             <Route path="/modules/ethics" element={<EthicsDashboard />} />
+            <Route path="/modules/ethics/received" element={<EthicsReceived />} />
+            <Route path="/modules/ethics/ongoing" element={<EthicsOngoing />} />
+            <Route path="/modules/ethics/closed" element={<EthicsClosed />} />
+            <Route path="/modules/ethics/stats" element={<EthicsStats />} />
             <Route path="/modules/ethics/:subSection" element={<EthicsDashboard />} />
             <Route path="/modules/:moduleId/:subSection" element={<SubSectionPage />} />
             
