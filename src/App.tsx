@@ -80,6 +80,7 @@ import Attendance from "./pages/modules/rh/Attendance";
 import Leave from "./pages/modules/rh/Leave";
 import Training from "./pages/modules/rh/Training";
 import Publications from "./pages/modules/rh/Publications";
+import EmployeeFiles from "./pages/modules/rh/EmployeeFiles";
 
 // Audit module pages
 import AuditDashboard from "./pages/modules/audit/AuditDashboard";
@@ -201,6 +202,7 @@ const App = () => (
             {/* RH module */}
             <Route path="/pole/rh" element={<RHDashboard />} />
             <Route path="/pole/rh/employees" element={<Employees />} />
+            <Route path="/pole/rh/files" element={<EmployeeFiles />} />
             <Route path="/pole/rh/onboarding" element={<RHOnboarding />} />
             <Route path="/pole/rh/attendance" element={<Attendance />} />
             <Route path="/pole/rh/leave" element={<Leave />} />
