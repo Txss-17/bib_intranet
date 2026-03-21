@@ -245,7 +245,7 @@ export default function HRAlerts() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <div className="enterprise-card p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Alertes actives</p>
           <p className="text-2xl font-semibold text-foreground mt-1">{activeAlerts.length}</p>
@@ -265,6 +265,10 @@ export default function HRAlerts() {
         <div className="enterprise-card p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Congés</p>
           <p className="text-2xl font-semibold text-foreground mt-1">{leaveCount}</p>
+        </div>
+        <div className="enterprise-card p-4 border-warning/30">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">Documents expirés</p>
+          <p className="text-2xl font-semibold text-warning mt-1">{docExpiryCount}</p>
         </div>
       </div>
 
