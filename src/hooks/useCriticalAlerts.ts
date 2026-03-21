@@ -115,6 +115,7 @@ let nextId = 7;
 export function useCriticalAlerts() {
   const [alerts, setAlerts] = useState<CriticalAlert[]>(INITIAL_ALERTS);
   const [lastAlert, setLastAlert] = useState<CriticalAlert | null>(null);
+  const { soundEnabled } = useAlertSoundSetting();
 
   // Simulate incoming alerts every 45-90 seconds
   useEffect(() => {
