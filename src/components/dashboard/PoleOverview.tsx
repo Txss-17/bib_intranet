@@ -32,6 +32,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Megaphone,
   ShieldAlert,
   RefreshCw,
+  FlaskConical,
 };
 
 // Mock activity data
