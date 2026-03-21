@@ -123,10 +123,11 @@ const mockEmployees: EmployeeFile[] = [
     absenceDays: 3, warnings: 0, documents: 12,
     employeeDocuments: [
       { id: 'd1', name: 'CDI_Sophie_Martin.pdf', type: 'contrat', uploadDate: '2022-03-15', size: '245 Ko', uploadedBy: 'RH' },
-      { id: 'd2', name: 'CNI_Sophie_Martin.pdf', type: 'identite', uploadDate: '2022-03-10', expiryDate: '2030-05-20', size: '1.2 Mo', uploadedBy: 'RH' },
+      { id: 'd2', name: 'CNI_Sophie_Martin.pdf', type: 'identite', uploadDate: '2022-03-10', expiryDate: '2026-04-05', size: '1.2 Mo', uploadedBy: 'RH' },
       { id: 'd3', name: 'Diplome_Master_Finance.pdf', type: 'diplome', uploadDate: '2022-03-10', size: '890 Ko', uploadedBy: 'RH' },
       { id: 'd4', name: 'Avenant_promotion_2024.pdf', type: 'contrat', uploadDate: '2024-06-01', size: '180 Ko', uploadedBy: 'RH' },
       { id: 'd5', name: 'Attestation_SS.pdf', type: 'administratif', uploadDate: '2022-03-10', size: '320 Ko', uploadedBy: 'Sophie Martin' },
+      { id: 'd5b', name: 'Visite_medicale_2025.pdf', type: 'medical', uploadDate: '2025-03-20', expiryDate: '2026-03-25', size: '150 Ko', uploadedBy: 'RH' },
     ],
     notes: [
       { id: 'n1', date: '2026-02-15', author: 'RH', type: 'performance', content: 'Excellente gestion du closing Q4. Propose pour prime exceptionnelle.' },
