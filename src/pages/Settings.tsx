@@ -22,7 +22,7 @@ export default function Settings() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [twoFactor, setTwoFactor] = useState(false);
-
+  const { soundEnabled, setSoundEnabled } = useAlertSoundSetting();
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
