@@ -167,8 +167,8 @@ const mockEmployees: EmployeeFile[] = [
     absenceDays: 12, warnings: 1, documents: 15,
     employeeDocuments: [
       { id: 'd9', name: 'CDI_Emilie_Rousseau.pdf', type: 'contrat', uploadDate: '2023-01-10', size: '240 Ko', uploadedBy: 'RH' },
-      { id: 'd10', name: 'CNI_Emilie_Rousseau.pdf', type: 'identite', uploadDate: '2023-01-05', expiryDate: '2029-03-15', size: '1.1 Mo', uploadedBy: 'RH' },
-      { id: 'd11', name: 'Certificat_medical_aptitude.pdf', type: 'medical', uploadDate: '2025-08-01', size: '150 Ko', uploadedBy: 'RH' },
+      { id: 'd10', name: 'CNI_Emilie_Rousseau.pdf', type: 'identite', uploadDate: '2023-01-05', expiryDate: '2026-04-15', size: '1.1 Mo', uploadedBy: 'RH' },
+      { id: 'd11', name: 'Certificat_medical_aptitude.pdf', type: 'medical', uploadDate: '2025-08-01', expiryDate: '2026-08-01', size: '150 Ko', uploadedBy: 'RH' },
     ],
     notes: [
       { id: 'n4', date: '2026-03-01', author: 'RH', type: 'disciplinary', content: 'Avertissement écrit suite à 3 retards consécutifs en février.' },
