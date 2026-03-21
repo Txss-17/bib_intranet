@@ -13,6 +13,7 @@ import {
   User,
   Settings,
   Circle,
+  ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -24,10 +25,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { currentUser, notifications, tasks } from '@/data/mockData';
 import { getPoleById } from '@/data/poles';
 import { PoleId } from '@/types';
 import { EmployeeStatus } from '@/types/roles';
+import { useCriticalAlerts } from '@/hooks/useCriticalAlerts';
+import { CriticalAlertsPanel } from '@/components/notifications/CriticalAlertsPanel';
+import { CriticalAlertToast } from '@/components/notifications/CriticalAlertToast';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
