@@ -7,8 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
-import { useTableInteractions } from '@/hooks/useTableInteractions';
-import { Search, Zap, Clock, AlertTriangle, Bug, Eye, TrendingUp } from 'lucide-react';
+import { Search, Zap, Clock, AlertTriangle, TrendingUp, Eye } from 'lucide-react';
 
 const frictions = [
   { id: 'FRC-001', module: 'Commandes & Expéditions', type: 'ux', description: 'Flux de validation commande trop complexe (5 étapes)', impact: 'high', frequency: 45, status: 'open', reportedDate: '10/03' },
@@ -48,7 +47,17 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 };
 
 export default function RDFrictions() {
-  const { searchQuery, setSearchQuery, sortColumn, sortDirection, handleSort, filters, setFilter } = useTableInteractions();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [filters, setFiltersState] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setFiltersState(prev => ({ ...prev, [key]: value }));
+  const toggleSort = (col: string) => {
+    if (sortColumn === col) {
+      if (sortDirection === 'asc') setSortDirection('desc');
+      else { setSortColumn(null); setSortDirection(null); }
+    } else { setSortColumn(col); setSortDirection('asc'); }
+  };
 
   const filtered = frictions
     .filter(f => {
@@ -59,7 +68,7 @@ export default function RDFrictions() {
       return true;
     })
     .sort((a, b) => {
-      if (!sortColumn) return 0;
+      if (!sortColumn || !sortDirection) return 0;
       const dir = sortDirection === 'asc' ? 1 : -1;
       const av = a[sortColumn as keyof typeof a];
       const bv = b[sortColumn as keyof typeof b];
@@ -137,12 +146,12 @@ export default function RDFrictions() {
           <Table>
             <TableHeader>
               <TableRow>
-                <SortableTableHead column="id" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>ID</SortableTableHead>
-                <SortableTableHead column="module" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Module</SortableTableHead>
+                <SortableTableHead column="id" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>ID</SortableTableHead>
+                <SortableTableHead column="module" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Module</SortableTableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Description</TableHead>
                 <TableHead>Impact</TableHead>
-                <SortableTableHead column="frequency" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Fréquence</SortableTableHead>
+                <SortableTableHead column="frequency" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Fréquence</SortableTableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead></TableHead>

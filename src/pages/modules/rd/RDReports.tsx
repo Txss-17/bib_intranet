@@ -6,8 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
-import { useTableInteractions } from '@/hooks/useTableInteractions';
-import { Search, FileText, Lightbulb, Plus, Eye, CheckCircle, Clock, AlertTriangle } from 'lucide-react';
+import { Search, FileText, Lightbulb, Plus, Eye, CheckCircle, Clock } from 'lucide-react';
 
 const reports = [
   { id: 'RPT-001', title: 'Rapport Produits Dormants Q1', type: 'analysis', date: '12/03/2025', author: 'Sarah M.', status: 'published', recommendations: 5 },
@@ -18,7 +17,7 @@ const reports = [
   { id: 'RPT-006', title: 'Audit Qualité Fournisseur F', type: 'risk', date: '28/02/2025', author: 'Marc L.', status: 'published', recommendations: 6 },
 ];
 
-const recommendations = [
+const recommendationsData = [
   { id: 'REC-001', report: 'RPT-001', detail: "Retrait 'Infuseur Thé Zen' du catalogue — 0 commande en 45j", priority: 'high', status: 'pending', category: 'Produits' },
   { id: 'REC-002', report: 'RPT-001', detail: "Promotion flash sur 8 produits dormants catégorie Éco", priority: 'medium', status: 'approved', category: 'Marketing' },
   { id: 'REC-003', report: 'RPT-002', detail: "Audit qualité approfondi Fournisseur B — taux rejet 43%", priority: 'critical', status: 'in_progress', category: 'Fournisseurs' },
@@ -55,27 +54,43 @@ const priorityConfig: Record<string, { label: string; color: string }> = {
 };
 
 export default function RDReports() {
-  const reportTable = useTableInteractions();
-  const recTable = useTableInteractions();
+  const [rptSearch, setRptSearch] = useState('');
+  const [rptSortCol, setRptSortCol] = useState<string | null>(null);
+  const [rptSortDir, setRptSortDir] = useState<'asc' | 'desc' | null>(null);
+  const [rptFilters, setRptFilters] = useState<Record<string, string>>({});
+  const setRptFilter = (k: string, v: string) => setRptFilters(p => ({ ...p, [k]: v }));
+  const toggleRptSort = (col: string) => {
+    if (rptSortCol === col) {
+      if (rptSortDir === 'asc') setRptSortDir('desc');
+      else { setRptSortCol(null); setRptSortDir(null); }
+    } else { setRptSortCol(col); setRptSortDir('asc'); }
+  };
+
+  const [recSearch, setRecSearch] = useState('');
+  const [recFilters, setRecFilters] = useState<Record<string, string>>({});
+  const setRecFilter = (k: string, v: string) => setRecFilters(p => ({ ...p, [k]: v }));
 
   const filteredReports = reports
     .filter(r => {
-      if (reportTable.searchQuery && !r.title.toLowerCase().includes(reportTable.searchQuery.toLowerCase())) return false;
-      if (reportTable.filters.type && reportTable.filters.type !== 'all' && r.type !== reportTable.filters.type) return false;
-      if (reportTable.filters.status && reportTable.filters.status !== 'all' && r.status !== reportTable.filters.status) return false;
+      if (rptSearch && !r.title.toLowerCase().includes(rptSearch.toLowerCase())) return false;
+      if (rptFilters.type && rptFilters.type !== 'all' && r.type !== rptFilters.type) return false;
+      if (rptFilters.status && rptFilters.status !== 'all' && r.status !== rptFilters.status) return false;
       return true;
     })
     .sort((a, b) => {
-      if (!reportTable.sortColumn) return 0;
-      const dir = reportTable.sortDirection === 'asc' ? 1 : -1;
-      return String(a[reportTable.sortColumn as keyof typeof a]).localeCompare(String(b[reportTable.sortColumn as keyof typeof b])) * dir;
+      if (!rptSortCol || !rptSortDir) return 0;
+      const dir = rptSortDir === 'asc' ? 1 : -1;
+      const av = a[rptSortCol as keyof typeof a];
+      const bv = b[rptSortCol as keyof typeof b];
+      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
+      return String(av).localeCompare(String(bv)) * dir;
     });
 
-  const filteredRecs = recommendations
+  const filteredRecs = recommendationsData
     .filter(r => {
-      if (recTable.searchQuery && !r.detail.toLowerCase().includes(recTable.searchQuery.toLowerCase())) return false;
-      if (recTable.filters.priority && recTable.filters.priority !== 'all' && r.priority !== recTable.filters.priority) return false;
-      if (recTable.filters.status && recTable.filters.status !== 'all' && r.status !== recTable.filters.status) return false;
+      if (recSearch && !r.detail.toLowerCase().includes(recSearch.toLowerCase())) return false;
+      if (recFilters.priority && recFilters.priority !== 'all' && r.priority !== recFilters.priority) return false;
+      if (recFilters.status && recFilters.status !== 'all' && r.status !== recFilters.status) return false;
       return true;
     });
 
@@ -107,7 +122,6 @@ export default function RDReports() {
         ))}
       </div>
 
-      {/* Reports table */}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -115,9 +129,9 @@ export default function RDReports() {
             <div className="flex items-center gap-2 flex-wrap">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Rechercher..." value={reportTable.searchQuery} onChange={e => reportTable.setSearchQuery(e.target.value)} className="pl-9 w-48" />
+                <Input placeholder="Rechercher..." value={rptSearch} onChange={e => setRptSearch(e.target.value)} className="pl-9 w-48" />
               </div>
-              <Select value={reportTable.filters.type || 'all'} onValueChange={v => reportTable.setFilter('type', v)}>
+              <Select value={rptFilters.type || 'all'} onValueChange={v => setRptFilter('type', v)}>
                 <SelectTrigger className="w-36"><SelectValue placeholder="Type" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous types</SelectItem>
@@ -127,7 +141,7 @@ export default function RDReports() {
                   <SelectItem value="friction">Friction</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={reportTable.filters.status || 'all'} onValueChange={v => reportTable.setFilter('status', v)}>
+              <Select value={rptFilters.status || 'all'} onValueChange={v => setRptFilter('status', v)}>
                 <SelectTrigger className="w-36"><SelectValue placeholder="Statut" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous</SelectItem>
@@ -143,12 +157,12 @@ export default function RDReports() {
           <Table>
             <TableHeader>
               <TableRow>
-                <SortableTableHead column="id" currentSort={reportTable.sortColumn} direction={reportTable.sortDirection} onSort={reportTable.handleSort}>ID</SortableTableHead>
-                <SortableTableHead column="title" currentSort={reportTable.sortColumn} direction={reportTable.sortDirection} onSort={reportTable.handleSort}>Titre</SortableTableHead>
-                <SortableTableHead column="date" currentSort={reportTable.sortColumn} direction={reportTable.sortDirection} onSort={reportTable.handleSort}>Date</SortableTableHead>
-                <SortableTableHead column="author" currentSort={reportTable.sortColumn} direction={reportTable.sortDirection} onSort={reportTable.handleSort}>Auteur</SortableTableHead>
+                <SortableTableHead column="id" currentSort={rptSortCol} direction={rptSortDir} onSort={toggleRptSort}>ID</SortableTableHead>
+                <SortableTableHead column="title" currentSort={rptSortCol} direction={rptSortDir} onSort={toggleRptSort}>Titre</SortableTableHead>
+                <SortableTableHead column="date" currentSort={rptSortCol} direction={rptSortDir} onSort={toggleRptSort}>Date</SortableTableHead>
+                <SortableTableHead column="author" currentSort={rptSortCol} direction={rptSortDir} onSort={toggleRptSort}>Auteur</SortableTableHead>
                 <TableHead>Statut</TableHead>
-                <SortableTableHead column="recommendations" currentSort={reportTable.sortColumn} direction={reportTable.sortDirection} onSort={reportTable.handleSort}>Recomm.</SortableTableHead>
+                <SortableTableHead column="recommendations" currentSort={rptSortCol} direction={rptSortDir} onSort={toggleRptSort}>Recomm.</SortableTableHead>
                 <TableHead></TableHead>
               </TableRow>
             </TableHeader>
@@ -169,7 +183,6 @@ export default function RDReports() {
         </CardContent>
       </Card>
 
-      {/* Recommendations table */}
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -177,9 +190,9 @@ export default function RDReports() {
             <div className="flex items-center gap-2 flex-wrap">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Rechercher..." value={recTable.searchQuery} onChange={e => recTable.setSearchQuery(e.target.value)} className="pl-9 w-48" />
+                <Input placeholder="Rechercher..." value={recSearch} onChange={e => setRecSearch(e.target.value)} className="pl-9 w-48" />
               </div>
-              <Select value={recTable.filters.priority || 'all'} onValueChange={v => recTable.setFilter('priority', v)}>
+              <Select value={recFilters.priority || 'all'} onValueChange={v => setRecFilter('priority', v)}>
                 <SelectTrigger className="w-36"><SelectValue placeholder="Priorité" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes</SelectItem>
@@ -188,7 +201,7 @@ export default function RDReports() {
                   <SelectItem value="medium">Moyenne</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={recTable.filters.status || 'all'} onValueChange={v => recTable.setFilter('status', v)}>
+              <Select value={recFilters.status || 'all'} onValueChange={v => setRecFilter('status', v)}>
                 <SelectTrigger className="w-36"><SelectValue placeholder="Statut" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous</SelectItem>

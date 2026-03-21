@@ -8,7 +8,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
 import { Search, Package, TrendingDown, Eye, AlertTriangle, BarChart3 } from 'lucide-react';
-import { Search, Package, TrendingDown, Eye, AlertTriangle, BarChart3 } from 'lucide-react';
 
 const products = [
   { id: 'PRD-001', name: 'Infuseur Thé Zen', category: 'Lifestyle', supplier: 'Fournisseur A', status: 'dormant', lastOrder: '45j', adoptionRate: 12, revenue: 340 },
@@ -38,8 +37,8 @@ export default function RDProducts() {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortColumn, setSortColumn] = useState<string | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
-  const [filters, setFilters] = useState<Record<string, string>>({});
-  const setFilter = (key: string, value: string) => setFilters(prev => ({ ...prev, [key]: value }));
+  const [filters, setFiltersState] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setFiltersState(prev => ({ ...prev, [key]: value }));
   const toggleSort = (col: string) => {
     if (sortColumn === col) {
       if (sortDirection === 'asc') setSortDirection('desc');
@@ -55,7 +54,7 @@ export default function RDProducts() {
       return true;
     })
     .sort((a, b) => {
-      if (!sortColumn) return 0;
+      if (!sortColumn || !sortDirection) return 0;
       const dir = sortDirection === 'asc' ? 1 : -1;
       const av = a[sortColumn as keyof typeof a];
       const bv = b[sortColumn as keyof typeof b];
@@ -123,13 +122,13 @@ export default function RDProducts() {
           <Table>
             <TableHeader>
               <TableRow>
-                <SortableTableHead column="id" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>ID</SortableTableHead>
-                <SortableTableHead column="name" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Produit</SortableTableHead>
-                <SortableTableHead column="category" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Catégorie</SortableTableHead>
-                <SortableTableHead column="supplier" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Fournisseur</SortableTableHead>
+                <SortableTableHead column="id" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>ID</SortableTableHead>
+                <SortableTableHead column="name" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Produit</SortableTableHead>
+                <SortableTableHead column="category" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Catégorie</SortableTableHead>
+                <SortableTableHead column="supplier" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Fournisseur</SortableTableHead>
                 <TableHead>Statut</TableHead>
-                <SortableTableHead column="adoptionRate" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Adoption</SortableTableHead>
-                <SortableTableHead column="revenue" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>CA (€)</SortableTableHead>
+                <SortableTableHead column="adoptionRate" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Adoption</SortableTableHead>
+                <SortableTableHead column="revenue" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>CA (€)</SortableTableHead>
                 <TableHead>Dernière Cmd</TableHead>
                 <TableHead></TableHead>
               </TableRow>

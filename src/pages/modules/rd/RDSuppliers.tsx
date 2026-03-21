@@ -7,7 +7,6 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
-import { useTableInteractions } from '@/hooks/useTableInteractions';
 import { Search, Package, AlertTriangle, CheckCircle, Eye, TrendingDown } from 'lucide-react';
 
 const suppliers = [
@@ -33,7 +32,17 @@ const statusConfig: Record<string, { label: string; variant: 'default' | 'second
 };
 
 export default function RDSuppliers() {
-  const { searchQuery, setSearchQuery, sortColumn, sortDirection, handleSort, filters, setFilter } = useTableInteractions();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortColumn, setSortColumn] = useState<string | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [filters, setFiltersState] = useState<Record<string, string>>({});
+  const setFilter = (key: string, value: string) => setFiltersState(prev => ({ ...prev, [key]: value }));
+  const toggleSort = (col: string) => {
+    if (sortColumn === col) {
+      if (sortDirection === 'asc') setSortDirection('desc');
+      else { setSortColumn(null); setSortDirection(null); }
+    } else { setSortColumn(col); setSortDirection('asc'); }
+  };
 
   const filtered = suppliers
     .filter(s => {
@@ -42,7 +51,7 @@ export default function RDSuppliers() {
       return true;
     })
     .sort((a, b) => {
-      if (!sortColumn) return 0;
+      if (!sortColumn || !sortDirection) return 0;
       const dir = sortDirection === 'asc' ? 1 : -1;
       const av = a[sortColumn as keyof typeof a];
       const bv = b[sortColumn as keyof typeof b];
@@ -100,14 +109,14 @@ export default function RDSuppliers() {
           <Table>
             <TableHeader>
               <TableRow>
-                <SortableTableHead column="id" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>ID</SortableTableHead>
-                <SortableTableHead column="name" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Fournisseur</SortableTableHead>
-                <SortableTableHead column="country" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Pays</SortableTableHead>
+                <SortableTableHead column="id" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>ID</SortableTableHead>
+                <SortableTableHead column="name" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Fournisseur</SortableTableHead>
+                <SortableTableHead column="country" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Pays</SortableTableHead>
                 <TableHead>Statut</TableHead>
-                <SortableTableHead column="products" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Produits</SortableTableHead>
-                <SortableTableHead column="rejectionRate" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Taux Rejet</SortableTableHead>
-                <SortableTableHead column="dependencyRate" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Dépendance</SortableTableHead>
-                <SortableTableHead column="certifications" currentSort={sortColumn} direction={sortDirection} onSort={handleSort}>Certif.</SortableTableHead>
+                <SortableTableHead column="products" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Produits</SortableTableHead>
+                <SortableTableHead column="rejectionRate" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Taux Rejet</SortableTableHead>
+                <SortableTableHead column="dependencyRate" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Dépendance</SortableTableHead>
+                <SortableTableHead column="certifications" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Certif.</SortableTableHead>
                 <TableHead>Audit</TableHead>
                 <TableHead></TableHead>
               </TableRow>
