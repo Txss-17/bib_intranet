@@ -11,6 +11,7 @@ import InternalFeed from "./pages/InternalFeed";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
 
 // Supplier module pages
 import SupplierDashboard from "./pages/modules/supplier/SupplierDashboard";
