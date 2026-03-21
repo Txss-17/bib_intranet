@@ -205,8 +205,8 @@ const mockEmployees: EmployeeFile[] = [
     absenceDays: 45, warnings: 0, documents: 18,
     employeeDocuments: [
       { id: 'd14', name: 'CDI_Julie_Petit.pdf', type: 'contrat', uploadDate: '2020-06-15', size: '220 Ko', uploadedBy: 'RH' },
-      { id: 'd15', name: 'Passeport_Julie_Petit.pdf', type: 'identite', uploadDate: '2020-06-10', expiryDate: '2027-09-01', size: '1.4 Mo', uploadedBy: 'RH' },
-      { id: 'd16', name: 'Certificat_grossesse.pdf', type: 'medical', uploadDate: '2025-12-20', size: '180 Ko', uploadedBy: 'Julie Petit' },
+      { id: 'd15', name: 'Passeport_Julie_Petit.pdf', type: 'identite', uploadDate: '2020-06-10', expiryDate: '2026-05-10', size: '1.4 Mo', uploadedBy: 'RH' },
+      { id: 'd16', name: 'Certificat_grossesse.pdf', type: 'medical', uploadDate: '2025-12-20', expiryDate: '2026-06-20', size: '180 Ko', uploadedBy: 'Julie Petit' },
       { id: 'd17', name: 'Avenant_promotion_senior.pdf', type: 'contrat', uploadDate: '2023-06-15', size: '195 Ko', uploadedBy: 'RH' },
     ],
     notes: [
