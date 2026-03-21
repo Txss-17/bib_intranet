@@ -13,6 +13,11 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
 import RDDashboard from "./pages/modules/rd/RDDashboard";
+import RDProducts from "./pages/modules/rd/RDProducts";
+import RDShops from "./pages/modules/rd/RDShops";
+import RDSuppliers from "./pages/modules/rd/RDSuppliers";
+import RDFrictions from "./pages/modules/rd/RDFrictions";
+import RDReports from "./pages/modules/rd/RDReports";
 
 // Supplier module pages
 import SupplierDashboard from "./pages/modules/supplier/SupplierDashboard";
@@ -229,6 +234,11 @@ const App = () => (
             <Route path="/modules/gateway" element={<SubSectionPage />} />
             <Route path="/modules/ethics" element={<EthicsDashboard />} />
             <Route path="/modules/rd" element={<RDDashboard />} />
+            <Route path="/modules/rd/products" element={<RDProducts />} />
+            <Route path="/modules/rd/shops" element={<RDShops />} />
+            <Route path="/modules/rd/suppliers" element={<RDSuppliers />} />
+            <Route path="/modules/rd/frictions" element={<RDFrictions />} />
+            <Route path="/modules/rd/reports" element={<RDReports />} />
             <Route path="/modules/ethics/:subSection" element={<EthicsDashboard />} />
             <Route path="/modules/packaging" element={<SubSectionPage />} />
             <Route path="/modules/:moduleId/:subSection" element={<SubSectionPage />} />

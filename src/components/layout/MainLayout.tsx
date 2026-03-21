@@ -28,8 +28,8 @@ export function MainLayout() {
   const extractedPoleId = poleIdMatch?.[1] as PoleId | undefined;
   
   // Extract transversal module type
-  const transversalModuleMatch = location.pathname.match(/^\/modules\/(ethics|gateway|packaging)/);
-  const transversalModule = transversalModuleMatch?.[1] as 'ethics' | 'gateway' | 'packaging' | undefined;
+  const transversalModuleMatch = location.pathname.match(/^\/modules\/(ethics|gateway|packaging|rd)/);
+  const transversalModule = transversalModuleMatch?.[1] as 'ethics' | 'gateway' | 'packaging' | 'rd' | undefined;
 
   // Show OX navigation on pole pages and transversal modules
   const showModuleNav = isPolePage || isTransversalModule;
