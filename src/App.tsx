@@ -212,6 +212,7 @@ const App = () => (
             {/* RSE module */}
             <Route path="/pole/rse" element={<RSEDashboard />} />
             <Route path="/pole/rse/packaging" element={<ValidatedPackaging />} />
+            <Route path="/pole/rse/packaging-lifecycle" element={<PackagingDashboard />} />
             <Route path="/pole/rse/recycling" element={<RecyclingStats />} />
             <Route path="/pole/rse/points" element={<CustomerPoints />} />
             <Route path="/pole/rse/co2" element={<CO2Impact />} />
