@@ -343,6 +343,33 @@ export default function EmployeeFiles() {
     toast({ title: 'Note ajoutée', description: `Note ajoutée au dossier de ${selectedEmployee.name}.` });
   };
 
+  const handleAddDoc = () => {
+    if (!selectedEmployee || !newDoc.name.trim()) return;
+    const doc: EmployeeDocument = {
+      id: `d-${Date.now()}`,
+      name: newDoc.name,
+      type: newDoc.type,
+      uploadDate: new Date().toISOString().split('T')[0],
+      size: '— Ko',
+      uploadedBy: 'RH',
+    };
+    setEmployees(prev => prev.map(e =>
+      e.id === selectedEmployee.id ? { ...e, employeeDocuments: [doc, ...e.employeeDocuments], documents: e.documents + 1 } : e
+    ));
+    setSelectedEmployee(prev => prev ? { ...prev, employeeDocuments: [doc, ...prev.employeeDocuments], documents: prev.documents + 1 } : null);
+    setNewDoc({ name: '', type: 'contrat' });
+    setDocDialogOpen(false);
+    toast({ title: 'Document ajouté', description: `Document ajouté au dossier de ${selectedEmployee.name}.` });
+  };
+
+  const handleDeleteDoc = (docId: string) => {
+    if (!selectedEmployee) return;
+    setEmployees(prev => prev.map(e =>
+      e.id === selectedEmployee.id ? { ...e, employeeDocuments: e.employeeDocuments.filter(d => d.id !== docId), documents: e.documents - 1 } : e
+    ));
+    setSelectedEmployee(prev => prev ? { ...prev, employeeDocuments: prev.employeeDocuments.filter(d => d.id !== docId), documents: prev.documents - 1 } : null);
+    toast({ title: 'Document supprimé', description: 'Le document a été retiré du dossier.' });
+
   const activeCount = employees.filter(e => e.status === 'active').length;
   const onLeaveCount = employees.filter(e => e.status === 'leave').length;
   const probationCount = employees.filter(e => e.status === 'probation').length;
