@@ -57,53 +57,12 @@ import { ExportButtons } from '@/components/ExportButtons';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-// Types
-interface EmployeeDocument {
-  id: string;
-  name: string;
-  type: 'contrat' | 'identite' | 'diplome' | 'medical' | 'administratif' | 'autre';
-  uploadDate: string;
-  expiryDate?: string;
-  size: string;
-  uploadedBy: string;
-}
-
-interface EmployeeFile {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  pole: string;
-  position: string;
-  status: 'active' | 'leave' | 'probation' | 'suspended';
-  startDate: string;
-  contractType: 'CDI' | 'CDD' | 'Stage' | 'Alternance';
-  contractEnd?: string;
-  manager: string;
-  evaluationScore?: number;
-  lastEvaluation?: string;
-  absenceDays: number;
-  warnings: number;
-  documents: number;
-  employeeDocuments: EmployeeDocument[];
-  notes: EmployeeNote[];
-  events: EmployeeEvent[];
-}
-
-interface EmployeeNote {
-  id: string;
-  date: string;
-  author: string;
-  type: 'general' | 'performance' | 'disciplinary' | 'medical' | 'formation';
-  content: string;
-}
-
-interface EmployeeEvent {
-  id: string;
-  date: string;
-  type: 'contract' | 'evaluation' | 'absence' | 'formation' | 'promotion' | 'warning' | 'document';
-  label: string;
-}
+import {
+  type EmployeeFile,
+  type EmployeeDocument,
+  type EmployeeNote,
+  initialEmployees,
+} from '@/data/employeeData';
 
 const docTypeConfig: Record<EmployeeDocument['type'], { label: string; icon: typeof FileText; className: string }> = {
   contrat: { label: 'Contrat', icon: Briefcase, className: 'bg-primary/10 text-primary' },
