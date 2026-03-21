@@ -145,6 +145,23 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
 
+        {/* Critical Alerts */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button variant="ghost" size="icon" className={cn('relative', criticalCount > 0 && 'animate-pulse')}>
+              <ShieldAlert className={cn('h-5 w-5', criticalCount > 0 ? 'text-destructive' : '')} />
+              {unreadCount > 0 && (
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
+                  {unreadCount}
+                </span>
+              )}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="p-0 w-auto">
+            <CriticalAlertsPanel alerts={alerts} onMarkAsRead={markAsRead} onMarkAllAsRead={markAllAsRead} />
+          </PopoverContent>
+        </Popover>
+
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
