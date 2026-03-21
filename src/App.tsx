@@ -236,7 +236,8 @@ const App = () => (
             <Route path="/pole/:poleId/:subSection" element={<SubSectionPage />} />
             
             {/* Transversal modules */}
-            <Route path="/modules/gateway" element={<SubSectionPage />} />
+            <Route path="/modules/gateway" element={<GatewayDashboard />} />
+            <Route path="/modules/gateway/:subSection" element={<GatewayDashboard />} />
             <Route path="/modules/ethics" element={<EthicsDashboard />} />
             <Route path="/modules/rd" element={<RDDashboard />} />
             <Route path="/modules/rd/products" element={<RDProducts />} />
@@ -245,7 +246,8 @@ const App = () => (
             <Route path="/modules/rd/frictions" element={<RDFrictions />} />
             <Route path="/modules/rd/reports" element={<RDReports />} />
             <Route path="/modules/ethics/:subSection" element={<EthicsDashboard />} />
-            <Route path="/modules/packaging" element={<SubSectionPage />} />
+            <Route path="/modules/packaging" element={<PackagingDashboard />} />
+            <Route path="/modules/packaging/:subSection" element={<PackagingDashboard />} />
             <Route path="/modules/:moduleId/:subSection" element={<SubSectionPage />} />
             
             {/* Other routes */}
