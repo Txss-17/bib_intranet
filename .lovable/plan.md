@@ -1,59 +1,87 @@
 
 
-# Plan: Interactions dynamiques sur tous les dashboards
+## Plan: Create 8 Dedicated Sub-Section Pages (4 Ethics + 4 Gateway)
 
-## Objectif
-Ajouter recherche en temps réel, filtres par statut/type, et tri par colonnes cliquables sur tous les tableaux des 6 dashboards enrichis.
+### Overview
 
-## Approche technique
+Currently, all Ethics sub-routes (`/received`, `/ongoing`, `/closed`, `/stats`) render the same `EthicsDashboard`, and all Gateway sub-routes (`/inbox`, `/validation`, `/routing`, `/responses`) render the same `GatewayDashboard`. We will create 8 dedicated pages with filtered data and specific UI for each sub-section.
 
-Creer un hook reutilisable `useTableInteractions` qui gere search, sort, et filters pour eviter la duplication dans chaque dashboard.
+---
 
-### Hook `src/hooks/useTableInteractions.ts`
-- `searchQuery` + `setSearchQuery` : filtre texte sur champs configurables
-- `sortColumn` + `sortDirection` : tri asc/desc par clic sur header
-- `filters` : objet cle/valeur pour filtres select
-- Fonction `processData(data)` qui applique search → filter → sort et retourne les donnees traitees
+### Ethics Module (4 pages)
 
-### Composant `src/components/ui/sortable-table-head.tsx`
-- TableHead cliquable avec icone fleche (ChevronUp/ChevronDown/ChevronsUpDown)
-- Indication visuelle de la colonne triee
+**1. `EthicsReceived.tsx`** — Signalements reçus
+- Table of incoming reports (status: "new/pending triage")
+- Columns: ID, type, priority, source (anonymous/identified), date, channel, actions (assign, escalate)
+- Filters: priority, category, source type
+- KPIs: total received (7d/30d), anonymous %, avg response time
 
-### Dashboards a modifier (6 fichiers)
+**2. `EthicsOngoing.tsx`** — Dossiers en cours
+- Table of active investigations
+- Columns: ID, case type, priority, investigator, status (investigating/escalated/due diligence), opened date, last update
+- Filters: priority, investigator, status
+- KPIs: open cases, avg duration, escalation rate
 
-**1. Supplier Dashboard** (`SupplierDashboard.tsx`)
-- Tableau "Commandes en Cours" : recherche par ID/fournisseur, tri par date/montant/articles, filtre par statut (production/shipped/delivered/quality_check)
-- Tableau "Top Fournisseurs" : tri par rating/CA/commandes
+**3. `EthicsClosed.tsx`** — Dossiers clôturés
+- Table of resolved cases with outcomes
+- Columns: ID, case type, priority, resolution (confirmed/dismissed/mediated), investigator, duration, closed date
+- Filters: resolution type, priority, date range
+- KPIs: total closed, confirmed rate, avg resolution time
 
-**2. Executive Dashboard** (`ExecutiveDashboard.tsx`)
-- Tableau "Alertes critiques" : filtre par severite (critical/high), filtre par pole
-- Section "Rapports Commissaire" : filtre par type
+**4. `EthicsStats.tsx`** — Statistiques anonymisées
+- Aggregated charts (no individual case details)
+- Pie charts: by category, by priority, by source
+- Bar chart: monthly trend of reports
+- KPIs: total reports YTD, resolution rate, anonymous %, repeat categories
 
-**3. Finance Dashboard** (`FinanceDashboard.tsx`)
-- Tableau "Factures & Salaires" : recherche par ID, tri par montant/echeance, filtre par type (Facture/Salaire/Fournisseur) et statut (pending/validated/overdue)
+### Gateway Module (4 pages)
 
-**4. Ops Dashboard** (`OpsDashboard.tsx`)
-- Tableau "Commandes en Attente" : recherche par ID/client, tri par date/montant, filtre par statut
-- Tableau "Support Clients" : recherche, filtre par statut (open/in_progress/resolved)
+**5. `GatewayInbox.tsx`** — Réception
+- Table filtered to status "new" + "read" (unprocessed messages)
+- Columns: ID, sender, subject, channel, category, received date, actions (mark read, assign)
+- Filters: channel, category, priority
 
-**5. Risk Dashboard** (`RiskDashboard.tsx`)
-- 3 tableaux incidents (Supplier/Client/Internal) : recherche par ID/issue, tri par severite, filtre par statut (investigating/mitigating/resolved/monitoring/escalated)
+**6. `GatewayValidation.tsx`** — Validation
+- Table of messages pending validation before routing
+- Columns: ID, sender, subject, category, validator, validation status, actions (approve, reject, flag)
+- Filters: category, validation status
 
-**6. RSE Dashboard** (`RSEDashboard.tsx`)
-- Tableau certifications : filtre par statut (active/renewal/pending)
-- Tableau projets ONGs : filtre par statut (active/planning)
+**7. `GatewayRouting.tsx`** — Routage
+- Table of validated messages being routed to poles
+- Columns: ID, subject, category, assigned pole, routing status (pending/routed/confirmed), routed by, date
+- Filters: target pole, routing status
 
-### Implementation par dashboard
-Pour chaque tableau :
-1. Ajouter barre de recherche `Input` avec icone `Search`
-2. Ajouter `Select` filtres pertinents (statut, type, severite)
-3. Rendre les `TableHead` cliquables avec indicateur de tri
-4. Utiliser le hook `useTableInteractions` pour gerer l'etat
+**8. `GatewayResponses.tsx`** — Réponses
+- Table of messages with responses sent
+- Columns: ID, subject, original sender, responded by, response date, response status (draft/sent/acknowledged)
+- Filters: response status, pole
 
-### PendingProducts
-Deja complet avec filtres, recherche et pagination — aucune modification requise.
+---
 
-## Ordre d'execution
-1. Creer `useTableInteractions` hook + `SortableTableHead` composant
-2. Modifier les 6 dashboards en parallele
+### Routing Changes (`App.tsx`)
+
+Add 8 explicit routes:
+- `/modules/ethics/received` → `EthicsReceived`
+- `/modules/ethics/ongoing` → `EthicsOngoing`
+- `/modules/ethics/closed` → `EthicsClosed`
+- `/modules/ethics/stats` → `EthicsStats`
+- `/modules/gateway/inbox` → `GatewayInbox`
+- `/modules/gateway/validation` → `GatewayValidation`
+- `/modules/gateway/routing` → `GatewayRouting`
+- `/modules/gateway/responses` → `GatewayResponses`
+
+Each page uses `useTableInteractions` + `SortableTableHead` for consistent table behavior. All data is realistic French-context mock data with 8-12 entries per table.
+
+### Files to Create
+- `src/pages/modules/ethics/EthicsReceived.tsx`
+- `src/pages/modules/ethics/EthicsOngoing.tsx`
+- `src/pages/modules/ethics/EthicsClosed.tsx`
+- `src/pages/modules/ethics/EthicsStats.tsx`
+- `src/pages/modules/gateway/GatewayInbox.tsx`
+- `src/pages/modules/gateway/GatewayValidation.tsx`
+- `src/pages/modules/gateway/GatewayRouting.tsx`
+- `src/pages/modules/gateway/GatewayResponses.tsx`
+
+### Files to Edit
+- `src/App.tsx` — add 8 imports + 8 routes
 
