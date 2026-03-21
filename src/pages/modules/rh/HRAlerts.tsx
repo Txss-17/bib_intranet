@@ -59,6 +59,61 @@ const priorityConfig: Record<AlertPriority, { label: string; variant: 'destructi
   low: { label: 'Basse', variant: 'outline' },
 };
 
+// Simulated employee document data for auto-alert generation
+interface DocAlertSource {
+  employeeName: string;
+  employeePole: string;
+  docName: string;
+  docType: 'identite' | 'medical';
+  expiryDate: string;
+}
+
+const documentSources: DocAlertSource[] = [
+  { employeeName: 'Sophie Martin', employeePole: 'Finance', docName: 'CNI_Sophie_Martin.pdf', docType: 'identite', expiryDate: '2026-04-05' },
+  { employeeName: 'Sophie Martin', employeePole: 'Finance', docName: 'Visite_medicale_2025.pdf', docType: 'medical', expiryDate: '2026-03-25' },
+  { employeeName: 'Émilie Rousseau', employeePole: 'Ops', docName: 'CNI_Emilie_Rousseau.pdf', docType: 'identite', expiryDate: '2026-04-15' },
+  { employeeName: 'Julie Petit', employeePole: 'RH', docName: 'Passeport_Julie_Petit.pdf', docType: 'identite', expiryDate: '2026-05-10' },
+  { employeeName: 'Julie Petit', employeePole: 'RH', docName: 'Certificat_grossesse.pdf', docType: 'medical', expiryDate: '2026-06-20' },
+  { employeeName: 'Émilie Rousseau', employeePole: 'Ops', docName: 'Certificat_medical_aptitude.pdf', docType: 'medical', expiryDate: '2026-08-01' },
+];
+
+function generateDocumentAlerts(): HRAlert[] {
+  const today = new Date();
+  return documentSources
+    .map((src, i) => {
+      const expiry = new Date(src.expiryDate);
+      const diffDays = Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays > 90) return null; // Only alert within 90 days
+
+      const isIdentite = src.docType === 'identite';
+      const docLabel = isIdentite ? 'Pièce d\'identité' : 'Document médical';
+      let priority: AlertPriority = 'low';
+      if (diffDays <= 0) priority = 'critical';
+      else if (diffDays <= 14) priority = 'critical';
+      else if (diffDays <= 30) priority = 'high';
+      else if (diffDays <= 60) priority = 'medium';
+
+      return {
+        id: `hra-doc-${i + 1}`,
+        type: 'document_expiry' as AlertType,
+        priority,
+        status: diffDays <= 0 ? 'active' as AlertStatus : 'active' as AlertStatus,
+        employeeName: src.employeeName,
+        employeePole: src.employeePole,
+        title: diffDays <= 0
+          ? `${docLabel} expiré(e)`
+          : `${docLabel} expire dans ${diffDays}j`,
+        description: diffDays <= 0
+          ? `Le document "${src.docName}" de ${src.employeeName} a expiré le ${expiry.toLocaleDateString('fr-FR')}. Renouvellement urgent requis.`
+          : `Le document "${src.docName}" de ${src.employeeName} expire le ${expiry.toLocaleDateString('fr-FR')}. Renouvellement à planifier.`,
+        dueDate: src.expiryDate,
+        daysRemaining: diffDays,
+        createdAt: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      } as HRAlert;
+    })
+    .filter(Boolean) as HRAlert[];
+}
+
 // Generate alerts based on simulated deadlines relative to today
 function generateAlerts(): HRAlert[] {
   const today = new Date();
@@ -68,7 +123,7 @@ function generateAlerts(): HRAlert[] {
     return date.toISOString().split('T')[0];
   };
 
-  return [
+  const manualAlerts: HRAlert[] = [
     {
       id: 'hra-1', type: 'contract_end', priority: 'critical', status: 'active',
       employeeName: 'Karim Hadj', employeePole: 'Marketing',
@@ -119,13 +174,6 @@ function generateAlerts(): HRAlert[] {
       dueDate: d(30), daysRemaining: 30, createdAt: d(-1),
     },
     {
-      id: 'hra-8', type: 'document_expiry', priority: 'high', status: 'active',
-      employeeName: 'Amira Belkacem', employeePole: 'Compliance',
-      title: 'Certification DPO expire dans 10 jours',
-      description: 'La certification DPO d\'Amira Belkacem expire le ' + d(10) + '. Renouvellement à initier pour maintenir la conformité.',
-      dueDate: d(10), daysRemaining: 10, createdAt: d(-5),
-    },
-    {
       id: 'hra-9', type: 'leave_return', priority: 'low', status: 'resolved',
       employeeName: 'Marc Lefèvre', employeePole: 'RH',
       title: 'Retour de congé maladie effectué',
@@ -140,6 +188,11 @@ function generateAlerts(): HRAlert[] {
       dueDate: d(-5), daysRemaining: -5, createdAt: d(-30),
     },
   ];
+
+  // Auto-generate document expiry alerts
+  const docAlerts = generateDocumentAlerts();
+
+  return [...manualAlerts, ...docAlerts];
 }
 
 export default function HRAlerts() {
@@ -169,6 +222,7 @@ export default function HRAlerts() {
   const contractEndCount = activeAlerts.filter(a => a.type === 'contract_end').length;
   const probationCount = activeAlerts.filter(a => a.type === 'probation_end').length;
   const leaveCount = activeAlerts.filter(a => a.type === 'leave_return' || a.type === 'leave_start').length;
+  const docExpiryCount = activeAlerts.filter(a => a.type === 'document_expiry').length;
 
   const getDaysLabel = (days: number) => {
     if (days < 0) return `Il y a ${Math.abs(days)}j`;
@@ -191,7 +245,7 @@ export default function HRAlerts() {
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
         <div className="enterprise-card p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Alertes actives</p>
           <p className="text-2xl font-semibold text-foreground mt-1">{activeAlerts.length}</p>
@@ -211,6 +265,10 @@ export default function HRAlerts() {
         <div className="enterprise-card p-4">
           <p className="text-xs text-muted-foreground uppercase tracking-wider">Congés</p>
           <p className="text-2xl font-semibold text-foreground mt-1">{leaveCount}</p>
+        </div>
+        <div className="enterprise-card p-4 border-warning/30">
+          <p className="text-xs text-muted-foreground uppercase tracking-wider">Documents expirés</p>
+          <p className="text-2xl font-semibold text-warning mt-1">{docExpiryCount}</p>
         </div>
       </div>
 

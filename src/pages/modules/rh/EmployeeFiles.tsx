@@ -123,10 +123,11 @@ const mockEmployees: EmployeeFile[] = [
     absenceDays: 3, warnings: 0, documents: 12,
     employeeDocuments: [
       { id: 'd1', name: 'CDI_Sophie_Martin.pdf', type: 'contrat', uploadDate: '2022-03-15', size: '245 Ko', uploadedBy: 'RH' },
-      { id: 'd2', name: 'CNI_Sophie_Martin.pdf', type: 'identite', uploadDate: '2022-03-10', expiryDate: '2030-05-20', size: '1.2 Mo', uploadedBy: 'RH' },
+      { id: 'd2', name: 'CNI_Sophie_Martin.pdf', type: 'identite', uploadDate: '2022-03-10', expiryDate: '2026-04-05', size: '1.2 Mo', uploadedBy: 'RH' },
       { id: 'd3', name: 'Diplome_Master_Finance.pdf', type: 'diplome', uploadDate: '2022-03-10', size: '890 Ko', uploadedBy: 'RH' },
       { id: 'd4', name: 'Avenant_promotion_2024.pdf', type: 'contrat', uploadDate: '2024-06-01', size: '180 Ko', uploadedBy: 'RH' },
       { id: 'd5', name: 'Attestation_SS.pdf', type: 'administratif', uploadDate: '2022-03-10', size: '320 Ko', uploadedBy: 'Sophie Martin' },
+      { id: 'd5b', name: 'Visite_medicale_2025.pdf', type: 'medical', uploadDate: '2025-03-20', expiryDate: '2026-03-25', size: '150 Ko', uploadedBy: 'RH' },
     ],
     notes: [
       { id: 'n1', date: '2026-02-15', author: 'RH', type: 'performance', content: 'Excellente gestion du closing Q4. Propose pour prime exceptionnelle.' },
@@ -166,8 +167,8 @@ const mockEmployees: EmployeeFile[] = [
     absenceDays: 12, warnings: 1, documents: 15,
     employeeDocuments: [
       { id: 'd9', name: 'CDI_Emilie_Rousseau.pdf', type: 'contrat', uploadDate: '2023-01-10', size: '240 Ko', uploadedBy: 'RH' },
-      { id: 'd10', name: 'CNI_Emilie_Rousseau.pdf', type: 'identite', uploadDate: '2023-01-05', expiryDate: '2029-03-15', size: '1.1 Mo', uploadedBy: 'RH' },
-      { id: 'd11', name: 'Certificat_medical_aptitude.pdf', type: 'medical', uploadDate: '2025-08-01', size: '150 Ko', uploadedBy: 'RH' },
+      { id: 'd10', name: 'CNI_Emilie_Rousseau.pdf', type: 'identite', uploadDate: '2023-01-05', expiryDate: '2026-04-15', size: '1.1 Mo', uploadedBy: 'RH' },
+      { id: 'd11', name: 'Certificat_medical_aptitude.pdf', type: 'medical', uploadDate: '2025-08-01', expiryDate: '2026-08-01', size: '150 Ko', uploadedBy: 'RH' },
     ],
     notes: [
       { id: 'n4', date: '2026-03-01', author: 'RH', type: 'disciplinary', content: 'Avertissement écrit suite à 3 retards consécutifs en février.' },
@@ -204,8 +205,8 @@ const mockEmployees: EmployeeFile[] = [
     absenceDays: 45, warnings: 0, documents: 18,
     employeeDocuments: [
       { id: 'd14', name: 'CDI_Julie_Petit.pdf', type: 'contrat', uploadDate: '2020-06-15', size: '220 Ko', uploadedBy: 'RH' },
-      { id: 'd15', name: 'Passeport_Julie_Petit.pdf', type: 'identite', uploadDate: '2020-06-10', expiryDate: '2027-09-01', size: '1.4 Mo', uploadedBy: 'RH' },
-      { id: 'd16', name: 'Certificat_grossesse.pdf', type: 'medical', uploadDate: '2025-12-20', size: '180 Ko', uploadedBy: 'Julie Petit' },
+      { id: 'd15', name: 'Passeport_Julie_Petit.pdf', type: 'identite', uploadDate: '2020-06-10', expiryDate: '2026-05-10', size: '1.4 Mo', uploadedBy: 'RH' },
+      { id: 'd16', name: 'Certificat_grossesse.pdf', type: 'medical', uploadDate: '2025-12-20', expiryDate: '2026-06-20', size: '180 Ko', uploadedBy: 'Julie Petit' },
       { id: 'd17', name: 'Avenant_promotion_senior.pdf', type: 'contrat', uploadDate: '2023-06-15', size: '195 Ko', uploadedBy: 'RH' },
     ],
     notes: [
