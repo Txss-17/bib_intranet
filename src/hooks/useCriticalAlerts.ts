@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { playCriticalAlertSound, playHighAlertSound } from '@/lib/alertSounds';
 
 export type AlertSeverity = 'critical' | 'high' | 'medium';
 export type AlertModule = 'ethics' | 'gateway';
