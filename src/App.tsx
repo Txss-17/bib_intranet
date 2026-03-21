@@ -228,6 +228,7 @@ const App = () => (
             {/* Transversal modules */}
             <Route path="/modules/gateway" element={<SubSectionPage />} />
             <Route path="/modules/ethics" element={<EthicsDashboard />} />
+            <Route path="/modules/rd" element={<RDDashboard />} />
             <Route path="/modules/ethics/:subSection" element={<EthicsDashboard />} />
             <Route path="/modules/packaging" element={<SubSectionPage />} />
             <Route path="/modules/:moduleId/:subSection" element={<SubSectionPage />} />
