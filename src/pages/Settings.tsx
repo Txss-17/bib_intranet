@@ -15,6 +15,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { currentUser } from '@/data/mockData';
+import { useAlertSoundSetting } from '@/hooks/useAlertSoundSetting';
+import { playCriticalAlertSound } from '@/lib/alertSounds';
 
 export default function Settings() {
   const [emailNotifications, setEmailNotifications] = useState(true);
