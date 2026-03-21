@@ -53,6 +53,7 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/rh' },
     { id: 'employees', label: 'Employees', labelFr: 'Employés', path: '/pole/rh/employees' },
     { id: 'files', label: 'Employee Files', labelFr: 'Dossiers employés', path: '/pole/rh/files' },
+    { id: 'alerts', label: 'HR Alerts', labelFr: 'Alertes RH', path: '/pole/rh/alerts' },
     { id: 'onboarding', label: 'Onboarding', labelFr: 'Onboarding', path: '/pole/rh/onboarding' },
     { id: 'attendance', label: 'Attendance', labelFr: 'Pointage', path: '/pole/rh/attendance' },
     { id: 'leave', label: 'Leave', labelFr: 'Congés', path: '/pole/rh/leave' },
