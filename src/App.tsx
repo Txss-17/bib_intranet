@@ -12,6 +12,7 @@ import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
+import RDDashboard from "./pages/modules/rd/RDDashboard";
 
 // Supplier module pages
 import SupplierDashboard from "./pages/modules/supplier/SupplierDashboard";
