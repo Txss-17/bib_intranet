@@ -196,6 +196,7 @@ const App = () => (
             <Route path="/pole/tech/infrastructure" element={<Infrastructure />} />
             <Route path="/pole/tech/security" element={<Security />} />
             <Route path="/pole/tech/catalog" element={<Catalog />} />
+            <Route path="/pole/tech/received-products" element={<ReceivedProducts />} />
             
             {/* RH module */}
             <Route path="/pole/rh" element={<RHDashboard />} />
