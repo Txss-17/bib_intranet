@@ -1,8 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, Shield, Activity, Clock, Eye, UserPlus, ArrowUpRight, CheckCircle2 } from 'lucide-react';
+import { SortableTableHead } from '@/components/ui/sortable-table-head';
+import { useTableInteractions } from '@/hooks/useTableInteractions';
+import { AlertTriangle, Shield, Activity, Clock, Eye, UserPlus, ArrowUpRight, CheckCircle2, Search } from 'lucide-react';
 import { LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const severityBanner = [
@@ -66,42 +70,88 @@ const getStatusLabel = (s: string) => {
   return map[s] || s;
 };
 
-const IncidentTable = ({ title, data }: { title: string; data: typeof supplierIncidents }) => (
-  <Card>
-    <CardHeader><CardTitle className="text-base">{title}</CardTitle></CardHeader>
-    <CardContent>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>ID</TableHead>
-            <TableHead>Problème</TableHead>
-            <TableHead>Sévérité</TableHead>
-            <TableHead>Statut</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {data.map(inc => (
-            <TableRow key={inc.id}>
-              <TableCell className="font-medium">{inc.id}</TableCell>
-              <TableCell>{inc.issue}</TableCell>
-              <TableCell>{getSeverityBadge(inc.severity)}</TableCell>
-              <TableCell><Badge variant="outline">{getStatusLabel(inc.status)}</Badge></TableCell>
-              <TableCell>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="sm"><Eye className="h-3 w-3" /></Button>
-                  <Button variant="ghost" size="sm"><UserPlus className="h-3 w-3" /></Button>
-                  <Button variant="ghost" size="sm"><ArrowUpRight className="h-3 w-3" /></Button>
-                  <Button variant="ghost" size="sm"><CheckCircle2 className="h-3 w-3" /></Button>
-                </div>
-              </TableCell>
+interface IncidentData {
+  id: string;
+  issue: string;
+  severity: string;
+  status: string;
+  action: string;
+}
+
+const IncidentTable = ({ title, data }: { title: string; data: IncidentData[] }) => {
+  const table = useTableInteractions({
+    data,
+    searchFields: ['id', 'issue'],
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">{title}</CardTitle>
+        <div className="flex gap-2 mt-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Rechercher par ID ou problème..." value={table.searchQuery} onChange={e => table.setSearchQuery(e.target.value)} className="pl-8 h-9" />
+          </div>
+          <Select value={table.filters.severity || 'all'} onValueChange={v => table.setFilter('severity', v)}>
+            <SelectTrigger className="w-[100px] h-9"><SelectValue placeholder="Sévérité" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes</SelectItem>
+              <SelectItem value="P1">P1</SelectItem>
+              <SelectItem value="P2">P2</SelectItem>
+              <SelectItem value="P3">P3</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={table.filters.status || 'all'} onValueChange={v => table.setFilter('status', v)}>
+            <SelectTrigger className="w-[140px] h-9"><SelectValue placeholder="Statut" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous</SelectItem>
+              <SelectItem value="investigating">Investigation</SelectItem>
+              <SelectItem value="mitigating">Mitigation</SelectItem>
+              <SelectItem value="monitoring">Surveillance</SelectItem>
+              <SelectItem value="resolved">Résolu</SelectItem>
+              <SelectItem value="escalated">Escaladé</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <SortableTableHead column="id" currentSort={table.sortColumn as string} direction={table.sortDirection} onSort={c => table.toggleSort(c as keyof IncidentData)}>ID</SortableTableHead>
+              <SortableTableHead column="issue" currentSort={table.sortColumn as string} direction={table.sortDirection} onSort={c => table.toggleSort(c as keyof IncidentData)}>Problème</SortableTableHead>
+              <SortableTableHead column="severity" currentSort={table.sortColumn as string} direction={table.sortDirection} onSort={c => table.toggleSort(c as keyof IncidentData)}>Sévérité</SortableTableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </CardContent>
-  </Card>
-);
+          </TableHeader>
+          <TableBody>
+            {table.processedData.map(inc => (
+              <TableRow key={inc.id}>
+                <TableCell className="font-medium">{inc.id}</TableCell>
+                <TableCell>{inc.issue}</TableCell>
+                <TableCell>{getSeverityBadge(inc.severity)}</TableCell>
+                <TableCell><Badge variant="outline">{getStatusLabel(inc.status)}</Badge></TableCell>
+                <TableCell>
+                  <div className="flex gap-1">
+                    <Button variant="ghost" size="sm"><Eye className="h-3 w-3" /></Button>
+                    <Button variant="ghost" size="sm"><UserPlus className="h-3 w-3" /></Button>
+                    <Button variant="ghost" size="sm"><ArrowUpRight className="h-3 w-3" /></Button>
+                    <Button variant="ghost" size="sm"><CheckCircle2 className="h-3 w-3" /></Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+            {table.processedData.length === 0 && (
+              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground">Aucun résultat</TableCell></TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function RiskDashboard() {
   return (
@@ -139,7 +189,7 @@ export default function RiskDashboard() {
         ))}
       </div>
 
-      {/* Incident Overview + Timeline */}
+      {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader><CardTitle>Incident Overview</CardTitle></CardHeader>
