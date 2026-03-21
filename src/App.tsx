@@ -81,6 +81,7 @@ import Leave from "./pages/modules/rh/Leave";
 import Training from "./pages/modules/rh/Training";
 import Publications from "./pages/modules/rh/Publications";
 import EmployeeFiles from "./pages/modules/rh/EmployeeFiles";
+import HRAlerts from "./pages/modules/rh/HRAlerts";
 
 // Audit module pages
 import AuditDashboard from "./pages/modules/audit/AuditDashboard";
