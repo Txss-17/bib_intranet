@@ -47,6 +47,7 @@ const poleActivity: Record<PoleId, { tasks: number; incidents: number; updates: 
   marketing: { tasks: 11, incidents: 0, updates: 12 },
   risk: { tasks: 4, incidents: 3, updates: 6 },
   lifecycle: { tasks: 13, incidents: 1, updates: 8 },
+  rd: { tasks: 10, incidents: 0, updates: 7 },
 };
 
 export function PoleOverview() {

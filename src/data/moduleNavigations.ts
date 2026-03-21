@@ -94,6 +94,7 @@ export const moduleNavigations: ModuleNavigations = {
   rse: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/rse' },
     { id: 'packaging', label: 'Validated Packaging', labelFr: 'Packaging validés', path: '/pole/rse/packaging' },
+    { id: 'packaging-lifecycle', label: 'Packaging Lifecycle', labelFr: 'Cycle de vie Packaging', path: '/pole/rse/packaging-lifecycle' },
     { id: 'recycling', label: 'Recycling Stats', labelFr: 'Recyclage (stats)', path: '/pole/rse/recycling' },
     { id: 'points', label: 'Customer Points', labelFr: 'Points clients finaux', path: '/pole/rse/points' },
     { id: 'co2', label: 'CO₂ Impact', labelFr: 'Impact CO₂', path: '/pole/rse/co2' },
