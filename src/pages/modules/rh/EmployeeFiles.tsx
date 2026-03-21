@@ -439,18 +439,81 @@ export default function EmployeeFiles() {
 
           {/* Right: Tabs */}
           <div className="lg:col-span-2 space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-2">
               <h3 className="text-lg font-semibold text-foreground">Dossier de {emp.name.split(' ')[0]}</h3>
-              <Button size="sm" onClick={() => setNoteDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-1" />Ajouter une note
-              </Button>
+              <div className="flex gap-2">
+                <Button size="sm" variant="outline" onClick={() => setDocDialogOpen(true)}>
+                  <Upload className="h-4 w-4 mr-1" />Ajouter un document
+                </Button>
+                <Button size="sm" onClick={() => setNoteDialogOpen(true)}>
+                  <Plus className="h-4 w-4 mr-1" />Ajouter une note
+                </Button>
+              </div>
             </div>
 
-            <Tabs defaultValue="timeline" className="w-full">
+            <Tabs defaultValue="documents" className="w-full">
               <TabsList>
+                <TabsTrigger value="documents">Documents ({emp.employeeDocuments.length})</TabsTrigger>
                 <TabsTrigger value="timeline">Chronologie</TabsTrigger>
                 <TabsTrigger value="notes">Notes ({emp.notes.length})</TabsTrigger>
               </TabsList>
+
+              <TabsContent value="documents" className="mt-4 space-y-3">
+                {/* Doc type summary */}
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {Object.entries(docTypeConfig).map(([key, cfg]) => {
+                    const count = emp.employeeDocuments.filter(d => d.type === key).length;
+                    if (count === 0) return null;
+                    return (
+                      <Badge key={key} className={cn('text-[10px]', cfg.className)}>
+                        {cfg.label} ({count})
+                      </Badge>
+                    );
+                  })}
+                </div>
+
+                {emp.employeeDocuments.map(doc => {
+                  const cfg = docTypeConfig[doc.type];
+                  const DocIcon = cfg.icon;
+                  const isExpired = doc.expiryDate && new Date(doc.expiryDate) < new Date();
+                  const isExpiringSoon = doc.expiryDate && !isExpired && new Date(doc.expiryDate) < new Date(Date.now() + 90 * 86400000);
+                  return (
+                    <div key={doc.id} className="enterprise-card p-4 flex items-center gap-4">
+                      <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', cfg.className)}>
+                        <DocIcon className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{doc.name}</p>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                          <Badge className={cn('text-[10px]', cfg.className)}>{cfg.label}</Badge>
+                          <span>•</span>
+                          <span>{doc.size}</span>
+                          <span>•</span>
+                          <span>Ajouté le {new Date(doc.uploadDate).toLocaleDateString('fr-FR')}</span>
+                          <span>•</span>
+                          <span>par {doc.uploadedBy}</span>
+                        </div>
+                        {doc.expiryDate && (
+                          <p className={cn('text-xs mt-1', isExpired ? 'text-destructive font-medium' : isExpiringSoon ? 'text-warning' : 'text-muted-foreground')}>
+                            {isExpired ? '⚠ Expiré' : `Expire le ${new Date(doc.expiryDate).toLocaleDateString('fr-FR')}`}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => toast({ title: 'Téléchargement', description: `${doc.name} en cours de téléchargement...` })}>
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => handleDeleteDoc(doc.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+                {emp.employeeDocuments.length === 0 && (
+                  <div className="text-center text-sm text-muted-foreground py-8">Aucun document dans le dossier</div>
+                )}
+              </TabsContent>
 
               <TabsContent value="timeline" className="mt-4">
                 <div className="enterprise-card p-4 space-y-0">
