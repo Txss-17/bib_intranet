@@ -127,6 +127,16 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'scoring', label: 'Risk Scoring', labelFr: 'Scoring risque', path: '/pole/lifecycle/scoring' },
     { id: 'support', label: 'Support Tickets', labelFr: 'Tickets support', path: '/pole/lifecycle/support' },
   ],
+
+  // R&D (Pole 13)
+  rd: [
+    { id: 'overview', label: 'Dashboard', labelFr: 'Dashboard', path: '/pole/rd' },
+    { id: 'products', label: 'Product Analysis', labelFr: 'Analyse Produits', path: '/pole/rd/products' },
+    { id: 'shops', label: 'Shop Analysis', labelFr: 'Analyse Boutiques', path: '/pole/rd/shops' },
+    { id: 'suppliers', label: 'Supplier Analysis', labelFr: 'Analyse Fournisseurs', path: '/pole/rd/suppliers' },
+    { id: 'frictions', label: 'System Frictions', labelFr: 'Frictions Système', path: '/pole/rd/frictions' },
+    { id: 'reports', label: 'Reports & Recommendations', labelFr: 'Rapports & Recommandations', path: '/pole/rd/reports' },
+  ],
 };
 
 export const getModuleNavigation = (poleId: PoleId): SubNavigationItem[] => {
