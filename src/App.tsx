@@ -70,6 +70,7 @@ import Deployments from "./pages/modules/tech/Deployments";
 import Infrastructure from "./pages/modules/tech/Infrastructure";
 import Security from "./pages/modules/tech/Security";
 import Catalog from "./pages/modules/tech/Catalog";
+import ReceivedProducts from "./pages/modules/tech/ReceivedProducts";
 
 // RH module pages
 import RHDashboard from "./pages/modules/rh/RHDashboard";
@@ -195,6 +196,7 @@ const App = () => (
             <Route path="/pole/tech/infrastructure" element={<Infrastructure />} />
             <Route path="/pole/tech/security" element={<Security />} />
             <Route path="/pole/tech/catalog" element={<Catalog />} />
+            <Route path="/pole/tech/received-products" element={<ReceivedProducts />} />
             
             {/* RH module */}
             <Route path="/pole/rh" element={<RHDashboard />} />
