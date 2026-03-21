@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { playCriticalAlertSound, playHighAlertSound } from '@/lib/alertSounds';
 
 export type AlertSeverity = 'critical' | 'high' | 'medium';
 export type AlertModule = 'ethics' | 'gateway';
@@ -128,6 +129,11 @@ export function useCriticalAlerts() {
         };
         setAlerts(prev => [newAlert, ...prev]);
         setLastAlert(newAlert);
+        if (newAlert.severity === 'critical') {
+          playCriticalAlertSound();
+        } else {
+          playHighAlertSound();
+        }
         timerId = scheduleNext();
       }, delay);
     };
