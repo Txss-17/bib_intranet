@@ -94,6 +94,7 @@ export const moduleNavigations: ModuleNavigations = {
   rse: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/rse' },
     { id: 'packaging', label: 'Validated Packaging', labelFr: 'Packaging validés', path: '/pole/rse/packaging' },
+    { id: 'packaging-lifecycle', label: 'Packaging Lifecycle', labelFr: 'Cycle de vie Packaging', path: '/pole/rse/packaging-lifecycle' },
     { id: 'recycling', label: 'Recycling Stats', labelFr: 'Recyclage (stats)', path: '/pole/rse/recycling' },
     { id: 'points', label: 'Customer Points', labelFr: 'Points clients finaux', path: '/pole/rse/points' },
     { id: 'co2', label: 'CO₂ Impact', labelFr: 'Impact CO₂', path: '/pole/rse/co2' },
@@ -127,6 +128,16 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'scoring', label: 'Risk Scoring', labelFr: 'Scoring risque', path: '/pole/lifecycle/scoring' },
     { id: 'support', label: 'Support Tickets', labelFr: 'Tickets support', path: '/pole/lifecycle/support' },
   ],
+
+  // R&D (Pole 13)
+  rd: [
+    { id: 'overview', label: 'Dashboard', labelFr: 'Dashboard', path: '/pole/rd' },
+    { id: 'products', label: 'Product Analysis', labelFr: 'Analyse Produits', path: '/pole/rd/products' },
+    { id: 'shops', label: 'Shop Analysis', labelFr: 'Analyse Boutiques', path: '/pole/rd/shops' },
+    { id: 'suppliers', label: 'Supplier Analysis', labelFr: 'Analyse Fournisseurs', path: '/pole/rd/suppliers' },
+    { id: 'frictions', label: 'System Frictions', labelFr: 'Frictions Système', path: '/pole/rd/frictions' },
+    { id: 'reports', label: 'Reports & Recommendations', labelFr: 'Rapports & Recommandations', path: '/pole/rd/reports' },
+  ],
 };
 
 export const getModuleNavigation = (poleId: PoleId): SubNavigationItem[] => {
@@ -148,21 +159,5 @@ export const transversalNavigations: Record<string, SubNavigationItem[]> = {
     { id: 'validation', label: 'Validation', labelFr: 'Validation', path: '/modules/gateway/validation' },
     { id: 'routing', label: 'Routing', labelFr: 'Routage', path: '/modules/gateway/routing' },
     { id: 'responses', label: 'Responses', labelFr: 'Réponses', path: '/modules/gateway/responses' },
-  ],
-  packaging: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/modules/packaging' },
-    { id: 'submissions', label: 'Submissions', labelFr: 'Soumissions', path: '/modules/packaging/submissions' },
-    { id: 'rse-validation', label: 'RSE Validation', labelFr: 'Validation RSE', path: '/modules/packaging/rse-validation' },
-    { id: 'audit-status', label: 'Audit Status', labelFr: 'Statut audit', path: '/modules/packaging/audit-status' },
-    { id: 'ops-transmission', label: 'Ops Transmission', labelFr: 'Transmission Ops', path: '/modules/packaging/ops-transmission' },
-    { id: 'recycling-resale', label: 'Recycling & Resale', labelFr: 'Recyclage revente', path: '/modules/packaging/recycling-resale' },
-  ],
-  rd: [
-    { id: 'overview', label: 'Dashboard', labelFr: 'Dashboard', path: '/modules/rd' },
-    { id: 'products', label: 'Product Analysis', labelFr: 'Analyse Produits', path: '/modules/rd/products' },
-    { id: 'shops', label: 'Shop Analysis', labelFr: 'Analyse Boutiques', path: '/modules/rd/shops' },
-    { id: 'suppliers', label: 'Supplier Analysis', labelFr: 'Analyse Fournisseurs', path: '/modules/rd/suppliers' },
-    { id: 'frictions', label: 'System Frictions', labelFr: 'Frictions Système', path: '/modules/rd/frictions' },
-    { id: 'reports', label: 'Reports & Recommendations', labelFr: 'Rapports & Recommandations', path: '/modules/rd/reports' },
   ],
 };

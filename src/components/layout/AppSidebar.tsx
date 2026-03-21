@@ -41,6 +41,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Megaphone,
   ShieldAlert,
   RefreshCw,
+  FlaskConical,
 };
 
 const transversalModules = [
@@ -48,8 +49,6 @@ const transversalModules = [
   { id: 'feed', name: 'Internal Feed', icon: Home, path: '/feed' },
   { id: 'ethics', name: 'Ethics & Whistleblowing', icon: Shield, path: '/modules/ethics' },
   { id: 'incidents', name: 'Risk & Incidents', icon: AlertTriangle, path: '/modules/incidents' },
-  { id: 'rd', name: 'R&D', icon: FlaskConical, path: '/modules/rd' },
-  { id: 'packaging', name: 'Packaging Lifecycle', icon: Recycle, path: '/modules/packaging' },
   { id: 'documents', name: 'Documents', icon: FileText, path: '/documents' },
 ];
 

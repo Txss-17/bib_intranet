@@ -10,7 +10,8 @@ export type PoleId =
   | 'rse'
   | 'marketing'
   | 'risk'
-  | 'lifecycle';
+  | 'lifecycle'
+  | 'rd';
 
 export interface Pole {
   id: PoleId;

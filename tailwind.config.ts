@@ -82,6 +82,7 @@ export default {
           marketing: "hsl(var(--pole-marketing))",
           risk: "hsl(var(--pole-risk))",
           lifecycle: "hsl(var(--pole-lifecycle))",
+          rd: "hsl(var(--pole-rd))",
         },
       },
       borderRadius: {

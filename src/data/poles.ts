@@ -97,6 +97,14 @@ export const poles: Pole[] = [
     icon: 'RefreshCw',
     color: 'pole-lifecycle',
   },
+  {
+    id: 'rd',
+    name: 'R&D',
+    shortName: 'R&D',
+    description: 'Research, product analysis, and system optimization',
+    icon: 'FlaskConical',
+    color: 'pole-rd',
+  },
 ];
 
 export const getPoleById = (id: string): Pole | undefined => {
