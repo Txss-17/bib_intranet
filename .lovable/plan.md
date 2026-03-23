@@ -1,44 +1,64 @@
 
 
-## Plan: Transmission des produits validés vers le pôle Tech
+# Plan d'implémentation — Intranet Linksy v2
 
-### Contexte
+Analyse de l'existant vs la vision décrite, organisée en phases d'implémentation.
 
-Les produits validés par le pôle Supplier (`ValidatedProducts.tsx`) n'ont actuellement aucun mécanisme de transmission vers le pôle Tech. Le catalogue Tech (`Catalog.tsx`) contient uniquement des services techniques, sans section pour les produits reçus des fournisseurs.
+---
 
-### Ce qui sera construit
+## Ce qui existe déjà
 
-**1. Ajout d'un bouton "Transmettre au Tech" sur chaque produit validé** (`ValidatedProducts.tsx`)
-- Ajout d'un champ `techStatus` sur chaque produit (état local) : `not_sent` | `sent` | `confirmed`
-- Nouveau bouton "Transmettre au Tech" dans le dropdown actions (icône `Send`)
-- Badge visuel indiquant le statut de transmission (Non transmis / Transmis / Confirmé)
-- Action en masse "Transmettre la sélection" via un bouton global pour envoyer un batch
-- Toast de confirmation à chaque transmission
-- KPI supplémentaire : nombre de produits transmis au Tech
+- Fiches fournisseurs avec statuts (validé/en attente/suspendu), score risque, certifications
+- Audits fournisseurs et ops (CRUD via Supabase)
+- Notifications temps réel (Ethics/Gateway uniquement)
+- Dashboard exécutif avec KPIs globaux (CA, EBITDA, ESG)
+- Dashboard pôle fournisseur avec stats de base
 
-**2. Nouvelle page "Produits reçus" côté Tech** (`src/pages/modules/tech/ReceivedProducts.tsx`)
-- Table dédiée listant les produits transmis par le pôle Supplier
-- Colonnes : Nom, SKU, Fournisseur, Catégorie, Prix unitaire, MOQ, Transmis le, Transmis par, Statut (En attente / Intégré / Rejeté)
-- Boutons d'action : "Intégrer au catalogue", "Rejeter", "Demander info"
-- Filtres : statut d'intégration, catégorie, fournisseur
-- KPIs : total reçus, en attente, intégrés, rejetés
-- Données mock réalistes correspondant aux produits validés du Supplier
+## Ce qui manque (7 chantiers)
 
-**3. Route et navigation** (`App.tsx`)
-- Ajout de la route `/modules/tech/received-products` pointant vers `ReceivedProducts`
+---
 
-### Fichiers impactés
+### Phase 1 — Liaison Audit ↔ Fournisseur
 
-| Fichier | Action |
-|---------|--------|
-| `src/pages/modules/supplier/ValidatedProducts.tsx` | Éditer — ajout techStatus, bouton Transmettre, badge, KPI |
-| `src/pages/modules/tech/ReceivedProducts.tsx` | Créer — page de réception avec table, actions, KPIs |
-| `src/App.tsx` | Éditer — ajout import + route |
+**Objectif** : Connecter les résultats d'audit au statut fournisseur automatiquement.
 
-### Détails techniques
+1. **Section "Audit & Conformité" dans chaque fiche fournisseur** (`SupplierFiles.tsx`)
+   - Ajouter un onglet/section dans la vue détaillée fournisseur affichant : statut audit, score qualité, date dernier audit, historique des audits
+   - Lire les données depuis la table `supplier_audits` filtrées par nom fournisseur
 
-- Le flux utilise l'état local (mock) conformément à l'architecture existante — pas de base de données pour l'instant
-- Les données mock de `ReceivedProducts` reprennent les mêmes produits que `ValidatedProducts` pour simuler la cohérence du flux
-- Les actions "Intégrer" et "Rejeter" côté Tech mettent à jour l'état local et affichent un toast
-- Pattern identique aux actions Gateway (Approuver/Rejeter) déjà implémentées
+2. **Actions automatiques post-audit** (`SupplierAudits.tsx` + nouveau hook)
+   - Quand un audit passe à "completed" : mettre à jour le statut fournisseur (Validé si score ≥ 70, À surveiller si 50-69, Refusé/Suspendu si < 50)
+   - Générer une notification au pôle fournisseur
+   - Enregistrer dans un historique traçable
 
+3. **Migration DB** : Ajouter colonnes `audit_status`, `last_audit_date`, `quality_score` à une table `suppliers` (ou créer cette table si elle n'existe pas encore en DB)
+
+---
+
+### Phase 2 — Module Portefeuille par catégorie
+
+**Objectif** : Organiser les fournisseurs validés en portefeuilles assignés.
+
+4. **Nouvelle page "Portefeuilles"** (`/pole/supplier/portfolios`)
+   - Vue par catégorie (Mode, Accessoires, Maison, Hygiène, etc.)
+   - Chaque portefeuille affiche : 1 responsable principal + 1 backup, liste fournisseurs validés, score moyen, alertes
+   - Règle : seuls les fournisseurs validés apparaissent
+
+5. **Dashboard employé fournisseur** (vue individuelle dans portefeuille)
+   - Nombre fournisseurs gérés, score moyen portefeuille, alertes actives, audits à venir
+
+6. **Vue Manager** (onglet dans SupplierDashboard)
+   - Répartition charge par employé, détection surcharge, suggestions de rééquilibrage
+
+7. **Migration DB** : Tables `supplier_portfolios` (category, responsible_id, backup_id) et `portfolio_assignments` (supplier_id, portfolio_id)
+
+---
+
+### Phase 3 — Assignation intelligente
+
+**Objectif** : Après validation audit, suggérer automatiquement un employé pour le portefeuille.
+
+8. **Logique d'assignation** (nouveau composant `AssignmentSuggestion`)
+   - Détection catégorie du fournisseur
+   - Calcul score candidat basé sur : charge actuelle, spécialisation catégorie, performance
+   - Interface : suggestion avec
