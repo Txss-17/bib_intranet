@@ -61,4 +61,63 @@ Analyse de l'existant vs la vision décrite, organisée en phases d'implémentat
 8. **Logique d'assignation** (nouveau composant `AssignmentSuggestion`)
    - Détection catégorie du fournisseur
    - Calcul score candidat basé sur : charge actuelle, spécialisation catégorie, performance
-   - Interface : suggestion avec
+   - Interface : suggestion avec justification + bouton validation humaine
+
+9. **Intégration dans le workflow audit** : Après validation → modal d'assignation avec suggestion pré-remplie
+
+---
+
+### Phase 4 — Module Audit 3 niveaux
+
+**Objectif** : Structurer les audits en 3 types distincts.
+
+10. **Audit initial** : Déclenché à l'ajout d'un nouveau fournisseur (statut "pending" → audit obligatoire)
+11. **Surveillance continue** : Alertes automatiques basées sur des seuils (score qualité, incidents, retards)
+12. **Audit périodique/déclenché** : Planification récurrente ou déclenchement manuel sur anomalie
+
+- Ajouter un champ `audit_type` (initial/continuous/periodic) aux audits
+- Enrichir `AuditDashboard` avec vue par type et actions correctives
+
+---
+
+### Phase 5 — Notifications multi-sources
+
+**Objectif** : Étendre le système de notifications au-delà Ethics/Gateway.
+
+13. **Élargir `useCriticalAlerts`** pour supporter les sources : audit, supplier, performance, risk
+14. **3 niveaux** : Normal (info), Important (à surveiller), Critique (action immédiate)
+15. **Mise à jour `CriticalAlertsPanel`** avec filtrage par source et niveau
+
+---
+
+### Phase 6 — KPI stratégiques internes
+
+**Objectif** : Dashboard Direction enrichi, données non exposées aux vendeurs.
+
+16. **Onglet "Intelligence" dans ExecutiveDashboard** : Top produits, best sellers, rentabilité par catégorie, volume ventes
+17. **Données marquées "internal only"** dans le modèle de données
+
+---
+
+### Phase 7 — Organisation pôle fournisseur
+
+**Objectif** : Hiérarchie claire dans le module supplier.
+
+18. **Vue organigramme** dans SupplierDashboard : Responsable pôle → équipes par catégorie → portefeuilles individuels
+19. **Lien avec les postes existants** (`positionAccess.ts`) pour le RBAC
+
+---
+
+## Détails techniques
+
+- **Tables DB à créer** : `suppliers` (persistance), `supplier_portfolios`, `portfolio_assignments`, `audit_history_log`, `internal_notifications`
+- **RLS** : Toutes les tables protégées par rôle (admin, manager supplier, auditeur)
+- **Hooks React Query** : `useSupplierPortfolios`, `useAssignmentSuggestion`, `useAuditWorkflow`, `useInternalNotifications`
+- **Fichiers principaux modifiés** : `SupplierFiles.tsx`, `SupplierDashboard.tsx`, `SupplierAudits.tsx`, `AuditDashboard.tsx`, `ExecutiveDashboard.tsx`, `CriticalAlertsPanel.tsx`, `useCriticalAlerts.ts`, `moduleNavigations.ts`, `App.tsx`
+
+## Ordre recommandé
+
+Phase 1 → Phase 4 → Phase 5 → Phase 2 → Phase 3 → Phase 6 → Phase 7
+
+La liaison Audit-Fournisseur (Phase 1) est le socle sur lequel reposent les portefeuilles et l'assignation.
+
