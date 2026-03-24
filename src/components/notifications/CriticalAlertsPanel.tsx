@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, ShieldAlert, Radio, X, CheckCheck, ExternalLink } from 'lucide-react';
+import { AlertTriangle, ShieldAlert, Radio, CheckCheck, ClipboardCheck, Building2, TrendingDown, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { CriticalAlert, AlertSeverity, AlertModule } from '@/hooks/useCriticalAlerts';
 
 interface CriticalAlertsPanelProps {
@@ -18,9 +20,13 @@ const severityConfig: Record<AlertSeverity, { label: string; className: string; 
   medium: { label: 'Moyenne', className: 'bg-secondary text-secondary-foreground', icon: Radio },
 };
 
-const moduleLabels: Record<AlertModule, string> = {
-  ethics: 'Ethics',
-  gateway: 'Gateway',
+const moduleConfig: Record<AlertModule, { label: string; icon: typeof AlertTriangle }> = {
+  ethics: { label: 'Ethics', icon: ShieldAlert },
+  gateway: { label: 'Gateway', icon: Radio },
+  audit: { label: 'Audit', icon: ClipboardCheck },
+  supplier: { label: 'Fournisseur', icon: Building2 },
+  performance: { label: 'Performance', icon: TrendingDown },
+  risk: { label: 'Risque', icon: Flame },
 };
 
 function timeAgo(timestamp: string): string {
@@ -35,7 +41,12 @@ function timeAgo(timestamp: string): string {
 
 export function CriticalAlertsPanel({ alerts, onMarkAsRead, onMarkAllAsRead }: CriticalAlertsPanelProps) {
   const navigate = useNavigate();
+  const [moduleFilter, setModuleFilter] = useState<string>('all');
   const unread = alerts.filter(a => !a.read).length;
+
+  const filteredAlerts = moduleFilter === 'all'
+    ? alerts
+    : alerts.filter(a => a.module === moduleFilter);
 
   return (
     <div className="w-96">
@@ -56,15 +67,31 @@ export function CriticalAlertsPanel({ alerts, onMarkAsRead, onMarkAllAsRead }: C
         )}
       </div>
 
+      {/* Source Filter */}
+      <div className="px-4 py-2 border-b border-border/50">
+        <Select value={moduleFilter} onValueChange={setModuleFilter}>
+          <SelectTrigger className="h-7 text-xs">
+            <SelectValue placeholder="Filtrer par source" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les sources</SelectItem>
+            {Object.entries(moduleConfig).map(([key, config]) => (
+              <SelectItem key={key} value={key}>{config.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       {/* Alerts list */}
       <ScrollArea className="max-h-96">
-        {alerts.length === 0 ? (
+        {filteredAlerts.length === 0 ? (
           <div className="p-6 text-center text-sm text-muted-foreground">
             Aucune alerte active
           </div>
         ) : (
-          alerts.slice(0, 10).map((alert) => {
+          filteredAlerts.slice(0, 15).map((alert) => {
             const severity = severityConfig[alert.severity];
+            const module = moduleConfig[alert.module];
             const SeverityIcon = severity.icon;
             return (
               <div
@@ -88,7 +115,7 @@ export function CriticalAlertsPanel({ alerts, onMarkAsRead, onMarkAllAsRead }: C
                   </div>
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{alert.description}</p>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <Badge variant="outline" className="text-[10px] h-4 px-1.5">{moduleLabels[alert.module]}</Badge>
+                    <Badge variant="outline" className="text-[10px] h-4 px-1.5">{module.label}</Badge>
                     <span className="text-[10px] text-muted-foreground">{timeAgo(alert.timestamp)}</span>
                   </div>
                 </div>

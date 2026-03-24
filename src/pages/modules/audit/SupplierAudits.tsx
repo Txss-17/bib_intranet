@@ -5,10 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Building, Calendar, FileText, Edit, Loader2 } from 'lucide-react';
+import { Search, Plus, Building, Calendar, FileText, Edit, Loader2, Send } from 'lucide-react';
 import { ExportButtons } from '@/components/ExportButtons';
 import AuditForm from '@/components/forms/AuditForm';
 import { useSupplierAudits, useCreateSupplierAudit, useUpdateSupplierAudit } from '@/hooks/useAudits';
+import { useAuditSupplierLiaison } from '@/hooks/useAuditSupplierLiaison';
 
 export default function SupplierAudits() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,14 +19,43 @@ export default function SupplierAudits() {
   const { data: audits = [], isLoading } = useSupplierAudits(searchTerm || undefined);
   const createAudit = useCreateSupplierAudit();
   const updateAudit = useUpdateSupplierAudit();
+  const { syncSupplierAfterAudit } = useAuditSupplierLiaison();
 
   const handleSubmit = (data: any) => {
     if (editingAudit) {
-      updateAudit.mutate({ id: editingAudit.id, ...data }, { onSuccess: () => toast.success('Audit modifié') });
+      updateAudit.mutate({ id: editingAudit.id, ...data }, {
+        onSuccess: (updatedAudit: any) => {
+          toast.success('Audit modifié');
+          // Auto-sync supplier if audit is now completed with a score
+          if (data.status === 'completed' && data.score != null) {
+            syncSupplierAfterAudit(data.supplier || editingAudit.supplier, data.score);
+          }
+        },
+      });
     } else {
-      createAudit.mutate(data, { onSuccess: () => toast.success('Audit planifié') });
+      createAudit.mutate(data, {
+        onSuccess: () => {
+          toast.success('Audit planifié');
+          if (data.status === 'completed' && data.score != null) {
+            syncSupplierAfterAudit(data.supplier, data.score);
+          }
+        },
+      });
     }
     setEditingAudit(null);
+  };
+
+  const handleCompleteAudit = (audit: any) => {
+    if (audit.score != null) {
+      updateAudit.mutate({ id: audit.id, status: 'completed' }, {
+        onSuccess: () => {
+          toast.success('Audit marqué comme terminé');
+          syncSupplierAfterAudit(audit.supplier, audit.score);
+        },
+      });
+    } else {
+      toast.error('Impossible de terminer un audit sans score');
+    }
   };
 
   const handleEdit = (audit: any) => { setEditingAudit(audit); setFormOpen(true); };
@@ -57,7 +87,7 @@ export default function SupplierAudits() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Audits Fournisseurs</h1>
-          <p className="text-muted-foreground">Évaluation et conformité des fournisseurs</p>
+          <p className="text-muted-foreground">Évaluation et conformité — liaison automatique avec le pôle fournisseur</p>
         </div>
         <div className="flex gap-2">
           <ExportButtons filename="audits-fournisseurs" title="Audits fournisseurs" columns={[
@@ -103,7 +133,16 @@ export default function SupplierAudits() {
                   <TableCell>{getStatusBadge(audit.status)}</TableCell>
                   <TableCell>{audit.score !== null ? <span className={`font-bold ${getScoreColor(audit.score)}`}>{audit.score}%</span> : '-'}</TableCell>
                   <TableCell>{audit.findings !== null ? audit.findings : '-'}</TableCell>
-                  <TableCell><Button variant="ghost" size="sm" onClick={() => handleEdit(audit)}><Edit className="h-4 w-4" /></Button></TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => handleEdit(audit)}><Edit className="h-4 w-4" /></Button>
+                      {audit.status !== 'completed' && audit.score !== null && (
+                        <Button variant="ghost" size="sm" onClick={() => handleCompleteAudit(audit)} title="Terminer et synchroniser fournisseur">
+                          <Send className="h-4 w-4 text-green-500" />
+                        </Button>
+                      )}
+                    </div>
+                  </TableCell>
                 </TableRow>
               ))}
               {audits.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucun audit trouvé</TableCell></TableRow>}

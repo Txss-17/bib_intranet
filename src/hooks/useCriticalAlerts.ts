@@ -3,7 +3,7 @@ import { playCriticalAlertSound, playHighAlertSound } from '@/lib/alertSounds';
 import { useAlertSoundSetting } from '@/hooks/useAlertSoundSetting';
 
 export type AlertSeverity = 'critical' | 'high' | 'medium';
-export type AlertModule = 'ethics' | 'gateway';
+export type AlertModule = 'ethics' | 'gateway' | 'audit' | 'supplier' | 'performance' | 'risk';
 
 export interface CriticalAlert {
   id: string;
@@ -39,6 +39,26 @@ const INITIAL_ALERTS: CriticalAlert[] = [
   },
   {
     id: 'ca-3',
+    module: 'audit',
+    severity: 'critical',
+    title: 'Audit fournisseur — score critique',
+    description: 'BioCosmetics SAS a obtenu un score de 38% lors du dernier audit — suspension recommandée.',
+    timestamp: new Date(Date.now() - 45 * 60000).toISOString(),
+    read: false,
+    actionUrl: '/pole/audit/supplier',
+  },
+  {
+    id: 'ca-4',
+    module: 'supplier',
+    severity: 'high',
+    title: 'Fournisseur suspendu automatiquement',
+    description: 'OrganicWorld Ltd suspendu suite à un score audit < 50%. Portefeuille à réassigner.',
+    timestamp: new Date(Date.now() - 1.5 * 3600000).toISOString(),
+    read: false,
+    actionUrl: '/pole/supplier/suppliers',
+  },
+  {
+    id: 'ca-5',
     module: 'ethics',
     severity: 'high',
     title: 'Dossier en cours sans assignation',
@@ -48,7 +68,7 @@ const INITIAL_ALERTS: CriticalAlert[] = [
     actionUrl: '/modules/ethics/ongoing',
   },
   {
-    id: 'ca-4',
+    id: 'ca-6',
     module: 'gateway',
     severity: 'high',
     title: 'Routage bloqué — pôle Finance',
@@ -58,7 +78,47 @@ const INITIAL_ALERTS: CriticalAlert[] = [
     actionUrl: '/modules/gateway/routing',
   },
   {
-    id: 'ca-5',
+    id: 'ca-7',
+    module: 'performance',
+    severity: 'high',
+    title: 'Taux de livraison en baisse',
+    description: 'Le taux de livraison à temps est passé sous 85% cette semaine — seuil d\'alerte franchi.',
+    timestamp: new Date(Date.now() - 5 * 3600000).toISOString(),
+    read: true,
+    actionUrl: '/pole/ops',
+  },
+  {
+    id: 'ca-8',
+    module: 'risk',
+    severity: 'medium',
+    title: 'Incident P3 non résolu depuis 7j',
+    description: 'L\'incident RISK-2026-018 (fuite de données potentielle) reste ouvert sans plan d\'action.',
+    timestamp: new Date(Date.now() - 6 * 3600000).toISOString(),
+    read: true,
+    actionUrl: '/pole/risk/active',
+  },
+  {
+    id: 'ca-9',
+    module: 'audit',
+    severity: 'medium',
+    title: '3 audits périodiques en retard',
+    description: 'Les audits planifiés pour NaturaCare, GreenBeauty et AromaPlantes sont en retard de 2 semaines.',
+    timestamp: new Date(Date.now() - 8 * 3600000).toISOString(),
+    read: true,
+    actionUrl: '/pole/audit/supplier',
+  },
+  {
+    id: 'ca-10',
+    module: 'supplier',
+    severity: 'medium',
+    title: 'Certifications expirant bientôt',
+    description: '4 certifications fournisseurs expirent dans les 30 prochains jours.',
+    timestamp: new Date(Date.now() - 10 * 3600000).toISOString(),
+    read: true,
+    actionUrl: '/pole/supplier/certifications',
+  },
+  {
+    id: 'ca-11',
     module: 'gateway',
     severity: 'medium',
     title: 'Réponse en brouillon expirée',
@@ -68,7 +128,7 @@ const INITIAL_ALERTS: CriticalAlert[] = [
     actionUrl: '/modules/gateway/responses',
   },
   {
-    id: 'ca-6',
+    id: 'ca-12',
     module: 'ethics',
     severity: 'medium',
     title: 'Taux de résolution en baisse',
@@ -95,11 +155,39 @@ const SIMULATED_ALERTS: Omit<CriticalAlert, 'id' | 'timestamp' | 'read'>[] = [
     actionUrl: '/modules/gateway/inbox',
   },
   {
+    module: 'audit',
+    severity: 'critical',
+    title: 'Non-conformité majeure détectée',
+    description: 'Audit terrain #AT-089 : non-conformité critique sur les conditions de stockage.',
+    actionUrl: '/pole/audit/nonconformities',
+  },
+  {
+    module: 'supplier',
+    severity: 'high',
+    title: 'Alerte qualité fournisseur',
+    description: 'Taux de retour anormalement élevé (+15%) pour les produits EcoPack Solutions.',
+    actionUrl: '/pole/supplier/alerts',
+  },
+  {
     module: 'ethics',
     severity: 'high',
     title: 'Nouveau signalement sensible',
     description: 'Signalement identifié concernant un membre de la direction — protocole spécial requis.',
     actionUrl: '/modules/ethics/received',
+  },
+  {
+    module: 'performance',
+    severity: 'high',
+    title: 'SLA fournisseur non respecté',
+    description: 'Délai moyen de livraison GreenBeauty : 12j vs 7j contractuels.',
+    actionUrl: '/pole/supplier',
+  },
+  {
+    module: 'risk',
+    severity: 'high',
+    title: 'Incident cybersécurité détecté',
+    description: 'Tentative d\'accès non autorisé détectée sur l\'API partenaire — investigation en cours.',
+    actionUrl: '/pole/tech/security',
   },
   {
     module: 'gateway',
@@ -110,14 +198,13 @@ const SIMULATED_ALERTS: Omit<CriticalAlert, 'id' | 'timestamp' | 'read'>[] = [
   },
 ];
 
-let nextId = 7;
+let nextId = 13;
 
 export function useCriticalAlerts() {
   const [alerts, setAlerts] = useState<CriticalAlert[]>(INITIAL_ALERTS);
   const [lastAlert, setLastAlert] = useState<CriticalAlert | null>(null);
   const { soundEnabled } = useAlertSoundSetting();
 
-  // Simulate incoming alerts every 45-90 seconds
   useEffect(() => {
     const scheduleNext = () => {
       const delay = 45000 + Math.random() * 45000;
