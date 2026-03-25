@@ -308,6 +308,12 @@ export default function SupplierDashboard() {
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
+
+        <TabsContent value="org" className="mt-4">
+          <SupplierOrgChart />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
