@@ -161,6 +161,7 @@ const ExecutiveDashboard = () => {
         <TabsList>
           <TabsTrigger value="overview">Vue globale</TabsTrigger>
           <TabsTrigger value="commercial">Résultats Commerciaux</TabsTrigger>
+          <TabsTrigger value="intelligence">🔒 Intelligence</TabsTrigger>
           <TabsTrigger value="strategic">Activités Stratégiques</TabsTrigger>
           <TabsTrigger value="reports">Rapports & Commissaire</TabsTrigger>
         </TabsList>
