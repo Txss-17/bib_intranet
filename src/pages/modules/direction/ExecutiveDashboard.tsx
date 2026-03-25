@@ -161,6 +161,7 @@ const ExecutiveDashboard = () => {
         <TabsList>
           <TabsTrigger value="overview">Vue globale</TabsTrigger>
           <TabsTrigger value="commercial">Résultats Commerciaux</TabsTrigger>
+          <TabsTrigger value="intelligence">🔒 Intelligence</TabsTrigger>
           <TabsTrigger value="strategic">Activités Stratégiques</TabsTrigger>
           <TabsTrigger value="reports">Rapports & Commissaire</TabsTrigger>
         </TabsList>
@@ -319,6 +320,102 @@ const ExecutiveDashboard = () => {
                   </div>
                 ))}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="intelligence" className="mt-4 space-y-6">
+          <Card className="border-primary/30 bg-primary/5">
+            <CardContent className="p-4 flex items-center gap-3">
+              <Shield className="h-5 w-5 text-primary" />
+              <span className="text-sm font-medium">Données stratégiques internes — non visibles par les vendeurs</span>
+            </CardContent>
+          </Card>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              { label: 'Top Produit', value: 'Sérum Bio Rose', sub: '2,340 ventes', color: 'text-primary' },
+              { label: 'Marge Moyenne', value: '34.2%', sub: '+2.1pts vs N-1', color: 'text-emerald-500' },
+              { label: 'Produit + Rentable', value: 'Crème Nuit Pro', sub: 'Marge: 52%', color: 'text-emerald-500' },
+              { label: 'Catégorie #1', value: 'Hygiène Bio', sub: '38% du CA', color: 'text-blue-500' },
+            ].map(kpi => (
+              <Card key={kpi.label}>
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">{kpi.label}</p>
+                  <p className={`text-lg font-bold mt-1 ${kpi.color}`}>{kpi.value}</p>
+                  <p className="text-xs text-muted-foreground">{kpi.sub}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader><CardTitle>Top 10 Produits (ventes)</CardTitle></CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={[
+                    { name: 'Sérum Bio Rose', ventes: 2340 },
+                    { name: 'Crème Nuit Pro', ventes: 1890 },
+                    { name: 'Shampoing Solide', ventes: 1650 },
+                    { name: 'Huile Argan', ventes: 1420 },
+                    { name: 'Baume Lèvres', ventes: 1280 },
+                    { name: 'Gel Douche Coco', ventes: 1150 },
+                    { name: 'Masque Argile', ventes: 980 },
+                    { name: 'Dentifrice Bio', ventes: 870 },
+                  ]} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis type="number" className="text-xs" />
+                    <YAxis type="category" dataKey="name" className="text-xs" width={130} />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                    <Bar dataKey="ventes" name="Ventes" fill="hsl(var(--chart-1))" radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><CardTitle>Rentabilité par Catégorie</CardTitle></CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={[
+                    { name: 'Hygiène Bio', marge: 42, ca: 380 },
+                    { name: 'Mode Femme', marge: 35, ca: 456 },
+                    { name: 'Mode Homme', marge: 31, ca: 312 },
+                    { name: 'Accessoires', marge: 38, ca: 198 },
+                    { name: 'Maison', marge: 28, ca: 145 },
+                  ]}>
+                    <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                    <XAxis dataKey="name" className="text-xs" />
+                    <YAxis className="text-xs" />
+                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                    <Legend />
+                    <Bar dataKey="marge" name="Marge (%)" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="ca" name="CA (K€)" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader><CardTitle>Best Sellers — Tendance mensuelle</CardTitle></CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={[
+                  { month: 'Jan', serum: 180, creme: 150, shampoing: 120 },
+                  { month: 'Fév', serum: 195, creme: 160, shampoing: 135 },
+                  { month: 'Mar', serum: 210, creme: 175, shampoing: 140 },
+                  { month: 'Avr', serum: 200, creme: 165, shampoing: 155 },
+                  { month: 'Mai', serum: 225, creme: 180, shampoing: 148 },
+                  { month: 'Juin', serum: 240, creme: 190, shampoing: 160 },
+                ]}>
+                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <XAxis dataKey="month" className="text-xs" />
+                  <YAxis className="text-xs" />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                  <Legend />
+                  <Line type="monotone" dataKey="serum" name="Sérum Bio Rose" stroke="hsl(var(--chart-1))" strokeWidth={2} />
+                  <Line type="monotone" dataKey="creme" name="Crème Nuit Pro" stroke="hsl(var(--chart-2))" strokeWidth={2} />
+                  <Line type="monotone" dataKey="shampoing" name="Shampoing Solide" stroke="hsl(var(--chart-3))" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
             </CardContent>
           </Card>
         </TabsContent>

@@ -32,6 +32,7 @@ import SupplierFiles from "./pages/modules/supplier/SupplierFiles";
 import Certifications from "./pages/modules/supplier/Certifications";
 import DecisionHistory from "./pages/modules/supplier/DecisionHistory";
 import QualityAlerts from "./pages/modules/supplier/QualityAlerts";
+import SupplierPortfolios from "./pages/modules/supplier/SupplierPortfolios";
 
 // Ops module pages
 import OpsDashboard from "./pages/modules/ops/OpsDashboard";
@@ -163,6 +164,7 @@ const App = () => (
             <Route path="/pole/supplier/certifications" element={<Certifications />} />
             <Route path="/pole/supplier/decisions" element={<DecisionHistory />} />
             <Route path="/pole/supplier/alerts" element={<QualityAlerts />} />
+            <Route path="/pole/supplier/portfolios" element={<SupplierPortfolios />} />
             
             {/* Lifecycle (User Success & Risk) module */}
             <Route path="/pole/lifecycle" element={<LifecycleDashboard />} />

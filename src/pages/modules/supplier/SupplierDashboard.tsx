@@ -7,11 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTableInteractions } from '@/hooks/useTableInteractions';
-import { Users, Package, AlertTriangle, ShoppingCart, Star, TrendingUp, Truck, BarChart3, Search } from 'lucide-react';
+import { Users, Package, AlertTriangle, ShoppingCart, Star, TrendingUp, Truck, BarChart3, Search, FolderOpen, Building2 } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link } from 'react-router-dom';
-
+import { SupplierOrgChart } from '@/components/supplier/SupplierOrgChart';
 const stats = [
   { label: 'Fournisseurs actifs', value: 31, icon: Users, color: 'text-primary' },
   { label: 'Commandes en cours', value: 14, icon: ShoppingCart, color: 'text-blue-500' },
@@ -83,6 +84,8 @@ export default function SupplierDashboard() {
     searchFields: ['name', 'country'],
   });
 
+  const [dashTab, setDashTab] = useState('overview');
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -91,10 +94,19 @@ export default function SupplierDashboard() {
           <p className="text-muted-foreground">Gestion des fournisseurs, stocks et commandes</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" asChild><Link to="/pole/supplier/portfolios"><FolderOpen className="h-4 w-4 mr-2" />Portefeuilles</Link></Button>
           <Button variant="outline" asChild><Link to="/pole/supplier/pending">Produits en attente</Link></Button>
           <Button asChild><Link to="/pole/supplier/suppliers">Fiches fournisseurs</Link></Button>
         </div>
       </div>
+
+      <Tabs value={dashTab} onValueChange={setDashTab}>
+        <TabsList>
+          <TabsTrigger value="overview">Vue globale</TabsTrigger>
+          <TabsTrigger value="org"><Building2 className="h-4 w-4 mr-1" />Organisation</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="mt-4 space-y-6">
 
       {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -296,6 +308,12 @@ export default function SupplierDashboard() {
           </CardContent>
         </Card>
       </div>
+        </TabsContent>
+
+        <TabsContent value="org" className="mt-4">
+          <SupplierOrgChart />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

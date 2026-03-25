@@ -64,6 +64,7 @@ export const moduleNavigations: ModuleNavigations = {
   // Supplier & Product
   supplier: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/supplier' },
+    { id: 'portfolios', label: 'Portfolios', labelFr: 'Portefeuilles', path: '/pole/supplier/portfolios' },
     { id: 'pending', label: 'Pending Products', labelFr: 'Produits en attente', path: '/pole/supplier/pending' },
     { id: 'validated', label: 'Validated Products', labelFr: 'Produits validés', path: '/pole/supplier/validated' },
     { id: 'suppliers', label: 'Supplier Files', labelFr: 'Fiches fournisseurs', path: '/pole/supplier/suppliers' },
