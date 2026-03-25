@@ -164,6 +164,7 @@ const App = () => (
             <Route path="/pole/supplier/certifications" element={<Certifications />} />
             <Route path="/pole/supplier/decisions" element={<DecisionHistory />} />
             <Route path="/pole/supplier/alerts" element={<QualityAlerts />} />
+            <Route path="/pole/supplier/portfolios" element={<SupplierPortfolios />} />
             
             {/* Lifecycle (User Success & Risk) module */}
             <Route path="/pole/lifecycle" element={<LifecycleDashboard />} />
