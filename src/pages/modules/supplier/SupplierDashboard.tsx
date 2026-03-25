@@ -7,11 +7,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTableInteractions } from '@/hooks/useTableInteractions';
-import { Users, Package, AlertTriangle, ShoppingCart, Star, TrendingUp, Truck, BarChart3, Search } from 'lucide-react';
+import { Users, Package, AlertTriangle, ShoppingCart, Star, TrendingUp, Truck, BarChart3, Search, FolderOpen, Building2 } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Link } from 'react-router-dom';
-
+import { SupplierOrgChart } from '@/components/supplier/SupplierOrgChart';
 const stats = [
   { label: 'Fournisseurs actifs', value: 31, icon: Users, color: 'text-primary' },
   { label: 'Commandes en cours', value: 14, icon: ShoppingCart, color: 'text-blue-500' },
