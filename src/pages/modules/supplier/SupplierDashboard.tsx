@@ -84,6 +84,8 @@ export default function SupplierDashboard() {
     searchFields: ['name', 'country'],
   });
 
+  const [dashTab, setDashTab] = useState('overview');
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -92,10 +94,19 @@ export default function SupplierDashboard() {
           <p className="text-muted-foreground">Gestion des fournisseurs, stocks et commandes</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" asChild><Link to="/pole/supplier/portfolios"><FolderOpen className="h-4 w-4 mr-2" />Portefeuilles</Link></Button>
           <Button variant="outline" asChild><Link to="/pole/supplier/pending">Produits en attente</Link></Button>
           <Button asChild><Link to="/pole/supplier/suppliers">Fiches fournisseurs</Link></Button>
         </div>
       </div>
+
+      <Tabs value={dashTab} onValueChange={setDashTab}>
+        <TabsList>
+          <TabsTrigger value="overview">Vue globale</TabsTrigger>
+          <TabsTrigger value="org"><Building2 className="h-4 w-4 mr-1" />Organisation</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="mt-4 space-y-6">
 
       {/* KPIs */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
