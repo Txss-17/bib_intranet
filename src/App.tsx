@@ -32,6 +32,7 @@ import SupplierFiles from "./pages/modules/supplier/SupplierFiles";
 import Certifications from "./pages/modules/supplier/Certifications";
 import DecisionHistory from "./pages/modules/supplier/DecisionHistory";
 import QualityAlerts from "./pages/modules/supplier/QualityAlerts";
+import SupplierPortfolios from "./pages/modules/supplier/SupplierPortfolios";
 
 // Ops module pages
 import OpsDashboard from "./pages/modules/ops/OpsDashboard";
