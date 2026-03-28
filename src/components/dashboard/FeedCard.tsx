@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { MessageCircle, Heart, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,8 @@ interface FeedCardProps {
 
 export function FeedCard({ item }: FeedCardProps) {
   const pole = item.poleId ? getPoleById(item.poleId) : null;
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(item.reactions);
 
   const getTypeBadgeVariant = () => {
     switch (item.type) {
@@ -71,9 +74,12 @@ export function FeedCard({ item }: FeedCardProps) {
 
       {/* Footer */}
       <div className="mt-4 flex items-center gap-4 pl-13 pt-3 border-t border-border/50">
-        <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-          <Heart className="h-4 w-4" />
-          <span>{item.reactions}</span>
+        <button
+          className={cn('flex items-center gap-1.5 text-sm transition-colors', liked ? 'text-destructive' : 'text-muted-foreground hover:text-foreground')}
+          onClick={() => { setLiked(!liked); setLikeCount(prev => liked ? prev - 1 : prev + 1); }}
+        >
+          <Heart className={cn('h-4 w-4', liked && 'fill-current')} />
+          <span>{likeCount}</span>
         </button>
         <button className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
           <MessageCircle className="h-4 w-4" />

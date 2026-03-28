@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Activity, Shield, FileText, TrendingUp } from 'lucide-react';
 import { MetricCard } from '@/components/dashboard/MetricCard';
@@ -111,9 +112,9 @@ export default function Dashboard() {
                 Audit Trail
               </h2>
             </div>
-            <a href="/audit" className="text-xs text-accent hover:underline">
+            <Link to="/pole/audit" className="text-xs text-accent hover:underline">
               View all
-            </a>
+            </Link>
           </div>
           <div className="enterprise-card p-4">
             {recentAuditLogs.map((log, index) => (

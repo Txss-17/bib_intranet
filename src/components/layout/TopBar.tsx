@@ -178,9 +178,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           <DropdownMenuContent align="end" className="w-80">
             <div className="flex items-center justify-between px-3 py-2 border-b border-border">
               <span className="text-sm font-semibold">Notifications</span>
-              <Link to="/notifications" className="text-xs text-accent hover:underline">
-                View all
-              </Link>
+              <span className="text-xs text-muted-foreground">Récentes</span>
             </div>
             <div className="max-h-80 overflow-y-auto">
               {notifications.slice(0, 5).map((notification) => {
@@ -214,12 +212,14 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
         </DropdownMenu>
 
         {/* Messages */}
-        <Button variant="ghost" size="icon" className="relative">
-          <MessageSquare className="h-5 w-5" />
-          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-medium text-accent-foreground">
-            2
-          </span>
-        </Button>
+        <Link to="/modules/gateway/inbox">
+          <Button variant="ghost" size="icon" className="relative">
+            <MessageSquare className="h-5 w-5" />
+            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-medium text-accent-foreground">
+              2
+            </span>
+          </Button>
+        </Link>
 
         {/* Tasks */}
         <DropdownMenu>
@@ -236,9 +236,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           <DropdownMenuContent align="end" className="w-80">
             <div className="flex items-center justify-between px-3 py-2 border-b border-border">
               <span className="text-sm font-semibold">My Tasks</span>
-              <Link to="/tasks" className="text-xs text-accent hover:underline">
-                View all
-              </Link>
+              <span className="text-xs text-muted-foreground">En cours</span>
             </div>
             <div className="max-h-80 overflow-y-auto">
               {tasks.map((task) => {
@@ -305,9 +303,9 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
               <p className="text-xs text-accent mt-1">{currentEmployee.employeeRoleTitle}</p>
             </div>
             <DropdownMenuItem asChild>
-              <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
+              <Link to="/pole/rh/files" className="flex items-center gap-2 cursor-pointer">
                 <User className="h-4 w-4" />
-                <span>Profile</span>
+                <span>Mon dossier</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
@@ -317,9 +315,12 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="flex items-center gap-2 text-destructive cursor-pointer">
+            <DropdownMenuItem
+              className="flex items-center gap-2 text-destructive cursor-pointer"
+              onClick={() => { window.location.href = '/'; }}
+            >
               <LogOut className="h-4 w-4" />
-              <span>Sign out</span>
+              <span>Déconnexion</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
