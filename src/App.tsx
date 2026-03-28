@@ -11,6 +11,7 @@ import InternalFeed from "./pages/InternalFeed";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
+import Profile from "./pages/Profile";
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
 import RDDashboard from "./pages/modules/rd/RDDashboard";
 import RDProducts from "./pages/modules/rd/RDProducts";
@@ -283,6 +284,7 @@ const App = () => (
             <Route path="/feed" element={<InternalFeed />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>

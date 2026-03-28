@@ -303,9 +303,9 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
               <p className="text-xs text-accent mt-1">{currentEmployee.employeeRoleTitle}</p>
             </div>
             <DropdownMenuItem asChild>
-              <Link to="/pole/rh/files" className="flex items-center gap-2 cursor-pointer">
+              <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
                 <User className="h-4 w-4" />
-                <span>Mon dossier</span>
+                <span>Mon profil</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuItem asChild>
