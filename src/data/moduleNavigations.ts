@@ -42,10 +42,11 @@ export const moduleNavigations: ModuleNavigations = {
   // Tech
   tech: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/tech' },
+    { id: 'received-products', label: 'Received Products', labelFr: 'Réception produits', path: '/pole/tech/received-products' },
+    { id: 'catalog', label: 'Catalog', labelFr: 'Catalogue', path: '/pole/tech/catalog' },
     { id: 'deployments', label: 'Deployments', labelFr: 'Déploiements', path: '/pole/tech/deployments' },
     { id: 'infrastructure', label: 'Infrastructure', labelFr: 'Infra', path: '/pole/tech/infrastructure' },
     { id: 'security', label: 'Security', labelFr: 'Sécurité', path: '/pole/tech/security' },
-    { id: 'catalog', label: 'Catalog', labelFr: 'Catalogue', path: '/pole/tech/catalog' },
   ],
 
   // RH
