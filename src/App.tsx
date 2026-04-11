@@ -242,6 +242,7 @@ const App = () => (
             
             {/* Marketing module */}
             <Route path="/pole/marketing" element={<MarketingDashboard />} />
+            <Route path="/pole/marketing/product-catalog" element={<ProductCatalog />} />
             <Route path="/pole/marketing/campaigns" element={<Campaigns />} />
             <Route path="/pole/marketing/content" element={<Content />} />
             <Route path="/pole/marketing/podcasts" element={<Podcasts />} />
