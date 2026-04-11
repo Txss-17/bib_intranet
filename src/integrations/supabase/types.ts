@@ -818,58 +818,100 @@ export type Database = {
       }
       products: {
         Row: {
+          barcode: string | null
           category: string | null
           created_at: string
           currency: string | null
           description: string | null
+          dimensions: string | null
+          gallery: string[] | null
           id: string
+          image_url: string | null
+          ingredients: string | null
+          margin: number | null
           moq: number | null
           name: string
+          origin: string | null
           packaging_status: string | null
+          product_sheet_url: string | null
           rejection_reason: string | null
+          selling_price: number | null
+          shelf_life: string | null
           sku: string | null
           status: string
           supplier_id: string
+          tech_integration_status: string | null
+          transmitted_at: string | null
+          transmitted_by: string | null
           unit_price: number | null
           updated_at: string
           validated_at: string | null
           validated_by: string | null
+          weight: string | null
         }
         Insert: {
+          barcode?: string | null
           category?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
+          dimensions?: string | null
+          gallery?: string[] | null
           id?: string
+          image_url?: string | null
+          ingredients?: string | null
+          margin?: number | null
           moq?: number | null
           name: string
+          origin?: string | null
           packaging_status?: string | null
+          product_sheet_url?: string | null
           rejection_reason?: string | null
+          selling_price?: number | null
+          shelf_life?: string | null
           sku?: string | null
           status?: string
           supplier_id: string
+          tech_integration_status?: string | null
+          transmitted_at?: string | null
+          transmitted_by?: string | null
           unit_price?: number | null
           updated_at?: string
           validated_at?: string | null
           validated_by?: string | null
+          weight?: string | null
         }
         Update: {
+          barcode?: string | null
           category?: string | null
           created_at?: string
           currency?: string | null
           description?: string | null
+          dimensions?: string | null
+          gallery?: string[] | null
           id?: string
+          image_url?: string | null
+          ingredients?: string | null
+          margin?: number | null
           moq?: number | null
           name?: string
+          origin?: string | null
           packaging_status?: string | null
+          product_sheet_url?: string | null
           rejection_reason?: string | null
+          selling_price?: number | null
+          shelf_life?: string | null
           sku?: string | null
           status?: string
           supplier_id?: string
+          tech_integration_status?: string | null
+          transmitted_at?: string | null
+          transmitted_by?: string | null
           unit_price?: number | null
           updated_at?: string
           validated_at?: string | null
           validated_by?: string | null
+          weight?: string | null
         }
         Relationships: [
           {
