@@ -115,6 +115,7 @@ import Campaigns from "./pages/modules/marketing/Campaigns";
 import Content from "./pages/modules/marketing/Content";
 import Podcasts from "./pages/modules/marketing/Podcasts";
 import Analytics from "./pages/modules/marketing/Analytics";
+import ProductCatalog from "./pages/modules/marketing/ProductCatalog";
 
 // Risk module pages
 import RiskDashboard from "./pages/modules/risk/RiskDashboard";
