@@ -258,7 +258,7 @@ export default function PendingProducts() {
                   <TableCell>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="sm" onClick={() => setSelectedProduct(p)}><Eye className="h-3 w-3" /></Button>
-                      <Button variant="outline" size="sm" className="text-emerald-600" onClick={() => { setSelectedProduct(p); setActionDialog('validate'); }}>
+                      <Button variant="outline" size="sm" className="text-primary" onClick={() => { setSelectedProduct(p); setActionDialog('validate'); }}>
                         <CheckCircle className="h-3 w-3" />
                       </Button>
                       <Button variant="outline" size="sm" className="text-destructive" onClick={() => { setSelectedProduct(p); setActionDialog('reject'); }}>
