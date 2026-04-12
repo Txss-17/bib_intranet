@@ -413,7 +413,7 @@ export default function PendingProducts() {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setActionDialog(null)}>Annuler</Button>
-            <Button onClick={handleValidate} className="bg-emerald-600 hover:bg-emerald-700 text-white">Confirmer</Button>
+            <Button onClick={handleValidate} className="bg-primary hover:bg-primary/90">Confirmer</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
