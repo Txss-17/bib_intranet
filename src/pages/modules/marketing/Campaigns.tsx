@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useCampaigns, useCreateCampaign, useUpdateCampaign } from '@/hooks/useCampaigns';
 import FileUploadZone from '@/components/FileUploadZone';
+import { useMediaAttachments, useSaveMediaAttachments } from '@/hooks/useMediaAttachments';
 
 export default function Campaigns() {
   const [search, setSearch] = useState('');
@@ -25,12 +26,12 @@ export default function Campaigns() {
     objective: '', target_audience: '', notes: '',
   });
   const [formFiles, setFormFiles] = useState<{ name: string; url: string; type: string; size: number }[]>([]);
-  // We store files info in notes as JSON suffix for simplicity
-  const [campaignFiles, setCampaignFiles] = useState<Record<string, any[]>>({});
 
   const { data: campaigns = [], isLoading } = useCampaigns(search || undefined);
   const createCampaign = useCreateCampaign();
   const updateCampaign = useUpdateCampaign();
+  const { data: allAttachments = [] } = useMediaAttachments('campaign');
+  const saveAttachments = useSaveMediaAttachments();
 
   const openNew = () => {
     setEditingId(null);
