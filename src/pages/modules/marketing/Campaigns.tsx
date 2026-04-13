@@ -74,7 +74,7 @@ export default function Campaigns() {
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-bold text-foreground">Campagnes</h1><p className="text-muted-foreground">Gestion des campagnes marketing</p></div>
         <div className="flex gap-2">
-          <ExportButtons filename="campagnes-marketing" title="Liste des campagnes marketing" columns={[
+          <ExportButtons filename="campagnes-marketing" title="Liste des campagnes marketing" poleName="Marketing" columns={[
             { header: 'N°', accessor: 'campaign_number' }, { header: 'Nom', accessor: 'name' },
             { header: 'Type', accessor: 'type' }, { header: 'Début', accessor: 'start_date' },
             { header: 'Fin', accessor: 'end_date' }, { header: 'Budget', accessor: 'budget' },
