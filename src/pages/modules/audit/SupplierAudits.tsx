@@ -90,7 +90,7 @@ export default function SupplierAudits() {
           <p className="text-muted-foreground">Évaluation et conformité — liaison automatique avec le pôle fournisseur</p>
         </div>
         <div className="flex gap-2">
-          <ExportButtons filename="audits-fournisseurs" title="Audits fournisseurs" columns={[
+          <ExportButtons filename="audits-fournisseurs" title="Audits fournisseurs" poleName="Audit" columns={[
             { header: 'Fournisseur', accessor: 'supplier' }, { header: 'Catégorie', accessor: 'category' },
             { header: 'Auditeur', accessor: 'auditor' }, { header: 'Date', accessor: 'date' },
             { header: 'Statut', accessor: 'status' }, { header: 'Score', accessor: 'score' },

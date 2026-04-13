@@ -189,7 +189,7 @@ export default function PendingProducts() {
           <p className="text-sm text-muted-foreground mt-1">{filtered.length} produit(s) — Marge automatique : {MARGIN_RATE * 100}%</p>
         </div>
         <div className="flex gap-2">
-          <ExportButtons filename="produits-revue" title="Revue Produits" columns={[
+          <ExportButtons filename="produits-revue" title="Revue Produits" poleName="Fournisseur" columns={[
             { header: 'Nom', accessor: 'name' }, { header: 'Fournisseur', accessor: 'supplier_name' },
             { header: 'Catégorie', accessor: 'category' }, { header: 'Prix achat', accessor: 'unit_price' },
             { header: 'Prix vente', accessor: 'selling_price' }, { header: 'Marge %', accessor: 'margin' },

@@ -61,7 +61,7 @@ const Shipments = () => {
           <p className="text-muted-foreground">Suivi des colis et livraisons</p>
         </div>
         <div className="flex gap-2">
-          <ExportButtons filename="expeditions" title="Liste des expéditions" columns={[
+          <ExportButtons filename="expeditions" title="Liste des expéditions" poleName="Ops" columns={[
             { header: 'N° Suivi', accessor: 'tracking_number' }, { header: 'Transporteur', accessor: 'carrier' },
             { header: 'Destination', accessor: 'destination_address' }, { header: 'Poids (kg)', accessor: 'weight_kg' },
             { header: 'Livraison prévue', accessor: 'estimated_delivery' }, { header: 'Coût', accessor: 'shipping_cost' },

@@ -53,7 +53,7 @@ export default function OpsAudits() {
           <p className="text-muted-foreground">Audits des processus opérationnels</p>
         </div>
         <div className="flex gap-2">
-          <ExportButtons filename="audits-ops" title="Audits opérationnels" columns={[
+          <ExportButtons filename="audits-ops" title="Audits opérationnels" poleName="Audit" columns={[
             { header: 'Processus', accessor: 'process' }, { header: 'Périmètre', accessor: 'scope' },
             { header: 'Auditeur', accessor: 'auditor' }, { header: 'Date', accessor: 'date' },
             { header: 'Statut', accessor: 'status' }, { header: 'Score', accessor: 'score' },

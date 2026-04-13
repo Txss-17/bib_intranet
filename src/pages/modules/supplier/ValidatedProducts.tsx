@@ -278,7 +278,7 @@ export default function ValidatedProducts() {
             <SelectItem value="price">Prix ↓</SelectItem>
           </SelectContent>
         </Select>
-        <ExportButtons filename="produits-valides" title="Produits validés" columns={[
+        <ExportButtons filename="produits-valides" title="Produits validés" poleName="Fournisseur" columns={[
           { header: 'Nom', accessor: 'name' }, { header: 'SKU', accessor: 'sku' },
           { header: 'Fournisseur', accessor: 'supplier' }, { header: 'Catégorie', accessor: 'category' },
           { header: 'Prix', accessor: 'unitPrice' }, { header: 'MOQ', accessor: 'moq' },
