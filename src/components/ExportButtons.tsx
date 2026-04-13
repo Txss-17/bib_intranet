@@ -9,24 +9,25 @@
    accessor: string;
  }
  
- interface ExportButtonsProps {
-   filename: string;
-   title?: string;
-   columns: ExportColumn[];
-   data: Record<string, any>[];
-   variant?: 'default' | 'outline' | 'ghost';
-   size?: 'default' | 'sm' | 'lg' | 'icon';
- }
- 
- export function ExportButtons({ filename, title, columns, data, variant = 'outline', size = 'default' }: ExportButtonsProps) {
-   const handleExportPDF = () => {
-     try {
-       exportToPDF({ filename, title, columns, data });
-       toast.success('Export PDF réussi');
-     } catch (error) {
-       toast.error('Erreur lors de l\'export PDF');
-     }
-   };
+interface ExportButtonsProps {
+  filename: string;
+  title?: string;
+  columns: ExportColumn[];
+  data: Record<string, any>[];
+  variant?: 'default' | 'outline' | 'ghost';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
+  poleName?: string;
+}
+
+export function ExportButtons({ filename, title, columns, data, variant = 'outline', size = 'default', poleName }: ExportButtonsProps) {
+  const handleExportPDF = () => {
+    try {
+      exportToPDF({ filename, title, columns, data, poleName });
+      toast.success('Export PDF réussi');
+    } catch (error) {
+      toast.error('Erreur lors de l\'export PDF');
+    }
+  };
  
    const handleExportExcel = () => {
      try {

@@ -108,7 +108,6 @@ export const moduleNavigations: ModuleNavigations = {
   // Marketing & Media
   marketing: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/marketing' },
-    { id: 'product-catalog', label: 'Product Catalog', labelFr: 'Catalogue produits', path: '/pole/marketing/product-catalog' },
     { id: 'campaigns', label: 'Campaigns', labelFr: 'Campagnes', path: '/pole/marketing/campaigns' },
     { id: 'content', label: 'Content', labelFr: 'Contenu', path: '/pole/marketing/content' },
     { id: 'podcasts', label: 'Podcasts', labelFr: 'Podcasts', path: '/pole/marketing/podcasts' },
