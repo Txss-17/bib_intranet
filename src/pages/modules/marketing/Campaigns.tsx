@@ -33,6 +33,9 @@ export default function Campaigns() {
   const { data: allAttachments = [] } = useMediaAttachments('campaign');
   const saveAttachments = useSaveMediaAttachments();
 
+  const getFilesForCampaign = (id: string) => 
+    allAttachments.filter(a => a.entity_id === id).map(a => ({ name: a.file_name, url: a.file_url, type: a.file_type, size: a.file_size }));
+
   const openNew = () => {
     setEditingId(null);
     setFormData({ name: '', type: '', start_date: '', end_date: '', budget: '', status: 'planned', objective: '', target_audience: '', notes: '' });
@@ -47,7 +50,7 @@ export default function Campaigns() {
       budget: c.budget || '', status: c.status, objective: c.objective || '',
       target_audience: c.target_audience || '', notes: c.notes || '',
     });
-    setFormFiles(campaignFiles[c.id] || []);
+    setFormFiles(getFilesForCampaign(c.id));
     setFormOpen(true);
   };
 
@@ -55,13 +58,13 @@ export default function Campaigns() {
     e.preventDefault();
     if (editingId) {
       updateCampaign.mutate({ id: editingId, ...formData }, { onSuccess: () => toast.success('Campagne modifiée') });
-      setCampaignFiles(prev => ({ ...prev, [editingId]: formFiles }));
+      saveAttachments.mutate({ entityType: 'campaign', entityId: editingId, files: formFiles });
     } else {
       const num = `CMP-${String(Math.floor(Math.random() * 999)).padStart(3, '0')}`;
       createCampaign.mutate({ campaign_number: num, spent: '0 €', ...formData }, {
         onSuccess: (data: any) => {
           toast.success('Campagne créée');
-          if (data?.id) setCampaignFiles(prev => ({ ...prev, [data.id]: formFiles }));
+          if (data?.id) saveAttachments.mutate({ entityType: 'campaign', entityId: data.id, files: formFiles });
         }
       });
     }
