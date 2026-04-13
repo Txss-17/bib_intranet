@@ -248,7 +248,7 @@ export default function ReceivedProducts() {
             {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
           </SelectContent>
         </Select>
-        <ExportButtons filename="produits-recus-tech" title="Produits reçus Tech" columns={[
+        <ExportButtons filename="produits-recus-tech" title="Produits reçus Tech" poleName="Tech" columns={[
           { header: 'Nom', accessor: 'name' }, { header: 'SKU', accessor: 'sku' },
           { header: 'Fournisseur', accessor: 'supplier_name' }, { header: 'Catégorie', accessor: 'category' },
           { header: 'Prix achat', accessor: 'unit_price' }, { header: 'Prix vente', accessor: 'selling_price' },

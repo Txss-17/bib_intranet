@@ -39,7 +39,7 @@ export default function Disputes() {
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-bold">Litiges</h1><p className="text-muted-foreground">Suivi et gestion des litiges</p></div>
         <div className="flex gap-2">
-          <ExportButtons filename="litiges" title="Liste des litiges" columns={[
+          <ExportButtons filename="litiges" title="Liste des litiges" poleName="Compliance" columns={[
             { header: 'N°', accessor: 'dispute_number' }, { header: 'Sujet', accessor: 'subject' },
             { header: 'Partie', accessor: 'party' }, { header: 'Type', accessor: 'type' },
             { header: 'Montant', accessor: 'amount' }, { header: 'Priorité', accessor: 'priority' },

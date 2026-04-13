@@ -297,7 +297,7 @@ export default function HRAlerts() {
             <SelectItem value="resolved">Résolues</SelectItem>
           </SelectContent>
         </Select>
-        <ExportButtons filename="alertes-rh" title="Alertes RH" columns={[
+        <ExportButtons filename="alertes-rh" title="Alertes RH" poleName="Ressources Humaines" columns={[
           { header: 'Employé', accessor: 'employeeName' }, { header: 'Pôle', accessor: 'employeePole' },
           { header: 'Type', accessor: 'type' }, { header: 'Priorité', accessor: 'priority' },
           { header: 'Titre', accessor: 'title' }, { header: 'Échéance', accessor: 'dueDate' },

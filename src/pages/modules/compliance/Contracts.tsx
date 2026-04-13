@@ -39,7 +39,7 @@ export default function Contracts() {
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-bold">Contrats</h1><p className="text-muted-foreground">Gestion des contrats et accords</p></div>
         <div className="flex gap-2">
-          <ExportButtons filename="contrats" title="Liste des contrats" columns={[
+          <ExportButtons filename="contrats" title="Liste des contrats" poleName="Compliance" columns={[
             { header: 'N°', accessor: 'contract_number' }, { header: 'Titre', accessor: 'title' },
             { header: 'Type', accessor: 'type' }, { header: 'Début', accessor: 'start_date' },
             { header: 'Fin', accessor: 'end_date' }, { header: 'Valeur', accessor: 'value' },

@@ -491,7 +491,7 @@ export default function EmployeeFiles() {
             <SelectItem value="probation">Période d'essai</SelectItem>
           </SelectContent>
         </Select>
-        <ExportButtons filename="dossiers-employes" title="Dossiers employés" columns={[
+        <ExportButtons filename="dossiers-employes" title="Dossiers employés" poleName="Ressources Humaines" columns={[
           { header: 'Nom', accessor: 'name' }, { header: 'Pôle', accessor: 'pole' },
           { header: 'Poste', accessor: 'position' }, { header: 'Statut', accessor: 'status' },
           { header: 'Contrat', accessor: 'contractType' }, { header: 'Évaluation', accessor: 'evaluationScore' },

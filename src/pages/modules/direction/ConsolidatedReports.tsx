@@ -72,6 +72,7 @@ const ConsolidatedReports = () => {
          <ExportButtons
            filename="rapports-consolides"
            title="Rapports Consolidés"
+           poleName="Direction"
            columns={reportColumns}
            data={reports}
          />
@@ -183,6 +184,7 @@ const ConsolidatedReports = () => {
                        <ExportButtons
                          filename={`rapport-${report.id}`}
                          title={report.title}
+                         poleName="Direction"
                          columns={kpiColumns}
                          data={[
                            { metric: 'Revenue', current: `€${(kpiSummary.revenue.current / 1000000).toFixed(2)}M`, previous: `€${(kpiSummary.revenue.previous / 1000000).toFixed(2)}M`, change: `+${kpiSummary.revenue.change}%` },

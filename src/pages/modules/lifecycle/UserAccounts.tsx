@@ -77,6 +77,7 @@ const UserAccounts = () => {
         <ExportButtons
           filename="comptes-utilisateurs"
           title="Comptes Utilisateurs"
+          poleName="Lifecycle"
           columns={[
             { header: 'Entreprise', accessor: 'company_name' },
             { header: 'Contact', accessor: 'contact_name' },

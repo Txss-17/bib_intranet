@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { useCampaigns, useCreateCampaign, useUpdateCampaign } from '@/hooks/useCampaigns';
 import FileUploadZone from '@/components/FileUploadZone';
+import { useMediaAttachments, useSaveMediaAttachments } from '@/hooks/useMediaAttachments';
 
 export default function Campaigns() {
   const [search, setSearch] = useState('');
@@ -25,12 +26,15 @@ export default function Campaigns() {
     objective: '', target_audience: '', notes: '',
   });
   const [formFiles, setFormFiles] = useState<{ name: string; url: string; type: string; size: number }[]>([]);
-  // We store files info in notes as JSON suffix for simplicity
-  const [campaignFiles, setCampaignFiles] = useState<Record<string, any[]>>({});
 
   const { data: campaigns = [], isLoading } = useCampaigns(search || undefined);
   const createCampaign = useCreateCampaign();
   const updateCampaign = useUpdateCampaign();
+  const { data: allAttachments = [] } = useMediaAttachments('campaign');
+  const saveAttachments = useSaveMediaAttachments();
+
+  const getFilesForCampaign = (id: string) => 
+    allAttachments.filter(a => a.entity_id === id).map(a => ({ name: a.file_name, url: a.file_url, type: a.file_type, size: a.file_size }));
 
   const openNew = () => {
     setEditingId(null);
@@ -46,7 +50,7 @@ export default function Campaigns() {
       budget: c.budget || '', status: c.status, objective: c.objective || '',
       target_audience: c.target_audience || '', notes: c.notes || '',
     });
-    setFormFiles(campaignFiles[c.id] || []);
+    setFormFiles(getFilesForCampaign(c.id));
     setFormOpen(true);
   };
 
@@ -54,13 +58,13 @@ export default function Campaigns() {
     e.preventDefault();
     if (editingId) {
       updateCampaign.mutate({ id: editingId, ...formData }, { onSuccess: () => toast.success('Campagne modifiée') });
-      setCampaignFiles(prev => ({ ...prev, [editingId]: formFiles }));
+      saveAttachments.mutate({ entityType: 'campaign', entityId: editingId, files: formFiles });
     } else {
       const num = `CMP-${String(Math.floor(Math.random() * 999)).padStart(3, '0')}`;
       createCampaign.mutate({ campaign_number: num, spent: '0 €', ...formData }, {
         onSuccess: (data: any) => {
           toast.success('Campagne créée');
-          if (data?.id) setCampaignFiles(prev => ({ ...prev, [data.id]: formFiles }));
+          if (data?.id) saveAttachments.mutate({ entityType: 'campaign', entityId: data.id, files: formFiles });
         }
       });
     }
@@ -74,7 +78,7 @@ export default function Campaigns() {
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-bold text-foreground">Campagnes</h1><p className="text-muted-foreground">Gestion des campagnes marketing</p></div>
         <div className="flex gap-2">
-          <ExportButtons filename="campagnes-marketing" title="Liste des campagnes marketing" columns={[
+          <ExportButtons filename="campagnes-marketing" title="Liste des campagnes marketing" poleName="Marketing" columns={[
             { header: 'N°', accessor: 'campaign_number' }, { header: 'Nom', accessor: 'name' },
             { header: 'Type', accessor: 'type' }, { header: 'Début', accessor: 'start_date' },
             { header: 'Fin', accessor: 'end_date' }, { header: 'Budget', accessor: 'budget' },
@@ -109,8 +113,8 @@ export default function Campaigns() {
                   <TableCell>{c.budget || '-'}</TableCell>
                   <TableCell>{c.spent || '-'}</TableCell>
                   <TableCell>
-                    {(campaignFiles[c.id]?.length || 0) > 0 ? (
-                      <Badge variant="secondary" className="text-xs">{campaignFiles[c.id].length} fichier(s)</Badge>
+                    {getFilesForCampaign(c.id).length > 0 ? (
+                      <Badge variant="secondary" className="text-xs">{getFilesForCampaign(c.id).length} fichier(s)</Badge>
                     ) : <span className="text-muted-foreground text-xs">—</span>}
                   </TableCell>
                   <TableCell>
@@ -235,10 +239,10 @@ export default function Campaigns() {
                 <div><p className="text-xs text-muted-foreground uppercase">Dépensé</p><p className="text-foreground">{viewing.spent || 'N/A'}</p></div>
               </div>
               {viewing.objective && <div><p className="text-xs text-muted-foreground uppercase">Objectif</p><p className="text-sm text-foreground">{viewing.objective}</p></div>}
-              {(campaignFiles[viewing.id]?.length || 0) > 0 && (
+              {getFilesForCampaign(viewing.id).length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-muted-foreground uppercase">Fichiers</p>
-                  {campaignFiles[viewing.id].map((f: any, i: number) => (
+                  {getFilesForCampaign(viewing.id).map((f: any, i: number) => (
                     <a key={i} href={f.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 hover:bg-muted text-sm">
                       <FileText className="h-4 w-4 text-primary" />
                       <span className="flex-1 truncate text-foreground">{f.name}</span>
