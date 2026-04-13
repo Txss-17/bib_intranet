@@ -113,8 +113,8 @@ export default function Campaigns() {
                   <TableCell>{c.budget || '-'}</TableCell>
                   <TableCell>{c.spent || '-'}</TableCell>
                   <TableCell>
-                    {(campaignFiles[c.id]?.length || 0) > 0 ? (
-                      <Badge variant="secondary" className="text-xs">{campaignFiles[c.id].length} fichier(s)</Badge>
+                    {getFilesForCampaign(c.id).length > 0 ? (
+                      <Badge variant="secondary" className="text-xs">{getFilesForCampaign(c.id).length} fichier(s)</Badge>
                     ) : <span className="text-muted-foreground text-xs">—</span>}
                   </TableCell>
                   <TableCell>
@@ -239,10 +239,10 @@ export default function Campaigns() {
                 <div><p className="text-xs text-muted-foreground uppercase">Dépensé</p><p className="text-foreground">{viewing.spent || 'N/A'}</p></div>
               </div>
               {viewing.objective && <div><p className="text-xs text-muted-foreground uppercase">Objectif</p><p className="text-sm text-foreground">{viewing.objective}</p></div>}
-              {(campaignFiles[viewing.id]?.length || 0) > 0 && (
+              {getFilesForCampaign(viewing.id).length > 0 && (
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-muted-foreground uppercase">Fichiers</p>
-                  {campaignFiles[viewing.id].map((f: any, i: number) => (
+                  {getFilesForCampaign(viewing.id).map((f: any, i: number) => (
                     <a key={i} href={f.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 hover:bg-muted text-sm">
                       <FileText className="h-4 w-4 text-primary" />
                       <span className="flex-1 truncate text-foreground">{f.name}</span>
