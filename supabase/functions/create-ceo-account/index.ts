@@ -11,15 +11,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const apiKey = req.headers.get("x-api-key");
-    const expectedKey = Deno.env.get("LINKSY_API_SECRET_KEY");
-    if (!apiKey || apiKey !== expectedKey) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -28,7 +19,6 @@ Deno.serve(async (req) => {
     const email = "tgliyeta@gmail.com";
     const password = "Linksy-CEO-2026!";
 
-    // Create user
     const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -48,7 +38,6 @@ Deno.serve(async (req) => {
 
     const userId = userData.user.id;
 
-    // Update profile with CEO position
     const { error: profileError } = await supabaseAdmin
       .from("profiles")
       .update({
@@ -60,19 +49,14 @@ Deno.serve(async (req) => {
       })
       .eq("id", userId);
 
-    if (profileError) {
-      console.error("Profile update error:", profileError);
-    }
+    if (profileError) console.error("Profile error:", profileError);
 
-    // Assign admin role
     const { error: roleError } = await supabaseAdmin
       .from("user_roles")
       .update({ role: "admin" })
       .eq("user_id", userId);
 
-    if (roleError) {
-      console.error("Role update error:", roleError);
-    }
+    if (roleError) console.error("Role error:", roleError);
 
     return new Response(
       JSON.stringify({
