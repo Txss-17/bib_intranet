@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, Globe, Users, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,7 @@ function useFeedPosts() {
   const qc = useQueryClient();
 
   // Realtime subscription for feed_posts
-  useState(() => {
+  useEffect(() => {
     const channel = supabase
       .channel('feed-posts-realtime')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'feed_posts' }, () => {
@@ -28,7 +28,7 @@ function useFeedPosts() {
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  });
+  }, [qc]);
 
   return useQuery({
     queryKey: ['feed_posts'],
