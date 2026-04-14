@@ -6,6 +6,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
 import { LogIn, Eye, EyeOff, Shield } from 'lucide-react';
+import { EmployeePosition } from '@/types/positions';
+
+const positionDefaultRoute: Record<EmployeePosition, string> = {
+  ceo: '/pole/direction',
+  supplier_manager: '/pole/supplier',
+  user_success_manager: '/pole/lifecycle',
+  ops_logistics_manager: '/pole/ops',
+  finance_manager: '/pole/finance',
+  audit_compliance_lead: '/pole/audit',
+  rse_packaging_manager: '/pole/rse',
+  tech_platform_manager: '/pole/tech',
+};
 
 const Login = () => {
   const navigate = useNavigate();
@@ -29,7 +41,20 @@ const Login = () => {
         variant: 'destructive',
       });
     } else {
-      navigate('/');
+      // Fetch profile to determine redirect
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('position')
+          .eq('id', user.id)
+          .single();
+        const position = profile?.position as EmployeePosition | null;
+        const route = position ? positionDefaultRoute[position] || '/' : '/';
+        navigate(route);
+      } else {
+        navigate('/');
+      }
     }
 
     setLoading(false);
