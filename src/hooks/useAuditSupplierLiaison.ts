@@ -43,6 +43,9 @@ export function useAuditSupplierLiaison() {
         .update({
           status: newStatus,
           risk_score: riskScore,
+          audit_status: auditScore >= 70 ? 'compliant' : auditScore >= 50 ? 'warning' : 'non_compliant',
+          quality_score: auditScore,
+          last_audit_date: new Date().toISOString(),
         })
         .eq('id', supplier.id);
 
