@@ -20,7 +20,7 @@ const positionDefaultRoute: Record<EmployeePosition, string> = {
   marketing_manager: '/pole/marketing',
   rh_manager: '/pole/rh',
   risk_manager: '/pole/risk',
-  rd_manager: '/pole/supplier',
+  rd_manager: '/pole/rd',
 };
 
 const Login = () => {

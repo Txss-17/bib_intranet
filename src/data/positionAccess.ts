@@ -97,7 +97,7 @@ export const positionAccess: Record<EmployeePosition, PositionAccess> = {
     restricted: ['finance.salaries', 'rh.confidential']
   },
   rd_manager: {
-    poles: ['supplier', 'lifecycle'],
+    poles: ['rd', 'supplier', 'lifecycle'],
     screens: [
       'rd.overview', 'rd.products', 'rd.frictions', 'rd.reports',
       'rd.shops', 'rd.suppliers'
