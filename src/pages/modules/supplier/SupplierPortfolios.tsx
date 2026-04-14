@@ -6,92 +6,102 @@ import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTableInteractions } from '@/hooks/useTableInteractions';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
 import { toast } from 'sonner';
-import { FolderOpen, Users, Star, AlertTriangle, Search, UserPlus, ArrowRightLeft, BarChart3, TrendingUp } from 'lucide-react';
+import { FolderOpen, Users, Star, AlertTriangle, Search, ArrowRightLeft, BarChart3, TrendingUp, Loader2, Plus } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { AssignmentSuggestion } from '@/components/supplier/AssignmentSuggestion';
 
-interface Portfolio {
-  id: string;
-  category: string;
-  responsible: string;
-  backup: string;
-  supplierCount: number;
-  avgScore: number;
-  activeAlerts: number;
-  upcomingAudits: number;
-  revenue: string;
+function usePortfolios() {
+  return useQuery({
+    queryKey: ['supplier_portfolios'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('supplier_portfolios' as any)
+        .select('*')
+        .order('category');
+      if (error) throw error;
+      return data as any[];
+    },
+  });
 }
 
-interface PortfolioSupplier {
-  id: string;
-  name: string;
-  country: string;
-  category: string;
-  score: number;
-  status: string;
-  assignedTo: string;
-  lastAudit: string;
-  revenue: string;
+function usePortfolioSuppliers() {
+  return useQuery({
+    queryKey: ['portfolio_suppliers'],
+    queryFn: async () => {
+      const { data: suppliers, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .eq('status', 'validated')
+        .order('name');
+      if (error) throw error;
+
+      // Get assignments
+      const { data: assignments } = await supabase
+        .from('portfolio_assignments' as any)
+        .select('*');
+
+      // Get quality alerts count per supplier
+      const { data: alerts } = await supabase
+        .from('quality_alerts')
+        .select('supplier_id, id')
+        .eq('status', 'open');
+
+      const alertsBySupplier: Record<string, number> = {};
+      (alerts || []).forEach(a => {
+        if (a.supplier_id) alertsBySupplier[a.supplier_id] = (alertsBySupplier[a.supplier_id] || 0) + 1;
+      });
+
+      const assignmentMap: Record<string, any> = {};
+      (assignments || []).forEach((a: any) => {
+        assignmentMap[a.supplier_id] = a;
+      });
+
+      return (suppliers || []).map(s => ({
+        id: s.id,
+        name: s.name,
+        country: s.country || '🌍',
+        category: (s as any).category || 'Général',
+        score: s.quality_score || 0,
+        status: s.status,
+        assignedTo: assignmentMap[s.id]?.assigned_to_name || 'Non assigné',
+        lastAudit: s.last_audit_date ? new Date(s.last_audit_date).toLocaleDateString('fr-FR') : '—',
+        alerts: alertsBySupplier[s.id] || 0,
+      }));
+    },
+  });
 }
-
-interface EmployeeLoad {
-  name: string;
-  role: string;
-  supplierCount: number;
-  maxCapacity: number;
-  avgScore: number;
-  alerts: number;
-  specialization: string[];
-  performance: number;
-}
-
-const portfolios: Portfolio[] = [
-  { id: 'p1', category: 'Mode Femme', responsible: 'Sophie Martin', backup: 'Léa Dubois', supplierCount: 8, avgScore: 87, activeAlerts: 1, upcomingAudits: 2, revenue: '456K €' },
-  { id: 'p2', category: 'Mode Homme', responsible: 'Marc Leroy', backup: 'Sophie Martin', supplierCount: 6, avgScore: 91, activeAlerts: 0, upcomingAudits: 1, revenue: '312K €' },
-  { id: 'p3', category: 'Accessoires', responsible: 'Léa Dubois', backup: 'Thomas Petit', supplierCount: 7, avgScore: 84, activeAlerts: 2, upcomingAudits: 1, revenue: '198K €' },
-  { id: 'p4', category: 'Maison & Déco', responsible: 'Thomas Petit', backup: 'Marc Leroy', supplierCount: 5, avgScore: 79, activeAlerts: 1, upcomingAudits: 3, revenue: '145K €' },
-  { id: 'p5', category: 'Hygiène & Bien-être', responsible: 'Claire Bernard', backup: 'Léa Dubois', supplierCount: 5, avgScore: 92, activeAlerts: 0, upcomingAudits: 0, revenue: '234K €' },
-];
-
-const portfolioSuppliers: PortfolioSupplier[] = [
-  { id: 's1', name: 'BioCosmetics SAS', country: '🇫🇷', category: 'Hygiène & Bien-être', score: 94, status: 'validated', assignedTo: 'Claire Bernard', lastAudit: '2026-02-15', revenue: '245K €' },
-  { id: 's2', name: 'NaturaCare', country: '🇩🇪', category: 'Hygiène & Bien-être', score: 88, status: 'validated', assignedTo: 'Claire Bernard', lastAudit: '2026-01-20', revenue: '198K €' },
-  { id: 's3', name: 'TextilVert', country: '🇫🇷', category: 'Mode Femme', score: 91, status: 'validated', assignedTo: 'Sophie Martin', lastAudit: '2026-03-01', revenue: '167K €' },
-  { id: 's4', name: 'EcoFashion Italia', country: '🇮🇹', category: 'Mode Femme', score: 85, status: 'validated', assignedTo: 'Sophie Martin', lastAudit: '2026-02-10', revenue: '134K €' },
-  { id: 's5', name: 'GreenBeauty', country: '🇮🇹', category: 'Accessoires', score: 82, status: 'watch', assignedTo: 'Léa Dubois', lastAudit: '2026-01-05', revenue: '156K €' },
-  { id: 's6', name: 'EcoPack Solutions', country: '🇪🇸', category: 'Accessoires', score: 73, status: 'watch', assignedTo: 'Léa Dubois', lastAudit: '2025-12-20', revenue: '134K €' },
-  { id: 's7', name: 'HomeDeco Bio', country: '🇫🇷', category: 'Maison & Déco', score: 78, status: 'validated', assignedTo: 'Thomas Petit', lastAudit: '2026-02-28', revenue: '89K €' },
-  { id: 's8', name: 'MenStyle Organic', country: '🇩🇪', category: 'Mode Homme', score: 93, status: 'validated', assignedTo: 'Marc Leroy', lastAudit: '2026-03-10', revenue: '112K €' },
-  { id: 's9', name: 'Nordic Wear', country: '🇸🇪', category: 'Mode Homme', score: 89, status: 'validated', assignedTo: 'Marc Leroy', lastAudit: '2026-02-22', revenue: '98K €' },
-  { id: 's10', name: 'ArtisanCraft', country: '🇵🇹', category: 'Maison & Déco', score: 76, status: 'watch', assignedTo: 'Thomas Petit', lastAudit: '2025-11-15', revenue: '67K €' },
-];
-
-const employeeLoads: EmployeeLoad[] = [
-  { name: 'Sophie Martin', role: 'Responsable Sourcing', supplierCount: 8, maxCapacity: 10, avgScore: 87, alerts: 1, specialization: ['Mode Femme', 'Mode Homme'], performance: 92 },
-  { name: 'Marc Leroy', role: 'Chargé Qualité', supplierCount: 6, maxCapacity: 8, avgScore: 91, alerts: 0, specialization: ['Mode Homme', 'Maison & Déco'], performance: 88 },
-  { name: 'Léa Dubois', role: 'Responsable Accessoires', supplierCount: 7, maxCapacity: 8, avgScore: 84, alerts: 2, specialization: ['Accessoires', 'Hygiène'], performance: 85 },
-  { name: 'Thomas Petit', role: 'Chargé Fournisseurs', supplierCount: 5, maxCapacity: 8, avgScore: 79, alerts: 1, specialization: ['Maison & Déco'], performance: 80 },
-  { name: 'Claire Bernard', role: 'Responsable Bio/Bien-être', supplierCount: 5, maxCapacity: 8, avgScore: 92, alerts: 0, specialization: ['Hygiène & Bien-être'], performance: 95 },
-];
 
 export default function SupplierPortfolios() {
   const [activeTab, setActiveTab] = useState('portfolios');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [assignmentOpen, setAssignmentOpen] = useState(false);
+  const [selectedSupplier, setSelectedSupplier] = useState<{ name: string; category: string } | null>(null);
 
-  const filteredSuppliers = selectedCategory === 'all' 
-    ? portfolioSuppliers 
-    : portfolioSuppliers.filter(s => s.category === selectedCategory);
+  const { data: portfolios = [], isLoading: portfoliosLoading } = usePortfolios();
+  const { data: allSuppliers = [], isLoading: suppliersLoading } = usePortfolioSuppliers();
+
+  const filteredSuppliers = selectedCategory === 'all'
+    ? allSuppliers
+    : allSuppliers.filter(s => s.category === selectedCategory);
 
   const suppliersTable = useTableInteractions({
     data: filteredSuppliers,
     searchFields: ['name', 'assignedTo', 'category'],
   });
 
-  const handleReassign = (supplierName: string) => {
-    toast.success('Réassignation initiée', { description: `${supplierName} — sélection du nouvel assigné en cours` });
+  const categories = [...new Set(allSuppliers.map(s => s.category))];
+  const totalSuppliers = allSuppliers.length;
+  const avgScore = totalSuppliers > 0 ? Math.round(allSuppliers.reduce((s, p) => s + p.score, 0) / totalSuppliers) : 0;
+  const totalAlerts = allSuppliers.reduce((s, p) => s + p.alerts, 0);
+
+  const handleReassign = (supplierName: string, category: string) => {
+    setSelectedSupplier({ name: supplierName, category });
+    setAssignmentOpen(true);
   };
 
   const getLoadColor = (count: number, max: number) => {
@@ -101,6 +111,20 @@ export default function SupplierPortfolios() {
     return 'text-emerald-500';
   };
 
+  const isLoading = portfoliosLoading || suppliersLoading;
+
+  if (isLoading) {
+    return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+  }
+
+  // Group suppliers by assignee for manager view
+  const suppliersByAssignee: Record<string, typeof allSuppliers> = {};
+  allSuppliers.forEach(s => {
+    const key = s.assignedTo || 'Non assigné';
+    if (!suppliersByAssignee[key]) suppliersByAssignee[key] = [];
+    suppliersByAssignee[key].push(s);
+  });
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -109,7 +133,7 @@ export default function SupplierPortfolios() {
             <FolderOpen className="h-8 w-8 text-primary" />
             Portefeuilles Fournisseurs
           </h1>
-          <p className="text-muted-foreground">Organisation par catégorie — uniquement fournisseurs validés</p>
+          <p className="text-muted-foreground">Organisation par catégorie — fournisseurs validés</p>
         </div>
       </div>
 
@@ -119,10 +143,10 @@ export default function SupplierPortfolios() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <Users className="h-5 w-5 text-primary" />
-              <Badge variant="outline" className="text-emerald-500"><TrendingUp className="h-3 w-3 mr-1" />+3</Badge>
+              <Badge variant="outline" className="text-emerald-500"><TrendingUp className="h-3 w-3 mr-1" />actifs</Badge>
             </div>
-            <p className="text-2xl font-bold mt-2">{portfolios.reduce((s, p) => s + p.supplierCount, 0)}</p>
-            <p className="text-xs text-muted-foreground">Fournisseurs assignés</p>
+            <p className="text-2xl font-bold mt-2">{totalSuppliers}</p>
+            <p className="text-xs text-muted-foreground">Fournisseurs validés</p>
           </CardContent>
         </Card>
         <Card>
@@ -130,8 +154,8 @@ export default function SupplierPortfolios() {
             <div className="flex items-center justify-between">
               <FolderOpen className="h-5 w-5 text-blue-500" />
             </div>
-            <p className="text-2xl font-bold mt-2">{portfolios.length}</p>
-            <p className="text-xs text-muted-foreground">Portefeuilles actifs</p>
+            <p className="text-2xl font-bold mt-2">{portfolios.length || categories.length}</p>
+            <p className="text-xs text-muted-foreground">Portefeuilles / catégories</p>
           </CardContent>
         </Card>
         <Card>
@@ -139,7 +163,7 @@ export default function SupplierPortfolios() {
             <div className="flex items-center justify-between">
               <Star className="h-5 w-5 text-yellow-500" />
             </div>
-            <p className="text-2xl font-bold mt-2">{Math.round(portfolios.reduce((s, p) => s + p.avgScore, 0) / portfolios.length)}%</p>
+            <p className="text-2xl font-bold mt-2">{avgScore}%</p>
             <p className="text-xs text-muted-foreground">Score qualité moyen</p>
           </CardContent>
         </Card>
@@ -148,7 +172,7 @@ export default function SupplierPortfolios() {
             <div className="flex items-center justify-between">
               <AlertTriangle className="h-5 w-5 text-destructive" />
             </div>
-            <p className="text-2xl font-bold mt-2">{portfolios.reduce((s, p) => s + p.activeAlerts, 0)}</p>
+            <p className="text-2xl font-bold mt-2">{totalAlerts}</p>
             <p className="text-xs text-muted-foreground">Alertes actives</p>
           </CardContent>
         </Card>
@@ -163,45 +187,43 @@ export default function SupplierPortfolios() {
 
         {/* Tab 1: Portfolios by category */}
         <TabsContent value="portfolios" className="mt-4 space-y-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {portfolios.map(p => (
-              <Card key={p.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">{p.category}</CardTitle>
-                  <CardDescription>{p.supplierCount} fournisseurs • {p.revenue}</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Responsable</span>
-                    <span className="font-medium">{p.responsible}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Backup</span>
-                    <span>{p.backup}</span>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Score qualité</span>
-                      <span className={p.avgScore >= 85 ? 'text-emerald-500 font-medium' : p.avgScore >= 70 ? 'text-yellow-500 font-medium' : 'text-destructive font-medium'}>
-                        {p.avgScore}%
-                      </span>
-                    </div>
-                    <Progress value={p.avgScore} className="h-2" />
-                  </div>
-                  <div className="flex gap-2">
-                    {p.activeAlerts > 0 && (
-                      <Badge variant="destructive" className="text-xs">
-                        <AlertTriangle className="h-3 w-3 mr-1" />{p.activeAlerts} alerte{p.activeAlerts > 1 ? 's' : ''}
-                      </Badge>
-                    )}
-                    {p.upcomingAudits > 0 && (
-                      <Badge variant="outline" className="text-xs">{p.upcomingAudits} audit{p.upcomingAudits > 1 ? 's' : ''} planifié{p.upcomingAudits > 1 ? 's' : ''}</Badge>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {categories.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">Aucun fournisseur validé</p>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {categories.map(cat => {
+                const catSuppliers = allSuppliers.filter(s => s.category === cat);
+                const catAvg = catSuppliers.length > 0 ? Math.round(catSuppliers.reduce((s, p) => s + p.score, 0) / catSuppliers.length) : 0;
+                const catAlerts = catSuppliers.reduce((s, p) => s + p.alerts, 0);
+                return (
+                  <Card key={cat} className="hover:shadow-md transition-shadow">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-lg">{cat}</CardTitle>
+                      <CardDescription>{catSuppliers.length} fournisseurs</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-muted-foreground">Score qualité</span>
+                          <span className={catAvg >= 85 ? 'text-emerald-500 font-medium' : catAvg >= 70 ? 'text-yellow-500 font-medium' : 'text-destructive font-medium'}>
+                            {catAvg}%
+                          </span>
+                        </div>
+                        <Progress value={catAvg} className="h-2" />
+                      </div>
+                      <div className="flex gap-2">
+                        {catAlerts > 0 && (
+                          <Badge variant="destructive" className="text-xs">
+                            <AlertTriangle className="h-3 w-3 mr-1" />{catAlerts} alerte{catAlerts > 1 ? 's' : ''}
+                          </Badge>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </TabsContent>
 
         {/* Tab 2: All suppliers */}
@@ -215,7 +237,7 @@ export default function SupplierPortfolios() {
               <SelectTrigger className="w-[180px] h-9"><SelectValue placeholder="Catégorie" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes catégories</SelectItem>
-                {portfolios.map(p => <SelectItem key={p.id} value={p.category}>{p.category}</SelectItem>)}
+                {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -227,7 +249,6 @@ export default function SupplierPortfolios() {
                 <SortableTableHead column="score" currentSort={suppliersTable.sortColumn as string} direction={suppliersTable.sortDirection} onSort={c => suppliersTable.toggleSort(c as any)}>Score</SortableTableHead>
                 <TableHead>Assigné à</TableHead>
                 <TableHead>Dernier audit</TableHead>
-                <SortableTableHead column="revenue" currentSort={suppliersTable.sortColumn as string} direction={suppliersTable.sortDirection} onSort={c => suppliersTable.toggleSort(c as any)} className="text-right">CA</SortableTableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -243,16 +264,15 @@ export default function SupplierPortfolios() {
                   </TableCell>
                   <TableCell>{s.assignedTo}</TableCell>
                   <TableCell className="text-muted-foreground">{s.lastAudit}</TableCell>
-                  <TableCell className="text-right font-medium">{s.revenue}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => handleReassign(s.name)}>
+                    <Button variant="ghost" size="sm" onClick={() => handleReassign(s.name, s.category)}>
                       <ArrowRightLeft className="h-4 w-4 mr-1" />Réassigner
                     </Button>
                   </TableCell>
                 </TableRow>
               ))}
               {suppliersTable.processedData.length === 0 && (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground">Aucun résultat</TableCell></TableRow>
+                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucun résultat</TableCell></TableRow>
               )}
             </TableBody>
           </Table>
@@ -263,58 +283,43 @@ export default function SupplierPortfolios() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Répartition de charge</CardTitle>
-              <CardDescription>Visualisation de la charge par employé avec détection de surcharge</CardDescription>
+              <CardDescription>Charge par responsable — basée sur les assignations réelles</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {employeeLoads.map(emp => {
-                  const loadPct = Math.round((emp.supplierCount / emp.maxCapacity) * 100);
+                {Object.entries(suppliersByAssignee).map(([name, suppliers]) => {
+                  const maxCapacity = 10;
+                  const loadPct = Math.round((suppliers.length / maxCapacity) * 100);
                   const isOverloaded = loadPct >= 90;
+                  const avgScoreEmp = suppliers.length > 0 ? Math.round(suppliers.reduce((s, p) => s + p.score, 0) / suppliers.length) : 0;
+                  const alertCount = suppliers.reduce((s, p) => s + p.alerts, 0);
+
                   return (
-                    <div key={emp.name} className="p-4 rounded-lg border space-y-3">
+                    <div key={name} className="p-4 rounded-lg border space-y-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-medium">{emp.name}</p>
-                          <p className="text-sm text-muted-foreground">{emp.role}</p>
+                          <p className="font-medium">{name}</p>
+                          <p className="text-sm text-muted-foreground">{suppliers.length} fournisseurs</p>
                         </div>
                         <div className="flex items-center gap-3">
                           {isOverloaded && <Badge variant="destructive">Surcharge</Badge>}
-                          <Badge variant="outline">Perf: {emp.performance}%</Badge>
                         </div>
                       </div>
-                      <div className="grid grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-3 gap-4 text-sm">
                         <div>
-                          <p className="text-muted-foreground">Fournisseurs</p>
-                          <p className={`font-bold ${getLoadColor(emp.supplierCount, emp.maxCapacity)}`}>{emp.supplierCount}/{emp.maxCapacity}</p>
+                          <p className="text-muted-foreground">Charge</p>
+                          <p className={`font-bold ${getLoadColor(suppliers.length, maxCapacity)}`}>{suppliers.length}/{maxCapacity}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Score moyen</p>
-                          <p className="font-bold">{emp.avgScore}%</p>
+                          <p className="font-bold">{avgScoreEmp}%</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Alertes</p>
-                          <p className={`font-bold ${emp.alerts > 0 ? 'text-destructive' : 'text-emerald-500'}`}>{emp.alerts}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Spécialisation</p>
-                          <div className="flex flex-wrap gap-1">
-                            {emp.specialization.map(s => <Badge key={s} variant="secondary" className="text-xs">{s}</Badge>)}
-                          </div>
+                          <p className={`font-bold ${alertCount > 0 ? 'text-destructive' : 'text-emerald-500'}`}>{alertCount}</p>
                         </div>
                       </div>
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Charge</span>
-                          <span>{loadPct}%</span>
-                        </div>
-                        <Progress value={loadPct} className="h-2" />
-                      </div>
-                      {loadPct >= 70 && loadPct < 90 && (
-                        <p className="text-xs text-yellow-500">⚠️ Charge élevée — envisager un rééquilibrage</p>
-                      )}
-                      {isOverloaded && (
-                        <p className="text-xs text-destructive">🔴 Surcharge détectée — réassignation recommandée</p>
-                      )}
+                      <Progress value={loadPct} className="h-2" />
                     </div>
                   );
                 })}
@@ -323,6 +328,15 @@ export default function SupplierPortfolios() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {selectedSupplier && (
+        <AssignmentSuggestion
+          open={assignmentOpen}
+          onOpenChange={setAssignmentOpen}
+          supplierName={selectedSupplier.name}
+          supplierCategory={selectedSupplier.category}
+        />
+      )}
     </div>
   );
 }
