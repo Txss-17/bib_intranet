@@ -946,6 +946,48 @@ export type Database = {
           },
         ]
       }
+      portfolio_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_to_id: string | null
+          assigned_to_name: string
+          id: string
+          portfolio_id: string | null
+          supplier_id: string | null
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_to_id?: string | null
+          assigned_to_name?: string
+          id?: string
+          portfolio_id?: string | null
+          supplier_id?: string | null
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_to_id?: string | null
+          assigned_to_name?: string
+          id?: string
+          portfolio_id?: string | null
+          supplier_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "portfolio_assignments_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_portfolios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "portfolio_assignments_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_decisions: {
         Row: {
           decision_at: string
@@ -1363,6 +1405,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      supplier_portfolios: {
+        Row: {
+          backup_id: string | null
+          backup_name: string
+          category: string
+          created_at: string | null
+          id: string
+          responsible_id: string | null
+          responsible_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          backup_id?: string | null
+          backup_name?: string
+          category: string
+          created_at?: string | null
+          id?: string
+          responsible_id?: string | null
+          responsible_name?: string
+          updated_at?: string | null
+        }
+        Update: {
+          backup_id?: string | null
+          backup_name?: string
+          category?: string
+          created_at?: string | null
+          id?: string
+          responsible_id?: string | null
+          responsible_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       suppliers: {
         Row: {

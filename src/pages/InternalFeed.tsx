@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Plus, Globe, Users, Lock, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,6 +17,19 @@ import type { FeedItem, PoleId } from '@/types';
 const from = (table: string) => (supabase as any).from(table);
 
 function useFeedPosts() {
+  const qc = useQueryClient();
+
+  // Realtime subscription for feed_posts
+  useEffect(() => {
+    const channel = supabase
+      .channel('feed-posts-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'feed_posts' }, () => {
+        qc.invalidateQueries({ queryKey: ['feed_posts'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [qc]);
+
   return useQuery({
     queryKey: ['feed_posts'],
     queryFn: async () => {
