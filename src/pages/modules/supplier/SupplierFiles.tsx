@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
   Building2, Search, Plus, MoreVertical, Eye, Edit, Mail, Phone, MapPin,
-  Shield, AlertTriangle, CheckCircle, Clock, XCircle, ClipboardCheck, TrendingUp,
+  Shield, AlertTriangle, CheckCircle, Clock, XCircle, ClipboardCheck, TrendingUp, Loader2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -21,14 +21,25 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { useSupplierAudits } from '@/hooks/useAudits';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import type { Tables } from '@/integrations/supabase/types';
 
-const mockSuppliers = [
-  { id: '1', name: 'BioCosmetics SAS', contactName: 'Jean-Pierre Martin', email: 'contact@biocosmetics.fr', phone: '+33 1 42 56 78 90', address: '15 Rue des Lilas, 75011 Paris', country: 'France', status: 'validated', riskScore: 15, productsCount: 12, validatedAt: '2025-06-15T10:00:00Z', certifications: ['ISO 9001', 'Ecocert'] },
-  { id: '2', name: 'NaturaCare', contactName: 'Sophie Durand', email: 'pro@naturacare.com', phone: '+33 4 91 23 45 67', address: '28 Avenue de la Mer, 13008 Marseille', country: 'France', status: 'validated', riskScore: 8, productsCount: 8, validatedAt: '2025-08-20T14:30:00Z', certifications: ['Bio AB', 'Cosmos Organic'] },
-  { id: '3', name: 'GreenBeauty', contactName: 'Thomas Bernard', email: 'hello@greenbeauty.de', phone: '+49 30 1234 5678', address: 'Friedrichstraße 123, 10117 Berlin', country: 'Allemagne', status: 'pending', riskScore: 35, productsCount: 3, validatedAt: null, certifications: ['BDIH'] },
-  { id: '4', name: 'AromaPlantes', contactName: 'Claire Lefevre', email: 'info@aromaplantes.fr', phone: '+33 5 56 78 90 12', address: '5 Chemin des Vignes, 33000 Bordeaux', country: 'France', status: 'validated', riskScore: 5, productsCount: 25, validatedAt: '2025-03-10T09:00:00Z', certifications: ['ISO 22716', 'Ecocert', 'AB'] },
-  { id: '5', name: 'OrganicWorld Ltd', contactName: 'James Wilson', email: 'sales@organicworld.co.uk', phone: '+44 20 7946 0958', address: '42 Oxford Street, London W1D 1BS', country: 'Royaume-Uni', status: 'suspended', riskScore: 72, productsCount: 0, validatedAt: '2024-11-05T11:00:00Z', certifications: ['Soil Association'] },
-];
+type Supplier = Tables<'suppliers'>;
+
+function useSuppliers() {
+  return useQuery({
+    queryKey: ['suppliers'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Supplier[];
+    },
+  });
+}
 
 function AuditConformitySection({ supplierName }: { supplierName: string }) {
   const { data: audits = [], isLoading } = useSupplierAudits();
@@ -54,7 +65,6 @@ function AuditConformitySection({ supplierName }: { supplierName: string }) {
 
   return (
     <div className="space-y-4">
-      {/* Audit KPIs */}
       <div className="grid grid-cols-3 gap-3">
         <div className="p-3 rounded-lg bg-muted/50">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Statut audit</p>
@@ -74,7 +84,6 @@ function AuditConformitySection({ supplierName }: { supplierName: string }) {
         </div>
       </div>
 
-      {/* Audit History */}
       <div>
         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Historique des audits</p>
         {supplierAudits.length === 0 ? (
@@ -116,12 +125,13 @@ function AuditConformitySection({ supplierName }: { supplierName: string }) {
 export default function SupplierFiles() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedSupplier, setSelectedSupplier] = useState<typeof mockSuppliers[0] | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const { data: suppliers = [], isLoading } = useSuppliers();
 
-  const filteredSuppliers = mockSuppliers.filter((supplier) => {
+  const filteredSuppliers = suppliers.filter((supplier) => {
     const matchesSearch = supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      supplier.contactName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      supplier.country.toLowerCase().includes(searchQuery.toLowerCase());
+      (supplier.contact_name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (supplier.country || '').toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === 'all' || supplier.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -139,11 +149,20 @@ export default function SupplierFiles() {
     }
   };
 
-  const getRiskBadge = (score: number) => {
-    if (score >= 60) return <Badge variant="destructive">Risque élevé ({score})</Badge>;
-    if (score >= 30) return <Badge variant="secondary" className="bg-warning/20 text-warning">Risque moyen ({score})</Badge>;
-    return <Badge variant="outline" className="text-success border-success">Risque faible ({score})</Badge>;
+  const getRiskBadge = (score: number | null) => {
+    const s = score || 0;
+    if (s >= 60) return <Badge variant="destructive">Risque élevé ({s})</Badge>;
+    if (s >= 30) return <Badge variant="secondary" className="bg-warning/20 text-warning">Risque moyen ({s})</Badge>;
+    return <Badge variant="outline" className="text-success border-success">Risque faible ({s})</Badge>;
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -156,20 +175,20 @@ export default function SupplierFiles() {
         <ExportButtons
           filename="fournisseurs" title="Liste des fournisseurs"
           columns={[
-            { header: 'Nom', accessor: 'name' }, { header: 'Contact', accessor: 'contactName' },
+            { header: 'Nom', accessor: 'name' }, { header: 'Contact', accessor: 'contact_name' },
             { header: 'Email', accessor: 'email' }, { header: 'Téléphone', accessor: 'phone' },
             { header: 'Pays', accessor: 'country' }, { header: 'Statut', accessor: 'status' },
-            { header: 'Score risque', accessor: 'riskScore' }, { header: 'Produits', accessor: 'productsCount' },
+            { header: 'Score risque', accessor: 'risk_score' },
           ]}
           data={filteredSuppliers}
         />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="enterprise-card p-4"><p className="text-xs text-muted-foreground uppercase tracking-wider">Total</p><p className="text-2xl font-semibold text-foreground mt-1">{mockSuppliers.length}</p></div>
-        <div className="enterprise-card p-4"><p className="text-xs text-muted-foreground uppercase tracking-wider">Validés</p><p className="text-2xl font-semibold text-success mt-1">{mockSuppliers.filter(s => s.status === 'validated').length}</p></div>
-        <div className="enterprise-card p-4"><p className="text-xs text-muted-foreground uppercase tracking-wider">En attente</p><p className="text-2xl font-semibold text-warning mt-1">{mockSuppliers.filter(s => s.status === 'pending').length}</p></div>
-        <div className="enterprise-card p-4"><p className="text-xs text-muted-foreground uppercase tracking-wider">À risque</p><p className="text-2xl font-semibold text-destructive mt-1">{mockSuppliers.filter(s => s.riskScore >= 60).length}</p></div>
+        <div className="enterprise-card p-4"><p className="text-xs text-muted-foreground uppercase tracking-wider">Total</p><p className="text-2xl font-semibold text-foreground mt-1">{suppliers.length}</p></div>
+        <div className="enterprise-card p-4"><p className="text-xs text-muted-foreground uppercase tracking-wider">Validés</p><p className="text-2xl font-semibold text-success mt-1">{suppliers.filter(s => s.status === 'validated').length}</p></div>
+        <div className="enterprise-card p-4"><p className="text-xs text-muted-foreground uppercase tracking-wider">En attente</p><p className="text-2xl font-semibold text-warning mt-1">{suppliers.filter(s => s.status === 'pending').length}</p></div>
+        <div className="enterprise-card p-4"><p className="text-xs text-muted-foreground uppercase tracking-wider">À risque</p><p className="text-2xl font-semibold text-destructive mt-1">{suppliers.filter(s => (s.risk_score || 0) >= 60).length}</p></div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -194,7 +213,7 @@ export default function SupplierFiles() {
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary"><Building2 className="h-5 w-5 text-muted-foreground" /></div>
-                <div><p className="text-sm font-medium text-foreground">{supplier.name}</p><p className="text-xs text-muted-foreground">{supplier.country}</p></div>
+                <div><p className="text-sm font-medium text-foreground">{supplier.name}</p><p className="text-xs text-muted-foreground">{supplier.country || 'N/A'}</p></div>
               </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
@@ -207,18 +226,22 @@ export default function SupplierFiles() {
               </DropdownMenu>
             </div>
             <div className="space-y-2">
-              <div className="flex items-center gap-2 text-xs text-muted-foreground"><Mail className="h-3 w-3" /><span>{supplier.email}</span></div>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground"><Phone className="h-3 w-3" /><span>{supplier.phone}</span></div>
+              {supplier.email && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Mail className="h-3 w-3" /><span>{supplier.email}</span></div>}
+              {supplier.phone && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Phone className="h-3 w-3" /><span>{supplier.phone}</span></div>}
             </div>
             <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-              <div className="flex items-center gap-2">{getStatusBadge(supplier.status)}{getRiskBadge(supplier.riskScore)}</div>
-              <div className="text-xs text-muted-foreground">{supplier.productsCount} produit(s)</div>
+              <div className="flex items-center gap-2">{getStatusBadge(supplier.status)}{getRiskBadge(supplier.risk_score)}</div>
             </div>
           </div>
         ))}
+        {filteredSuppliers.length === 0 && (
+          <div className="col-span-2 enterprise-card p-12 text-center">
+            <Building2 className="h-12 w-12 mx-auto text-muted-foreground/30 mb-4" />
+            <p className="text-muted-foreground">Aucun fournisseur trouvé</p>
+          </div>
+        )}
       </div>
 
-      {/* Supplier Detail Dialog with Tabs */}
       <Dialog open={!!selectedSupplier} onOpenChange={() => setSelectedSupplier(null)}>
         <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
           <DialogHeader>
@@ -228,7 +251,7 @@ export default function SupplierFiles() {
             <div className="space-y-4">
               <div className="flex items-center gap-3">
                 {getStatusBadge(selectedSupplier.status)}
-                {getRiskBadge(selectedSupplier.riskScore)}
+                {getRiskBadge(selectedSupplier.risk_score)}
               </div>
 
               <Tabs defaultValue="info" className="w-full">
@@ -240,24 +263,16 @@ export default function SupplierFiles() {
                 <TabsContent value="info" className="space-y-6 mt-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-4">
-                      <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Contact</p><p className="text-sm font-medium">{selectedSupplier.contactName}</p></div>
-                      <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Email</p><p className="text-sm">{selectedSupplier.email}</p></div>
-                      <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Téléphone</p><p className="text-sm">{selectedSupplier.phone}</p></div>
+                      <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Contact</p><p className="text-sm font-medium">{selectedSupplier.contact_name || 'N/A'}</p></div>
+                      <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Email</p><p className="text-sm">{selectedSupplier.email || selectedSupplier.contact_email || 'N/A'}</p></div>
+                      <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Téléphone</p><p className="text-sm">{selectedSupplier.phone || 'N/A'}</p></div>
                     </div>
                     <div className="space-y-4">
-                      <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Adresse</p><p className="text-sm">{selectedSupplier.address}</p></div>
-                      <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Pays</p><p className="text-sm">{selectedSupplier.country}</p></div>
-                      {selectedSupplier.validatedAt && (
-                        <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Validé le</p><p className="text-sm">{format(new Date(selectedSupplier.validatedAt), 'd MMMM yyyy', { locale: fr })}</p></div>
+                      <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Adresse</p><p className="text-sm">{selectedSupplier.address || 'N/A'}</p></div>
+                      <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Pays</p><p className="text-sm">{selectedSupplier.country || 'N/A'}</p></div>
+                      {selectedSupplier.validated_at && (
+                        <div><p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Validé le</p><p className="text-sm">{format(new Date(selectedSupplier.validated_at), 'd MMMM yyyy', { locale: fr })}</p></div>
                       )}
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Certifications</p>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedSupplier.certifications.map((cert) => (
-                        <Badge key={cert} variant="secondary"><Shield className="h-3 w-3 mr-1" />{cert}</Badge>
-                      ))}
                     </div>
                   </div>
                 </TabsContent>

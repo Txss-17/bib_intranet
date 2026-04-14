@@ -1,32 +1,16 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Bell,
-  MessageSquare,
-  CheckSquare,
-  Search,
-  Menu,
-  Sun,
-  Moon,
-  ChevronDown,
-  LogOut,
-  User,
-  Settings,
-  Circle,
-  ShieldAlert,
+  Bell, MessageSquare, CheckSquare, Search, Menu, Sun, Moon, ChevronDown,
+  LogOut, User, Settings, Circle, ShieldAlert,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { notifications, tasks } from '@/data/mockData';
 import { getPoleById } from '@/data/poles';
 import { PoleId } from '@/types';
 import { EmployeeStatus } from '@/types/roles';
@@ -35,6 +19,8 @@ import { CriticalAlertsPanel } from '@/components/notifications/CriticalAlertsPa
 import { CriticalAlertToast } from '@/components/notifications/CriticalAlertToast';
 import { useAuth } from '@/hooks/useAuth';
 import { positionInfos } from '@/types/positions';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -58,11 +44,38 @@ const statusLabels: Record<EmployeeStatus, string> = {
   offline: 'Hors ligne',
 };
 
+function useNotifications() {
+  const { profile } = useAuth();
+  return useQuery({
+    queryKey: ['notifications', profile?.email],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!profile,
+  });
+}
+
+const getNotificationIcon = (type: string) => {
+  switch (type) {
+    case 'critical': return 'bg-destructive';
+    case 'warning': return 'bg-warning';
+    case 'success': return 'bg-success';
+    default: return 'bg-accent';
+  }
+};
+
 export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDarkMode, activePoleId }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
   const { alerts, unreadCount, criticalCount, lastAlert, markAsRead, markAllAsRead, dismissLastAlert } = useCriticalAlerts();
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const { data: dbNotifications = [] } = useNotifications();
   
   const firstName = profile?.first_name || 'U';
   const lastName = profile?.last_name || '';
@@ -70,22 +83,8 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
   const posInfo = profile?.position ? positionInfos[profile.position as keyof typeof positionInfos] : null;
   const roleTitle = posInfo?.titleFr || profile?.position || 'Collaborateur';
 
-  const unreadNotifications = notifications.filter(n => !n.read).length;
-  const pendingTasks = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
+  const unreadNotifications = dbNotifications.filter(n => !n.read).length;
   const activePole = activePoleId ? getPoleById(activePoleId) : null;
-
-  const getNotificationIcon = (type: string) => {
-    switch (type) {
-      case 'critical':
-        return 'bg-destructive';
-      case 'warning':
-        return 'bg-warning';
-      case 'success':
-        return 'bg-success';
-      default:
-        return 'bg-accent';
-    }
-  };
 
   return (
     <>
@@ -95,68 +94,40 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
         sidebarCollapsed ? 'left-16' : 'left-64'
       )}
     >
-      {/* Left section */}
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleSidebar}
-          className="shrink-0"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-
-        {/* Active Pole Indicator */}
+        <Button variant="ghost" size="icon" onClick={onToggleSidebar} className="shrink-0"><Menu className="h-5 w-5" /></Button>
         {activePole && (
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/50 border border-border">
             <span className={cn('h-2 w-2 rounded-full', activePole.color)} />
             <span className="text-sm font-medium text-foreground">{activePole.shortName}</span>
           </div>
         )}
-
-        {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <input
-            type="text"
-            placeholder="Rechercher..."
-            className={cn(
-              'h-9 rounded-lg border border-input bg-secondary/50 pl-10 pr-4 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-accent focus:ring-1 focus:ring-accent',
-              searchFocused ? 'w-64' : 'w-48'
-            )}
-            onFocus={() => setSearchFocused(true)}
-            onBlur={() => setSearchFocused(false)}
+            type="text" placeholder="Rechercher..."
+            className={cn('h-9 rounded-lg border border-input bg-secondary/50 pl-10 pr-4 text-sm outline-none transition-all placeholder:text-muted-foreground focus:border-accent focus:ring-1 focus:ring-accent', searchFocused ? 'w-64' : 'w-48')}
+            onFocus={() => setSearchFocused(true)} onBlur={() => setSearchFocused(false)}
           />
         </div>
       </div>
 
-      {/* Right section */}
       <div className="flex items-center gap-2">
-        {/* Employee Status */}
         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/30">
           <Circle className={cn('h-2 w-2 fill-current', statusColors['online'])} />
           <span className="text-xs text-muted-foreground">{statusLabels['online']}</span>
         </div>
 
-        {/* Theme toggle */}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleDarkMode}
-          className="text-muted-foreground hover:text-foreground"
-        >
+        <Button variant="ghost" size="icon" onClick={onToggleDarkMode} className="text-muted-foreground hover:text-foreground">
           {darkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </Button>
 
-        {/* Critical Alerts */}
         <Popover>
           <PopoverTrigger asChild>
             <Button variant="ghost" size="icon" className={cn('relative', criticalCount > 0 && 'animate-pulse')}>
               <ShieldAlert className={cn('h-5 w-5', criticalCount > 0 ? 'text-destructive' : '')} />
               {unreadCount > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
-                  {unreadCount}
-                </span>
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">{unreadCount}</span>
               )}
             </Button>
           </PopoverTrigger>
@@ -165,135 +136,63 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           </PopoverContent>
         </Popover>
 
-        {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="h-5 w-5" />
               {unreadNotifications > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">
-                  {unreadNotifications}
-                </span>
+                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground">{unreadNotifications}</span>
               )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">
             <div className="flex items-center justify-between px-3 py-2 border-b border-border">
               <span className="text-sm font-semibold">Notifications</span>
-              <span className="text-xs text-muted-foreground">Récentes</span>
+              <span className="text-xs text-muted-foreground">{dbNotifications.length} récentes</span>
             </div>
             <div className="max-h-80 overflow-y-auto">
-              {notifications.slice(0, 5).map((notification) => {
-                const pole = notification.poleId ? getPoleById(notification.poleId) : null;
-                return (
-                  <DropdownMenuItem
-                    key={notification.id}
-                    className="flex flex-col items-start gap-1 p-3 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2 w-full">
-                      <span className={cn('h-2 w-2 rounded-full', getNotificationIcon(notification.type))} />
-                      <span className="text-sm font-medium truncate flex-1">{notification.title}</span>
-                      {!notification.read && (
-                        <span className="h-1.5 w-1.5 rounded-full bg-accent" />
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-2 pl-4">
-                      {notification.message}
-                    </p>
-                    {pole && (
-                      <div className="flex items-center gap-1 pl-4 mt-1">
-                        <span className={cn('h-1.5 w-1.5 rounded-full', pole.color)} />
-                        <span className="text-[10px] text-muted-foreground">{pole.shortName}</span>
+              {dbNotifications.length === 0 ? (
+                <div className="p-4 text-center text-sm text-muted-foreground">Aucune notification</div>
+              ) : (
+                dbNotifications.slice(0, 5).map((notification) => {
+                  const pole = notification.pole_id ? getPoleById(notification.pole_id as PoleId) : null;
+                  return (
+                    <DropdownMenuItem key={notification.id} className="flex flex-col items-start gap-1 p-3 cursor-pointer">
+                      <div className="flex items-center gap-2 w-full">
+                        <span className={cn('h-2 w-2 rounded-full', getNotificationIcon(notification.type || 'info'))} />
+                        <span className="text-sm font-medium truncate flex-1">{notification.title}</span>
+                        {!notification.read && <span className="h-1.5 w-1.5 rounded-full bg-accent" />}
                       </div>
-                    )}
-                  </DropdownMenuItem>
-                );
-              })}
-            </div>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        {/* Messages */}
-        <Link to="/modules/gateway/inbox">
-          <Button variant="ghost" size="icon" className="relative">
-            <MessageSquare className="h-5 w-5" />
-            <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-medium text-accent-foreground">
-              2
-            </span>
-          </Button>
-        </Link>
-
-        {/* Tasks */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
-              <CheckSquare className="h-5 w-5" />
-              {pendingTasks > 0 && (
-                <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-warning text-[10px] font-medium text-warning-foreground">
-                  {pendingTasks}
-                </span>
-              )}
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-80">
-            <div className="flex items-center justify-between px-3 py-2 border-b border-border">
-              <span className="text-sm font-semibold">My Tasks</span>
-              <span className="text-xs text-muted-foreground">En cours</span>
-            </div>
-            <div className="max-h-80 overflow-y-auto">
-              {tasks.map((task) => {
-                const pole = getPoleById(task.poleId);
-                return (
-                  <DropdownMenuItem
-                    key={task.id}
-                    className="flex flex-col items-start gap-1 p-3 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2 w-full">
-                      <Badge
-                        variant={task.priority === 'critical' ? 'destructive' : 'secondary'}
-                        className="text-[10px] h-4 px-1.5"
-                      >
-                        {task.priority}
-                      </Badge>
-                      <span className="text-sm font-medium truncate flex-1">{task.title}</span>
-                    </div>
-                    <div className="flex items-center gap-2 pl-0 mt-1">
+                      <p className="text-xs text-muted-foreground line-clamp-2 pl-4">{notification.message}</p>
                       {pole && (
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1 pl-4 mt-1">
                           <span className={cn('h-1.5 w-1.5 rounded-full', pole.color)} />
                           <span className="text-[10px] text-muted-foreground">{pole.shortName}</span>
                         </div>
                       )}
-                      <span className="text-[10px] text-muted-foreground">
-                        Due: {new Date(task.dueDate).toLocaleDateString()}
-                      </span>
-                    </div>
-                  </DropdownMenuItem>
-                );
-              })}
+                    </DropdownMenuItem>
+                  );
+                })
+              )}
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
 
-        {/* Separator */}
+        <Link to="/modules/gateway/inbox">
+          <Button variant="ghost" size="icon" className="relative"><MessageSquare className="h-5 w-5" /></Button>
+        </Link>
+
         <div className="mx-2 h-6 w-px bg-border" />
 
-        {/* Profile */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="flex items-center gap-2 px-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-accent-foreground">
-                <span className="text-sm font-medium">
-                  {firstName[0]}{lastName[0]}
-                </span>
+                <span className="text-sm font-medium">{firstName[0]}{lastName[0]}</span>
               </div>
               <div className="hidden md:flex flex-col items-start">
-                <span className="text-sm font-medium">
-                  {firstName} {lastName}
-                </span>
-                <span className="text-[10px] text-muted-foreground">
-                  {roleTitle}
-                </span>
+                <span className="text-sm font-medium">{firstName} {lastName}</span>
+                <span className="text-[10px] text-muted-foreground">{roleTitle}</span>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
             </Button>
@@ -304,36 +203,17 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
               <p className="text-xs text-muted-foreground">{email}</p>
               <p className="text-xs text-accent mt-1">{roleTitle}</p>
             </div>
-            <DropdownMenuItem asChild>
-              <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
-                <User className="h-4 w-4" />
-                <span>Mon profil</span>
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
-                <Settings className="h-4 w-4" />
-                <span>Paramètres</span>
-              </Link>
-            </DropdownMenuItem>
+            <DropdownMenuItem asChild><Link to="/profile" className="flex items-center gap-2 cursor-pointer"><User className="h-4 w-4" /><span>Mon profil</span></Link></DropdownMenuItem>
+            <DropdownMenuItem asChild><Link to="/settings" className="flex items-center gap-2 cursor-pointer"><Settings className="h-4 w-4" /><span>Paramètres</span></Link></DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="flex items-center gap-2 text-destructive cursor-pointer"
-              onClick={async () => {
-                await signOut();
-                navigate('/login');
-              }}
-            >
-              <LogOut className="h-4 w-4" />
-              <span>Déconnexion</span>
+            <DropdownMenuItem className="flex items-center gap-2 text-destructive cursor-pointer" onClick={async () => { await signOut(); navigate('/login'); }}>
+              <LogOut className="h-4 w-4" /><span>Déconnexion</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
     </header>
-    {lastAlert && (
-      <CriticalAlertToast alert={lastAlert} onDismiss={dismissLastAlert} onMarkAsRead={markAsRead} />
-    )}
+    {lastAlert && <CriticalAlertToast alert={lastAlert} onDismiss={dismissLastAlert} onMarkAsRead={markAsRead} />}
     </>
   );
 }

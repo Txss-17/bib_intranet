@@ -8,6 +8,7 @@ import {
   Globe,
   HelpCircle,
   Volume2,
+  CheckCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +20,98 @@ import { useAuth } from '@/hooks/useAuth';
 import { positionInfos, EmployeePosition } from '@/types/positions';
 import { useAlertSoundSetting } from '@/hooks/useAlertSoundSetting';
 import { playCriticalAlertSound } from '@/lib/alertSounds';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+
+function SecuritySettings() {
+  const [twoFactor, setTwoFactor] = useState(false);
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [showChangeForm, setShowChangeForm] = useState(false);
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast({ title: 'Erreur', description: 'Les mots de passe ne correspondent pas.', variant: 'destructive' });
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast({ title: 'Erreur', description: 'Le mot de passe doit contenir au moins 8 caractères.', variant: 'destructive' });
+      return;
+    }
+    setChangingPassword(true);
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Succès', description: 'Mot de passe mis à jour avec succès.' });
+      setShowChangeForm(false);
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+    setChangingPassword(false);
+  };
+
+  return (
+    <>
+      <div className="enterprise-card p-6">
+        <h3 className="text-lg font-medium text-foreground mb-4">Paramètres de sécurité</h3>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <p className="text-sm font-medium text-foreground">Double authentification (2FA)</p>
+              <p className="text-xs text-muted-foreground">Ajouter une couche de sécurité supplémentaire</p>
+            </div>
+            <Switch checked={twoFactor} onCheckedChange={setTwoFactor} />
+          </div>
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <p className="text-sm font-medium text-foreground">Changer le mot de passe</p>
+              <p className="text-xs text-muted-foreground">Mettre à jour vos identifiants</p>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setShowChangeForm(!showChangeForm)}>
+              <Key className="h-4 w-4 mr-2" />Modifier
+            </Button>
+          </div>
+          {showChangeForm && (
+            <form onSubmit={handleChangePassword} className="space-y-3 p-4 rounded-lg bg-secondary/30 border border-border">
+              <div className="space-y-2">
+                <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+                <Input id="newPassword" type="password" placeholder="••••••••" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={8} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="confirmNewPassword">Confirmer le nouveau mot de passe</Label>
+                <Input id="confirmNewPassword" type="password" placeholder="••••••••" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required minLength={8} />
+              </div>
+              <div className="flex gap-2">
+                <Button type="submit" size="sm" disabled={changingPassword}>
+                  {changingPassword ? 'Mise à jour...' : 'Mettre à jour'}
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => setShowChangeForm(false)}>Annuler</Button>
+              </div>
+            </form>
+          )}
+          <div className="flex items-center justify-between py-2">
+            <div>
+              <p className="text-sm font-medium text-foreground">Sessions actives</p>
+              <p className="text-xs text-muted-foreground">Gérer vos connexions actives</p>
+            </div>
+            <Button variant="outline" size="sm">Voir les sessions</Button>
+          </div>
+        </div>
+      </div>
+
+      <div className="enterprise-card p-6">
+        <h3 className="text-lg font-medium text-foreground mb-4">Journal d'audit</h3>
+        <p className="text-sm text-muted-foreground mb-4">Votre activité récente est journalisée pour des raisons de sécurité.</p>
+        <Button variant="outline">Voir le journal complet</Button>
+      </div>
+    </>
+  );
+}
 
 export default function Settings() {
   const [emailNotifications, setEmailNotifications] = useState(true);
@@ -173,45 +266,8 @@ export default function Settings() {
           </div>
         </TabsContent>
 
-        {/* Security Tab */}
         <TabsContent value="security" className="space-y-6 mt-6">
-          <div className="enterprise-card p-6">
-            <h3 className="text-lg font-medium text-foreground mb-4">Paramètres de sécurité</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Double authentification (2FA)</p>
-                  <p className="text-xs text-muted-foreground">Ajouter une couche de sécurité supplémentaire</p>
-                </div>
-                <Switch checked={twoFactor} onCheckedChange={setTwoFactor} />
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Changer le mot de passe</p>
-                  <p className="text-xs text-muted-foreground">Mettre à jour vos identifiants</p>
-                </div>
-                <Button variant="outline" size="sm">
-                  <Key className="h-4 w-4 mr-2" />
-                  Modifier
-                </Button>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Sessions actives</p>
-                  <p className="text-xs text-muted-foreground">Gérer vos connexions actives</p>
-                </div>
-                <Button variant="outline" size="sm">Voir les sessions</Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="enterprise-card p-6">
-            <h3 className="text-lg font-medium text-foreground mb-4">Journal d'audit</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Votre activité récente est journalisée pour des raisons de sécurité.
-            </p>
-            <Button variant="outline">Voir le journal complet</Button>
-          </div>
+          <SecuritySettings />
         </TabsContent>
 
         {/* Preferences Tab */}
