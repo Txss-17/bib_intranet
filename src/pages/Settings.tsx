@@ -173,45 +173,8 @@ export default function Settings() {
           </div>
         </TabsContent>
 
-        {/* Security Tab */}
         <TabsContent value="security" className="space-y-6 mt-6">
-          <div className="enterprise-card p-6">
-            <h3 className="text-lg font-medium text-foreground mb-4">Paramètres de sécurité</h3>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Double authentification (2FA)</p>
-                  <p className="text-xs text-muted-foreground">Ajouter une couche de sécurité supplémentaire</p>
-                </div>
-                <Switch checked={twoFactor} onCheckedChange={setTwoFactor} />
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Changer le mot de passe</p>
-                  <p className="text-xs text-muted-foreground">Mettre à jour vos identifiants</p>
-                </div>
-                <Button variant="outline" size="sm">
-                  <Key className="h-4 w-4 mr-2" />
-                  Modifier
-                </Button>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <p className="text-sm font-medium text-foreground">Sessions actives</p>
-                  <p className="text-xs text-muted-foreground">Gérer vos connexions actives</p>
-                </div>
-                <Button variant="outline" size="sm">Voir les sessions</Button>
-              </div>
-            </div>
-          </div>
-
-          <div className="enterprise-card p-6">
-            <h3 className="text-lg font-medium text-foreground mb-4">Journal d'audit</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Votre activité récente est journalisée pour des raisons de sécurité.
-            </p>
-            <Button variant="outline">Voir le journal complet</Button>
-          </div>
+          <SecuritySettings />
         </TabsContent>
 
         {/* Preferences Tab */}
