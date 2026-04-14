@@ -32,7 +32,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">
-            {greeting()}, {currentUser.firstName}
+            {greeting()}, {profile?.first_name || 'Utilisateur'}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {format(new Date(), "EEEE, MMMM d, yyyy")} · Executive Dashboard
