@@ -85,6 +85,10 @@ export default function Dashboard() {
       case 'audit_compliance_lead': return 'Audit & Conformité · Contrôles, sanctions et rapports';
       case 'rse_packaging_manager': return 'RSE & Packaging · Impact CO₂, recyclage et emballages';
       case 'tech_platform_manager': return 'Tech & Plateforme · Infrastructure, déploiements et sécurité';
+      case 'marketing_manager': return 'Marketing · Campagnes, analytics et communication';
+      case 'rh_manager': return 'Ressources Humaines · Employés, formation et congés';
+      case 'risk_manager': return 'Risques · Incidents actifs, registre et métriques';
+      case 'rd_manager': return 'R&D · Études produits, frictions et rapports terrain';
       default: return 'Tableau de bord général';
     }
   };
@@ -99,6 +103,10 @@ export default function Dashboard() {
       case 'audit_compliance_lead': return 'Audit Dashboard';
       case 'rse_packaging_manager': return 'RSE Dashboard';
       case 'tech_platform_manager': return 'Tech Dashboard';
+      case 'marketing_manager': return 'Marketing Dashboard';
+      case 'rh_manager': return 'RH Dashboard';
+      case 'risk_manager': return 'Risk Dashboard';
+      case 'rd_manager': return 'R&D Dashboard';
       default: return 'Dashboard';
     }
   };

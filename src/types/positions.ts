@@ -7,6 +7,10 @@ export type EmployeePosition =
   | 'audit_compliance_lead' // Audit, Compliance & Legal Lead
   | 'rse_packaging_manager' // RSE & Packaging Manager
   | 'tech_platform_manager' // Tech Platform Manager
+  | 'marketing_manager'     // Marketing & Communication Manager
+  | 'rh_manager'            // HR Manager
+  | 'risk_manager'          // Risk & Incidents Manager
+  | 'rd_manager'            // R&D Manager
   | 'ceo';                  // CEO / Fondatrice
 
 export interface PositionInfo {
@@ -66,6 +70,34 @@ export const positionInfos: Record<EmployeePosition, PositionInfo> = {
     titleFr: 'Responsable Plateforme Tech',
     module: 'Tech & Catalogue',
     description: 'Catalogue produits, site, intranet, sécurité, monitoring'
+  },
+  marketing_manager: {
+    id: 'marketing_manager',
+    title: 'Marketing & Communication Manager',
+    titleFr: 'Responsable Marketing & Communication',
+    module: 'Marketing & Communication',
+    description: 'Campagnes, analytics, contenu, podcasts, stratégie de communication'
+  },
+  rh_manager: {
+    id: 'rh_manager',
+    title: 'HR Manager',
+    titleFr: 'Responsable Ressources Humaines',
+    module: 'Ressources Humaines',
+    description: 'Recrutement, formation, congés, fiches employés, onboarding'
+  },
+  risk_manager: {
+    id: 'risk_manager',
+    title: 'Risk & Incidents Manager',
+    titleFr: 'Responsable Risques & Incidents',
+    module: 'Risk & Incidents',
+    description: 'Registre des risques, incidents actifs, métriques, historique'
+  },
+  rd_manager: {
+    id: 'rd_manager',
+    title: 'R&D Manager',
+    titleFr: 'Responsable R&D',
+    module: 'Recherche & Développement',
+    description: 'Études produits, frictions terrain, rapports boutiques, fournisseurs R&D'
   },
   ceo: {
     id: 'ceo',

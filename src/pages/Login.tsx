@@ -17,6 +17,10 @@ const positionDefaultRoute: Record<EmployeePosition, string> = {
   audit_compliance_lead: '/pole/audit',
   rse_packaging_manager: '/pole/rse',
   tech_platform_manager: '/pole/tech',
+  marketing_manager: '/pole/marketing',
+  rh_manager: '/pole/rh',
+  risk_manager: '/pole/risk',
+  rd_manager: '/pole/supplier',
 };
 
 const Login = () => {
