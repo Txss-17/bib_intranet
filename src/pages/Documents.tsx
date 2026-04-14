@@ -59,14 +59,14 @@ export default function Documents() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [createOpen, setCreateOpen] = useState(false);
   const { data: documents = [], isLoading } = useDocuments();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const qc = useQueryClient();
 
   const createDoc = useMutation({
     mutationFn: async (doc: { name: string; type: string; access_level: string }) => {
       const { error } = await from('documents').insert({
         ...doc,
-        uploaded_by: profile?.id,
+        uploaded_by: user?.id,
         modified_by: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim(),
         pole_id: profile?.poles?.[0] || null,
       });

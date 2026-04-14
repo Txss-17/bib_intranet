@@ -51,14 +51,14 @@ export default function InternalFeed() {
   const [activeFilter, setActiveFilter] = useState('all');
   const [createOpen, setCreateOpen] = useState(false);
   const { data: feedItems = [], isLoading } = useFeedPosts();
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const qc = useQueryClient();
 
   const createPost = useMutation({
     mutationFn: async (post: { title: string; content: string; type: string; visibility: string }) => {
       const { error } = await from('feed_posts').insert({
         ...post,
-        author_id: profile?.id,
+        author_id: user?.id,
         author_name: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Utilisateur',
         author_role: profile?.position || 'employee',
       });
