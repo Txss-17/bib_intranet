@@ -1,87 +1,79 @@
 
 
-# Analyse des fonctionnalités non finalisées — Intranet Linksy
+# Ce qui reste à implémenter — État des lieux
+
+## FAIT (priorités hautes réalisées)
+- SupplierFiles, Certifications, QualityAlerts, DecisionHistory → connectés à Supabase
+- TopBar notifications → connectées à la table `notifications`
+- Dashboard incidents + audit_logs → connectés à Supabase
+- Feed interne → connecté à `feed_posts` (CRUD)
+- Documents → connecté à la table `documents` (CRUD)
+- Executive Dashboard → connecté via `useExecutiveKPIs` (KPIs réels)
+- Mot de passe oublié (Login) + changement mot de passe (Settings) → fonctionnels
+- 4 positions ajoutées à l'enum (`marketing_manager`, `rh_manager`, `risk_manager`, `rd_manager`)
+- Liaison Audit ↔ Fournisseur (`audit_status`, `quality_score`, `last_audit_date` sur `suppliers`)
+- Notifications multi-sources (Ethics, Gateway, quality_alerts, logistics_incidents)
+- RLS renforcé sur 13+ tables
 
 ---
 
-## A. Données encore en mock (pas persistées en base)
+## RESTE À FAIRE
 
-Ces pages utilisent des données statiques codées en dur au lieu de lire depuis la base de données.
+### 1. Mock résiduel sur le Dashboard principal
+`Dashboard.tsx` importe encore `executiveMetrics` et `feedItems` de `mockData.ts` :
+- Les **6 métriques** (CA, utilisateurs, commandes...) sont statiques
+- Le **feed** dans l'onglet "Activité" lit le mock au lieu de `feed_posts`
 
-| Page | Fichier | Données mock |
-|------|---------|-------------|
-| **Dashboard principal** | `Dashboard.tsx` | `recentIncidents`, `recentAuditLogs` importés de `mockData.ts` |
-| **TopBar** (notifications/tâches) | `TopBar.tsx` | `notifications`, `tasks` importés de `mockData.ts` |
-| **Feed interne** | `InternalFeed.tsx` | `feedItems` importé de `mockData.ts` |
-| **Documents** | `Documents.tsx` | `documents` importé de `mockData.ts` |
-| **Fiches fournisseurs** | `SupplierFiles.tsx` | `mockSuppliers` en dur (la table `suppliers` existe en DB mais n'est pas lue) |
-| **Certifications** | `Certifications.tsx` | `mockCertifications` (la table `certifications` existe en DB) |
-| **Historique décisions** | `DecisionHistory.tsx` | `mockDecisions` (la table `product_decisions` existe en DB) |
-| **Alertes qualité** | `QualityAlerts.tsx` | `mockAlerts` (la table `quality_alerts` existe en DB) |
-| **Ethics fermés** | `EthicsClosed.tsx` | `mockClosed` en dur |
-| **Executive Dashboard** | `ExecutiveDashboard.tsx` | KPIs, graphiques CA/EBITDA, alertes critiques — tout en dur |
+**Action** : Remplacer `executiveMetrics` par des agrégats Supabase et `feedItems` par une requête sur `feed_posts`.
 
----
+### 2. EthicsClosed — encore en mock
+`EthicsClosed.tsx` utilise `mockClosed` en dur (10 cas fictifs).
 
-## B. Plan v2 — 7 chantiers non commencés
+**Action** : Lire les `whistleblower_submissions` avec `status = 'closed'` depuis Supabase.
 
-Aucune des 7 phases du plan `.lovable/plan.md` n'a été implémentée :
+### 3. Plan v2 — Phases non commencées
 
-1. **Liaison Audit ↔ Fournisseur** — Pas de section audit dans les fiches fournisseurs, pas d'actions automatiques post-audit, pas de colonnes `audit_status`/`quality_score` sur la table `suppliers`
+| Phase | Description | Statut |
+|-------|-------------|--------|
+| **2** | Portefeuilles par catégorie | Tables `supplier_portfolios` / `portfolio_assignments` non créées |
+| **3** | Assignation intelligente | `AssignmentSuggestion.tsx` existe mais sans logique DB |
+| **4** | Audit 3 niveaux (initial/continu/périodique) | Champ `audit_type` existe mais pas exploité côté UI |
+| **7** | Organigramme fournisseur avec RBAC | `SupplierOrgChart.tsx` existe mais non intégré |
 
-2. **Portefeuilles par catégorie** — La page `SupplierPortfolios.tsx` existe mais fonctionne avec des données locales. Tables `supplier_portfolios` et `portfolio_assignments` non créées en DB
+### 4. Fonctionnalités transverses
 
-3. **Assignation intelligente** — Le composant `AssignmentSuggestion.tsx` existe en UI mais sans logique métier connectée à la DB
-
-4. **Audit 3 niveaux** — Pas de distinction initial/continu/périodique dans les audits. Le champ `audit_type` dans `field_audits` n'est pas exploité pour cette logique
-
-5. **Notifications multi-sources** — `useCriticalAlerts` ne couvre que Ethics/Gateway. Audit, supplier, risk, performance ne génèrent pas de notifications
-
-6. **KPI stratégiques internes** — Executive Dashboard entièrement statique, aucun onglet "Intelligence", pas de données réelles
-
-7. **Organisation pôle fournisseur** — `SupplierOrgChart.tsx` existe en composant mais pas intégré dans un workflow réel avec RBAC
-
----
-
-## C. Fonctionnalités transverses incomplètes
-
-| Fonctionnalité | Statut |
+| Fonctionnalité | Détail |
 |---------------|--------|
-| **Notifications temps réel** | Fonctionne pour Ethics/Gateway uniquement. TopBar lit encore `mockData.ts` |
-| **Export PDF** | Logo Linksy en en-tête demandé mais non vérifié sur tous les modules |
-| **Réinitialisation mot de passe** | Pas de page "Mot de passe oublié" sur le login |
-| **Changement mot de passe** | Page Settings a une section Sécurité mais non fonctionnelle avec Supabase |
-| **RLS policies** | Tables existantes ont probablement des policies mais non vérifiable ici — à auditer |
-| **Rôles manquants** | L'enum `employee_position` ne couvre que 8 postes (sur les 12 prévus en Phase 1 RBAC). Manquent : `marketing_manager`, `rh_manager`, `risk_manager`, `rd_manager` |
-| **Feed interne** | Aucune table DB pour les publications internes |
-| **Documents** | Aucune table DB pour le coffre-fort documentaire par pôle |
+| **Export PDF** | Logo Linksy en en-tête non vérifié sur tous les modules |
+| **Realtime** | Pas de Supabase Realtime activé (notifications, feed, incidents) |
+| **R&D manager route** | Pointe vers `/pole/supplier` au lieu de `/pole/rd` |
 
 ---
 
-## D. Résumé priorisé
+## Plan d'implémentation proposé
 
-```text
-PRIORITÉ HAUTE (fondations)
-├── Remplacer les mock par les tables DB existantes (suppliers, certifications, quality_alerts, product_decisions)
-├── Connecter TopBar aux notifications DB (table `notifications` existe)
-├── Ajouter les 4 positions manquantes à l'enum employee_position
-└── Implémenter reset/change password
+### Étape 1 — Éliminer les derniers mocks (Dashboard + EthicsClosed)
+- `Dashboard.tsx` : Requêtes Supabase pour les métriques (orders count, user_accounts count, cashflows sum) + feed depuis `feed_posts`
+- `EthicsClosed.tsx` : Requête sur `whistleblower_submissions` filtrée par `status = 'closed'`
+- Supprimer `mockData.ts` si plus aucun import
 
-PRIORITÉ MOYENNE (plan v2)
-├── Phase 1 : Liaison Audit ↔ Fournisseur
-├── Phase 4 : Audit 3 niveaux
-├── Phase 5 : Notifications multi-sources
-└── Phase 6 : KPI stratégiques (Executive Dashboard connecté aux vraies données)
+### Étape 2 — Phase 4 : Audit 3 niveaux
+- Ajouter un filtre par `audit_type` (initial/continu/périodique) dans `FieldAudits.tsx`
+- Afficher le type d'audit dans les cards et tableaux existants
+- Ajouter des statistiques par type dans `AuditDashboard.tsx`
 
-PRIORITÉ BASSE (enrichissement)
-├── Phase 2 : Portefeuilles catégorie (tables DB)
-├── Phase 3 : Assignation intelligente
-├── Phase 7 : Organigramme fournisseur
-├── Feed interne persisté en DB
-└── Documents/coffre-fort par pôle
-```
+### Étape 3 — Phase 2+3 : Portefeuilles et assignation
+- Migration SQL : créer `supplier_portfolios` et `portfolio_assignments`
+- Connecter `SupplierPortfolios.tsx` à ces tables
+- Implémenter la logique d'assignation dans `AssignmentSuggestion.tsx` basée sur `quality_score` et charge
 
----
+### Étape 4 — Améliorations transverses
+- Activer Supabase Realtime sur `notifications`, `feed_posts`
+- Corriger la route R&D manager → `/pole/rd`
+- Vérifier l'export PDF avec logo sur tous les modules
 
-Souhaitez-vous que je commence l'implémentation par les priorités hautes (remplacement des mocks + mots de passe + rôles manquants) ?
+### Détails techniques
+- Fichiers modifiés : `Dashboard.tsx`, `EthicsClosed.tsx`, `FieldAudits.tsx`, `AuditDashboard.tsx`, `SupplierPortfolios.tsx`, `AssignmentSuggestion.tsx`, `Login.tsx`
+- Migration SQL pour les tables portefeuilles
+- Suppression potentielle de `mockData.ts`
 
