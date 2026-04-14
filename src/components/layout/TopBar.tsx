@@ -284,15 +284,15 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
             <Button variant="ghost" className="flex items-center gap-2 px-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-accent-foreground">
                 <span className="text-sm font-medium">
-                  {currentEmployee.firstName[0]}{currentEmployee.lastName[0]}
+                  {firstName[0]}{lastName[0]}
                 </span>
               </div>
               <div className="hidden md:flex flex-col items-start">
                 <span className="text-sm font-medium">
-                  {currentEmployee.firstName} {currentEmployee.lastName}
+                  {firstName} {lastName}
                 </span>
                 <span className="text-[10px] text-muted-foreground">
-                  {currentEmployee.employeeRoleTitle}
+                  {roleTitle}
                 </span>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -300,9 +300,9 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-3 py-2 border-b border-border">
-              <p className="text-sm font-medium">{currentEmployee.firstName} {currentEmployee.lastName}</p>
-              <p className="text-xs text-muted-foreground">{currentEmployee.email}</p>
-              <p className="text-xs text-accent mt-1">{currentEmployee.employeeRoleTitle}</p>
+              <p className="text-sm font-medium">{firstName} {lastName}</p>
+              <p className="text-xs text-muted-foreground">{email}</p>
+              <p className="text-xs text-accent mt-1">{roleTitle}</p>
             </div>
             <DropdownMenuItem asChild>
               <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
@@ -313,13 +313,16 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
             <DropdownMenuItem asChild>
               <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
                 <Settings className="h-4 w-4" />
-                <span>Settings</span>
+                <span>Paramètres</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="flex items-center gap-2 text-destructive cursor-pointer"
-              onClick={() => { window.location.href = '/'; }}
+              onClick={async () => {
+                await signOut();
+                navigate('/login');
+              }}
             >
               <LogOut className="h-4 w-4" />
               <span>Déconnexion</span>
