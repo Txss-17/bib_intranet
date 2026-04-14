@@ -680,6 +680,51 @@ export type Database = {
         }
         Relationships: []
       }
+      ops_audits: {
+        Row: {
+          auditor: string
+          created_at: string | null
+          date: string
+          findings: string | null
+          id: string
+          notes: string | null
+          process: string
+          recommendations: number | null
+          scope: string
+          score: number | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          auditor?: string
+          created_at?: string | null
+          date?: string
+          findings?: string | null
+          id?: string
+          notes?: string | null
+          process: string
+          recommendations?: number | null
+          scope?: string
+          score?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          auditor?: string
+          created_at?: string | null
+          date?: string
+          findings?: string | null
+          id?: string
+          notes?: string | null
+          process?: string
+          recommendations?: number | null
+          scope?: string
+          score?: number | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string | null
@@ -1114,6 +1159,59 @@ export type Database = {
           },
         ]
       }
+      supplier_audits: {
+        Row: {
+          auditor: string
+          category: string
+          created_at: string | null
+          date: string
+          findings: number | null
+          id: string
+          notes: string | null
+          score: number | null
+          status: string
+          supplier: string
+          supplier_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          auditor?: string
+          category?: string
+          created_at?: string | null
+          date?: string
+          findings?: number | null
+          id?: string
+          notes?: string | null
+          score?: number | null
+          status?: string
+          supplier: string
+          supplier_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          auditor?: string
+          category?: string
+          created_at?: string | null
+          date?: string
+          findings?: number | null
+          id?: string
+          notes?: string | null
+          score?: number | null
+          status?: string
+          supplier?: string
+          supplier_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_audits_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_payments: {
         Row: {
           amount: number
@@ -1173,15 +1271,18 @@ export type Database = {
       suppliers: {
         Row: {
           address: string | null
+          audit_status: string | null
           contact_email: string | null
           contact_name: string | null
           country: string | null
           created_at: string
           email: string | null
           id: string
+          last_audit_date: string | null
           name: string
           notes: string | null
           phone: string | null
+          quality_score: number | null
           risk_score: number | null
           status: string
           updated_at: string
@@ -1190,15 +1291,18 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          audit_status?: string | null
           contact_email?: string | null
           contact_name?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          last_audit_date?: string | null
           name: string
           notes?: string | null
           phone?: string | null
+          quality_score?: number | null
           risk_score?: number | null
           status?: string
           updated_at?: string
@@ -1207,15 +1311,18 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          audit_status?: string | null
           contact_email?: string | null
           contact_name?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          last_audit_date?: string | null
           name?: string
           notes?: string | null
           phone?: string | null
+          quality_score?: number | null
           risk_score?: number | null
           status?: string
           updated_at?: string
@@ -1450,6 +1557,10 @@ export type Database = {
         | "rse_packaging_manager"
         | "tech_platform_manager"
         | "ceo"
+        | "marketing_manager"
+        | "rh_manager"
+        | "risk_manager"
+        | "rd_manager"
       message_status:
         | "pending"
         | "validated"
@@ -1620,6 +1731,10 @@ export const Constants = {
         "rse_packaging_manager",
         "tech_platform_manager",
         "ceo",
+        "marketing_manager",
+        "rh_manager",
+        "risk_manager",
+        "rd_manager",
       ],
       message_status: [
         "pending",
