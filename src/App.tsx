@@ -139,9 +139,15 @@ import GatewayResponses from "./pages/modules/gateway/GatewayResponses";
 
 const queryClient = new QueryClient();
 
+const AppInner = () => {
+  useAuthLogger();
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <AppInner />
       <Toaster />
       <Sonner />
       <BrowserRouter>
