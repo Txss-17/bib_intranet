@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Bell,
   MessageSquare,
@@ -26,29 +26,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { currentUser, notifications, tasks } from '@/data/mockData';
+import { notifications, tasks } from '@/data/mockData';
 import { getPoleById } from '@/data/poles';
 import { PoleId } from '@/types';
 import { EmployeeStatus } from '@/types/roles';
 import { useCriticalAlerts } from '@/hooks/useCriticalAlerts';
 import { CriticalAlertsPanel } from '@/components/notifications/CriticalAlertsPanel';
 import { CriticalAlertToast } from '@/components/notifications/CriticalAlertToast';
-
-interface TopBarProps {
-  onToggleSidebar: () => void;
-  sidebarCollapsed: boolean;
-  darkMode: boolean;
-  onToggleDarkMode: () => void;
-  activePoleId?: PoleId;
-}
-
-// Mock current employee data (will be replaced with auth)
-const currentEmployee = {
-  ...currentUser,
-  employeeRole: 'tech_lead' as const,
-  employeeRoleTitle: 'Tech Lead & Architect',
-  status: 'online' as EmployeeStatus,
-};
+import { useAuth } from '@/hooks/useAuth';
+import { positionInfos } from '@/types/positions';
 
 const statusColors: Record<EmployeeStatus, string> = {
   online: 'bg-success',
