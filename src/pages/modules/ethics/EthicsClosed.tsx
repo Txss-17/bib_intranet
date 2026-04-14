@@ -5,20 +5,48 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
 import { useTableInteractions } from '@/hooks/useTableInteractions';
-import { CheckCircle2, XCircle, Scale, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle, Scale, Clock, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
+import { differenceInDays, format } from 'date-fns';
 
-const mockClosed = [
-  { id: 'ETH-2024-038', type: 'Harcèlement', priority: 'critique', resolution: 'Confirmé', investigator: 'Marie Dupont', duration: '18j', closed: '2025-05-30' },
-  { id: 'ETH-2024-035', type: 'Fraude', priority: 'haute', resolution: 'Confirmé', investigator: 'Jean-Marc Leroy', duration: '22j', closed: '2025-05-25' },
-  { id: 'ETH-2024-033', type: 'Conflit d\'intérêts', priority: 'moyenne', resolution: 'Classé sans suite', investigator: 'Sophie Martin', duration: '8j', closed: '2025-05-20' },
-  { id: 'ETH-2024-030', type: 'Discrimination', priority: 'haute', resolution: 'Médiation', investigator: 'Karim Benzema', duration: '14j', closed: '2025-05-15' },
-  { id: 'ETH-2024-028', type: 'Non-conformité', priority: 'basse', resolution: 'Classé sans suite', investigator: 'Marie Dupont', duration: '5j', closed: '2025-05-10' },
-  { id: 'ETH-2024-025', type: 'Corruption', priority: 'critique', resolution: 'Confirmé', investigator: 'Jean-Marc Leroy', duration: '30j', closed: '2025-05-05' },
-  { id: 'ETH-2024-022', type: 'Violation données', priority: 'haute', resolution: 'Confirmé', investigator: 'Sophie Martin', duration: '16j', closed: '2025-04-28' },
-  { id: 'ETH-2024-020', type: 'Harcèlement', priority: 'moyenne', resolution: 'Médiation', investigator: 'Karim Benzema', duration: '10j', closed: '2025-04-20' },
-  { id: 'ETH-2024-018', type: 'Fraude', priority: 'haute', resolution: 'Classé sans suite', investigator: 'Marie Dupont', duration: '12j', closed: '2025-04-15' },
-  { id: 'ETH-2024-015', type: 'Conflit d\'intérêts', priority: 'moyenne', resolution: 'Confirmé', investigator: 'Jean-Marc Leroy', duration: '9j', closed: '2025-04-10' },
-];
+interface ClosedCase {
+  id: string;
+  type: string;
+  priority: string;
+  resolution: string;
+  investigator: string;
+  duration: string;
+  closed: string;
+}
+
+function useClosedCases() {
+  return useQuery({
+    queryKey: ['ethics_closed'],
+    queryFn: async (): Promise<ClosedCase[]> => {
+      const { data, error } = await supabase
+        .from('whistleblower_submissions')
+        .select('*')
+        .eq('status', 'closed')
+        .order('updated_at', { ascending: false });
+      if (error) throw error;
+      return (data || []).map(s => {
+        const created = new Date(s.created_at || '');
+        const closed = new Date(s.updated_at || '');
+        const days = differenceInDays(closed, created);
+        return {
+          id: s.submission_code,
+          type: s.category,
+          priority: s.severity || 'moyenne',
+          resolution: s.resolution_notes || 'Classé sans suite',
+          investigator: s.assigned_auditor_id ? 'Auditeur assigné' : 'Non assigné',
+          duration: `${days}j`,
+          closed: format(closed, 'yyyy-MM-dd'),
+        };
+      });
+    },
+  });
+}
 
 const resolutionColors: Record<string, string> = {
   Confirmé: 'bg-destructive/15 text-destructive',
@@ -28,19 +56,37 @@ const resolutionColors: Record<string, string> = {
 
 const priorityColors: Record<string, string> = {
   critique: 'bg-destructive text-destructive-foreground',
+  critical: 'bg-destructive text-destructive-foreground',
   haute: 'bg-orange-500/15 text-orange-700 border-orange-200',
+  high: 'bg-orange-500/15 text-orange-700 border-orange-200',
   moyenne: 'bg-yellow-500/15 text-yellow-700 border-yellow-200',
+  medium: 'bg-yellow-500/15 text-yellow-700 border-yellow-200',
   basse: 'bg-muted text-muted-foreground',
+  low: 'bg-muted text-muted-foreground',
 };
 
 const EthicsClosed = () => {
+  const { data: closedCases = [], isLoading } = useClosedCases();
+
   const { searchQuery, setSearchQuery, sortColumn, sortDirection, toggleSort, filters, setFilter, processedData } = useTableInteractions({
-    data: mockClosed,
+    data: closedCases,
     searchFields: ['id', 'type', 'investigator', 'resolution'],
   });
 
-  const confirmedCount = mockClosed.filter(c => c.resolution === 'Confirmé').length;
-  const confirmedRate = Math.round((confirmedCount / mockClosed.length) * 100);
+  const confirmedCount = closedCases.filter(c => c.resolution === 'Confirmé').length;
+  const confirmedRate = closedCases.length > 0 ? Math.round((confirmedCount / closedCases.length) * 100) : 0;
+  const mediationCount = closedCases.filter(c => c.resolution === 'Médiation').length;
+  const avgDuration = closedCases.length > 0
+    ? (closedCases.reduce((s, c) => s + parseInt(c.duration) || 0, 0) / closedCases.length).toFixed(1)
+    : '0';
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -50,10 +96,10 @@ const EthicsClosed = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><CheckCircle2 className="h-8 w-8 text-green-500" /><div><p className="text-2xl font-bold">{mockClosed.length}</p><p className="text-xs text-muted-foreground">Total clôturés</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><CheckCircle2 className="h-8 w-8 text-green-500" /><div><p className="text-2xl font-bold">{closedCases.length}</p><p className="text-xs text-muted-foreground">Total clôturés</p></div></div></CardContent></Card>
         <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><XCircle className="h-8 w-8 text-destructive" /><div><p className="text-2xl font-bold">{confirmedRate}%</p><p className="text-xs text-muted-foreground">Taux confirmé</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Scale className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">2</p><p className="text-xs text-muted-foreground">Médiations</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Clock className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">14.4j</p><p className="text-xs text-muted-foreground">Durée moyenne</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Scale className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{mediationCount}</p><p className="text-xs text-muted-foreground">Médiations</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Clock className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{avgDuration}j</p><p className="text-xs text-muted-foreground">Durée moyenne</p></div></div></CardContent></Card>
       </div>
 
       <Card>
@@ -83,32 +129,36 @@ const EthicsClosed = () => {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <SortableTableHead column="id" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockClosed[0])}>ID</SortableTableHead>
-                <SortableTableHead column="type" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockClosed[0])}>Type</SortableTableHead>
-                <SortableTableHead column="priority" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockClosed[0])}>Priorité</SortableTableHead>
-                <SortableTableHead column="resolution" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockClosed[0])}>Résolution</SortableTableHead>
-                <SortableTableHead column="investigator" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockClosed[0])}>Enquêteur</SortableTableHead>
-                <SortableTableHead column="duration" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockClosed[0])}>Durée</SortableTableHead>
-                <SortableTableHead column="closed" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof mockClosed[0])}>Clôturé le</SortableTableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {processedData.map(c => (
-                <TableRow key={c.id}>
-                  <TableCell className="font-mono text-xs">{c.id}</TableCell>
-                  <TableCell>{c.type}</TableCell>
-                  <TableCell><Badge className={priorityColors[c.priority]}>{c.priority}</Badge></TableCell>
-                  <TableCell><Badge className={resolutionColors[c.resolution]}>{c.resolution}</Badge></TableCell>
-                  <TableCell>{c.investigator}</TableCell>
-                  <TableCell>{c.duration}</TableCell>
-                  <TableCell>{c.closed}</TableCell>
+          {processedData.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">Aucun dossier clôturé trouvé</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <SortableTableHead column="id" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof ClosedCase)}>ID</SortableTableHead>
+                  <SortableTableHead column="type" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof ClosedCase)}>Type</SortableTableHead>
+                  <SortableTableHead column="priority" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof ClosedCase)}>Priorité</SortableTableHead>
+                  <SortableTableHead column="resolution" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof ClosedCase)}>Résolution</SortableTableHead>
+                  <SortableTableHead column="investigator" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof ClosedCase)}>Enquêteur</SortableTableHead>
+                  <SortableTableHead column="duration" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof ClosedCase)}>Durée</SortableTableHead>
+                  <SortableTableHead column="closed" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof ClosedCase)}>Clôturé le</SortableTableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {processedData.map(c => (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-mono text-xs">{c.id}</TableCell>
+                    <TableCell>{c.type}</TableCell>
+                    <TableCell><Badge className={priorityColors[c.priority] || 'bg-muted text-muted-foreground'}>{c.priority}</Badge></TableCell>
+                    <TableCell><Badge className={resolutionColors[c.resolution] || 'bg-muted text-muted-foreground'}>{c.resolution}</Badge></TableCell>
+                    <TableCell>{c.investigator}</TableCell>
+                    <TableCell>{c.duration}</TableCell>
+                    <TableCell>{c.closed}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
