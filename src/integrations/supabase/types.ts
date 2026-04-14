@@ -245,6 +245,54 @@ export type Database = {
         }
         Relationships: []
       }
+      documents: {
+        Row: {
+          access_level: string
+          created_at: string | null
+          file_size: number | null
+          file_url: string | null
+          id: string
+          modified_by: string | null
+          name: string
+          pole_id: Database["public"]["Enums"]["pole_id"] | null
+          status: string
+          type: string
+          updated_at: string | null
+          uploaded_by: string | null
+          version: string
+        }
+        Insert: {
+          access_level?: string
+          created_at?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          modified_by?: string | null
+          name: string
+          pole_id?: Database["public"]["Enums"]["pole_id"] | null
+          status?: string
+          type?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+          version?: string
+        }
+        Update: {
+          access_level?: string
+          created_at?: string | null
+          file_size?: number | null
+          file_url?: string | null
+          id?: string
+          modified_by?: string | null
+          name?: string
+          pole_id?: Database["public"]["Enums"]["pole_id"] | null
+          status?: string
+          type?: string
+          updated_at?: string | null
+          uploaded_by?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       external_messages: {
         Row: {
           content: string
@@ -293,6 +341,54 @@ export type Database = {
           updated_at?: string | null
           validated_by?: string | null
           validation_notes?: string | null
+        }
+        Relationships: []
+      }
+      feed_posts: {
+        Row: {
+          author_id: string | null
+          author_name: string
+          author_role: string
+          comments: number | null
+          content: string
+          created_at: string | null
+          id: string
+          pole_id: Database["public"]["Enums"]["pole_id"] | null
+          reactions: number | null
+          title: string
+          type: string
+          updated_at: string | null
+          visibility: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name: string
+          author_role?: string
+          comments?: number | null
+          content: string
+          created_at?: string | null
+          id?: string
+          pole_id?: Database["public"]["Enums"]["pole_id"] | null
+          reactions?: number | null
+          title: string
+          type?: string
+          updated_at?: string | null
+          visibility?: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string
+          author_role?: string
+          comments?: number | null
+          content?: string
+          created_at?: string | null
+          id?: string
+          pole_id?: Database["public"]["Enums"]["pole_id"] | null
+          reactions?: number | null
+          title?: string
+          type?: string
+          updated_at?: string | null
+          visibility?: string
         }
         Relationships: []
       }
