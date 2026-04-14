@@ -9,10 +9,62 @@ import { IncidentCard } from '@/components/dashboard/IncidentCard';
 import { AuditLogItem } from '@/components/dashboard/AuditLogItem';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { PoleOverview } from '@/components/dashboard/PoleOverview';
-import { executiveMetrics, feedItems } from '@/data/mockData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { Metric, FeedItem } from '@/types';
+
+function useDashboardMetrics() {
+  return useQuery({
+    queryKey: ['dashboard_metrics'],
+    queryFn: async (): Promise<Metric[]> => {
+      const [ordersRes, usersRes, suppliersRes, incidentsRes, ticketsRes, docsRes] = await Promise.all([
+        supabase.from('orders').select('id', { count: 'exact', head: true }),
+        supabase.from('user_accounts').select('id', { count: 'exact', head: true }),
+        supabase.from('suppliers').select('id', { count: 'exact', head: true }).eq('status', 'validated'),
+        supabase.from('logistics_incidents').select('id', { count: 'exact', head: true }).in('status', ['open', 'investigating']),
+        supabase.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+        supabase.from('documents').select('id', { count: 'exact', head: true }),
+      ]);
+
+      return [
+        { id: 'met_orders', label: 'Commandes', value: ordersRes.count ?? 0, change: 0, changeType: 'neutral' as const },
+        { id: 'met_users', label: 'Comptes clients', value: usersRes.count ?? 0, change: 0, changeType: 'neutral' as const },
+        { id: 'met_suppliers', label: 'Fournisseurs validés', value: suppliersRes.count ?? 0, change: 0, changeType: 'positive' as const },
+        { id: 'met_incidents', label: 'Incidents actifs', value: incidentsRes.count ?? 0, change: 0, changeType: (incidentsRes.count ?? 0) > 0 ? 'negative' as const : 'positive' as const },
+        { id: 'met_tickets', label: 'Tickets ouverts', value: ticketsRes.count ?? 0, change: 0, changeType: 'neutral' as const },
+        { id: 'met_docs', label: 'Documents', value: docsRes.count ?? 0, change: 0, changeType: 'neutral' as const },
+      ];
+    },
+    staleTime: 60_000,
+  });
+}
+
+function useDashboardFeed() {
+  return useQuery({
+    queryKey: ['dashboard_feed'],
+    queryFn: async (): Promise<FeedItem[]> => {
+      const { data, error } = await supabase
+        .from('feed_posts')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      if (error) throw error;
+      return (data || []).map(p => ({
+        id: p.id,
+        author: { name: p.author_name, role: p.author_role },
+        poleId: p.pole_id as FeedItem['poleId'],
+        title: p.title,
+        content: p.content,
+        type: (p.type || 'update') as FeedItem['type'],
+        visibility: (p.visibility || 'company') as FeedItem['visibility'],
+        createdAt: p.created_at || '',
+        reactions: p.reactions || 0,
+        comments: p.comments || 0,
+      }));
+    },
+  });
+}
 
 function useRecentIncidents() {
   return useQuery({
@@ -65,6 +117,8 @@ function useRecentAuditLogs() {
 
 export default function Dashboard() {
   const { profile } = useAuth();
+  const { data: metrics = [], isLoading: metricsLoading } = useDashboardMetrics();
+  const { data: feedData = [], isLoading: feedLoading } = useDashboardFeed();
   const { data: incidents = [], isLoading: incLoading } = useRecentIncidents();
   const { data: auditLogs = [], isLoading: logLoading } = useRecentAuditLogs();
 
@@ -135,7 +189,11 @@ export default function Dashboard() {
           <h2 className="text-sm font-semibold text-foreground uppercase tracking-wider">Key Metrics</h2>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {executiveMetrics.map((metric) => (<MetricCard key={metric.id} metric={metric} />))}
+          {metricsLoading ? (
+            <div className="col-span-full flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+          ) : (
+            metrics.map((metric) => (<MetricCard key={metric.id} metric={metric} />))
+          )}
         </div>
       </section>
 
@@ -155,7 +213,16 @@ export default function Dashboard() {
               <TabsTrigger value="incidents" className="text-sm">Active Incidents</TabsTrigger>
             </TabsList>
             <TabsContent value="feed" className="space-y-4 mt-0">
-              {feedItems.map((item) => (<FeedCard key={item.id} item={item} />))}
+              {feedLoading ? (
+                <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+              ) : feedData.length > 0 ? (
+                feedData.map((item) => (<FeedCard key={item.id} item={item} />))
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  <Activity className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Aucune publication récente</p>
+                </div>
+              )}
             </TabsContent>
             <TabsContent value="incidents" className="space-y-4 mt-0">
               {incLoading ? (

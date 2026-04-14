@@ -3,25 +3,59 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, MapPin, Calendar, FileText } from 'lucide-react';
+import { Search, Plus, MapPin, Calendar, FileText, Loader2, Eye, RefreshCw } from 'lucide-react';
 import { ExportButtons } from '@/components/ExportButtons';
+import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
-const fieldAudits = [
-  { id: 1, location: 'Entrepôt Lyon', type: 'Stockage', auditor: 'Paul Lefevre', scheduledDate: '2025-02-05', status: 'scheduled', score: null },
-  { id: 2, location: 'Entrepôt Paris', type: 'Sécurité', auditor: 'Marie Dubois', scheduledDate: '2025-02-02', status: 'in_progress', score: null },
-  { id: 3, location: 'Point relais Marseille', type: 'Qualité', auditor: 'Jean Martin', scheduledDate: '2025-01-28', status: 'completed', score: 85 },
-  { id: 4, location: 'Entrepôt Bordeaux', type: 'Hygiène', auditor: 'Sophie Bernard', scheduledDate: '2025-01-20', status: 'completed', score: 92 },
-  { id: 5, location: 'Point relais Lille', type: 'Stockage', auditor: 'Paul Lefevre', scheduledDate: '2025-02-10', status: 'scheduled', score: null },
-];
+function useFieldAudits() {
+  return useQuery({
+    queryKey: ['field_audits'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('field_audits')
+        .select('*')
+        .order('scheduled_date', { ascending: false });
+      if (error) throw error;
+      return data.map(a => ({
+        id: a.id,
+        location: a.target_name || 'N/A',
+        type: a.target_type,
+        auditType: a.audit_type,
+        auditor: a.auditor_id || 'Non assigné',
+        scheduledDate: a.scheduled_date || '',
+        status: a.status || 'scheduled',
+        score: a.score,
+      }));
+    },
+  });
+}
+
+const auditTypeLabels: Record<string, string> = {
+  initial: 'Initial',
+  continuous: 'Continu',
+  periodic: 'Périodique',
+};
+
+const auditTypeColors: Record<string, string> = {
+  initial: 'bg-blue-500/10 text-blue-500',
+  continuous: 'bg-orange-500/10 text-orange-600',
+  periodic: 'bg-purple-500/10 text-purple-600',
+};
 
 export default function FieldAudits() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const { data: fieldAudits = [], isLoading } = useFieldAudits();
 
-  const filteredAudits = fieldAudits.filter(a =>
-    a.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    a.type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredAudits = fieldAudits.filter(a => {
+    const matchesSearch = a.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      a.type.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === 'all' || a.auditType === typeFilter;
+    return matchesSearch && matchesType;
+  });
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -32,30 +66,44 @@ export default function FieldAudits() {
     }
   };
 
+  const scheduledCount = fieldAudits.filter(a => a.status === 'scheduled').length;
+  const inProgressCount = fieldAudits.filter(a => a.status === 'in_progress').length;
+  const completedCount = fieldAudits.filter(a => a.status === 'completed').length;
+  const completedWithScore = fieldAudits.filter(a => a.score !== null);
+  const avgScore = completedWithScore.length > 0
+    ? (completedWithScore.reduce((s, a) => s + (a.score || 0), 0) / completedWithScore.length).toFixed(1)
+    : '—';
+
+  if (isLoading) {
+    return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Audits Terrain</h1>
-          <p className="text-muted-foreground">Audits des sites et points de vente</p>
+          <p className="text-muted-foreground">Audits des sites et points de vente — 3 niveaux</p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Planifier un audit
-        </Button>
-        <ExportButtons
-          filename="audits-terrain"
-          title="Audits terrain"
-          columns={[
-            { header: 'Lieu', accessor: 'location' },
-            { header: 'Type', accessor: 'type' },
-            { header: 'Auditeur', accessor: 'auditor' },
-            { header: 'Date', accessor: 'scheduledDate' },
-            { header: 'Statut', accessor: 'status' },
-            { header: 'Score', accessor: 'score' },
-          ]}
-          data={filteredAudits}
-        />
+        <div className="flex gap-2">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Planifier un audit
+          </Button>
+          <ExportButtons
+            filename="audits-terrain"
+            title="Audits terrain"
+            columns={[
+              { header: 'Lieu', accessor: 'location' },
+              { header: 'Type', accessor: 'type' },
+              { header: 'Niveau', accessor: 'auditType' },
+              { header: 'Date', accessor: 'scheduledDate' },
+              { header: 'Statut', accessor: 'status' },
+              { header: 'Score', accessor: 'score' },
+            ]}
+            data={filteredAudits}
+          />
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -64,45 +112,28 @@ export default function FieldAudits() {
             <CardTitle className="text-sm font-medium">Planifiés</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {fieldAudits.filter(a => a.status === 'scheduled').length}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold">{scheduledCount}</div></CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">En cours</CardTitle>
             <MapPin className="h-4 w-4 text-blue-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-500">
-              {fieldAudits.filter(a => a.status === 'in_progress').length}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-blue-500">{inProgressCount}</div></CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Terminés</CardTitle>
             <FileText className="h-4 w-4 text-green-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-500">
-              {fieldAudits.filter(a => a.status === 'completed').length}
-            </div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold text-green-500">{completedCount}</div></CardContent>
         </Card>
-
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Score moyen</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">88.5%</div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold">{avgScore}%</div></CardContent>
         </Card>
       </div>
 
@@ -116,6 +147,15 @@ export default function FieldAudits() {
             className="pl-10"
           />
         </div>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-[180px]"><SelectValue placeholder="Niveau d'audit" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les niveaux</SelectItem>
+            <SelectItem value="initial"><Eye className="h-3 w-3 inline mr-1" />Initial</SelectItem>
+            <SelectItem value="continuous"><RefreshCw className="h-3 w-3 inline mr-1" />Continu</SelectItem>
+            <SelectItem value="periodic"><Calendar className="h-3 w-3 inline mr-1" />Périodique</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
@@ -128,7 +168,7 @@ export default function FieldAudits() {
               <TableRow>
                 <TableHead>Lieu</TableHead>
                 <TableHead>Type</TableHead>
-                <TableHead>Auditeur</TableHead>
+                <TableHead>Niveau</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Score</TableHead>
@@ -136,34 +176,38 @@ export default function FieldAudits() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAudits.map((audit) => (
-                <TableRow key={audit.id}>
-                  <TableCell className="font-medium">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-muted-foreground" />
-                      {audit.location}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{audit.type}</Badge>
-                  </TableCell>
-                  <TableCell>{audit.auditor}</TableCell>
-                  <TableCell>{new Date(audit.scheduledDate).toLocaleDateString('fr-FR')}</TableCell>
-                  <TableCell>{getStatusBadge(audit.status)}</TableCell>
-                  <TableCell>
-                    {audit.score !== null ? (
-                      <span className={audit.score >= 80 ? 'text-green-500 font-bold' : 'text-yellow-500 font-bold'}>
-                        {audit.score}%
-                      </span>
-                    ) : (
-                      '-'
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm">Voir</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredAudits.length === 0 ? (
+                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Aucun audit trouvé</TableCell></TableRow>
+              ) : (
+                filteredAudits.map((audit) => (
+                  <TableRow key={audit.id}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-muted-foreground" />
+                        {audit.location}
+                      </div>
+                    </TableCell>
+                    <TableCell><Badge variant="outline">{audit.type}</Badge></TableCell>
+                    <TableCell>
+                      <Badge className={auditTypeColors[audit.auditType] || 'bg-muted text-muted-foreground'}>
+                        {auditTypeLabels[audit.auditType] || audit.auditType}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{audit.scheduledDate ? new Date(audit.scheduledDate).toLocaleDateString('fr-FR') : '—'}</TableCell>
+                    <TableCell>{getStatusBadge(audit.status)}</TableCell>
+                    <TableCell>
+                      {audit.score !== null ? (
+                        <span className={audit.score >= 80 ? 'text-green-500 font-bold' : 'text-yellow-500 font-bold'}>
+                          {audit.score}%
+                        </span>
+                      ) : '—'}
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="sm">Voir</Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
