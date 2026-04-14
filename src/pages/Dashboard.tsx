@@ -9,7 +9,6 @@ import { AuditLogItem } from '@/components/dashboard/AuditLogItem';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { PoleOverview } from '@/components/dashboard/PoleOverview';
 import { 
-  currentUser, 
   executiveMetrics, 
   feedItems, 
   recentIncidents,
