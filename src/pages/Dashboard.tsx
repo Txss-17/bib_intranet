@@ -26,6 +26,43 @@ export default function Dashboard() {
     return 'Bonsoir';
   };
 
+  const getRoleMessage = () => {
+    switch (profile?.position) {
+      case 'ceo':
+        return 'Pilotage stratégique · Vue consolidée de tous les pôles';
+      case 'finance_manager':
+        return 'Suivi financier · Trésorerie, paiements et budgets';
+      case 'supplier_manager':
+        return 'Gestion fournisseurs · Portefeuilles, audits et qualité';
+      case 'ops_logistics_manager':
+        return 'Opérations · Commandes, expéditions et logistique';
+      case 'user_success_manager':
+        return 'Succès client · Comptes utilisateurs, support et risques';
+      case 'audit_compliance_lead':
+        return 'Audit & Conformité · Contrôles, sanctions et rapports';
+      case 'rse_packaging_manager':
+        return 'RSE & Packaging · Impact CO₂, recyclage et emballages';
+      case 'tech_platform_manager':
+        return 'Tech & Plateforme · Infrastructure, déploiements et sécurité';
+      default:
+        return 'Tableau de bord général';
+    }
+  };
+
+  const getDashboardLabel = () => {
+    switch (profile?.position) {
+      case 'ceo': return 'Executive Dashboard';
+      case 'finance_manager': return 'Finance Dashboard';
+      case 'supplier_manager': return 'Supplier Dashboard';
+      case 'ops_logistics_manager': return 'Operations Dashboard';
+      case 'user_success_manager': return 'Lifecycle Dashboard';
+      case 'audit_compliance_lead': return 'Audit Dashboard';
+      case 'rse_packaging_manager': return 'RSE Dashboard';
+      case 'tech_platform_manager': return 'Tech Dashboard';
+      default: return 'Dashboard';
+    }
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -35,8 +72,9 @@ export default function Dashboard() {
             {greeting()}, {profile?.first_name || 'Utilisateur'}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {format(new Date(), "EEEE, MMMM d, yyyy")} · Executive Dashboard
+            {format(new Date(), "EEEE d MMMM yyyy")} · {getDashboardLabel()}
           </p>
+          <p className="text-xs text-accent mt-1">{getRoleMessage()}</p>
         </div>
         <div className="flex items-center gap-2 text-sm">
           <span className="status-dot status-active animate-pulse-subtle" />
