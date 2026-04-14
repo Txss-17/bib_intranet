@@ -150,12 +150,14 @@ const AppInner = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AppInner />
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<MainLayout />}>
+      <AuthProvider>
+        <AppInner />
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route element={<AuthGuard><MainLayout /></AuthGuard>}>
             <Route path="/" element={<Index />} />
             
             {/* Direction module */}
