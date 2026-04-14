@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Activity, Shield, FileText, TrendingUp } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { FeedCard } from '@/components/dashboard/FeedCard';
 import { IncidentCard } from '@/components/dashboard/IncidentCard';
@@ -8,7 +9,6 @@ import { AuditLogItem } from '@/components/dashboard/AuditLogItem';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { PoleOverview } from '@/components/dashboard/PoleOverview';
 import { 
-  currentUser, 
   executiveMetrics, 
   feedItems, 
   recentIncidents,
@@ -17,11 +17,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function Dashboard() {
+  const { profile } = useAuth();
+
   const greeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return 'Bonjour';
+    if (hour < 18) return 'Bon après-midi';
+    return 'Bonsoir';
   };
 
   return (
@@ -30,7 +32,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">
-            {greeting()}, {currentUser.firstName}
+            {greeting()}, {profile?.first_name || 'Utilisateur'}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
             {format(new Date(), "EEEE, MMMM d, yyyy")} · Executive Dashboard
