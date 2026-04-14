@@ -567,6 +567,39 @@ export type Database = {
         }
         Relationships: []
       }
+      media_attachments: {
+        Row: {
+          created_at: string | null
+          entity_id: string
+          entity_type: string
+          file_name: string
+          file_size: number
+          file_type: string
+          file_url: string
+          id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entity_id: string
+          entity_type: string
+          file_name: string
+          file_size?: number
+          file_type?: string
+          file_url: string
+          id?: string
+        }
+        Update: {
+          created_at?: string | null
+          entity_id?: string
+          entity_type?: string
+          file_name?: string
+          file_size?: number
+          file_type?: string
+          file_url?: string
+          id?: string
+        }
+        Relationships: []
+      }
       message_routing_log: {
         Row: {
           action: string
