@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { Activity, Shield, FileText, TrendingUp } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { FeedCard } from '@/components/dashboard/FeedCard';
 import { IncidentCard } from '@/components/dashboard/IncidentCard';
