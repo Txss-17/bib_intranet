@@ -36,6 +36,14 @@ import { CriticalAlertToast } from '@/components/notifications/CriticalAlertToas
 import { useAuth } from '@/hooks/useAuth';
 import { positionInfos } from '@/types/positions';
 
+interface TopBarProps {
+  onToggleSidebar: () => void;
+  sidebarCollapsed: boolean;
+  darkMode: boolean;
+  onToggleDarkMode: () => void;
+  activePoleId?: PoleId;
+}
+
 const statusColors: Record<EmployeeStatus, string> = {
   online: 'bg-success',
   absent: 'bg-muted-foreground',
@@ -53,7 +61,15 @@ const statusLabels: Record<EmployeeStatus, string> = {
 export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDarkMode, activePoleId }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
   const { alerts, unreadCount, criticalCount, lastAlert, markAsRead, markAllAsRead, dismissLastAlert } = useCriticalAlerts();
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
   
+  const firstName = profile?.first_name || 'U';
+  const lastName = profile?.last_name || '';
+  const email = profile?.email || '';
+  const posInfo = profile?.position ? positionInfos[profile.position as keyof typeof positionInfos] : null;
+  const roleTitle = posInfo?.titleFr || profile?.position || 'Collaborateur';
+
   const unreadNotifications = notifications.filter(n => !n.read).length;
   const pendingTasks = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
   const activePole = activePoleId ? getPoleById(activePoleId) : null;
