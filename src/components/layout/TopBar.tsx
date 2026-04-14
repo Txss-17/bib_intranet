@@ -47,7 +47,7 @@ const statusLabels: Record<EmployeeStatus, string> = {
 function useNotifications() {
   const { profile } = useAuth();
   return useQuery({
-    queryKey: ['notifications', profile?.id],
+    queryKey: ['notifications', profile?.email],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notifications')
@@ -57,7 +57,7 @@ function useNotifications() {
       if (error) throw error;
       return data;
     },
-    enabled: !!profile?.id,
+    enabled: !!profile,
   });
 }
 
