@@ -134,8 +134,8 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
       <div className="flex items-center gap-2">
         {/* Employee Status */}
         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/30">
-          <Circle className={cn('h-2 w-2 fill-current', statusColors[currentEmployee.status])} />
-          <span className="text-xs text-muted-foreground">{statusLabels[currentEmployee.status]}</span>
+          <Circle className={cn('h-2 w-2 fill-current', statusColors['online'])} />
+          <span className="text-xs text-muted-foreground">{statusLabels['online']}</span>
         </div>
 
         {/* Theme toggle */}
