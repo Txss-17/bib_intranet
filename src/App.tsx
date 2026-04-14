@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainLayout } from "./components/layout/MainLayout";
+import { useAuthLogger } from "./hooks/useAuthLogger";
 import Index from "./pages/Index";
 import PoleDashboard from "./pages/PoleDashboard";
 import SubSectionPage from "./pages/modules/SubSectionPage";
@@ -138,9 +139,15 @@ import GatewayResponses from "./pages/modules/gateway/GatewayResponses";
 
 const queryClient = new QueryClient();
 
+const AppInner = () => {
+  useAuthLogger();
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <AppInner />
       <Toaster />
       <Sonner />
       <BrowserRouter>
