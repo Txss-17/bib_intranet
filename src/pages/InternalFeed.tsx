@@ -17,6 +17,19 @@ import type { FeedItem, PoleId } from '@/types';
 const from = (table: string) => (supabase as any).from(table);
 
 function useFeedPosts() {
+  const qc = useQueryClient();
+
+  // Realtime subscription for feed_posts
+  useState(() => {
+    const channel = supabase
+      .channel('feed-posts-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'feed_posts' }, () => {
+        qc.invalidateQueries({ queryKey: ['feed_posts'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  });
+
   return useQuery({
     queryKey: ['feed_posts'],
     queryFn: async () => {

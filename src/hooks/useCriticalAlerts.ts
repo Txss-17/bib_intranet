@@ -125,8 +125,19 @@ export function useCriticalAlerts() {
       if (error) throw error;
       return data || [];
     },
-    refetchInterval: 30000, // Poll every 30s
+    refetchInterval: 30000,
   });
+
+  // Realtime subscription for notifications
+  useEffect(() => {
+    const channel = supabase
+      .channel('critical-notifications-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+        qc.invalidateQueries({ queryKey: ['critical_notifications'] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [qc]);
 
   // Also fetch from other sources: quality_alerts, logistics_incidents, supplier_audits
   const { data: qualityAlerts = [] } = useQuery({
