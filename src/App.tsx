@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { MainLayout } from "./components/layout/MainLayout";
 import { useAuthLogger } from "./hooks/useAuthLogger";
+import { AuthProvider } from "./hooks/useAuth";
+import { AuthGuard } from "./components/AuthGuard";
+import Login from "./pages/Login";
 import Index from "./pages/Index";
 import PoleDashboard from "./pages/PoleDashboard";
 import SubSectionPage from "./pages/modules/SubSectionPage";
@@ -147,12 +150,14 @@ const AppInner = () => {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AppInner />
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<MainLayout />}>
+      <AuthProvider>
+        <AppInner />
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route element={<AuthGuard><MainLayout /></AuthGuard>}>
             <Route path="/" element={<Index />} />
             
             {/* Direction module */}
@@ -298,6 +303,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

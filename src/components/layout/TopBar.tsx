@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Bell,
   MessageSquare,
@@ -26,13 +26,15 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { currentUser, notifications, tasks } from '@/data/mockData';
+import { notifications, tasks } from '@/data/mockData';
 import { getPoleById } from '@/data/poles';
 import { PoleId } from '@/types';
 import { EmployeeStatus } from '@/types/roles';
 import { useCriticalAlerts } from '@/hooks/useCriticalAlerts';
 import { CriticalAlertsPanel } from '@/components/notifications/CriticalAlertsPanel';
 import { CriticalAlertToast } from '@/components/notifications/CriticalAlertToast';
+import { useAuth } from '@/hooks/useAuth';
+import { positionInfos } from '@/types/positions';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -41,14 +43,6 @@ interface TopBarProps {
   onToggleDarkMode: () => void;
   activePoleId?: PoleId;
 }
-
-// Mock current employee data (will be replaced with auth)
-const currentEmployee = {
-  ...currentUser,
-  employeeRole: 'tech_lead' as const,
-  employeeRoleTitle: 'Tech Lead & Architect',
-  status: 'online' as EmployeeStatus,
-};
 
 const statusColors: Record<EmployeeStatus, string> = {
   online: 'bg-success',
@@ -67,7 +61,15 @@ const statusLabels: Record<EmployeeStatus, string> = {
 export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDarkMode, activePoleId }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
   const { alerts, unreadCount, criticalCount, lastAlert, markAsRead, markAllAsRead, dismissLastAlert } = useCriticalAlerts();
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
   
+  const firstName = profile?.first_name || 'U';
+  const lastName = profile?.last_name || '';
+  const email = profile?.email || '';
+  const posInfo = profile?.position ? positionInfos[profile.position as keyof typeof positionInfos] : null;
+  const roleTitle = posInfo?.titleFr || profile?.position || 'Collaborateur';
+
   const unreadNotifications = notifications.filter(n => !n.read).length;
   const pendingTasks = tasks.filter(t => t.status === 'pending' || t.status === 'in_progress').length;
   const activePole = activePoleId ? getPoleById(activePoleId) : null;
@@ -132,8 +134,8 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
       <div className="flex items-center gap-2">
         {/* Employee Status */}
         <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-secondary/30">
-          <Circle className={cn('h-2 w-2 fill-current', statusColors[currentEmployee.status])} />
-          <span className="text-xs text-muted-foreground">{statusLabels[currentEmployee.status]}</span>
+          <Circle className={cn('h-2 w-2 fill-current', statusColors['online'])} />
+          <span className="text-xs text-muted-foreground">{statusLabels['online']}</span>
         </div>
 
         {/* Theme toggle */}
@@ -282,15 +284,15 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
             <Button variant="ghost" className="flex items-center gap-2 px-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent text-accent-foreground">
                 <span className="text-sm font-medium">
-                  {currentEmployee.firstName[0]}{currentEmployee.lastName[0]}
+                  {firstName[0]}{lastName[0]}
                 </span>
               </div>
               <div className="hidden md:flex flex-col items-start">
                 <span className="text-sm font-medium">
-                  {currentEmployee.firstName} {currentEmployee.lastName}
+                  {firstName} {lastName}
                 </span>
                 <span className="text-[10px] text-muted-foreground">
-                  {currentEmployee.employeeRoleTitle}
+                  {roleTitle}
                 </span>
               </div>
               <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -298,9 +300,9 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <div className="px-3 py-2 border-b border-border">
-              <p className="text-sm font-medium">{currentEmployee.firstName} {currentEmployee.lastName}</p>
-              <p className="text-xs text-muted-foreground">{currentEmployee.email}</p>
-              <p className="text-xs text-accent mt-1">{currentEmployee.employeeRoleTitle}</p>
+              <p className="text-sm font-medium">{firstName} {lastName}</p>
+              <p className="text-xs text-muted-foreground">{email}</p>
+              <p className="text-xs text-accent mt-1">{roleTitle}</p>
             </div>
             <DropdownMenuItem asChild>
               <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
@@ -311,13 +313,16 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
             <DropdownMenuItem asChild>
               <Link to="/settings" className="flex items-center gap-2 cursor-pointer">
                 <Settings className="h-4 w-4" />
-                <span>Settings</span>
+                <span>Paramètres</span>
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="flex items-center gap-2 text-destructive cursor-pointer"
-              onClick={() => { window.location.href = '/'; }}
+              onClick={async () => {
+                await signOut();
+                navigate('/login');
+              }}
             >
               <LogOut className="h-4 w-4" />
               <span>Déconnexion</span>
