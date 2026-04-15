@@ -1,9 +1,22 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Shield } from 'lucide-react';
+import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
-  const { session, loading } = useAuth();
+  const { session, profile, loading, signOut } = useAuth();
+
+  useEffect(() => {
+    if (!loading && profile && profile.app_origin && profile.app_origin !== 'bos') {
+      toast({
+        title: 'Accès refusé',
+        description: 'Ce compte n\'est pas autorisé sur LINKSY Business OS.',
+        variant: 'destructive',
+      });
+      signOut();
+    }
+  }, [loading, profile, signOut]);
 
   if (loading) {
     return (
@@ -17,6 +30,10 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!session) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (profile && profile.app_origin && profile.app_origin !== 'bos') {
     return <Navigate to="/login" replace />;
   }
 
