@@ -13,6 +13,7 @@ interface AuthContextType {
     email: string;
     poles: string[] | null;
     seniority: string | null;
+    app_origin: string | null;
   } | null;
   loading: boolean;
   signOut: () => Promise<void>;
