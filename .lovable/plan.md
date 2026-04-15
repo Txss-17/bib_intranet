@@ -1,77 +1,62 @@
 
 
-# Ce qui reste à implémenter — État actuel
+# Isolation authentification Business OS / Connect
 
-## Déjà fait (depuis la dernière analyse)
+## Contexte
+Les deux apps partagent le même backend Lovable Cloud mais ne doivent pas partager l'authentification. On ajoute une colonne `app_origin` pour séparer logiquement les utilisateurs.
 
-- **Mocks éliminés** : `mockData.ts` supprimé, `Dashboard.tsx` et `EthicsClosed.tsx` connectés à Supabase
-- **Phase 4 (Audit 3 niveaux)** : Filtrage par `audit_type` dans `FieldAudits.tsx`, stats par type dans `AuditDashboard.tsx`
-- **Phases 2+3 (Portefeuilles + Assignation)** : Tables `supplier_portfolios` / `portfolio_assignments` créées, `SupplierPortfolios.tsx` connecté
-- **Phase 6 (KPI stratégiques)** : `useExecutiveKPIs.ts` avec données réelles
-- **Positions** : 4 nouvelles positions ajoutées à l'enum
-- **RLS renforcé** sur 13+ tables
+## Étape 1 — Migration SQL (automatique via l'outil migration)
 
----
+```sql
+-- Ajouter la colonne app_origin aux profils
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS app_origin text NOT NULL DEFAULT 'bos';
 
-## Ce qui reste
+-- Mettre à jour le trigger handle_new_user pour lire app_origin depuis les metadata
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, first_name, last_name, app_origin)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'first_name', 'New'),
+    COALESCE(NEW.raw_user_meta_data->>'last_name', 'User'),
+    COALESCE(NEW.raw_user_meta_data->>'app_origin', 'bos')
+  );
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES (NEW.id, 'viewer');
+  RETURN NEW;
+END;
+$$;
 
-### 1. Route R&D manager incorrecte
-`Login.tsx` ligne 23 : `rd_manager: '/pole/supplier'` au lieu de `'/pole/rd'`.
-`positionAccess.ts` : `rd_manager.poles` = `['supplier', 'lifecycle']` — manque `'rd'`.
+-- Activer Realtime sur notifications et feed_posts
+ALTER PUBLICATION supabase_realtime ADD TABLE public.notifications;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.feed_posts;
+```
 
-**Action** : Corriger la route vers `/pole/rd` et ajouter `'rd'` aux poles accessibles.
+## Étape 2 — AuthGuard : vérification app_origin
 
-### 2. AssignmentSuggestion — données en dur
-`AssignmentSuggestion.tsx` utilise un tableau `candidates` statique (5 employés codés en dur) au lieu de lire depuis la base (profiles/portfolio_assignments).
+Modifier `AuthGuard.tsx` pour :
+1. Lire `profile.app_origin` depuis le hook `useAuth`
+2. Si `app_origin !== 'bos'` → `signOut()` + redirect `/login` avec toast d'erreur
 
-**Action** : Requêter les profils avec position `supplier_manager` et les assignments existants pour calculer la charge réelle.
+## Étape 3 — useAuth : exposer app_origin
 
-### 3. SupplierOrgChart — données en dur
-`SupplierOrgChart.tsx` affiche un organigramme avec des données mock (noms, équipes, performances statiques).
+Ajouter `app_origin` au type du profil et au `SELECT` dans `useAuth.tsx`.
 
-**Action** : Connecter à `profiles` (filtrés par poles supplier) et `portfolio_assignments` pour refléter l'organisation réelle.
+## Étape 4 — Documentation pour LINKSY Connect
 
-### 4. SupplierDashboard — statistiques en dur
-`SupplierDashboard.tsx` ligne 16 : `stats` array codé en dur (31 fournisseurs actifs, etc.). Les graphiques (PieChart, BarChart) utilisent aussi des données statiques.
+Fournir les instructions pour le second projet :
+- Utiliser les mêmes `VITE_SUPABASE_URL` et `VITE_SUPABASE_PUBLISHABLE_KEY`
+- Au signup : `supabase.auth.signUp({ data: { app_origin: 'connect' } })`
+- Au login : vérifier `profile.app_origin === 'connect'`
 
-**Action** : Remplacer par des agrégats depuis `suppliers`, `products`, `quality_alerts`.
-
-### 5. Realtime non activé sur notifications/feed
-Les tables `notifications` et `feed_posts` ne sont pas dans la publication `supabase_realtime`. Seul `products` a du realtime (3 pages).
-
-**Action** : `ALTER PUBLICATION supabase_realtime ADD TABLE notifications, feed_posts;` + abonnement dans les hooks concernés.
-
-### 6. Types TypeScript — `as any` sur les tables portfolio
-`SupplierPortfolios.tsx` utilise `from('supplier_portfolios' as any)` car les types Supabase auto-générés ne contiennent pas encore ces tables.
-
-**Action** : Les types se régénèrent automatiquement après migration. Si toujours absent, typer manuellement les interfaces.
-
----
-
-## Plan d'implémentation
-
-### Étape 1 — Corrections rapides
-- Corriger `rd_manager` route → `/pole/rd` dans `Login.tsx`
-- Ajouter `'rd'` aux poles de `rd_manager` dans `positionAccess.ts`
-
-### Étape 2 — Connecter AssignmentSuggestion à la DB
-- Requêter `profiles` (position supplier-related) + `portfolio_assignments` pour calculer charge
-- Remplacer le tableau `candidates` statique par des données réelles
-
-### Étape 3 — Connecter SupplierOrgChart à la DB
-- Requêter `profiles` filtrés par `poles @> '{supplier}'` 
-- Agréger les assignments par personne pour afficher la charge et performance réelles
-
-### Étape 4 — SupplierDashboard dynamique
-- Remplacer les stats codées en dur par des count/agrégats sur `suppliers`, `products`, `quality_alerts`, `certifications`
-- Connecter les graphiques aux données réelles
-
-### Étape 5 — Activer Realtime
-- Migration SQL : ajouter `notifications` et `feed_posts` à la publication realtime
-- Ajouter des subscriptions dans `useCriticalAlerts` et la page Feed
-
-### Détails techniques
-- **Fichiers modifiés** : `Login.tsx`, `positionAccess.ts`, `AssignmentSuggestion.tsx`, `SupplierOrgChart.tsx`, `SupplierDashboard.tsx`, `useCriticalAlerts.ts`, `InternalFeed.tsx`
-- **Migration SQL** : ALTER PUBLICATION pour realtime
-- **Aucune nouvelle table** nécessaire
+## Fichiers modifiés
+- **Migration SQL** : 1 migration (app_origin + trigger + realtime)
+- `src/hooks/useAuth.tsx` : ajouter `app_origin` au profil
+- `src/components/AuthGuard.tsx` : vérifier `app_origin === 'bos'`
 
