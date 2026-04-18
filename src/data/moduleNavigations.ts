@@ -39,14 +39,19 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'partners', label: 'Partners', labelFr: 'Partenaires', path: '/pole/ops/partners' },
   ],
 
-  // Tech
+  // Tech (Système de contrôle distribué)
   tech: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/tech' },
+    { id: 'access', label: 'Access & Users', labelFr: 'Accès & utilisateurs', path: '/pole/tech/access' },
+    { id: 'vpn', label: 'VPN / Network', labelFr: 'Réseau / VPN', path: '/pole/tech/vpn' },
+    { id: 'logs', label: 'Logs & Activity', labelFr: 'Logs & activité', path: '/pole/tech/logs' },
+    { id: 'deployments', label: 'Deployments', labelFr: 'Déploiements', path: '/pole/tech/deployments' },
+    { id: 'environments', label: 'Environments', labelFr: 'Environnements', path: '/pole/tech/environments' },
+    { id: 'security', label: 'Security', labelFr: 'Sécurité', path: '/pole/tech/security' },
+    { id: 'dataflow', label: 'Data Flow', labelFr: 'Flux de données', path: '/pole/tech/dataflow' },
     { id: 'received-products', label: 'Received Products', labelFr: 'Réception produits', path: '/pole/tech/received-products' },
     { id: 'catalog', label: 'Catalog', labelFr: 'Catalogue', path: '/pole/tech/catalog' },
-    { id: 'deployments', label: 'Deployments', labelFr: 'Déploiements', path: '/pole/tech/deployments' },
     { id: 'infrastructure', label: 'Infrastructure', labelFr: 'Infra', path: '/pole/tech/infrastructure' },
-    { id: 'security', label: 'Security', labelFr: 'Sécurité', path: '/pole/tech/security' },
   ],
 
   // RH
