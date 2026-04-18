@@ -78,6 +78,12 @@ import Infrastructure from "./pages/modules/tech/Infrastructure";
 import Security from "./pages/modules/tech/Security";
 import Catalog from "./pages/modules/tech/Catalog";
 import ReceivedProducts from "./pages/modules/tech/ReceivedProducts";
+import TechAccess from "./pages/modules/tech/TechAccess";
+import TechVPN from "./pages/modules/tech/TechVPN";
+import TechLogs from "./pages/modules/tech/TechLogs";
+import TechEnvironments from "./pages/modules/tech/TechEnvironments";
+import TechSecurity from "./pages/modules/tech/TechSecurity";
+import TechDataFlow from "./pages/modules/tech/TechDataFlow";
 
 // RH module pages
 import RHDashboard from "./pages/modules/rh/RHDashboard";
@@ -212,9 +218,14 @@ const App = () => (
             
             {/* Tech module */}
             <Route path="/pole/tech" element={<TechDashboard />} />
+            <Route path="/pole/tech/access" element={<TechAccess />} />
+            <Route path="/pole/tech/vpn" element={<TechVPN />} />
+            <Route path="/pole/tech/logs" element={<TechLogs />} />
             <Route path="/pole/tech/deployments" element={<Deployments />} />
+            <Route path="/pole/tech/environments" element={<TechEnvironments />} />
+            <Route path="/pole/tech/security" element={<TechSecurity />} />
+            <Route path="/pole/tech/dataflow" element={<TechDataFlow />} />
             <Route path="/pole/tech/infrastructure" element={<Infrastructure />} />
-            <Route path="/pole/tech/security" element={<Security />} />
             <Route path="/pole/tech/catalog" element={<Catalog />} />
             <Route path="/pole/tech/received-products" element={<ReceivedProducts />} />
             

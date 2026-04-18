@@ -66,9 +66,10 @@ export const positionAccess: Record<EmployeePosition, PositionAccess> = {
   tech_platform_manager: {
     poles: ['tech'],
     screens: [
-      'tech.overview', 'tech.catalog', 'tech.product-catalogue', 'tech.user-site',
-      'tech.intranet', 'tech.deployments', 'tech.infrastructure', 'tech.security',
-      'tech.logs-monitoring'
+      'tech.overview', 'tech.access', 'tech.vpn', 'tech.logs',
+      'tech.deployments', 'tech.environments', 'tech.security', 'tech.dataflow',
+      'tech.catalog', 'tech.product-catalogue', 'tech.user-site',
+      'tech.intranet', 'tech.infrastructure', 'tech.logs-monitoring'
     ],
     restricted: ['rh.decisions', 'finance.arbitrage']
   },
