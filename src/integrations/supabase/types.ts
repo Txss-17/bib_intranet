@@ -53,6 +53,42 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_logs: {
+        Row: {
+          app_origin: string | null
+          created_at: string
+          event_type: string
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_agent: string | null
+          user_email: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_origin?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_origin?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_email?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       bugs: {
         Row: {
           assigned_to: string | null
@@ -290,6 +326,45 @@ export type Database = {
           updated_at?: string | null
           uploaded_by?: string | null
           version?: string
+        }
+        Relationships: []
+      }
+      edge_function_logs: {
+        Row: {
+          app_origin: string | null
+          caller_id: string | null
+          created_at: string
+          duration_ms: number | null
+          error_message: string | null
+          function_name: string
+          http_status: number | null
+          id: string
+          metadata: Json | null
+          status: string
+        }
+        Insert: {
+          app_origin?: string | null
+          caller_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name: string
+          http_status?: number | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+        }
+        Update: {
+          app_origin?: string | null
+          caller_id?: string | null
+          created_at?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          function_name?: string
+          http_status?: number | null
+          id?: string
+          metadata?: Json | null
+          status?: string
         }
         Relationships: []
       }
@@ -1297,6 +1372,63 @@ export type Database = {
           },
         ]
       }
+      security_alerts: {
+        Row: {
+          affected_user_id: string | null
+          alert_type: string
+          assigned_to: string | null
+          created_at: string
+          description: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          source: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          affected_user_id?: string | null
+          alert_type: string
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          affected_user_id?: string | null
+          alert_type?: string
+          assigned_to?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          source?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       supplier_audits: {
         Row: {
           auditor: string
@@ -1624,6 +1756,66 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      vpn_access: {
+        Row: {
+          created_at: string
+          device_name: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          ip_address: string | null
+          last_seen_at: string | null
+          metadata: Json | null
+          notes: string | null
+          provider: string | null
+          provider_device_id: string | null
+          revoked_at: string | null
+          status: string
+          updated_at: string
+          user_email: string | null
+          user_id: string | null
+          user_name: string
+        }
+        Insert: {
+          created_at?: string
+          device_name?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          ip_address?: string | null
+          last_seen_at?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          provider?: string | null
+          provider_device_id?: string | null
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_name: string
+        }
+        Update: {
+          created_at?: string
+          device_name?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          ip_address?: string | null
+          last_seen_at?: string | null
+          metadata?: Json | null
+          notes?: string | null
+          provider?: string | null
+          provider_device_id?: string | null
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+          user_email?: string | null
+          user_id?: string | null
+          user_name?: string
         }
         Relationships: []
       }
