@@ -646,11 +646,14 @@ export type Database = {
       logistics_incidents: {
         Row: {
           assigned_to: string | null
+          catalog_id: string | null
+          category: string | null
           created_at: string | null
           description: string
           id: string
           incident_type: string
           order_id: string | null
+          partner_id: string | null
           reported_by: string | null
           resolution_notes: string | null
           resolved_at: string | null
@@ -660,11 +663,14 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          catalog_id?: string | null
+          category?: string | null
           created_at?: string | null
           description: string
           id?: string
           incident_type: string
           order_id?: string | null
+          partner_id?: string | null
           reported_by?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
@@ -674,11 +680,14 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          catalog_id?: string | null
+          category?: string | null
           created_at?: string | null
           description?: string
           id?: string
           incident_type?: string
           order_id?: string | null
+          partner_id?: string | null
           reported_by?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
@@ -688,10 +697,24 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "logistics_incidents_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "product_catalog"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "logistics_incidents_order_id_fkey"
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "logistics_incidents_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "logistics_partners"
             referencedColumns: ["id"]
           },
         ]
@@ -699,42 +722,54 @@ export type Database = {
       logistics_partners: {
         Row: {
           api_integrated: boolean | null
+          avg_lead_time_hours: number | null
           contact_email: string | null
           contact_name: string | null
           contact_phone: string | null
           created_at: string | null
+          error_rate: number | null
           id: string
           name: string
           notes: string | null
+          region: string | null
           status: string | null
           type: string | null
           updated_at: string | null
+          volume_processed: number | null
         }
         Insert: {
           api_integrated?: boolean | null
+          avg_lead_time_hours?: number | null
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          error_rate?: number | null
           id?: string
           name: string
           notes?: string | null
+          region?: string | null
           status?: string | null
           type?: string | null
           updated_at?: string | null
+          volume_processed?: number | null
         }
         Update: {
           api_integrated?: boolean | null
+          avg_lead_time_hours?: number | null
           contact_email?: string | null
           contact_name?: string | null
           contact_phone?: string | null
           created_at?: string | null
+          error_rate?: number | null
           id?: string
           name?: string
           notes?: string | null
+          region?: string | null
           status?: string | null
           type?: string | null
           updated_at?: string | null
+          volume_processed?: number | null
         }
         Relationships: []
       }
@@ -896,17 +931,69 @@ export type Database = {
         }
         Relationships: []
       }
+      order_lifecycle_events: {
+        Row: {
+          created_at: string
+          id: string
+          metadata: Json | null
+          notes: string | null
+          order_id: string
+          partner_id: string | null
+          performed_by: string | null
+          stage: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          order_id: string
+          partner_id?: string | null
+          performed_by?: string | null
+          stage: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          order_id?: string
+          partner_id?: string | null
+          performed_by?: string | null
+          stage?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_lifecycle_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_lifecycle_events_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "logistics_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       orders: {
         Row: {
+          catalog_id: string | null
           created_at: string | null
           currency: string | null
+          current_stage: string | null
           delivered_at: string | null
           id: string
           order_number: string
           ordered_at: string | null
+          partner_id: string | null
           shipped_at: string | null
           shipping_address: string | null
           shipping_method: string | null
+          shop_sku: string | null
           status: string | null
           total_amount: number | null
           tracking_number: string | null
@@ -914,15 +1001,19 @@ export type Database = {
           user_account_id: string | null
         }
         Insert: {
+          catalog_id?: string | null
           created_at?: string | null
           currency?: string | null
+          current_stage?: string | null
           delivered_at?: string | null
           id?: string
           order_number: string
           ordered_at?: string | null
+          partner_id?: string | null
           shipped_at?: string | null
           shipping_address?: string | null
           shipping_method?: string | null
+          shop_sku?: string | null
           status?: string | null
           total_amount?: number | null
           tracking_number?: string | null
@@ -930,15 +1021,19 @@ export type Database = {
           user_account_id?: string | null
         }
         Update: {
+          catalog_id?: string | null
           created_at?: string | null
           currency?: string | null
+          current_stage?: string | null
           delivered_at?: string | null
           id?: string
           order_number?: string
           ordered_at?: string | null
+          partner_id?: string | null
           shipped_at?: string | null
           shipping_address?: string | null
           shipping_method?: string | null
+          shop_sku?: string | null
           status?: string | null
           total_amount?: number | null
           tracking_number?: string | null
@@ -946,6 +1041,20 @@ export type Database = {
           user_account_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "product_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "logistics_partners"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_user_account_id_fkey"
             columns: ["user_account_id"]
@@ -1021,6 +1130,116 @@ export type Database = {
           },
         ]
       }
+      partner_stocks: {
+        Row: {
+          catalog_id: string
+          created_at: string
+          id: string
+          last_inventory_at: string | null
+          location: string | null
+          partner_id: string
+          quantity: number
+          region: string | null
+          reorder_threshold: number | null
+          reserved_quantity: number
+          rupture_threshold: number | null
+          updated_at: string
+        }
+        Insert: {
+          catalog_id: string
+          created_at?: string
+          id?: string
+          last_inventory_at?: string | null
+          location?: string | null
+          partner_id: string
+          quantity?: number
+          region?: string | null
+          reorder_threshold?: number | null
+          reserved_quantity?: number
+          rupture_threshold?: number | null
+          updated_at?: string
+        }
+        Update: {
+          catalog_id?: string
+          created_at?: string
+          id?: string
+          last_inventory_at?: string | null
+          location?: string | null
+          partner_id?: string
+          quantity?: number
+          region?: string | null
+          reorder_threshold?: number | null
+          reserved_quantity?: number
+          rupture_threshold?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_stocks_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "product_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_stocks_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "logistics_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_sync_events: {
+        Row: {
+          created_at: string
+          direction: string
+          duration_ms: number | null
+          error_message: string | null
+          event_type: string
+          id: string
+          partner_id: string
+          payload: Json | null
+          reference_id: string | null
+          reference_type: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          direction: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_type: string
+          id?: string
+          partner_id: string
+          payload?: Json | null
+          reference_id?: string | null
+          reference_type?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          direction?: string
+          duration_ms?: number | null
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          partner_id?: string
+          payload?: Json | null
+          reference_id?: string | null
+          reference_type?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_sync_events_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "logistics_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       portfolio_assignments: {
         Row: {
           assigned_at: string | null
@@ -1059,6 +1278,74 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_catalog: {
+        Row: {
+          barcode: string | null
+          category: string | null
+          created_at: string
+          dimensions: string | null
+          id: string
+          internal_sku: string | null
+          is_active: boolean | null
+          moq: number | null
+          name: string
+          notes: string | null
+          packaging_type: string | null
+          product_id: string | null
+          reorder_threshold: number | null
+          shop_sku: string
+          updated_at: string
+          weight_gross_g: number | null
+          weight_net_g: number | null
+        }
+        Insert: {
+          barcode?: string | null
+          category?: string | null
+          created_at?: string
+          dimensions?: string | null
+          id?: string
+          internal_sku?: string | null
+          is_active?: boolean | null
+          moq?: number | null
+          name: string
+          notes?: string | null
+          packaging_type?: string | null
+          product_id?: string | null
+          reorder_threshold?: number | null
+          shop_sku: string
+          updated_at?: string
+          weight_gross_g?: number | null
+          weight_net_g?: number | null
+        }
+        Update: {
+          barcode?: string | null
+          category?: string | null
+          created_at?: string
+          dimensions?: string | null
+          id?: string
+          internal_sku?: string | null
+          is_active?: boolean | null
+          moq?: number | null
+          name?: string
+          notes?: string | null
+          packaging_type?: string | null
+          product_id?: string | null
+          reorder_threshold?: number | null
+          shop_sku?: string
+          updated_at?: string
+          weight_gross_g?: number | null
+          weight_net_g?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_catalog_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
@@ -1316,6 +1603,79 @@ export type Database = {
           },
         ]
       }
+      replenishment_suggestions: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          catalog_id: string
+          created_at: string
+          executed_at: string | null
+          id: string
+          notes: string | null
+          priority: string | null
+          reason: string
+          source_partner_id: string | null
+          status: string
+          suggested_quantity: number
+          target_partner_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          catalog_id: string
+          created_at?: string
+          executed_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          reason: string
+          source_partner_id?: string | null
+          status?: string
+          suggested_quantity: number
+          target_partner_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          catalog_id?: string
+          created_at?: string
+          executed_at?: string | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          reason?: string
+          source_partner_id?: string | null
+          status?: string
+          suggested_quantity?: number
+          target_partner_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "replenishment_suggestions_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "product_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "replenishment_suggestions_source_partner_id_fkey"
+            columns: ["source_partner_id"]
+            isOneToOne: false
+            referencedRelation: "logistics_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "replenishment_suggestions_target_partner_id_fkey"
+            columns: ["target_partner_id"]
+            isOneToOne: false
+            referencedRelation: "logistics_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       salaries: {
         Row: {
           bonuses: number | null
@@ -1428,6 +1788,67 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          catalog_id: string
+          created_at: string
+          id: string
+          movement_type: string
+          performed_by: string | null
+          quantity: number
+          reason: string | null
+          reference: string | null
+          source_partner_id: string | null
+          target_partner_id: string | null
+        }
+        Insert: {
+          catalog_id: string
+          created_at?: string
+          id?: string
+          movement_type: string
+          performed_by?: string | null
+          quantity: number
+          reason?: string | null
+          reference?: string | null
+          source_partner_id?: string | null
+          target_partner_id?: string | null
+        }
+        Update: {
+          catalog_id?: string
+          created_at?: string
+          id?: string
+          movement_type?: string
+          performed_by?: string | null
+          quantity?: number
+          reason?: string | null
+          reference?: string | null
+          source_partner_id?: string | null
+          target_partner_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "product_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_source_partner_id_fkey"
+            columns: ["source_partner_id"]
+            isOneToOne: false
+            referencedRelation: "logistics_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stock_movements_target_partner_id_fkey"
+            columns: ["target_partner_id"]
+            isOneToOne: false
+            referencedRelation: "logistics_partners"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       supplier_audits: {
         Row: {
