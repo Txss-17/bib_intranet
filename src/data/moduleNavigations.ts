@@ -39,7 +39,10 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'partners', label: 'Partners', labelFr: 'Partenaires', path: '/pole/ops/partners' },
     { id: 'flows', label: 'Sync Flows', labelFr: 'Flux & sync', path: '/pole/ops/flows' },
     { id: 'incidents', label: 'Incidents', labelFr: 'Incidents', path: '/pole/ops/incidents' },
+    { id: 'thresholds', label: 'Thresholds & Alerts', labelFr: 'Seuils & alertes', path: '/pole/ops/thresholds' },
+    { id: 'forecast', label: 'Demand Forecast', labelFr: 'Prévision demande', path: '/pole/ops/forecast' },
     { id: 'replenishment', label: 'Replenishment', labelFr: 'Réapprovisionnement', path: '/pole/ops/replenishment' },
+    { id: 'suppliers-lt', label: 'Supplier Lead Times', labelFr: 'Fournisseurs logistiques', path: '/pole/ops/suppliers-lead-times' },
     { id: 'audit-link', label: 'Audit Link', labelFr: 'Audit ↔ OPS', path: '/pole/ops/audit-link' },
   ],
 

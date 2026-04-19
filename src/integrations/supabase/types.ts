@@ -245,6 +245,50 @@ export type Database = {
           },
         ]
       }
+      demand_forecasts: {
+        Row: {
+          avg_daily_sales_7d: number
+          catalog_id: string
+          computed_at: string
+          confidence_level: string | null
+          id: string
+          projected_sales_7d: number
+          region: string | null
+          sample_size: number | null
+          trend_percent: number
+        }
+        Insert: {
+          avg_daily_sales_7d?: number
+          catalog_id: string
+          computed_at?: string
+          confidence_level?: string | null
+          id?: string
+          projected_sales_7d?: number
+          region?: string | null
+          sample_size?: number | null
+          trend_percent?: number
+        }
+        Update: {
+          avg_daily_sales_7d?: number
+          catalog_id?: string
+          computed_at?: string
+          confidence_level?: string | null
+          id?: string
+          projected_sales_7d?: number
+          region?: string | null
+          sample_size?: number | null
+          trend_percent?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "demand_forecasts_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "product_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deployments: {
         Row: {
           changelog: string | null
@@ -990,6 +1034,7 @@ export type Database = {
           order_number: string
           ordered_at: string | null
           partner_id: string | null
+          region: string | null
           shipped_at: string | null
           shipping_address: string | null
           shipping_method: string | null
@@ -1010,6 +1055,7 @@ export type Database = {
           order_number: string
           ordered_at?: string | null
           partner_id?: string | null
+          region?: string | null
           shipped_at?: string | null
           shipping_address?: string | null
           shipping_method?: string | null
@@ -1030,6 +1076,7 @@ export type Database = {
           order_number?: string
           ordered_at?: string | null
           partner_id?: string | null
+          region?: string | null
           shipped_at?: string | null
           shipping_address?: string | null
           shipping_method?: string | null
@@ -1135,42 +1182,51 @@ export type Database = {
           catalog_id: string
           created_at: string
           id: string
+          ideal_stock: number | null
           last_inventory_at: string | null
           location: string | null
+          min_threshold: number | null
           partner_id: string
           quantity: number
           region: string | null
           reorder_threshold: number | null
           reserved_quantity: number
           rupture_threshold: number | null
+          supplier_lead_time_days: number | null
           updated_at: string
         }
         Insert: {
           catalog_id: string
           created_at?: string
           id?: string
+          ideal_stock?: number | null
           last_inventory_at?: string | null
           location?: string | null
+          min_threshold?: number | null
           partner_id: string
           quantity?: number
           region?: string | null
           reorder_threshold?: number | null
           reserved_quantity?: number
           rupture_threshold?: number | null
+          supplier_lead_time_days?: number | null
           updated_at?: string
         }
         Update: {
           catalog_id?: string
           created_at?: string
           id?: string
+          ideal_stock?: number | null
           last_inventory_at?: string | null
           location?: string | null
+          min_threshold?: number | null
           partner_id?: string
           quantity?: number
           region?: string | null
           reorder_threshold?: number | null
           reserved_quantity?: number
           rupture_threshold?: number | null
+          supplier_lead_time_days?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -1607,13 +1663,16 @@ export type Database = {
         Row: {
           approved_at: string | null
           approved_by: string | null
+          auto_executable: boolean | null
           catalog_id: string
+          confidence_score: number | null
           created_at: string
           executed_at: string | null
           id: string
           notes: string | null
           priority: string | null
           reason: string
+          source: string | null
           source_partner_id: string | null
           status: string
           suggested_quantity: number
@@ -1623,13 +1682,16 @@ export type Database = {
         Insert: {
           approved_at?: string | null
           approved_by?: string | null
+          auto_executable?: boolean | null
           catalog_id: string
+          confidence_score?: number | null
           created_at?: string
           executed_at?: string | null
           id?: string
           notes?: string | null
           priority?: string | null
           reason: string
+          source?: string | null
           source_partner_id?: string | null
           status?: string
           suggested_quantity: number
@@ -1639,13 +1701,16 @@ export type Database = {
         Update: {
           approved_at?: string | null
           approved_by?: string | null
+          auto_executable?: boolean | null
           catalog_id?: string
+          confidence_score?: number | null
           created_at?: string
           executed_at?: string | null
           id?: string
           notes?: string | null
           priority?: string | null
           reason?: string
+          source?: string | null
           source_partner_id?: string | null
           status?: string
           suggested_quantity?: number
@@ -1899,6 +1964,62 @@ export type Database = {
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_lead_times: {
+        Row: {
+          catalog_id: string
+          created_at: string
+          currency: string | null
+          id: string
+          is_primary: boolean | null
+          lead_time_days: number
+          moq: number
+          notes: string | null
+          reliability_score: number | null
+          supplier_contact: string | null
+          supplier_name: string
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          catalog_id: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_primary?: boolean | null
+          lead_time_days?: number
+          moq?: number
+          notes?: string | null
+          reliability_score?: number | null
+          supplier_contact?: string | null
+          supplier_name: string
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          catalog_id?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          is_primary?: boolean | null
+          lead_time_days?: number
+          moq?: number
+          notes?: string | null
+          reliability_score?: number | null
+          supplier_contact?: string | null
+          supplier_name?: string
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_lead_times_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "product_catalog"
             referencedColumns: ["id"]
           },
         ]
@@ -2316,6 +2437,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_demand_forecast: { Args: never; Returns: number }
+      detect_replenishment_needs: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

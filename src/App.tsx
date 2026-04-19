@@ -52,6 +52,9 @@ import SyncFlows from "./pages/modules/ops/SyncFlows";
 import Replenishment from "./pages/modules/ops/Replenishment";
 import OrderPipeline from "./pages/modules/ops/OrderPipeline";
 import AuditLink from "./pages/modules/ops/AuditLink";
+import DemandForecast from "./pages/modules/ops/DemandForecast";
+import StockThresholds from "./pages/modules/ops/StockThresholds";
+import SupplierLeadTimes from "./pages/modules/ops/SupplierLeadTimes";
 
 // Direction module pages
 import ExecutiveDashboard from "./pages/modules/direction/ExecutiveDashboard";
@@ -224,6 +227,9 @@ const App = () => (
             <Route path="/pole/ops/flows" element={<SyncFlows />} />
             <Route path="/pole/ops/incidents" element={<LogisticsIncidents />} />
             <Route path="/pole/ops/replenishment" element={<Replenishment />} />
+            <Route path="/pole/ops/forecast" element={<DemandForecast />} />
+            <Route path="/pole/ops/thresholds" element={<StockThresholds />} />
+            <Route path="/pole/ops/suppliers-lead-times" element={<SupplierLeadTimes />} />
             <Route path="/pole/ops/audit-link" element={<AuditLink />} />
             {/* Legacy routes (rétro-compat) */}
             <Route path="/pole/ops/orders" element={<Orders />} />
