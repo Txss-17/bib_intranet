@@ -46,6 +46,12 @@ import Orders from "./pages/modules/ops/Orders";
 import Shipments from "./pages/modules/ops/Shipments";
 import LogisticsIncidents from "./pages/modules/ops/LogisticsIncidents";
 import Partners from "./pages/modules/ops/Partners";
+import DistributedStocks from "./pages/modules/ops/DistributedStocks";
+import ProductCatalog from "./pages/modules/ops/ProductCatalog";
+import SyncFlows from "./pages/modules/ops/SyncFlows";
+import Replenishment from "./pages/modules/ops/Replenishment";
+import OrderPipeline from "./pages/modules/ops/OrderPipeline";
+import AuditLink from "./pages/modules/ops/AuditLink";
 
 // Direction module pages
 import ExecutiveDashboard from "./pages/modules/direction/ExecutiveDashboard";
@@ -209,12 +215,19 @@ const App = () => (
             <Route path="/pole/finance/salaries" element={<Salaries />} />
             <Route path="/pole/finance/guarantee" element={<GuaranteeFund />} />
             
-            {/* Ops module */}
+            {/* Ops Control Tower */}
             <Route path="/pole/ops" element={<OpsDashboard />} />
+            <Route path="/pole/ops/pipeline" element={<OrderPipeline />} />
+            <Route path="/pole/ops/stocks" element={<DistributedStocks />} />
+            <Route path="/pole/ops/catalog" element={<ProductCatalog />} />
+            <Route path="/pole/ops/partners" element={<Partners />} />
+            <Route path="/pole/ops/flows" element={<SyncFlows />} />
+            <Route path="/pole/ops/incidents" element={<LogisticsIncidents />} />
+            <Route path="/pole/ops/replenishment" element={<Replenishment />} />
+            <Route path="/pole/ops/audit-link" element={<AuditLink />} />
+            {/* Legacy routes (rétro-compat) */}
             <Route path="/pole/ops/orders" element={<Orders />} />
             <Route path="/pole/ops/shipments" element={<Shipments />} />
-            <Route path="/pole/ops/incidents" element={<LogisticsIncidents />} />
-            <Route path="/pole/ops/partners" element={<Partners />} />
             
             {/* Tech module */}
             <Route path="/pole/tech" element={<TechDashboard />} />

@@ -30,13 +30,17 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'guarantee', label: 'Guarantee Fund', labelFr: 'Fonds de garantie', path: '/pole/finance/guarantee' },
   ],
 
-  // Ops
+  // Ops — Control Tower
   ops: [
-    { id: 'overview', label: 'Dashboard', labelFr: 'Dashboard', path: '/pole/ops' },
-    { id: 'orders', label: 'Orders', labelFr: 'Commandes', path: '/pole/ops/orders' },
-    { id: 'shipments', label: 'Shipments', labelFr: 'Expéditions', path: '/pole/ops/shipments' },
-    { id: 'incidents', label: 'Incidents', labelFr: 'Incidents', path: '/pole/ops/incidents' },
+    { id: 'overview', label: 'Dashboard', labelFr: 'Vue globale', path: '/pole/ops' },
+    { id: 'pipeline', label: 'Order Pipeline', labelFr: 'Cycle commandes', path: '/pole/ops/pipeline' },
+    { id: 'stocks', label: 'Distributed Stocks', labelFr: 'Stocks distribués', path: '/pole/ops/stocks' },
+    { id: 'catalog', label: 'Product Catalog', labelFr: 'Référentiel produits', path: '/pole/ops/catalog' },
     { id: 'partners', label: 'Partners', labelFr: 'Partenaires', path: '/pole/ops/partners' },
+    { id: 'flows', label: 'Sync Flows', labelFr: 'Flux & sync', path: '/pole/ops/flows' },
+    { id: 'incidents', label: 'Incidents', labelFr: 'Incidents', path: '/pole/ops/incidents' },
+    { id: 'replenishment', label: 'Replenishment', labelFr: 'Réapprovisionnement', path: '/pole/ops/replenishment' },
+    { id: 'audit-link', label: 'Audit Link', labelFr: 'Audit ↔ OPS', path: '/pole/ops/audit-link' },
   ],
 
   // Tech (Système de contrôle distribué)
