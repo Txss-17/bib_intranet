@@ -42,7 +42,7 @@ export const useAuthLogger = () => {
             event_type: 'login_success',
             ip_address: ip,
             user_agent: navigator.userAgent,
-            app_origin: 'bos',
+            app_origin: 'connect',
             metadata: { provider: session.user.app_metadata?.provider || 'email' },
           }).then(() => {}, (e: any) => console.error('auth_logs error:', e));
         }
@@ -54,7 +54,7 @@ export const useAuthLogger = () => {
               event_type: 'logout',
               ip_address: ip,
               user_agent: navigator.userAgent,
-              app_origin: 'bos',
+              app_origin: 'connect',
             }).then(() => {}, () => {});
           }
           logged.current = false;
@@ -66,7 +66,7 @@ export const useAuthLogger = () => {
             event_type: 'password_reset',
             ip_address: ip,
             user_agent: navigator.userAgent,
-            app_origin: 'bos',
+            app_origin: 'connect',
           }).then(() => {}, () => {});
         }
       }
