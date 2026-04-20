@@ -39,7 +39,7 @@ const fetchProfile = async (userId: string): Promise<ProfileData | null> => {
     .single();
   if (!data) return null;
   // app_origin may not exist in types yet but exists in DB after migration
-  return { ...data, app_origin: (data as any).app_origin ?? 'bos' };
+  return { ...data, app_origin: (data as any).app_origin ?? 'connect' };
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
