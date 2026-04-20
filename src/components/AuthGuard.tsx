@@ -8,10 +8,10 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
   const { session, profile, loading, signOut } = useAuth();
 
   useEffect(() => {
-    if (!loading && profile && profile.app_origin && profile.app_origin !== 'bos') {
+    if (!loading && profile && profile.app_origin && profile.app_origin !== 'connect') {
       toast({
         title: 'Accès refusé',
-        description: 'Ce compte n\'est pas autorisé sur LINKSY Business OS.',
+        description: 'Ce compte n\'est pas autorisé sur LINKSY Connect.',
         variant: 'destructive',
       });
       signOut();
@@ -33,7 +33,7 @@ export const AuthGuard = ({ children }: { children: React.ReactNode }) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (profile && profile.app_origin && profile.app_origin !== 'bos') {
+  if (profile && profile.app_origin && profile.app_origin !== 'connect') {
     return <Navigate to="/login" replace />;
   }
 
