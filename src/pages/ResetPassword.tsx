@@ -70,9 +70,9 @@ export default function ResetPassword() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-1">
-            <div className="bg-primary text-primary-foreground font-bold text-2xl px-3 py-1 rounded-lg">L</div>
-            <span className="text-2xl font-bold text-foreground tracking-tight">inksy</span>
+          <div className="flex items-center justify-center gap-2">
+            <div className="bg-primary text-primary-foreground font-bold text-xl px-3 py-1.5 rounded-lg tracking-tight">B.I.B</div>
+            <span className="text-2xl font-bold text-foreground tracking-tight">Intranet</span>
           </div>
           <p className="text-muted-foreground text-sm">Réinitialisation du mot de passe</p>
         </div>

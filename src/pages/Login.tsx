@@ -34,6 +34,16 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!email.toLowerCase().endsWith('@brand-in-a-box.space')) {
+      toast({
+        title: 'Domaine non autorisé',
+        description: 'Seules les adresses @brand-in-a-box.space peuvent se connecter à l\'intranet.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -71,6 +81,10 @@ const Login = () => {
       toast({ title: 'Erreur', description: 'Veuillez saisir votre adresse email.', variant: 'destructive' });
       return;
     }
+    if (!email.toLowerCase().endsWith('@brand-in-a-box.space')) {
+      toast({ title: 'Domaine non autorisé', description: 'Seules les adresses @brand-in-a-box.space sont autorisées.', variant: 'destructive' });
+      return;
+    }
     setLoading(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -89,11 +103,11 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-1">
-            <div className="bg-primary text-primary-foreground font-bold text-2xl px-3 py-1 rounded-lg">L</div>
-            <span className="text-2xl font-bold text-foreground tracking-tight">inksy</span>
+          <div className="flex items-center justify-center gap-2">
+            <div className="bg-primary text-primary-foreground font-bold text-xl px-3 py-1.5 rounded-lg tracking-tight">B.I.B</div>
+            <span className="text-2xl font-bold text-foreground tracking-tight">Intranet</span>
           </div>
-          <p className="text-muted-foreground text-sm">Intranet — Espace collaborateur</p>
+          <p className="text-muted-foreground text-sm">Brand in a Box — Espace collaborateur</p>
         </div>
 
         <div className="border border-border rounded-xl bg-card p-8 shadow-sm space-y-6">
@@ -120,7 +134,7 @@ const Login = () => {
                   <p className="text-sm text-muted-foreground">Saisissez votre adresse email pour recevoir un lien de réinitialisation.</p>
                   <div className="space-y-2">
                     <Label htmlFor="reset-email">Adresse email</Label>
-                    <Input id="reset-email" type="email" placeholder="prenom@linksy-group.com" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+                    <Input id="reset-email" type="email" placeholder="prenom@brand-in-a-box.space" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? 'Envoi...' : 'Envoyer le lien'}
@@ -141,7 +155,7 @@ const Login = () => {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Adresse email</Label>
-                  <Input id="email" type="email" placeholder="prenom@linksy-group.com" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+                  <Input id="email" type="email" placeholder="prenom@brand-in-a-box.space" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
                 </div>
 
                 <div className="space-y-2">
