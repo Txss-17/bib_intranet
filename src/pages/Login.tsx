@@ -46,6 +46,8 @@ const Login = () => {
 
     setLoading(true);
 
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+
     if (error) {
       toast({
         title: 'Erreur de connexion',
