@@ -83,13 +83,13 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
       {/* Logo */}
       <div className="flex h-16 items-center border-b border-sidebar-border px-4">
         <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent">
-            <span className="text-lg font-bold text-accent-foreground">L</span>
+          <div className="flex h-9 px-2 items-center justify-center rounded-lg bg-accent">
+            <span className="text-sm font-bold text-accent-foreground tracking-tight">B.I.B</span>
           </div>
           {!collapsed && (
             <div>
-              <span className="text-lg font-semibold text-sidebar-foreground">LINKSY</span>
-              <span className="ml-1 text-xs text-sidebar-muted">GROUP</span>
+              <span className="text-lg font-semibold text-sidebar-foreground">Brand in a Box</span>
+              <span className="ml-1 text-xs text-sidebar-muted">INTRANET</span>
             </div>
           )}
         </Link>
