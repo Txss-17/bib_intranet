@@ -34,9 +34,17 @@ const Login = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (!email.toLowerCase().endsWith('@brand-in-a-box.space')) {
+      toast({
+        title: 'Domaine non autorisé',
+        description: 'Seules les adresses @brand-in-a-box.space peuvent se connecter à l\'intranet.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
 
     if (error) {
       toast({
