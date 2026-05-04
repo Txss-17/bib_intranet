@@ -81,6 +81,10 @@ const Login = () => {
       toast({ title: 'Erreur', description: 'Veuillez saisir votre adresse email.', variant: 'destructive' });
       return;
     }
+    if (!email.toLowerCase().endsWith('@brand-in-a-box.space')) {
+      toast({ title: 'Domaine non autorisé', description: 'Seules les adresses @brand-in-a-box.space sont autorisées.', variant: 'destructive' });
+      return;
+    }
     setLoading(true);
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
