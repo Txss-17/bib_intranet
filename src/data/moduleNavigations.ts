@@ -176,4 +176,9 @@ export const transversalNavigations: Record<string, SubNavigationItem[]> = {
     { id: 'responses', label: 'Responses', labelFr: 'Réponses', path: '/modules/gateway/responses' },
     { id: 'journal', label: 'Journal', labelFr: 'Traçabilité', path: '/modules/gateway/journal' },
   ],
+  'independent-audit': [
+    { id: 'overview', label: 'Overview', labelFr: 'Visibilité audit', path: '/modules/independent-audit' },
+    { id: 'declare', label: 'Declare', labelFr: 'Déclarer un incident', path: '/modules/independent-audit/declare' },
+    { id: 'resolution', label: 'Resolution', labelFr: 'Suivi résolution', path: '/modules/independent-audit/resolution' },
+  ],
 };
