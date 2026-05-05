@@ -88,6 +88,7 @@ export default function Documents() {
   const [newDoc, setNewDoc] = useState<{ name: string; type: string; access_level: string; pole_id: PoleId | 'general' }>({ name: '', type: 'report', access_level: 'public', pole_id: (userPoles[0] as PoleId) || 'general' });
 
   const handleCreate = () => {
+    if (!canAddDocument) { toast.error("Réservé aux administrateurs de pôle ou à la direction"); return; }
     if (!newDoc.name) { toast.error('Nom requis'); return; }
     createDoc.mutate({ ...newDoc, pole_id: newDoc.pole_id === 'general' ? null : newDoc.pole_id });
     setNewDoc({ name: '', type: 'report', access_level: 'public', pole_id: (userPoles[0] as PoleId) || 'general' });
