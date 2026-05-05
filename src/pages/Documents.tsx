@@ -62,9 +62,11 @@ export default function Documents() {
   const [scope, setScope] = useState<'all' | 'mine' | 'general'>('all');
   const { data: documents = [], isLoading } = useDocuments();
   const { profile, user } = useAuth();
+  const { isAdmin, isManager } = useUserRole();
   const qc = useQueryClient();
 
   const userPoles = (profile?.poles || []) as PoleId[];
+  const canAddDocument = isAdmin || isManager;
 
   const createDoc = useMutation({
     mutationFn: async (doc: { name: string; type: string; access_level: string; pole_id: PoleId | null }) => {
