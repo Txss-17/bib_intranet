@@ -21,7 +21,7 @@ const TEXT = '#1a1f2e'
 const MUTED = '#6b7280'
 const LOGO_URL = 'https://workspace.brand-in-a-box.space/brand/bib-logo.jpg'
 
-const GatewayReply = ({ senderName = '', subject = '', message = '', messageRef = '', respondedBy = '' }: Props) => (
+const GatewayReply = ({ senderName = '', subject = '', message = '', messageRef = '', respondedBy = '', respondedByName = '', respondedByPosition = '' }: Props) => (
   <Html>
     <Head />
     <Preview>Réponse à votre message — {subject}</Preview>
