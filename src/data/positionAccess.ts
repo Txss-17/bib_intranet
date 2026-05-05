@@ -23,7 +23,8 @@ export const positionAccess: Record<EmployeePosition, PositionAccess> = {
     screens: [
       'lifecycle.overview', 'lifecycle.user-accounts', 'lifecycle.risk-alerts',
       'lifecycle.email-campaigns', 'lifecycle.trustpilot', 'lifecycle.support',
-      'lifecycle.onboarding', 'lifecycle.monitoring', 'lifecycle.scoring'
+      'lifecycle.onboarding', 'lifecycle.monitoring', 'lifecycle.scoring',
+      'audit.independent', 'audit.declare', 'audit.resolution'
     ],
     restricted: ['supplier.negotiations', 'rh.*', 'finance.salaries']
   },
@@ -49,6 +50,7 @@ export const positionAccess: Record<EmployeePosition, PositionAccess> = {
     screens: [
       'audit.overview', 'audit.field', 'audit.supplier', 'audit.ops',
       'audit.reports', 'audit.nonconformities', 'audit.sanctions',
+      'audit.independent', 'audit.declare', 'audit.resolution',
       'compliance.overview', 'compliance.contracts', 'compliance.policies',
       'compliance.disputes', 'compliance.risks',
       'supplier.dossiers', 'supplier.certifications'
