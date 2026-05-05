@@ -123,12 +123,20 @@ export const canAccessPole = (position: EmployeePosition | undefined, poleId: Po
   return positionAccess[position].poles.includes(poleId);
 };
 
+// Screens that any authenticated employee can access (transversal rights)
+const PUBLIC_SCREENS = new Set<string>([
+  'audit.declare',           // Anyone can declare an incident
+  'audit.independent',       // Independent audit visibility
+  'audit.resolution',        // Resolution tracking visibility
+]);
+
 export const canAccessScreen = (position: EmployeePosition | undefined, screenId: string): boolean => {
   if (!position) return false;
   if (position === 'ceo') return true;
-  
+  if (PUBLIC_SCREENS.has(screenId)) return true;
+
   const access = positionAccess[position];
-  
+
   for (const restriction of access.restricted) {
     if (restriction.endsWith('.*')) {
       const prefix = restriction.replace('.*', '');
@@ -137,7 +145,7 @@ export const canAccessScreen = (position: EmployeePosition | undefined, screenId
       return false;
     }
   }
-  
+
   return access.screens.includes(screenId) || access.screens.includes('*');
 };
 
