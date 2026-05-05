@@ -1,130 +1,85 @@
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
-import { SortableTableHead } from '@/components/ui/sortable-table-head';
-import { useTableInteractions } from '@/hooks/useTableInteractions';
-import { MessageSquareReply, Send, FileEdit, CheckCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
+import { Send, MessageSquareReply, CheckCheck } from 'lucide-react';
+import { useGatewayMessages, GatewayMessage } from '@/hooks/useGatewayMessages';
 
-const initialResponses = [
-  { id: 'GW-2025-102', subject: 'Réclamation colis endommagé', sender: 'Client Leclerc #412', respondedBy: 'Pierre Moreau', pole: 'Lifecycle', responseDate: '2025-06-18', responseStatus: 'Envoyé' },
-  { id: 'GW-2025-107', subject: 'Signalement conditions travail', sender: 'Salarié anonyme', respondedBy: 'Marie Dupont', pole: 'Ethics', responseDate: '2025-06-17', responseStatus: 'Accusé réception' },
-  { id: 'GW-2025-108', subject: 'Confirmation virement fournisseur', sender: 'Banque BNP', respondedBy: 'Alice Bernard', pole: 'Finance', responseDate: '2025-06-16', responseStatus: 'Envoyé' },
-  { id: 'GW-2025-105', subject: 'Demande devis volume', sender: 'Client Carrefour #887', respondedBy: 'Sophie Martin', pole: 'Marketing', responseDate: '2025-06-16', responseStatus: 'Brouillon' },
-  { id: 'GW-2025-110', subject: 'Retour produit périmé', sender: 'Client Bio c\' Bon', respondedBy: 'Pierre Moreau', pole: 'Ops', responseDate: '2025-06-15', responseStatus: 'Envoyé' },
-  { id: 'GW-2025-103', subject: 'Mise à jour tarifs Q3', sender: 'Partenaire DHL', respondedBy: 'Marie Dupont', pole: 'Ops', responseDate: '2025-06-15', responseStatus: 'Accusé réception' },
-  { id: 'GW-2025-109', subject: 'Renouvellement licence', sender: 'Mairie Rungis', respondedBy: 'Alice Bernard', pole: 'Compliance', responseDate: '2025-06-14', responseStatus: 'Brouillon' },
-  { id: 'GW-2025-101', subject: 'Demande certificat Bio', sender: 'Fournisseur Maroc S.A.', respondedBy: 'Sophie Martin', pole: 'Supplier', responseDate: '2025-06-14', responseStatus: 'Envoyé' },
-];
+export default function GatewayResponses() {
+  const { data: messages = [], sendReply } = useGatewayMessages();
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
 
-const responseColors: Record<string, string> = {
-  Brouillon: 'bg-muted text-muted-foreground',
-  Envoyé: 'bg-primary/15 text-primary',
-  'Accusé réception': 'bg-green-500/15 text-green-700',
-};
+  const toRespond = messages.filter(m => m.status === 'routed');
+  const responded = messages.filter(m => m.status === 'responded');
 
-const GatewayResponses = () => {
-  const { toast } = useToast();
-  const [items, setItems] = useState(initialResponses);
-
-  const { searchQuery, setSearchQuery, sortColumn, sortDirection, toggleSort, filters, setFilter, processedData } = useTableInteractions({
-    data: items,
-    searchFields: ['id', 'subject', 'sender', 'respondedBy', 'pole'],
-  });
-
-  const handleSend = (id: string) => {
-    setItems(prev => prev.map(m => m.id === id ? { ...m, responseStatus: 'Envoyé' } : m));
-    toast({ title: 'Réponse envoyée', description: `${id} — la réponse a été envoyée au destinataire.` });
+  const handleSend = async (m: GatewayMessage) => {
+    const response = drafts[m.id]?.trim();
+    if (!response) return;
+    await sendReply.mutateAsync({ msg: m, response });
+    setDrafts(d => ({ ...d, [m.id]: '' }));
   };
-
-  const sentCount = items.filter(m => m.responseStatus === 'Envoyé').length;
-  const draftCount = items.filter(m => m.responseStatus === 'Brouillon').length;
-  const ackedCount = items.filter(m => m.responseStatus === 'Accusé réception').length;
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Réponses</h1>
-        <p className="text-muted-foreground">Suivi des réponses envoyées et brouillons</p>
+        <p className="text-muted-foreground">Rédiger et envoyer les réponses aux expéditeurs</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><MessageSquareReply className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{items.length}</p><p className="text-xs text-muted-foreground">Total réponses</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Send className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{sentCount}</p><p className="text-xs text-muted-foreground">Envoyées</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><FileEdit className="h-8 w-8 text-muted-foreground" /><div><p className="text-2xl font-bold">{draftCount}</p><p className="text-xs text-muted-foreground">Brouillons</p></div></div></CardContent></Card>
-        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><CheckCheck className="h-8 w-8 text-green-500" /><div><p className="text-2xl font-bold">{ackedCount}</p><p className="text-xs text-muted-foreground">Accusés réception</p></div></div></CardContent></Card>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><MessageSquareReply className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{toRespond.length}</p><p className="text-xs text-muted-foreground">À répondre</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><Send className="h-8 w-8 text-primary" /><div><p className="text-2xl font-bold">{responded.length}</p><p className="text-xs text-muted-foreground">Envoyés</p></div></div></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="flex items-center gap-3"><CheckCheck className="h-8 w-8 text-green-500" /><div><p className="text-2xl font-bold">{messages.length}</p><p className="text-xs text-muted-foreground">Total</p></div></div></CardContent></Card>
       </div>
 
       <Card>
-        <CardHeader>
-          <CardTitle>Historique des réponses</CardTitle>
-          <div className="flex flex-wrap gap-3 mt-2">
-            <Input placeholder="Rechercher…" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="max-w-xs" />
-            <Select value={filters.responseStatus || 'all'} onValueChange={v => setFilter('responseStatus', v)}>
-              <SelectTrigger className="w-[170px]"><SelectValue placeholder="Statut" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                <SelectItem value="Brouillon">Brouillon</SelectItem>
-                <SelectItem value="Envoyé">Envoyé</SelectItem>
-                <SelectItem value="Accusé réception">Accusé réception</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={filters.pole || 'all'} onValueChange={v => setFilter('pole', v)}>
-              <SelectTrigger className="w-[140px]"><SelectValue placeholder="Pôle" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous</SelectItem>
-                <SelectItem value="Lifecycle">Lifecycle</SelectItem>
-                <SelectItem value="Ethics">Ethics</SelectItem>
-                <SelectItem value="Finance">Finance</SelectItem>
-                <SelectItem value="Marketing">Marketing</SelectItem>
-                <SelectItem value="Ops">Ops</SelectItem>
-                <SelectItem value="Compliance">Compliance</SelectItem>
-                <SelectItem value="Supplier">Supplier</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </CardHeader>
+        <CardHeader><CardTitle>Messages à traiter</CardTitle></CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <SortableTableHead column="id" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialResponses[0])}>ID</SortableTableHead>
-                <SortableTableHead column="subject" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialResponses[0])}>Objet</SortableTableHead>
-                <SortableTableHead column="sender" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialResponses[0])}>Destinataire</SortableTableHead>
-                <SortableTableHead column="pole" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialResponses[0])}>Pôle</SortableTableHead>
-                <SortableTableHead column="responseStatus" currentSort={sortColumn as string} direction={sortDirection} onSort={c => toggleSort(c as keyof typeof initialResponses[0])}>Statut</SortableTableHead>
-                <SortableTableHead column="id" currentSort={null} direction={null} onSort={() => {}}>Actions</SortableTableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {processedData.map(m => (
-                <TableRow key={m.id}>
-                  <TableCell className="font-mono text-xs">{m.id}</TableCell>
-                  <TableCell className="max-w-[200px] truncate">{m.subject}</TableCell>
-                  <TableCell>{m.sender}</TableCell>
-                  <TableCell><Badge variant="outline">{m.pole}</Badge></TableCell>
-                  <TableCell><Badge className={responseColors[m.responseStatus]}>{m.responseStatus}</Badge></TableCell>
-                  <TableCell>
-                    {m.responseStatus === 'Brouillon' && (
-                      <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => handleSend(m.id)}>
-                        <Send className="h-3 w-3" /> Envoyer
-                      </Button>
-                    )}
-                    {m.responseStatus === 'Envoyé' && <span className="text-xs text-primary">Envoyé ✓</span>}
-                    {m.responseStatus === 'Accusé réception' && <span className="text-xs text-green-600">Reçu ✓✓</span>}
-                  </TableCell>
-                </TableRow>
+          {toRespond.length === 0 ? <p className="text-sm text-muted-foreground">Aucun message routé en attente.</p> :
+            <div className="space-y-4">
+              {toRespond.map(m => (
+                <div key={m.id} className="p-3 border border-border rounded-lg space-y-2">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm">{m.subject}</p>
+                      <p className="text-xs text-muted-foreground">{m.sender_name ? `${m.sender_name} · ` : ''}{m.sender_email}</p>
+                      <p className="text-xs text-muted-foreground mt-1 italic">« {m.content} »</p>
+                    </div>
+                    <Badge variant="outline">{m.routed_to_pole}</Badge>
+                  </div>
+                  <Textarea placeholder="Rédiger la réponse…" rows={4}
+                    value={drafts[m.id] || ''} onChange={e => setDrafts({ ...drafts, [m.id]: e.target.value })} />
+                  <Button size="sm" className="gap-2" onClick={() => handleSend(m)}
+                    disabled={!drafts[m.id]?.trim() || sendReply.isPending}>
+                    <Send className="h-3 w-3" /> Envoyer la réponse
+                  </Button>
+                </div>
               ))}
-            </TableBody>
-          </Table>
+            </div>
+          }
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader><CardTitle>Historique des réponses</CardTitle></CardHeader>
+        <CardContent>
+          {responded.length === 0 ? <p className="text-sm text-muted-foreground">Aucune réponse envoyée.</p> :
+            <div className="space-y-2">
+              {responded.map(m => (
+                <div key={m.id} className="p-3 border border-border rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-sm">{m.subject}</p>
+                    <span className="text-xs text-muted-foreground">{m.responded_at && new Date(m.responded_at).toLocaleString('fr-FR')}</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">→ {m.sender_email}</p>
+                  <p className="text-xs mt-1 line-clamp-2">{m.response_content}</p>
+                </div>
+              ))}
+            </div>
+          }
         </CardContent>
       </Card>
     </div>
   );
-};
-
-export default GatewayResponses;
+}
