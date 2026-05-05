@@ -157,6 +157,7 @@ import GatewayValidation from "./pages/modules/gateway/GatewayValidation";
 import GatewayRouting from "./pages/modules/gateway/GatewayRouting";
 import GatewayResponses from "./pages/modules/gateway/GatewayResponses";
 import GatewayCompose from "./pages/modules/gateway/GatewayCompose";
+import GatewayJournal from "./pages/modules/gateway/GatewayJournal";
 
 const queryClient = new QueryClient();
 
