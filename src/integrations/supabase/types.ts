@@ -1947,6 +1947,98 @@ export type Database = {
           },
         ]
       }
+      rd_recommendations: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          detail: string
+          id: string
+          priority: string
+          report_id: string | null
+          status: string
+          target_pole: Database["public"]["Enums"]["pole_id"] | null
+          ticket_id: string | null
+          ticket_type: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          detail: string
+          id?: string
+          priority?: string
+          report_id?: string | null
+          status?: string
+          target_pole?: Database["public"]["Enums"]["pole_id"] | null
+          ticket_id?: string | null
+          ticket_type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          detail?: string
+          id?: string
+          priority?: string
+          report_id?: string | null
+          status?: string
+          target_pole?: Database["public"]["Enums"]["pole_id"] | null
+          ticket_id?: string | null
+          ticket_type?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rd_recommendations_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "rd_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rd_reports: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          created_at: string
+          id: string
+          published_at: string | null
+          status: string
+          summary: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          status?: string
+          summary?: string | null
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          created_at?: string
+          id?: string
+          published_at?: string | null
+          status?: string
+          summary?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       replenishment_suggestions: {
         Row: {
           approved_at: string | null
