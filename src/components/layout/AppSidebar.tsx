@@ -46,7 +46,6 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 const transversalModules = [
   { id: 'gateway', name: 'Gateways & Messages', icon: MessageSquare, path: '/modules/gateway' },
   { id: 'feed', name: 'Internal Feed', icon: Home, path: '/feed' },
-  { id: 'ethics', name: 'Ethics & Whistleblowing', icon: Shield, path: '/modules/ethics' },
   { id: 'documents', name: 'Documents', icon: FileText, path: '/documents' },
 ];
 

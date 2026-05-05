@@ -72,6 +72,7 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'leave', label: 'Leave', labelFr: 'Congés', path: '/pole/rh/leave' },
     { id: 'training', label: 'Training', labelFr: 'Formations', path: '/pole/rh/training' },
     { id: 'publications', label: 'Publications', labelFr: 'Publications internes', path: '/pole/rh/publications' },
+    { id: 'ethics', label: 'Ethics & Whistleblowing', labelFr: 'Éthique & Signalements', path: '/modules/ethics' },
   ],
 
   // Supplier & Product
@@ -157,7 +158,8 @@ export const getModuleNavigation = (poleId: PoleId): SubNavigationItem[] => {
 // Transversal modules navigation (Ethics, Gateway, etc.)
 export const transversalNavigations: Record<string, SubNavigationItem[]> = {
   ethics: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/modules/ethics' },
+    { id: 'report', label: 'Report', labelFr: 'Faire un signalement', path: '/modules/ethics' },
+    { id: 'dashboard', label: 'Dashboard', labelFr: 'Vue référents', path: '/modules/ethics/dashboard' },
     { id: 'received', label: 'Received Reports', labelFr: 'Signalements reçus', path: '/modules/ethics/received' },
     { id: 'ongoing', label: 'Ongoing Cases', labelFr: 'Dossiers en cours', path: '/modules/ethics/ongoing' },
     { id: 'closed', label: 'Closed Cases', labelFr: 'Clôturés', path: '/modules/ethics/closed' },
