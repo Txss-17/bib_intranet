@@ -11,6 +11,8 @@ interface Props {
   message?: string
   messageRef?: string
   respondedBy?: string
+  respondedByName?: string
+  respondedByPosition?: string
 }
 
 const NAVY = '#0a1024'
@@ -19,7 +21,7 @@ const TEXT = '#1a1f2e'
 const MUTED = '#6b7280'
 const LOGO_URL = 'https://workspace.brand-in-a-box.space/brand/bib-logo.jpg'
 
-const GatewayReply = ({ senderName = '', subject = '', message = '', messageRef = '', respondedBy = '' }: Props) => (
+const GatewayReply = ({ senderName = '', subject = '', message = '', messageRef = '', respondedBy = '', respondedByName = '', respondedByPosition = '' }: Props) => (
   <Html>
     <Head />
     <Preview>Réponse à votre message — {subject}</Preview>
@@ -53,8 +55,10 @@ const GatewayReply = ({ senderName = '', subject = '', message = '', messageRef 
           <Hr style={{ borderColor: '#e5e7eb', margin: '28px 0 14px' }} />
           <Text style={{ margin: 0, fontSize: '13px', color: TEXT, lineHeight: '20px' }}>
             Cordialement,<br />
-            <strong>{respondedBy || "L'équipe B.I.B"}</strong><br />
-            <span style={{ color: MUTED, fontSize: '12px' }}>Brand in a Box · B.I.B Intranet</span>
+            <strong>{respondedByName || respondedBy || "L'équipe B.I.B"}</strong>
+            {respondedByPosition ? <><br /><span style={{ color: MUTED, fontSize: '12px' }}>{respondedByPosition}</span></> : null}
+            <br />
+            <span style={{ color: MUTED, fontSize: '12px' }}>Brand in a Box · B.I.B Intranet{respondedBy ? ` · ${respondedBy}` : ''}</span>
           </Text>
 
           <Text style={{ color: MUTED, fontSize: '11px', marginTop: '20px', fontFamily: 'monospace' }}>

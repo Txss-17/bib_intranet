@@ -11,6 +11,8 @@ interface Props {
   message?: string
   messageRef?: string
   sentBy?: string
+  sentByName?: string
+  sentByPosition?: string
   ccList?: string[]
 }
 
@@ -20,7 +22,7 @@ const TEXT = '#1a1f2e'
 const MUTED = '#6b7280'
 const LOGO_URL = 'https://workspace.brand-in-a-box.space/brand/bib-logo.jpg'
 
-const GatewayOutbound = ({ senderName = '', subject = '', message = '', messageRef = '', sentBy = '', ccList = [] }: Props) => (
+const GatewayOutbound = ({ senderName = '', subject = '', message = '', messageRef = '', sentBy = '', sentByName = '', sentByPosition = '', ccList = [] }: Props) => (
   <Html>
     <Head />
     <Preview>{subject || 'Message — B.I.B Intranet'}</Preview>
@@ -53,8 +55,10 @@ const GatewayOutbound = ({ senderName = '', subject = '', message = '', messageR
           <Hr style={{ borderColor: '#e5e7eb', margin: '28px 0 14px' }} />
           <Text style={{ margin: 0, fontSize: '13px', color: TEXT, lineHeight: '20px' }}>
             Cordialement,<br />
-            <strong>{sentBy || "L'équipe B.I.B"}</strong><br />
-            <span style={{ color: MUTED, fontSize: '12px' }}>Brand in a Box · B.I.B Intranet</span>
+            <strong>{sentByName || sentBy || "L'équipe B.I.B"}</strong>
+            {sentByPosition ? <><br /><span style={{ color: MUTED, fontSize: '12px' }}>{sentByPosition}</span></> : null}
+            <br />
+            <span style={{ color: MUTED, fontSize: '12px' }}>Brand in a Box · B.I.B Intranet{sentBy ? ` · ${sentBy}` : ''}</span>
           </Text>
           <Text style={{ color: MUTED, fontSize: '11px', marginTop: '20px', fontFamily: 'monospace' }}>Réf : {messageRef}</Text>
         </Section>
