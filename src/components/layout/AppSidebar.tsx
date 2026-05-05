@@ -18,7 +18,7 @@ import {
   Home,
   MessageSquare,
   FileText,
-  AlertTriangle,
+  FileText,
   Shield,
   Recycle,
   Settings,
