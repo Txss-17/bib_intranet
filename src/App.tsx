@@ -64,6 +64,12 @@ import VisionRoadmap from "./pages/modules/direction/VisionRoadmap";
 import DecisionArbitrage from "./pages/modules/direction/DecisionArbitrage";
 import GroupGovernance from "./pages/modules/direction/GroupGovernance";
 import ConsolidatedReports from "./pages/modules/direction/ConsolidatedReports";
+import BoardReports from "./pages/modules/direction/BoardReports";
+import ManagedRiskAlerts from "./pages/modules/lifecycle/ManagedRiskAlerts";
+import LifecycleEmailCampaignsPage from "./pages/modules/lifecycle/LifecycleEmailCampaigns";
+import IndependentAuditDashboard from "./pages/modules/independent-audit/IndependentAuditDashboard";
+import IncidentDeclaration from "./pages/modules/independent-audit/IncidentDeclaration";
+import ResolutionTracking from "./pages/modules/independent-audit/ResolutionTracking";
 
 // Lifecycle module pages
 import LifecycleDashboard from "./pages/modules/lifecycle/LifecycleDashboard";
