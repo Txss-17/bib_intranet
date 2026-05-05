@@ -16,6 +16,9 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'kpi', label: 'Strategic KPIs', labelFr: 'KPI stratégiques', path: '/pole/direction/kpi' },
     { id: 'alerts', label: 'Critical Alerts', labelFr: 'Alertes critiques', path: '/pole/direction/alerts' },
     { id: 'decisions', label: 'Decisions', labelFr: 'Décisions', path: '/pole/direction/decisions' },
+    { id: 'reports', label: 'Consolidated Reports', labelFr: 'Rapports consolidés', path: '/pole/direction/reports' },
+    { id: 'vision', label: 'Vision & Roadmap', labelFr: 'Vision & Roadmap', path: '/pole/direction/vision' },
+    { id: 'governance', label: 'Group Governance', labelFr: 'Gouvernance Groupe', path: '/pole/direction/governance' },
     { id: 'access', label: 'Module Access', labelFr: 'Accès lecture modules', path: '/pole/direction/access' },
   ],
 
