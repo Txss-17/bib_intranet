@@ -30,11 +30,25 @@ const Page = () => {
 
   const exportBoardPack = () => {
     try {
-      exportToPDF(
-        'Board Pack — Rapports consolidés',
-        ['Titre', 'Type', 'Période', 'Statut', 'Date'],
-        (data ?? []).map((r: any) => [r.title, r.type, r.period || '-', r.status, new Date(r.created_at).toLocaleDateString()])
-      );
+      exportToPDF({
+        filename: 'board-pack',
+        title: 'Board Pack — Rapports consolidés',
+        poleName: 'Direction',
+        columns: [
+          { header: 'Titre', accessor: 'title' },
+          { header: 'Type', accessor: 'type' },
+          { header: 'Période', accessor: 'period' },
+          { header: 'Statut', accessor: 'status' },
+          { header: 'Date', accessor: 'date' },
+        ],
+        data: (data ?? []).map((r: any) => ({
+          title: r.title,
+          type: r.type,
+          period: r.period || '-',
+          status: r.status,
+          date: new Date(r.created_at).toLocaleDateString(),
+        })),
+      });
       toast.success('PDF Board Pack généré');
     } catch (e: any) { toast.error(e.message); }
   };
