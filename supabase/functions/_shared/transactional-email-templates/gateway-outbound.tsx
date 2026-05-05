@@ -11,6 +11,8 @@ interface Props {
   message?: string
   messageRef?: string
   sentBy?: string
+  sentByName?: string
+  sentByPosition?: string
   ccList?: string[]
 }
 
