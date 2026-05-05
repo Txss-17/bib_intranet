@@ -259,6 +259,11 @@ const App = () => (
             <Route path="/pole/rh/leave" element={<Leave />} />
             <Route path="/pole/rh/training" element={<Training />} />
             <Route path="/pole/rh/publications" element={<Publications />} />
+            <Route path="/pole/rh/ethics" element={<EthicsDashboard />} />
+            <Route path="/pole/rh/ethics/received" element={<EthicsReceived />} />
+            <Route path="/pole/rh/ethics/ongoing" element={<EthicsOngoing />} />
+            <Route path="/pole/rh/ethics/closed" element={<EthicsClosed />} />
+            <Route path="/pole/rh/ethics/stats" element={<EthicsStats />} />
             
             {/* Audit module */}
             <Route path="/pole/audit" element={<AuditDashboard />} />
