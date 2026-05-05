@@ -11,6 +11,8 @@ interface Props {
   message?: string
   messageRef?: string
   respondedBy?: string
+  respondedByName?: string
+  respondedByPosition?: string
 }
 
 const NAVY = '#0a1024'
