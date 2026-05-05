@@ -138,12 +138,7 @@ import Podcasts from "./pages/modules/marketing/Podcasts";
 import Analytics from "./pages/modules/marketing/Analytics";
 
 
-// Risk module pages
-import RiskDashboard from "./pages/modules/risk/RiskDashboard";
-import ActiveIncidents from "./pages/modules/risk/ActiveIncidents";
-import RiskRegisterModule from "./pages/modules/risk/RiskRegisterModule";
-import IncidentHistory from "./pages/modules/risk/IncidentHistory";
-import RiskMetrics from "./pages/modules/risk/RiskMetrics";
+// Risk module removed
 
 // Ethics sub-section pages
 import EthicsReceived from "./pages/modules/ethics/EthicsReceived";
@@ -158,6 +153,7 @@ import GatewayRouting from "./pages/modules/gateway/GatewayRouting";
 import GatewayResponses from "./pages/modules/gateway/GatewayResponses";
 import GatewayCompose from "./pages/modules/gateway/GatewayCompose";
 import GatewayJournal from "./pages/modules/gateway/GatewayJournal";
+import GatewayMessageDetail from "./pages/modules/gateway/GatewayMessageDetail";
 
 const queryClient = new QueryClient();
 
@@ -296,12 +292,6 @@ const App = () => (
             <Route path="/pole/marketing/podcasts" element={<Podcasts />} />
             <Route path="/pole/marketing/analytics" element={<Analytics />} />
             
-            {/* Risk module */}
-            <Route path="/pole/risk" element={<RiskDashboard />} />
-            <Route path="/pole/risk/active" element={<ActiveIncidents />} />
-            <Route path="/pole/risk/register" element={<RiskRegisterModule />} />
-            <Route path="/pole/risk/history" element={<IncidentHistory />} />
-            <Route path="/pole/risk/metrics" element={<RiskMetrics />} />
             
             {/* Other pole routes with generic sub-sections */}
             <Route path="/pole/:poleId" element={<PoleDashboard />} />
@@ -323,6 +313,7 @@ const App = () => (
             <Route path="/modules/gateway/responses" element={<GatewayResponses />} />
             <Route path="/modules/gateway/compose" element={<GatewayCompose />} />
             <Route path="/modules/gateway/journal" element={<GatewayJournal />} />
+            <Route path="/modules/gateway/message/:messageId" element={<GatewayMessageDetail />} />
             <Route path="/modules/gateway/:subSection" element={<GatewayDashboard />} />
             <Route path="/modules/ethics" element={<EthicsDashboard />} />
             <Route path="/modules/ethics/received" element={<EthicsReceived />} />

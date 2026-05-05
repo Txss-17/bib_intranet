@@ -126,14 +126,8 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'analytics', label: 'Analytics', labelFr: 'Analytiques', path: '/pole/marketing/analytics' },
   ],
 
-  // Risk & Incidents
-  risk: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/risk' },
-    { id: 'active', label: 'Active Incidents', labelFr: 'Incidents actifs', path: '/pole/risk/active' },
-    { id: 'register', label: 'Risk Register', labelFr: 'Registre des risques', path: '/pole/risk/register' },
-    { id: 'history', label: 'History', labelFr: 'Historique', path: '/pole/risk/history' },
-    { id: 'metrics', label: 'Risk Metrics', labelFr: 'Métriques', path: '/pole/risk/metrics' },
-  ],
+  // Risk & Incidents (module retiré)
+  risk: [],
 
   // User & Supplier Lifecycle (Pole 12)
   lifecycle: [

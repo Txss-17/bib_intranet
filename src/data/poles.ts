@@ -82,14 +82,6 @@ export const poles: Pole[] = [
     color: 'pole-marketing',
   },
   {
-    id: 'risk',
-    name: 'Risk & Incidents',
-    shortName: 'RSK',
-    description: 'Risk assessment and incident response',
-    icon: 'ShieldAlert',
-    color: 'pole-risk',
-  },
-  {
     id: 'lifecycle',
     name: 'User & Supplier Lifecycle',
     shortName: 'LCY',

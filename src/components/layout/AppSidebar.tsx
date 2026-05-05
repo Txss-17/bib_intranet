@@ -18,7 +18,6 @@ import {
   Home,
   MessageSquare,
   FileText,
-  AlertTriangle,
   Shield,
   Recycle,
   Settings,
@@ -48,7 +47,6 @@ const transversalModules = [
   { id: 'gateway', name: 'Gateways & Messages', icon: MessageSquare, path: '/modules/gateway' },
   { id: 'feed', name: 'Internal Feed', icon: Home, path: '/feed' },
   { id: 'ethics', name: 'Ethics & Whistleblowing', icon: Shield, path: '/modules/ethics' },
-  { id: 'incidents', name: 'Risk & Incidents', icon: AlertTriangle, path: '/modules/incidents' },
   { id: 'documents', name: 'Documents', icon: FileText, path: '/documents' },
 ];
 
