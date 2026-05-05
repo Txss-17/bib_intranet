@@ -5,11 +5,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Send, Plus, Mail, Users, EyeOff, X, Inbox as InboxIcon, ShieldCheck, UserCircle2 } from 'lucide-react';
+import { Send, Mail, Users, EyeOff, X, ShieldCheck, UserCircle2 } from 'lucide-react';
 import { useGatewayMessages } from '@/hooks/useGatewayMessages';
 import { useBibContacts, useCurrentBibContact, BibContact } from '@/hooks/useBibContacts';
-
-type Mode = 'outbound' | 'inbound';
 
 const splitEmails = (s: string) =>
   s.split(/[,;\s]+/).map(e => e.trim()).filter(Boolean);
@@ -71,12 +69,10 @@ const ContactAutocomplete = ({ value, onChange, contacts, placeholder, type = 'e
 };
 
 export default function GatewayCompose() {
-  const { sendOutbound, createMessage } = useGatewayMessages();
+  const { sendOutbound } = useGatewayMessages();
   const { data: contacts = [] } = useBibContacts();
   const { data: me } = useCurrentBibContact();
-  const [mode, setMode] = useState<Mode>('outbound');
 
-  // Outbound state
   const [to, setTo] = useState('');
   const [recipientName, setRecipientName] = useState('');
   const [ccInput, setCcInput] = useState('');
@@ -85,12 +81,6 @@ export default function GatewayCompose() {
   const [showBcc, setShowBcc] = useState(false);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
-
-  // Inbound (manual entry) state
-  const [iSender, setISender] = useState('');
-  const [iSenderName, setISenderName] = useState('');
-  const [iSubject, setISubject] = useState('');
-  const [iContent, setIContent] = useState('');
 
   const cc = splitEmails(ccInput);
   const bcc = splitEmails(bccInput);
@@ -109,26 +99,16 @@ export default function GatewayCompose() {
     setSubject(''); setMessage(''); setShowCc(false); setShowBcc(false);
   };
 
-  const handleSaveInbound = async () => {
-    await createMessage.mutateAsync({
-      sender_email: iSender,
-      sender_name: iSenderName || undefined,
-      subject: iSubject,
-      content: iContent,
-    });
-    setISender(''); setISenderName(''); setISubject(''); setIContent('');
-  };
-
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold">Composer & envoyer</h1>
         <p className="text-muted-foreground">
-          Envoi sortant via <code className="bg-muted px-1.5 py-0.5 rounded text-xs">notify.brand-in-a-box.space</code> — ou saisie manuelle d'un message entrant
+          Envoi sortant via <code className="bg-muted px-1.5 py-0.5 rounded text-xs">notify.brand-in-a-box.space</code>
         </p>
       </div>
 
-      {me && mode === 'outbound' && (
+      {me && (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="pt-4 pb-4 flex items-center gap-3">
             <UserCircle2 className="h-8 w-8 text-primary" />
@@ -143,145 +123,109 @@ export default function GatewayCompose() {
         </Card>
       )}
 
-      <div className="flex gap-2">
-        <Button variant={mode === 'outbound' ? 'default' : 'outline'} onClick={() => setMode('outbound')} className="gap-2">
-          <Send className="h-4 w-4" /> Envoi sortant
-        </Button>
-        <Button variant={mode === 'inbound' ? 'default' : 'outline'} onClick={() => setMode('inbound')} className="gap-2">
-          <InboxIcon className="h-4 w-4" /> Saisir un message entrant
-        </Button>
-      </div>
-
-      {mode === 'outbound' ? (
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2"><Mail className="h-5 w-5" /> Nouveau message sortant</CardTitle>
-            {totalRecipients > 0 && (
-              <Badge variant="secondary" className="gap-1">
-                <Users className="h-3 w-3" /> {totalRecipients} destinataire{totalRecipients > 1 ? 's' : ''}
-              </Badge>
-            )}
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-3">
-              <div>
-                <Label>Destinataire (À) *</Label>
-                <ContactAutocomplete
-                  value={to}
-                  onChange={(email, name) => { setTo(email); if (name) setRecipientName(name); }}
-                  contacts={contacts}
-                  placeholder="contact@exemple.com ou nom B.I.B…"
-                />
-              </div>
-              <div>
-                <Label>Nom du destinataire</Label>
-                <Input value={recipientName} onChange={e => setRecipientName(e.target.value)} placeholder="Marie Dupont" />
-              </div>
-            </div>
-
-            <div className="flex gap-2 text-xs">
-              {!showCc && <button type="button" className="text-primary hover:underline" onClick={() => setShowCc(true)}>+ Ajouter Cc</button>}
-              {!showBcc && <button type="button" className="text-primary hover:underline" onClick={() => setShowBcc(true)}>+ Ajouter Cci</button>}
-            </div>
-
-            {showCc && (
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Cc (visible par tous)</Label>
-                  <button type="button" onClick={() => { setShowCc(false); setCcInput(''); }} className="text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>
-                </div>
-                <Input value={ccInput} onChange={e => setCcInput(e.target.value)} placeholder="email1@x.com, email2@x.com" />
-                {cc.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {cc.map(e => <Badge key={e} variant="secondary" className="text-xs">{e}</Badge>)}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {showBcc && (
-              <div>
-                <div className="flex items-center justify-between">
-                  <Label className="flex items-center gap-1.5"><EyeOff className="h-3.5 w-3.5" /> Cci (copie cachée)</Label>
-                  <button type="button" onClick={() => { setShowBcc(false); setBccInput(''); }} className="text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>
-                </div>
-                <Input value={bccInput} onChange={e => setBccInput(e.target.value)} placeholder="caché1@x.com, caché2@x.com" />
-                {bcc.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {bcc.map(e => <Badge key={e} variant="secondary" className="text-xs">{e} <EyeOff className="h-2.5 w-2.5 ml-1" /></Badge>)}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground mt-1">
-                  Les Cci ne sont visibles ni par le destinataire principal ni par les Cc.
-                </p>
-              </div>
-            )}
-
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="flex items-center gap-2"><Mail className="h-5 w-5" /> Nouveau message sortant</CardTitle>
+          {totalRecipients > 0 && (
+            <Badge variant="secondary" className="gap-1">
+              <Users className="h-3 w-3" /> {totalRecipients} destinataire{totalRecipients > 1 ? 's' : ''}
+            </Badge>
+          )}
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid md:grid-cols-2 gap-3">
             <div>
-              <Label>Objet *</Label>
-              <Input value={subject} onChange={e => setSubject(e.target.value)} />
+              <Label>Destinataire (À) *</Label>
+              <ContactAutocomplete
+                value={to}
+                onChange={(email, name) => { setTo(email); if (name) setRecipientName(name); }}
+                contacts={contacts}
+                placeholder="contact@exemple.com ou nom B.I.B…"
+              />
             </div>
-
             <div>
-              <Label>Message *</Label>
-              <Textarea rows={10} value={message} onChange={e => setMessage(e.target.value)} placeholder="Rédigez votre message…" />
+              <Label>Nom du destinataire</Label>
+              <Input value={recipientName} onChange={e => setRecipientName(e.target.value)} placeholder="Marie Dupont" />
             </div>
+          </div>
 
-            <div className="flex items-start gap-2 p-3 bg-muted/40 rounded-md border border-border">
-              <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-              <div className="text-xs text-muted-foreground space-y-1">
-                <p><strong className="text-foreground">Conformité RGPD automatique :</strong></p>
-                <ul className="list-disc list-inside space-y-0.5">
-                  <li>Signature avec votre nom et poste B.I.B</li>
-                  <li>Pied de page légal (Art. 6.1.b/f RGPD, conservation 36 mois, hébergement UE)</li>
-                  <li>Lien de désinscription RFC 8058 et contact DPO</li>
-                  <li>Chaque envoi est tracé dans le journal de traçabilité</li>
-                </ul>
-              </div>
-            </div>
+          <div className="flex gap-2 text-xs">
+            {!showCc && <button type="button" className="text-primary hover:underline" onClick={() => setShowCc(true)}>+ Ajouter Cc</button>}
+            {!showBcc && <button type="button" className="text-primary hover:underline" onClick={() => setShowBcc(true)}>+ Ajouter Cci</button>}
+          </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => { setTo(''); setSubject(''); setMessage(''); setCcInput(''); setBccInput(''); setRecipientName(''); }}>
-                Vider
-              </Button>
-              <Button
-                onClick={handleSend}
-                disabled={!to || !subject || !message || sendOutbound.isPending}
-                className="gap-2"
-              >
-                <Send className="h-4 w-4" />
-                {sendOutbound.isPending ? 'Envoi…' : `Envoyer${totalRecipients > 1 ? ` à ${totalRecipients}` : ''}`}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        <Card>
-          <CardHeader><CardTitle className="flex items-center gap-2"><Plus className="h-5 w-5" /> Saisir un message entrant</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid md:grid-cols-2 gap-3">
-              <div>
-                <Label>Email expéditeur *</Label>
-                <ContactAutocomplete
-                  value={iSender}
-                  onChange={(email, name) => { setISender(email); if (name) setISenderName(name); }}
-                  contacts={contacts}
-                  placeholder="contact@exemple.com"
-                />
+          {showCc && (
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> Cc (visible par tous)</Label>
+                <button type="button" onClick={() => { setShowCc(false); setCcInput(''); }} className="text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>
               </div>
-              <div><Label>Nom expéditeur</Label><Input value={iSenderName} onChange={e => setISenderName(e.target.value)} /></div>
+              <Input value={ccInput} onChange={e => setCcInput(e.target.value)} placeholder="email1@x.com, email2@x.com" />
+              {cc.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {cc.map(e => <Badge key={e} variant="secondary" className="text-xs">{e}</Badge>)}
+                </div>
+              )}
             </div>
-            <div><Label>Objet *</Label><Input value={iSubject} onChange={e => setISubject(e.target.value)} /></div>
-            <div><Label>Contenu *</Label><Textarea rows={8} value={iContent} onChange={e => setIContent(e.target.value)} /></div>
-            <div className="flex justify-end">
-              <Button onClick={handleSaveInbound} disabled={!iSender || !iSubject || !iContent || createMessage.isPending} className="gap-2">
-                <Plus className="h-4 w-4" />
-                {createMessage.isPending ? 'Enregistrement…' : 'Enregistrer & accuser réception'}
-              </Button>
+          )}
+
+          {showBcc && (
+            <div>
+              <div className="flex items-center justify-between">
+                <Label className="flex items-center gap-1.5"><EyeOff className="h-3.5 w-3.5" /> Cci (copie cachée)</Label>
+                <button type="button" onClick={() => { setShowBcc(false); setBccInput(''); }} className="text-muted-foreground hover:text-foreground"><X className="h-3.5 w-3.5" /></button>
+              </div>
+              <Input value={bccInput} onChange={e => setBccInput(e.target.value)} placeholder="caché1@x.com, caché2@x.com" />
+              {bcc.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {bcc.map(e => <Badge key={e} variant="secondary" className="text-xs">{e} <EyeOff className="h-2.5 w-2.5 ml-1" /></Badge>)}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-1">
+                Les Cci ne sont visibles ni par le destinataire principal ni par les Cc.
+              </p>
             </div>
-          </CardContent>
-        </Card>
-      )}
+          )}
+
+          <div>
+            <Label>Objet *</Label>
+            <Input value={subject} onChange={e => setSubject(e.target.value)} />
+          </div>
+
+          <div>
+            <Label>Message *</Label>
+            <Textarea rows={10} value={message} onChange={e => setMessage(e.target.value)} placeholder="Rédigez votre message…" />
+          </div>
+
+          <div className="flex items-start gap-2 p-3 bg-muted/40 rounded-md border border-border">
+            <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+            <div className="text-xs text-muted-foreground space-y-1">
+              <p><strong className="text-foreground">Conformité RGPD automatique :</strong></p>
+              <ul className="list-disc list-inside space-y-0.5">
+                <li>Signature avec votre nom et poste B.I.B</li>
+                <li>Pied de page légal (Art. 6.1.b/f RGPD, conservation 36 mois, hébergement UE)</li>
+                <li>Lien de désinscription RFC 8058 et contact DPO</li>
+                <li>Chaque envoi est tracé dans le journal de traçabilité</li>
+                <li>Statut de livraison réel suivi (envoyé / bounce / supprimé)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => { setTo(''); setSubject(''); setMessage(''); setCcInput(''); setBccInput(''); setRecipientName(''); }}>
+              Vider
+            </Button>
+            <Button
+              onClick={handleSend}
+              disabled={!to || !subject || !message || sendOutbound.isPending}
+              className="gap-2"
+            >
+              <Send className="h-4 w-4" />
+              {sendOutbound.isPending ? 'Envoi…' : `Envoyer${totalRecipients > 1 ? ` à ${totalRecipients}` : ''}`}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
