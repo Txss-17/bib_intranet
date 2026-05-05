@@ -106,6 +106,7 @@ import Training from "./pages/modules/rh/Training";
 import Publications from "./pages/modules/rh/Publications";
 import EmployeeFiles from "./pages/modules/rh/EmployeeFiles";
 import HRAlerts from "./pages/modules/rh/HRAlerts";
+import RHEthics from "./pages/modules/rh/RHEthics";
 
 // Audit module pages
 import AuditDashboard from "./pages/modules/audit/AuditDashboard";
@@ -259,11 +260,7 @@ const App = () => (
             <Route path="/pole/rh/leave" element={<Leave />} />
             <Route path="/pole/rh/training" element={<Training />} />
             <Route path="/pole/rh/publications" element={<Publications />} />
-            <Route path="/pole/rh/ethics" element={<EthicsDashboard />} />
-            <Route path="/pole/rh/ethics/received" element={<EthicsReceived />} />
-            <Route path="/pole/rh/ethics/ongoing" element={<EthicsOngoing />} />
-            <Route path="/pole/rh/ethics/closed" element={<EthicsClosed />} />
-            <Route path="/pole/rh/ethics/stats" element={<EthicsStats />} />
+            <Route path="/pole/rh/ethics" element={<RHEthics />} />
             
             {/* Audit module */}
             <Route path="/pole/audit" element={<AuditDashboard />} />
