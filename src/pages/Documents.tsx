@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 import type { PoleId } from '@/types';
 
@@ -61,9 +62,11 @@ export default function Documents() {
   const [scope, setScope] = useState<'all' | 'mine' | 'general'>('all');
   const { data: documents = [], isLoading } = useDocuments();
   const { profile, user } = useAuth();
+  const { isAdmin, isManager } = useUserRole();
   const qc = useQueryClient();
 
   const userPoles = (profile?.poles || []) as PoleId[];
+  const canAddDocument = isAdmin || isManager;
 
   const createDoc = useMutation({
     mutationFn: async (doc: { name: string; type: string; access_level: string; pole_id: PoleId | null }) => {
@@ -85,6 +88,7 @@ export default function Documents() {
   const [newDoc, setNewDoc] = useState<{ name: string; type: string; access_level: string; pole_id: PoleId | 'general' }>({ name: '', type: 'report', access_level: 'public', pole_id: (userPoles[0] as PoleId) || 'general' });
 
   const handleCreate = () => {
+    if (!canAddDocument) { toast.error("Réservé aux administrateurs de pôle ou à la direction"); return; }
     if (!newDoc.name) { toast.error('Nom requis'); return; }
     createDoc.mutate({ ...newDoc, pole_id: newDoc.pole_id === 'general' ? null : newDoc.pole_id });
     setNewDoc({ name: '', type: 'report', access_level: 'public', pole_id: (userPoles[0] as PoleId) || 'general' });
@@ -151,7 +155,9 @@ export default function Documents() {
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline"><FolderOpen className="h-4 w-4 mr-2" />Parcourir</Button>
-          <Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
+          {canAddDocument && (
+            <Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
+          )}
         </div>
       </div>
 
