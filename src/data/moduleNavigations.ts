@@ -72,11 +72,7 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'leave', label: 'Leave', labelFr: 'Congés', path: '/pole/rh/leave' },
     { id: 'training', label: 'Training', labelFr: 'Formations', path: '/pole/rh/training' },
     { id: 'publications', label: 'Publications', labelFr: 'Publications internes', path: '/pole/rh/publications' },
-    { id: 'ethics-dashboard', label: 'Ethics Dashboard', labelFr: 'Éthique — Vue référents', path: '/pole/rh/ethics' },
-    { id: 'ethics-received', label: 'Ethics Received', labelFr: 'Éthique — Reçus', path: '/pole/rh/ethics/received' },
-    { id: 'ethics-ongoing', label: 'Ethics Ongoing', labelFr: 'Éthique — En cours', path: '/pole/rh/ethics/ongoing' },
-    { id: 'ethics-closed', label: 'Ethics Closed', labelFr: 'Éthique — Clôturés', path: '/pole/rh/ethics/closed' },
-    { id: 'ethics-stats', label: 'Ethics Stats', labelFr: 'Éthique — Statistiques', path: '/pole/rh/ethics/stats' },
+    { id: 'ethics', label: 'Ethics', labelFr: 'Éthique & Signalements', path: '/pole/rh/ethics' },
   ],
 
   // Supplier & Product

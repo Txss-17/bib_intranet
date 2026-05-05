@@ -1,6 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Users, UserPlus, Calendar, GraduationCap, Clock, TrendingUp } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { Users, UserPlus, Calendar, GraduationCap, Clock, TrendingUp, Shield, AlertTriangle, ArrowRight } from 'lucide-react';
 
 export default function RHDashboard() {
   return (
@@ -159,6 +161,57 @@ export default function RHDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-primary" />
+              Éthique & Signalements — Suivi
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">Vue confidentielle réservée aux référents RH</p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link to="/pole/rh/ethics" className="gap-2">Ouvrir le module <ArrowRight className="h-4 w-4" /></Link>
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4 md:grid-cols-4">
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Nouveaux</span>
+                <AlertTriangle className="h-4 w-4 text-destructive" />
+              </div>
+              <p className="text-2xl font-bold mt-1">4</p>
+              <p className="text-xs text-muted-foreground">À trier</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">En cours</span>
+                <Clock className="h-4 w-4 text-orange-500" />
+              </div>
+              <p className="text-2xl font-bold mt-1">12</p>
+              <p className="text-xs text-muted-foreground">Investigations actives</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Critiques</span>
+                <Shield className="h-4 w-4 text-destructive" />
+              </div>
+              <p className="text-2xl font-bold mt-1 text-destructive">2</p>
+              <p className="text-xs text-muted-foreground">Priorité maximale</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Clôturés (30j)</span>
+                <TrendingUp className="h-4 w-4 text-emerald-500" />
+              </div>
+              <p className="text-2xl font-bold mt-1">28</p>
+              <p className="text-xs text-muted-foreground">Délai moyen 4.2 j</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
