@@ -176,5 +176,6 @@ export const transversalNavigations: Record<string, SubNavigationItem[]> = {
     { id: 'validation', label: 'Validation', labelFr: 'Validation', path: '/modules/gateway/validation' },
     { id: 'routing', label: 'Routing', labelFr: 'Routage', path: '/modules/gateway/routing' },
     { id: 'responses', label: 'Responses', labelFr: 'Réponses', path: '/modules/gateway/responses' },
+    { id: 'journal', label: 'Journal', labelFr: 'Traçabilité', path: '/modules/gateway/journal' },
   ],
 };
