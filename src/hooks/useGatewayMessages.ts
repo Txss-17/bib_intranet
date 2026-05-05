@@ -122,5 +122,71 @@ export const useGatewayMessages = () => {
     onError: (e: any) => toast({ title: 'Erreur', description: e.message, variant: 'destructive' }),
   });
 
-  return { ...query, createMessage, updateStatus, sendReply };
+  const sendOutbound = useMutation({
+    mutationFn: async (input: {
+      to: string;
+      cc?: string[];
+      bcc?: string[];
+      recipientName?: string;
+      subject: string;
+      message: string;
+    }) => {
+      const { data: u } = await supabase.auth.getUser();
+      const messageRef = `OUT-${Date.now().toString(36).toUpperCase()}`;
+      const sentBy = u.user?.email ?? 'B.I.B';
+
+      const recipients = [
+        input.to,
+        ...(input.cc ?? []),
+        ...(input.bcc ?? []),
+      ].map(s => s.trim()).filter(Boolean);
+
+      // Send to each recipient individually (one user-initiated send per recipient).
+      const errors: string[] = [];
+      for (const r of recipients) {
+        const { error } = await supabase.functions.invoke('send-transactional-email', {
+          body: {
+            templateName: 'gateway-outbound',
+            recipientEmail: r,
+            idempotencyKey: `gw-out-${messageRef}-${r}`,
+            templateData: {
+              senderName: input.recipientName || '',
+              subject: input.subject,
+              message: input.message,
+              messageRef,
+              sentBy,
+              ccList: input.cc ?? [],
+            },
+          },
+        });
+        if (error) errors.push(`${r}: ${error.message}`);
+      }
+
+      // Archive a record of the outbound in external_messages
+      await supabase.from('external_messages').insert({
+        sender_email: input.to,
+        sender_name: input.recipientName || null,
+        subject: `[Sortant] ${input.subject}`,
+        content: input.message,
+        status: 'responded',
+        response_content: input.message,
+        responded_by: u.user?.id ?? null,
+        responded_at: new Date().toISOString(),
+        validation_notes: [
+          input.cc?.length ? `Cc: ${input.cc.join(', ')}` : null,
+          input.bcc?.length ? `Cci: ${input.bcc.join(', ')}` : null,
+        ].filter(Boolean).join(' | ') || null,
+      } as any);
+
+      if (errors.length) throw new Error(errors.join(' ; '));
+      return { messageRef, count: recipients.length };
+    },
+    onSuccess: (r) => {
+      toast({ title: 'Email envoyé', description: `${r.count} destinataire(s) — Réf ${r.messageRef}` });
+      qc.invalidateQueries({ queryKey: ['gateway-messages'] });
+    },
+    onError: (e: any) => toast({ title: 'Erreur envoi', description: e.message, variant: 'destructive' }),
+  });
+
+  return { ...query, createMessage, updateStatus, sendReply, sendOutbound };
 };
