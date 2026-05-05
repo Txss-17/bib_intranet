@@ -1,247 +1,230 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { SortableTableHead } from '@/components/ui/sortable-table-head';
-import { Search, FileText, Lightbulb, Plus, Eye, CheckCircle, Clock } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { FileText, Lightbulb, Plus, CheckCircle, Clock, ArrowRight, Loader2 } from 'lucide-react';
+import {
+  useRDReports, useCreateRDReport, useUpdateRDReportStatus,
+  useRDRecommendations, useCreateRDRecommendation, useUpdateRecommendationStatus,
+  useConvertRecommendationToTicket,
+} from '@/hooks/useRD';
+import { toast } from 'sonner';
+import ProtectedScreen from '@/components/ProtectedScreen';
 
-const reports = [
-  { id: 'RPT-001', title: 'Rapport Produits Dormants Q1', type: 'analysis', date: '12/03/2025', author: 'Sarah M.', status: 'published', recommendations: 5 },
-  { id: 'RPT-002', title: 'Analyse Risque Fournisseur B', type: 'risk', date: '10/03/2025', author: 'Marc L.', status: 'draft', recommendations: 3 },
-  { id: 'RPT-003', title: 'Performance Boutiques Europe', type: 'performance', date: '08/03/2025', author: 'Julie D.', status: 'published', recommendations: 7 },
-  { id: 'RPT-004', title: 'Frictions UX Module Commandes', type: 'friction', date: '05/03/2025', author: 'Pierre K.', status: 'review', recommendations: 4 },
-  { id: 'RPT-005', title: 'Concentration Produit Top 5', type: 'analysis', date: '01/03/2025', author: 'Sarah M.', status: 'published', recommendations: 2 },
-  { id: 'RPT-006', title: 'Audit Qualité Fournisseur F', type: 'risk', date: '28/02/2025', author: 'Marc L.', status: 'published', recommendations: 6 },
-];
+const prioColor = (p: string) =>
+  p === 'critical' ? 'bg-destructive text-destructive-foreground'
+  : p === 'high' ? 'bg-orange-500 text-white'
+  : p === 'medium' ? 'bg-yellow-500 text-black'
+  : 'bg-muted';
 
-const recommendationsData = [
-  { id: 'REC-001', report: 'RPT-001', detail: "Retrait 'Infuseur Thé Zen' du catalogue — 0 commande en 45j", priority: 'high', status: 'pending', category: 'Produits' },
-  { id: 'REC-002', report: 'RPT-001', detail: "Promotion flash sur 8 produits dormants catégorie Éco", priority: 'medium', status: 'approved', category: 'Marketing' },
-  { id: 'REC-003', report: 'RPT-002', detail: "Audit qualité approfondi Fournisseur B — taux rejet 43%", priority: 'critical', status: 'in_progress', category: 'Fournisseurs' },
-  { id: 'REC-004', report: 'RPT-003', detail: "Email prévention churn boutiques inactives >15j", priority: 'high', status: 'approved', category: 'Boutiques' },
-  { id: 'REC-005', report: 'RPT-004', detail: "Refonte flux validation commande: 5 → 3 étapes", priority: 'medium', status: 'pending', category: 'Système' },
-  { id: 'REC-006', report: 'RPT-002', detail: "Diversification sourcing carton recyclé — réduire dépendance 42%", priority: 'critical', status: 'pending', category: 'Fournisseurs' },
-];
+const RecommendationCard = ({ r }: { r: any }) => {
+  const update = useUpdateRecommendationStatus();
+  const convert = useConvertRecommendationToTicket();
+  const [convertOpen, setConvertOpen] = useState(false);
+  const [pole, setPole] = useState<'tech' | 'ops' | 'supplier' | 'rse'>('ops');
 
-const kpis = [
-  { label: 'Rapports Publiés', value: 24, icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10' },
-  { label: 'Recommandations', value: 47, icon: Lightbulb, color: 'text-yellow-500', bgColor: 'bg-yellow-500/10' },
-  { label: 'Approuvées', value: 31, icon: CheckCircle, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
-  { label: 'En attente', value: 16, icon: Clock, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
-];
+  const setStatus = async (status: string) => {
+    try { await update.mutateAsync({ id: r.id, status }); toast.success(`Statut: ${status}`); }
+    catch (e: any) { toast.error(e.message); }
+  };
 
-const reportStatusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  published: { label: 'Publié', variant: 'default' },
-  draft: { label: 'Brouillon', variant: 'outline' },
-  review: { label: 'En revue', variant: 'secondary' },
+  const submitConvert = async () => {
+    try {
+      await convert.mutateAsync({ recommendation: r, targetPole: pole });
+      toast.success(`Ticket créé pour le pôle ${pole}`);
+      setConvertOpen(false);
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  return (
+    <div className="p-3 border rounded space-y-2">
+      <div className="flex justify-between items-start gap-2">
+        <p className="text-sm">{r.detail}</p>
+        <div className="flex gap-1 shrink-0">
+          <Badge className={prioColor(r.priority)}>{r.priority}</Badge>
+          <Badge variant="outline">{r.status}</Badge>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2 items-center">
+        {r.category && <Badge variant="secondary">{r.category}</Badge>}
+        {r.target_pole && <Badge>→ {r.target_pole}</Badge>}
+        <div className="flex gap-2 ml-auto">
+          {r.status === 'pending' && <Button size="sm" variant="outline" onClick={() => setStatus('approved')}>Approuver</Button>}
+          {r.status !== 'rejected' && r.status !== 'in_progress' && <Button size="sm" variant="ghost" onClick={() => setStatus('rejected')}>Rejeter</Button>}
+          {!r.ticket_id && (
+            <Dialog open={convertOpen} onOpenChange={setConvertOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm"><ArrowRight className="h-4 w-4 mr-1" />Transformer en ticket</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Transmettre au pôle</DialogTitle></DialogHeader>
+                <div className="space-y-2">
+                  <Label>Pôle cible</Label>
+                  <Select value={pole} onValueChange={v => setPole(v as any)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tech">Tech</SelectItem>
+                      <SelectItem value="ops">Ops</SelectItem>
+                      <SelectItem value="supplier">Supplier</SelectItem>
+                      <SelectItem value="rse">RSE</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <DialogFooter><Button onClick={submitConvert} disabled={convert.isPending}>Créer ticket</Button></DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
-const recStatusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  approved: { label: 'Approuvée', variant: 'default' },
-  pending: { label: 'En attente', variant: 'outline' },
-  in_progress: { label: 'En cours', variant: 'secondary' },
-  rejected: { label: 'Rejetée', variant: 'destructive' },
-};
+const Page = () => {
+  const { data: reports, isLoading } = useRDReports();
+  const { data: recos } = useRDRecommendations();
+  const createReport = useCreateRDReport();
+  const updateReport = useUpdateRDReportStatus();
+  const createReco = useCreateRDRecommendation();
 
-const priorityConfig: Record<string, { label: string; color: string }> = {
-  critical: { label: 'Critique', color: 'text-destructive' },
-  high: { label: 'Élevée', color: 'text-orange-500' },
-  medium: { label: 'Moyenne', color: 'text-yellow-500' },
-  low: { label: 'Faible', color: 'text-muted-foreground' },
+  const [reportOpen, setReportOpen] = useState(false);
+  const [recoOpen, setRecoOpen] = useState(false);
+  const [reportForm, setReportForm] = useState({ title: '', type: 'analysis', summary: '' });
+  const [recoForm, setRecoForm] = useState({ report_id: '', detail: '', category: '', priority: 'medium' });
+
+  const submitReport = async () => {
+    try {
+      await createReport.mutateAsync(reportForm);
+      toast.success('Rapport créé');
+      setReportOpen(false);
+      setReportForm({ title: '', type: 'analysis', summary: '' });
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const submitReco = async () => {
+    try {
+      await createReco.mutateAsync(recoForm);
+      toast.success('Recommandation créée');
+      setRecoOpen(false);
+      setRecoForm({ report_id: '', detail: '', category: '', priority: 'medium' });
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const stats = {
+    total: reports?.length ?? 0,
+    published: reports?.filter((r: any) => r.status === 'published').length ?? 0,
+    recos: recos?.length ?? 0,
+    pending: recos?.filter((r: any) => r.status === 'pending').length ?? 0,
+  };
+
+  return (
+    <div className="p-6 space-y-6">
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-3"><FileText className="h-8 w-8" /> Rapports & Recommandations R&D</h1>
+          <p className="text-muted-foreground mt-1">Insights, frictions, et transformation en actions</p>
+        </div>
+        <div className="flex gap-2">
+          <Dialog open={recoOpen} onOpenChange={setRecoOpen}>
+            <DialogTrigger asChild><Button variant="outline"><Lightbulb className="h-4 w-4 mr-2" />Nouvelle recommandation</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Créer une recommandation</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div><Label>Rapport associé</Label>
+                  <Select value={recoForm.report_id} onValueChange={v => setRecoForm({ ...recoForm, report_id: v })}>
+                    <SelectTrigger><SelectValue placeholder="Choisir un rapport" /></SelectTrigger>
+                    <SelectContent>{(reports ?? []).map((r: any) => <SelectItem key={r.id} value={r.id}>{r.title}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Détail</Label><Textarea rows={3} value={recoForm.detail} onChange={e => setRecoForm({ ...recoForm, detail: e.target.value })} /></div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div><Label>Catégorie</Label><Input value={recoForm.category} onChange={e => setRecoForm({ ...recoForm, category: e.target.value })} placeholder="Produits, UX..." /></div>
+                  <div><Label>Priorité</Label>
+                    <Select value={recoForm.priority} onValueChange={v => setRecoForm({ ...recoForm, priority: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="low">Basse</SelectItem><SelectItem value="medium">Moyenne</SelectItem>
+                        <SelectItem value="high">Haute</SelectItem><SelectItem value="critical">Critique</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+              <DialogFooter><Button onClick={submitReco} disabled={!recoForm.report_id || !recoForm.detail || createReco.isPending}>Créer</Button></DialogFooter>
+            </DialogContent>
+          </Dialog>
+          <Dialog open={reportOpen} onOpenChange={setReportOpen}>
+            <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Nouveau rapport</Button></DialogTrigger>
+            <DialogContent>
+              <DialogHeader><DialogTitle>Créer un rapport R&D</DialogTitle></DialogHeader>
+              <div className="space-y-3">
+                <div><Label>Titre</Label><Input value={reportForm.title} onChange={e => setReportForm({ ...reportForm, title: e.target.value })} /></div>
+                <div><Label>Type</Label>
+                  <Select value={reportForm.type} onValueChange={v => setReportForm({ ...reportForm, type: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="analysis">Analyse</SelectItem>
+                      <SelectItem value="risk">Risque</SelectItem>
+                      <SelectItem value="performance">Performance</SelectItem>
+                      <SelectItem value="friction">Friction</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div><Label>Résumé</Label><Textarea rows={4} value={reportForm.summary} onChange={e => setReportForm({ ...reportForm, summary: e.target.value })} /></div>
+              </div>
+              <DialogFooter><Button onClick={submitReport} disabled={!reportForm.title || createReport.isPending}>Créer</Button></DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card><CardContent className="p-4"><p className="text-3xl font-bold">{stats.total}</p><p className="text-sm text-muted-foreground">Rapports</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-3xl font-bold text-emerald-500">{stats.published}</p><p className="text-sm text-muted-foreground">Publiés</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-3xl font-bold">{stats.recos}</p><p className="text-sm text-muted-foreground">Recommandations</p></CardContent></Card>
+        <Card><CardContent className="p-4"><p className="text-3xl font-bold text-orange-500">{stats.pending}</p><p className="text-sm text-muted-foreground">En attente</p></CardContent></Card>
+      </div>
+
+      {isLoading ? <Loader2 className="h-8 w-8 animate-spin" /> : (
+        <Tabs defaultValue="reports">
+          <TabsList>
+            <TabsTrigger value="reports">Rapports ({stats.total})</TabsTrigger>
+            <TabsTrigger value="recos">Recommandations ({stats.recos})</TabsTrigger>
+          </TabsList>
+          <TabsContent value="reports" className="space-y-3 mt-4">
+            {(reports ?? []).map((r: any) => (
+              <Card key={r.id}>
+                <CardContent className="p-4 flex justify-between items-start">
+                  <div>
+                    <div className="flex items-center gap-2"><span className="font-semibold">{r.title}</span><Badge variant="outline">{r.type}</Badge><Badge>{r.status}</Badge></div>
+                    <p className="text-sm text-muted-foreground mt-1">{r.summary}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{r.author_name || 'Anonyme'} — {new Date(r.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {r.status !== 'published' && <Button size="sm" onClick={async () => { try { await updateReport.mutateAsync({ id: r.id, status: 'published' }); toast.success('Publié'); } catch (e: any) { toast.error(e.message); } }}><CheckCircle className="h-4 w-4 mr-1" />Publier</Button>}
+                    {r.status === 'draft' && <Button size="sm" variant="outline" onClick={async () => { try { await updateReport.mutateAsync({ id: r.id, status: 'review' }); toast.success('En revue'); } catch (e: any) { toast.error(e.message); } }}><Clock className="h-4 w-4 mr-1" />En revue</Button>}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+            {(!reports || reports.length === 0) && <p className="text-sm text-muted-foreground text-center py-6">Aucun rapport</p>}
+          </TabsContent>
+          <TabsContent value="recos" className="space-y-3 mt-4">
+            {(recos ?? []).map((r: any) => <RecommendationCard key={r.id} r={r} />)}
+            {(!recos || recos.length === 0) && <p className="text-sm text-muted-foreground text-center py-6">Aucune recommandation</p>}
+          </TabsContent>
+        </Tabs>
+      )}
+    </div>
+  );
 };
 
 export default function RDReports() {
-  const [rptSearch, setRptSearch] = useState('');
-  const [rptSortCol, setRptSortCol] = useState<string | null>(null);
-  const [rptSortDir, setRptSortDir] = useState<'asc' | 'desc' | null>(null);
-  const [rptFilters, setRptFilters] = useState<Record<string, string>>({});
-  const setRptFilter = (k: string, v: string) => setRptFilters(p => ({ ...p, [k]: v }));
-  const toggleRptSort = (col: string) => {
-    if (rptSortCol === col) {
-      if (rptSortDir === 'asc') setRptSortDir('desc');
-      else { setRptSortCol(null); setRptSortDir(null); }
-    } else { setRptSortCol(col); setRptSortDir('asc'); }
-  };
-
-  const [recSearch, setRecSearch] = useState('');
-  const [recFilters, setRecFilters] = useState<Record<string, string>>({});
-  const setRecFilter = (k: string, v: string) => setRecFilters(p => ({ ...p, [k]: v }));
-
-  const filteredReports = reports
-    .filter(r => {
-      if (rptSearch && !r.title.toLowerCase().includes(rptSearch.toLowerCase())) return false;
-      if (rptFilters.type && rptFilters.type !== 'all' && r.type !== rptFilters.type) return false;
-      if (rptFilters.status && rptFilters.status !== 'all' && r.status !== rptFilters.status) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      if (!rptSortCol || !rptSortDir) return 0;
-      const dir = rptSortDir === 'asc' ? 1 : -1;
-      const av = a[rptSortCol as keyof typeof a];
-      const bv = b[rptSortCol as keyof typeof b];
-      if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
-      return String(av).localeCompare(String(bv)) * dir;
-    });
-
-  const filteredRecs = recommendationsData
-    .filter(r => {
-      if (recSearch && !r.detail.toLowerCase().includes(recSearch.toLowerCase())) return false;
-      if (recFilters.priority && recFilters.priority !== 'all' && r.priority !== recFilters.priority) return false;
-      if (recFilters.status && recFilters.status !== 'all' && r.status !== recFilters.status) return false;
-      return true;
-    });
-
-  return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Rapports & Recommandations</h1>
-          <p className="text-muted-foreground">Historique des analyses R&D et suivi des recommandations</p>
-        </div>
-        <Button><Plus className="h-4 w-4 mr-2" />Nouveau rapport</Button>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {kpis.map(k => (
-          <Card key={k.label}>
-            <CardContent className="pt-6">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">{k.label}</p>
-                  <p className={`text-3xl font-bold mt-1 ${k.color}`}>{k.value}</p>
-                </div>
-                <div className={`h-10 w-10 rounded-lg ${k.bgColor} flex items-center justify-center`}>
-                  <k.icon className={`h-5 w-5 ${k.color}`} />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <CardTitle>Rapports R&D</CardTitle>
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Rechercher..." value={rptSearch} onChange={e => setRptSearch(e.target.value)} className="pl-9 w-48" />
-              </div>
-              <Select value={rptFilters.type || 'all'} onValueChange={v => setRptFilter('type', v)}>
-                <SelectTrigger className="w-36"><SelectValue placeholder="Type" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous types</SelectItem>
-                  <SelectItem value="analysis">Analyse</SelectItem>
-                  <SelectItem value="risk">Risque</SelectItem>
-                  <SelectItem value="performance">Performance</SelectItem>
-                  <SelectItem value="friction">Friction</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={rptFilters.status || 'all'} onValueChange={v => setRptFilter('status', v)}>
-                <SelectTrigger className="w-36"><SelectValue placeholder="Statut" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="published">Publié</SelectItem>
-                  <SelectItem value="draft">Brouillon</SelectItem>
-                  <SelectItem value="review">En revue</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <SortableTableHead column="id" currentSort={rptSortCol} direction={rptSortDir} onSort={toggleRptSort}>ID</SortableTableHead>
-                <SortableTableHead column="title" currentSort={rptSortCol} direction={rptSortDir} onSort={toggleRptSort}>Titre</SortableTableHead>
-                <SortableTableHead column="date" currentSort={rptSortCol} direction={rptSortDir} onSort={toggleRptSort}>Date</SortableTableHead>
-                <SortableTableHead column="author" currentSort={rptSortCol} direction={rptSortDir} onSort={toggleRptSort}>Auteur</SortableTableHead>
-                <TableHead>Statut</TableHead>
-                <SortableTableHead column="recommendations" currentSort={rptSortCol} direction={rptSortDir} onSort={toggleRptSort}>Recomm.</SortableTableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredReports.map(r => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-mono text-xs">{r.id}</TableCell>
-                  <TableCell className="font-medium">{r.title}</TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{r.date}</TableCell>
-                  <TableCell>{r.author}</TableCell>
-                  <TableCell><Badge variant={reportStatusConfig[r.status].variant}>{reportStatusConfig[r.status].label}</Badge></TableCell>
-                  <TableCell className="font-medium">{r.recommendations}</TableCell>
-                  <TableCell><Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <CardTitle>Recommandations Actives</CardTitle>
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Rechercher..." value={recSearch} onChange={e => setRecSearch(e.target.value)} className="pl-9 w-48" />
-              </div>
-              <Select value={recFilters.priority || 'all'} onValueChange={v => setRecFilter('priority', v)}>
-                <SelectTrigger className="w-36"><SelectValue placeholder="Priorité" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Toutes</SelectItem>
-                  <SelectItem value="critical">Critique</SelectItem>
-                  <SelectItem value="high">Élevée</SelectItem>
-                  <SelectItem value="medium">Moyenne</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={recFilters.status || 'all'} onValueChange={v => setRecFilter('status', v)}>
-                <SelectTrigger className="w-36"><SelectValue placeholder="Statut" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="approved">Approuvée</SelectItem>
-                  <SelectItem value="pending">En attente</SelectItem>
-                  <SelectItem value="in_progress">En cours</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID</TableHead>
-                <TableHead>Rapport</TableHead>
-                <TableHead>Catégorie</TableHead>
-                <TableHead>Détail</TableHead>
-                <TableHead>Priorité</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRecs.map(r => (
-                <TableRow key={r.id}>
-                  <TableCell className="font-mono text-xs">{r.id}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{r.report}</TableCell>
-                  <TableCell><Badge variant="outline">{r.category}</Badge></TableCell>
-                  <TableCell className="max-w-xs truncate text-sm">{r.detail}</TableCell>
-                  <TableCell><span className={`font-medium text-sm ${priorityConfig[r.priority].color}`}>{priorityConfig[r.priority].label}</span></TableCell>
-                  <TableCell><Badge variant={recStatusConfig[r.status].variant}>{recStatusConfig[r.status].label}</Badge></TableCell>
-                  <TableCell><Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button></TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
-  );
+  return <ProtectedScreen screenId="rd.reports"><Page /></ProtectedScreen>;
 }
