@@ -17,27 +17,27 @@ interface ExportOptions {
 
 const drawLinksyHeader = (doc: jsPDF, poleName?: string) => {
   const pageWidth = doc.internal.pageSize.getWidth();
-  
-  // Draw "L" logo block - blue square with white L
-  doc.setFillColor(59, 130, 246);
-  doc.roundedRect(14, 8, 14, 14, 2, 2, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(16);
+
+  // Draw "B.I.B" logo block - navy square with gold text
+  doc.setFillColor(10, 16, 36);
+  doc.roundedRect(14, 8, 22, 14, 2, 2, 'F');
+  doc.setTextColor(201, 169, 97);
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
-  doc.text('L', 18, 19);
-  
-  // Draw "inksy" text
-  doc.setTextColor(59, 130, 246);
-  doc.setFontSize(16);
+  doc.text('B.I.B', 16.5, 18);
+
+  // Draw "intranet" text
+  doc.setTextColor(10, 16, 36);
+  doc.setFontSize(14);
   doc.setFont('helvetica', 'bold');
-  doc.text('inksy', 30, 19);
-  
+  doc.text('intranet', 39, 18);
+
   // Draw pole name after dash
   if (poleName) {
     doc.setTextColor(100, 116, 139);
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
-    doc.text(`— ${poleName}`, 55, 19);
+    doc.text(`— ${poleName}`, 70, 18);
   }
   
   // Separator line
