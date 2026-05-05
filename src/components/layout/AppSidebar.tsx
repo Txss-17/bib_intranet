@@ -18,7 +18,6 @@ import {
   Home,
   MessageSquare,
   FileText,
-  FileText,
   Shield,
   Recycle,
   Settings,
