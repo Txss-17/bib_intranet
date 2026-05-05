@@ -55,8 +55,10 @@ const GatewayReply = ({ senderName = '', subject = '', message = '', messageRef 
           <Hr style={{ borderColor: '#e5e7eb', margin: '28px 0 14px' }} />
           <Text style={{ margin: 0, fontSize: '13px', color: TEXT, lineHeight: '20px' }}>
             Cordialement,<br />
-            <strong>{respondedBy || "L'équipe B.I.B"}</strong><br />
-            <span style={{ color: MUTED, fontSize: '12px' }}>Brand in a Box · B.I.B Intranet</span>
+            <strong>{respondedByName || respondedBy || "L'équipe B.I.B"}</strong>
+            {respondedByPosition ? <><br /><span style={{ color: MUTED, fontSize: '12px' }}>{respondedByPosition}</span></> : null}
+            <br />
+            <span style={{ color: MUTED, fontSize: '12px' }}>Brand in a Box · B.I.B Intranet{respondedBy ? ` · ${respondedBy}` : ''}</span>
           </Text>
 
           <Text style={{ color: MUTED, fontSize: '11px', marginTop: '20px', fontFamily: 'monospace' }}>
