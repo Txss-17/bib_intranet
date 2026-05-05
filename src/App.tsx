@@ -334,6 +334,9 @@ const App = () => (
             <Route path="/modules/ethics/closed" element={<EthicsClosed />} />
             <Route path="/modules/ethics/stats" element={<EthicsStats />} />
             <Route path="/modules/ethics/:subSection" element={<EthicsDashboard />} />
+            <Route path="/modules/independent-audit" element={<IndependentAuditDashboard />} />
+            <Route path="/modules/independent-audit/declare" element={<IncidentDeclaration />} />
+            <Route path="/modules/independent-audit/resolution" element={<ResolutionTracking />} />
             <Route path="/modules/:moduleId/:subSection" element={<SubSectionPage />} />
             
             {/* Other routes */}
