@@ -72,7 +72,11 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'leave', label: 'Leave', labelFr: 'Congés', path: '/pole/rh/leave' },
     { id: 'training', label: 'Training', labelFr: 'Formations', path: '/pole/rh/training' },
     { id: 'publications', label: 'Publications', labelFr: 'Publications internes', path: '/pole/rh/publications' },
-    { id: 'ethics', label: 'Ethics & Whistleblowing', labelFr: 'Éthique & Signalements', path: '/modules/ethics' },
+    { id: 'ethics-dashboard', label: 'Ethics Dashboard', labelFr: 'Éthique — Vue référents', path: '/pole/rh/ethics' },
+    { id: 'ethics-received', label: 'Ethics Received', labelFr: 'Éthique — Reçus', path: '/pole/rh/ethics/received' },
+    { id: 'ethics-ongoing', label: 'Ethics Ongoing', labelFr: 'Éthique — En cours', path: '/pole/rh/ethics/ongoing' },
+    { id: 'ethics-closed', label: 'Ethics Closed', labelFr: 'Éthique — Clôturés', path: '/pole/rh/ethics/closed' },
+    { id: 'ethics-stats', label: 'Ethics Stats', labelFr: 'Éthique — Statistiques', path: '/pole/rh/ethics/stats' },
   ],
 
   // Supplier & Product
@@ -159,11 +163,6 @@ export const getModuleNavigation = (poleId: PoleId): SubNavigationItem[] => {
 export const transversalNavigations: Record<string, SubNavigationItem[]> = {
   ethics: [
     { id: 'report', label: 'Report', labelFr: 'Faire un signalement', path: '/modules/ethics' },
-    { id: 'dashboard', label: 'Dashboard', labelFr: 'Vue référents', path: '/modules/ethics/dashboard' },
-    { id: 'received', label: 'Received Reports', labelFr: 'Signalements reçus', path: '/modules/ethics/received' },
-    { id: 'ongoing', label: 'Ongoing Cases', labelFr: 'Dossiers en cours', path: '/modules/ethics/ongoing' },
-    { id: 'closed', label: 'Closed Cases', labelFr: 'Clôturés', path: '/modules/ethics/closed' },
-    { id: 'stats', label: 'Anonymous Stats', labelFr: 'Statistiques anonymisées', path: '/modules/ethics/stats' },
   ],
   gateway: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/modules/gateway' },
