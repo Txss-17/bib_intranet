@@ -137,9 +137,13 @@ export const moduleNavigations: ModuleNavigations = {
   lifecycle: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/lifecycle' },
     { id: 'onboarding', label: 'Onboarding', labelFr: 'Onboarding', path: '/pole/lifecycle/onboarding' },
+    { id: 'user-accounts', label: 'User Accounts', labelFr: 'Comptes utilisateurs', path: '/pole/lifecycle/user-accounts' },
     { id: 'monitoring', label: 'Activity Monitoring', labelFr: 'Suivi activité', path: '/pole/lifecycle/monitoring' },
     { id: 'compliance', label: 'Compliance Status', labelFr: 'Statut conformité', path: '/pole/lifecycle/compliance' },
     { id: 'scoring', label: 'Risk Scoring', labelFr: 'Scoring risque', path: '/pole/lifecycle/scoring' },
+    { id: 'risk-alerts', label: 'Risk Alerts', labelFr: 'Alertes risque', path: '/pole/lifecycle/risk-alerts' },
+    { id: 'emails', label: 'Email Campaigns', labelFr: 'Campagnes email', path: '/pole/lifecycle/emails' },
+    { id: 'trustpilot', label: 'Trustpilot', labelFr: 'Trustpilot', path: '/pole/lifecycle/trustpilot' },
     { id: 'support', label: 'Support Tickets', labelFr: 'Tickets support', path: '/pole/lifecycle/support' },
   ],
 
