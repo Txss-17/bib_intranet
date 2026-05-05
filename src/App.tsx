@@ -9,6 +9,7 @@ import { AuthProvider } from "./hooks/useAuth";
 import { AuthGuard } from "./components/AuthGuard";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
+import Unsubscribe from "./pages/Unsubscribe";
 import Index from "./pages/Index";
 import PoleDashboard from "./pages/PoleDashboard";
 import SubSectionPage from "./pages/modules/SubSectionPage";
@@ -174,6 +175,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route element={<AuthGuard><MainLayout /></AuthGuard>}>
             <Route path="/" element={<Index />} />
             
