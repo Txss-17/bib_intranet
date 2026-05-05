@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_incidents: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          declared_at: string
+          declared_by: string | null
+          declared_by_name: string | null
+          description: string | null
+          id: string
+          pole_id: Database["public"]["Enums"]["pole_id"] | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          declared_at?: string
+          declared_by?: string | null
+          declared_by_name?: string | null
+          description?: string | null
+          id?: string
+          pole_id?: Database["public"]["Enums"]["pole_id"] | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          declared_at?: string
+          declared_by?: string | null
+          declared_by_name?: string | null
+          description?: string | null
+          id?: string
+          pole_id?: Database["public"]["Enums"]["pole_id"] | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -322,6 +379,48 @@ export type Database = {
           rollback_at?: string | null
           status?: string | null
           version?: string
+        }
+        Relationships: []
+      }
+      direction_board_reports: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          file_url: string | null
+          id: string
+          period: string | null
+          published_at: string | null
+          status: string
+          summary: string | null
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          period?: string | null
+          published_at?: string | null
+          status?: string
+          summary?: string | null
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          file_url?: string | null
+          id?: string
+          period?: string | null
+          published_at?: string | null
+          status?: string
+          summary?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -771,6 +870,108 @@ export type Database = {
           read?: boolean | null
           subject?: string
           to_pole?: Database["public"]["Enums"]["pole_id"]
+        }
+        Relationships: []
+      }
+      lifecycle_email_campaigns: {
+        Row: {
+          audience: string | null
+          body: string | null
+          click_rate: number | null
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          open_rate: number | null
+          scheduled_at: string | null
+          sent_at: string | null
+          sent_count: number | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          audience?: string | null
+          body?: string | null
+          click_rate?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          open_rate?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          audience?: string | null
+          body?: string | null
+          click_rate?: number | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          open_rate?: number | null
+          scheduled_at?: string | null
+          sent_at?: string | null
+          sent_count?: number | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lifecycle_risk_alerts: {
+        Row: {
+          amount: number | null
+          assigned_to: string | null
+          company: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number | null
+          assigned_to?: string | null
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number | null
+          assigned_to?: string | null
+          company?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
