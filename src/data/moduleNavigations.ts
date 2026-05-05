@@ -172,6 +172,7 @@ export const transversalNavigations: Record<string, SubNavigationItem[]> = {
   gateway: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/modules/gateway' },
     { id: 'inbox', label: 'Inbox', labelFr: 'Réception', path: '/modules/gateway/inbox' },
+    { id: 'compose', label: 'Compose', labelFr: 'Composer & envoyer', path: '/modules/gateway/compose' },
     { id: 'validation', label: 'Validation', labelFr: 'Validation', path: '/modules/gateway/validation' },
     { id: 'routing', label: 'Routing', labelFr: 'Routage', path: '/modules/gateway/routing' },
     { id: 'responses', label: 'Responses', labelFr: 'Réponses', path: '/modules/gateway/responses' },

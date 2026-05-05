@@ -156,6 +156,7 @@ import GatewayInbox from "./pages/modules/gateway/GatewayInbox";
 import GatewayValidation from "./pages/modules/gateway/GatewayValidation";
 import GatewayRouting from "./pages/modules/gateway/GatewayRouting";
 import GatewayResponses from "./pages/modules/gateway/GatewayResponses";
+import GatewayCompose from "./pages/modules/gateway/GatewayCompose";
 
 const queryClient = new QueryClient();
 
@@ -319,6 +320,7 @@ const App = () => (
             <Route path="/modules/gateway/validation" element={<GatewayValidation />} />
             <Route path="/modules/gateway/routing" element={<GatewayRouting />} />
             <Route path="/modules/gateway/responses" element={<GatewayResponses />} />
+            <Route path="/modules/gateway/compose" element={<GatewayCompose />} />
             <Route path="/modules/gateway/:subSection" element={<GatewayDashboard />} />
             <Route path="/modules/ethics" element={<EthicsDashboard />} />
             <Route path="/modules/ethics/received" element={<EthicsReceived />} />

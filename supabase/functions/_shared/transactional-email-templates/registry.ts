@@ -1,6 +1,7 @@
 import * as React from 'npm:react@18.3.1'
 import { template as gatewayAck } from './gateway-acknowledgment.tsx'
 import { template as gatewayReply } from './gateway-reply.tsx'
+import { template as gatewayOutbound } from './gateway-outbound.tsx'
 
 export type TemplateEntry = {
   component: React.ComponentType<any>
@@ -13,4 +14,5 @@ export type TemplateEntry = {
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'gateway-acknowledgment': gatewayAck,
   'gateway-reply': gatewayReply,
+  'gateway-outbound': gatewayOutbound,
 }
