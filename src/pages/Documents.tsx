@@ -58,17 +58,19 @@ export default function Documents() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [createOpen, setCreateOpen] = useState(false);
+  const [scope, setScope] = useState<'all' | 'mine' | 'general'>('all');
   const { data: documents = [], isLoading } = useDocuments();
   const { profile, user } = useAuth();
   const qc = useQueryClient();
 
+  const userPoles = (profile?.poles || []) as PoleId[];
+
   const createDoc = useMutation({
-    mutationFn: async (doc: { name: string; type: string; access_level: string }) => {
+    mutationFn: async (doc: { name: string; type: string; access_level: string; pole_id: PoleId | null }) => {
       const { error } = await from('documents').insert({
         ...doc,
         uploaded_by: user?.id,
         modified_by: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim(),
-        pole_id: profile?.poles?.[0] || null,
       });
       if (error) throw error;
     },
@@ -80,15 +82,27 @@ export default function Documents() {
     onError: () => toast.error('Erreur lors de l\'ajout'),
   });
 
-  const [newDoc, setNewDoc] = useState({ name: '', type: 'report', access_level: 'public' });
+  const [newDoc, setNewDoc] = useState<{ name: string; type: string; access_level: string; pole_id: PoleId | 'general' }>({ name: '', type: 'report', access_level: 'public', pole_id: (userPoles[0] as PoleId) || 'general' });
 
   const handleCreate = () => {
     if (!newDoc.name) { toast.error('Nom requis'); return; }
-    createDoc.mutate(newDoc);
-    setNewDoc({ name: '', type: 'report', access_level: 'public' });
+    createDoc.mutate({ ...newDoc, pole_id: newDoc.pole_id === 'general' ? null : newDoc.pole_id });
+    setNewDoc({ name: '', type: 'report', access_level: 'public', pole_id: (userPoles[0] as PoleId) || 'general' });
   };
 
-  const filtered = documents.filter(doc => {
+  // Visible: docs from user's poles + general (pole_id null) docs
+  const visible = documents.filter(doc => {
+    if (doc.pole_id === null) return true;
+    return userPoles.includes(doc.pole_id);
+  });
+
+  const scoped = visible.filter(d => {
+    if (scope === 'mine') return d.pole_id !== null;
+    if (scope === 'general') return d.pole_id === null;
+    return true;
+  });
+
+  const filtered = scoped.filter(doc => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return doc.name.toLowerCase().includes(q) || doc.type.toLowerCase().includes(q);
