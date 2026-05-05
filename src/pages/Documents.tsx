@@ -287,6 +287,18 @@ export default function Documents() {
                 </Select>
               </div>
             </div>
+            <div className="space-y-2">
+              <Label>Rattachement</Label>
+              <Select value={newDoc.pole_id} onValueChange={(v: any) => setNewDoc(p => ({ ...p, pole_id: v }))}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">Général (guides, politiques internes…)</SelectItem>
+                  {userPoles.map(p => (
+                    <SelectItem key={p} value={p}>Pôle {p}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <Button onClick={handleCreate} className="w-full" disabled={createDoc.isPending}>
               {createDoc.isPending ? 'Ajout...' : 'Ajouter'}
             </Button>
