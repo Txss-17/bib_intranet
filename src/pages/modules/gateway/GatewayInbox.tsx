@@ -12,8 +12,12 @@ const statusVariant: Record<string, any> = {
   pending: 'destructive', validated: 'secondary', routed: 'default', responded: 'outline', archived: 'outline',
 };
 
+const isOutbound = (s: string) => s?.startsWith('[Sortant]');
+
 export default function GatewayInbox() {
-  const { data: messages = [], isLoading } = useGatewayMessages();
+  const { data: allMessages = [], isLoading } = useGatewayMessages();
+  // Réception = messages entrants uniquement (les sortants sont dans Réponses → onglet Envois sortants)
+  const messages = allMessages.filter(m => !isOutbound(m.subject));
 
   const newCount = messages.filter(m => m.status === 'pending').length;
   const validatedCount = messages.filter(m => m.status === 'validated').length;
