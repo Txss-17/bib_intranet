@@ -76,7 +76,7 @@ export const useGatewayMessages = () => {
   const updateStatus = useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<GatewayMessage> }) => {
       const { data: u } = await supabase.auth.getUser();
-      const { error } = await supabase.from('external_messages').update(patch).eq('id', id);
+      const { error } = await supabase.from('external_messages').update(patch as any).eq('id', id);
       if (error) throw error;
       await supabase.from('message_routing_log').insert({
         message_id: id,
