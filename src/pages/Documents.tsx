@@ -131,13 +131,13 @@ export default function Documents() {
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 
   const stats = {
-    total: documents.length,
-    review: documents.filter(d => d.status === 'review').length,
-    recent: documents.filter(d => {
+    total: visible.length,
+    mine: visible.filter(d => d.pole_id !== null).length,
+    general: visible.filter(d => d.pole_id === null).length,
+    recent: visible.filter(d => {
       const diff = Date.now() - new Date(d.updated_at).getTime();
       return diff < 7 * 86400000;
     }).length,
-    archived: documents.filter(d => d.status === 'archived').length,
   };
 
   return (
@@ -145,7 +145,9 @@ export default function Documents() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Documents</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Coffre-fort documentaire par pôle</p>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Documents de vos pôles ({userPoles.join(', ') || '—'}) et documents généraux (guides, politiques internes…)
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline"><FolderOpen className="h-4 w-4 mr-2" />Parcourir</Button>
@@ -160,6 +162,11 @@ export default function Documents() {
         </div>
         <div className="flex gap-2">
           <div className="flex border border-input rounded-lg">
+            <Button variant={scope === 'all' ? 'default' : 'ghost'} size="sm" onClick={() => setScope('all')} className="rounded-r-none">Tous</Button>
+            <Button variant={scope === 'mine' ? 'default' : 'ghost'} size="sm" onClick={() => setScope('mine')} className="rounded-none border-x">Mes pôles</Button>
+            <Button variant={scope === 'general' ? 'default' : 'ghost'} size="sm" onClick={() => setScope('general')} className="rounded-l-none">Général</Button>
+          </div>
+          <div className="flex border border-input rounded-lg">
             <Button variant={viewMode === 'list' ? 'default' : 'ghost'} size="icon" onClick={() => setViewMode('list')} className="rounded-r-none"><List className="h-4 w-4" /></Button>
             <Button variant={viewMode === 'grid' ? 'default' : 'ghost'} size="icon" onClick={() => setViewMode('grid')} className="rounded-l-none"><Grid className="h-4 w-4" /></Button>
           </div>
@@ -167,10 +174,10 @@ export default function Documents() {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="metric-card"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total</p><p className="mt-2 text-2xl font-semibold text-foreground">{stats.total}</p></div>
-        <div className="metric-card"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">En revue</p><p className="mt-2 text-2xl font-semibold text-warning">{stats.review}</p></div>
+        <div className="metric-card"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total visibles</p><p className="mt-2 text-2xl font-semibold text-foreground">{stats.total}</p></div>
+        <div className="metric-card"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Mes pôles</p><p className="mt-2 text-2xl font-semibold text-foreground">{stats.mine}</p></div>
+        <div className="metric-card"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Généraux</p><p className="mt-2 text-2xl font-semibold text-foreground">{stats.general}</p></div>
         <div className="metric-card"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Récents (7j)</p><p className="mt-2 text-2xl font-semibold text-foreground">{stats.recent}</p></div>
-        <div className="metric-card"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Archivés</p><p className="mt-2 text-2xl font-semibold text-muted-foreground">{stats.archived}</p></div>
       </div>
 
       {viewMode === 'list' ? (
