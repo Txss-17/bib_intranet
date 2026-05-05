@@ -186,7 +186,8 @@ const App = () => (
             <Route path="/pole/direction/decisions" element={<DecisionArbitrage />} />
             <Route path="/pole/direction/vision" element={<VisionRoadmap />} />
             <Route path="/pole/direction/governance" element={<GroupGovernance />} />
-            <Route path="/pole/direction/reports" element={<ConsolidatedReports />} />
+            <Route path="/pole/direction/reports" element={<BoardReports />} />
+            <Route path="/pole/direction/reports-legacy" element={<ConsolidatedReports />} />
             <Route path="/pole/direction/access" element={<ModuleAccess />} />
             
             {/* Supplier module */}
@@ -204,8 +205,10 @@ const App = () => (
             <Route path="/pole/lifecycle/onboarding" element={<LifecycleOnboarding />} />
             <Route path="/pole/lifecycle/monitoring" element={<UserAccounts />} />
             <Route path="/pole/lifecycle/user-accounts" element={<UserAccounts />} />
-            <Route path="/pole/lifecycle/risk-alerts" element={<RiskAlerts />} />
-            <Route path="/pole/lifecycle/emails" element={<EmailCampaigns />} />
+            <Route path="/pole/lifecycle/risk-alerts" element={<ManagedRiskAlerts />} />
+            <Route path="/pole/lifecycle/risk-alerts-legacy" element={<RiskAlerts />} />
+            <Route path="/pole/lifecycle/emails" element={<LifecycleEmailCampaignsPage />} />
+            <Route path="/pole/lifecycle/emails-legacy" element={<EmailCampaigns />} />
             <Route path="/pole/lifecycle/trustpilot" element={<TrustpilotAnalytics />} />
             <Route path="/pole/lifecycle/support" element={<SupportTickets />} />
             <Route path="/pole/lifecycle/scoring" element={<RiskAlerts />} />
