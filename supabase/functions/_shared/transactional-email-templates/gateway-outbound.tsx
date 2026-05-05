@@ -22,7 +22,7 @@ const TEXT = '#1a1f2e'
 const MUTED = '#6b7280'
 const LOGO_URL = 'https://workspace.brand-in-a-box.space/brand/bib-logo.jpg'
 
-const GatewayOutbound = ({ senderName = '', subject = '', message = '', messageRef = '', sentBy = '', ccList = [] }: Props) => (
+const GatewayOutbound = ({ senderName = '', subject = '', message = '', messageRef = '', sentBy = '', sentByName = '', sentByPosition = '', ccList = [] }: Props) => (
   <Html>
     <Head />
     <Preview>{subject || 'Message — B.I.B Intranet'}</Preview>
