@@ -93,6 +93,23 @@ export const useGatewayMessages = () => {
   const sendReply = useMutation({
     mutationFn: async ({ msg, response }: { msg: GatewayMessage; response: string }) => {
       const { data: u } = await supabase.auth.getUser();
+      let senderName = '';
+      let senderPosition = '';
+      if (u.user?.id) {
+        const { data: p } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, position')
+          .eq('id', u.user.id)
+          .maybeSingle();
+        if (p) {
+          senderName = `${(p as any).first_name ?? ''} ${(p as any).last_name ?? ''}`.trim();
+          const pos = (p as any).position;
+          if (pos) {
+            const { positionInfos } = await import('@/types/positions');
+            senderPosition = positionInfos[pos as keyof typeof positionInfos]?.titleFr ?? '';
+          }
+        }
+      }
       const { error: invokeErr } = await supabase.functions.invoke('send-transactional-email', {
         body: {
           templateName: 'gateway-reply',
@@ -103,6 +120,8 @@ export const useGatewayMessages = () => {
             message: response,
             messageRef: msg.id.slice(0, 8).toUpperCase(),
             respondedBy: u.user?.email ?? 'B.I.B',
+            respondedByName: senderName,
+            respondedByPosition: senderPosition,
           },
         },
       });
@@ -114,6 +133,14 @@ export const useGatewayMessages = () => {
         responded_at: new Date().toISOString(),
       }).eq('id', msg.id);
       if (error) throw error;
+      await supabase.from('message_routing_log').insert({
+        message_id: msg.id,
+        action: 'reply:sent',
+        performed_by: u.user?.id ?? null,
+        from_status: msg.status as any,
+        to_status: 'responded' as any,
+        notes: `Réponse envoyée par ${senderName || u.user?.email} (${senderPosition || '—'}) à ${msg.sender_email}`,
+      });
     },
     onSuccess: () => {
       toast({ title: 'Réponse envoyée', description: 'Email envoyé au destinataire.' });
@@ -135,13 +162,30 @@ export const useGatewayMessages = () => {
       const messageRef = `OUT-${Date.now().toString(36).toUpperCase()}`;
       const sentBy = u.user?.email ?? 'B.I.B';
 
+      let sentByName = '';
+      let sentByPosition = '';
+      if (u.user?.id) {
+        const { data: p } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, position')
+          .eq('id', u.user.id)
+          .maybeSingle();
+        if (p) {
+          sentByName = `${(p as any).first_name ?? ''} ${(p as any).last_name ?? ''}`.trim();
+          const pos = (p as any).position;
+          if (pos) {
+            const { positionInfos } = await import('@/types/positions');
+            sentByPosition = positionInfos[pos as keyof typeof positionInfos]?.titleFr ?? '';
+          }
+        }
+      }
+
       const recipients = [
         input.to,
         ...(input.cc ?? []),
         ...(input.bcc ?? []),
       ].map(s => s.trim()).filter(Boolean);
 
-      // Send to each recipient individually (one user-initiated send per recipient).
       const errors: string[] = [];
       for (const r of recipients) {
         const { error } = await supabase.functions.invoke('send-transactional-email', {
@@ -155,6 +199,8 @@ export const useGatewayMessages = () => {
               message: input.message,
               messageRef,
               sentBy,
+              sentByName,
+              sentByPosition,
               ccList: input.cc ?? [],
             },
           },
@@ -163,7 +209,7 @@ export const useGatewayMessages = () => {
       }
 
       // Archive a record of the outbound in external_messages
-      await supabase.from('external_messages').insert({
+      const { data: archived } = await supabase.from('external_messages').insert({
         sender_email: input.to,
         sender_name: input.recipientName || null,
         subject: `[Sortant] ${input.subject}`,
@@ -176,7 +222,23 @@ export const useGatewayMessages = () => {
           input.cc?.length ? `Cc: ${input.cc.join(', ')}` : null,
           input.bcc?.length ? `Cci: ${input.bcc.join(', ')}` : null,
         ].filter(Boolean).join(' | ') || null,
-      } as any);
+      } as any).select().single();
+
+      if (archived?.id) {
+        await supabase.from('message_routing_log').insert({
+          message_id: archived.id,
+          action: 'outbound:sent',
+          performed_by: u.user?.id ?? null,
+          to_status: 'responded' as any,
+          notes: [
+            `Envoi sortant par ${sentByName || sentBy} (${sentByPosition || '—'})`,
+            `À: ${input.to}`,
+            input.cc?.length ? `Cc: ${input.cc.join(', ')}` : null,
+            input.bcc?.length ? `Cci: ${input.bcc.join(', ')}` : null,
+            `Réf: ${messageRef}`,
+          ].filter(Boolean).join(' | '),
+        });
+      }
 
       if (errors.length) throw new Error(errors.join(' ; '));
       return { messageRef, count: recipients.length };
