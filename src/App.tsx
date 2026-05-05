@@ -322,6 +322,7 @@ const App = () => (
             <Route path="/modules/gateway/routing" element={<GatewayRouting />} />
             <Route path="/modules/gateway/responses" element={<GatewayResponses />} />
             <Route path="/modules/gateway/compose" element={<GatewayCompose />} />
+            <Route path="/modules/gateway/journal" element={<GatewayJournal />} />
             <Route path="/modules/gateway/:subSection" element={<GatewayDashboard />} />
             <Route path="/modules/ethics" element={<EthicsDashboard />} />
             <Route path="/modules/ethics/received" element={<EthicsReceived />} />
