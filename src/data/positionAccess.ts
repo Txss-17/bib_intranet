@@ -23,7 +23,8 @@ export const positionAccess: Record<EmployeePosition, PositionAccess> = {
     screens: [
       'lifecycle.overview', 'lifecycle.user-accounts', 'lifecycle.risk-alerts',
       'lifecycle.email-campaigns', 'lifecycle.trustpilot', 'lifecycle.support',
-      'lifecycle.onboarding', 'lifecycle.monitoring', 'lifecycle.scoring'
+      'lifecycle.onboarding', 'lifecycle.monitoring', 'lifecycle.scoring',
+      'audit.independent', 'audit.declare', 'audit.resolution'
     ],
     restricted: ['supplier.negotiations', 'rh.*', 'finance.salaries']
   },
@@ -49,6 +50,7 @@ export const positionAccess: Record<EmployeePosition, PositionAccess> = {
     screens: [
       'audit.overview', 'audit.field', 'audit.supplier', 'audit.ops',
       'audit.reports', 'audit.nonconformities', 'audit.sanctions',
+      'audit.independent', 'audit.declare', 'audit.resolution',
       'compliance.overview', 'compliance.contracts', 'compliance.policies',
       'compliance.disputes', 'compliance.risks',
       'supplier.dossiers', 'supplier.certifications'
@@ -121,12 +123,20 @@ export const canAccessPole = (position: EmployeePosition | undefined, poleId: Po
   return positionAccess[position].poles.includes(poleId);
 };
 
+// Screens that any authenticated employee can access (transversal rights)
+const PUBLIC_SCREENS = new Set<string>([
+  'audit.declare',           // Anyone can declare an incident
+  'audit.independent',       // Independent audit visibility
+  'audit.resolution',        // Resolution tracking visibility
+]);
+
 export const canAccessScreen = (position: EmployeePosition | undefined, screenId: string): boolean => {
   if (!position) return false;
   if (position === 'ceo') return true;
-  
+  if (PUBLIC_SCREENS.has(screenId)) return true;
+
   const access = positionAccess[position];
-  
+
   for (const restriction of access.restricted) {
     if (restriction.endsWith('.*')) {
       const prefix = restriction.replace('.*', '');
@@ -135,7 +145,7 @@ export const canAccessScreen = (position: EmployeePosition | undefined, screenId
       return false;
     }
   }
-  
+
   return access.screens.includes(screenId) || access.screens.includes('*');
 };
 

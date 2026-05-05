@@ -64,6 +64,12 @@ import VisionRoadmap from "./pages/modules/direction/VisionRoadmap";
 import DecisionArbitrage from "./pages/modules/direction/DecisionArbitrage";
 import GroupGovernance from "./pages/modules/direction/GroupGovernance";
 import ConsolidatedReports from "./pages/modules/direction/ConsolidatedReports";
+import BoardReports from "./pages/modules/direction/BoardReports";
+import ManagedRiskAlerts from "./pages/modules/lifecycle/ManagedRiskAlerts";
+import LifecycleEmailCampaignsPage from "./pages/modules/lifecycle/LifecycleEmailCampaigns";
+import IndependentAuditDashboard from "./pages/modules/independent-audit/IndependentAuditDashboard";
+import IncidentDeclaration from "./pages/modules/independent-audit/IncidentDeclaration";
+import ResolutionTracking from "./pages/modules/independent-audit/ResolutionTracking";
 
 // Lifecycle module pages
 import LifecycleDashboard from "./pages/modules/lifecycle/LifecycleDashboard";
@@ -186,7 +192,8 @@ const App = () => (
             <Route path="/pole/direction/decisions" element={<DecisionArbitrage />} />
             <Route path="/pole/direction/vision" element={<VisionRoadmap />} />
             <Route path="/pole/direction/governance" element={<GroupGovernance />} />
-            <Route path="/pole/direction/reports" element={<ConsolidatedReports />} />
+            <Route path="/pole/direction/reports" element={<BoardReports />} />
+            <Route path="/pole/direction/reports-legacy" element={<ConsolidatedReports />} />
             <Route path="/pole/direction/access" element={<ModuleAccess />} />
             
             {/* Supplier module */}
@@ -204,8 +211,10 @@ const App = () => (
             <Route path="/pole/lifecycle/onboarding" element={<LifecycleOnboarding />} />
             <Route path="/pole/lifecycle/monitoring" element={<UserAccounts />} />
             <Route path="/pole/lifecycle/user-accounts" element={<UserAccounts />} />
-            <Route path="/pole/lifecycle/risk-alerts" element={<RiskAlerts />} />
-            <Route path="/pole/lifecycle/emails" element={<EmailCampaigns />} />
+            <Route path="/pole/lifecycle/risk-alerts" element={<ManagedRiskAlerts />} />
+            <Route path="/pole/lifecycle/risk-alerts-legacy" element={<RiskAlerts />} />
+            <Route path="/pole/lifecycle/emails" element={<LifecycleEmailCampaignsPage />} />
+            <Route path="/pole/lifecycle/emails-legacy" element={<EmailCampaigns />} />
             <Route path="/pole/lifecycle/trustpilot" element={<TrustpilotAnalytics />} />
             <Route path="/pole/lifecycle/support" element={<SupportTickets />} />
             <Route path="/pole/lifecycle/scoring" element={<RiskAlerts />} />
@@ -325,6 +334,9 @@ const App = () => (
             <Route path="/modules/ethics/closed" element={<EthicsClosed />} />
             <Route path="/modules/ethics/stats" element={<EthicsStats />} />
             <Route path="/modules/ethics/:subSection" element={<EthicsDashboard />} />
+            <Route path="/modules/independent-audit" element={<IndependentAuditDashboard />} />
+            <Route path="/modules/independent-audit/declare" element={<IncidentDeclaration />} />
+            <Route path="/modules/independent-audit/resolution" element={<ResolutionTracking />} />
             <Route path="/modules/:moduleId/:subSection" element={<SubSectionPage />} />
             
             {/* Other routes */}
