@@ -19,6 +19,7 @@ import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
+import EthicsReport from "./pages/modules/ethics/EthicsReport";
 import RDDashboard from "./pages/modules/rd/RDDashboard";
 import RDProducts from "./pages/modules/rd/RDProducts";
 import RDShops from "./pages/modules/rd/RDShops";
@@ -315,7 +316,8 @@ const App = () => (
             <Route path="/modules/gateway/journal" element={<GatewayJournal />} />
             <Route path="/modules/gateway/message/:messageId" element={<GatewayMessageDetail />} />
             <Route path="/modules/gateway/:subSection" element={<GatewayDashboard />} />
-            <Route path="/modules/ethics" element={<EthicsDashboard />} />
+            <Route path="/modules/ethics" element={<EthicsReport />} />
+            <Route path="/modules/ethics/dashboard" element={<EthicsDashboard />} />
             <Route path="/modules/ethics/received" element={<EthicsReceived />} />
             <Route path="/modules/ethics/ongoing" element={<EthicsOngoing />} />
             <Route path="/modules/ethics/closed" element={<EthicsClosed />} />
