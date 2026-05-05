@@ -42,14 +42,16 @@ export default function Unsubscribe() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-lg">
-        <CardContent className="pt-8 pb-8 space-y-5">
-          <div className="flex items-center justify-center gap-2">
-            <div className="bg-primary text-primary-foreground font-bold text-lg px-3 py-1.5 rounded-lg">B.I.B</div>
-            <span className="text-xl font-bold tracking-tight">Intranet</span>
-          </div>
-
+      <Card className="w-full max-w-lg overflow-hidden">
+        <div className="bg-[#0a1024] py-7 px-6 text-center">
+          <img src={bibLogo} alt="Brand in a Box" className="h-10 mx-auto invert brightness-0 contrast-200" style={{ filter: 'brightness(0) invert(1)' }} />
+          <p className="text-[11px] tracking-[0.2em] uppercase font-semibold mt-2" style={{ color: '#c9a961' }}>
+            Intranet
+          </p>
+        </div>
+        <CardContent className="pt-7 pb-7 space-y-5">
           <div className="text-center space-y-3">
+            <div className="w-10 h-[3px] mx-auto" style={{ background: '#c9a961' }} />
             {state === 'loading' && (<><Loader2 className="h-8 w-8 mx-auto animate-spin text-muted-foreground" /><p className="text-sm">Vérification du lien…</p></>)}
 
             {state === 'valid' && (
