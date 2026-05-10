@@ -8,11 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { FileText, Lightbulb, Plus, CheckCircle, Clock, ArrowRight, Loader2 } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { FileText, Lightbulb, Plus, CheckCircle, Clock, ArrowRight, Loader2, Ticket, ExternalLink } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import {
   useRDReports, useCreateRDReport, useUpdateRDReportStatus,
   useRDRecommendations, useCreateRDRecommendation, useUpdateRecommendationStatus,
-  useConvertRecommendationToTicket,
+  useConvertRecommendationToTicket, useRDTickets,
 } from '@/hooks/useRD';
 import { toast } from 'sonner';
 import ProtectedScreen from '@/components/ProtectedScreen';
