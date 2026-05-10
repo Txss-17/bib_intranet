@@ -91,6 +91,7 @@ const RecommendationCard = ({ r }: { r: any }) => {
 const Page = () => {
   const { data: reports, isLoading } = useRDReports();
   const { data: recos } = useRDRecommendations();
+  const { data: tickets } = useRDTickets();
   const createReport = useCreateRDReport();
   const updateReport = useUpdateRDReportStatus();
   const createReco = useCreateRDRecommendation();
