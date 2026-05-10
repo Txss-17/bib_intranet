@@ -146,6 +146,7 @@ export const useConvertRecommendationToTicket = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['rd_recommendations'] });
       qc.invalidateQueries({ queryKey: ['audit_incidents'] });
+      qc.invalidateQueries({ queryKey: ['rd_tickets'] });
     },
   });
 };
