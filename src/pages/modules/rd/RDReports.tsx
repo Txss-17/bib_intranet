@@ -199,6 +199,7 @@ const Page = () => {
           <TabsList>
             <TabsTrigger value="reports">Rapports ({stats.total})</TabsTrigger>
             <TabsTrigger value="recos">Recommandations ({stats.recos})</TabsTrigger>
+            <TabsTrigger value="tickets">Tickets ({tickets?.length ?? 0})</TabsTrigger>
           </TabsList>
           <TabsContent value="reports" className="space-y-3 mt-4">
             {(reports ?? []).map((r: any) => (
