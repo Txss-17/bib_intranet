@@ -75,6 +75,52 @@ export const useUpdateRecommendationStatus = () => {
   });
 };
 
+// Tickets created from R&D recommendations (joined with audit_incidents + assignee profile)
+export const useRDTickets = () =>
+  useQuery({
+    queryKey: ['rd_tickets'],
+    queryFn: async () => {
+      const { data: recos, error: rErr } = await sb
+        .from('rd_recommendations')
+        .select('id, detail, priority, status, target_pole, ticket_id, ticket_type, created_at')
+        .not('ticket_id', 'is', null)
+        .order('created_at', { ascending: false });
+      if (rErr) throw rErr;
+      const ids = (recos || []).map((r: any) => r.ticket_id).filter(Boolean);
+      if (ids.length === 0) return [];
+      const { data: incidents, error: iErr } = await sb
+        .from('audit_incidents')
+        .select('id, title, status, severity, pole_id, assigned_to, resolved_at, updated_at')
+        .in('id', ids);
+      if (iErr) throw iErr;
+      const assigneeIds = Array.from(new Set((incidents || []).map((i: any) => i.assigned_to).filter(Boolean)));
+      let profilesMap: Record<string, string> = {};
+      if (assigneeIds.length > 0) {
+        const { data: profiles } = await sb.from('profiles').select('id, first_name, last_name').in('id', assigneeIds);
+        (profiles || []).forEach((p: any) => { profilesMap[p.id] = `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim(); });
+      }
+      const incidentMap: Record<string, any> = {};
+      (incidents || []).forEach((i: any) => { incidentMap[i.id] = i; });
+      return (recos || []).map((r: any) => {
+        const inc = incidentMap[r.ticket_id];
+        return {
+          recommendation_id: r.id,
+          detail: r.detail,
+          priority: r.priority,
+          target_pole: r.target_pole,
+          created_at: r.created_at,
+          ticket_id: r.ticket_id,
+          ticket_type: r.ticket_type,
+          ticket_title: inc?.title,
+          ticket_status: inc?.status ?? 'unknown',
+          ticket_severity: inc?.severity,
+          assignee_id: inc?.assigned_to,
+          assignee_name: inc?.assigned_to ? (profilesMap[inc.assigned_to] || '—') : null,
+        };
+      });
+    },
+  });
+
 // Transform a recommendation into a downstream ticket (audit_incidents as a generic actionable ticket).
 export const useConvertRecommendationToTicket = () => {
   const qc = useQueryClient();
@@ -100,6 +146,7 @@ export const useConvertRecommendationToTicket = () => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['rd_recommendations'] });
       qc.invalidateQueries({ queryKey: ['audit_incidents'] });
+      qc.invalidateQueries({ queryKey: ['rd_tickets'] });
     },
   });
 };
