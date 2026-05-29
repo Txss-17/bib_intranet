@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -8,14 +8,18 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { FileText, Lightbulb, Plus, CheckCircle, Clock, ArrowRight, Loader2, Ticket, ExternalLink } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from '@/components/ui/table';
+import { SortableTableHead } from '@/components/ui/sortable-table-head';
+import { FileText, Lightbulb, Plus, CheckCircle, Clock, ArrowRight, Loader2, Ticket, ExternalLink, Search, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   useRDReports, useCreateRDReport, useUpdateRDReportStatus,
   useRDRecommendations, useCreateRDRecommendation, useUpdateRecommendationStatus,
   useConvertRecommendationToTicket, useRDTickets,
 } from '@/hooks/useRD';
+import { useTableInteractions } from '@/hooks/useTableInteractions';
+import { ExportButtons } from '@/components/ExportButtons';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from 'sonner';
 import ProtectedScreen from '@/components/ProtectedScreen';
 
@@ -24,6 +28,7 @@ const prioColor = (p: string) =>
   : p === 'high' ? 'bg-orange-500 text-white'
   : p === 'medium' ? 'bg-yellow-500 text-black'
   : 'bg-muted';
+
 
 const RecommendationCard = ({ r }: { r: any }) => {
   const update = useUpdateRecommendationStatus();
