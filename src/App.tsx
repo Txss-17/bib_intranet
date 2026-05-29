@@ -26,6 +26,7 @@ import RDShops from "./pages/modules/rd/RDShops";
 import RDSuppliers from "./pages/modules/rd/RDSuppliers";
 import RDFrictions from "./pages/modules/rd/RDFrictions";
 import RDReports from "./pages/modules/rd/RDReports";
+import RDTicketDetail from "./pages/modules/rd/RDTicketDetail";
 import GatewayDashboard from "./pages/modules/gateway/GatewayDashboard";
 import PackagingDashboard from "./pages/modules/packaging/PackagingDashboard";
 import ModuleAccess from "./pages/modules/direction/ModuleAccess";
