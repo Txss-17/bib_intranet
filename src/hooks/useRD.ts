@@ -144,35 +144,13 @@ export const useConvertRecommendationToTicket = () => {
       return incident;
     },
     onSuccess: () => {
-// Transform a recommendation into a downstream ticket (audit_incidents as a generic actionable ticket).
-export const useConvertRecommendationToTicket = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ recommendation, targetPole }: { recommendation: any; targetPole: 'tech' | 'ops' | 'supplier' | 'rse' }) => {
-      const { data: u } = await supabase.auth.getUser();
-      const { data: incident, error: insErr } = await sb.from('audit_incidents').insert({
-        title: `[R&D] ${recommendation.detail.slice(0, 80)}`,
-        description: `Issu de la recommandation R&D #${recommendation.id}\n\n${recommendation.detail}`,
-        category: 'operational',
-        severity: recommendation.priority === 'critical' ? 'critical' : recommendation.priority === 'high' ? 'high' : 'medium',
-        pole_id: targetPole,
-        declared_by: u.user?.id,
-      }).select().single();
-      if (insErr) throw insErr;
-
-      const { error: updErr } = await sb.from('rd_recommendations')
-        .update({ status: 'in_progress', target_pole: targetPole, ticket_type: 'audit_incident', ticket_id: incident.id })
-        .eq('id', recommendation.id);
-      if (updErr) throw updErr;
-      return incident;
-    },
-    onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['rd_recommendations'] });
       qc.invalidateQueries({ queryKey: ['audit_incidents'] });
       qc.invalidateQueries({ queryKey: ['rd_tickets'] });
     },
   });
 };
+
 
 // Fetch a single R&D ticket detail: incident + originating recommendation + history (audit_logs)
 export const useRDTicket = (ticketId?: string) =>
