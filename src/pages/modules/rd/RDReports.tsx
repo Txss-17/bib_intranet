@@ -93,6 +93,196 @@ const RecommendationCard = ({ r }: { r: any }) => {
   );
 };
 
+const TicketsTab = () => {
+  const { data: tickets } = useRDTickets();
+  const { canExportAudit } = useUserRole();
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [prioFilter, setPrioFilter] = useState('all');
+  const [assigneeFilter, setAssigneeFilter] = useState('all');
+  const [dateFilter, setDateFilter] = useState('all'); // all | 7 | 30 | 90
+
+  const baseData = useMemo(() => {
+    const list = (tickets ?? []).map((t: any) => ({
+      ...t,
+      assignee_label: t.assignee_name || 'Non assigné',
+      created_iso: t.created_at,
+    }));
+    const now = Date.now();
+    const days = dateFilter === 'all' ? null : parseInt(dateFilter, 10);
+    return list.filter((t: any) => {
+      if (statusFilter !== 'all' && t.ticket_status !== statusFilter) return false;
+      if (prioFilter !== 'all' && t.priority !== prioFilter) return false;
+      if (assigneeFilter !== 'all' && t.assignee_label !== assigneeFilter) return false;
+      if (days != null) {
+        const age = (now - new Date(t.created_iso).getTime()) / 86400000;
+        if (age > days) return false;
+      }
+      return true;
+    });
+  }, [tickets, statusFilter, prioFilter, assigneeFilter, dateFilter]);
+
+  const { searchQuery, setSearchQuery, sortColumn, sortDirection, toggleSort, processedData } =
+    useTableInteractions<any>({
+      data: baseData,
+      searchFields: ['ticket_title', 'detail', 'assignee_label'],
+      initialSort: { column: 'created_iso', direction: 'desc' },
+    });
+
+  const assignees = useMemo(() => {
+    const set = new Set<string>();
+    (tickets ?? []).forEach((t: any) => set.add(t.assignee_name || 'Non assigné'));
+    return Array.from(set).sort();
+  }, [tickets]);
+
+  const resetFilters = () => {
+    setStatusFilter('all'); setPrioFilter('all'); setAssigneeFilter('all'); setDateFilter('all'); setSearchQuery('');
+  };
+
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const exportData = processedData.map((t: any) => ({
+    title: t.ticket_title || '—',
+    pole: t.target_pole || '—',
+    status: t.ticket_status,
+    priority: t.priority,
+    assignee: t.assignee_label,
+    created: new Date(t.created_at).toLocaleDateString(),
+    link: `${origin}/pole/rd/tickets/${t.ticket_id}`,
+  }));
+
+  const exportColumns = [
+    { header: 'Ticket', accessor: 'title' },
+    { header: 'Pôle', accessor: 'pole' },
+    { header: 'Statut', accessor: 'status' },
+    { header: 'Priorité', accessor: 'priority' },
+    { header: 'Responsable', accessor: 'assignee' },
+    { header: 'Créé', accessor: 'created' },
+    { header: 'Lien', accessor: 'link' },
+  ];
+
+  return (
+    <Card>
+      <CardHeader className="space-y-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Ticket className="h-4 w-4" /> Tickets issus des recommandations R&D
+            <Badge variant="outline" className="ml-2">{processedData.length}/{tickets?.length ?? 0}</Badge>
+          </CardTitle>
+          {canExportAudit && (
+            <ExportButtons
+              filename={`rd-tickets-${new Date().toISOString().slice(0,10)}`}
+              title="Tickets R&D"
+              poleName="R&D"
+              columns={exportColumns}
+              data={exportData}
+              size="sm"
+            />
+          )}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-2">
+          <div className="relative md:col-span-2">
+            <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              className="pl-8"
+              placeholder="Rechercher titre, détail, responsable..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger><SelectValue placeholder="Statut" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous statuts</SelectItem>
+              <SelectItem value="declared">Déclaré</SelectItem>
+              <SelectItem value="in_progress">En cours</SelectItem>
+              <SelectItem value="resolved">Résolu</SelectItem>
+              <SelectItem value="closed">Clos</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={prioFilter} onValueChange={setPrioFilter}>
+            <SelectTrigger><SelectValue placeholder="Priorité" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes priorités</SelectItem>
+              <SelectItem value="critical">Critique</SelectItem>
+              <SelectItem value="high">Haute</SelectItem>
+              <SelectItem value="medium">Moyenne</SelectItem>
+              <SelectItem value="low">Basse</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select value={assigneeFilter} onValueChange={setAssigneeFilter}>
+            <SelectTrigger><SelectValue placeholder="Responsable" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous responsables</SelectItem>
+              {assignees.map(a => <SelectItem key={a} value={a}>{a}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={dateFilter} onValueChange={setDateFilter}>
+            <SelectTrigger><SelectValue placeholder="Date" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Toutes dates</SelectItem>
+              <SelectItem value="7">7 derniers jours</SelectItem>
+              <SelectItem value="30">30 derniers jours</SelectItem>
+              <SelectItem value="90">90 derniers jours</SelectItem>
+            </SelectContent>
+          </Select>
+          {(statusFilter !== 'all' || prioFilter !== 'all' || assigneeFilter !== 'all' || dateFilter !== 'all' || searchQuery) && (
+            <Button variant="ghost" size="sm" onClick={resetFilters} className="md:col-span-5 justify-self-start">
+              <X className="h-3 w-3 mr-1" />Réinitialiser
+            </Button>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        {processedData.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">
+            {(tickets?.length ?? 0) === 0 ? 'Aucun ticket créé pour le moment' : 'Aucun résultat pour ces filtres'}
+          </p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <SortableTableHead column="ticket_title" currentSort={sortColumn as string} direction={sortDirection} onSort={toggleSort as any}>Ticket</SortableTableHead>
+                <SortableTableHead column="target_pole" currentSort={sortColumn as string} direction={sortDirection} onSort={toggleSort as any}>Pôle</SortableTableHead>
+                <SortableTableHead column="ticket_status" currentSort={sortColumn as string} direction={sortDirection} onSort={toggleSort as any}>Statut</SortableTableHead>
+                <SortableTableHead column="priority" currentSort={sortColumn as string} direction={sortDirection} onSort={toggleSort as any}>Priorité</SortableTableHead>
+                <SortableTableHead column="assignee_label" currentSort={sortColumn as string} direction={sortDirection} onSort={toggleSort as any}>Responsable</SortableTableHead>
+                <SortableTableHead column="created_iso" currentSort={sortColumn as string} direction={sortDirection} onSort={toggleSort as any}>Créé</SortableTableHead>
+                <th className="text-right pr-4">Action</th>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {processedData.map((t: any) => (
+                <TableRow key={t.ticket_id}>
+                  <TableCell className="max-w-[280px]">
+                    <p className="font-medium truncate">{t.ticket_title || '—'}</p>
+                    <p className="text-xs text-muted-foreground truncate">{t.detail}</p>
+                  </TableCell>
+                  <TableCell><Badge variant="outline">{t.target_pole || '—'}</Badge></TableCell>
+                  <TableCell>
+                    <Badge variant={t.ticket_status === 'resolved' ? 'default' : t.ticket_status === 'in_progress' ? 'secondary' : 'outline'}>
+                      {t.ticket_status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell><Badge className={prioColor(t.priority)}>{t.priority}</Badge></TableCell>
+                  <TableCell className="text-sm">{t.assignee_name || <span className="text-muted-foreground">Non assigné</span>}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{new Date(t.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell className="text-right">
+                    <Button asChild size="sm" variant="outline">
+                      <Link to={`/pole/rd/tickets/${t.ticket_id}`}>
+                        Ouvrir <ExternalLink className="h-3 w-3 ml-1" />
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  );
+};
+
+
 const Page = () => {
   const { data: reports, isLoading } = useRDReports();
   const { data: recos } = useRDRecommendations();
