@@ -317,6 +317,7 @@ const App = () => (
             <Route path="/pole/rd/suppliers" element={<RDSuppliers />} />
             <Route path="/pole/rd/frictions" element={<RDFrictions />} />
             <Route path="/pole/rd/reports" element={<RDReports />} />
+            <Route path="/pole/rd/tickets/:id" element={<RDTicketDetail />} />
             
             {/* Transversal modules */}
             <Route path="/modules/gateway" element={<GatewayDashboard />} />
