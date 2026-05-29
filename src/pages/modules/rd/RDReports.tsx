@@ -229,58 +229,7 @@ const Page = () => {
             {(!recos || recos.length === 0) && <p className="text-sm text-muted-foreground text-center py-6">Aucune recommandation</p>}
           </TabsContent>
           <TabsContent value="tickets" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-base">
-                  <Ticket className="h-4 w-4" /> Tickets issus des recommandations R&D
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                {!tickets || tickets.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-8">Aucun ticket créé pour le moment</p>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Ticket</TableHead>
-                        <TableHead>Pôle</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead>Priorité</TableHead>
-                        <TableHead>Responsable</TableHead>
-                        <TableHead>Créé</TableHead>
-                        <TableHead className="text-right">Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {tickets.map((t: any) => (
-                        <TableRow key={t.ticket_id}>
-                          <TableCell className="max-w-[280px]">
-                            <p className="font-medium truncate">{t.ticket_title || '—'}</p>
-                            <p className="text-xs text-muted-foreground truncate">{t.detail}</p>
-                          </TableCell>
-                          <TableCell><Badge variant="outline">{t.target_pole || '—'}</Badge></TableCell>
-                          <TableCell>
-                            <Badge variant={t.ticket_status === 'resolved' ? 'default' : t.ticket_status === 'in_progress' ? 'secondary' : 'outline'}>
-                              {t.ticket_status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell><Badge className={prioColor(t.priority)}>{t.priority}</Badge></TableCell>
-                          <TableCell className="text-sm">{t.assignee_name || <span className="text-muted-foreground">Non assigné</span>}</TableCell>
-                          <TableCell className="text-xs text-muted-foreground">{new Date(t.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell className="text-right">
-                            <Button asChild size="sm" variant="outline">
-                              <Link to={`/modules/independent-audit/resolution?id=${t.ticket_id}`}>
-                                Ouvrir <ExternalLink className="h-3 w-3 ml-1" />
-                              </Link>
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
+            <TicketsTab />
           </TabsContent>
         </Tabs>
       )}
