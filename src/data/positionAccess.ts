@@ -103,7 +103,7 @@ export const positionAccess: Record<EmployeePosition, PositionAccess> = {
     poles: ['rd', 'supplier', 'lifecycle'],
     screens: [
       'rd.overview', 'rd.products', 'rd.frictions', 'rd.reports',
-      'rd.shops', 'rd.suppliers'
+      'rd.shops', 'rd.suppliers', 'rd.tickets'
     ],
     restricted: ['finance.*', 'rh.*']
   },
