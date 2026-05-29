@@ -150,3 +150,83 @@ export const useConvertRecommendationToTicket = () => {
     },
   });
 };
+
+
+// Fetch a single R&D ticket detail: incident + originating recommendation + history (audit_logs)
+export const useRDTicket = (ticketId?: string) =>
+  useQuery({
+    queryKey: ['rd_ticket', ticketId],
+    enabled: !!ticketId,
+    queryFn: async () => {
+      const { data: incident, error: iErr } = await sb
+        .from('audit_incidents').select('*').eq('id', ticketId).maybeSingle();
+      if (iErr) throw iErr;
+      if (!incident) return null;
+
+      const { data: reco } = await sb
+        .from('rd_recommendations').select('*').eq('ticket_id', ticketId).maybeSingle();
+
+      let report = null;
+      if (reco?.report_id) {
+        const { data: r } = await sb.from('rd_reports').select('id,title,type').eq('id', reco.report_id).maybeSingle();
+        report = r;
+      }
+
+      let assignee: any = null;
+      if (incident.assigned_to) {
+        const { data: p } = await sb.from('profiles').select('id,first_name,last_name,email').eq('id', incident.assigned_to).maybeSingle();
+        assignee = p;
+      }
+
+      const { data: history } = await sb
+        .from('audit_logs').select('*')
+        .eq('resource', 'audit_incident').eq('resource_id', ticketId)
+        .order('created_at', { ascending: false });
+
+      return { incident, recommendation: reco, report, assignee, history: history || [] };
+    },
+  });
+
+// List of profiles for assignee selection
+export const useProfiles = () =>
+  useQuery({
+    queryKey: ['profiles_min'],
+    queryFn: async () => {
+      const { data, error } = await sb.from('profiles').select('id,first_name,last_name,email').order('first_name');
+      if (error) throw error;
+      return (data || []).map((p: any) => ({ ...p, full_name: `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || p.email }));
+    },
+  });
+
+// Update an R&D-originated ticket (audit_incident) + write history entry
+export const useUpdateRDTicket = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ ticketId, updates, changeNote }: { ticketId: string; updates: Record<string, any>; changeNote: string }) => {
+      const { data: u } = await supabase.auth.getUser();
+      const cleaned: any = { ...updates };
+      if (updates.status === 'resolved' && !updates.resolved_at) cleaned.resolved_at = new Date().toISOString();
+      const { error } = await sb.from('audit_incidents').update(cleaned).eq('id', ticketId);
+      if (error) throw error;
+
+      let user_name: string | null = null;
+      if (u.user?.id) {
+        const { data: prof } = await sb.from('profiles').select('first_name,last_name').eq('id', u.user.id).maybeSingle();
+        if (prof) user_name = `${prof.first_name ?? ''} ${prof.last_name ?? ''}`.trim();
+      }
+      await sb.from('audit_logs').insert({
+        resource: 'audit_incident',
+        resource_id: ticketId,
+        action: 'rd_ticket_update',
+        user_id: u.user?.id,
+        user_name,
+        details: { changes: updates, note: changeNote },
+      });
+    },
+    onSuccess: (_d, vars) => {
+      qc.invalidateQueries({ queryKey: ['rd_ticket', vars.ticketId] });
+      qc.invalidateQueries({ queryKey: ['rd_tickets'] });
+      qc.invalidateQueries({ queryKey: ['audit_incidents'] });
+    },
+  });
+};

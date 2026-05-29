@@ -26,6 +26,7 @@ import RDShops from "./pages/modules/rd/RDShops";
 import RDSuppliers from "./pages/modules/rd/RDSuppliers";
 import RDFrictions from "./pages/modules/rd/RDFrictions";
 import RDReports from "./pages/modules/rd/RDReports";
+import RDTicketDetail from "./pages/modules/rd/RDTicketDetail";
 import GatewayDashboard from "./pages/modules/gateway/GatewayDashboard";
 import PackagingDashboard from "./pages/modules/packaging/PackagingDashboard";
 import ModuleAccess from "./pages/modules/direction/ModuleAccess";
@@ -316,6 +317,7 @@ const App = () => (
             <Route path="/pole/rd/suppliers" element={<RDSuppliers />} />
             <Route path="/pole/rd/frictions" element={<RDFrictions />} />
             <Route path="/pole/rd/reports" element={<RDReports />} />
+            <Route path="/pole/rd/tickets/:id" element={<RDTicketDetail />} />
             
             {/* Transversal modules */}
             <Route path="/modules/gateway" element={<GatewayDashboard />} />
