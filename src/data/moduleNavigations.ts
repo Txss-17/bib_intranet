@@ -81,6 +81,7 @@ export const moduleNavigations: ModuleNavigations = {
   // Supplier & Product
   supplier: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/supplier' },
+    { id: 'applications', label: 'Applications', labelFr: 'Candidatures', path: '/pole/supplier/applications' },
     { id: 'portfolios', label: 'Portfolios', labelFr: 'Portefeuilles', path: '/pole/supplier/portfolios' },
     { id: 'pending', label: 'Pending Products', labelFr: 'Produits en attente', path: '/pole/supplier/pending' },
     { id: 'validated', label: 'Validated Products', labelFr: 'Produits validés', path: '/pole/supplier/validated' },
@@ -89,6 +90,7 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'decisions', label: 'Decision History', labelFr: 'Historique décisions', path: '/pole/supplier/decisions' },
     { id: 'alerts', label: 'Quality Alerts', labelFr: 'Alertes qualité', path: '/pole/supplier/alerts' },
   ],
+
 
   // Audit
   audit: [
