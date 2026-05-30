@@ -82,6 +82,8 @@ export const moduleNavigations: ModuleNavigations = {
   supplier: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/supplier' },
     { id: 'applications', label: 'Applications', labelFr: 'Candidatures', path: '/pole/supplier/applications' },
+    { id: 'restock-orders', label: 'Restock Orders', labelFr: 'Ordres de restock', path: '/pole/supplier/restock-orders' },
+    { id: 'catalog-inbox', label: 'Catalog Inbox', labelFr: 'Inbox catalogues', path: '/pole/supplier/catalog-inbox' },
     { id: 'portfolios', label: 'Portfolios', labelFr: 'Portefeuilles', path: '/pole/supplier/portfolios' },
     { id: 'pending', label: 'Pending Products', labelFr: 'Produits en attente', path: '/pole/supplier/pending' },
     { id: 'validated', label: 'Validated Products', labelFr: 'Produits validés', path: '/pole/supplier/validated' },

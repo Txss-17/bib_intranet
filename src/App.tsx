@@ -44,6 +44,8 @@ import QualityAlerts from "./pages/modules/supplier/QualityAlerts";
 import SupplierPortfolios from "./pages/modules/supplier/SupplierPortfolios";
 import SupplierApplications from "./pages/modules/supplier/SupplierApplications";
 import SupplierApplicationDetail from "./pages/modules/supplier/SupplierApplicationDetail";
+import SupplierRestockOrders from "./pages/modules/supplier/SupplierRestockOrders";
+import SupplierCatalogInbox from "./pages/modules/supplier/SupplierCatalogInbox";
 
 
 // Ops module pages
@@ -211,6 +213,8 @@ const App = () => (
             <Route path="/pole/supplier/portfolios" element={<SupplierPortfolios />} />
             <Route path="/pole/supplier/applications" element={<SupplierApplications />} />
             <Route path="/pole/supplier/applications/:id" element={<SupplierApplicationDetail />} />
+            <Route path="/pole/supplier/restock-orders" element={<SupplierRestockOrders />} />
+            <Route path="/pole/supplier/catalog-inbox" element={<SupplierCatalogInbox />} />
 
             
             {/* Lifecycle (User Success & Risk) module */}

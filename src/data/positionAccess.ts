@@ -14,7 +14,8 @@ export const positionAccess: Record<EmployeePosition, PositionAccess> = {
       'supplier.overview', 'supplier.inbox-catalogues', 'supplier.fiche-fournisseur',
       'supplier.validation-produit', 'supplier.pending', 'supplier.validated',
       'supplier.suppliers', 'supplier.certifications', 'supplier.decisions',
-      'supplier.alerts', 'supplier.transmission-tech', 'supplier.applications'
+      'supplier.alerts', 'supplier.transmission-tech', 'supplier.applications',
+      'supplier.restock_orders', 'supplier.catalog_inbox'
     ],
     restricted: ['finance.*', 'lifecycle.comptes-utilisateurs', 'rh.*']
   },

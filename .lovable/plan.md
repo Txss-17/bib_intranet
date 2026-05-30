@@ -1,143 +1,118 @@
-# Portail Candidatures Fournisseurs — Intégration BOS → Connect
+# Portail Fournisseur Bidirectionnel — BOS ↔ Connect
 
-## Objectif
-
-Remplacer la réception par mail des candidatures (fournisseurs, fabricants, logisticiens) venant de la plateforme b.i.b (BOS) par un **système intégré au pôle Fournisseur de Connect** : ingestion automatique, calcul de score pondéré, attribution automatique à un gestionnaire, workflow de validation, dashboard et historique.
+Extension du portail candidatures (déjà livré côté Connect) pour couvrir tout le cycle de vie fournisseur, avec visibilité côté BOS (portail fournisseur) et actions côté Connect (pôle Fournisseur).
 
 ---
 
-## 1. Flux global
+## 1. Statut candidature visible côté fournisseur
 
-```text
-[BOS form submit] 
-   → Edge function publique `supplier-application-intake`
-   → INSERT supplier_applications (score calculé, priorité)
-   → Auto-assignation gestionnaire (algorithme existant)
-   → Notification gestionnaire
-   → Dashboard pôle Fournisseur → Validation / Refus / Revue
-   → Historique conservé (application_events)
-```
+**But** : le candidat voit l'avancement de sa candidature en temps réel sur b.i.b platform.
+
+- **Côté Connect** : statuts déjà gérés (`new → assigned → in_review → approved/rejected/on_hold`), événements dans `supplier_application_events`.
+- **Nouveau** : Edge function publique `supplier-application-status` (GET, signée par `application_id + email` ou token) qui retourne `{ status, priority, last_event, public_timeline }`.
+- **Timeline publique** : on filtre `supplier_application_events` (event_type, to_status, notes, created_at) — on n'expose JAMAIS les `decision_notes` internes ni le scoring détaillé.
+- Champ ajouté `supplier_applications.public_token` (uuid, généré à l'insert) utilisé par BOS pour interroger sans auth.
 
 ---
 
-## 2. Base de données (migration)
+## 2. Ordres de restock (MOQ par destination)
 
-### `supplier_applications`
-Champs clés : `id`, `type` (supplier/manufacturer/logistics), `company_name`, `contact_name`, `contact_email`, `contact_phone`, `country`, `category`, `lead_time_days`, `moq`, `audit_accepted` (bool), `certifications` (jsonb), `documents` (jsonb urls), `raw_payload` (jsonb), `score` (int), `priority` (high/standard/low), `status` (new/assigned/in_review/approved/rejected/on_hold), `blocking_criteria` (text[]), `assigned_to_id` (uuid), `assigned_to_name`, `assigned_at`, `decision_notes`, `decision_by`, `decision_at`, `source` (default 'bos_form'), `created_at`, `updated_at`.
+**But** : pour un fournisseur **validé** (lié à `suppliers`), le pôle envoie via le portail fournisseur des ordres : "produit X, MOQ Y, destination = partenaire logistique Z ou entrepôt W".
 
-Rejet automatique si `audit_accepted = false`.
+### Table `supplier_restock_orders`
+- `id`, `supplier_id` (fk suppliers), `catalog_id` (fk product_catalog), `product_name` (snapshot)
+- `quantity` (= MOQ demandé), `destination_type` ('warehouse' | 'logistics_partner'), `destination_id` (uuid), `destination_name`
+- `customization_notes` (text, nullable — produits à personnaliser)
+- `status` ('draft' | 'sent' | 'acknowledged' | 'in_production' | 'shipped' | 'received' | 'cancelled')
+- `priority` ('high'|'standard'|'low'), `due_date`, `sent_at`, `acknowledged_at`, `received_at`
+- `created_by`, `created_at`, `updated_at`
+- RLS : SELECT/UPDATE authenticated avec rôle admin/manager ; lecture publique par supplier via edge function signée.
 
-### `supplier_application_events` (historique)
-`id`, `application_id`, `event_type` (created/scored/assigned/status_changed/commented/decided), `from_status`, `to_status`, `notes`, `performed_by`, `metadata` jsonb, `created_at`.
+### UI Connect
+- Sous-page `/pole/supplier/restock-orders` : table + filtres (fournisseur, statut, destination), création via dialog (catalog picker + destination picker = warehouses ou logistics_partners).
+- Action "Envoyer" → status `sent` + event log + notification (futur : email).
 
-### RLS
-- SELECT : authenticated (toute la team Fournisseur voit).
-- INSERT : `service_role` uniquement (edge function) + authenticated pour création manuelle.
-- UPDATE : `admin`/`manager` OU `supplier_manager` via has_role + position check.
-- Events : INSERT authenticated, SELECT authenticated.
-
-### GRANTs explicites pour les deux tables.
-
----
-
-## 3. Scoring (server-side, dans l'edge function et fonction SQL)
-
-Barème simple, pondéré :
-
-| Critère | Règle | Points |
-|---|---|---|
-| Lead time UE | <5j / 5–10j / >10j | +20 / +10 / 0 |
-| MOQ | <50 / 50–200 / >200 | +15 / +10 / +2 |
-| Audit accepté | oui/non | +20 / **rejet auto** |
-| Certifications | par cert valide | +5 (cap +15) |
-| Origine FR/UE | FR / UE / autre | +10 / +5 / 0 |
-
-**Priorité dérivée** :
-- `high` : score ≥ 55 ET FR/UE ET audit ok
-- `standard` : score ≥ 30
-- `low` : sinon
+### Côté BOS (lecture seule pour le fournisseur)
+- Edge function `supplier-portal-orders` retourne la liste des ordres pour `supplier_id` (auth via token portail fournisseur).
 
 ---
 
-## 4. Edge function `supplier-application-intake`
+## 3. Notifications audit programmé
 
-- Publique (verify_jwt=false), CORS ouvert.
-- Auth simple via header `x-linksy-key` = `LINKSY_API_SECRET_KEY`.
-- Zod validation du payload.
-- Calcule score + priorité.
-- Si `audit_accepted=false` → insert avec status=`rejected`, blocking_criteria=['audit_refused'].
-- Sinon → status=`new`, puis appelle l'algo d'auto-assignation (réutilise la logique de `AssignmentSuggestion`) → assigne au meilleur candidat dispo et passe status=`assigned`.
-- Crée notification + event historique.
-- Renvoie `{ id, score, priority, status, assigned_to }`.
+**But** : quand le pôle Audit planifie un audit fournisseur, le fournisseur est notifié sur son portail.
 
----
+- Table `field_audits` existe déjà (target_type='supplier', scheduled_date, status).
+- Ajouter : trigger ou hook applicatif → quand `field_audits` insert avec `target_type='supplier'` et `status='scheduled'`, créer une entrée dans nouvelle table `supplier_portal_notifications`.
 
-## 5. UI Connect — Pôle Fournisseur
-
-### Nouvelle sous-page : `supplier.applications` → `/modules/supplier/applications`
-
-**Liste** (table) :
-- Colonnes : Société, Type, Pays, Catégorie, Score (badge couleur), Priorité (🔥🟡⚪), Statut, Gestionnaire, Reçue le, Action.
-- Filtres : statut, priorité, type, gestionnaire, date, score min.
-- Recherche temps réel (titre, email, société).
-- Export CSV/PDF (ExportButtons existant).
-
-### Fiche candidature : `/modules/supplier/applications/:id`
-Onglets :
-1. **Vue d'ensemble** — score décomposé, critères bloquants, priorité, contact, payload brut formaté.
-2. **Documents** — liens vers certifs/fichiers uploadés.
-3. **Décision** — boutons Approuver / Refuser / Mettre en revue / Réassigner, commentaire requis. Création d'un fournisseur (suppliers) si approuvé.
-4. **Historique** — timeline `supplier_application_events`.
-
-### Dashboard widget
-Sur `SupplierDashboard` : compteur "Nouvelles candidatures" + "À traiter" (status in new/assigned/in_review).
+### Table `supplier_portal_notifications`
+- `id`, `supplier_id`, `type` ('audit_scheduled' | 'restock_order' | 'catalog_review' | 'application_update' | 'generic')
+- `title`, `body`, `reference_table`, `reference_id`, `read_at`, `created_at`
+- Pas d'écriture côté fournisseur — uniquement READ via edge function du portail.
+- RLS Connect : SELECT authenticated, INSERT authenticated (admins/managers Audit + Fournisseur), pas d'UPDATE/DELETE.
 
 ---
 
-## 6. RBAC
+## 4. Réception nouveaux catalogues uploadés par le fournisseur
 
-- `supplier.applications` ajouté dans `positionAccess.ts` pour `supplier_manager` et `ceo`.
-- Actions de décision : guard `isAdmin || isManager || position==='supplier_manager'`.
-- Wrapping `<ProtectedScreen screenId="supplier.applications">`.
+**But** : le fournisseur upload un nouveau catalogue depuis BOS → arrive dans une inbox côté pôle Fournisseur.
 
----
+### Table `supplier_catalog_uploads`
+- `id`, `supplier_id`, `submitted_by_email`, `file_name`, `file_url` (storage `product-assets/catalogs/{supplier_id}/...`), `file_size`, `mime_type`
+- `version` (text), `notes` (text)
+- `status` ('pending' | 'reviewing' | 'approved' | 'rejected'), `review_notes`, `reviewed_by`, `reviewed_at`
+- `created_at`, `updated_at`
+- RLS : SELECT/UPDATE authenticated (admin/manager), INSERT via edge function service_role.
 
-## 7. Hook `useSupplierApplications`
+### Edge function `supplier-catalog-upload` (publique, signée `x-linksy-key`)
+- Reçoit `{ supplier_id, file_base64, file_name, mime_type, version, notes }`.
+- Upload vers bucket `product-assets/catalogs/{supplier_id}/{uuid}-{filename}`.
+- Insert ligne `pending` + notification au gestionnaire du fournisseur + event audit_log.
 
-- `useSupplierApplications(filters)` — liste avec react-query.
-- `useSupplierApplication(id)` — détail + events.
-- `useUpdateApplicationStatus()` — change statut + crée event.
-- `useReassignApplication()` — change gestionnaire + event.
-- `useApproveApplication()` — crée ligne dans `suppliers` puis status=approved.
-
----
-
-## 8. Navigation
-
-- `moduleNavigations.ts` : ajouter "Candidatures" sous le pôle Fournisseur (entre Inbox catalogues et Fiche fournisseur).
-- Route dans `App.tsx`.
+### UI Connect
+- Sous-page `/pole/supplier/catalog-inbox` : table des uploads pending/reviewing avec preview du fichier + actions Approuver/Refuser (commentaire requis).
+- Hook React Query `useSupplierCatalogUploads`.
 
 ---
 
-## 9. Hors-scope (volontaire — KISS)
+## 5. Navigation & RBAC
 
-- Pas d'IA / scoring prédictif.
-- Pas d'intégration mail entrante (uniquement webhook signé).
-- Réassignation manuelle = MVP (pas de rebalance auto).
+Nouvelles entrées dans `moduleNavigations.ts` (pôle Supplier) :
+- "Ordres de restock" → `supplier.restock_orders`
+- "Inbox catalogues" → `supplier.catalog_inbox`
+
+`positionAccess.ts` : ajout des screens pour `supplier_manager` + `ceo`.
+
+`App.tsx` : 4 nouvelles routes (restock list, restock detail futur, catalog inbox, application detail déjà fait).
 
 ---
 
-## Fichiers créés
+## 6. Hors-scope (KISS)
 
-- `supabase/migrations/<ts>_supplier_applications.sql`
-- `supabase/functions/supplier-application-intake/index.ts`
-- `src/hooks/useSupplierApplications.ts`
-- `src/pages/modules/supplier/SupplierApplications.tsx`
-- `src/pages/modules/supplier/SupplierApplicationDetail.tsx`
+- Pas d'authentification fournisseur côté BOS dans ce sprint (on génère/réutilise des tokens signés ; auth complète = sprint séparé).
+- Pas d'envoi email automatique pour restock/audit (notif in-app + champ pour futur trigger).
+- Pas de versionning fin sur les catalogues (un upload = une ligne).
+- Pas de regénération auto des MOQ depuis `replenishment_suggestions` (le manager choisit manuellement, MVP).
 
-## Fichiers modifiés
+---
 
-- `src/App.tsx` (routes)
-- `src/data/moduleNavigations.ts` (nav)
-- `src/data/positionAccess.ts` (RBAC)
-- `src/pages/modules/supplier/SupplierDashboard.tsx` (widget)
+## 7. Fichiers
+
+**Migration unique** `supabase/migrations/<ts>_supplier_portal_bidirectional.sql` :
+- ALTER `supplier_applications` ADD `public_token uuid DEFAULT gen_random_uuid()`.
+- CREATE `supplier_restock_orders`, `supplier_portal_notifications`, `supplier_catalog_uploads` (+ GRANTs + RLS + triggers updated_at).
+
+**Edge functions** :
+- `supabase/functions/supplier-application-status/index.ts` (GET public token-based)
+- `supabase/functions/supplier-portal-orders/index.ts` (GET supplier_id + token)
+- `supabase/functions/supplier-catalog-upload/index.ts` (POST signé)
+
+**Hooks** :
+- `src/hooks/useSupplierRestockOrders.ts`
+- `src/hooks/useSupplierCatalogUploads.ts`
+- `src/hooks/useSupplierPortalNotifications.ts`
+
+**Pages** :
+- `src/pages/modules/supplier/SupplierRestockOrders.tsx`
+- `src/pages/modules/supplier/SupplierCatalogInbox.tsx`
+
+**Edits** : `App.tsx`, `moduleNavigations.ts`, `positionAccess.ts`, `SupplierApplications.tsx` (badge "lien public"), `SupplierDashboard.tsx` (widgets restock + catalog inbox).
