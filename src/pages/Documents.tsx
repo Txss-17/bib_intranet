@@ -61,6 +61,8 @@ export default function Documents() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [createOpen, setCreateOpen] = useState(false);
   const [scope, setScope] = useState<'all' | 'mine' | 'general'>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; url: string; type: string; size: number }[]>([]);
   const { data: documents = [], isLoading } = useDocuments();
   const { profile, user } = useAuth();
   const { isAdmin, isManager } = useUserRole();
