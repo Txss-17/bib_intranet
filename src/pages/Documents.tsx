@@ -340,7 +340,7 @@ export default function Documents() {
                     <SelectItem key={p} value={p}>Pôle {p}</SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+            </div>
             <div className="space-y-2">
               <Label>Fichier</Label>
               <FileUploadZone
