@@ -327,8 +327,8 @@ export default function Documents() {
                     <SelectItem value="restricted">Restreint</SelectItem>
                     <SelectItem value="confidential">Confidentiel</SelectItem>
                   </SelectContent>
-                </Select>
-              </div>
+              </Select>
+            </div>
             </div>
             <div className="space-y-2">
               <Label>Rattachement</Label>
