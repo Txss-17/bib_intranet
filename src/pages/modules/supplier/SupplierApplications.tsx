@@ -56,17 +56,25 @@ export default function SupplierApplications() {
     high: apps.filter(a => a.priority === 'high' && a.status !== 'approved' && a.status !== 'rejected').length,
   };
 
+  const exportColumns = [
+    { header: 'Société', accessor: 'Société' }, { header: 'Type', accessor: 'Type' },
+    { header: 'Pays', accessor: 'Pays' }, { header: 'Score', accessor: 'Score' },
+    { header: 'Priorité', accessor: 'Priorité' }, { header: 'Statut', accessor: 'Statut' },
+    { header: 'Gestionnaire', accessor: 'Gestionnaire' }, { header: 'Email', accessor: 'Email' },
+    { header: 'Reçue', accessor: 'Reçue' },
+  ];
+
   return (
-    <MainLayout>
-      <ProtectedScreen screenId="supplier.applications">
-        <div className="space-y-6">
-          <div className="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <h1 className="text-2xl font-semibold flex items-center gap-2"><Inbox className="h-6 w-6" /> Candidatures fournisseurs</h1>
-              <p className="text-sm text-muted-foreground">Réception et traitement des candidatures issues du formulaire b.i.b platform</p>
-            </div>
-            <ExportButtons data={exportRows} filename="candidatures-fournisseurs" title="Candidatures fournisseurs" />
+    <ProtectedScreen screenId="supplier.applications">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-semibold flex items-center gap-2"><Inbox className="h-6 w-6" /> Candidatures fournisseurs</h1>
+            <p className="text-sm text-muted-foreground">Réception et traitement des candidatures issues du formulaire b.i.b platform</p>
           </div>
+          <ExportButtons data={exportRows} columns={exportColumns} filename="candidatures-fournisseurs" title="Candidatures fournisseurs" />
+        </div>
+
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card><CardContent className="pt-6"><div className="text-xs text-muted-foreground">Nouvelles</div><div className="text-2xl font-semibold mt-1">{counts.new}</div></CardContent></Card>
