@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EmployeePosition, positionInfos } from '@/types/positions';
-import { positionAccess, canAccessPole, canAccessScreen, getAccessiblePoles } from '@/data/positionAccess';
+import { canAccessPole, canAccessScreen, getAccessiblePoles } from '@/data/positionAccess';
 import { PoleId } from '@/types';
 
 interface UsePositionReturn {
@@ -15,23 +15,21 @@ interface UsePositionReturn {
 
 export const usePosition = (): UsePositionReturn => {
   const [position, setPosition] = useState<EmployeePosition | undefined>(undefined);
+  const [extraPoles, setExtraPoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchPosition = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        
         if (user) {
           const { data: profile } = await supabase
             .from('profiles')
-            .select('position')
+            .select('position, poles')
             .eq('id', user.id)
             .single();
-          
-          if (profile?.position) {
-            setPosition(profile.position as EmployeePosition);
-          }
+          if (profile?.position) setPosition(profile.position as EmployeePosition);
+          if (profile?.poles) setExtraPoles(profile.poles as string[]);
         }
       } catch (error) {
         console.error('Error fetching position:', error);
@@ -39,7 +37,6 @@ export const usePosition = (): UsePositionReturn => {
         setIsLoading(false);
       }
     };
-
     fetchPosition();
   }, []);
 
@@ -50,8 +47,8 @@ export const usePosition = (): UsePositionReturn => {
     position: effectivePosition,
     positionInfo: effectivePosition ? positionInfos[effectivePosition] : undefined,
     isLoading,
-    canAccessPole: (poleId: PoleId) => canAccessPole(effectivePosition, poleId),
-    canAccessScreen: (screenId: string) => canAccessScreen(effectivePosition, screenId),
-    accessiblePoles: getAccessiblePoles(effectivePosition)
+    canAccessPole: (poleId: PoleId) => canAccessPole(effectivePosition, poleId, extraPoles),
+    canAccessScreen: (screenId: string) => canAccessScreen(effectivePosition, screenId, extraPoles),
+    accessiblePoles: getAccessiblePoles(effectivePosition, extraPoles),
   };
 };

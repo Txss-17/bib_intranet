@@ -119,10 +119,44 @@ export const positionAccess: Record<EmployeePosition, PositionAccess> = {
   }
 };
 
-export const canAccessPole = (position: EmployeePosition | undefined, poleId: PoleId): boolean => {
+// Build a union of "implicit" extra access from a list of additional poles
+// stored on the profile (profile.poles). For each extra pole, we union in the
+// poles + screens of the default position covering that pole.
+const POLE_DEFAULT_POSITION: Record<string, EmployeePosition> = {
+  supplier: 'supplier_manager',
+  ops: 'ops_logistics_manager',
+  finance: 'finance_manager',
+  audit: 'audit_compliance_lead',
+  compliance: 'audit_compliance_lead',
+  rse: 'rse_packaging_manager',
+  tech: 'tech_platform_manager',
+  marketing: 'marketing_manager',
+  rh: 'rh_manager',
+  risk: 'risk_manager',
+  rd: 'rd_manager',
+  lifecycle: 'user_success_manager',
+};
+
+const collectExtraScreens = (extraPoles?: string[]): Set<string> => {
+  const out = new Set<string>();
+  if (!extraPoles) return out;
+  for (const p of extraPoles) {
+    const pos = POLE_DEFAULT_POSITION[p];
+    if (!pos) continue;
+    for (const s of positionAccess[pos].screens) out.add(s);
+  }
+  return out;
+};
+
+export const canAccessPole = (
+  position: EmployeePosition | undefined,
+  poleId: PoleId,
+  extraPoles?: string[],
+): boolean => {
   if (!position) return false;
   if (position === 'ceo') return true;
-  return positionAccess[position].poles.includes(poleId);
+  if (positionAccess[position].poles.includes(poleId)) return true;
+  return !!extraPoles && extraPoles.includes(poleId);
 };
 
 // Screens that any authenticated employee can access (transversal rights)
@@ -132,7 +166,11 @@ const PUBLIC_SCREENS = new Set<string>([
   'audit.resolution',        // Resolution tracking visibility
 ]);
 
-export const canAccessScreen = (position: EmployeePosition | undefined, screenId: string): boolean => {
+export const canAccessScreen = (
+  position: EmployeePosition | undefined,
+  screenId: string,
+  extraPoles?: string[],
+): boolean => {
   if (!position) return false;
   if (position === 'ceo') return true;
   if (PUBLIC_SCREENS.has(screenId)) return true;
@@ -142,16 +180,31 @@ export const canAccessScreen = (position: EmployeePosition | undefined, screenId
   for (const restriction of access.restricted) {
     if (restriction.endsWith('.*')) {
       const prefix = restriction.replace('.*', '');
-      if (screenId.startsWith(prefix)) return false;
+      if (screenId.startsWith(prefix)) {
+        // Allow if the screen's pole is explicitly granted via profile.poles
+        if (!(extraPoles && extraPoles.includes(prefix))) return false;
+      }
     } else if (restriction === screenId) {
       return false;
     }
   }
 
-  return access.screens.includes(screenId) || access.screens.includes('*');
+  if (access.screens.includes(screenId) || access.screens.includes('*')) return true;
+
+  // Fall back to extra-pole-derived screens
+  const extraScreens = collectExtraScreens(extraPoles);
+  return extraScreens.has(screenId);
 };
 
-export const getAccessiblePoles = (position: EmployeePosition | undefined): PoleId[] => {
+export const getAccessiblePoles = (
+  position: EmployeePosition | undefined,
+  extraPoles?: string[],
+): PoleId[] => {
   if (!position) return [];
-  return positionAccess[position].poles;
+  const base = positionAccess[position].poles;
+  if (!extraPoles?.length) return base;
+  const merged = new Set<PoleId>(base);
+  for (const p of extraPoles) merged.add(p as PoleId);
+  return Array.from(merged);
 };
+

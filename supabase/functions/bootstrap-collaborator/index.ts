@@ -12,7 +12,7 @@ const TARGETS = [
     password: 'TXss@s17',
     first_name: 'Admin',
     last_name: 'Test',
-    position: 'supplier_logistics_manager',
+    position: 'supplier_manager',
     poles: ['supplier', 'ops'],
     seniority: 'collaborator',
   },
