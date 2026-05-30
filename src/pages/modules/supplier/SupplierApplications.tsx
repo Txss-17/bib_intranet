@@ -152,9 +152,9 @@ export default function SupplierApplications() {
                 </TableBody>
               </Table>
             </CardContent>
-          </Card>
-        </div>
-      </ProtectedScreen>
-    </MainLayout>
+        </Card>
+      </div>
+    </ProtectedScreen>
   );
 }
+
