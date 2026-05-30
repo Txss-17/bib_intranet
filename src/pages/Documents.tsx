@@ -341,6 +341,15 @@ export default function Documents() {
                   ))}
                 </SelectContent>
               </Select>
+            <div className="space-y-2">
+              <Label>Fichier</Label>
+              <FileUploadZone
+                bucket="product-assets"
+                folder="documents"
+                multiple={false}
+                files={uploadedFiles}
+                onFilesChange={setUploadedFiles}
+              />
             </div>
             <Button onClick={handleCreate} className="w-full" disabled={createDoc.isPending}>
               {createDoc.isPending ? 'Ajout...' : 'Ajouter'}
