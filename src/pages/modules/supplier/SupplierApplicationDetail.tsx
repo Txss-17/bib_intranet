@@ -51,8 +51,8 @@ export default function SupplierApplicationDetail() {
   };
 
   return (
-    <MainLayout>
-      <ProtectedScreen screenId="supplier.applications">
+    <ProtectedScreen screenId="supplier.applications">
+
         <div className="space-y-6">
           <div className="flex items-center gap-3">
             <Button asChild variant="ghost" size="sm"><Link to="/pole/supplier/applications"><ArrowLeft className="h-4 w-4 mr-1" /> Retour</Link></Button>
