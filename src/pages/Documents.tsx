@@ -164,7 +164,6 @@ export default function Documents() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline"><FolderOpen className="h-4 w-4 mr-2" />Parcourir</Button>
           {canAddDocument && (
             <Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
           )}
