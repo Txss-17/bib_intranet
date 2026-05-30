@@ -17,21 +17,22 @@ interface ReauthenticationEmailProps {
 }
 
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="fr" dir="ltr">
     <Head />
-    <Preview>Your verification code</Preview>
+    <Preview>Votre code de vérification</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
+        <Heading style={h1}>Confirmation d'identité</Heading>
+        <Text style={text}>Utilisez le code ci-dessous pour confirmer votre identité :</Text>
         <Text style={codeStyle}>{token}</Text>
         <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
+          Ce code expirera prochainement. Si vous n'êtes pas à l'origine de
+          cette demande, ignorez cet email.
         </Text>
       </Container>
     </Body>
   </Html>
+
 )
 
 export default ReauthenticationEmail
