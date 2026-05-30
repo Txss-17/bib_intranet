@@ -3,7 +3,6 @@ export type EmployeePosition =
   | 'supplier_manager'      // Supplier & Product Manager
   | 'user_success_manager'  // User Success & Risk Manager (Pôle 12)
   | 'ops_logistics_manager' // Ops & Logistics Manager
-  | 'supplier_logistics_manager' // Combined: Supplier + Ops/Logistics
   | 'finance_manager'       // Finance & Cashflow Manager
   | 'audit_compliance_lead' // Audit, Compliance & Legal Lead
   | 'rse_packaging_manager' // RSE & Packaging Manager
@@ -43,13 +42,6 @@ export const positionInfos: Record<EmployeePosition, PositionInfo> = {
     titleFr: 'Responsable Ops & Logistique',
     module: 'Ops & Logistics Hub',
     description: 'Commandes, expéditions, incidents logistiques, partenaires'
-  },
-  supplier_logistics_manager: {
-    id: 'supplier_logistics_manager',
-    title: 'Supplier & Logistics Manager',
-    titleFr: 'Gestionnaire Fournisseurs & Logistique',
-    module: 'Supplier & Ops/Logistics',
-    description: 'Accès combiné aux pôles Fournisseurs et Ops/Logistique'
   },
   finance_manager: {
     id: 'finance_manager',
