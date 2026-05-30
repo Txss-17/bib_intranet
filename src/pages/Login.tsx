@@ -32,10 +32,15 @@ const Login = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
+  const isAllowedEmail = (value: string) => {
+    const e = value.toLowerCase().trim();
+    return e.endsWith('@brand-in-a-box.space') || e === 'tgliyeta@gmail.com';
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email.toLowerCase().endsWith('@brand-in-a-box.space')) {
+    if (!isAllowedEmail(email)) {
       toast({
         title: 'Domaine non autorisé',
         description: 'Seules les adresses @brand-in-a-box.space peuvent se connecter à l\'intranet.',
@@ -43,6 +48,7 @@ const Login = () => {
       });
       return;
     }
+
 
     setLoading(true);
 
@@ -81,7 +87,7 @@ const Login = () => {
       toast({ title: 'Erreur', description: 'Veuillez saisir votre adresse email.', variant: 'destructive' });
       return;
     }
-    if (!email.toLowerCase().endsWith('@brand-in-a-box.space')) {
+    if (!isAllowedEmail(email)) {
       toast({ title: 'Domaine non autorisé', description: 'Seules les adresses @brand-in-a-box.space sont autorisées.', variant: 'destructive' });
       return;
     }
