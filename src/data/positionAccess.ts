@@ -20,20 +20,6 @@ export const positionAccess: Record<EmployeePosition, PositionAccess> = {
     restricted: ['finance.*', 'lifecycle.comptes-utilisateurs', 'rh.*']
   },
 
-  supplier_logistics_manager: {
-    poles: ['supplier', 'ops'],
-    screens: [
-      'supplier.overview', 'supplier.inbox-catalogues', 'supplier.fiche-fournisseur',
-      'supplier.validation-produit', 'supplier.pending', 'supplier.validated',
-      'supplier.suppliers', 'supplier.certifications', 'supplier.decisions',
-      'supplier.alerts', 'supplier.transmission-tech', 'supplier.applications',
-      'supplier.restock_orders', 'supplier.catalog_inbox',
-      'ops.overview', 'ops.orders', 'ops.shipments', 'ops.logistics',
-      'ops.incidents', 'ops.partners', 'ops.packaging-instructions', 'ops.daily-reports'
-    ],
-    restricted: ['finance.*', 'lifecycle.comptes-utilisateurs', 'rh.*']
-  },
-
   user_success_manager: {
     poles: ['lifecycle'],
     screens: [
