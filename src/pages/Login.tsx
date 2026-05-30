@@ -13,6 +13,7 @@ const positionDefaultRoute: Record<EmployeePosition, string> = {
   supplier_manager: '/pole/supplier',
   user_success_manager: '/pole/lifecycle',
   ops_logistics_manager: '/pole/ops',
+  supplier_logistics_manager: '/pole/supplier',
   finance_manager: '/pole/finance',
   audit_compliance_lead: '/pole/audit',
   rse_packaging_manager: '/pole/rse',
