@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -54,9 +55,10 @@ interface ValidatedProduct {
 }
 
 export default function ValidatedProducts() {
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState<ValidatedProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('supplier') ?? '');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sortBy, setSortBy] = useState('recent');
   const [selected, setSelected] = useState<Set<string>>(new Set());
