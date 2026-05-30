@@ -175,7 +175,18 @@ export default function Documents() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Rechercher par nom ou type..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Type" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les types</SelectItem>
+              <SelectItem value="report">Rapport</SelectItem>
+              <SelectItem value="contract">Contrat</SelectItem>
+              <SelectItem value="policy">Politique</SelectItem>
+              <SelectItem value="procedure">Procédure</SelectItem>
+              <SelectItem value="template">Template</SelectItem>
+            </SelectContent>
+          </Select>
           <div className="flex border border-input rounded-lg">
             <Button variant={scope === 'all' ? 'default' : 'ghost'} size="sm" onClick={() => setScope('all')} className="rounded-r-none">Tous</Button>
             <Button variant={scope === 'mine' ? 'default' : 'ghost'} size="sm" onClick={() => setScope('mine')} className="rounded-none border-x">Mes pôles</Button>
