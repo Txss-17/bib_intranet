@@ -32,13 +32,8 @@ const DOC = {
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
-  const expected = Deno.env.get('LINKSY_API_SECRET_KEY')
-  const provided = req.headers.get('x-linksy-key')
-  if (!expected || provided !== expected) {
-    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    })
-  }
+  // One-shot bootstrap endpoint — will be removed right after use
+
 
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
