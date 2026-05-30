@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MainLayout } from '@/components/layout/MainLayout';
 import { ProtectedScreen } from '@/components/ProtectedScreen';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,8 +8,9 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { ExportButtons } from '@/components/ExportButtons';
-import { useSupplierApplications, SupplierApplication } from '@/hooks/useSupplierApplications';
+import { useSupplierApplications } from '@/hooks/useSupplierApplications';
 import { Inbox, Flame } from 'lucide-react';
+
 
 const statusLabels: Record<string, string> = {
   new: 'Nouvelle', assigned: 'Assignée', in_review: 'En revue',
