@@ -284,7 +284,13 @@ export default function SupplierFiles() {
 
               <div className="flex justify-end gap-2 pt-4 border-t border-border">
                 <Button variant="outline" onClick={() => setSelectedSupplier(null)}>Fermer</Button>
-                <Button>Voir tous les produits</Button>
+                <Button
+                  onClick={() => {
+                    const name = selectedSupplier.name;
+                    setSelectedSupplier(null);
+                    navigate(`/pole/supplier/validated?supplier=${encodeURIComponent(name)}`);
+                  }}
+                >Voir tous les produits</Button>
               </div>
             </div>
           )}
