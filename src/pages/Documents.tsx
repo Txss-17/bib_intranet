@@ -18,6 +18,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { getPoleById } from '@/data/poles';
+import FileUploadZone from '@/components/FileUploadZone';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -60,6 +61,8 @@ export default function Documents() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list');
   const [createOpen, setCreateOpen] = useState(false);
   const [scope, setScope] = useState<'all' | 'mine' | 'general'>('all');
+  const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; url: string; type: string; size: number }[]>([]);
   const { data: documents = [], isLoading } = useDocuments();
   const { profile, user } = useAuth();
   const { isAdmin, isManager } = useUserRole();
@@ -69,7 +72,7 @@ export default function Documents() {
   const canAddDocument = isAdmin || isManager;
 
   const createDoc = useMutation({
-    mutationFn: async (doc: { name: string; type: string; access_level: string; pole_id: PoleId | null }) => {
+    mutationFn: async (doc: { name: string; type: string; access_level: string; pole_id: PoleId | null; file_url: string | null }) => {
       const { error } = await from('documents').insert({
         ...doc,
         uploaded_by: user?.id,
@@ -80,6 +83,7 @@ export default function Documents() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['documents'] });
       setCreateOpen(false);
+      setUploadedFiles([]);
       toast.success('Document ajouté');
     },
     onError: () => toast.error('Erreur lors de l\'ajout'),
@@ -90,7 +94,12 @@ export default function Documents() {
   const handleCreate = () => {
     if (!canAddDocument) { toast.error("Réservé aux administrateurs de pôle ou à la direction"); return; }
     if (!newDoc.name) { toast.error('Nom requis'); return; }
-    createDoc.mutate({ ...newDoc, pole_id: newDoc.pole_id === 'general' ? null : newDoc.pole_id });
+    if (uploadedFiles.length === 0) { toast.error('Veuillez uploader un fichier'); return; }
+    createDoc.mutate({
+      ...newDoc,
+      pole_id: newDoc.pole_id === 'general' ? null : newDoc.pole_id,
+      file_url: uploadedFiles[0].url,
+    });
     setNewDoc({ name: '', type: 'report', access_level: 'public', pole_id: (userPoles[0] as PoleId) || 'general' });
   };
 
@@ -107,6 +116,7 @@ export default function Documents() {
   });
 
   const filtered = scoped.filter(doc => {
+    if (typeFilter !== 'all' && doc.type !== typeFilter) return false;
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return doc.name.toLowerCase().includes(q) || doc.type.toLowerCase().includes(q);
@@ -154,7 +164,6 @@ export default function Documents() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline"><FolderOpen className="h-4 w-4 mr-2" />Parcourir</Button>
           {canAddDocument && (
             <Button onClick={() => setCreateOpen(true)}><Plus className="h-4 w-4 mr-2" />Ajouter</Button>
           )}
@@ -166,7 +175,18 @@ export default function Documents() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Rechercher par nom ou type..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" />
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <Select value={typeFilter} onValueChange={setTypeFilter}>
+            <SelectTrigger className="w-[160px]"><SelectValue placeholder="Type" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tous les types</SelectItem>
+              <SelectItem value="report">Rapport</SelectItem>
+              <SelectItem value="contract">Contrat</SelectItem>
+              <SelectItem value="policy">Politique</SelectItem>
+              <SelectItem value="procedure">Procédure</SelectItem>
+              <SelectItem value="template">Template</SelectItem>
+            </SelectContent>
+          </Select>
           <div className="flex border border-input rounded-lg">
             <Button variant={scope === 'all' ? 'default' : 'ghost'} size="sm" onClick={() => setScope('all')} className="rounded-r-none">Tous</Button>
             <Button variant={scope === 'mine' ? 'default' : 'ghost'} size="sm" onClick={() => setScope('mine')} className="rounded-none border-x">Mes pôles</Button>
@@ -307,8 +327,8 @@ export default function Documents() {
                     <SelectItem value="restricted">Restreint</SelectItem>
                     <SelectItem value="confidential">Confidentiel</SelectItem>
                   </SelectContent>
-                </Select>
-              </div>
+              </Select>
+            </div>
             </div>
             <div className="space-y-2">
               <Label>Rattachement</Label>
@@ -321,6 +341,16 @@ export default function Documents() {
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="space-y-2">
+              <Label>Fichier</Label>
+              <FileUploadZone
+                bucket="product-assets"
+                folder="documents"
+                multiple={false}
+                files={uploadedFiles}
+                onFilesChange={setUploadedFiles}
+              />
             </div>
             <Button onClick={handleCreate} className="w-full" disabled={createDoc.isPending}>
               {createDoc.isPending ? 'Ajout...' : 'Ajouter'}
