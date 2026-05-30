@@ -184,8 +184,8 @@ export default function SupplierApplicationDetail() {
               </Card>
             </TabsContent>
           </Tabs>
-        </div>
-      </ProtectedScreen>
-    </MainLayout>
+      </div>
+    </ProtectedScreen>
   );
+
 }
