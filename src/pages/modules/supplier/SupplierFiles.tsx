@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -123,6 +124,7 @@ function AuditConformitySection({ supplierName }: { supplierName: string }) {
 }
 
 export default function SupplierFiles() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
@@ -284,7 +286,13 @@ export default function SupplierFiles() {
 
               <div className="flex justify-end gap-2 pt-4 border-t border-border">
                 <Button variant="outline" onClick={() => setSelectedSupplier(null)}>Fermer</Button>
-                <Button>Voir tous les produits</Button>
+                <Button
+                  onClick={() => {
+                    const name = selectedSupplier.name;
+                    setSelectedSupplier(null);
+                    navigate(`/pole/supplier/validated?supplier=${encodeURIComponent(name)}`);
+                  }}
+                >Voir tous les produits</Button>
               </div>
             </div>
           )}

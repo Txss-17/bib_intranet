@@ -225,8 +225,25 @@ export default function Documents() {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild><Button variant="ghost" size="icon"><MoreHorizontal className="h-4 w-4" /></Button></DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem><Eye className="h-4 w-4 mr-2" />Voir</DropdownMenuItem>
-                      <DropdownMenuItem><Download className="h-4 w-4 mr-2" />Télécharger</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (!doc.file_url) { toast.error("Aucun fichier associé à ce document"); return; }
+                          window.open(doc.file_url, '_blank', 'noopener,noreferrer');
+                        }}
+                      ><Eye className="h-4 w-4 mr-2" />Voir</DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => {
+                          if (!doc.file_url) { toast.error("Aucun fichier associé à ce document"); return; }
+                          const a = document.createElement('a');
+                          a.href = doc.file_url;
+                          a.download = doc.name;
+                          a.target = '_blank';
+                          a.rel = 'noopener noreferrer';
+                          document.body.appendChild(a);
+                          a.click();
+                          a.remove();
+                        }}
+                      ><Download className="h-4 w-4 mr-2" />Télécharger</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
