@@ -72,7 +72,7 @@ export default function Documents() {
   const canAddDocument = isAdmin || isManager;
 
   const createDoc = useMutation({
-    mutationFn: async (doc: { name: string; type: string; access_level: string; pole_id: PoleId | null }) => {
+    mutationFn: async (doc: { name: string; type: string; access_level: string; pole_id: PoleId | null; file_url: string | null }) => {
       const { error } = await from('documents').insert({
         ...doc,
         uploaded_by: user?.id,
@@ -83,6 +83,7 @@ export default function Documents() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['documents'] });
       setCreateOpen(false);
+      setUploadedFiles([]);
       toast.success('Document ajouté');
     },
     onError: () => toast.error('Erreur lors de l\'ajout'),
@@ -93,7 +94,12 @@ export default function Documents() {
   const handleCreate = () => {
     if (!canAddDocument) { toast.error("Réservé aux administrateurs de pôle ou à la direction"); return; }
     if (!newDoc.name) { toast.error('Nom requis'); return; }
-    createDoc.mutate({ ...newDoc, pole_id: newDoc.pole_id === 'general' ? null : newDoc.pole_id });
+    if (uploadedFiles.length === 0) { toast.error('Veuillez uploader un fichier'); return; }
+    createDoc.mutate({
+      ...newDoc,
+      pole_id: newDoc.pole_id === 'general' ? null : newDoc.pole_id,
+      file_url: uploadedFiles[0].url,
+    });
     setNewDoc({ name: '', type: 'report', access_level: 'public', pole_id: (userPoles[0] as PoleId) || 'general' });
   };
 
@@ -110,6 +116,7 @@ export default function Documents() {
   });
 
   const filtered = scoped.filter(doc => {
+    if (typeFilter !== 'all' && doc.type !== typeFilter) return false;
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return doc.name.toLowerCase().includes(q) || doc.type.toLowerCase().includes(q);
