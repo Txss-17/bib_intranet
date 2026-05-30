@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -123,6 +124,7 @@ function AuditConformitySection({ supplierName }: { supplierName: string }) {
 }
 
 export default function SupplierFiles() {
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
