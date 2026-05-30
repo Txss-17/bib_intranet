@@ -34,7 +34,7 @@ export default function SupplierApplicationDetail() {
   const [notes, setNotes] = useState('');
   const [assignee, setAssignee] = useState<string>('');
 
-  if (isLoading || !data) return <MainLayout><div className="p-6 text-muted-foreground">Chargement…</div></MainLayout>;
+  if (isLoading || !data) return <div className="p-6 text-muted-foreground">Chargement…</div>;
   const { app, events } = data;
 
   const decide = (status: 'approved' | 'rejected' | 'in_review' | 'on_hold') => {
