@@ -9,6 +9,10 @@ import {
   HelpCircle,
   Volume2,
   CheckCircle,
+  Laptop,
+  FileText,
+  Lock,
+  Info,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -219,6 +223,76 @@ export default function Settings() {
                     <span className="text-sm text-muted-foreground">Aucun</span>
                   )}
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Équipement attribué */}
+          <div className="enterprise-card p-6">
+            <h3 className="text-lg font-medium text-foreground mb-4 flex items-center gap-2">
+              <Laptop className="h-4 w-4" /> Équipement & outils
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Ordinateur attribué</p>
+                  <p className="text-xs text-muted-foreground">Matériel professionnel</p>
+                </div>
+                <span className="text-sm text-muted-foreground">Non renseigné</span>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Licence Microsoft / Google</p>
+                  <p className="text-xs text-muted-foreground">Suite bureautique</p>
+                </div>
+                <span className="text-sm text-muted-foreground">Non renseigné</span>
+              </div>
+              <div className="flex items-center justify-between py-2">
+                <div>
+                  <p className="text-sm font-medium text-foreground">Carte professionnelle</p>
+                  <p className="text-xs text-muted-foreground">Transport · Hébergement · Repas professionnels</p>
+                </div>
+                <Badge variant="secondary">Active</Badge>
+              </div>
+            </div>
+          </div>
+
+          {/* Documents employé */}
+          <div className="enterprise-card p-6">
+            <h3 className="text-lg font-medium text-foreground mb-4 flex items-center gap-2">
+              <FileText className="h-4 w-4" /> Mes documents
+            </h3>
+            <div className="space-y-2">
+              {[
+                { name: 'Contrat de travail', type: 'Contrat' },
+                { name: 'Charte informatique', type: 'Politique' },
+                { name: 'Politique de frais', type: 'Politique' },
+                { name: 'Procédures internes', type: 'Procédure' },
+              ].map((d) => (
+                <div key={d.name} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{d.name}</p>
+                    <p className="text-xs text-muted-foreground">{d.type}</p>
+                  </div>
+                  <Button variant="outline" size="sm">Consulter</Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Note confidentialité */}
+          <div className="enterprise-card p-4 border-dashed">
+            <div className="flex gap-3">
+              <Lock className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p className="font-medium text-foreground flex items-center gap-1">
+                  <Info className="h-3 w-3" /> Informations réservées
+                </p>
+                <p>
+                  Les éléments salariaux (rémunération, primes, plafonds budgétaires détaillés),
+                  les évaluations de performance et les journaux d'audit complets sont accessibles
+                  uniquement à votre manager, aux RH et à la Direction.
+                </p>
               </div>
             </div>
           </div>
