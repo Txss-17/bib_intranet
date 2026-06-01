@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   User,
   Bell,
@@ -13,7 +13,11 @@ import {
   FileText,
   Lock,
   Info,
+  Eye,
+  EyeOff,
+  ShieldCheck,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +30,46 @@ import { useAlertSoundSetting } from '@/hooks/useAlertSoundSetting';
 import { playCriticalAlertSound } from '@/lib/alertSounds';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { usePermissionRules } from '@/hooks/usePermissionRules';
+import { logSensitiveAccess } from '@/lib/sensitiveAudit';
+
+function SensitiveProfileSection() {
+  useEffect(() => {
+    logSensitiveAccess({
+      section: 'settings.sensitive_profile',
+      action: 'view_sensitive_profile',
+      allowed: true,
+    });
+  }, []);
+  return (
+    <div className="enterprise-card p-6 border-l-4 border-l-amber-500">
+      <div className="flex items-start justify-between mb-4">
+        <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-amber-500" /> Données sensibles (RH/Direction)
+        </h3>
+        <Badge variant="outline" className="text-amber-600 border-amber-500/40">Consultation journalisée</Badge>
+      </div>
+      <div className="space-y-3">
+        <div className="flex justify-between text-sm py-1 border-b border-border/40">
+          <span className="text-muted-foreground">Rémunération brute annuelle</span>
+          <span className="font-medium">— (à intégrer SIRH)</span>
+        </div>
+        <div className="flex justify-between text-sm py-1 border-b border-border/40">
+          <span className="text-muted-foreground">Bonus / variable</span>
+          <span className="font-medium">— (à intégrer SIRH)</span>
+        </div>
+        <div className="flex justify-between text-sm py-1 border-b border-border/40">
+          <span className="text-muted-foreground">Plafond budgétaire</span>
+          <span className="font-medium">— (à intégrer Finance)</span>
+        </div>
+        <div className="flex justify-between text-sm py-1">
+          <span className="text-muted-foreground">Évaluation dernière revue</span>
+          <span className="font-medium">— (à intégrer SIRH)</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function SecuritySettings() {
   const [twoFactor, setTwoFactor] = useState(false);
@@ -34,6 +78,25 @@ function SecuritySettings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
   const [showChangeForm, setShowChangeForm] = useState(false);
+  const rights = usePermissionRules();
+
+  const handleViewAuditLog = async () => {
+    await logSensitiveAccess({
+      section: 'settings.audit_log',
+      action: 'view_full_audit_log',
+      allowed: rights.can_view_audit_log,
+      reason: rights.can_view_audit_log ? 'authorized' : 'denied_by_rule',
+    });
+    if (!rights.can_view_audit_log) {
+      toast({
+        title: 'Accès restreint',
+        description: 'Le journal complet est réservé aux RH et à la Direction. Votre tentative a été enregistrée.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    toast({ title: 'Accès enregistré', description: 'Consultation du journal d\'audit journalisée.' });
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -109,9 +172,19 @@ function SecuritySettings() {
       </div>
 
       <div className="enterprise-card p-6">
-        <h3 className="text-lg font-medium text-foreground mb-4">Journal d'audit</h3>
-        <p className="text-sm text-muted-foreground mb-4">Votre activité récente est journalisée pour des raisons de sécurité.</p>
-        <Button variant="outline">Voir le journal complet</Button>
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <h3 className="text-lg font-medium text-foreground">Journal d'audit</h3>
+          <Badge variant={rights.can_view_audit_log ? 'default' : 'outline'} className="gap-1">
+            {rights.can_view_audit_log ? <Eye className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+            {rights.can_view_audit_log ? 'Accès complet' : 'Accès restreint'}
+          </Badge>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          {rights.can_view_audit_log
+            ? "Vous pouvez consulter l'ensemble des journaux d'audit. Chaque consultation est elle-même enregistrée."
+            : "Votre activité personnelle est journalisée. Le journal complet est réservé aux RH et à la Direction."}
+        </p>
+        <Button variant="outline" onClick={handleViewAuditLog}>Voir le journal complet</Button>
       </div>
     </>
   );
@@ -123,6 +196,7 @@ export default function Settings() {
   const [twoFactor, setTwoFactor] = useState(false);
   const { soundEnabled, setSoundEnabled } = useAlertSoundSetting();
   const { profile } = useAuth();
+  const rights = usePermissionRules();
 
   const firstName = profile?.first_name || '';
   const lastName = profile?.last_name || '';
@@ -132,14 +206,59 @@ export default function Settings() {
   const poles = profile?.poles || [];
   const seniority = profile?.seniority || '';
 
+  // Log a single audit entry on Settings load summarising the visibility decisions
+  useEffect(() => {
+    if (!profile) return;
+    logSensitiveAccess({
+      section: 'settings.load',
+      action: 'open_settings',
+      allowed: true,
+      details: {
+        poles,
+        seniority,
+        can_view_sensitive: rights.can_view_sensitive,
+        can_view_audit_log: rights.can_view_audit_log,
+      },
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.email]);
+
+  const visibilityCount =
+    (rights.can_view_sensitive ? 1 : 0) +
+    (rights.can_view_audit_log ? 1 : 0) +
+    (rights.can_configure_permissions ? 1 : 0);
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Paramètres</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Gérez vos préférences et paramètres de sécurité
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Paramètres</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Gérez vos préférences et paramètres de sécurité
+          </p>
+        </div>
+        {/* Visibility status */}
+        <div className="enterprise-card p-3 flex items-center gap-3 self-start">
+          {rights.can_view_sensitive ? (
+            <Eye className="h-4 w-4 text-emerald-500" />
+          ) : (
+            <EyeOff className="h-4 w-4 text-muted-foreground" />
+          )}
+          <div className="text-xs">
+            <p className="font-medium text-foreground">Visibilité</p>
+            <p className="text-muted-foreground">
+              {visibilityCount === 0
+                ? 'Vue standard employé'
+                : `${visibilityCount} droit${visibilityCount > 1 ? 's' : ''} étendu${visibilityCount > 1 ? 's' : ''} actif${visibilityCount > 1 ? 's' : ''}`}
+            </p>
+          </div>
+          {rights.can_configure_permissions && (
+            <Button asChild size="sm" variant="outline" className="ml-2">
+              <Link to="/permissions"><ShieldCheck className="h-3.5 w-3.5 mr-1" />Configurer</Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
@@ -280,7 +399,12 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Note confidentialité */}
+          {/* Sensitive section — visible only if rule allows */}
+          {rights.can_view_sensitive && (
+            <SensitiveProfileSection />
+          )}
+
+          {/* Note confidentialité — adapts to current rights */}
           <div className="enterprise-card p-4 border-dashed">
             <div className="flex gap-3">
               <Lock className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -289,9 +413,9 @@ export default function Settings() {
                   <Info className="h-3 w-3" /> Informations réservées
                 </p>
                 <p>
-                  Les éléments salariaux (rémunération, primes, plafonds budgétaires détaillés),
-                  les évaluations de performance et les journaux d'audit complets sont accessibles
-                  uniquement à votre manager, aux RH et à la Direction.
+                  {rights.can_view_sensitive
+                    ? "Vous avez accès aux données sensibles (rémunération, évaluations, budgets détaillés) en tant que membre RH/Direction. Toute consultation est journalisée."
+                    : "Les éléments salariaux (rémunération, primes, plafonds budgétaires détaillés), les évaluations de performance et les journaux d'audit complets sont accessibles uniquement à votre manager, aux RH et à la Direction."}
                 </p>
               </div>
             </div>
