@@ -16,6 +16,7 @@ import SubSectionPage from "./pages/modules/SubSectionPage";
 import InternalFeed from "./pages/InternalFeed";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
+import PermissionsMatrix from "./pages/PermissionsMatrix";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
@@ -355,6 +356,7 @@ const App = () => (
             <Route path="/feed" element={<InternalFeed />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/permissions" element={<PermissionsMatrix />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
