@@ -40,6 +40,25 @@ function SecuritySettings() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
   const [showChangeForm, setShowChangeForm] = useState(false);
+  const rights = usePermissionRules();
+
+  const handleViewAuditLog = async () => {
+    await logSensitiveAccess({
+      section: 'settings.audit_log',
+      action: 'view_full_audit_log',
+      allowed: rights.can_view_audit_log,
+      reason: rights.can_view_audit_log ? 'authorized' : 'denied_by_rule',
+    });
+    if (!rights.can_view_audit_log) {
+      toast({
+        title: 'Accès restreint',
+        description: 'Le journal complet est réservé aux RH et à la Direction. Votre tentative a été enregistrée.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    toast({ title: 'Accès enregistré', description: 'Consultation du journal d\'audit journalisée.' });
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -115,9 +134,19 @@ function SecuritySettings() {
       </div>
 
       <div className="enterprise-card p-6">
-        <h3 className="text-lg font-medium text-foreground mb-4">Journal d'audit</h3>
-        <p className="text-sm text-muted-foreground mb-4">Votre activité récente est journalisée pour des raisons de sécurité.</p>
-        <Button variant="outline">Voir le journal complet</Button>
+        <div className="flex items-start justify-between gap-3 mb-2">
+          <h3 className="text-lg font-medium text-foreground">Journal d'audit</h3>
+          <Badge variant={rights.can_view_audit_log ? 'default' : 'outline'} className="gap-1">
+            {rights.can_view_audit_log ? <Eye className="h-3 w-3" /> : <Lock className="h-3 w-3" />}
+            {rights.can_view_audit_log ? 'Accès complet' : 'Accès restreint'}
+          </Badge>
+        </div>
+        <p className="text-sm text-muted-foreground mb-4">
+          {rights.can_view_audit_log
+            ? "Vous pouvez consulter l'ensemble des journaux d'audit. Chaque consultation est elle-même enregistrée."
+            : "Votre activité personnelle est journalisée. Le journal complet est réservé aux RH et à la Direction."}
+        </p>
+        <Button variant="outline" onClick={handleViewAuditLog}>Voir le journal complet</Button>
       </div>
     </>
   );
