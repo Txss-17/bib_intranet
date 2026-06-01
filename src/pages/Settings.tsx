@@ -129,6 +129,7 @@ export default function Settings() {
   const [twoFactor, setTwoFactor] = useState(false);
   const { soundEnabled, setSoundEnabled } = useAlertSoundSetting();
   const { profile } = useAuth();
+  const rights = usePermissionRules();
 
   const firstName = profile?.first_name || '';
   const lastName = profile?.last_name || '';
@@ -138,14 +139,59 @@ export default function Settings() {
   const poles = profile?.poles || [];
   const seniority = profile?.seniority || '';
 
+  // Log a single audit entry on Settings load summarising the visibility decisions
+  useEffect(() => {
+    if (!profile) return;
+    logSensitiveAccess({
+      section: 'settings.load',
+      action: 'open_settings',
+      allowed: true,
+      details: {
+        poles,
+        seniority,
+        can_view_sensitive: rights.can_view_sensitive,
+        can_view_audit_log: rights.can_view_audit_log,
+      },
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile?.id]);
+
+  const visibilityCount =
+    (rights.can_view_sensitive ? 1 : 0) +
+    (rights.can_view_audit_log ? 1 : 0) +
+    (rights.can_configure_permissions ? 1 : 0);
+
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Paramètres</h1>
-        <p className="text-sm text-muted-foreground mt-0.5">
-          Gérez vos préférences et paramètres de sécurité
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Paramètres</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
+            Gérez vos préférences et paramètres de sécurité
+          </p>
+        </div>
+        {/* Visibility status */}
+        <div className="enterprise-card p-3 flex items-center gap-3 self-start">
+          {rights.can_view_sensitive ? (
+            <Eye className="h-4 w-4 text-emerald-500" />
+          ) : (
+            <EyeOff className="h-4 w-4 text-muted-foreground" />
+          )}
+          <div className="text-xs">
+            <p className="font-medium text-foreground">Visibilité</p>
+            <p className="text-muted-foreground">
+              {visibilityCount === 0
+                ? 'Vue standard employé'
+                : `${visibilityCount} droit${visibilityCount > 1 ? 's' : ''} étendu${visibilityCount > 1 ? 's' : ''} actif${visibilityCount > 1 ? 's' : ''}`}
+            </p>
+          </div>
+          {rights.can_configure_permissions && (
+            <Button asChild size="sm" variant="outline" className="ml-2">
+              <Link to="/permissions"><ShieldCheck className="h-3.5 w-3.5 mr-1" />Configurer</Link>
+            </Button>
+          )}
+        </div>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
