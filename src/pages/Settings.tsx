@@ -154,7 +154,7 @@ export default function Settings() {
       },
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile?.id]);
+  }, [profile?.email]);
 
   const visibilityCount =
     (rights.can_view_sensitive ? 1 : 0) +
