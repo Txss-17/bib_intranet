@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   User,
   Bell,
@@ -13,7 +13,11 @@ import {
   FileText,
   Lock,
   Info,
+  Eye,
+  EyeOff,
+  ShieldCheck,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +30,8 @@ import { useAlertSoundSetting } from '@/hooks/useAlertSoundSetting';
 import { playCriticalAlertSound } from '@/lib/alertSounds';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { usePermissionRules } from '@/hooks/usePermissionRules';
+import { logSensitiveAccess } from '@/lib/sensitiveAudit';
 
 function SecuritySettings() {
   const [twoFactor, setTwoFactor] = useState(false);
