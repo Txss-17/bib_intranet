@@ -33,6 +33,44 @@ import { toast } from '@/hooks/use-toast';
 import { usePermissionRules } from '@/hooks/usePermissionRules';
 import { logSensitiveAccess } from '@/lib/sensitiveAudit';
 
+function SensitiveProfileSection() {
+  useEffect(() => {
+    logSensitiveAccess({
+      section: 'settings.sensitive_profile',
+      action: 'view_sensitive_profile',
+      allowed: true,
+    });
+  }, []);
+  return (
+    <div className="enterprise-card p-6 border-l-4 border-l-amber-500">
+      <div className="flex items-start justify-between mb-4">
+        <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-amber-500" /> Données sensibles (RH/Direction)
+        </h3>
+        <Badge variant="outline" className="text-amber-600 border-amber-500/40">Consultation journalisée</Badge>
+      </div>
+      <div className="space-y-3">
+        <div className="flex justify-between text-sm py-1 border-b border-border/40">
+          <span className="text-muted-foreground">Rémunération brute annuelle</span>
+          <span className="font-medium">— (à intégrer SIRH)</span>
+        </div>
+        <div className="flex justify-between text-sm py-1 border-b border-border/40">
+          <span className="text-muted-foreground">Bonus / variable</span>
+          <span className="font-medium">— (à intégrer SIRH)</span>
+        </div>
+        <div className="flex justify-between text-sm py-1 border-b border-border/40">
+          <span className="text-muted-foreground">Plafond budgétaire</span>
+          <span className="font-medium">— (à intégrer Finance)</span>
+        </div>
+        <div className="flex justify-between text-sm py-1">
+          <span className="text-muted-foreground">Évaluation dernière revue</span>
+          <span className="font-medium">— (à intégrer SIRH)</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SecuritySettings() {
   const [twoFactor, setTwoFactor] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
