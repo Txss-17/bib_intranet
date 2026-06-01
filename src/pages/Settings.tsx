@@ -361,7 +361,12 @@ export default function Settings() {
             </div>
           </div>
 
-          {/* Note confidentialité */}
+          {/* Sensitive section — visible only if rule allows */}
+          {rights.can_view_sensitive && (
+            <SensitiveProfileSection />
+          )}
+
+          {/* Note confidentialité — adapts to current rights */}
           <div className="enterprise-card p-4 border-dashed">
             <div className="flex gap-3">
               <Lock className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
@@ -370,9 +375,9 @@ export default function Settings() {
                   <Info className="h-3 w-3" /> Informations réservées
                 </p>
                 <p>
-                  Les éléments salariaux (rémunération, primes, plafonds budgétaires détaillés),
-                  les évaluations de performance et les journaux d'audit complets sont accessibles
-                  uniquement à votre manager, aux RH et à la Direction.
+                  {rights.can_view_sensitive
+                    ? "Vous avez accès aux données sensibles (rémunération, évaluations, budgets détaillés) en tant que membre RH/Direction. Toute consultation est journalisée."
+                    : "Les éléments salariaux (rémunération, primes, plafonds budgétaires détaillés), les évaluations de performance et les journaux d'audit complets sont accessibles uniquement à votre manager, aux RH et à la Direction."}
                 </p>
               </div>
             </div>
