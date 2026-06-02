@@ -1,14 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Loader2 } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 import { useCriticalAlerts } from '@/hooks/useCriticalAlerts';
 
 export default function CriticalAlerts() {
-  const { alerts, loading } = useCriticalAlerts();
-
-  if (loading) {
-    return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
-  }
+  const { alerts } = useCriticalAlerts();
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
@@ -37,9 +33,10 @@ export default function CriticalAlerts() {
                 <div key={a.id} className="flex items-start justify-between gap-3 border-b last:border-0 pb-3">
                   <div className="min-w-0">
                     <p className="text-sm font-medium">{a.title}</p>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{a.message}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2">{a.description}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 capitalize">{a.module} · {new Date(a.timestamp).toLocaleString('fr-FR')}</p>
                   </div>
-                  <Badge variant="destructive" className="shrink-0 capitalize">{a.severity}</Badge>
+                  <Badge variant={a.severity === 'critical' ? 'destructive' : 'secondary'} className="shrink-0 capitalize">{a.severity}</Badge>
                 </div>
               ))}
             </div>
