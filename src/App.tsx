@@ -226,7 +226,7 @@ const App = () => (
             {/* Lifecycle (User Success & Risk) module */}
             <Route path="/pole/lifecycle" element={<LifecycleDashboard />} />
             <Route path="/pole/lifecycle/onboarding" element={<LifecycleOnboarding />} />
-            <Route path="/pole/lifecycle/monitoring" element={<UserAccounts />} />
+            <Route path="/pole/lifecycle/monitoring" element={<ActivityMonitoring />} />
             <Route path="/pole/lifecycle/user-accounts" element={<UserAccounts />} />
             <Route path="/pole/lifecycle/risk-alerts" element={<ManagedRiskAlerts />} />
             <Route path="/pole/lifecycle/risk-alerts-legacy" element={<RiskAlerts />} />
@@ -234,7 +234,7 @@ const App = () => (
             <Route path="/pole/lifecycle/emails-legacy" element={<EmailCampaigns />} />
             <Route path="/pole/lifecycle/trustpilot" element={<TrustpilotAnalytics />} />
             <Route path="/pole/lifecycle/support" element={<SupportTickets />} />
-            <Route path="/pole/lifecycle/scoring" element={<RiskAlerts />} />
+            <Route path="/pole/lifecycle/scoring" element={<RiskScoring />} />
             <Route path="/pole/lifecycle/compliance" element={<ComplianceStatusPage />} />
             
             {/* Finance module */}
@@ -362,6 +362,7 @@ const App = () => (
             <Route path="/documents" element={<Documents />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/permissions" element={<PermissionsMatrix />} />
+            <Route path="/compliance-audit" element={<ComplianceAudit />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
