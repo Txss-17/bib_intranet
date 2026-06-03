@@ -17,6 +17,11 @@ import InternalFeed from "./pages/InternalFeed";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import PermissionsMatrix from "./pages/PermissionsMatrix";
+import ComplianceAudit from "./pages/ComplianceAudit";
+import StrategicKPIs from "./pages/modules/direction/StrategicKPIs";
+import CriticalAlertsPage from "./pages/modules/direction/CriticalAlerts";
+import ActivityMonitoring from "./pages/modules/lifecycle/ActivityMonitoring";
+import RiskScoring from "./pages/modules/lifecycle/RiskScoring";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
@@ -194,8 +199,8 @@ const App = () => (
             
             {/* Direction module */}
             <Route path="/pole/direction" element={<ExecutiveDashboard />} />
-            <Route path="/pole/direction/kpi" element={<ExecutiveDashboard />} />
-            <Route path="/pole/direction/alerts" element={<ExecutiveDashboard />} />
+            <Route path="/pole/direction/kpi" element={<StrategicKPIs />} />
+            <Route path="/pole/direction/alerts" element={<CriticalAlertsPage />} />
             <Route path="/pole/direction/decisions" element={<DecisionArbitrage />} />
             <Route path="/pole/direction/vision" element={<VisionRoadmap />} />
             <Route path="/pole/direction/governance" element={<GroupGovernance />} />
