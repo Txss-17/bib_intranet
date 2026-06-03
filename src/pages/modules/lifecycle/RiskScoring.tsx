@@ -4,17 +4,18 @@ import { Loader2, Gauge } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
+const RANK: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1 };
+
 function useScoring() {
   return useQuery({
     queryKey: ['lifecycle_risk_scoring'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('user_accounts')
-        .select('id, company_name, risk_level, risk_score, last_activity_at, status')
-        .order('risk_score', { ascending: false, nullsFirst: false })
-        .limit(50);
+        .select('id, company_name, risk_level, payment_status, subscription_status, trustpilot_rating, last_order_date')
+        .limit(200);
       if (error) throw error;
-      return data || [];
+      return (data || []).sort((a, b) => (RANK[b.risk_level || 'low'] || 0) - (RANK[a.risk_level || 'low'] || 0));
     },
   });
 }
@@ -67,7 +68,10 @@ export default function RiskScoring() {
                 <div key={a.id} className="flex items-center justify-between gap-3 border-b last:border-0 pb-2">
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate">{a.company_name || '—'}</p>
-                    <p className="text-xs text-muted-foreground">Score {a.risk_score ?? 0}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Paiement : {a.payment_status || '—'} · Abo : {a.subscription_status || '—'}
+                      {a.trustpilot_rating != null && ` · Trustpilot ${a.trustpilot_rating}`}
+                    </p>
                   </div>
                   <Badge variant={riskBadge(a.risk_level) as any} className="capitalize">{a.risk_level || 'low'}</Badge>
                 </div>
