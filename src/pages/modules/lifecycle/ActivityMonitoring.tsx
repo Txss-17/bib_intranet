@@ -9,7 +9,7 @@ function useActivity() {
     queryKey: ['lifecycle_activity_monitoring'],
     queryFn: async () => {
       const [accounts, events] = await Promise.all([
-        supabase.from('user_accounts').select('id, company_name, last_activity_at, risk_level, status').order('last_activity_at', { ascending: false, nullsFirst: false }).limit(20),
+        supabase.from('user_accounts').select('id, company_name, last_order_date, risk_level, subscription_status').order('last_order_date', { ascending: false, nullsFirst: false }).limit(20),
         supabase.from('audit_logs').select('id, action, user_name, resource, created_at').order('created_at', { ascending: false }).limit(15),
       ]);
       return { accounts: accounts.data || [], events: events.data || [] };
@@ -28,7 +28,7 @@ export default function ActivityMonitoring() {
           <Activity className="h-5 w-5" /> Suivi activité
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Activité récente des comptes et événements système.
+          Dernière activité des comptes et journaux système.
         </p>
       </div>
 
@@ -45,7 +45,7 @@ export default function ActivityMonitoring() {
                     <div className="min-w-0">
                       <p className="text-sm font-medium truncate">{a.company_name || '—'}</p>
                       <p className="text-xs text-muted-foreground">
-                        {a.last_activity_at ? new Date(a.last_activity_at).toLocaleString('fr-FR') : 'Jamais'}
+                        Dernière commande : {a.last_order_date ? new Date(a.last_order_date).toLocaleDateString('fr-FR') : '—'}
                       </p>
                     </div>
                     <Badge variant={a.risk_level === 'critical' || a.risk_level === 'high' ? 'destructive' : 'outline'} className="capitalize">{a.risk_level || 'low'}</Badge>
