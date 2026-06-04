@@ -102,6 +102,20 @@ export default function ComplianceAudit() {
         </CardContent>
       </Card>
 
+      {/* Pole-specific compliance */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Conformité par pôle</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <PoleLink to="/compliance-audit/finance" icon={Wallet} label="Finance" description="Cashflow, paiements, fonds garantie" />
+            <PoleLink to="/compliance-audit/ops" icon={Truck} label="Ops" description="Incidents, synchros, restock" />
+            <PoleLink to="/compliance-audit/tech" icon={Server} label="Tech" description="Sécurité, auth, déploiements" />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent audit events */}
         <Card>
