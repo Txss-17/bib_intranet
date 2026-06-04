@@ -193,6 +193,21 @@ export default function ComplianceAudit() {
   );
 }
 
+function PoleLink({ to, icon: Icon, label, description }: { to: string; icon: any; label: string; description: string }) {
+  return (
+    <Link to={to} className="flex items-center gap-3 rounded-lg border p-3 hover:bg-accent transition-colors group">
+      <div className="h-9 w-9 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium">{label}</p>
+        <p className="text-xs text-muted-foreground truncate">{description}</p>
+      </div>
+      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+    </Link>
+  );
+}
+
 function StatusItem({ icon: Icon, label, allowed }: { icon: any; label: string; allowed: boolean }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border p-3">
