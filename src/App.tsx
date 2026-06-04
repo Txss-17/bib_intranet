@@ -18,6 +18,9 @@ import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import PermissionsMatrix from "./pages/PermissionsMatrix";
 import ComplianceAudit from "./pages/ComplianceAudit";
+import FinanceCompliance from "./pages/compliance/FinanceCompliance";
+import OpsCompliance from "./pages/compliance/OpsCompliance";
+import TechCompliance from "./pages/compliance/TechCompliance";
 import StrategicKPIs from "./pages/modules/direction/StrategicKPIs";
 import CriticalAlertsPage from "./pages/modules/direction/CriticalAlerts";
 import ActivityMonitoring from "./pages/modules/lifecycle/ActivityMonitoring";
@@ -363,6 +366,9 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/permissions" element={<PermissionsMatrix />} />
             <Route path="/compliance-audit" element={<ComplianceAudit />} />
+            <Route path="/compliance-audit/finance" element={<FinanceCompliance />} />
+            <Route path="/compliance-audit/ops" element={<OpsCompliance />} />
+            <Route path="/compliance-audit/tech" element={<TechCompliance />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
