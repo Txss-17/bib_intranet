@@ -17,7 +17,7 @@ function useFinanceCompliance() {
       const since = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
       const [cashflows, payments, fund] = await Promise.all([
         supabase.from('cashflows').select('id, type, category, amount, transaction_date, description').gte('transaction_date', since).order('transaction_date', { ascending: false }).limit(100),
-        supabase.from('supplier_payments').select('id, amount, status, created_at, payment_date').order('created_at', { ascending: false }).limit(100),
+        supabase.from('supplier_payments').select('id, amount, status, created_at').order('created_at', { ascending: false }).limit(100),
         supabase.from('guarantee_fund').select('id, type, amount, reason, transaction_date').order('transaction_date', { ascending: false }).limit(20),
       ]);
       const cf = cashflows.data || [];
