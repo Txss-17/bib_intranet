@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Shield, Eye, FileSearch, Settings as SettingsIcon, ClipboardCheck, AlertTriangle, ArrowRight, Lock, CheckCircle2 } from 'lucide-react';
+import { Shield, Eye, FileSearch, Settings as SettingsIcon, ClipboardCheck, AlertTriangle, ArrowRight, Lock, CheckCircle2, Wallet, Truck, Server } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissionRules } from '@/hooks/usePermissionRules';
 import { logSensitiveAccess } from '@/lib/sensitiveAudit';
