@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Shield, Eye, FileSearch, Settings as SettingsIcon, ClipboardCheck, AlertTriangle, ArrowRight, Lock, CheckCircle2 } from 'lucide-react';
+import { Shield, Eye, FileSearch, Settings as SettingsIcon, ClipboardCheck, AlertTriangle, ArrowRight, Lock, CheckCircle2, Wallet, Truck, Server } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissionRules } from '@/hooks/usePermissionRules';
 import { logSensitiveAccess } from '@/lib/sensitiveAudit';
@@ -102,6 +102,20 @@ export default function ComplianceAudit() {
         </CardContent>
       </Card>
 
+      {/* Pole-specific compliance */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Conformité par pôle</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <PoleLink to="/compliance-audit/finance" icon={Wallet} label="Finance" description="Cashflow, paiements, fonds garantie" />
+            <PoleLink to="/compliance-audit/ops" icon={Truck} label="Ops" description="Incidents, synchros, restock" />
+            <PoleLink to="/compliance-audit/tech" icon={Server} label="Tech" description="Sécurité, auth, déploiements" />
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent audit events */}
         <Card>
@@ -176,6 +190,21 @@ export default function ComplianceAudit() {
         </Card>
       </div>
     </div>
+  );
+}
+
+function PoleLink({ to, icon: Icon, label, description }: { to: string; icon: any; label: string; description: string }) {
+  return (
+    <Link to={to} className="flex items-center gap-3 rounded-lg border p-3 hover:bg-accent transition-colors group">
+      <div className="h-9 w-9 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+        <Icon className="h-4 w-4" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium">{label}</p>
+        <p className="text-xs text-muted-foreground truncate">{description}</p>
+      </div>
+      <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+    </Link>
   );
 }
 
