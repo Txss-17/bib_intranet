@@ -12,6 +12,7 @@ export interface OpsAudit {
   recommendations: number | null;
   findings: string | null;
   notes: string | null;
+  app_origin: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -26,20 +27,20 @@ export interface SupplierAudit {
   score: number | null;
   findings: number | null;
   notes: string | null;
+  app_origin: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
 
 const from = (table: string) => (supabase as any).from(table);
 
-export const useOpsAudits = (search?: string) => {
+export const useOpsAudits = (search?: string, source?: string) => {
   return useQuery({
-    queryKey: ['ops-audits', search],
+    queryKey: ['ops-audits', search, source],
     queryFn: async () => {
       let query = from('ops_audits').select('*').order('date', { ascending: false });
-      if (search) {
-        query = query.or(`process.ilike.%${search}%,scope.ilike.%${search}%`);
-      }
+      if (search) query = query.or(`process.ilike.%${search}%,scope.ilike.%${search}%`);
+      if (source && source !== 'all') query = query.eq('app_origin', source);
       const { data, error } = await query;
       if (error) throw error;
       return (data || []) as OpsAudit[];
@@ -50,8 +51,8 @@ export const useOpsAudits = (search?: string) => {
 export const useCreateOpsAudit = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (audit: Omit<OpsAudit, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await from('ops_audits').insert(audit).select().single();
+    mutationFn: async (audit: Omit<OpsAudit, 'id' | 'created_at' | 'updated_at' | 'app_origin'>) => {
+      const { data, error } = await from('ops_audits').insert({ ...audit, app_origin: 'connect' }).select().single();
       if (error) throw error;
       return data;
     },
@@ -71,14 +72,13 @@ export const useUpdateOpsAudit = () => {
   });
 };
 
-export const useSupplierAudits = (search?: string) => {
+export const useSupplierAudits = (search?: string, source?: string) => {
   return useQuery({
-    queryKey: ['supplier-audits', search],
+    queryKey: ['supplier-audits', search, source],
     queryFn: async () => {
       let query = from('supplier_audits').select('*').order('date', { ascending: false });
-      if (search) {
-        query = query.or(`supplier.ilike.%${search}%,category.ilike.%${search}%`);
-      }
+      if (search) query = query.or(`supplier.ilike.%${search}%,category.ilike.%${search}%`);
+      if (source && source !== 'all') query = query.eq('app_origin', source);
       const { data, error } = await query;
       if (error) throw error;
       return (data || []) as SupplierAudit[];
@@ -89,8 +89,8 @@ export const useSupplierAudits = (search?: string) => {
 export const useCreateSupplierAudit = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (audit: Omit<SupplierAudit, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await from('supplier_audits').insert(audit).select().single();
+    mutationFn: async (audit: Omit<SupplierAudit, 'id' | 'created_at' | 'updated_at' | 'app_origin'>) => {
+      const { data, error } = await from('supplier_audits').insert({ ...audit, app_origin: 'connect' }).select().single();
       if (error) throw error;
       return data;
     },

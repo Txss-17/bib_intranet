@@ -10,13 +10,15 @@ import { ExportButtons } from '@/components/ExportButtons';
 import AuditForm from '@/components/forms/AuditForm';
 import { useSupplierAudits, useCreateSupplierAudit, useUpdateSupplierAudit } from '@/hooks/useAudits';
 import { useAuditSupplierLiaison } from '@/hooks/useAuditSupplierLiaison';
+import { SourceBadge, SourceFilter } from '@/components/audit/SourceBadge';
 
 export default function SupplierAudits() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('all');
   const [formOpen, setFormOpen] = useState(false);
   const [editingAudit, setEditingAudit] = useState<any>(null);
 
-  const { data: audits = [], isLoading } = useSupplierAudits(searchTerm || undefined);
+  const { data: audits = [], isLoading } = useSupplierAudits(searchTerm || undefined, sourceFilter);
   const createAudit = useCreateSupplierAudit();
   const updateAudit = useUpdateSupplierAudit();
   const { syncSupplierAfterAudit } = useAuditSupplierLiaison();
@@ -112,6 +114,7 @@ export default function SupplierAudits() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Rechercher par fournisseur ou catégorie..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
         </div>
+        <SourceFilter value={sourceFilter} onChange={setSourceFilter} />
       </div>
 
       <Card>
@@ -119,7 +122,7 @@ export default function SupplierAudits() {
         <CardContent>
           <Table>
             <TableHeader><TableRow>
-              <TableHead>Fournisseur</TableHead><TableHead>Catégorie</TableHead><TableHead>Auditeur</TableHead>
+              <TableHead>Fournisseur</TableHead><TableHead>Source</TableHead><TableHead>Catégorie</TableHead><TableHead>Auditeur</TableHead>
               <TableHead>Date</TableHead><TableHead>Statut</TableHead><TableHead>Score</TableHead>
               <TableHead>NC détectées</TableHead><TableHead>Actions</TableHead>
             </TableRow></TableHeader>
@@ -127,6 +130,7 @@ export default function SupplierAudits() {
               {audits.map((audit) => (
                 <TableRow key={audit.id}>
                   <TableCell className="font-medium"><div className="flex items-center gap-2"><Building className="h-4 w-4 text-muted-foreground" />{audit.supplier}</div></TableCell>
+                  <TableCell><SourceBadge source={audit.app_origin} /></TableCell>
                   <TableCell><Badge variant="outline">{audit.category}</Badge></TableCell>
                   <TableCell>{audit.auditor}</TableCell>
                   <TableCell>{new Date(audit.date).toLocaleDateString('fr-FR')}</TableCell>
@@ -145,7 +149,7 @@ export default function SupplierAudits() {
                   </TableCell>
                 </TableRow>
               ))}
-              {audits.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucun audit trouvé</TableCell></TableRow>}
+              {audits.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Aucun audit trouvé</TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent>
