@@ -9,13 +9,15 @@ import { Search, Plus, Settings, Calendar, FileText, Edit, Loader2 } from 'lucid
 import { ExportButtons } from '@/components/ExportButtons';
 import AuditForm from '@/components/forms/AuditForm';
 import { useOpsAudits, useCreateOpsAudit, useUpdateOpsAudit } from '@/hooks/useAudits';
+import { SourceBadge, SourceFilter } from '@/components/audit/SourceBadge';
 
 export default function OpsAudits() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sourceFilter, setSourceFilter] = useState('all');
   const [formOpen, setFormOpen] = useState(false);
   const [editingAudit, setEditingAudit] = useState<any>(null);
 
-  const { data: audits = [], isLoading } = useOpsAudits(searchTerm || undefined);
+  const { data: audits = [], isLoading } = useOpsAudits(searchTerm || undefined, sourceFilter);
   const createAudit = useCreateOpsAudit();
   const updateAudit = useUpdateOpsAudit();
 
@@ -75,6 +77,7 @@ export default function OpsAudits() {
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input placeholder="Rechercher par processus ou périmètre..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" />
         </div>
+        <SourceFilter value={sourceFilter} onChange={setSourceFilter} />
       </div>
 
       <Card>
@@ -82,7 +85,7 @@ export default function OpsAudits() {
         <CardContent>
           <Table>
             <TableHeader><TableRow>
-              <TableHead>Processus</TableHead><TableHead>Périmètre</TableHead><TableHead>Auditeur</TableHead>
+              <TableHead>Processus</TableHead><TableHead>Source</TableHead><TableHead>Périmètre</TableHead><TableHead>Auditeur</TableHead>
               <TableHead>Date</TableHead><TableHead>Statut</TableHead><TableHead>Score</TableHead>
               <TableHead>Recommandations</TableHead><TableHead>Actions</TableHead>
             </TableRow></TableHeader>
@@ -90,6 +93,7 @@ export default function OpsAudits() {
               {audits.map((audit) => (
                 <TableRow key={audit.id}>
                   <TableCell className="font-medium"><div className="flex items-center gap-2"><Settings className="h-4 w-4 text-muted-foreground" />{audit.process}</div></TableCell>
+                  <TableCell><SourceBadge source={audit.app_origin} /></TableCell>
                   <TableCell><Badge variant="outline">{audit.scope}</Badge></TableCell>
                   <TableCell>{audit.auditor}</TableCell>
                   <TableCell>{new Date(audit.date).toLocaleDateString('fr-FR')}</TableCell>
@@ -99,7 +103,7 @@ export default function OpsAudits() {
                   <TableCell><Button variant="ghost" size="sm" onClick={() => handleEdit(audit)}><Edit className="h-4 w-4" /></Button></TableCell>
                 </TableRow>
               ))}
-              {audits.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucun audit trouvé</TableCell></TableRow>}
+              {audits.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Aucun audit trouvé</TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent>

@@ -9,6 +9,7 @@ import { Search, Plus, MapPin, Calendar, FileText, Loader2, Eye, RefreshCw } fro
 import { ExportButtons } from '@/components/ExportButtons';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { SourceBadge, SourceFilter } from '@/components/audit/SourceBadge';
 
 function useFieldAudits() {
   return useQuery({
@@ -19,7 +20,7 @@ function useFieldAudits() {
         .select('*')
         .order('scheduled_date', { ascending: false });
       if (error) throw error;
-      return data.map(a => ({
+      return data.map((a: any) => ({
         id: a.id,
         location: a.target_name || 'N/A',
         type: a.target_type,
@@ -28,6 +29,7 @@ function useFieldAudits() {
         scheduledDate: a.scheduled_date || '',
         status: a.status || 'scheduled',
         score: a.score,
+        app_origin: a.app_origin || 'connect',
       }));
     },
   });
@@ -48,13 +50,15 @@ const auditTypeColors: Record<string, string> = {
 export default function FieldAudits() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const [sourceFilter, setSourceFilter] = useState('all');
   const { data: fieldAudits = [], isLoading } = useFieldAudits();
 
   const filteredAudits = fieldAudits.filter(a => {
     const matchesSearch = a.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
       a.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'all' || a.auditType === typeFilter;
-    return matchesSearch && matchesType;
+    const matchesSource = sourceFilter === 'all' || a.app_origin === sourceFilter;
+    return matchesSearch && matchesType && matchesSource;
   });
 
   const getStatusBadge = (status: string) => {
@@ -156,6 +160,7 @@ export default function FieldAudits() {
             <SelectItem value="periodic"><Calendar className="h-3 w-3 inline mr-1" />Périodique</SelectItem>
           </SelectContent>
         </Select>
+        <SourceFilter value={sourceFilter} onChange={setSourceFilter} />
       </div>
 
       <Card>
@@ -167,6 +172,7 @@ export default function FieldAudits() {
             <TableHeader>
               <TableRow>
                 <TableHead>Lieu</TableHead>
+                <TableHead>Source</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Niveau</TableHead>
                 <TableHead>Date</TableHead>
@@ -177,7 +183,7 @@ export default function FieldAudits() {
             </TableHeader>
             <TableBody>
               {filteredAudits.length === 0 ? (
-                <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Aucun audit trouvé</TableCell></TableRow>
+                <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucun audit trouvé</TableCell></TableRow>
               ) : (
                 filteredAudits.map((audit) => (
                   <TableRow key={audit.id}>
@@ -187,6 +193,7 @@ export default function FieldAudits() {
                         {audit.location}
                       </div>
                     </TableCell>
+                    <TableCell><SourceBadge source={audit.app_origin} /></TableCell>
                     <TableCell><Badge variant="outline">{audit.type}</Badge></TableCell>
                     <TableCell>
                       <Badge className={auditTypeColors[audit.auditType] || 'bg-muted text-muted-foreground'}>
