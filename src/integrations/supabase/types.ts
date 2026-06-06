@@ -699,6 +699,7 @@ export type Database = {
       }
       field_audits: {
         Row: {
+          app_origin: string
           audit_type: string
           auditor_id: string | null
           completed_date: string | null
@@ -715,6 +716,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          app_origin?: string
           audit_type: string
           auditor_id?: string | null
           completed_date?: string | null
@@ -731,6 +733,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          app_origin?: string
           audit_type?: string
           auditor_id?: string | null
           completed_date?: string | null
@@ -1220,6 +1223,7 @@ export type Database = {
       }
       ops_audits: {
         Row: {
+          app_origin: string
           auditor: string
           created_at: string | null
           date: string
@@ -1234,6 +1238,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          app_origin?: string
           auditor?: string
           created_at?: string | null
           date?: string
@@ -1248,6 +1253,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          app_origin?: string
           auditor?: string
           created_at?: string | null
           date?: string
@@ -2297,6 +2303,7 @@ export type Database = {
       }
       supplier_audits: {
         Row: {
+          app_origin: string
           auditor: string
           category: string
           created_at: string | null
@@ -2311,6 +2318,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          app_origin?: string
           auditor?: string
           category?: string
           created_at?: string | null
@@ -2325,6 +2333,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          app_origin?: string
           auditor?: string
           category?: string
           created_at?: string | null
