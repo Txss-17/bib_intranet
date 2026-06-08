@@ -47,7 +47,7 @@ export default function RDProducts() {
     { label: 'CA 30j (€)', value: totalRevenue.toLocaleString(), icon: AlertTriangle, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
   ];
 
-  const categories = Array.from(new Set(rows.map(r => r.category))).filter(c => c && c !== '—');
+  const categories = Array.from(new Set(rows.map((r: any) => r.category as string))).filter((c) => c && c !== '—');
 
   const filtered = rows
     .filter(p => {
