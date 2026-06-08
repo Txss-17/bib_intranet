@@ -7,36 +7,26 @@ import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
-import { Search, Package, AlertTriangle, CheckCircle, Eye, TrendingDown } from 'lucide-react';
-
-const suppliers = [
-  { id: 'FRN-001', name: 'Fournisseur A', country: 'France', products: 45, rejectionRate: 12, dependencyRate: 42, status: 'critical', certifications: 3, lastAudit: '12/03' },
-  { id: 'FRN-002', name: 'Fournisseur B', country: 'Allemagne', products: 32, rejectionRate: 43, dependencyRate: 15, status: 'warning', certifications: 2, lastAudit: '08/03' },
-  { id: 'FRN-003', name: 'Fournisseur C', country: 'Espagne', products: 18, rejectionRate: 8, dependencyRate: 5, status: 'healthy', certifications: 4, lastAudit: '15/03' },
-  { id: 'FRN-004', name: 'Fournisseur D', country: 'Italie', products: 27, rejectionRate: 22, dependencyRate: 8, status: 'warning', certifications: 2, lastAudit: '10/03' },
-  { id: 'FRN-005', name: 'Fournisseur E', country: 'Portugal', products: 15, rejectionRate: 5, dependencyRate: 3, status: 'healthy', certifications: 5, lastAudit: '18/03' },
-  { id: 'FRN-006', name: 'Fournisseur F', country: 'Belgique', products: 38, rejectionRate: 35, dependencyRate: 28, status: 'critical', certifications: 1, lastAudit: '05/03' },
-];
-
-const kpis = [
-  { label: 'Fournisseurs Actifs', value: 48, icon: Package, color: 'text-primary', bgColor: 'bg-primary/10' },
-  { label: 'Taux Rejet Moyen', value: '21%', icon: TrendingDown, color: 'text-orange-500', bgColor: 'bg-orange-500/10' },
-  { label: 'Alertes Dépendance', value: 5, icon: AlertTriangle, color: 'text-destructive', bgColor: 'bg-destructive/10' },
-  { label: 'Certifiés ISO', value: 32, icon: CheckCircle, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10' },
-];
+import { Search, Package, AlertTriangle, CheckCircle, Lightbulb, TrendingDown, Loader2, Database } from 'lucide-react';
+import { useRDSuppliersData } from '@/hooks/useRDData';
+import CreateRecommendationDialog from '@/components/rd/CreateRecommendationDialog';
+import { ExportButtons } from '@/components/ExportButtons';
 
 const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  healthy: { label: 'Sain', variant: 'default' },
-  warning: { label: 'Attention', variant: 'secondary' },
-  critical: { label: 'Critique', variant: 'destructive' },
+  active: { label: 'Actif', variant: 'default' },
+  at_risk: { label: 'À risque', variant: 'secondary' },
+  suspended: { label: 'Suspendu', variant: 'destructive' },
+  pending: { label: 'En attente', variant: 'outline' },
 };
+
+const fmtDate = (d?: string) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
 
 export default function RDSuppliers() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortColumn, setSortColumn] = useState<string | null>(null);
-  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>(null);
+  const [sortColumn, setSortColumn] = useState<string | null>('risk_score');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc' | null>('desc');
   const [filters, setFiltersState] = useState<Record<string, string>>({});
-  const setFilter = (key: string, value: string) => setFiltersState(prev => ({ ...prev, [key]: value }));
+  const setFilter = (k: string, v: string) => setFiltersState(p => ({ ...p, [k]: v }));
   const toggleSort = (col: string) => {
     if (sortColumn === col) {
       if (sortDirection === 'asc') setSortDirection('desc');
@@ -44,26 +34,53 @@ export default function RDSuppliers() {
     } else { setSortColumn(col); setSortDirection('asc'); }
   };
 
-  const filtered = suppliers
+  const { data, isLoading } = useRDSuppliersData();
+  const rows = data?.rows || [];
+  const isMock = data?.isMock;
+
+  const atRiskCount = rows.filter(r => r.risk_score > 50).length;
+  const healthyCount = rows.filter(r => r.quality_score >= 80).length;
+  const avgQuality = rows.length ? Math.round(rows.reduce((s, r) => s + r.quality_score, 0) / rows.length) : 0;
+
+  const kpis = [
+    { label: 'Fournisseurs', value: rows.length, icon: Package, color: 'text-primary', bg: 'bg-primary/10' },
+    { label: 'Qualité Moy.', value: `${avgQuality}%`, icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: 'À Risque', value: atRiskCount, icon: AlertTriangle, color: 'text-destructive', bg: 'bg-destructive/10' },
+    { label: 'Performants', value: healthyCount, icon: TrendingDown, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+  ];
+
+  const filtered = rows
     .filter(s => {
-      if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase()) && !s.id.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (searchQuery && !s.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (filters.status && filters.status !== 'all' && s.status !== filters.status) return false;
+      if (filters.risk === 'high' && s.risk_score < 50) return false;
+      if (filters.risk === 'low' && s.risk_score >= 50) return false;
       return true;
     })
-    .sort((a, b) => {
+    .sort((a: any, b: any) => {
       if (!sortColumn || !sortDirection) return 0;
       const dir = sortDirection === 'asc' ? 1 : -1;
-      const av = a[sortColumn as keyof typeof a];
-      const bv = b[sortColumn as keyof typeof b];
+      const av = a[sortColumn], bv = b[sortColumn];
       if (typeof av === 'number' && typeof bv === 'number') return (av - bv) * dir;
-      return String(av).localeCompare(String(bv)) * dir;
+      return String(av ?? '').localeCompare(String(bv ?? '')) * dir;
     });
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold">Analyse Fournisseurs</h1>
-        <p className="text-muted-foreground">Risques, dépendances et performance fournisseurs</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Analyse Fournisseurs</h1>
+          <p className="text-muted-foreground">Risques, dépendances et qualité fournisseurs — temps réel</p>
+        </div>
+        <div className="flex gap-2">
+          {isMock && <Badge variant="outline" className="gap-1"><Database className="h-3 w-3" />Démo</Badge>}
+          <ExportButtons data={filtered as any} filename="rd-suppliers" title="Analyse Fournisseurs R&D" columns={[
+            { accessor: 'name', header: 'Fournisseur' }, { accessor: 'country', header: 'Pays' },
+            { accessor: 'products_count', header: 'Produits' }, { accessor: 'quality_score', header: 'Qualité' },
+            { accessor: 'risk_score', header: 'Risque' }, { accessor: 'status', header: 'Statut' },
+          ]} />
+          <CreateRecommendationDialog defaultCategory="supplier" defaultPole="supplier" />
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -75,7 +92,7 @@ export default function RDSuppliers() {
                   <p className="text-sm font-medium text-muted-foreground">{k.label}</p>
                   <p className={`text-3xl font-bold mt-1 ${k.color}`}>{k.value}</p>
                 </div>
-                <div className={`h-10 w-10 rounded-lg ${k.bgColor} flex items-center justify-center`}>
+                <div className={`h-10 w-10 rounded-lg ${k.bg} flex items-center justify-center`}>
                   <k.icon className={`h-5 w-5 ${k.color}`} />
                 </div>
               </div>
@@ -87,7 +104,7 @@ export default function RDSuppliers() {
       <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <CardTitle>Fournisseurs</CardTitle>
+            <CardTitle>Fournisseurs ({filtered.length})</CardTitle>
             <div className="flex items-center gap-2 flex-wrap">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -97,54 +114,73 @@ export default function RDSuppliers() {
                 <SelectTrigger className="w-36"><SelectValue placeholder="Statut" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous</SelectItem>
-                  <SelectItem value="healthy">Sain</SelectItem>
-                  <SelectItem value="warning">Attention</SelectItem>
-                  <SelectItem value="critical">Critique</SelectItem>
+                  <SelectItem value="active">Actif</SelectItem>
+                  <SelectItem value="at_risk">À risque</SelectItem>
+                  <SelectItem value="suspended">Suspendu</SelectItem>
+                  <SelectItem value="pending">En attente</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={filters.risk || 'all'} onValueChange={v => setFilter('risk', v)}>
+                <SelectTrigger className="w-36"><SelectValue placeholder="Risque" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Tous risques</SelectItem>
+                  <SelectItem value="high">Élevé (&gt;50)</SelectItem>
+                  <SelectItem value="low">Faible (&lt;50)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <SortableTableHead column="id" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>ID</SortableTableHead>
-                <SortableTableHead column="name" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Fournisseur</SortableTableHead>
-                <SortableTableHead column="country" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Pays</SortableTableHead>
-                <TableHead>Statut</TableHead>
-                <SortableTableHead column="products" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Produits</SortableTableHead>
-                <SortableTableHead column="rejectionRate" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Taux Rejet</SortableTableHead>
-                <SortableTableHead column="dependencyRate" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Dépendance</SortableTableHead>
-                <SortableTableHead column="certifications" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Certif.</SortableTableHead>
-                <TableHead>Audit</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filtered.map(s => (
-                <TableRow key={s.id}>
-                  <TableCell className="font-mono text-xs">{s.id}</TableCell>
-                  <TableCell className="font-medium">{s.name}</TableCell>
-                  <TableCell>{s.country}</TableCell>
-                  <TableCell><Badge variant={statusConfig[s.status].variant}>{statusConfig[s.status].label}</Badge></TableCell>
-                  <TableCell>{s.products}</TableCell>
-                  <TableCell>
-                    <span className={`font-medium ${s.rejectionRate > 30 ? 'text-destructive' : s.rejectionRate > 15 ? 'text-orange-500' : 'text-emerald-500'}`}>{s.rejectionRate}%</span>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Progress value={s.dependencyRate} className="h-2 w-16" />
-                      <span className="text-xs">{s.dependencyRate}%</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>{s.certifications}</TableCell>
-                  <TableCell className="text-muted-foreground text-xs">{s.lastAudit}</TableCell>
-                  <TableCell><Button variant="ghost" size="sm"><Eye className="h-4 w-4" /></Button></TableCell>
+          {isLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <SortableTableHead column="name" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Fournisseur</SortableTableHead>
+                  <SortableTableHead column="country" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Pays</SortableTableHead>
+                  <TableHead>Statut</TableHead>
+                  <SortableTableHead column="products_count" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Produits</SortableTableHead>
+                  <SortableTableHead column="quality_score" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Qualité</SortableTableHead>
+                  <SortableTableHead column="risk_score" currentSort={sortColumn} direction={sortDirection} onSort={toggleSort}>Risque</SortableTableHead>
+                  <TableHead>Dernier audit</TableHead>
+                  <TableHead className="text-right">Action</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {filtered.map(s => (
+                  <TableRow key={s.id}>
+                    <TableCell className="font-medium">{s.name}</TableCell>
+                    <TableCell>{s.country}</TableCell>
+                    <TableCell><Badge variant={statusConfig[s.status]?.variant || 'outline'}>{statusConfig[s.status]?.label || s.status}</Badge></TableCell>
+                    <TableCell>{s.products_count}</TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Progress value={s.quality_score} className="h-2 w-16" />
+                        <span className={`text-xs font-medium ${s.quality_score >= 80 ? 'text-emerald-500' : s.quality_score >= 50 ? 'text-orange-500' : 'text-destructive'}`}>{s.quality_score}%</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`font-medium text-sm ${s.risk_score > 60 ? 'text-destructive' : s.risk_score > 30 ? 'text-orange-500' : 'text-emerald-500'}`}>{s.risk_score}</span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{fmtDate(s.last_audit_date)}</TableCell>
+                    <TableCell className="text-right">
+                      <CreateRecommendationDialog
+                        trigger={<Button variant="ghost" size="sm"><Lightbulb className="h-4 w-4" /></Button>}
+                        defaultDetail={`Fournisseur "${s.name}" (risque ${s.risk_score}, qualité ${s.quality_score}%): `}
+                        defaultCategory="supplier"
+                        defaultPole="supplier"
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+                {filtered.length === 0 && (
+                  <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucun fournisseur</TableCell></TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
