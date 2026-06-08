@@ -73,10 +73,10 @@ export default function RDProducts() {
         </div>
         <div className="flex gap-2">
           {isMock && <Badge variant="outline" className="gap-1"><Database className="h-3 w-3" />Démo</Badge>}
-          <ExportButtons data={filtered} filename="rd-products" title="Analyse Produits R&D" columns={[
-            { key: 'name', label: 'Produit' }, { key: 'category', label: 'Catégorie' },
-            { key: 'supplier_name', label: 'Fournisseur' }, { key: 'status', label: 'Statut' },
-            { key: 'orders_30d', label: 'Cmd 30j' }, { key: 'revenue_30d', label: 'CA 30j' }, { key: 'adoption', label: 'Adoption' },
+          <ExportButtons data={filtered as any} filename="rd-products" title="Analyse Produits R&D" columns={[
+            { accessor: 'name', header: 'Produit' }, { accessor: 'category', header: 'Catégorie' },
+            { accessor: 'supplier_name', header: 'Fournisseur' }, { accessor: 'status', header: 'Statut' },
+            { accessor: 'orders_30d', header: 'Cmd 30j' }, { accessor: 'revenue_30d', header: 'CA 30j' }, { accessor: 'adoption', header: 'Adoption' },
           ]} />
           <CreateRecommendationDialog defaultCategory="product" defaultPole="ops" />
         </div>
