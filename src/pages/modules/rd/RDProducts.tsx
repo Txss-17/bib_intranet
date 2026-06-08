@@ -123,7 +123,7 @@ export default function RDProducts() {
                   <SelectTrigger className="w-36"><SelectValue placeholder="Catégorie" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Toutes</SelectItem>
-                    {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {(categories as string[]).map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               )}
