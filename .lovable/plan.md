@@ -1,118 +1,62 @@
-# Portail Fournisseur Bidirectionnel — BOS ↔ Connect
+# Évolution Brand-in-a-Box → ERP interne
 
-Extension du portail candidatures (déjà livré côté Connect) pour couvrir tout le cycle de vie fournisseur, avec visibilité côté BOS (portail fournisseur) et actions côté Connect (pôle Fournisseur).
+Ce chantier est très large (16 blocs fonctionnels). Je propose un découpage en 4 phases livrables indépendamment pour garder l'architecture modulaire et éviter la régression sur l'existant.
 
----
+## Phase 1 — Fondations Data & Publications (prioritaire)
 
-## 1. Statut candidature visible côté fournisseur
+**Nouveau pôle Data & Analytics** (`data`)
+- Ajout dans `positionAccess.ts`, sidebar, permissions matrix
+- Postes : `data_analyst` (actif), `data_lead`, `bi_analyst`, `data_engineer` (préparés, désactivés)
+- Pages : Dashboard Data, KPI Catalogue, Rapports, BI, Demandes publication, Historique versions
 
-**But** : le candidat voit l'avancement de sa candidature en temps réel sur b.i.b platform.
+**Catalogue KPI** (table `kpi_catalog`)
+- Champs : name, description, formula, source, frequency, owner_id, version, pole_access[], status
+- CRUD + versioning (table `kpi_versions`)
 
-- **Côté Connect** : statuts déjà gérés (`new → assigned → in_review → approved/rejected/on_hold`), événements dans `supplier_application_events`.
-- **Nouveau** : Edge function publique `supplier-application-status` (GET, signée par `application_id + email` ou token) qui retourne `{ status, priority, last_event, public_timeline }`.
-- **Timeline publique** : on filtre `supplier_application_events` (event_type, to_status, notes, created_at) — on n'expose JAMAIS les `decision_notes` internes ni le scoring détaillé.
-- Champ ajouté `supplier_applications.public_token` (uuid, généré à l'insert) utilisé par BOS pour interroger sans auth.
+**Workflow Data → Tech** (table `publication_requests`)
+- États : draft → data_validated → tech_queued → in_dev → testing → deployed → archived
+- Notifications à chaque transition
 
----
+**Système de publications** (table `publications`)
+- Types : `technical` (kpi/dashboard/feature/fix/maintenance), `news`, `hr`, `finance`, `legal`, `security`
+- Visibilité : `visibility_scope` (all/subsidiary/pole/team/role/user) + `visibility_targets[]`
+- Dates : `publish_at`, `available_at`, `archive_at`
+- Journal historisé automatique
 
-## 2. Ordres de restock (MOQ par destination)
+**Centre "What's New"** (`/whats-new`)
+- Feed filtrable par catégorie
+- Badge non-lu par utilisateur
 
-**But** : pour un fournisseur **validé** (lié à `suppliers`), le pôle envoie via le portail fournisseur des ordres : "produit X, MOQ Y, destination = partenaire logistique Z ou entrepôt W".
+## Phase 2 — Notifications & Gouvernance
 
-### Table `supplier_restock_orders`
-- `id`, `supplier_id` (fk suppliers), `catalog_id` (fk product_catalog), `product_name` (snapshot)
-- `quantity` (= MOQ demandé), `destination_type` ('warehouse' | 'logistics_partner'), `destination_id` (uuid), `destination_name`
-- `customization_notes` (text, nullable — produits à personnaliser)
-- `status` ('draft' | 'sent' | 'acknowledged' | 'in_production' | 'shipped' | 'received' | 'cancelled')
-- `priority` ('high'|'standard'|'low'), `due_date`, `sent_at`, `acknowledged_at`, `received_at`
-- `created_by`, `created_at`, `updated_at`
-- RLS : SELECT/UPDATE authenticated avec rôle admin/manager ; lecture publique par supplier via edge function signée.
+- Notifications multi-canal : intranet (existe), email Workspace (via `auth-email-hook`), centre notifications
+- Ciblage automatique selon `visibility_scope` de la publication
+- Backlog Tech (table `tech_backlog`) : priorité, impact, échéance, complexité, responsable, statut
+- Matrice gouvernance données (Data/Tech/Direction/Métiers) → documentée dans `PermissionsMatrix`
 
-### UI Connect
-- Sous-page `/pole/supplier/restock-orders` : table + filtres (fournisseur, statut, destination), création via dialog (catalog picker + destination picker = warehouses ou logistics_partners).
-- Action "Envoyer" → status `sent` + event log + notification (futur : email).
+## Phase 3 — Paramètres compte étendus & RH
 
-### Côté BOS (lecture seule pour le fournisseur)
-- Edge function `supplier-portal-orders` retourne la liste des ordres pour `supplier_id` (auth via token portail fournisseur).
+- Onglet **Professionnel** dans Settings : poste, pôle, filiale, manager, mode travail (remote/hybride/terrain/bureau)
+- Onglet **Ressources** : matériel, licences, carte entreprise, documents RH (existe partiellement → à consolider)
+- Onglet **Accès** : modules, permissions, groupes Workspace
+- Champ `work_mode` ajouté à `profiles`
 
----
+## Phase 4 — Modules métiers transverses
 
-## 3. Notifications audit programmé
+- **Déplacements pro** (table `business_trips`) : demande → validation manager → réservation → justificatifs → rapport mission
+- **Carte entreprise** (table `corporate_cards`) : activation, plafond, catégories, historique transactions ; accès scindé salarié/finance/direction
+- **Dashboard Direction global** (`/direction/global`) : agrège CA, marge, commandes, fournisseurs, audits, satisfaction, tickets, KPI par pôle (via `useDirectionKPIs` étendu)
 
-**But** : quand le pôle Audit planifie un audit fournisseur, le fournisseur est notifié sur son portail.
+## Détails techniques
 
-- Table `field_audits` existe déjà (target_type='supplier', scheduled_date, status).
-- Ajouter : trigger ou hook applicatif → quand `field_audits` insert avec `target_type='supplier'` et `status='scheduled'`, créer une entrée dans nouvelle table `supplier_portal_notifications`.
+- Migrations SQL : `kpi_catalog`, `kpi_versions`, `publications`, `publication_requests`, `publication_reads`, `tech_backlog`, `business_trips`, `corporate_cards`, `corporate_card_transactions` + ajout colonnes `work_mode`, `subsidiary`, `manager_id` sur `profiles`
+- Toutes tables : RLS + GRANT authenticated/service_role, `has_role`/`has_pole_access` pour scope
+- Edge function `notify-publication` : dispatch email + notification lors du déploiement
+- Hook `usePublicationVisibility` centralise le filtrage
+- Sidebar : nouveau groupe "Data & Analytics" + entrée transversale "What's New"
 
-### Table `supplier_portal_notifications`
-- `id`, `supplier_id`, `type` ('audit_scheduled' | 'restock_order' | 'catalog_review' | 'application_update' | 'generic')
-- `title`, `body`, `reference_table`, `reference_id`, `read_at`, `created_at`
-- Pas d'écriture côté fournisseur — uniquement READ via edge function du portail.
-- RLS Connect : SELECT authenticated, INSERT authenticated (admins/managers Audit + Fournisseur), pas d'UPDATE/DELETE.
+## Question avant d'attaquer
 
----
+Ce périmètre = ~30 fichiers + 8 migrations. Je propose de **commencer par la Phase 1** (fondations Data + publications + What's New) qui débloque tout le reste, puis d'itérer.
 
-## 4. Réception nouveaux catalogues uploadés par le fournisseur
-
-**But** : le fournisseur upload un nouveau catalogue depuis BOS → arrive dans une inbox côté pôle Fournisseur.
-
-### Table `supplier_catalog_uploads`
-- `id`, `supplier_id`, `submitted_by_email`, `file_name`, `file_url` (storage `product-assets/catalogs/{supplier_id}/...`), `file_size`, `mime_type`
-- `version` (text), `notes` (text)
-- `status` ('pending' | 'reviewing' | 'approved' | 'rejected'), `review_notes`, `reviewed_by`, `reviewed_at`
-- `created_at`, `updated_at`
-- RLS : SELECT/UPDATE authenticated (admin/manager), INSERT via edge function service_role.
-
-### Edge function `supplier-catalog-upload` (publique, signée `x-linksy-key`)
-- Reçoit `{ supplier_id, file_base64, file_name, mime_type, version, notes }`.
-- Upload vers bucket `product-assets/catalogs/{supplier_id}/{uuid}-{filename}`.
-- Insert ligne `pending` + notification au gestionnaire du fournisseur + event audit_log.
-
-### UI Connect
-- Sous-page `/pole/supplier/catalog-inbox` : table des uploads pending/reviewing avec preview du fichier + actions Approuver/Refuser (commentaire requis).
-- Hook React Query `useSupplierCatalogUploads`.
-
----
-
-## 5. Navigation & RBAC
-
-Nouvelles entrées dans `moduleNavigations.ts` (pôle Supplier) :
-- "Ordres de restock" → `supplier.restock_orders`
-- "Inbox catalogues" → `supplier.catalog_inbox`
-
-`positionAccess.ts` : ajout des screens pour `supplier_manager` + `ceo`.
-
-`App.tsx` : 4 nouvelles routes (restock list, restock detail futur, catalog inbox, application detail déjà fait).
-
----
-
-## 6. Hors-scope (KISS)
-
-- Pas d'authentification fournisseur côté BOS dans ce sprint (on génère/réutilise des tokens signés ; auth complète = sprint séparé).
-- Pas d'envoi email automatique pour restock/audit (notif in-app + champ pour futur trigger).
-- Pas de versionning fin sur les catalogues (un upload = une ligne).
-- Pas de regénération auto des MOQ depuis `replenishment_suggestions` (le manager choisit manuellement, MVP).
-
----
-
-## 7. Fichiers
-
-**Migration unique** `supabase/migrations/<ts>_supplier_portal_bidirectional.sql` :
-- ALTER `supplier_applications` ADD `public_token uuid DEFAULT gen_random_uuid()`.
-- CREATE `supplier_restock_orders`, `supplier_portal_notifications`, `supplier_catalog_uploads` (+ GRANTs + RLS + triggers updated_at).
-
-**Edge functions** :
-- `supabase/functions/supplier-application-status/index.ts` (GET public token-based)
-- `supabase/functions/supplier-portal-orders/index.ts` (GET supplier_id + token)
-- `supabase/functions/supplier-catalog-upload/index.ts` (POST signé)
-
-**Hooks** :
-- `src/hooks/useSupplierRestockOrders.ts`
-- `src/hooks/useSupplierCatalogUploads.ts`
-- `src/hooks/useSupplierPortalNotifications.ts`
-
-**Pages** :
-- `src/pages/modules/supplier/SupplierRestockOrders.tsx`
-- `src/pages/modules/supplier/SupplierCatalogInbox.tsx`
-
-**Edits** : `App.tsx`, `moduleNavigations.ts`, `positionAccess.ts`, `SupplierApplications.tsx` (badge "lien public"), `SupplierDashboard.tsx` (widgets restock + catalog inbox).
+**Veux-tu que je démarre directement la Phase 1**, ou préfères-tu qu'on livre autre chose en priorité (ex. Phase 4 Dashboard Direction global d'abord) ?

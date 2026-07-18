@@ -25,6 +25,12 @@ import StrategicKPIs from "./pages/modules/direction/StrategicKPIs";
 import CriticalAlertsPage from "./pages/modules/direction/CriticalAlerts";
 import ActivityMonitoring from "./pages/modules/lifecycle/ActivityMonitoring";
 import RiskScoring from "./pages/modules/lifecycle/RiskScoring";
+import DataDashboard from "./pages/modules/data/DataDashboard";
+import KPICatalog from "./pages/modules/data/KPICatalog";
+import PublicationRequestsPage from "./pages/modules/data/PublicationRequests";
+import TechBacklogPage from "./pages/modules/data/TechBacklog";
+import KPIVersions from "./pages/modules/data/KPIVersions";
+import WhatsNew from "./pages/WhatsNew";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
@@ -369,6 +375,12 @@ const App = () => (
             <Route path="/compliance-audit/finance" element={<FinanceCompliance />} />
             <Route path="/compliance-audit/ops" element={<OpsCompliance />} />
             <Route path="/compliance-audit/tech" element={<TechCompliance />} />
+            <Route path="/pole/data" element={<DataDashboard />} />
+            <Route path="/pole/data/kpi" element={<KPICatalog />} />
+            <Route path="/pole/data/requests" element={<PublicationRequestsPage />} />
+            <Route path="/pole/data/backlog" element={<TechBacklogPage />} />
+            <Route path="/pole/data/versions" element={<KPIVersions />} />
+            <Route path="/whats-new" element={<WhatsNew />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />

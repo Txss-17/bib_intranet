@@ -112,12 +112,21 @@ export const positionAccess: Record<EmployeePosition, PositionAccess> = {
   ceo: {
     poles: [
       'direction', 'finance', 'ops', 'tech', 'rh', 'supplier',
-      'audit', 'compliance', 'rse', 'marketing', 'risk', 'lifecycle'
+      'audit', 'compliance', 'rse', 'marketing', 'risk', 'lifecycle', 'data'
     ],
     screens: ['*'],
     restricted: []
+  },
+  data_analyst: {
+    poles: ['data'],
+    screens: [
+      'data.overview', 'data.kpi', 'data.reports', 'data.bi',
+      'data.requests', 'data.backlog', 'data.versions'
+    ],
+    restricted: ['finance.salaries', 'rh.confidential']
   }
 };
+
 
 // Build a union of "implicit" extra access from a list of additional poles
 // stored on the profile (profile.poles). For each extra pole, we union in the
@@ -135,7 +144,9 @@ const POLE_DEFAULT_POSITION: Record<string, EmployeePosition> = {
   risk: 'risk_manager',
   rd: 'rd_manager',
   lifecycle: 'user_success_manager',
+  data: 'data_analyst',
 };
+
 
 const collectExtraScreens = (extraPoles?: string[]): Set<string> => {
   const out = new Set<string>();

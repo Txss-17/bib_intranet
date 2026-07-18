@@ -21,7 +21,9 @@ const positionDefaultRoute: Record<EmployeePosition, string> = {
   rh_manager: '/pole/rh',
   risk_manager: '/pole/risk',
   rd_manager: '/pole/rd',
+  data_analyst: '/pole/data',
 };
+
 
 const Login = () => {
   const navigate = useNavigate();

@@ -22,7 +22,10 @@ import {
   Recycle,
   Settings,
   FlaskConical,
+  BarChart3,
+  Sparkles,
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { poles } from '@/data/poles';
 import { PoleId } from '@/types';
@@ -41,15 +44,18 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ShieldAlert,
   RefreshCw,
   FlaskConical,
+  BarChart3,
 };
 
 const transversalModules = [
+  { id: 'whats-new', name: "What's New", icon: Sparkles, path: '/whats-new' },
   { id: 'gateway', name: 'Gateways & Messages', icon: MessageSquare, path: '/modules/gateway' },
   { id: 'independent-audit', name: 'Audit indépendant', icon: ShieldAlert, path: '/modules/independent-audit' },
   { id: 'compliance-audit', name: 'Conformité & Audit', icon: Shield, path: '/compliance-audit' },
   { id: 'feed', name: 'Internal Feed', icon: Home, path: '/feed' },
   { id: 'documents', name: 'Documents', icon: FileText, path: '/documents' },
 ];
+
 
 interface AppSidebarProps {
   collapsed: boolean;

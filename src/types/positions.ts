@@ -11,7 +11,9 @@ export type EmployeePosition =
   | 'rh_manager'            // HR Manager
   | 'risk_manager'          // Risk & Incidents Manager
   | 'rd_manager'            // R&D Manager
+  | 'data_analyst'          // Data Analyst (Pôle Data & Analytics)
   | 'ceo';                  // CEO / Fondatrice
+
 
 export interface PositionInfo {
   id: EmployeePosition;
@@ -105,5 +107,13 @@ export const positionInfos: Record<EmployeePosition, PositionInfo> = {
     titleFr: 'CEO / Fondatrice',
     module: 'Executive & Strategy',
     description: 'Vision stratégique, KPI globaux, arbitrage, gouvernance'
+  },
+  data_analyst: {
+    id: 'data_analyst',
+    title: 'Data Analyst',
+    titleFr: 'Data Analyst',
+    module: 'Data & Analytics',
+    description: 'Définition KPI, rapports, tableaux de bord, workflow de publication vers Tech'
   }
 };
+
