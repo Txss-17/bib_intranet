@@ -22,7 +22,10 @@ import {
   Recycle,
   Settings,
   FlaskConical,
+  BarChart3,
+  Sparkles,
 } from 'lucide-react';
+
 import { cn } from '@/lib/utils';
 import { poles } from '@/data/poles';
 import { PoleId } from '@/types';
