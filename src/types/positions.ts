@@ -107,5 +107,13 @@ export const positionInfos: Record<EmployeePosition, PositionInfo> = {
     titleFr: 'CEO / Fondatrice',
     module: 'Executive & Strategy',
     description: 'Vision stratégique, KPI globaux, arbitrage, gouvernance'
+  },
+  data_analyst: {
+    id: 'data_analyst',
+    title: 'Data Analyst',
+    titleFr: 'Data Analyst',
+    module: 'Data & Analytics',
+    description: 'Définition KPI, rapports, tableaux de bord, workflow de publication vers Tech'
   }
 };
+
