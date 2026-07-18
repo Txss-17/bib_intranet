@@ -876,6 +876,98 @@ export type Database = {
         }
         Relationships: []
       }
+      kpi_catalog: {
+        Row: {
+          app_origin: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          formula: string | null
+          frequency: string | null
+          id: string
+          name: string
+          owner_id: string | null
+          pole_access: string[]
+          source: string | null
+          status: string | null
+          tags: string[] | null
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          app_origin?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          formula?: string | null
+          frequency?: string | null
+          id?: string
+          name: string
+          owner_id?: string | null
+          pole_access?: string[]
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          app_origin?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          formula?: string | null
+          frequency?: string | null
+          id?: string
+          name?: string
+          owner_id?: string | null
+          pole_access?: string[]
+          source?: string | null
+          status?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      kpi_versions: {
+        Row: {
+          change_note: string | null
+          changed_by: string | null
+          created_at: string
+          id: string
+          kpi_id: string
+          snapshot: Json
+          version: string
+        }
+        Insert: {
+          change_note?: string | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          kpi_id: string
+          snapshot: Json
+          version: string
+        }
+        Update: {
+          change_note?: string | null
+          changed_by?: string | null
+          created_at?: string
+          id?: string
+          kpi_id?: string
+          snapshot?: Json
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_versions_kpi_id_fkey"
+            columns: ["kpi_id"]
+            isOneToOne: false
+            referencedRelation: "kpi_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lifecycle_email_campaigns: {
         Row: {
           audience: string | null
@@ -1859,10 +1951,13 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
+          manager_id: string | null
           poles: Database["public"]["Enums"]["pole_id"][] | null
           position: Database["public"]["Enums"]["employee_position"] | null
           seniority: string | null
+          subsidiary: string | null
           updated_at: string | null
+          work_mode: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1871,10 +1966,13 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
+          manager_id?: string | null
           poles?: Database["public"]["Enums"]["pole_id"][] | null
           position?: Database["public"]["Enums"]["employee_position"] | null
           seniority?: string | null
+          subsidiary?: string | null
           updated_at?: string | null
+          work_mode?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -1883,12 +1981,186 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
+          manager_id?: string | null
           poles?: Database["public"]["Enums"]["pole_id"][] | null
           position?: Database["public"]["Enums"]["employee_position"] | null
           seniority?: string | null
+          subsidiary?: string | null
           updated_at?: string | null
+          work_mode?: string | null
         }
         Relationships: []
+      }
+      publication_reads: {
+        Row: {
+          publication_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          publication_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          publication_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publication_reads_publication_id_fkey"
+            columns: ["publication_id"]
+            isOneToOne: false
+            referencedRelation: "publications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publication_requests: {
+        Row: {
+          app_origin: string
+          created_at: string
+          data_validator: string | null
+          deployed_at: string | null
+          description: string | null
+          history: Json | null
+          id: string
+          notes: string | null
+          priority: string | null
+          related_kpi_id: string | null
+          request_type: string
+          requested_by: string | null
+          status: string
+          target_deploy_date: string | null
+          tech_assignee: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          app_origin?: string
+          created_at?: string
+          data_validator?: string | null
+          deployed_at?: string | null
+          description?: string | null
+          history?: Json | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          related_kpi_id?: string | null
+          request_type: string
+          requested_by?: string | null
+          status?: string
+          target_deploy_date?: string | null
+          tech_assignee?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          app_origin?: string
+          created_at?: string
+          data_validator?: string | null
+          deployed_at?: string | null
+          description?: string | null
+          history?: Json | null
+          id?: string
+          notes?: string | null
+          priority?: string | null
+          related_kpi_id?: string | null
+          request_type?: string
+          requested_by?: string | null
+          status?: string
+          target_deploy_date?: string | null
+          tech_assignee?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publication_requests_related_kpi_id_fkey"
+            columns: ["related_kpi_id"]
+            isOneToOne: false
+            referencedRelation: "kpi_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      publications: {
+        Row: {
+          app_origin: string
+          archive_at: string | null
+          author_id: string | null
+          author_pole: string | null
+          available_at: string | null
+          body: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          publish_at: string | null
+          related_kpi_id: string | null
+          status: string
+          subtype: string | null
+          summary: string | null
+          title: string
+          type: string
+          updated_at: string
+          version: string
+          visibility_scope: string
+          visibility_targets: string[]
+        }
+        Insert: {
+          app_origin?: string
+          archive_at?: string | null
+          author_id?: string | null
+          author_pole?: string | null
+          available_at?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          publish_at?: string | null
+          related_kpi_id?: string | null
+          status?: string
+          subtype?: string | null
+          summary?: string | null
+          title: string
+          type: string
+          updated_at?: string
+          version?: string
+          visibility_scope?: string
+          visibility_targets?: string[]
+        }
+        Update: {
+          app_origin?: string
+          archive_at?: string | null
+          author_id?: string | null
+          author_pole?: string | null
+          available_at?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          publish_at?: string | null
+          related_kpi_id?: string | null
+          status?: string
+          subtype?: string | null
+          summary?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          version?: string
+          visibility_scope?: string
+          visibility_targets?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "publications_related_kpi_id_fkey"
+            columns: ["related_kpi_id"]
+            isOneToOne: false
+            referencedRelation: "kpi_catalog"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quality_alerts: {
         Row: {
@@ -2641,6 +2913,68 @@ export type Database = {
           reason?: string
         }
         Relationships: []
+      }
+      tech_backlog: {
+        Row: {
+          app_origin: string
+          assignee: string | null
+          complexity: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          impact: string | null
+          labels: string[] | null
+          origin_request_id: string | null
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          app_origin?: string
+          assignee?: string | null
+          complexity?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          impact?: string | null
+          labels?: string[] | null
+          origin_request_id?: string | null
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          app_origin?: string
+          assignee?: string | null
+          complexity?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          impact?: string | null
+          labels?: string[] | null
+          origin_request_id?: string | null
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tech_backlog_origin_request_id_fkey"
+            columns: ["origin_request_id"]
+            isOneToOne: false
+            referencedRelation: "publication_requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_accounts: {
         Row: {
