@@ -15,8 +15,9 @@ export const SENIORITY_ORDER: Seniority[] = ['junior', 'mid', 'senior', 'lead', 
 
 export const POLES_FOR_MATRIX = [
   'direction', 'finance', 'rh', 'ops', 'tech', 'supplier',
-  'audit', 'compliance', 'rse', 'marketing', 'risk', 'lifecycle',
+  'audit', 'compliance', 'rse', 'marketing', 'risk', 'lifecycle', 'data',
 ] as const;
+
 
 export const DEFAULT_RULES: Record<string, Partial<Record<Seniority, PermissionRule>>> = {
   rh:        { executive: { can_view_sensitive: true,  can_view_audit_log: true,  can_configure_permissions: true  },
