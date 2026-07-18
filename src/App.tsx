@@ -375,6 +375,12 @@ const App = () => (
             <Route path="/compliance-audit/finance" element={<FinanceCompliance />} />
             <Route path="/compliance-audit/ops" element={<OpsCompliance />} />
             <Route path="/compliance-audit/tech" element={<TechCompliance />} />
+            <Route path="/pole/data" element={<DataDashboard />} />
+            <Route path="/pole/data/kpi" element={<KPICatalog />} />
+            <Route path="/pole/data/requests" element={<PublicationRequestsPage />} />
+            <Route path="/pole/data/backlog" element={<TechBacklogPage />} />
+            <Route path="/pole/data/versions" element={<KPIVersions />} />
+            <Route path="/whats-new" element={<WhatsNew />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
