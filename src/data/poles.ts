@@ -97,7 +97,16 @@ export const poles: Pole[] = [
     icon: 'FlaskConical',
     color: 'pole-rd',
   },
+  {
+    id: 'data',
+    name: 'Data & Analytics',
+    shortName: 'DATA',
+    description: 'KPI catalog, dashboards, BI, publication workflows',
+    icon: 'BarChart3',
+    color: 'pole-tech',
+  },
 ];
+
 
 export const getPoleById = (id: string): Pole | undefined => {
   return poles.find(pole => pole.id === id);
