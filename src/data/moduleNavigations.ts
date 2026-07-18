@@ -160,7 +160,19 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'frictions', label: 'System Frictions', labelFr: 'Frictions Système', path: '/pole/rd/frictions' },
     { id: 'reports', label: 'Reports & Recommendations', labelFr: 'Rapports & Recommandations', path: '/pole/rd/reports' },
   ],
+
+  // Data & Analytics
+  data: [
+    { id: 'overview', label: 'Dashboard', labelFr: 'Vue globale', path: '/pole/data' },
+    { id: 'kpi', label: 'KPI Catalog', labelFr: 'Catalogue KPI', path: '/pole/data/kpi' },
+    { id: 'reports', label: 'Reports', labelFr: 'Rapports', path: '/pole/data/reports' },
+    { id: 'bi', label: 'Business Intelligence', labelFr: 'BI', path: '/pole/data/bi' },
+    { id: 'requests', label: 'Publication Requests', labelFr: 'Demandes de publication', path: '/pole/data/requests' },
+    { id: 'backlog', label: 'Tech Backlog', labelFr: 'Backlog Tech', path: '/pole/data/backlog' },
+    { id: 'versions', label: 'Version History', labelFr: 'Historique versions', path: '/pole/data/versions' },
+  ],
 };
+
 
 export const getModuleNavigation = (poleId: PoleId): SubNavigationItem[] => {
   return moduleNavigations[poleId] || [];
