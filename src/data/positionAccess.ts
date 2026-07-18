@@ -144,7 +144,9 @@ const POLE_DEFAULT_POSITION: Record<string, EmployeePosition> = {
   risk: 'risk_manager',
   rd: 'rd_manager',
   lifecycle: 'user_success_manager',
+  data: 'data_analyst',
 };
+
 
 const collectExtraScreens = (extraPoles?: string[]): Set<string> => {
   const out = new Set<string>();
