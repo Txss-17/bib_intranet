@@ -380,7 +380,7 @@ const App = () => (
             <Route path="/pole/data/requests" element={<PublicationRequestsPage />} />
             <Route path="/pole/data/backlog" element={<TechBacklogPage />} />
             <Route path="/pole/data/versions" element={<KPIVersions />} />
-            <Route path="/whats-new" element={<WhatsNew />} />
+            <Route path="/whats-new" element={<Navigate to="/feed?tab=news" replace />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
