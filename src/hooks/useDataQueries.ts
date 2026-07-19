@@ -156,15 +156,53 @@ export const useCreatePublication = () => {
   return useMutation({
     mutationFn: async (payload: Partial<PublicationRow>) => {
       const { data: user } = await supabase.auth.getUser();
-      const { error } = await supabase.from('publications' as any).insert({
+      const { data: inserted, error } = await supabase.from('publications' as any).insert({
         ...payload,
         author_id: user.user?.id ?? null,
-      });
+      }).select().single();
       if (error) throw error;
+
+      // Multi-channel dispatch: intranet notifications targeted by visibility scope
+      const pub = inserted as any;
+      if (pub && (pub.status === 'published' || pub.status === 'scheduled')) {
+        try {
+          const scope = pub.visibility_scope as string;
+          const targets: string[] = pub.visibility_targets ?? [];
+          const baseNotif = {
+            title: `Nouveauté : ${pub.title}`,
+            message: pub.summary ?? 'Une nouvelle publication est disponible.',
+            type: 'info' as const,
+            pole_id: pub.author_pole ?? null,
+            action_url: '/feed?tab=news',
+            metadata: { publication_id: pub.id, publication_type: pub.type },
+          };
+          if (scope === 'user' && targets.length) {
+            await supabase.from('notifications' as any).insert(
+              targets.map((uid) => ({ ...baseNotif, user_id: uid }))
+            );
+          } else if (scope === 'pole' && targets.length) {
+            const { data: profs } = await (supabase as any)
+              .from('profiles')
+              .select('id, poles')
+              .overlaps('poles', targets);
+            const ids = (profs ?? []).map((p: any) => p.id);
+            if (ids.length) {
+              await supabase.from('notifications' as any).insert(
+                ids.map((uid: string) => ({ ...baseNotif, user_id: uid }))
+              );
+            }
+          } else {
+            await supabase.from('notifications' as any).insert({ ...baseNotif, user_id: null });
+          }
+        } catch (e) {
+          console.warn('Notification dispatch failed', e);
+        }
+      }
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['publications'] });
-      toast({ title: 'Publication créée' });
+      qc.invalidateQueries({ queryKey: ['notifications'] });
+      toast({ title: 'Publication créée', description: 'Notifications envoyées aux destinataires.' });
     },
     onError: (e: any) =>
       toast({ title: 'Erreur', description: e.message, variant: 'destructive' }),
