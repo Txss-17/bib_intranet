@@ -107,6 +107,14 @@ export default function InternalFeed() {
     setNewPost({ title: '', content: '', type: 'update', visibility: 'company' });
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'all';
+  const { data: pubs = [] } = usePublications();
+  const publishedPubs = pubs.filter((p) => p.status === 'published' || p.status === 'scheduled');
+  const filteredPubs = publishedPubs.filter((p) =>
+    !searchQuery || p.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const filtered = feedItems.filter(item => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
