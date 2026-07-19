@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Globe, Users, Lock, Loader2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, Plus, Globe, Users, Lock, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FeedCard } from '@/components/dashboard/FeedCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,7 +15,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { usePublications } from '@/hooks/useDataQueries';
 import type { FeedItem, PoleId } from '@/types';
+
+const TYPE_STYLE: Record<string, string> = {
+  technical: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
+  news: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+  hr: 'bg-purple-500/10 text-purple-600 border-purple-500/30',
+  finance: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
+  legal: 'bg-orange-500/10 text-orange-600 border-orange-500/30',
+  security: 'bg-destructive/10 text-destructive border-destructive/30',
+  data: 'bg-primary/10 text-primary border-primary/30',
+};
 
 const from = (table: string) => (supabase as any).from(table);
 
@@ -93,6 +107,14 @@ export default function InternalFeed() {
     setNewPost({ title: '', content: '', type: 'update', visibility: 'company' });
   };
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab') || 'all';
+  const { data: pubs = [] } = usePublications();
+  const publishedPubs = pubs.filter((p) => p.status === 'published' || p.status === 'scheduled');
+  const filteredPubs = publishedPubs.filter((p) =>
+    !searchQuery || p.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const filtered = feedItems.filter(item => {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
@@ -130,9 +152,13 @@ export default function InternalFeed() {
         </div>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
+      <Tabs value={initialTab} onValueChange={(v) => setSearchParams({ tab: v })} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="all">Tous</TabsTrigger>
+          <TabsTrigger value="news" className="gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" /> Nouveautés
+            {publishedPubs.length > 0 && <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">{publishedPubs.length}</Badge>}
+          </TabsTrigger>
           <TabsTrigger value="announcements">Annonces</TabsTrigger>
           <TabsTrigger value="policies">Politiques</TabsTrigger>
           <TabsTrigger value="achievements">Réalisations</TabsTrigger>
@@ -142,6 +168,31 @@ export default function InternalFeed() {
           {filtered.length === 0 ? (
             <div className="enterprise-card p-12 text-center text-muted-foreground">Aucune publication</div>
           ) : filtered.map((item) => <FeedCard key={item.id} item={item} />)}
+        </TabsContent>
+        <TabsContent value="news" className="space-y-3">
+          {filteredPubs.length === 0 ? (
+            <div className="enterprise-card p-12 text-center text-muted-foreground">Aucune nouveauté publiée</div>
+          ) : filteredPubs.map((p) => (
+            <Card key={p.id}>
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-4">
+                  <CardTitle className="text-base">{p.title}</CardTitle>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge className={TYPE_STYLE[p.type]} variant="outline">{p.type}</Badge>
+                    <span className="text-xs text-muted-foreground font-mono">v{p.version}</span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {p.summary && <p className="text-sm text-muted-foreground">{p.summary}</p>}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mt-3">
+                  {p.author_pole && <Badge variant="outline">{p.author_pole}</Badge>}
+                  {p.publish_at && <span>{new Date(p.publish_at).toLocaleDateString('fr-FR')}</span>}
+                  <span>Visibilité : {p.visibility_scope}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </TabsContent>
         <TabsContent value="announcements" className="space-y-4">
           {filtered.filter(i => i.type === 'announcement').map((item) => <FeedCard key={item.id} item={item} />)}

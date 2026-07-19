@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { MainLayout } from "./components/layout/MainLayout";
 import { useAuthLogger } from "./hooks/useAuthLogger";
 import { AuthProvider } from "./hooks/useAuth";
@@ -30,7 +30,7 @@ import KPICatalog from "./pages/modules/data/KPICatalog";
 import PublicationRequestsPage from "./pages/modules/data/PublicationRequests";
 import TechBacklogPage from "./pages/modules/data/TechBacklog";
 import KPIVersions from "./pages/modules/data/KPIVersions";
-import WhatsNew from "./pages/WhatsNew";
+// WhatsNew merged into InternalFeed (/feed?tab=news)
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
@@ -380,7 +380,7 @@ const App = () => (
             <Route path="/pole/data/requests" element={<PublicationRequestsPage />} />
             <Route path="/pole/data/backlog" element={<TechBacklogPage />} />
             <Route path="/pole/data/versions" element={<KPIVersions />} />
-            <Route path="/whats-new" element={<WhatsNew />} />
+            <Route path="/whats-new" element={<Navigate to="/feed?tab=news" replace />} />
             <Route path="/profile" element={<Profile />} />
           </Route>
           <Route path="*" element={<NotFound />} />
