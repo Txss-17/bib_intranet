@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Globe, Users, Lock, Loader2 } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, Plus, Globe, Users, Lock, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { FeedCard } from '@/components/dashboard/FeedCard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
@@ -12,7 +15,18 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { usePublications } from '@/hooks/useDataQueries';
 import type { FeedItem, PoleId } from '@/types';
+
+const TYPE_STYLE: Record<string, string> = {
+  technical: 'bg-blue-500/10 text-blue-600 border-blue-500/30',
+  news: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
+  hr: 'bg-purple-500/10 text-purple-600 border-purple-500/30',
+  finance: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/30',
+  legal: 'bg-orange-500/10 text-orange-600 border-orange-500/30',
+  security: 'bg-destructive/10 text-destructive border-destructive/30',
+  data: 'bg-primary/10 text-primary border-primary/30',
+};
 
 const from = (table: string) => (supabase as any).from(table);
 
