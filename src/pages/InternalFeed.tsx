@@ -152,9 +152,13 @@ export default function InternalFeed() {
         </div>
       </div>
 
-      <Tabs defaultValue="all" className="w-full">
+      <Tabs value={initialTab} onValueChange={(v) => setSearchParams({ tab: v })} className="w-full">
         <TabsList className="mb-4">
           <TabsTrigger value="all">Tous</TabsTrigger>
+          <TabsTrigger value="news" className="gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" /> Nouveautés
+            {publishedPubs.length > 0 && <Badge variant="secondary" className="h-4 px-1.5 text-[10px]">{publishedPubs.length}</Badge>}
+          </TabsTrigger>
           <TabsTrigger value="announcements">Annonces</TabsTrigger>
           <TabsTrigger value="policies">Politiques</TabsTrigger>
           <TabsTrigger value="achievements">Réalisations</TabsTrigger>
@@ -164,6 +168,31 @@ export default function InternalFeed() {
           {filtered.length === 0 ? (
             <div className="enterprise-card p-12 text-center text-muted-foreground">Aucune publication</div>
           ) : filtered.map((item) => <FeedCard key={item.id} item={item} />)}
+        </TabsContent>
+        <TabsContent value="news" className="space-y-3">
+          {filteredPubs.length === 0 ? (
+            <div className="enterprise-card p-12 text-center text-muted-foreground">Aucune nouveauté publiée</div>
+          ) : filteredPubs.map((p) => (
+            <Card key={p.id}>
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-4">
+                  <CardTitle className="text-base">{p.title}</CardTitle>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge className={TYPE_STYLE[p.type]} variant="outline">{p.type}</Badge>
+                    <span className="text-xs text-muted-foreground font-mono">v{p.version}</span>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {p.summary && <p className="text-sm text-muted-foreground">{p.summary}</p>}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground mt-3">
+                  {p.author_pole && <Badge variant="outline">{p.author_pole}</Badge>}
+                  {p.publish_at && <span>{new Date(p.publish_at).toLocaleDateString('fr-FR')}</span>}
+                  <span>Visibilité : {p.visibility_scope}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
         </TabsContent>
         <TabsContent value="announcements" className="space-y-4">
           {filtered.filter(i => i.type === 'announcement').map((item) => <FeedCard key={item.id} item={item} />)}
