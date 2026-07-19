@@ -30,7 +30,7 @@ import KPICatalog from "./pages/modules/data/KPICatalog";
 import PublicationRequestsPage from "./pages/modules/data/PublicationRequests";
 import TechBacklogPage from "./pages/modules/data/TechBacklog";
 import KPIVersions from "./pages/modules/data/KPIVersions";
-import WhatsNew from "./pages/WhatsNew";
+// WhatsNew merged into InternalFeed (/feed?tab=news)
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
