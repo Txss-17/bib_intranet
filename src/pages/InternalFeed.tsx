@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { usePublications } from '@/hooks/useDataQueries';
+import { poles } from '@/data/poles';
 import type { FeedItem, PoleId } from '@/types';
 
 const TYPE_STYLE: Record<string, string> = {
