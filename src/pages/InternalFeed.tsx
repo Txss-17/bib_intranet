@@ -259,12 +259,25 @@ export default function InternalFeed() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="company">Entreprise</SelectItem>
-                    <SelectItem value="pole">Mon pôle</SelectItem>
+                    <SelectItem value="pole">Pôle spécifique</SelectItem>
                     <SelectItem value="restricted">Restreint</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
+            {newPost.visibility === 'pole' && (
+              <div className="space-y-2">
+                <Label>Pôle destinataire</Label>
+                <Select value={newPost.pole_id} onValueChange={(v) => setNewPost(p => ({ ...p, pole_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Choisir un pôle" /></SelectTrigger>
+                  <SelectContent>
+                    {poles.map((pole) => (
+                      <SelectItem key={pole.id} value={pole.id}>{pole.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <Button onClick={handleCreate} className="w-full" disabled={createPost.isPending}>
               {createPost.isPending ? 'Publication...' : 'Publier'}
             </Button>
