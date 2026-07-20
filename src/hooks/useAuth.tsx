@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ProfileData {
+  id: string;
   first_name: string;
   last_name: string;
   position: string | null;
@@ -10,6 +11,9 @@ interface ProfileData {
   email: string;
   poles: string[] | null;
   seniority: string | null;
+  work_mode: string | null;
+  subsidiary: string | null;
+  manager_id: string | null;
   app_origin: string | null;
 }
 
@@ -19,6 +23,7 @@ interface AuthContextType {
   profile: ProfileData | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -27,6 +32,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   loading: true,
   signOut: async () => {},
+  refreshProfile: async () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -34,7 +40,7 @@ export const useAuth = () => useContext(AuthContext);
 const fetchProfile = async (userId: string): Promise<ProfileData | null> => {
   const { data } = await supabase
     .from('profiles')
-    .select('first_name, last_name, position, avatar_url, email, poles, seniority')
+    .select('id, first_name, last_name, position, avatar_url, email, poles, seniority, work_mode, subsidiary, manager_id')
     .eq('id', userId)
     .single();
   if (!data) return null;
