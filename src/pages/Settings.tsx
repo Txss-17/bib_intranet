@@ -16,6 +16,8 @@ import {
   Eye,
   EyeOff,
   ShieldCheck,
+  Briefcase,
+  KeyRound,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
