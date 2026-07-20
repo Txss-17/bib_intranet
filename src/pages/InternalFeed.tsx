@@ -83,9 +83,13 @@ export default function InternalFeed() {
   const qc = useQueryClient();
 
   const createPost = useMutation({
-    mutationFn: async (post: { title: string; content: string; type: string; visibility: string }) => {
+    mutationFn: async (post: { title: string; content: string; type: string; visibility: string; pole_id?: string | null }) => {
       const { error } = await from('feed_posts').insert({
-        ...post,
+        title: post.title,
+        content: post.content,
+        type: post.type,
+        visibility: post.visibility,
+        pole_id: post.pole_id || null,
         author_id: user?.id,
         author_name: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Utilisateur',
         author_role: profile?.position || 'employee',
@@ -100,12 +104,21 @@ export default function InternalFeed() {
     onError: () => toast.error('Erreur lors de la création'),
   });
 
-  const [newPost, setNewPost] = useState({ title: '', content: '', type: 'update', visibility: 'company' });
+  const [newPost, setNewPost] = useState<{ title: string; content: string; type: string; visibility: string; pole_id: string }>(
+    { title: '', content: '', type: 'update', visibility: 'company', pole_id: profile?.pole || '' }
+  );
 
   const handleCreate = () => {
     if (!newPost.title || !newPost.content) { toast.error('Titre et contenu requis'); return; }
-    createPost.mutate(newPost);
-    setNewPost({ title: '', content: '', type: 'update', visibility: 'company' });
+    if (newPost.visibility === 'pole' && !newPost.pole_id) { toast.error('Sélectionnez un pôle'); return; }
+    createPost.mutate({
+      title: newPost.title,
+      content: newPost.content,
+      type: newPost.type,
+      visibility: newPost.visibility,
+      pole_id: newPost.visibility === 'pole' ? newPost.pole_id : null,
+    });
+    setNewPost({ title: '', content: '', type: 'update', visibility: 'company', pole_id: profile?.pole || '' });
   };
 
   const [searchParams, setSearchParams] = useSearchParams();
