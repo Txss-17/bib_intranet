@@ -34,6 +34,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { usePermissionRules } from '@/hooks/usePermissionRules';
 import { logSensitiveAccess } from '@/lib/sensitiveAudit';
+import { ProfessionalTab } from '@/components/settings/ProfessionalTab';
+import { ResourcesTab } from '@/components/settings/ResourcesTab';
+import { AccessTab } from '@/components/settings/AccessTab';
 
 function SensitiveProfileSection() {
   useEffect(() => {
