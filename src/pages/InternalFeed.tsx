@@ -105,7 +105,7 @@ export default function InternalFeed() {
   });
 
   const [newPost, setNewPost] = useState<{ title: string; content: string; type: string; visibility: string; pole_id: string }>(
-    { title: '', content: '', type: 'update', visibility: 'company', pole_id: profile?.pole || '' }
+    { title: '', content: '', type: 'update', visibility: 'company', pole_id: profile?.poles?.[0] || '' }
   );
 
   const handleCreate = () => {
@@ -118,7 +118,7 @@ export default function InternalFeed() {
       visibility: newPost.visibility,
       pole_id: newPost.visibility === 'pole' ? newPost.pole_id : null,
     });
-    setNewPost({ title: '', content: '', type: 'update', visibility: 'company', pole_id: profile?.pole || '' });
+    setNewPost({ title: '', content: '', type: 'update', visibility: 'company', pole_id: profile?.poles?.[0] || '' });
   };
 
   const [searchParams, setSearchParams] = useSearchParams();
