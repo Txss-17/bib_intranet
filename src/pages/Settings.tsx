@@ -439,6 +439,18 @@ export default function Settings() {
           </div>
         </TabsContent>
 
+        <TabsContent value="professional" className="space-y-6 mt-6">
+          <ProfessionalTab />
+        </TabsContent>
+
+        <TabsContent value="resources" className="space-y-6 mt-6">
+          <ResourcesTab />
+        </TabsContent>
+
+        <TabsContent value="access" className="space-y-6 mt-6">
+          <AccessTab />
+        </TabsContent>
+
         {/* Notifications Tab */}
         <TabsContent value="notifications" className="space-y-6 mt-6">
           <div className="enterprise-card p-6">
