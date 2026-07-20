@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { usePublications } from '@/hooks/useDataQueries';
+import { poles } from '@/data/poles';
 import type { FeedItem, PoleId } from '@/types';
 
 const TYPE_STYLE: Record<string, string> = {
@@ -82,9 +83,13 @@ export default function InternalFeed() {
   const qc = useQueryClient();
 
   const createPost = useMutation({
-    mutationFn: async (post: { title: string; content: string; type: string; visibility: string }) => {
+    mutationFn: async (post: { title: string; content: string; type: string; visibility: string; pole_id?: string | null }) => {
       const { error } = await from('feed_posts').insert({
-        ...post,
+        title: post.title,
+        content: post.content,
+        type: post.type,
+        visibility: post.visibility,
+        pole_id: post.pole_id || null,
         author_id: user?.id,
         author_name: `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Utilisateur',
         author_role: profile?.position || 'employee',
@@ -99,12 +104,21 @@ export default function InternalFeed() {
     onError: () => toast.error('Erreur lors de la création'),
   });
 
-  const [newPost, setNewPost] = useState({ title: '', content: '', type: 'update', visibility: 'company' });
+  const [newPost, setNewPost] = useState<{ title: string; content: string; type: string; visibility: string; pole_id: string }>(
+    { title: '', content: '', type: 'update', visibility: 'company', pole_id: profile?.poles?.[0] || '' }
+  );
 
   const handleCreate = () => {
     if (!newPost.title || !newPost.content) { toast.error('Titre et contenu requis'); return; }
-    createPost.mutate(newPost);
-    setNewPost({ title: '', content: '', type: 'update', visibility: 'company' });
+    if (newPost.visibility === 'pole' && !newPost.pole_id) { toast.error('Sélectionnez un pôle'); return; }
+    createPost.mutate({
+      title: newPost.title,
+      content: newPost.content,
+      type: newPost.type,
+      visibility: newPost.visibility,
+      pole_id: newPost.visibility === 'pole' ? newPost.pole_id : null,
+    });
+    setNewPost({ title: '', content: '', type: 'update', visibility: 'company', pole_id: profile?.poles?.[0] || '' });
   };
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -245,12 +259,25 @@ export default function InternalFeed() {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="company">Entreprise</SelectItem>
-                    <SelectItem value="pole">Mon pôle</SelectItem>
+                    <SelectItem value="pole">Pôle spécifique</SelectItem>
                     <SelectItem value="restricted">Restreint</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
+            {newPost.visibility === 'pole' && (
+              <div className="space-y-2">
+                <Label>Pôle destinataire</Label>
+                <Select value={newPost.pole_id} onValueChange={(v) => setNewPost(p => ({ ...p, pole_id: v }))}>
+                  <SelectTrigger><SelectValue placeholder="Choisir un pôle" /></SelectTrigger>
+                  <SelectContent>
+                    {poles.map((pole) => (
+                      <SelectItem key={pole.id} value={pole.id}>{pole.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <Button onClick={handleCreate} className="w-full" disabled={createPost.isPending}>
               {createPost.isPending ? 'Publication...' : 'Publier'}
             </Button>
