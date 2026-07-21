@@ -211,6 +211,7 @@ const App = () => (
             
             {/* Direction module */}
             <Route path="/pole/direction" element={<ExecutiveDashboard />} />
+            <Route path="/pole/direction/global" element={<DirectionGlobal />} />
             <Route path="/pole/direction/kpi" element={<StrategicKPIs />} />
             <Route path="/pole/direction/alerts" element={<CriticalAlertsPage />} />
             <Route path="/pole/direction/decisions" element={<DecisionArbitrage />} />
