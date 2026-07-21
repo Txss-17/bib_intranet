@@ -76,6 +76,7 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'attendance', label: 'Attendance', labelFr: 'Pointage', path: '/pole/rh/attendance' },
     { id: 'leave', label: 'Leave', labelFr: 'Congés', path: '/pole/rh/leave' },
     { id: 'training', label: 'Training', labelFr: 'Formations', path: '/pole/rh/training' },
+    { id: 'trips', label: 'Business Trips', labelFr: 'Déplacements pro', path: '/pole/rh/trips' },
     { id: 'publications', label: 'Publications', labelFr: 'Publications internes', path: '/pole/rh/publications' },
     { id: 'ethics', label: 'Ethics', labelFr: 'Éthique & Signalements', path: '/pole/rh/ethics' },
   ],
