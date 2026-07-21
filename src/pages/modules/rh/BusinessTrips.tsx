@@ -23,8 +23,8 @@ const statusMeta: Record<string, { label: string; color: string; icon: any }> = 
 
 export default function BusinessTrips() {
   const { user } = useAuth();
-  const { data: role } = useUserRole();
-  const canApprove = role === 'admin' || role === 'executive' || role === 'manager';
+  const { isAdmin, isManager } = useUserRole();
+  const canApprove = isAdmin || isManager;
   const { data: trips = [], isLoading } = useBusinessTrips();
   const create = useCreateBusinessTrip();
   const update = useUpdateBusinessTrip();
