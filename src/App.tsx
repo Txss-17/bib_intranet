@@ -299,6 +299,7 @@ const App = () => (
             <Route path="/pole/rh/attendance" element={<Attendance />} />
             <Route path="/pole/rh/leave" element={<Leave />} />
             <Route path="/pole/rh/training" element={<Training />} />
+            <Route path="/pole/rh/trips" element={<BusinessTrips />} />
             <Route path="/pole/rh/publications" element={<Publications />} />
             <Route path="/pole/rh/ethics" element={<RHEthics />} />
             
