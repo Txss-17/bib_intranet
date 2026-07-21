@@ -257,6 +257,7 @@ const App = () => (
             <Route path="/pole/finance/supplier-payments" element={<SupplierPayments />} />
             <Route path="/pole/finance/subscriptions" element={<Subscriptions />} />
             <Route path="/pole/finance/salaries" element={<Salaries />} />
+            <Route path="/pole/finance/cards" element={<CorporateCards />} />
             <Route path="/pole/finance/guarantee" element={<GuaranteeFund />} />
             
             {/* Ops Control Tower */}
