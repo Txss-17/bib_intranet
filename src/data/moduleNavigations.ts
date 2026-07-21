@@ -13,6 +13,7 @@ export const moduleNavigations: ModuleNavigations = {
   // Direction (Executive)
   direction: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/direction' },
+    { id: 'global', label: 'Group Dashboard', labelFr: 'Dashboard Groupe', path: '/pole/direction/global' },
     { id: 'kpi', label: 'Strategic KPIs', labelFr: 'KPI stratégiques', path: '/pole/direction/kpi' },
     { id: 'alerts', label: 'Critical Alerts', labelFr: 'Alertes critiques', path: '/pole/direction/alerts' },
     { id: 'decisions', label: 'Decisions', labelFr: 'Décisions', path: '/pole/direction/decisions' },
