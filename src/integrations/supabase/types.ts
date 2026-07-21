@@ -194,6 +194,69 @@ export type Database = {
         }
         Relationships: []
       }
+      business_trips: {
+        Row: {
+          accommodation: string | null
+          actual_cost: number | null
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          destination: string
+          end_date: string
+          estimated_budget: number | null
+          id: string
+          manager_id: string | null
+          mission_report: string | null
+          notes: string | null
+          purpose: string
+          start_date: string
+          status: string
+          transport_mode: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accommodation?: string | null
+          actual_cost?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          destination: string
+          end_date: string
+          estimated_budget?: number | null
+          id?: string
+          manager_id?: string | null
+          mission_report?: string | null
+          notes?: string | null
+          purpose: string
+          start_date: string
+          status?: string
+          transport_mode?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accommodation?: string | null
+          actual_cost?: number | null
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          destination?: string
+          end_date?: string
+          estimated_budget?: number | null
+          id?: string
+          manager_id?: string | null
+          mission_report?: string | null
+          notes?: string | null
+          purpose?: string
+          start_date?: string
+          status?: string
+          transport_mode?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cashflows: {
         Row: {
           amount: number
@@ -301,6 +364,104 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      corporate_card_transactions: {
+        Row: {
+          amount: number
+          card_id: string
+          category: string | null
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          merchant: string
+          receipt_url: string | null
+          status: string
+          transaction_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          card_id: string
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          merchant: string
+          receipt_url?: string | null
+          status?: string
+          transaction_date?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          card_id?: string
+          category?: string | null
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          merchant?: string
+          receipt_url?: string | null
+          status?: string
+          transaction_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "corporate_card_transactions_card_id_fkey"
+            columns: ["card_id"]
+            isOneToOne: false
+            referencedRelation: "corporate_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      corporate_cards: {
+        Row: {
+          activated_at: string | null
+          allowed_categories: string[]
+          card_number_masked: string
+          card_type: string
+          created_at: string
+          id: string
+          monthly_limit: number
+          status: string
+          suspended_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activated_at?: string | null
+          allowed_categories?: string[]
+          card_number_masked: string
+          card_type?: string
+          created_at?: string
+          id?: string
+          monthly_limit?: number
+          status?: string
+          suspended_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activated_at?: string | null
+          allowed_categories?: string[]
+          card_number_masked?: string
+          card_type?: string
+          created_at?: string
+          id?: string
+          monthly_limit?: number
+          status?: string
+          suspended_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       demand_forecasts: {
         Row: {
