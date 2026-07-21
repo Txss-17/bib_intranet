@@ -122,6 +122,9 @@ import TechLogs from "./pages/modules/tech/TechLogs";
 import TechEnvironments from "./pages/modules/tech/TechEnvironments";
 import TechSecurity from "./pages/modules/tech/TechSecurity";
 import TechDataFlow from "./pages/modules/tech/TechDataFlow";
+import DirectionGlobal from "./pages/modules/direction/DirectionGlobal";
+import BusinessTrips from "./pages/modules/rh/BusinessTrips";
+import CorporateCards from "./pages/modules/finance/CorporateCards";
 
 // RH module pages
 import RHDashboard from "./pages/modules/rh/RHDashboard";
