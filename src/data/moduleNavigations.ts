@@ -13,6 +13,7 @@ export const moduleNavigations: ModuleNavigations = {
   // Direction (Executive)
   direction: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/direction' },
+    { id: 'global', label: 'Group Dashboard', labelFr: 'Dashboard Groupe', path: '/pole/direction/global' },
     { id: 'kpi', label: 'Strategic KPIs', labelFr: 'KPI stratégiques', path: '/pole/direction/kpi' },
     { id: 'alerts', label: 'Critical Alerts', labelFr: 'Alertes critiques', path: '/pole/direction/alerts' },
     { id: 'decisions', label: 'Decisions', labelFr: 'Décisions', path: '/pole/direction/decisions' },
@@ -30,6 +31,7 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'supplier-payments', label: 'Supplier Payments', labelFr: 'Paiements fournisseurs', path: '/pole/finance/supplier-payments' },
     { id: 'subscriptions', label: 'Subscriptions', labelFr: 'Abonnements', path: '/pole/finance/subscriptions' },
     { id: 'salaries', label: 'Salaries & Bonuses', labelFr: 'Salaires & Primes', path: '/pole/finance/salaries' },
+    { id: 'cards', label: 'Corporate Cards', labelFr: 'Cartes entreprise', path: '/pole/finance/cards' },
     { id: 'guarantee', label: 'Guarantee Fund', labelFr: 'Fonds de garantie', path: '/pole/finance/guarantee' },
   ],
 
@@ -74,6 +76,7 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'attendance', label: 'Attendance', labelFr: 'Pointage', path: '/pole/rh/attendance' },
     { id: 'leave', label: 'Leave', labelFr: 'Congés', path: '/pole/rh/leave' },
     { id: 'training', label: 'Training', labelFr: 'Formations', path: '/pole/rh/training' },
+    { id: 'trips', label: 'Business Trips', labelFr: 'Déplacements pro', path: '/pole/rh/trips' },
     { id: 'publications', label: 'Publications', labelFr: 'Publications internes', path: '/pole/rh/publications' },
     { id: 'ethics', label: 'Ethics', labelFr: 'Éthique & Signalements', path: '/pole/rh/ethics' },
   ],

@@ -122,6 +122,9 @@ import TechLogs from "./pages/modules/tech/TechLogs";
 import TechEnvironments from "./pages/modules/tech/TechEnvironments";
 import TechSecurity from "./pages/modules/tech/TechSecurity";
 import TechDataFlow from "./pages/modules/tech/TechDataFlow";
+import DirectionGlobal from "./pages/modules/direction/DirectionGlobal";
+import BusinessTrips from "./pages/modules/rh/BusinessTrips";
+import CorporateCards from "./pages/modules/finance/CorporateCards";
 
 // RH module pages
 import RHDashboard from "./pages/modules/rh/RHDashboard";
@@ -208,6 +211,7 @@ const App = () => (
             
             {/* Direction module */}
             <Route path="/pole/direction" element={<ExecutiveDashboard />} />
+            <Route path="/pole/direction/global" element={<DirectionGlobal />} />
             <Route path="/pole/direction/kpi" element={<StrategicKPIs />} />
             <Route path="/pole/direction/alerts" element={<CriticalAlertsPage />} />
             <Route path="/pole/direction/decisions" element={<DecisionArbitrage />} />
@@ -253,6 +257,7 @@ const App = () => (
             <Route path="/pole/finance/supplier-payments" element={<SupplierPayments />} />
             <Route path="/pole/finance/subscriptions" element={<Subscriptions />} />
             <Route path="/pole/finance/salaries" element={<Salaries />} />
+            <Route path="/pole/finance/cards" element={<CorporateCards />} />
             <Route path="/pole/finance/guarantee" element={<GuaranteeFund />} />
             
             {/* Ops Control Tower */}
@@ -294,6 +299,7 @@ const App = () => (
             <Route path="/pole/rh/attendance" element={<Attendance />} />
             <Route path="/pole/rh/leave" element={<Leave />} />
             <Route path="/pole/rh/training" element={<Training />} />
+            <Route path="/pole/rh/trips" element={<BusinessTrips />} />
             <Route path="/pole/rh/publications" element={<Publications />} />
             <Route path="/pole/rh/ethics" element={<RHEthics />} />
             
