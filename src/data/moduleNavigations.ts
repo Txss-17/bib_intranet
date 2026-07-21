@@ -31,6 +31,7 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'supplier-payments', label: 'Supplier Payments', labelFr: 'Paiements fournisseurs', path: '/pole/finance/supplier-payments' },
     { id: 'subscriptions', label: 'Subscriptions', labelFr: 'Abonnements', path: '/pole/finance/subscriptions' },
     { id: 'salaries', label: 'Salaries & Bonuses', labelFr: 'Salaires & Primes', path: '/pole/finance/salaries' },
+    { id: 'cards', label: 'Corporate Cards', labelFr: 'Cartes entreprise', path: '/pole/finance/cards' },
     { id: 'guarantee', label: 'Guarantee Fund', labelFr: 'Fonds de garantie', path: '/pole/finance/guarantee' },
   ],
 
