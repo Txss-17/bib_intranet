@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Responsive, WidthProvider } from 'react-grid-layout';
+import RGL, { Responsive } from 'react-grid-layout';
+const WidthProvider = (RGL as any).WidthProvider;
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { Card, CardContent } from '@/components/ui/card';
