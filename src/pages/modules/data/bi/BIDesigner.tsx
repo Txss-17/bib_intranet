@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Responsive, WidthProvider, Layout } from 'react-grid-layout';
+import { Responsive, WidthProvider } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { Card, CardContent } from '@/components/ui/card';
@@ -129,9 +129,8 @@ export default function BIDesigner() {
     });
   };
 
-  const onLayoutChange = async (layout: Layout[]) => {
+  const onLayoutChange = async (layout: any[]) => {
     if (isNew || !id) return;
-    // persist positions
     for (const l of layout) {
       const w = widgets.find(x => x.id === l.i);
       if (!w) continue;
