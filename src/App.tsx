@@ -30,6 +30,13 @@ import KPICatalog from "./pages/modules/data/KPICatalog";
 import PublicationRequestsPage from "./pages/modules/data/PublicationRequests";
 import TechBacklogPage from "./pages/modules/data/TechBacklog";
 import KPIVersions from "./pages/modules/data/KPIVersions";
+import BIOverview from "./pages/modules/data/bi/BIOverview";
+import BIDashboardsList from "./pages/modules/data/bi/BIDashboardsList";
+import BIDesigner from "./pages/modules/data/bi/BIDesigner";
+import BITemplates from "./pages/modules/data/bi/BITemplates";
+import BIDataSources from "./pages/modules/data/bi/BIDataSources";
+import BIWidgetLibrary from "./pages/modules/data/bi/BIWidgetLibrary";
+import BIHistory from "./pages/modules/data/bi/BIHistory";
 // WhatsNew merged into InternalFeed (/feed?tab=news)
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
@@ -386,6 +393,13 @@ const App = () => (
             <Route path="/pole/data/requests" element={<PublicationRequestsPage />} />
             <Route path="/pole/data/backlog" element={<TechBacklogPage />} />
             <Route path="/pole/data/versions" element={<KPIVersions />} />
+            <Route path="/pole/data/bi" element={<BIOverview />} />
+            <Route path="/pole/data/bi/dashboards" element={<BIDashboardsList />} />
+            <Route path="/pole/data/bi/designer/:id" element={<BIDesigner />} />
+            <Route path="/pole/data/bi/templates" element={<BITemplates />} />
+            <Route path="/pole/data/bi/sources" element={<BIDataSources />} />
+            <Route path="/pole/data/bi/library" element={<BIWidgetLibrary />} />
+            <Route path="/pole/data/bi/history/:id" element={<BIHistory />} />
             <Route path="/whats-new" element={<Navigate to="/feed?tab=news" replace />} />
             <Route path="/profile" element={<Profile />} />
           </Route>

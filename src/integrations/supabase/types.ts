@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      approval_history: {
+        Row: {
+          action: string
+          actor_id: string | null
+          comment: string | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          comment?: string | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          comment?: string | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       audit_incidents: {
         Row: {
           assigned_to: string | null
@@ -146,6 +179,241 @@ export type Database = {
         }
         Relationships: []
       }
+      bi_dashboard_versions: {
+        Row: {
+          author_id: string | null
+          created_at: string
+          dashboard_id: string
+          id: string
+          kpis_added: string[] | null
+          kpis_removed: string[] | null
+          note: string | null
+          snapshot: Json
+          version: string
+        }
+        Insert: {
+          author_id?: string | null
+          created_at?: string
+          dashboard_id: string
+          id?: string
+          kpis_added?: string[] | null
+          kpis_removed?: string[] | null
+          note?: string | null
+          snapshot: Json
+          version: string
+        }
+        Update: {
+          author_id?: string | null
+          created_at?: string
+          dashboard_id?: string
+          id?: string
+          kpis_added?: string[] | null
+          kpis_removed?: string[] | null
+          note?: string | null
+          snapshot?: Json
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bi_dashboard_versions_dashboard_id_fkey"
+            columns: ["dashboard_id"]
+            isOneToOne: false
+            referencedRelation: "bi_dashboards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bi_dashboard_widgets: {
+        Row: {
+          config: Json
+          created_at: string
+          dashboard_id: string
+          data_source: string | null
+          h: number
+          id: string
+          kpi_id: string | null
+          page_id: string
+          title: string | null
+          type: string
+          updated_at: string
+          w: number
+          x: number
+          y: number
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          dashboard_id: string
+          data_source?: string | null
+          h?: number
+          id?: string
+          kpi_id?: string | null
+          page_id?: string
+          title?: string | null
+          type: string
+          updated_at?: string
+          w?: number
+          x?: number
+          y?: number
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          dashboard_id?: string
+          data_source?: string | null
+          h?: number
+          id?: string
+          kpi_id?: string | null
+          page_id?: string
+          title?: string | null
+          type?: string
+          updated_at?: string
+          w?: number
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bi_dashboard_widgets_dashboard_id_fkey"
+            columns: ["dashboard_id"]
+            isOneToOne: false
+            referencedRelation: "bi_dashboards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bi_dashboards: {
+        Row: {
+          archive_at: string | null
+          created_at: string
+          description: string | null
+          id: string
+          layout: Json
+          name: string
+          owner_id: string | null
+          pages: Json
+          pole_id: string | null
+          publish_at: string | null
+          published_at: string | null
+          status: string
+          target_filiale: string | null
+          target_pole: string | null
+          target_role: string | null
+          target_users: string[] | null
+          template_id: string | null
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          archive_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          layout?: Json
+          name: string
+          owner_id?: string | null
+          pages?: Json
+          pole_id?: string | null
+          publish_at?: string | null
+          published_at?: string | null
+          status?: string
+          target_filiale?: string | null
+          target_pole?: string | null
+          target_role?: string | null
+          target_users?: string[] | null
+          template_id?: string | null
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          archive_at?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          layout?: Json
+          name?: string
+          owner_id?: string | null
+          pages?: Json
+          pole_id?: string | null
+          publish_at?: string | null
+          published_at?: string | null
+          status?: string
+          target_filiale?: string | null
+          target_pole?: string | null
+          target_role?: string | null
+          target_users?: string[] | null
+          template_id?: string | null
+          updated_at?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      bi_data_sources: {
+        Row: {
+          config: Json
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_id: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          owner_id?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          owner_id?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bi_templates: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          pole_id: string | null
+          preset: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          pole_id?: string | null
+          preset?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          pole_id?: string | null
+          preset?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bugs: {
         Row: {
           assigned_to: string | null
@@ -209,8 +477,12 @@ export type Database = {
           mission_report: string | null
           notes: string | null
           purpose: string
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
           start_date: string
           status: string
+          submitted_at: string | null
           transport_mode: string | null
           updated_at: string
           user_id: string
@@ -229,8 +501,12 @@ export type Database = {
           mission_report?: string | null
           notes?: string | null
           purpose: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           start_date: string
           status?: string
+          submitted_at?: string | null
           transport_mode?: string | null
           updated_at?: string
           user_id: string
@@ -249,8 +525,12 @@ export type Database = {
           mission_report?: string | null
           notes?: string | null
           purpose?: string
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           start_date?: string
           status?: string
+          submitted_at?: string | null
           transport_mode?: string | null
           updated_at?: string
           user_id?: string
@@ -368,6 +648,9 @@ export type Database = {
       corporate_card_transactions: {
         Row: {
           amount: number
+          approval_status: string
+          approved_at: string | null
+          approved_by: string | null
           card_id: string
           category: string | null
           created_at: string
@@ -376,13 +659,20 @@ export type Database = {
           id: string
           merchant: string
           receipt_url: string | null
+          rejected_at: string | null
+          rejected_by: string | null
+          rejection_reason: string | null
           status: string
+          submitted_at: string | null
           transaction_date: string
           updated_at: string
           user_id: string
         }
         Insert: {
           amount: number
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           card_id: string
           category?: string | null
           created_at?: string
@@ -391,13 +681,20 @@ export type Database = {
           id?: string
           merchant: string
           receipt_url?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           status?: string
+          submitted_at?: string | null
           transaction_date?: string
           updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number
+          approval_status?: string
+          approved_at?: string | null
+          approved_by?: string | null
           card_id?: string
           category?: string | null
           created_at?: string
@@ -406,7 +703,11 @@ export type Database = {
           id?: string
           merchant?: string
           receipt_url?: string | null
+          rejected_at?: string | null
+          rejected_by?: string | null
+          rejection_reason?: string | null
           status?: string
+          submitted_at?: string | null
           transaction_date?: string
           updated_at?: string
           user_id?: string
