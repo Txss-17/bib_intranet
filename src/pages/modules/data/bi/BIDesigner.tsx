@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import RGL, { Responsive } from 'react-grid-layout';
-const WidthProvider = (RGL as any).WidthProvider;
+import { ResponsiveGridLayout as ResponsiveGrid } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { Card, CardContent } from '@/components/ui/card';
@@ -27,7 +26,7 @@ import { useKpiCatalog } from '@/hooks/useDataQueries';
 import { toast } from '@/hooks/use-toast';
 import { poles } from '@/data/poles';
 
-const ResponsiveGrid = WidthProvider(Responsive);
+
 
 const COMPONENTS = [
   { type: 'kpi_card', label: 'KPI Card', icon: Square, w: 3, h: 3 },
@@ -244,8 +243,7 @@ export default function BIDesigner() {
                   breakpoints={{ lg: 0 }}
                   cols={{ lg: DEVICE_COLS[device] }}
                   rowHeight={60}
-                  isDraggable={!preview}
-                  isResizable={!preview}
+                  {...({ isDraggable: !preview, isResizable: !preview } as any)}
                   onLayoutChange={onLayoutChange}
                 >
                   {widgets.map(w => (
