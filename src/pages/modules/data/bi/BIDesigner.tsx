@@ -26,7 +26,7 @@ import { useKpiCatalog } from '@/hooks/useDataQueries';
 import { toast } from '@/hooks/use-toast';
 import { poles } from '@/data/poles';
 
-const ResponsiveGrid = WidthProvider(Responsive);
+
 
 const COMPONENTS = [
   { type: 'kpi_card', label: 'KPI Card', icon: Square, w: 3, h: 3 },
