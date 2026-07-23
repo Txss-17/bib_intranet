@@ -243,8 +243,7 @@ export default function BIDesigner() {
                   breakpoints={{ lg: 0 }}
                   cols={{ lg: DEVICE_COLS[device] }}
                   rowHeight={60}
-                  isDraggable={!preview}
-                  isResizable={!preview}
+                  {...({ isDraggable: !preview, isResizable: !preview } as any)}
                   onLayoutChange={onLayoutChange}
                 >
                   {widgets.map(w => (
