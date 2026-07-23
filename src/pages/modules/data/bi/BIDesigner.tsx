@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Responsive } from 'react-grid-layout';
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-import WidthProvider from 'react-grid-layout/build/components/WidthProvider';
+import { ResponsiveGridLayout as ResponsiveGrid } from 'react-grid-layout';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import { Card, CardContent } from '@/components/ui/card';
