@@ -1,0 +1,1 @@
+DROP POLICY IF EXISTS "product-assets authenticated read" ON storage.objects;
