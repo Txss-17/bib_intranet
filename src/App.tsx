@@ -30,6 +30,7 @@ import KPICatalog from "./pages/modules/data/KPICatalog";
 import PublicationRequestsPage from "./pages/modules/data/PublicationRequests";
 import TechBacklogPage from "./pages/modules/data/TechBacklog";
 import KPIVersions from "./pages/modules/data/KPIVersions";
+import DataReports from "./pages/modules/data/Reports";
 import BIOverview from "./pages/modules/data/bi/BIOverview";
 import BIDashboardsList from "./pages/modules/data/bi/BIDashboardsList";
 import BIDesigner from "./pages/modules/data/bi/BIDesigner";
