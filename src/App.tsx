@@ -394,6 +394,7 @@ const App = () => (
             <Route path="/pole/data/requests" element={<PublicationRequestsPage />} />
             <Route path="/pole/data/backlog" element={<TechBacklogPage />} />
             <Route path="/pole/data/versions" element={<KPIVersions />} />
+            <Route path="/pole/data/reports" element={<DataReports />} />
             <Route path="/pole/data/bi" element={<BIOverview />} />
             <Route path="/pole/data/bi/dashboards" element={<BIDashboardsList />} />
             <Route path="/pole/data/bi/designer/:id" element={<BIDesigner />} />
