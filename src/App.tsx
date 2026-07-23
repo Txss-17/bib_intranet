@@ -30,6 +30,7 @@ import KPICatalog from "./pages/modules/data/KPICatalog";
 import PublicationRequestsPage from "./pages/modules/data/PublicationRequests";
 import TechBacklogPage from "./pages/modules/data/TechBacklog";
 import KPIVersions from "./pages/modules/data/KPIVersions";
+import DataReports from "./pages/modules/data/Reports";
 import BIOverview from "./pages/modules/data/bi/BIOverview";
 import BIDashboardsList from "./pages/modules/data/bi/BIDashboardsList";
 import BIDesigner from "./pages/modules/data/bi/BIDesigner";
@@ -393,6 +394,7 @@ const App = () => (
             <Route path="/pole/data/requests" element={<PublicationRequestsPage />} />
             <Route path="/pole/data/backlog" element={<TechBacklogPage />} />
             <Route path="/pole/data/versions" element={<KPIVersions />} />
+            <Route path="/pole/data/reports" element={<DataReports />} />
             <Route path="/pole/data/bi" element={<BIOverview />} />
             <Route path="/pole/data/bi/dashboards" element={<BIDashboardsList />} />
             <Route path="/pole/data/bi/designer/:id" element={<BIDesigner />} />
