@@ -187,6 +187,7 @@ export const canAccessScreen = (
   screenId: string,
   extraPoles?: string[],
 ): boolean => {
+  if (BUILD_MODE_OPEN_ACCESS) return true;
   if (!position) return false;
   if (position === 'ceo') return true;
   if (PUBLIC_SCREENS.has(screenId)) return true;
