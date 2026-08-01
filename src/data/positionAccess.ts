@@ -217,6 +217,7 @@ export const getAccessiblePoles = (
   position: EmployeePosition | undefined,
   extraPoles?: string[],
 ): PoleId[] => {
+  if (BUILD_MODE_OPEN_ACCESS) return [...positionAccess.ceo.poles];
   if (!position) return [];
   const base = positionAccess[position].poles;
   if (!extraPoles?.length) return base;
