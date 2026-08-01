@@ -64,10 +64,21 @@ export const getRule = (
   return fromDefault ?? EMPTY_RULE;
 };
 
+// ⚠️ Mode construction : droits sensibles ouverts à tous le temps de finaliser
+// l'intranet. Repasser à `false` pour réactiver la matrice.
+export const BUILD_MODE_OPEN_RULES = true;
+
 export const mergeRulesForUser = (
   poles: string[],
   seniority: string | null | undefined,
 ): PermissionRule => {
+  if (BUILD_MODE_OPEN_RULES) {
+    return {
+      can_view_sensitive: true,
+      can_view_audit_log: true,
+      can_configure_permissions: true,
+    };
+  }
   const overrides = loadOverrides();
   const merged: PermissionRule = { ...EMPTY_RULE };
   for (const p of poles) {
