@@ -159,11 +159,16 @@ const collectExtraScreens = (extraPoles?: string[]): Set<string> => {
   return out;
 };
 
+// ⚠️ Mode construction : toutes les pages sont ouvertes à tous les postes le
+// temps de finaliser l'intranet. Repasser à `false` pour réactiver le RBAC.
+export const BUILD_MODE_OPEN_ACCESS = true;
+
 export const canAccessPole = (
   position: EmployeePosition | undefined,
   poleId: PoleId,
   extraPoles?: string[],
 ): boolean => {
+  if (BUILD_MODE_OPEN_ACCESS) return true;
   if (!position) return false;
   if (position === 'ceo') return true;
   if (positionAccess[position].poles.includes(poleId)) return true;
