@@ -24,6 +24,7 @@ import {
   FlaskConical,
   BarChart3,
   Sparkles,
+  UserCog,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
@@ -53,6 +54,7 @@ const transversalModules = [
   { id: 'compliance-audit', name: 'Conformité & Audit', icon: Shield, path: '/compliance-audit' },
   { id: 'feed', name: 'Internal Feed', icon: Sparkles, path: '/feed' },
   { id: 'documents', name: 'Documents', icon: FileText, path: '/documents' },
+  { id: 'test-accounts', name: 'Comptes de test', icon: UserCog, path: '/admin/test-accounts' },
 ];
 
 

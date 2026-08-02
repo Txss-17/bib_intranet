@@ -2,3 +2,6 @@ project_id = "cxguhlssztinaxrgeuku"
 
 [functions.mirror-audit-intake]
 verify_jwt = false
+
+[functions.provision-test-accounts]
+verify_jwt = true
