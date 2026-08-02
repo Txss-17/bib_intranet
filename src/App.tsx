@@ -17,6 +17,7 @@ import InternalFeed from "./pages/InternalFeed";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import PermissionsMatrix from "./pages/PermissionsMatrix";
+import TestAccounts from "./pages/admin/TestAccounts";
 import ComplianceAudit from "./pages/ComplianceAudit";
 import FinanceCompliance from "./pages/compliance/FinanceCompliance";
 import OpsCompliance from "./pages/compliance/OpsCompliance";
@@ -385,6 +386,7 @@ const App = () => (
             <Route path="/documents" element={<Documents />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/permissions" element={<PermissionsMatrix />} />
+            <Route path="/admin/test-accounts" element={<TestAccounts />} />
             <Route path="/compliance-audit" element={<ComplianceAudit />} />
             <Route path="/compliance-audit/finance" element={<FinanceCompliance />} />
             <Route path="/compliance-audit/ops" element={<OpsCompliance />} />
