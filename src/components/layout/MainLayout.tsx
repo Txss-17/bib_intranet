@@ -3,6 +3,8 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { AppSidebar } from './AppSidebar';
 import { TopBar } from './TopBar';
+import { ViewAsBanner } from '@/components/admin/ViewAsBanner';
+
 import { ModuleNavigation } from './ModuleNavigation';
 import { PoleId } from '@/types';
 
