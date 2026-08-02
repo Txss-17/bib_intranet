@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { EmployeePosition, positionInfos } from '@/types/positions';
 import { canAccessPole, canAccessScreen, getAccessiblePoles } from '@/data/positionAccess';
 import { PoleId } from '@/types';
+import { useViewAs } from '@/hooks/useViewAs';
 
 interface UsePositionReturn {
   position: EmployeePosition | undefined;
@@ -11,12 +12,15 @@ interface UsePositionReturn {
   canAccessPole: (poleId: PoleId) => boolean;
   canAccessScreen: (screenId: string) => boolean;
   accessiblePoles: PoleId[];
+  /** Rôle métier simulé via « Visualiser comme », si actif */
+  simulatedRoleLabel?: string;
 }
 
 export const usePosition = (): UsePositionReturn => {
   const [position, setPosition] = useState<EmployeePosition | undefined>(undefined);
   const [extraPoles, setExtraPoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { role: simulatedRole } = useViewAs();
 
   useEffect(() => {
     const fetchPosition = async () => {
@@ -40,15 +44,17 @@ export const usePosition = (): UsePositionReturn => {
     fetchPosition();
   }, []);
 
-  // For development/demo purposes, default to CEO if no position set
-  const effectivePosition = position || 'ceo';
+  // Mode « Visualiser comme » : le rôle métier simulé prend le dessus.
+  const effectivePosition = simulatedRole?.position ?? position ?? 'ceo';
+  const effectivePoles = simulatedRole ? simulatedRole.poles : extraPoles;
 
   return {
     position: effectivePosition,
     positionInfo: effectivePosition ? positionInfos[effectivePosition] : undefined,
     isLoading,
-    canAccessPole: (poleId: PoleId) => canAccessPole(effectivePosition, poleId, extraPoles),
-    canAccessScreen: (screenId: string) => canAccessScreen(effectivePosition, screenId, extraPoles),
-    accessiblePoles: getAccessiblePoles(effectivePosition, extraPoles),
+    canAccessPole: (poleId: PoleId) => canAccessPole(effectivePosition, poleId, effectivePoles),
+    canAccessScreen: (screenId: string) => canAccessScreen(effectivePosition, screenId, effectivePoles),
+    accessiblePoles: getAccessiblePoles(effectivePosition, effectivePoles),
+    simulatedRoleLabel: simulatedRole?.label,
   };
 };
