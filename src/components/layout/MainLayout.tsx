@@ -58,9 +58,11 @@ export function MainLayout() {
           showModuleNav ? 'pt-28' : 'pt-16'
         )}
       >
+        <ViewAsBanner />
         <div className="p-6">
           <Outlet />
         </div>
+
       </main>
     </div>
   );
