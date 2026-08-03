@@ -1,5 +1,6 @@
 import { PoleId } from '@/types';
 import { EmployeePosition } from '@/types/positions';
+import { isRbacEnforced } from '@/data/permissionMatrix';
 
 export interface PositionAccess {
   poles: PoleId[];
@@ -159,16 +160,16 @@ const collectExtraScreens = (extraPoles?: string[]): Set<string> => {
   return out;
 };
 
-// ⚠️ Mode construction : toutes les pages sont ouvertes à tous les postes le
-// temps de finaliser l'intranet. Repasser à `false` pour réactiver le RBAC.
-export const BUILD_MODE_OPEN_ACCESS = true;
+// Le mode construction (accès ouvert) est piloté depuis
+// Administration → Rôles & Permissions (interrupteur « Moindre privilège »).
+export const isBuildModeOpen = (): boolean => !isRbacEnforced();
 
 export const canAccessPole = (
   position: EmployeePosition | undefined,
   poleId: PoleId,
   extraPoles?: string[],
 ): boolean => {
-  if (BUILD_MODE_OPEN_ACCESS) return true;
+  if (isBuildModeOpen()) return true;
   if (!position) return false;
   if (position === 'ceo') return true;
   if (positionAccess[position].poles.includes(poleId)) return true;
@@ -187,7 +188,7 @@ export const canAccessScreen = (
   screenId: string,
   extraPoles?: string[],
 ): boolean => {
-  if (BUILD_MODE_OPEN_ACCESS) return true;
+  if (isBuildModeOpen()) return true;
   if (!position) return false;
   if (position === 'ceo') return true;
   if (PUBLIC_SCREENS.has(screenId)) return true;
@@ -217,7 +218,7 @@ export const getAccessiblePoles = (
   position: EmployeePosition | undefined,
   extraPoles?: string[],
 ): PoleId[] => {
-  if (BUILD_MODE_OPEN_ACCESS) return [...positionAccess.ceo.poles];
+  if (isBuildModeOpen()) return [...positionAccess.ceo.poles];
   if (!position) return [];
   const base = positionAccess[position].poles;
   if (!extraPoles?.length) return base;

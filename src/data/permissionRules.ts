@@ -64,15 +64,17 @@ export const getRule = (
   return fromDefault ?? EMPTY_RULE;
 };
 
-// ⚠️ Mode construction : droits sensibles ouverts à tous le temps de finaliser
-// l'intranet. Repasser à `false` pour réactiver la matrice.
-export const BUILD_MODE_OPEN_RULES = true;
+// Mode construction : piloté par l'interrupteur « Moindre privilège » de
+// Administration → Rôles & Permissions.
+export const isBuildModeOpenRules = (): boolean => {
+  try { return localStorage.getItem('bib.rbac_enforced.v1') === 'off'; } catch { return false; }
+};
 
 export const mergeRulesForUser = (
   poles: string[],
   seniority: string | null | undefined,
 ): PermissionRule => {
-  if (BUILD_MODE_OPEN_RULES) {
+  if (isBuildModeOpenRules()) {
     return {
       can_view_sensitive: true,
       can_view_audit_log: true,
