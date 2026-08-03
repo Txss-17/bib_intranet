@@ -18,6 +18,7 @@ import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 import PermissionsMatrix from "./pages/PermissionsMatrix";
 import TestAccounts from "./pages/admin/TestAccounts";
+import RolesPermissions from '@/pages/admin/RolesPermissions';
 import ComplianceAudit from "./pages/ComplianceAudit";
 import FinanceCompliance from "./pages/compliance/FinanceCompliance";
 import OpsCompliance from "./pages/compliance/OpsCompliance";
@@ -387,6 +388,7 @@ const App = () => (
             <Route path="/settings" element={<Settings />} />
             <Route path="/permissions" element={<PermissionsMatrix />} />
             <Route path="/admin/test-accounts" element={<TestAccounts />} />
+            <Route path="/admin/roles-permissions" element={<RolesPermissions />} />
             <Route path="/compliance-audit" element={<ComplianceAudit />} />
             <Route path="/compliance-audit/finance" element={<FinanceCompliance />} />
             <Route path="/compliance-audit/ops" element={<OpsCompliance />} />
