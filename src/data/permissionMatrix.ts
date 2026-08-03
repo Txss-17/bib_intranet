@@ -256,8 +256,8 @@ export const resolvePagePermissions = (pageId: string, ctx: ResolveContext): Act
   const owners = RESTRICTED_PAGES[pageId];
   if (owners && !(ctx.role && owners.includes(ctx.role.id))) return apply({ ...NO_ACCESS });
 
-  // Modules transversaux d'administration : réservés
-  if (page.scope === 'admin') return apply({ ...NO_ACCESS });
+  // Les pages d'administration doivent être explicitement listées ci-dessus
+  if (page.scope === 'admin' && !owners) return apply({ ...NO_ACCESS });
 
   if (PUBLIC_PAGES.has(pageId)) return apply(makeActions(['read', 'create']));
 
