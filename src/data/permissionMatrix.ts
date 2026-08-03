@@ -87,11 +87,11 @@ export const getPageByPath = (path: string) => pageRegistry.find((p) => p.path =
 // Pages totalement interdites, sauf aux rôles listés (ids de src/data/jobRoles)
 // ---------------------------------------------------------------------------
 
-const TECH_OWNERS = ['ceo', 'cto', 'responsable_tech', 'devops', 'admin_systeme', 'developpeur_backend', 'developpeur_frontend'];
-const FINANCE_OWNERS = ['ceo', 'cfo', 'responsable_finance', 'comptable', 'controleur_gestion'];
-const RH_OWNERS = ['ceo', 'directeur_rh', 'responsable_rh', 'charge_rh', 'gestionnaire_paie'];
-const LEGAL_OWNERS = ['ceo', 'directeur_juridique', 'juriste', 'responsable_conformite', 'dpo'];
-const ADMIN_OWNERS = ['ceo', 'cto', 'admin_systeme', 'responsable_tech'];
+const TECH_OWNERS = ['ceo', 'cto', 'responsable_tech', 'devops_engineer', 'sre', 'admin_systeme', 'dba', 'architecte_logiciel', 'architecte_cloud', 'dev_backend', 'dev_fullstack', 'rssi'];
+const FINANCE_OWNERS = ['ceo', 'cfo', 'comptable', 'controleur_gestion', 'tresorier', 'gestionnaire_paiements'];
+const RH_OWNERS = ['ceo', 'directeur_rh', 'responsable_rh', 'gestionnaire_paie', 'gestionnaire_admin_rh'];
+const LEGAL_OWNERS = ['ceo', 'juriste', 'conformite_juridique', 'responsable_conformite', 'analyste_rgpd', 'gestionnaire_contrats'];
+const ADMIN_OWNERS = ['ceo', 'cto', 'admin_systeme', 'responsable_tech', 'rssi'];
 
 export const RESTRICTED_PAGES: Record<string, string[]> = {
   // Tech — outils sensibles
@@ -152,12 +152,15 @@ export interface DataScope {
 export const GLOBAL_SCOPE: DataScope = { regions: null, subsidiaries: null, ownRecordsOnly: false };
 
 export const ROLE_DATA_SCOPES: Record<string, Partial<DataScope>> = {
-  gestionnaire_fournisseurs_france: { regions: ['FR'] },
-  gestionnaire_fournisseurs_europe: { regions: ['FR', 'DE', 'ES', 'IT', 'BE', 'NL'] },
-  commercial_terrain: { ownRecordsOnly: true },
-  fournisseur_externe: { ownRecordsOnly: true },
-  partenaire_logistique: { ownRecordsOnly: true },
-  client_boutique: { ownRecordsOnly: true },
+  gestionnaire_fournisseurs: { regions: ['FR'] },
+  acheteur: { regions: ['FR', 'DE', 'ES', 'IT', 'BE', 'NL'] },
+  account_manager: { ownRecordsOnly: true },
+  business_developer: { ownRecordsOnly: true },
+  ext_fournisseur: { ownRecordsOnly: true },
+  ext_vendeur: { ownRecordsOnly: true },
+  ext_client_entreprise: { ownRecordsOnly: true },
+  ext_client_particulier: { ownRecordsOnly: true },
+  ext_prestataire: { ownRecordsOnly: true },
 };
 
 export const getDataScope = (role?: JobRole | null): DataScope => {
