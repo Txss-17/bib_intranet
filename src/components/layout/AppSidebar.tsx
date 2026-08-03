@@ -25,10 +25,12 @@ import {
   BarChart3,
   Sparkles,
   UserCog,
+  ShieldCheck,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { poles } from '@/data/poles';
+import { usePermissions } from '@/hooks/usePermissions';
 import { PoleId } from '@/types';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -54,6 +56,7 @@ const transversalModules = [
   { id: 'compliance-audit', name: 'Conformité & Audit', icon: Shield, path: '/compliance-audit' },
   { id: 'feed', name: 'Internal Feed', icon: Sparkles, path: '/feed' },
   { id: 'documents', name: 'Documents', icon: FileText, path: '/documents' },
+  { id: 'roles-permissions', name: 'Rôles & Permissions', icon: ShieldCheck, path: '/admin/roles-permissions' },
   { id: 'test-accounts', name: 'Comptes de test', icon: UserCog, path: '/admin/test-accounts' },
 ];
 
@@ -64,6 +67,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ collapsed }: AppSidebarProps) {
   const location = useLocation();
+  const { canViewPole, canViewPath } = usePermissions();
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     poles: true,
     modules: true,
@@ -140,7 +144,7 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
 
           {(expandedSections.poles || collapsed) && (
             <div className="mt-1 space-y-0.5">
-              {poles.map((pole) => {
+              {poles.filter((pole) => canViewPole(pole.id)).map((pole) => {
                 const Icon = iconMap[pole.icon] || Crown;
                 return (
                   <Link
@@ -193,7 +197,7 @@ export function AppSidebar({ collapsed }: AppSidebarProps) {
 
           {(expandedSections.modules || collapsed) && (
             <div className="mt-1 space-y-0.5">
-              {transversalModules.map((module) => {
+              {transversalModules.filter((m) => canViewPath(m.path)).map((module) => {
                 const Icon = module.icon;
                 return (
                   <Link

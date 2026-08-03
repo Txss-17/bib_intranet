@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils';
 import { getModuleNavigation, transversalNavigations } from '@/data/moduleNavigations';
 import { PoleId } from '@/types';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { usePermissions } from '@/hooks/usePermissions';
 
 interface ModuleNavigationProps {
   poleId?: PoleId;
@@ -12,13 +13,17 @@ interface ModuleNavigationProps {
 
 export function ModuleNavigation({ poleId, transversalModule, sidebarCollapsed }: ModuleNavigationProps) {
   const location = useLocation();
-  
+  const { canViewPage } = usePermissions();
+
   // Get navigation items based on pole or transversal module
-  const navItems = poleId 
+  const scope = poleId ?? transversalModule;
+  const allItems = poleId
     ? getModuleNavigation(poleId)
-    : transversalModule 
+    : transversalModule
       ? transversalNavigations[transversalModule] || []
       : [];
+  // Moindre privilège : les pages non autorisées n'apparaissent pas.
+  const navItems = scope ? allItems.filter((i) => canViewPage(`${scope}.${i.id}`)) : allItems;
 
   if (navItems.length === 0) return null;
 
