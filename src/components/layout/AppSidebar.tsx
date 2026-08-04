@@ -24,7 +24,6 @@ import {
   FlaskConical,
   BarChart3,
   Sparkles,
-  UserCog,
   ShieldCheck,
 } from 'lucide-react';
 
@@ -57,7 +56,6 @@ const transversalModules = [
   { id: 'feed', name: 'Internal Feed', icon: Sparkles, path: '/feed' },
   { id: 'documents', name: 'Documents', icon: FileText, path: '/documents' },
   { id: 'roles-permissions', name: 'Rôles & Permissions', icon: ShieldCheck, path: '/admin/roles-permissions' },
-  { id: 'test-accounts', name: 'Comptes de test', icon: UserCog, path: '/admin/test-accounts' },
 ];
 
 

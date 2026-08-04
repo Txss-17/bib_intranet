@@ -132,6 +132,8 @@ import TechLogs from "./pages/modules/tech/TechLogs";
 import TechEnvironments from "./pages/modules/tech/TechEnvironments";
 import TechSecurity from "./pages/modules/tech/TechSecurity";
 import TechDataFlow from "./pages/modules/tech/TechDataFlow";
+import TechSandbox from "./pages/modules/tech/TechSandbox";
+import TechIntegrations from "./pages/modules/tech/TechIntegrations";
 import DirectionGlobal from "./pages/modules/direction/DirectionGlobal";
 import BusinessTrips from "./pages/modules/rh/BusinessTrips";
 import CorporateCards from "./pages/modules/finance/CorporateCards";
@@ -299,6 +301,9 @@ const App = () => (
             <Route path="/pole/tech/infrastructure" element={<Infrastructure />} />
             <Route path="/pole/tech/catalog" element={<Catalog />} />
             <Route path="/pole/tech/received-products" element={<ReceivedProducts />} />
+            <Route path="/pole/tech/sandbox" element={<TechSandbox />} />
+            <Route path="/pole/tech/test-accounts" element={<TestAccounts />} />
+            <Route path="/pole/tech/integrations" element={<TechIntegrations />} />
             
             {/* RH module */}
             <Route path="/pole/rh" element={<RHDashboard />} />
