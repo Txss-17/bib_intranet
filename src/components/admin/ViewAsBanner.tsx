@@ -11,7 +11,7 @@ export function ViewAsBanner() {
       <span>
         Mode simulation : interface vue comme <strong>{role.label}</strong>
       </span>
-      <Link to="/admin/test-accounts" className="underline underline-offset-2">Changer</Link>
+      <Link to="/pole/tech/test-accounts" className="underline underline-offset-2">Changer</Link>
       <button onClick={() => setRole(null)} className="inline-flex items-center gap-1 underline underline-offset-2">
         <X className="h-3 w-3" /> Quitter
       </button>

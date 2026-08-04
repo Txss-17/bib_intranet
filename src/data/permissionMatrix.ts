@@ -103,6 +103,9 @@ export const RESTRICTED_PAGES: Record<string, string[]> = {
   'tech.vpn': TECH_OWNERS,
   'tech.dataflow': TECH_OWNERS,
   'tech.infrastructure': TECH_OWNERS,
+  'tech.sandbox': TECH_OWNERS,
+  'tech.test-accounts': TECH_OWNERS,
+  'tech.integrations': TECH_OWNERS,
   // Administration
   'admin.roles': ADMIN_OWNERS.concat(['directeur_rh', 'responsable_rh']),
   'admin.test-accounts': ADMIN_OWNERS,

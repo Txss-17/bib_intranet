@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Server, Shield, Rocket, Users, Activity, Wifi, AlertTriangle, GitBranch } from 'lucide-react';
+import { Server, Shield, Rocket, Users, Activity, Wifi, AlertTriangle, GitBranch, FlaskConical, UserCog, Plug } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuthLogs, useEdgeFunctionLogs, useVpnAccess, useSecurityAlerts } from '@/hooks/useTechData';
 import { formatDistanceToNow } from 'date-fns';
@@ -28,6 +28,9 @@ export default function TechDashboard() {
     { to: '/pole/tech/environments', label: 'Environnements', icon: GitBranch, desc: 'Dev / Staging / Prod' },
     { to: '/pole/tech/security', label: 'Sécurité', icon: Shield, desc: 'Alertes & incidents' },
     { to: '/pole/tech/dataflow', label: 'Flux de données', icon: Server, desc: 'Public ↔ Interne' },
+    { to: '/pole/tech/sandbox', label: 'Sandbox', icon: FlaskConical, desc: 'Simulation isolée' },
+    { to: '/pole/tech/test-accounts', label: 'Comptes de test', icon: UserCog, desc: 'Profils simulés' },
+    { to: '/pole/tech/integrations', label: 'Intégrations', icon: Plug, desc: 'Centre de synchro' },
   ];
 
   return (

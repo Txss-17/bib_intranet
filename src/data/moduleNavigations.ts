@@ -64,6 +64,9 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'received-products', label: 'Received Products', labelFr: 'Réception produits', path: '/pole/tech/received-products' },
     { id: 'catalog', label: 'Catalog', labelFr: 'Catalogue', path: '/pole/tech/catalog' },
     { id: 'infrastructure', label: 'Infrastructure', labelFr: 'Infra', path: '/pole/tech/infrastructure' },
+    { id: 'sandbox', label: 'Sandbox', labelFr: 'Sandbox (simulation)', path: '/pole/tech/sandbox' },
+    { id: 'test-accounts', label: 'Test Accounts', labelFr: 'Comptes de test', path: '/pole/tech/test-accounts' },
+    { id: 'integrations', label: 'Integrations', labelFr: 'Intégrations', path: '/pole/tech/integrations' },
   ],
 
   // RH
