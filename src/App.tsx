@@ -134,6 +134,8 @@ import TechSecurity from "./pages/modules/tech/TechSecurity";
 import TechDataFlow from "./pages/modules/tech/TechDataFlow";
 import TechSandbox from "./pages/modules/tech/TechSandbox";
 import TechIntegrations from "./pages/modules/tech/TechIntegrations";
+import TechCode from "./pages/modules/tech/TechCode";
+import TechSupervision from "./pages/modules/tech/TechSupervision";
 import DirectionGlobal from "./pages/modules/direction/DirectionGlobal";
 import BusinessTrips from "./pages/modules/rh/BusinessTrips";
 import CorporateCards from "./pages/modules/finance/CorporateCards";
@@ -199,6 +201,8 @@ import GatewayCompose from "./pages/modules/gateway/GatewayCompose";
 import GatewayJournal from "./pages/modules/gateway/GatewayJournal";
 import GatewayMessageDetail from "./pages/modules/gateway/GatewayMessageDetail";
 
+import { SandboxProvider } from "@/hooks/useSandbox";
+
 const queryClient = new QueryClient();
 
 const AppInner = () => {
@@ -210,6 +214,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
+      <SandboxProvider>
         <AppInner />
         <Toaster />
         <Sonner />
@@ -304,6 +309,8 @@ const App = () => (
             <Route path="/pole/tech/sandbox" element={<TechSandbox />} />
             <Route path="/pole/tech/test-accounts" element={<TestAccounts />} />
             <Route path="/pole/tech/integrations" element={<TechIntegrations />} />
+            <Route path="/pole/tech/code" element={<TechCode />} />
+            <Route path="/pole/tech/supervision" element={<TechSupervision />} />
             
             {/* RH module */}
             <Route path="/pole/rh" element={<RHDashboard />} />
@@ -417,6 +424,7 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+      </SandboxProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
