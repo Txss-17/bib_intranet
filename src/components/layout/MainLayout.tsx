@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { AppSidebar } from './AppSidebar';
 import { TopBar } from './TopBar';
 import { ViewAsBanner } from '@/components/admin/ViewAsBanner';
+import { SandboxBanner } from '@/components/tech/SandboxBanner';
 
 import { ModuleNavigation } from './ModuleNavigation';
 import { PoleId } from '@/types';
@@ -60,6 +61,7 @@ export function MainLayout() {
           showModuleNav ? 'pt-28' : 'pt-16'
         )}
       >
+        <SandboxBanner />
         <ViewAsBanner />
         <div className="p-6">
           <Outlet />

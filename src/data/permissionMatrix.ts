@@ -106,6 +106,8 @@ export const RESTRICTED_PAGES: Record<string, string[]> = {
   'tech.sandbox': TECH_OWNERS,
   'tech.test-accounts': TECH_OWNERS,
   'tech.integrations': TECH_OWNERS,
+  'tech.code': TECH_OWNERS,
+  'tech.supervision': TECH_OWNERS,
   // Administration
   'admin.roles': ADMIN_OWNERS.concat(['directeur_rh', 'responsable_rh']),
   'admin.test-accounts': ADMIN_OWNERS,
