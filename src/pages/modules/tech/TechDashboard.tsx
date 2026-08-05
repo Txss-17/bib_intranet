@@ -27,7 +27,6 @@ export default function TechDashboard() {
     { to: '/pole/tech/environments', label: 'Environnements & Déploiements', icon: Rocket, desc: 'Cartes, pipelines, rollback' },
     { to: '/pole/tech/documentation', label: 'Documentation', icon: Rocket, desc: 'Base de connaissances technique' },
     { to: '/pole/tech/console', label: 'Console', icon: Rocket, desc: 'Terminal, SQL, Git, API' },
-    { to: '/pole/tech/environments', label: 'Environnements', icon: GitBranch, desc: 'Dev / Staging / Prod' },
     { to: '/pole/tech/security', label: 'Sécurité', icon: Shield, desc: 'Alertes & incidents' },
     { to: '/pole/tech/dataflow', label: 'Flux de données', icon: Server, desc: 'Public ↔ Interne' },
     { to: '/pole/tech/sandbox', label: 'Sandbox', icon: FlaskConical, desc: 'Simulation isolée' },
