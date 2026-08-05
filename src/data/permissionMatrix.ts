@@ -96,7 +96,6 @@ const ADMIN_OWNERS = ['ceo', 'cto', 'admin_systeme', 'responsable_tech', 'rssi']
 export const RESTRICTED_PAGES: Record<string, string[]> = {
   // Tech — outils sensibles
   'tech.logs': TECH_OWNERS,
-  'tech.deployments': TECH_OWNERS,
   'tech.environments': TECH_OWNERS,
   'tech.security': TECH_OWNERS,
   'tech.access': TECH_OWNERS,
@@ -108,6 +107,8 @@ export const RESTRICTED_PAGES: Record<string, string[]> = {
   'tech.integrations': TECH_OWNERS,
   'tech.code': TECH_OWNERS,
   'tech.supervision': TECH_OWNERS,
+  'tech.documentation': TECH_OWNERS,
+  'tech.console': TECH_OWNERS,
   // Administration
   'admin.roles': ADMIN_OWNERS.concat(['directeur_rh', 'responsable_rh']),
   'admin.test-accounts': ADMIN_OWNERS,
