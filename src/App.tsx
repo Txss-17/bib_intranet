@@ -121,7 +121,6 @@ import GuaranteeFund from "./pages/modules/finance/GuaranteeFund";
 
 // Tech module pages
 import TechDashboard from "./pages/modules/tech/TechDashboard";
-import Deployments from "./pages/modules/tech/Deployments";
 import Infrastructure from "./pages/modules/tech/Infrastructure";
 import Security from "./pages/modules/tech/Security";
 import Catalog from "./pages/modules/tech/Catalog";
@@ -136,6 +135,8 @@ import TechSandbox from "./pages/modules/tech/TechSandbox";
 import TechIntegrations from "./pages/modules/tech/TechIntegrations";
 import TechCode from "./pages/modules/tech/TechCode";
 import TechSupervision from "./pages/modules/tech/TechSupervision";
+import TechDocumentation from "./pages/modules/tech/TechDocumentation";
+import TechConsole from "./pages/modules/tech/TechConsole";
 import DirectionGlobal from "./pages/modules/direction/DirectionGlobal";
 import BusinessTrips from "./pages/modules/rh/BusinessTrips";
 import CorporateCards from "./pages/modules/finance/CorporateCards";
@@ -299,7 +300,7 @@ const App = () => (
             <Route path="/pole/tech/access" element={<TechAccess />} />
             <Route path="/pole/tech/vpn" element={<TechVPN />} />
             <Route path="/pole/tech/logs" element={<TechLogs />} />
-            <Route path="/pole/tech/deployments" element={<Deployments />} />
+            <Route path="/pole/tech/deployments" element={<Navigate to="/pole/tech/environments" replace />} />
             <Route path="/pole/tech/environments" element={<TechEnvironments />} />
             <Route path="/pole/tech/security" element={<TechSecurity />} />
             <Route path="/pole/tech/dataflow" element={<TechDataFlow />} />
@@ -311,6 +312,8 @@ const App = () => (
             <Route path="/pole/tech/integrations" element={<TechIntegrations />} />
             <Route path="/pole/tech/code" element={<TechCode />} />
             <Route path="/pole/tech/supervision" element={<TechSupervision />} />
+            <Route path="/pole/tech/documentation" element={<TechDocumentation />} />
+            <Route path="/pole/tech/console" element={<TechConsole />} />
             
             {/* RH module */}
             <Route path="/pole/rh" element={<RHDashboard />} />

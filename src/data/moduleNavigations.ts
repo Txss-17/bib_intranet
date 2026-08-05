@@ -57,8 +57,7 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'access', label: 'Access & Users', labelFr: 'Accès & utilisateurs', path: '/pole/tech/access' },
     { id: 'vpn', label: 'VPN / Network', labelFr: 'Réseau / VPN', path: '/pole/tech/vpn' },
     { id: 'logs', label: 'Logs & Activity', labelFr: 'Logs & activité', path: '/pole/tech/logs' },
-    { id: 'deployments', label: 'Deployments', labelFr: 'Déploiements', path: '/pole/tech/deployments' },
-    { id: 'environments', label: 'Environments', labelFr: 'Environnements', path: '/pole/tech/environments' },
+    { id: 'environments', label: 'Environments & Deployments', labelFr: 'Environnements & Déploiements', path: '/pole/tech/environments' },
     { id: 'security', label: 'Security', labelFr: 'Sécurité', path: '/pole/tech/security' },
     { id: 'dataflow', label: 'Data Flow', labelFr: 'Flux de données', path: '/pole/tech/dataflow' },
     { id: 'received-products', label: 'Received Products', labelFr: 'Réception produits', path: '/pole/tech/received-products' },
@@ -69,6 +68,8 @@ export const moduleNavigations: ModuleNavigations = {
     { id: 'integrations', label: 'Integrations', labelFr: 'Intégrations', path: '/pole/tech/integrations' },
     { id: 'code', label: 'Code & GitHub', labelFr: 'Code & GitHub', path: '/pole/tech/code' },
     { id: 'supervision', label: 'Supervision', labelFr: 'Supervision', path: '/pole/tech/supervision' },
+    { id: 'documentation', label: 'Documentation', labelFr: 'Documentation', path: '/pole/tech/documentation' },
+    { id: 'console', label: 'Console', labelFr: 'Console', path: '/pole/tech/console' },
   ],
 
   // RH
