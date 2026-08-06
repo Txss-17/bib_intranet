@@ -76,7 +76,7 @@ export function AccessTab() {
         {rights.can_configure_permissions && (
           <div className="mt-4">
             <Button asChild variant="outline" size="sm">
-              <Link to="/permissions">
+              <Link to="/admin/roles-permissions">
                 <ShieldCheck className="h-4 w-4 mr-2" /> Ouvrir la matrice de permissions
               </Link>
             </Button>
