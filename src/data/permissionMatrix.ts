@@ -72,8 +72,8 @@ const buildRegistry = (): PageDescriptor[] => {
     { id: 'app.compliance-audit', scope: 'app', label: 'Conformité & Audit', path: '/compliance-audit', transversal: true },
     { id: 'app.settings', scope: 'app', label: 'Paramètres', path: '/settings', transversal: true },
     { id: 'admin.roles', scope: 'admin', label: 'Rôles & Permissions', path: '/admin/roles-permissions', transversal: true },
-    { id: 'admin.test-accounts', scope: 'admin', label: 'Comptes de test / Visualiser comme', path: '/admin/test-accounts', transversal: true },
-    { id: 'admin.permissions-matrix', scope: 'admin', label: 'Matrice héritée', path: '/permissions', transversal: true },
+    { id: 'admin.test-accounts', scope: 'admin', label: 'Comptes de test / Visualiser comme', path: '/pole/tech/test-accounts', transversal: true },
+
   );
   return out;
 };
