@@ -72,8 +72,8 @@ const buildRegistry = (): PageDescriptor[] => {
     { id: 'app.compliance-audit', scope: 'app', label: 'Conformité & Audit', path: '/compliance-audit', transversal: true },
     { id: 'app.settings', scope: 'app', label: 'Paramètres', path: '/settings', transversal: true },
     { id: 'admin.roles', scope: 'admin', label: 'Rôles & Permissions', path: '/admin/roles-permissions', transversal: true },
-    { id: 'admin.test-accounts', scope: 'admin', label: 'Comptes de test / Visualiser comme', path: '/admin/test-accounts', transversal: true },
-    { id: 'admin.permissions-matrix', scope: 'admin', label: 'Matrice héritée', path: '/permissions', transversal: true },
+    { id: 'admin.test-accounts', scope: 'admin', label: 'Comptes de test / Visualiser comme', path: '/pole/tech/test-accounts', transversal: true },
+
   );
   return out;
 };
@@ -112,7 +112,6 @@ export const RESTRICTED_PAGES: Record<string, string[]> = {
   // Administration
   'admin.roles': ADMIN_OWNERS.concat(['directeur_rh', 'responsable_rh']),
   'admin.test-accounts': ADMIN_OWNERS,
-  'admin.permissions-matrix': ADMIN_OWNERS.concat(['directeur_rh', 'responsable_rh']),
   // Finance — comptabilité, salaires, budgets
   'finance.salaries': RH_OWNERS.concat(['ceo', 'cfo', 'responsable_finance']),
   'finance.cashflow': FINANCE_OWNERS,

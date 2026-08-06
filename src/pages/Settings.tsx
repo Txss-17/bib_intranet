@@ -260,7 +260,7 @@ export default function Settings() {
           </div>
           {rights.can_configure_permissions && (
             <Button asChild size="sm" variant="outline" className="ml-2">
-              <Link to="/permissions"><ShieldCheck className="h-3.5 w-3.5 mr-1" />Configurer</Link>
+              <Link to="/admin/roles-permissions"><ShieldCheck className="h-3.5 w-3.5 mr-1" />Configurer</Link>
             </Button>
           )}
         </div>

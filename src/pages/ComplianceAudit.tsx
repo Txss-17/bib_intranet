@@ -80,7 +80,7 @@ export default function ComplianceAudit() {
         </div>
         {isRhOrDirection && (
           <Button asChild size="sm" variant="outline">
-            <Link to="/permissions"><SettingsIcon className="h-4 w-4 mr-2" /> Matrice de permissions</Link>
+            <Link to="/admin/roles-permissions"><SettingsIcon className="h-4 w-4 mr-2" /> Matrice de permissions</Link>
           </Button>
         )}
       </div>
