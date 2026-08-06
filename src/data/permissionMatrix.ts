@@ -112,7 +112,6 @@ export const RESTRICTED_PAGES: Record<string, string[]> = {
   // Administration
   'admin.roles': ADMIN_OWNERS.concat(['directeur_rh', 'responsable_rh']),
   'admin.test-accounts': ADMIN_OWNERS,
-  'admin.permissions-matrix': ADMIN_OWNERS.concat(['directeur_rh', 'responsable_rh']),
   // Finance — comptabilité, salaires, budgets
   'finance.salaries': RH_OWNERS.concat(['ceo', 'cfo', 'responsable_finance']),
   'finance.cashflow': FINANCE_OWNERS,
