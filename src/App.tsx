@@ -16,7 +16,6 @@ import SubSectionPage from "./pages/modules/SubSectionPage";
 import InternalFeed from "./pages/InternalFeed";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
-import PermissionsMatrix from "./pages/PermissionsMatrix";
 import TestAccounts from "./pages/admin/TestAccounts";
 import RolesPermissions from '@/pages/admin/RolesPermissions';
 import ComplianceAudit from "./pages/ComplianceAudit";
@@ -94,7 +93,6 @@ import ExecutiveDashboard from "./pages/modules/direction/ExecutiveDashboard";
 import VisionRoadmap from "./pages/modules/direction/VisionRoadmap";
 import DecisionArbitrage from "./pages/modules/direction/DecisionArbitrage";
 import GroupGovernance from "./pages/modules/direction/GroupGovernance";
-import ConsolidatedReports from "./pages/modules/direction/ConsolidatedReports";
 import BoardReports from "./pages/modules/direction/BoardReports";
 import ManagedRiskAlerts from "./pages/modules/lifecycle/ManagedRiskAlerts";
 import LifecycleEmailCampaignsPage from "./pages/modules/lifecycle/LifecycleEmailCampaigns";
@@ -105,8 +103,6 @@ import ResolutionTracking from "./pages/modules/independent-audit/ResolutionTrac
 // Lifecycle module pages
 import LifecycleDashboard from "./pages/modules/lifecycle/LifecycleDashboard";
 import UserAccounts from "./pages/modules/lifecycle/UserAccounts";
-import RiskAlerts from "./pages/modules/lifecycle/RiskAlerts";
-import EmailCampaigns from "./pages/modules/lifecycle/EmailCampaigns";
 import TrustpilotAnalytics from "./pages/modules/lifecycle/TrustpilotAnalytics";
 import SupportTickets from "./pages/modules/lifecycle/SupportTickets";
 
@@ -236,7 +232,6 @@ const App = () => (
             <Route path="/pole/direction/vision" element={<VisionRoadmap />} />
             <Route path="/pole/direction/governance" element={<GroupGovernance />} />
             <Route path="/pole/direction/reports" element={<BoardReports />} />
-            <Route path="/pole/direction/reports-legacy" element={<ConsolidatedReports />} />
             <Route path="/pole/direction/access" element={<ModuleAccess />} />
             
             {/* Supplier module */}
@@ -260,9 +255,7 @@ const App = () => (
             <Route path="/pole/lifecycle/monitoring" element={<ActivityMonitoring />} />
             <Route path="/pole/lifecycle/user-accounts" element={<UserAccounts />} />
             <Route path="/pole/lifecycle/risk-alerts" element={<ManagedRiskAlerts />} />
-            <Route path="/pole/lifecycle/risk-alerts-legacy" element={<RiskAlerts />} />
             <Route path="/pole/lifecycle/emails" element={<LifecycleEmailCampaignsPage />} />
-            <Route path="/pole/lifecycle/emails-legacy" element={<EmailCampaigns />} />
             <Route path="/pole/lifecycle/trustpilot" element={<TrustpilotAnalytics />} />
             <Route path="/pole/lifecycle/support" element={<SupportTickets />} />
             <Route path="/pole/lifecycle/scoring" element={<RiskScoring />} />
@@ -401,8 +394,8 @@ const App = () => (
             <Route path="/feed" element={<InternalFeed />} />
             <Route path="/documents" element={<Documents />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/permissions" element={<PermissionsMatrix />} />
-            <Route path="/admin/test-accounts" element={<TestAccounts />} />
+            <Route path="/permissions" element={<Navigate to="/admin/roles-permissions" replace />} />
+            <Route path="/admin/test-accounts" element={<Navigate to="/pole/tech/test-accounts" replace />} />
             <Route path="/admin/roles-permissions" element={<RolesPermissions />} />
             <Route path="/compliance-audit" element={<ComplianceAudit />} />
             <Route path="/compliance-audit/finance" element={<FinanceCompliance />} />
