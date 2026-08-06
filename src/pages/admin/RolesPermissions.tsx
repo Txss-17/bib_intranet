@@ -122,12 +122,18 @@ const RolesPermissionsInner = () => {
       </div>
 
       <Tabs defaultValue="matrix">
-        <TabsList>
+        <TabsList className="flex flex-wrap h-auto">
           <TabsTrigger value="matrix">Matrice</TabsTrigger>
           <TabsTrigger value="roles">Rôles & périmètres</TabsTrigger>
           <TabsTrigger value="restricted">Pages restreintes</TabsTrigger>
+          <TabsTrigger value="sensitive">Données sensibles</TabsTrigger>
           <TabsTrigger value="history">Historique</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="sensitive" className="mt-4">
+          <SensitiveRulesMatrix />
+        </TabsContent>
+
 
         <TabsContent value="matrix" className="mt-4 space-y-4">
           <Card>
