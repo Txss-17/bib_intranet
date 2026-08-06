@@ -16,6 +16,8 @@ import { useViewAs } from '@/hooks/useViewAs';
 import { jobRoles, jobDepartments } from '@/data/jobRoles';
 import { logSensitiveAccess } from '@/lib/sensitiveAudit';
 import { ProtectedPage } from '@/components/PermissionGate';
+import { SensitiveRulesMatrix } from '@/components/admin/SensitiveRulesMatrix';
+
 import {
   ActionSet, MatrixOverrides, PERMISSION_ACTIONS, PermissionAction, RESTRICTED_PAGES,
   appendMatrixHistory, getDataScope, isRbacEnforced, loadMatrixHistory, loadMatrixOverrides,
