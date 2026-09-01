@@ -12,6 +12,7 @@ import {
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { SANDBOX_SPACES, useSandbox } from '@/hooks/useSandbox';
+import { DOMAIN_LABELS, domainsForSpace } from '@/data/sandboxSeed';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -26,7 +27,7 @@ const SCENARIOS = [
 
 export default function TechSandbox() {
   const {
-    isSandbox, setEnabled, spaces, events, seedSpace, cleanSpace, seedAll, resetAll,
+    isSandbox, setEnabled, spaces, events, seedSpace, cleanSpace, seedAll, resetAll, dataset,
     createDemoCompany, logEvent, totalRecords, demoCompany,
   } = useSandbox();
 
@@ -158,7 +159,17 @@ export default function TechSandbox() {
                       Généré {formatDistanceToNow(new Date(st.seededAt), { addSuffix: true, locale: fr })}
                     </p>
                   )}
+                  {st.seeded && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {domainsForSpace(s.id).map((d) => (
+                        <Badge key={d} variant="outline" className="text-[10px] font-normal">
+                          {DOMAIN_LABELS[d]} · {dataset(d).length}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                   <Separator className="my-3" />
+
                   <div className="flex gap-2">
                     <Button size="sm" variant="outline" onClick={() => seedSpace(s.id)}>
                       <Database className="mr-1.5 h-3.5 w-3.5" /> Générer

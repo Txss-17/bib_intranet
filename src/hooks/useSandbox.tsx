@@ -1,4 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  SandboxDomain, SandboxRecord, domainsForSpace, generateSpaceDatasets,
+} from '@/data/sandboxSeed';
 
 /**
  * Séparation stricte Production / Sandbox.
@@ -47,19 +50,27 @@ interface SandboxState {
   spaces: Record<string, SandboxSpaceState>;
   events: SandboxEvent[];
   demoCompany?: { name: string; createdAt: string } | null;
+  /** Jeux de données fictifs, par domaine — jamais envoyés au backend. */
+  datasets: Record<string, SandboxRecord[]>;
 }
 
 const emptySpaces = (): Record<string, SandboxSpaceState> =>
   Object.fromEntries(SANDBOX_SPACES.map((s) => [s.id, { seeded: false, records: 0 }]));
 
-const initialState: SandboxState = { enabled: false, spaces: emptySpaces(), events: [], demoCompany: null };
+const initialState: SandboxState = {
+  enabled: false, spaces: emptySpaces(), events: [], demoCompany: null, datasets: {},
+};
 
 function load(): SandboxState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return initialState;
     const parsed = JSON.parse(raw) as SandboxState;
-    return { ...initialState, ...parsed, spaces: { ...emptySpaces(), ...(parsed.spaces ?? {}) } };
+    return {
+      ...initialState, ...parsed,
+      spaces: { ...emptySpaces(), ...(parsed.spaces ?? {}) },
+      datasets: parsed.datasets ?? {},
+    };
   } catch {
     return initialState;
   }
@@ -74,6 +85,8 @@ interface SandboxContextValue extends SandboxState {
   seedAll: () => void;
   resetAll: () => void;
   createDemoCompany: (name?: string) => void;
+  /** Enregistrements fictifs d'un domaine (vide en Production). */
+  dataset: (domain: SandboxDomain) => SandboxRecord[];
   logEvent: (label: string, detail?: string, space?: SandboxSpaceId) => void;
   totalRecords: number;
 }
@@ -117,9 +130,11 @@ export function SandboxProvider({ children }: { children: React.ReactNode }) {
   const seedSpace = useCallback(
     (id: SandboxSpaceId) =>
       setState((s) => {
-        const records = 20 + Math.floor(Math.random() * 60);
+        const datasets = generateSpaceDatasets(id);
+        const records = Object.values(datasets).reduce((a, r) => a + r.length, 0);
         const next: SandboxState = {
           ...s,
+          datasets: { ...s.datasets, ...datasets },
           spaces: { ...s.spaces, [id]: { seeded: true, records, seededAt: new Date().toISOString() } },
         };
         return push(next, `Données fictives générées — ${id}`, `${records} enregistrements simulés`, id);
@@ -129,23 +144,28 @@ export function SandboxProvider({ children }: { children: React.ReactNode }) {
 
   const cleanSpace = useCallback(
     (id: SandboxSpaceId) =>
-      setState((s) =>
-        push({ ...s, spaces: { ...s.spaces, [id]: { seeded: false, records: 0 } } },
-          `Espace nettoyé — ${id}`, 'Données de simulation supprimées', id)
-      ),
+      setState((s) => {
+        const datasets = { ...s.datasets };
+        domainsForSpace(id).forEach((d) => { delete datasets[d]; });
+        return push({ ...s, datasets, spaces: { ...s.spaces, [id]: { seeded: false, records: 0 } } },
+          `Espace nettoyé — ${id}`, 'Données de simulation supprimées', id);
+      }),
     [push]
   );
 
   const seedAll = useCallback(
     () =>
       setState((s) => {
+        const datasets: Record<string, SandboxRecord[]> = { ...s.datasets };
         const spaces = Object.fromEntries(
           SANDBOX_SPACES.map((sp) => {
-            const records = 20 + Math.floor(Math.random() * 60);
+            const generated = generateSpaceDatasets(sp.id);
+            Object.assign(datasets, generated);
+            const records = Object.values(generated).reduce((a, r) => a + r.length, 0);
             return [sp.id, { seeded: true, records, seededAt: new Date().toISOString() }];
           })
         );
-        return push({ ...s, spaces }, 'Jeu de démonstration complet chargé', 'Tous les espaces sont alimentés');
+        return push({ ...s, spaces, datasets }, 'Jeu de démonstration complet chargé', 'Tous les espaces sont alimentés');
       }),
     [push]
   );
@@ -153,7 +173,8 @@ export function SandboxProvider({ children }: { children: React.ReactNode }) {
   const resetAll = useCallback(
     () =>
       setState((s) =>
-        push({ ...s, spaces: emptySpaces(), demoCompany: null }, 'Sandbox réinitialisée', 'État initial restauré')
+        push({ ...s, spaces: emptySpaces(), demoCompany: null, datasets: {} },
+          'Sandbox réinitialisée', 'État initial restauré')
       ),
     [push]
   );
@@ -172,6 +193,11 @@ export function SandboxProvider({ children }: { children: React.ReactNode }) {
     [state.spaces]
   );
 
+  const dataset = useCallback(
+    (domain: SandboxDomain): SandboxRecord[] => (state.enabled ? state.datasets[domain] ?? [] : []),
+    [state.enabled, state.datasets]
+  );
+
   const value: SandboxContextValue = {
     ...state,
     isSandbox: state.enabled,
@@ -181,6 +207,7 @@ export function SandboxProvider({ children }: { children: React.ReactNode }) {
     seedAll,
     resetAll,
     createDemoCompany,
+    dataset,
     logEvent,
     totalRecords,
   };
