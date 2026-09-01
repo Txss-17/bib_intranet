@@ -12,6 +12,7 @@ import {
 import { Link } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import { SANDBOX_SPACES, useSandbox } from '@/hooks/useSandbox';
+import { DOMAIN_LABELS, domainsForSpace } from '@/data/sandboxSeed';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
@@ -26,7 +27,7 @@ const SCENARIOS = [
 
 export default function TechSandbox() {
   const {
-    isSandbox, setEnabled, spaces, events, seedSpace, cleanSpace, seedAll, resetAll,
+    isSandbox, setEnabled, spaces, events, seedSpace, cleanSpace, seedAll, resetAll, dataset,
     createDemoCompany, logEvent, totalRecords, demoCompany,
   } = useSandbox();
 
