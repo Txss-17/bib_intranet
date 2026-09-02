@@ -1302,6 +1302,131 @@ export type Database = {
           },
         ]
       }
+      hr_employee_request_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          note: string | null
+          request_id: string
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          request_id: string
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          request_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_employee_request_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employee_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      hr_employee_requests: {
+        Row: {
+          account_created_at: string | null
+          account_created_by: string | null
+          contract_type: string | null
+          created_at: string
+          created_by: string | null
+          created_user_id: string | null
+          first_name: string
+          hr_validated_at: string | null
+          hr_validated_by: string | null
+          id: string
+          last_name: string
+          manager_id: string | null
+          notes: string | null
+          personal_email: string | null
+          poles: string[]
+          position: Database["public"]["Enums"]["employee_position"] | null
+          reference: string
+          rejection_reason: string | null
+          requested_role: Database["public"]["Enums"]["app_role"]
+          seniority: string
+          start_date: string | null
+          status: string
+          updated_at: string
+          work_email: string | null
+        }
+        Insert: {
+          account_created_at?: string | null
+          account_created_by?: string | null
+          contract_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_user_id?: string | null
+          first_name: string
+          hr_validated_at?: string | null
+          hr_validated_by?: string | null
+          id?: string
+          last_name: string
+          manager_id?: string | null
+          notes?: string | null
+          personal_email?: string | null
+          poles?: string[]
+          position?: Database["public"]["Enums"]["employee_position"] | null
+          reference?: string
+          rejection_reason?: string | null
+          requested_role?: Database["public"]["Enums"]["app_role"]
+          seniority?: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          work_email?: string | null
+        }
+        Update: {
+          account_created_at?: string | null
+          account_created_by?: string | null
+          contract_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_user_id?: string | null
+          first_name?: string
+          hr_validated_at?: string | null
+          hr_validated_by?: string | null
+          id?: string
+          last_name?: string
+          manager_id?: string | null
+          notes?: string | null
+          personal_email?: string | null
+          poles?: string[]
+          position?: Database["public"]["Enums"]["employee_position"] | null
+          reference?: string
+          rejection_reason?: string | null
+          requested_role?: Database["public"]["Enums"]["app_role"]
+          seniority?: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          work_email?: string | null
+        }
+        Relationships: []
+      }
       inter_pole_messages: {
         Row: {
           content: string
@@ -3438,6 +3563,148 @@ export type Database = {
           },
         ]
       }
+      tech_request_comments: {
+        Row: {
+          author_id: string | null
+          author_name: string | null
+          author_pole: string | null
+          body: string
+          created_at: string
+          id: string
+          request_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          author_name?: string | null
+          author_pole?: string | null
+          body: string
+          created_at?: string
+          id?: string
+          request_id: string
+        }
+        Update: {
+          author_id?: string | null
+          author_name?: string | null
+          author_pole?: string | null
+          body?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tech_request_comments_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "tech_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tech_request_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          from_status: string | null
+          id: string
+          note: string | null
+          request_id: string
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          request_id: string
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          note?: string | null
+          request_id?: string
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tech_request_events_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "tech_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tech_requests: {
+        Row: {
+          assignee_id: string | null
+          category: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          description: string
+          id: string
+          priority: string
+          reference: string
+          requester_id: string | null
+          requester_name: string | null
+          requester_pole: string
+          status: string
+          target_date: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          category?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          description: string
+          id?: string
+          priority?: string
+          reference?: string
+          requester_id?: string | null
+          requester_name?: string | null
+          requester_pole: string
+          status?: string
+          target_date?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          category?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_reason?: string | null
+          description?: string
+          id?: string
+          priority?: string
+          reference?: string
+          requester_id?: string | null
+          requester_name?: string | null
+          requester_pole?: string
+          status?: string
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_accounts: {
         Row: {
           company_name: string
@@ -3657,6 +3924,11 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      has_any_pole: {
+        Args: { _poles: string[]; _user_id: string }
+        Returns: boolean
+      }
+      has_pole: { Args: { _pole: string; _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -3664,6 +3936,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_leadership: { Args: { _user_id: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -3673,6 +3946,7 @@ export type Database = {
         }
         Returns: number
       }
+      my_poles: { Args: never; Returns: string[] }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
