@@ -54,6 +54,7 @@ export const moduleNavigations: ModuleNavigations = {
   // Tech (Système de contrôle distribué)
   tech: [
     { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/tech' },
+    { id: 'studio', label: 'Tech Studio', labelFr: 'Tech Studio (demandes)', path: '/pole/tech/studio' },
     { id: 'access', label: 'Access & Users', labelFr: 'Accès & utilisateurs', path: '/pole/tech/access' },
     { id: 'vpn', label: 'VPN / Network', labelFr: 'Réseau / VPN', path: '/pole/tech/vpn' },
     { id: 'logs', label: 'Logs & Activity', labelFr: 'Logs & activité', path: '/pole/tech/logs' },

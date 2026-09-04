@@ -14,17 +14,31 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { Metric, FeedItem } from '@/types';
 
-function useDashboardMetrics() {
+/** Chaque métrique est rattachée aux pôles autorisés à la voir. */
+const METRIC_POLES: Record<string, string[]> = {
+  met_orders: ['ops', 'direction', 'finance'],
+  met_users: ['lifecycle', 'marketing', 'direction'],
+  met_suppliers: ['supplier', 'direction', 'audit'],
+  met_incidents: ['ops', 'risk', 'direction'],
+  met_tickets: ['lifecycle', 'tech', 'direction'],
+  met_docs: ['compliance', 'audit', 'rh', 'direction'],
+  met_tech_requests: ['tech', 'direction'],
+};
+
+function useDashboardMetrics(enabled: boolean) {
   return useQuery({
     queryKey: ['dashboard_metrics'],
+    enabled,
     queryFn: async (): Promise<Metric[]> => {
-      const [ordersRes, usersRes, suppliersRes, incidentsRes, ticketsRes, docsRes] = await Promise.all([
+      const [ordersRes, usersRes, suppliersRes, incidentsRes, ticketsRes, docsRes, techRes] = await Promise.all([
         supabase.from('orders').select('id', { count: 'exact', head: true }),
         supabase.from('user_accounts').select('id', { count: 'exact', head: true }),
         supabase.from('suppliers').select('id', { count: 'exact', head: true }).eq('status', 'validated'),
         supabase.from('logistics_incidents').select('id', { count: 'exact', head: true }).in('status', ['open', 'investigating']),
         supabase.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open'),
         supabase.from('documents').select('id', { count: 'exact', head: true }),
+        (supabase as unknown as { from: (t: string) => any })
+          .from('tech_requests').select('id', { count: 'exact', head: true }).in('status', ['submitted', 'under_review']),
       ]);
 
       return [
@@ -34,11 +48,13 @@ function useDashboardMetrics() {
         { id: 'met_incidents', label: 'Incidents actifs', value: incidentsRes.count ?? 0, change: 0, changeType: (incidentsRes.count ?? 0) > 0 ? 'negative' as const : 'positive' as const },
         { id: 'met_tickets', label: 'Tickets ouverts', value: ticketsRes.count ?? 0, change: 0, changeType: 'neutral' as const },
         { id: 'met_docs', label: 'Documents', value: docsRes.count ?? 0, change: 0, changeType: 'neutral' as const },
+        { id: 'met_tech_requests', label: 'Demandes Tech à traiter', value: techRes.count ?? 0, change: 0, changeType: 'neutral' as const },
       ];
     },
     staleTime: 60_000,
   });
 }
+
 
 function useDashboardFeed() {
   return useQuery({
@@ -66,9 +82,10 @@ function useDashboardFeed() {
   });
 }
 
-function useRecentIncidents() {
+function useRecentIncidents(enabled: boolean) {
   return useQuery({
     queryKey: ['dashboard_incidents'],
+    enabled,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('logistics_incidents')
@@ -91,9 +108,10 @@ function useRecentIncidents() {
   });
 }
 
-function useRecentAuditLogs() {
+function useRecentAuditLogs(enabled: boolean) {
   return useQuery({
     queryKey: ['dashboard_audit_logs'],
+    enabled,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('audit_logs')
@@ -117,10 +135,20 @@ function useRecentAuditLogs() {
 
 export default function Dashboard() {
   const { profile } = useAuth();
-  const { data: metrics = [], isLoading: metricsLoading } = useDashboardMetrics();
+  const userPoles = profile?.poles ?? [];
+  const isLeadership = userPoles.includes('direction') || profile?.position === 'ceo';
+  const canSee = (poles: string[]) => isLeadership || poles.some((p) => userPoles.includes(p));
+
+  const canSeeIncidents = canSee(METRIC_POLES.met_incidents);
+  const canSeeAudit = canSee(['audit', 'compliance', 'direction']);
+
+  const { data: allMetrics = [], isLoading: metricsLoading } = useDashboardMetrics(userPoles.length > 0 || isLeadership);
   const { data: feedData = [], isLoading: feedLoading } = useDashboardFeed();
-  const { data: incidents = [], isLoading: incLoading } = useRecentIncidents();
-  const { data: auditLogs = [], isLoading: logLoading } = useRecentAuditLogs();
+  const { data: incidents = [], isLoading: incLoading } = useRecentIncidents(canSeeIncidents);
+  const { data: auditLogs = [], isLoading: logLoading } = useRecentAuditLogs(canSeeAudit);
+
+  // Moindre privilège : seules les métriques rattachées aux pôles du collaborateur sont affichées.
+  const metrics = allMetrics.filter((m) => canSee(METRIC_POLES[m.id] ?? []));
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -191,8 +219,12 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           {metricsLoading ? (
             <div className="col-span-full flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-          ) : (
+          ) : metrics.length > 0 ? (
             metrics.map((metric) => (<MetricCard key={metric.id} metric={metric} />))
+          ) : (
+            <p className="col-span-full text-sm text-muted-foreground">
+              Aucun indicateur rattaché à vos pôles pour le moment.
+            </p>
           )}
         </div>
       </section>
@@ -208,9 +240,9 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <Tabs defaultValue="feed" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
+            <TabsList className={`grid w-full mb-4 ${canSeeIncidents ? 'grid-cols-2' : 'grid-cols-1'}`}>
               <TabsTrigger value="feed" className="text-sm">Company Feed</TabsTrigger>
-              <TabsTrigger value="incidents" className="text-sm">Active Incidents</TabsTrigger>
+              {canSeeIncidents && <TabsTrigger value="incidents" className="text-sm">Active Incidents</TabsTrigger>}
             </TabsList>
             <TabsContent value="feed" className="space-y-4 mt-0">
               {feedLoading ? (
@@ -224,6 +256,7 @@ export default function Dashboard() {
                 </div>
               )}
             </TabsContent>
+            {canSeeIncidents && (
             <TabsContent value="incidents" className="space-y-4 mt-0">
               {incLoading ? (
                 <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
@@ -236,9 +269,11 @@ export default function Dashboard() {
                 </div>
               )}
             </TabsContent>
+            )}
           </Tabs>
         </div>
 
+        {canSeeAudit && (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -257,8 +292,10 @@ export default function Dashboard() {
             )}
           </div>
         </div>
+        )}
       </div>
 
+      {isLeadership && (
       <section>
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
@@ -269,6 +306,7 @@ export default function Dashboard() {
         </div>
         <PoleOverview />
       </section>
+      )}
     </div>
   );
 }
