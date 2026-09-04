@@ -128,6 +128,7 @@ import TechEnvironments from "./pages/modules/tech/TechEnvironments";
 import TechSecurity from "./pages/modules/tech/TechSecurity";
 import TechDataFlow from "./pages/modules/tech/TechDataFlow";
 import TechSandbox from "./pages/modules/tech/TechSandbox";
+import TechStudio from "./pages/TechStudio";
 import TechIntegrations from "./pages/modules/tech/TechIntegrations";
 import TechCode from "./pages/modules/tech/TechCode";
 import TechSupervision from "./pages/modules/tech/TechSupervision";
@@ -307,6 +308,8 @@ const App = () => (
             <Route path="/pole/tech/supervision" element={<TechSupervision />} />
             <Route path="/pole/tech/documentation" element={<TechDocumentation />} />
             <Route path="/pole/tech/console" element={<TechConsole />} />
+            <Route path="/pole/tech/studio" element={<TechStudio />} />
+            <Route path="/tech-studio" element={<TechStudio />} />
             
             {/* RH module */}
             <Route path="/pole/rh" element={<RHDashboard />} />
