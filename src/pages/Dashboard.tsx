@@ -12,48 +12,10 @@ import { PoleOverview } from '@/components/dashboard/PoleOverview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Metric, FeedItem } from '@/types';
+import { FeedItem } from '@/types';
+import { useDashboardKPIs } from '@/hooks/useDashboardKPIs';
+import { usePermissions } from '@/hooks/usePermissions';
 
-/** Chaque métrique est rattachée aux pôles autorisés à la voir. */
-const METRIC_POLES: Record<string, string[]> = {
-  met_orders: ['ops', 'direction', 'finance'],
-  met_users: ['lifecycle', 'marketing', 'direction'],
-  met_suppliers: ['supplier', 'direction', 'audit'],
-  met_incidents: ['ops', 'risk', 'direction'],
-  met_tickets: ['lifecycle', 'tech', 'direction'],
-  met_docs: ['compliance', 'audit', 'rh', 'direction'],
-  met_tech_requests: ['tech', 'direction'],
-};
-
-function useDashboardMetrics(enabled: boolean) {
-  return useQuery({
-    queryKey: ['dashboard_metrics'],
-    enabled,
-    queryFn: async (): Promise<Metric[]> => {
-      const [ordersRes, usersRes, suppliersRes, incidentsRes, ticketsRes, docsRes, techRes] = await Promise.all([
-        supabase.from('orders').select('id', { count: 'exact', head: true }),
-        supabase.from('user_accounts').select('id', { count: 'exact', head: true }),
-        supabase.from('suppliers').select('id', { count: 'exact', head: true }).eq('status', 'validated'),
-        supabase.from('logistics_incidents').select('id', { count: 'exact', head: true }).in('status', ['open', 'investigating']),
-        supabase.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-        supabase.from('documents').select('id', { count: 'exact', head: true }),
-        (supabase as unknown as { from: (t: string) => any })
-          .from('tech_requests').select('id', { count: 'exact', head: true }).in('status', ['submitted', 'under_review']),
-      ]);
-
-      return [
-        { id: 'met_orders', label: 'Commandes', value: ordersRes.count ?? 0, change: 0, changeType: 'neutral' as const },
-        { id: 'met_users', label: 'Comptes clients', value: usersRes.count ?? 0, change: 0, changeType: 'neutral' as const },
-        { id: 'met_suppliers', label: 'Fournisseurs validés', value: suppliersRes.count ?? 0, change: 0, changeType: 'positive' as const },
-        { id: 'met_incidents', label: 'Incidents actifs', value: incidentsRes.count ?? 0, change: 0, changeType: (incidentsRes.count ?? 0) > 0 ? 'negative' as const : 'positive' as const },
-        { id: 'met_tickets', label: 'Tickets ouverts', value: ticketsRes.count ?? 0, change: 0, changeType: 'neutral' as const },
-        { id: 'met_docs', label: 'Documents', value: docsRes.count ?? 0, change: 0, changeType: 'neutral' as const },
-        { id: 'met_tech_requests', label: 'Demandes Tech à traiter', value: techRes.count ?? 0, change: 0, changeType: 'neutral' as const },
-      ];
-    },
-    staleTime: 60_000,
-  });
-}
 
 
 function useDashboardFeed() {
@@ -135,20 +97,22 @@ function useRecentAuditLogs(enabled: boolean) {
 
 export default function Dashboard() {
   const { profile } = useAuth();
-  const userPoles = profile?.poles ?? [];
-  const isLeadership = userPoles.includes('direction') || profile?.position === 'ceo';
+  const { poles: permPoles, isSuperAdmin } = usePermissions();
+  const userPoles = permPoles.length ? permPoles : (profile?.poles ?? []);
+  const isLeadership = isSuperAdmin || userPoles.includes('direction') || profile?.position === 'ceo';
   const canSee = (poles: string[]) => isLeadership || poles.some((p) => userPoles.includes(p));
 
-  const canSeeIncidents = canSee(METRIC_POLES.met_incidents);
+  const canSeeIncidents = canSee(['ops', 'risk', 'direction']);
   const canSeeAudit = canSee(['audit', 'compliance', 'direction']);
 
-  const { data: allMetrics = [], isLoading: metricsLoading } = useDashboardMetrics(userPoles.length > 0 || isLeadership);
+  const { data: allMetrics = [], isLoading: metricsLoading } = useDashboardKPIs(userPoles.length > 0 || isLeadership);
   const { data: feedData = [], isLoading: feedLoading } = useDashboardFeed();
   const { data: incidents = [], isLoading: incLoading } = useRecentIncidents(canSeeIncidents);
   const { data: auditLogs = [], isLoading: logLoading } = useRecentAuditLogs(canSeeAudit);
 
   // Moindre privilège : seules les métriques rattachées aux pôles du collaborateur sont affichées.
-  const metrics = allMetrics.filter((m) => canSee(METRIC_POLES[m.id] ?? []));
+  const metrics = allMetrics.filter((m) => canSee(m.poles));
+
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -220,7 +184,15 @@ export default function Dashboard() {
           {metricsLoading ? (
             <div className="col-span-full flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : metrics.length > 0 ? (
-            metrics.map((metric) => (<MetricCard key={metric.id} metric={metric} />))
+            metrics.map((metric) => (
+              metric.href ? (
+                <Link key={metric.id} to={metric.href} className="block">
+                  <MetricCard metric={metric} className="h-full transition-colors hover:border-accent/60" />
+                </Link>
+              ) : (
+                <MetricCard key={metric.id} metric={metric} />
+              )
+            ))
           ) : (
             <p className="col-span-full text-sm text-muted-foreground">
               Aucun indicateur rattaché à vos pôles pour le moment.
