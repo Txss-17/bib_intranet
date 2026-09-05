@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import { FeedItem } from '@/types';
 import { useDashboardKPIs } from '@/hooks/useDashboardKPIs';
+import { usePermissions } from '@/hooks/usePermissions';
 
 
 
@@ -183,7 +184,15 @@ export default function Dashboard() {
           {metricsLoading ? (
             <div className="col-span-full flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
           ) : metrics.length > 0 ? (
-            metrics.map((metric) => (<MetricCard key={metric.id} metric={metric} />))
+            metrics.map((metric) => (
+              metric.href ? (
+                <Link key={metric.id} to={metric.href} className="block">
+                  <MetricCard metric={metric} className="h-full transition-colors hover:border-accent/60" />
+                </Link>
+              ) : (
+                <MetricCard key={metric.id} metric={metric} />
+              )
+            ))
           ) : (
             <p className="col-span-full text-sm text-muted-foreground">
               Aucun indicateur rattaché à vos pôles pour le moment.
