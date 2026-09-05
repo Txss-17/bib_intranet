@@ -12,48 +12,9 @@ import { PoleOverview } from '@/components/dashboard/PoleOverview';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
-import { Metric, FeedItem } from '@/types';
+import { FeedItem } from '@/types';
+import { useDashboardKPIs } from '@/hooks/useDashboardKPIs';
 
-/** Chaque métrique est rattachée aux pôles autorisés à la voir. */
-const METRIC_POLES: Record<string, string[]> = {
-  met_orders: ['ops', 'direction', 'finance'],
-  met_users: ['lifecycle', 'marketing', 'direction'],
-  met_suppliers: ['supplier', 'direction', 'audit'],
-  met_incidents: ['ops', 'risk', 'direction'],
-  met_tickets: ['lifecycle', 'tech', 'direction'],
-  met_docs: ['compliance', 'audit', 'rh', 'direction'],
-  met_tech_requests: ['tech', 'direction'],
-};
-
-function useDashboardMetrics(enabled: boolean) {
-  return useQuery({
-    queryKey: ['dashboard_metrics'],
-    enabled,
-    queryFn: async (): Promise<Metric[]> => {
-      const [ordersRes, usersRes, suppliersRes, incidentsRes, ticketsRes, docsRes, techRes] = await Promise.all([
-        supabase.from('orders').select('id', { count: 'exact', head: true }),
-        supabase.from('user_accounts').select('id', { count: 'exact', head: true }),
-        supabase.from('suppliers').select('id', { count: 'exact', head: true }).eq('status', 'validated'),
-        supabase.from('logistics_incidents').select('id', { count: 'exact', head: true }).in('status', ['open', 'investigating']),
-        supabase.from('support_tickets').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-        supabase.from('documents').select('id', { count: 'exact', head: true }),
-        (supabase as unknown as { from: (t: string) => any })
-          .from('tech_requests').select('id', { count: 'exact', head: true }).in('status', ['submitted', 'under_review']),
-      ]);
-
-      return [
-        { id: 'met_orders', label: 'Commandes', value: ordersRes.count ?? 0, change: 0, changeType: 'neutral' as const },
-        { id: 'met_users', label: 'Comptes clients', value: usersRes.count ?? 0, change: 0, changeType: 'neutral' as const },
-        { id: 'met_suppliers', label: 'Fournisseurs validés', value: suppliersRes.count ?? 0, change: 0, changeType: 'positive' as const },
-        { id: 'met_incidents', label: 'Incidents actifs', value: incidentsRes.count ?? 0, change: 0, changeType: (incidentsRes.count ?? 0) > 0 ? 'negative' as const : 'positive' as const },
-        { id: 'met_tickets', label: 'Tickets ouverts', value: ticketsRes.count ?? 0, change: 0, changeType: 'neutral' as const },
-        { id: 'met_docs', label: 'Documents', value: docsRes.count ?? 0, change: 0, changeType: 'neutral' as const },
-        { id: 'met_tech_requests', label: 'Demandes Tech à traiter', value: techRes.count ?? 0, change: 0, changeType: 'neutral' as const },
-      ];
-    },
-    staleTime: 60_000,
-  });
-}
 
 
 function useDashboardFeed() {
