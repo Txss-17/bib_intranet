@@ -96,20 +96,22 @@ function useRecentAuditLogs(enabled: boolean) {
 
 export default function Dashboard() {
   const { profile } = useAuth();
-  const userPoles = profile?.poles ?? [];
-  const isLeadership = userPoles.includes('direction') || profile?.position === 'ceo';
+  const { poles: permPoles, isSuperAdmin } = usePermissions();
+  const userPoles = permPoles.length ? permPoles : (profile?.poles ?? []);
+  const isLeadership = isSuperAdmin || userPoles.includes('direction') || profile?.position === 'ceo';
   const canSee = (poles: string[]) => isLeadership || poles.some((p) => userPoles.includes(p));
 
-  const canSeeIncidents = canSee(METRIC_POLES.met_incidents);
+  const canSeeIncidents = canSee(['ops', 'risk', 'direction']);
   const canSeeAudit = canSee(['audit', 'compliance', 'direction']);
 
-  const { data: allMetrics = [], isLoading: metricsLoading } = useDashboardMetrics(userPoles.length > 0 || isLeadership);
+  const { data: allMetrics = [], isLoading: metricsLoading } = useDashboardKPIs(userPoles.length > 0 || isLeadership);
   const { data: feedData = [], isLoading: feedLoading } = useDashboardFeed();
   const { data: incidents = [], isLoading: incLoading } = useRecentIncidents(canSeeIncidents);
   const { data: auditLogs = [], isLoading: logLoading } = useRecentAuditLogs(canSeeAudit);
 
   // Moindre privilège : seules les métriques rattachées aux pôles du collaborateur sont affichées.
-  const metrics = allMetrics.filter((m) => canSee(METRIC_POLES[m.id] ?? []));
+  const metrics = allMetrics.filter((m) => canSee(m.poles));
+
 
   const greeting = () => {
     const hour = new Date().getHours();
