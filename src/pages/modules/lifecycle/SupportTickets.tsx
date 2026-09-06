@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ExportButtons } from '@/components/ExportButtons';
 import SupportTicketForm from '@/components/forms/SupportTicketForm';
+import { TechRequestButton } from '@/components/tech/TechRequestButton';
 import { useSupportTickets, useSupportTicketStats, useCreateSupportTicket, useUpdateSupportTicket } from '@/hooks/useLifecycle';
 
 const SupportTickets = () => {
@@ -110,7 +111,18 @@ const SupportTickets = () => {
                     {ticket.assigned_to && <><span>•</span><span className="flex items-center gap-1"><User className="h-3 w-3" />Assigné</span></>}
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => handleEdit(ticket)}>Modifier</Button>
+                <div className="flex gap-2">
+                  <TechRequestButton
+                    pole="lifecycle"
+                    category="bug"
+                    defaultTitle={`Ticket support ${ticket.id.substring(0, 8)} — ${ticket.subject}`}
+                    defaultDescription={`Ticket : ${ticket.id}\nClient : ${(ticket.user_account as any)?.company_name || 'N/A'}\nPriorité : ${ticket.priority || 'N/A'}\n\nProblème constaté :\nAttendu :`}
+                    defaultPriority={ticket.priority === 'critical' || ticket.priority === 'high' ? 'high' : 'medium'}
+                    label="Escalader à la Tech"
+                    variant="ghost"
+                  />
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(ticket)}>Modifier</Button>
+                </div>
               </div>
             </CardContent>
           </Card>

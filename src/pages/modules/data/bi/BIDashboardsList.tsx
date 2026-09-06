@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Search, MoreHorizontal, Plus, LayoutDashboard, Copy, Archive, History, Send, ExternalLink } from 'lucide-react';
 import { useDashboards, useDuplicateDashboard, useArchiveDashboard, usePublishDashboard } from '@/hooks/useBI';
+import { TechRequestButton } from '@/components/tech/TechRequestButton';
 
 const STATUS_STYLE: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground',
@@ -38,7 +39,16 @@ export default function BIDashboardsList() {
           </div>
           <h1 className="text-2xl font-semibold">Mes tableaux de bord</h1>
         </div>
-        <Button asChild><Link to="/pole/data/bi/designer/new"><Plus className="h-4 w-4 mr-1" /> Nouveau</Link></Button>
+        <div className="flex gap-2">
+          <TechRequestButton
+            pole="data"
+            category="data"
+            defaultTitle="Besoin BI : "
+            defaultDescription={'Tableau de bord / KPI concerné :\nBesoin (nouvelle source, calcul, publication) :\nUsage attendu :'}
+            label="Demande BI à la Tech"
+          />
+          <Button asChild><Link to="/pole/data/bi/designer/new"><Plus className="h-4 w-4 mr-1" /> Nouveau</Link></Button>
+        </div>
       </div>
 
       <div className="relative max-w-md">
