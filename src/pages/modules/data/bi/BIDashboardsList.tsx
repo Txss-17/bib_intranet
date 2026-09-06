@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Search, MoreHorizontal, Plus, LayoutDashboard, Copy, Archive, History, Send, ExternalLink } from 'lucide-react';
 import { useDashboards, useDuplicateDashboard, useArchiveDashboard, usePublishDashboard } from '@/hooks/useBI';
+import { TechRequestButton } from '@/components/tech/TechRequestButton';
 
 const STATUS_STYLE: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground',
