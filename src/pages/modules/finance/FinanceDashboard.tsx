@@ -71,7 +71,14 @@ const FinanceDashboard = () => {
           <h1 className="text-3xl font-bold text-foreground">Finance & Cashflow</h1>
           <p className="text-muted-foreground mt-1">Vue temps réel des indicateurs financiers</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          <TechRequestButton
+            pole="finance"
+            category="data"
+            defaultTitle="Tableau financier : "
+            defaultDescription={'Tableau / indicateur demandé :\nDonnées et périmètre :\nFréquence de mise à jour :'}
+            label="Demander un tableau"
+          />
           <Button variant="outline" asChild><Link to="/pole/finance/transactions">Voir transactions</Link></Button>
           <Button asChild><Link to="/pole/finance/cashflow">Cashflow détaillé</Link></Button>
         </div>
