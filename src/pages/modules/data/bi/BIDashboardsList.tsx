@@ -38,7 +38,16 @@ export default function BIDashboardsList() {
           </div>
           <h1 className="text-2xl font-semibold">Mes tableaux de bord</h1>
         </div>
-        <Button asChild><Link to="/pole/data/bi/designer/new"><Plus className="h-4 w-4 mr-1" /> Nouveau</Link></Button>
+        <div className="flex gap-2">
+          <TechRequestButton
+            pole="data"
+            category="data"
+            defaultTitle="Besoin BI : "
+            defaultDescription="Tableau de bord / KPI concerné :\nBesoin (nouvelle source, calcul, publication) :\nUsage attendu :"
+            label="Demande BI à la Tech"
+          />
+          <Button asChild><Link to="/pole/data/bi/designer/new"><Plus className="h-4 w-4 mr-1" /> Nouveau</Link></Button>
+        </div>
       </div>
 
       <div className="relative max-w-md">
