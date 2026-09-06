@@ -14,6 +14,7 @@ import {
 import { Link } from "react-router-dom";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { useCashflowStats, useCashflows, useSupplierPaymentStats } from "@/hooks/useFinance";
+import { TechRequestButton } from "@/components/tech/TechRequestButton";
 
 const incomeBreakdown = [
   { name: 'Abonnements', value: 45, color: 'hsl(var(--chart-1))' },

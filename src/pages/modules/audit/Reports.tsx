@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, FileText, Download, Eye, Check, Clock } from 'lucide-react';
+import { TechRequestButton } from '@/components/tech/TechRequestButton';
 
 const reports = [
   { id: 1, title: 'Rapport audit FreshFarm Bio', type: 'Fournisseur', author: 'Paul Lefevre', date: '2025-02-01', status: 'pending_validation', pages: 12 },
@@ -47,9 +48,18 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Rapports d'Audit</h1>
-        <p className="text-muted-foreground">Bibliothèque des rapports d'audit</p>
+      <div className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-3xl font-bold">Rapports d'Audit</h1>
+          <p className="text-muted-foreground">Bibliothèque des rapports d'audit</p>
+        </div>
+        <TechRequestButton
+          pole="audit"
+          category="evolution"
+          defaultTitle="Modèle de rapport d'audit : "
+          defaultDescription={'Type de modèle souhaité (fournisseur, terrain, ops, consolidé) :\nChamps et sections attendus :\nRègles de validation :'}
+          label="Demander un modèle"
+        />
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
