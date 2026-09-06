@@ -61,6 +61,7 @@ export default function Employees() {
             { header: 'Pôle', accessor: 'pole' }, { header: 'Poste', accessor: 'position' },
             { header: 'Statut', accessor: 'status' }, { header: "Date d'arrivée", accessor: 'start_date' },
           ]} data={employees} />
+          <Button variant="outline" asChild><Link to="/pole/rh/onboarding"><UserPlus className="mr-2 h-4 w-4" />Ajouter un dossier</Link></Button>
           <Button onClick={() => handleOpenForm()}><Plus className="mr-2 h-4 w-4" />Ajouter un employé</Button>
         </div>
       </div>
