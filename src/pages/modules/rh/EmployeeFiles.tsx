@@ -444,9 +444,14 @@ export default function EmployeeFiles() {
   // List view
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-semibold text-foreground">Dossiers employés</h1>
-        <p className="text-sm text-muted-foreground mt-1">Suivi individuel complet de chaque collaborateur</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-semibold text-foreground">Dossiers employés</h1>
+          <p className="text-sm text-muted-foreground mt-1">Suivi individuel complet de chaque collaborateur</p>
+        </div>
+        <Button asChild size="sm">
+          <Link to="/pole/rh/onboarding"><Plus className="mr-1.5 h-4 w-4" /> Ajouter un dossier</Link>
+        </Button>
       </div>
 
       {/* KPIs */}
