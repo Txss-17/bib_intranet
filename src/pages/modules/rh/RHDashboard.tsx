@@ -7,9 +7,14 @@ import { Users, UserPlus, Calendar, GraduationCap, Clock, TrendingUp, Shield, Al
 export default function RHDashboard() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Pôle RH</h1>
-        <p className="text-muted-foreground">Gestion des ressources humaines</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold">Pôle RH</h1>
+          <p className="text-muted-foreground">Gestion des ressources humaines</p>
+        </div>
+        <Button asChild size="sm">
+          <Link to="/pole/rh/onboarding"><UserPlus className="mr-1.5 h-4 w-4" /> Ajouter un dossier</Link>
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
