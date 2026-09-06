@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Search, Plus, Mail, Phone, Edit, Trash2, Loader2 } from 'lucide-react';
+import { Search, Plus, Mail, Phone, Edit, Trash2, Loader2, UserPlus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { ExportButtons } from '@/components/ExportButtons';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -61,6 +62,7 @@ export default function Employees() {
             { header: 'Pôle', accessor: 'pole' }, { header: 'Poste', accessor: 'position' },
             { header: 'Statut', accessor: 'status' }, { header: "Date d'arrivée", accessor: 'start_date' },
           ]} data={employees} />
+          <Button variant="outline" asChild><Link to="/pole/rh/onboarding"><UserPlus className="mr-2 h-4 w-4" />Ajouter un dossier</Link></Button>
           <Button onClick={() => handleOpenForm()}><Plus className="mr-2 h-4 w-4" />Ajouter un employé</Button>
         </div>
       </div>
