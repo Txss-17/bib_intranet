@@ -43,7 +43,7 @@ export default function BIDashboardsList() {
             pole="data"
             category="data"
             defaultTitle="Besoin BI : "
-            defaultDescription="Tableau de bord / KPI concerné :\nBesoin (nouvelle source, calcul, publication) :\nUsage attendu :"
+            defaultDescription={'Tableau de bord / KPI concerné :\nBesoin (nouvelle source, calcul, publication) :\nUsage attendu :'}
             label="Demande BI à la Tech"
           />
           <Button asChild><Link to="/pole/data/bi/designer/new"><Plus className="h-4 w-4 mr-1" /> Nouveau</Link></Button>
