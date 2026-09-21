@@ -9,7 +9,27 @@ export interface PositionAccess {
 }
 
 export const positionAccess: Record<EmployeePosition, PositionAccess> = {
-customer_success_manager: {
+ceo: {
+  poles: [
+    'direction',
+    'finance',
+    'ops',
+    'supplier',
+    'marketplace',
+    'support',
+    'marketing',
+    'rh',
+    'audit',
+    'compliance',
+    'rse',
+    'product',
+    'data',
+    'security',
+  ],
+  screens: ['*'],
+  restricted: [],
+},
+  customer_success_manager: {
   poles: ['marketplace', 'support'],
   screens: [
     'marketplace.overview',
