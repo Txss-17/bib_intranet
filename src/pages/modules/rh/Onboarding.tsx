@@ -35,7 +35,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -100,8 +99,49 @@ const SENIORITIES = [
   'executive',
 ];
 
+const POSITION_LABELS: Record<string, string> = {
+  supplier_manager: 'Responsable Fournisseurs & Produits',
+  customer_success_manager: 'Responsable Marketplace & Customer Success',
+  ops_logistics_manager: 'Responsable Opérations & Logistique',
+  finance_manager: 'Responsable Finance',
+  audit_compliance_lead: 'Responsable Qualité, Audit & Conformité',
+  rse_impact_manager: 'Responsable RSE & Impact',
+  product_engineering_manager: 'Responsable Product & Engineering',
+  marketing_communication_manager: 'Responsable Marketing & Communication',
+  rh_manager: 'Responsable RH',
+  data_bi_manager: 'Responsable Data & BI',
+  security_it_manager: 'Responsable Security & IT',
+  ceo: 'Direction',
+};
+
+const ROLE_LABELS: Record<string, string> = {
+  viewer: 'Consultation',
+  operator: 'Opérateur',
+  analyst: 'Analyste',
+  manager: 'Manager',
+  executive: 'Direction',
+  admin: 'Administrateur',
+};
+
+const SENIORITY_LABELS: Record<string, string> = {
+  junior: 'Junior',
+  mid: 'Confirmé',
+  senior: 'Senior',
+  lead: 'Lead',
+  executive: 'Direction',
+};
+
 const poleLabel = (id: string) =>
-  allPoles.find((p) => p.id === id)?.shortName ?? id;
+  allPoles.find((pole) => pole.id === id)?.shortName ?? id;
+
+const positionLabel = (position: string | null) =>
+  position ? POSITION_LABELS[position] ?? position : '—';
+
+const roleLabel = (role: string) =>
+  ROLE_LABELS[role] ?? role;
+
+const seniorityLabel = (seniority: string) =>
+  SENIORITY_LABELS[seniority] ?? seniority;
 
 function NewEmployeeDialog() {
   const [open, setOpen] = useState(false);
@@ -152,8 +192,8 @@ function NewEmployeeDialog() {
         <DialogHeader>
           <DialogTitle>Dossier collaborateur</DialogTitle>
           <DialogDescription>
-            Créé par les RH, validé en interne, puis transmis au pôle habilité
-            pour la création du compte et des accès.
+            Créé par les RH, validé en interne, puis transmis au pôle
+            habilité pour la création du compte et des accès.
           </DialogDescription>
         </DialogHeader>
 
@@ -163,10 +203,10 @@ function NewEmployeeDialog() {
               <Label>Prénom</Label>
               <Input
                 value={form.first_name}
-                onChange={(e) =>
+                onChange={(event) =>
                   setForm({
                     ...form,
-                    first_name: e.target.value,
+                    first_name: event.target.value,
                   })
                 }
               />
@@ -176,10 +216,10 @@ function NewEmployeeDialog() {
               <Label>Nom</Label>
               <Input
                 value={form.last_name}
-                onChange={(e) =>
+                onChange={(event) =>
                   setForm({
                     ...form,
-                    last_name: e.target.value,
+                    last_name: event.target.value,
                   })
                 }
               />
@@ -190,10 +230,10 @@ function NewEmployeeDialog() {
               <Input
                 type="email"
                 value={form.personal_email}
-                onChange={(e) =>
+                onChange={(event) =>
                   setForm({
                     ...form,
-                    personal_email: e.target.value,
+                    personal_email: event.target.value,
                   })
                 }
               />
@@ -204,10 +244,10 @@ function NewEmployeeDialog() {
               <Input
                 type="email"
                 value={form.work_email}
-                onChange={(e) =>
+                onChange={(event) =>
                   setForm({
                     ...form,
-                    work_email: e.target.value,
+                    work_email: event.target.value,
                   })
                 }
                 placeholder="prenom@brand-in-a-box.space"
@@ -232,7 +272,7 @@ function NewEmployeeDialog() {
                 <SelectContent>
                   {POSITIONS.map((position) => (
                     <SelectItem key={position} value={position}>
-                      {position}
+                      {positionLabel(position)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -257,7 +297,7 @@ function NewEmployeeDialog() {
                 <SelectContent>
                   {SENIORITIES.map((seniority) => (
                     <SelectItem key={seniority} value={seniority}>
-                      {seniority}
+                      {seniorityLabel(seniority)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -282,7 +322,7 @@ function NewEmployeeDialog() {
                 <SelectContent>
                   {ROLES.map((role) => (
                     <SelectItem key={role} value={role}>
-                      {role}
+                      {roleLabel(role)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -294,10 +334,10 @@ function NewEmployeeDialog() {
               <Input
                 type="date"
                 value={form.start_date}
-                onChange={(e) =>
+                onChange={(event) =>
                   setForm({
                     ...form,
-                    start_date: e.target.value,
+                    start_date: event.target.value,
                   })
                 }
               />
@@ -336,10 +376,10 @@ function NewEmployeeDialog() {
             <Textarea
               rows={2}
               value={form.notes}
-              onChange={(e) =>
+              onChange={(event) =>
                 setForm({
                   ...form,
-                  notes: e.target.value,
+                  notes: event.target.value,
                 })
               }
             />
@@ -399,7 +439,7 @@ function RequestSheet({
 
         <SheetDescription>
           {request.first_name} {request.last_name} ·{' '}
-          {request.position ?? '—'}
+          {positionLabel(request.position)}
         </SheetDescription>
       </SheetHeader>
 
@@ -433,16 +473,23 @@ function RequestSheet({
 
           <p>
             <span className="text-muted-foreground">
+              Poste :
+            </span>{' '}
+            {positionLabel(request.position)}
+          </p>
+
+          <p>
+            <span className="text-muted-foreground">
               Rôle :
             </span>{' '}
-            {request.requested_role}
+            {roleLabel(request.requested_role)}
           </p>
 
           <p>
             <span className="text-muted-foreground">
               Niveau :
             </span>{' '}
-            {request.seniority}
+            {seniorityLabel(request.seniority)}
           </p>
 
           <p>
@@ -491,7 +538,7 @@ function RequestSheet({
                 rows={2}
                 placeholder="Motif (obligatoire pour un refus)"
                 value={reason}
-                onChange={(e) => setReason(e.target.value)}
+                onChange={(event) => setReason(event.target.value)}
               />
 
               <div className="mt-2 flex flex-wrap gap-2">
@@ -525,7 +572,7 @@ function RequestSheet({
                         <UserPlus className="mr-1.5 h-3.5 w-3.5" />
                       )}
 
-                      Créer compte & rôle
+                      Créer compte & accès
                     </Button>
                   )}
 
@@ -613,6 +660,7 @@ export default function Onboarding() {
     userPoles.includes('direction');
 
   const canProvision =
+    userPoles.includes('direction') ||
     userPoles.includes('product') ||
     userPoles.includes('security');
 
@@ -645,7 +693,7 @@ export default function Onboarding() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">
-            Onboarding & workflow RH → Accès
+            Onboarding RH — intégration collaborateur
           </h1>
 
           <p className="text-sm text-muted-foreground">
@@ -771,21 +819,14 @@ export default function Onboarding() {
         </CardContent>
       </Card>
 
-      <Sheet
-        open={!!selected}
-        onOpenChange={(open) =>
-          !open && setSelected(null)
-        }
-      >
-        {selected && (
-          <RequestSheet
-            request={selected}
-            canValidate={canValidate}
-            canProvision={canProvision}
-            onClose={() => setSelected(null)}
-          />
-        )}
-      </Sheet>
+      {selected && (
+        <RequestSheet
+          request={selected}
+          canValidate={canValidate}
+          canProvision={canProvision}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </div>
   );
 }
