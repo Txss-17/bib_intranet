@@ -17,29 +17,37 @@ export interface ModuleNavigation {
 }
 
 /**
- * Navigation principale BIB
+ * Navigation principale BIB.
  *
  * Architecture cible :
- * Direction
- * Finance
- * Opérations & Logistique
- * Fournisseurs & Produits
- * Marketplace & Customer
- * Support & Customer Success
- * Marketing & Communication
- * RH
- * Qualité & Audit
- * Conformité & Juridique
- * RSE & Impact
- * Produit & Engineering
- * Data & BI
- * Security & IT
+ *
+ * 1. Direction
+ * 2. Finance
+ * 3. Opérations & Logistique
+ * 4. Fournisseurs & Produits
+ * 5. Marketplace & Customer
+ * 6. Support & Customer Success
+ * 7. Marketing & Communication
+ * 8. RH
+ * 9. Qualité & Audit
+ * 10. Conformité & Juridique
+ * 11. RSE & Impact
+ * 12. Produit & Engineering
+ * 13. Data & BI
+ * 14. Security & IT
+ *
+ * Les anciennes structures Tech, Lifecycle, R&D et Risk
+ * ne sont plus des pôles de navigation.
  */
-export const moduleNavigations: Record<string, ModuleNavigation> = {
+export const moduleNavigations: Record<
+  string,
+  ModuleNavigation
+> = {
   direction: {
     id: 'direction',
     label: 'Direction',
-    description: 'Pilotage stratégique et gouvernance',
+    description:
+      'Pilotage stratégique et gouvernance',
     items: [
       {
         id: 'overview',
@@ -89,7 +97,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   finance: {
     id: 'finance',
     label: 'Finance',
-    description: 'Pilotage financier, paiements et facturation',
+    description:
+      'Pilotage financier, paiements et facturation',
     items: [
       {
         id: 'overview',
@@ -151,7 +160,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   ops: {
     id: 'ops',
     label: 'Opérations & Logistique',
-    description: 'Commandes, stocks, expéditions et partenaires',
+    description:
+      'Commandes, stocks, expéditions et partenaires',
     items: [
       {
         id: 'overview',
@@ -225,7 +235,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   supplier: {
     id: 'supplier',
     label: 'Fournisseurs & Produits',
-    description: 'Qualification, produits, catalogues et certifications',
+    description:
+      'Qualification, produits, catalogues et certifications',
     items: [
       {
         id: 'overview',
@@ -287,7 +298,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   marketplace: {
     id: 'marketplace',
     label: 'Marketplace & Customer',
-    description: 'Marketplace, boutiques, clients et engagement',
+    description:
+      'Marketplace, boutiques, clients et engagement',
     items: [
       {
         id: 'overview',
@@ -349,7 +361,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   support: {
     id: 'support',
     label: 'Support & Customer Success',
-    description: 'Support, accompagnement et qualité de l’expérience',
+    description:
+      'Support, accompagnement et qualité de l’expérience',
     items: [
       {
         id: 'overview',
@@ -387,7 +400,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   marketing: {
     id: 'marketing',
     label: 'Marketing & Communication',
-    description: 'Marque, contenu, campagnes, CRM et réputation',
+    description:
+      'Marque, contenu, campagnes, CRM et réputation',
     items: [
       {
         id: 'overview',
@@ -437,7 +451,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   rh: {
     id: 'rh',
     label: 'Ressources Humaines',
-    description: 'Collaborateurs, recrutement et développement',
+    description:
+      'Collaborateurs, recrutement et développement',
     items: [
       {
         id: 'overview',
@@ -465,7 +480,7 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
       },
       {
         id: 'onboarding',
-        label: 'Onboarding',
+        label: 'Onboarding RH — intégration collaborateur',
         path: '/pole/rh/onboarding',
         icon: 'DoorOpen',
       },
@@ -505,7 +520,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   audit: {
     id: 'audit',
     label: 'Qualité & Audit',
-    description: 'Audits, contrôles, non-conformités et actions correctives',
+    description:
+      'Audits, contrôles, non-conformités et actions correctives',
     items: [
       {
         id: 'overview',
@@ -561,7 +577,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   compliance: {
     id: 'compliance',
     label: 'Conformité & Juridique',
-    description: 'Cadre juridique, contrats et conformité',
+    description:
+      'Cadre juridique, contrats et conformité',
     items: [
       {
         id: 'overview',
@@ -599,7 +616,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   rse: {
     id: 'rse',
     label: 'RSE & Impact',
-    description: 'Recyclage, emballages, environnement et ESG',
+    description:
+      'Recyclage, emballages, environnement et ESG',
     items: [
       {
         id: 'overview',
@@ -637,7 +655,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   product: {
     id: 'product',
     label: 'Produit & Engineering',
-    description: 'Produit, développement, plateforme et innovation',
+    description:
+      'Produit, développement, plateforme et innovation',
     items: [
       {
         id: 'overview',
@@ -699,7 +718,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   data: {
     id: 'data',
     label: 'Data & BI',
-    description: 'Données, KPI, BI et gouvernance de la donnée',
+    description:
+      'Données, KPI, BI et gouvernance de la donnée',
     items: [
       {
         id: 'overview',
@@ -743,7 +763,8 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
   security: {
     id: 'security',
     label: 'Security & IT',
-    description: 'Sécurité, accès, infrastructure et systèmes IT',
+    description:
+      'Sécurité, accès, infrastructure et systèmes IT',
     items: [
       {
         id: 'overview',
@@ -789,55 +810,22 @@ export const moduleNavigations: Record<string, ModuleNavigation> = {
       },
     ],
   },
-
-  /**
-   * Legacy
-   *
-   * Ces entrées ne doivent plus être considérées comme des pôles
-   * fonctionnels de l'architecture cible.
-   *
-   * Elles restent temporairement disponibles pour éviter de casser
-   * les anciennes routes pendant la migration.
-   */
-  tech: {
-    id: 'tech',
-    label: 'Legacy — Technology',
-    description: 'Ancienne structure technique en cours de migration',
-    items: [],
-  },
-
-  lifecycle: {
-    id: 'lifecycle',
-    label: 'Legacy — Lifecycle',
-    description: 'Ancienne structure lifecycle en cours de migration',
-    items: [],
-  },
-
-  rd: {
-    id: 'rd',
-    label: 'Legacy — R&D',
-    description: 'Ancienne structure R&D en cours de migration',
-    items: [],
-  },
-
-  risk: {
-    id: 'risk',
-    label: 'Legacy — Risk',
-    description: 'Fonction désormais transversale',
-    items: [],
-  },
 };
 
 /**
  * Modules transversaux BIB.
  *
- * Ils ne dépendent pas d'un pôle métier unique.
+ * Ils ne dépendent pas d’un pôle métier unique.
  */
-export const transversalNavigations: Record<string, ModuleNavigation> = {
+export const transversalNavigations: Record<
+  string,
+  ModuleNavigation
+> = {
   work: {
     id: 'work',
     label: 'Travail',
-    description: 'Tâches, projets, processus et activités',
+    description:
+      'Tâches, projets, processus et activités',
     items: [
       {
         id: 'tasks',
@@ -881,7 +869,8 @@ export const transversalNavigations: Record<string, ModuleNavigation> = {
   notifications: {
     id: 'notifications',
     label: 'Notifications',
-    description: 'Alertes et notifications système',
+    description:
+      'Alertes et notifications système',
     items: [
       {
         id: 'all',
@@ -895,7 +884,8 @@ export const transversalNavigations: Record<string, ModuleNavigation> = {
   gateway: {
     id: 'gateway',
     label: 'Gateway & Messages',
-    description: 'Centre opérationnel des communications',
+    description:
+      'Centre opérationnel des communications',
     items: [
       {
         id: 'overview',
@@ -945,7 +935,8 @@ export const transversalNavigations: Record<string, ModuleNavigation> = {
   documents: {
     id: 'documents',
     label: 'Documents',
-    description: 'Documents et pièces liés aux activités BIB',
+    description:
+      'Documents et pièces liés aux activités BIB',
     items: [
       {
         id: 'all',
@@ -959,7 +950,8 @@ export const transversalNavigations: Record<string, ModuleNavigation> = {
   feed: {
     id: 'feed',
     label: 'Fil interne',
-    description: 'Informations et communications internes',
+    description:
+      'Informations et communications internes',
     items: [
       {
         id: 'all',
@@ -973,7 +965,8 @@ export const transversalNavigations: Record<string, ModuleNavigation> = {
   ethics: {
     id: 'ethics',
     label: 'Éthique & Signalements',
-    description: 'Signalements éthiques et traitement confidentiel',
+    description:
+      'Signalements éthiques et traitement confidentiel',
     items: [
       {
         id: 'overview',
@@ -1017,7 +1010,8 @@ export const transversalNavigations: Record<string, ModuleNavigation> = {
   independentAudit: {
     id: 'independent-audit',
     label: 'Audit indépendant',
-    description: 'Déclarations et suivi des incidents soumis à audit',
+    description:
+      'Déclarations et suivi des incidents soumis à audit',
     items: [
       {
         id: 'overview',
@@ -1043,7 +1037,8 @@ export const transversalNavigations: Record<string, ModuleNavigation> = {
   permissions: {
     id: 'permissions',
     label: 'Rôles & Permissions',
-    description: 'Gestion des rôles, droits et périmètres d’accès',
+    description:
+      'Gestion des rôles, droits et périmètres d’accès',
     items: [
       {
         id: 'roles',
