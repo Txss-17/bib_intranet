@@ -1,17 +1,17 @@
 // Phase 1 Employee Roles - LINKSY Group
-export type EmployeeRole = 
-  | 'ceo'                    // CEO / Fondatrice
-  | 'coo'                    // COO / Ops Lead
-  | 'finance_manager'        // Finance & Cashflow Manager
-  | 'compliance_officer'     // Compliance & Risk Officer
-  | 'supplier_manager'       // Supplier & Product Validation Manager
-  | 'logistics_coordinator'  // Ops & Logistics Coordinator
-  | 'rse_manager'           // RSE & Packaging Manager
-  | 'rd_manager'            // R&D & Test Stores Manager
-  | 'tech_lead'             // Tech Lead & Architect
-  | 'support_manager'       // User Success & Support Manager
-  | 'brand_manager'         // Brand & Media Manager
-  | 'hr_manager';           // HR & Culture Manager
+export type EmployeeRole =
+  | 'ceo'
+  | 'finance_manager'
+  | 'supplier_manager'
+  | 'ops_logistics_manager'
+  | 'customer_success_manager'
+  | 'audit_compliance_lead'
+  | 'rse_impact_manager'
+  | 'product_engineering_manager'
+  | 'marketing_communication_manager'
+  | 'rh_manager'
+  | 'data_bi_manager'
+  | 'security_it_manager';
 
 export type EmployeeStatus = 'online' | 'absent' | 'busy' | 'offline';
 
@@ -19,7 +19,7 @@ export interface EmployeeRoleInfo {
   id: EmployeeRole;
   title: string;
   titleFr: string;
-  poles: string[];  // Poles this role has access to
+  poles: string[];
   description: string;
 }
 
@@ -27,89 +27,129 @@ export const employeeRoles: Record<EmployeeRole, EmployeeRoleInfo> = {
   ceo: {
     id: 'ceo',
     title: 'CEO / Founder',
-    titleFr: 'CEO / Fondatrice',
-    poles: ['*'], // Access to all poles (read)
-    description: 'Vision, arbitrage stratégique, validation finale',
+    titleFr: 'CEO / Direction',
+    poles: [
+      'direction',
+      'finance',
+      'ops',
+      'supplier',
+      'marketplace',
+      'support',
+      'marketing',
+      'rh',
+      'audit',
+      'compliance',
+      'rse',
+      'product',
+      'data',
+      'security',
+    ],
+    description:
+      'Vision stratégique, arbitrage, gouvernance et validation des décisions structurantes.',
   },
-  coo: {
-    id: 'coo',
-    title: 'COO / Ops Lead',
-    titleFr: 'COO / Ops Lead',
-    poles: ['direction', 'ops', 'tech', 'supplier', 'logistics'],
-    description: 'Coordination globale, gestion incidents',
-  },
+
   finance_manager: {
     id: 'finance_manager',
-    title: 'Finance & Cashflow Manager',
-    titleFr: 'Finance & Cashflow Manager',
+    title: 'Finance Manager',
+    titleFr: 'Responsable Finance',
     poles: ['finance'],
-    description: 'Comptabilité, cashflow, paiements, levées de fonds',
+    description:
+      'Gestion financière, trésorerie, facturation, paiements, rapprochements et reporting financier.',
   },
-  compliance_officer: {
-    id: 'compliance_officer',
-    title: 'Compliance & Risk Officer',
-    titleFr: 'Compliance & Risk Officer',
-    poles: ['finance', 'compliance', 'audit', 'risk'],
-    description: 'CGU/CGV, risques fournisseurs, litiges',
-  },
+
   supplier_manager: {
     id: 'supplier_manager',
-    title: 'Supplier & Product Manager',
-    titleFr: 'Supplier & Product Validation Manager',
+    title: 'Supplier & Product Validation Manager',
+    titleFr: 'Responsable Fournisseurs & Produits',
     poles: ['supplier'],
-    description: 'Contacts fournisseurs, contrats, validation produits',
+    description:
+      'Gestion des candidatures fournisseurs, validation des catalogues, certifications et décisions fournisseurs.',
   },
-  logistics_coordinator: {
-    id: 'logistics_coordinator',
-    title: 'Logistics Coordinator',
-    titleFr: 'Ops & Logistics Coordinator',
-    poles: ['ops', 'logistics'],
-    description: 'Relation fulfilment, suivi expéditions, incidents',
+
+  ops_logistics_manager: {
+    id: 'ops_logistics_manager',
+    title: 'Operations & Logistics Manager',
+    titleFr: 'Responsable Opérations & Logistique',
+    poles: ['ops'],
+    description:
+      'Pilotage des flux opérationnels, expéditions, stocks, partenaires logistiques et incidents.',
   },
-  rse_manager: {
-    id: 'rse_manager',
-    title: 'RSE & Packaging Manager',
-    titleFr: 'RSE & Packaging Manager',
+
+  customer_success_manager: {
+    id: 'customer_success_manager',
+    title: 'Customer Success Manager',
+    titleFr: 'Responsable Marketplace & Customer Success',
+    poles: ['marketplace', 'support'],
+    description:
+      'Gestion de l’expérience client, marketplace, commandes, abonnés, support et fidélisation.',
+  },
+
+  audit_compliance_lead: {
+    id: 'audit_compliance_lead',
+    title: 'Audit & Compliance Lead',
+    titleFr: 'Responsable Audit & Conformité',
+    poles: ['audit', 'compliance'],
+    description:
+      'Contrôles, audits, non-conformités, actions correctives, contrats, politiques et conformité.',
+  },
+
+  rse_impact_manager: {
+    id: 'rse_impact_manager',
+    title: 'RSE & Impact Manager',
+    titleFr: 'Responsable RSE & Impact',
     poles: ['rse'],
-    description: 'Validation packaging, recyclabilité, reporting ESG',
+    description:
+      'Packaging, recyclage, impact carbone, indicateurs ESG et programmes RSE.',
   },
-  rd_manager: {
-    id: 'rd_manager',
-    title: 'R&D & Test Stores Manager',
-    titleFr: 'R&D & Test Stores Manager',
-    poles: ['marketing', 'ops'],
-    description: 'Boutiques tests, analyse performance, agents IA',
+
+  product_engineering_manager: {
+    id: 'product_engineering_manager',
+    title: 'Product & Engineering Manager',
+    titleFr: 'Responsable Produit & Engineering',
+    poles: ['product'],
+    description:
+      'Produit, roadmap, backlog, engineering, intégrations, documentation et innovation.',
   },
-  tech_lead: {
-    id: 'tech_lead',
-    title: 'Tech Lead & Architect',
-    titleFr: 'Tech Lead & Architect',
-    poles: ['tech'],
-    description: 'Site utilisateur, intranet, sécurité, catalogue',
-  },
-  support_manager: {
-    id: 'support_manager',
-    title: 'User Success Manager',
-    titleFr: 'User Success & Support Manager',
-    poles: ['lifecycle'],
-    description: 'Support client, Trustpilot, prévention impayés',
-  },
-  brand_manager: {
-    id: 'brand_manager',
-    title: 'Brand & Media Manager',
-    titleFr: 'Brand & Media Manager',
+
+  marketing_communication_manager: {
+    id: 'marketing_communication_manager',
+    title: 'Marketing & Communication Manager',
+    titleFr: 'Responsable Marketing & Communication',
     poles: ['marketing'],
-    description: 'Image LINKSY, podcasts, communication externe',
+    description:
+      'Campagnes, contenus, CRM, parcours, communication, analytics et réputation.',
   },
-  hr_manager: {
-    id: 'hr_manager',
-    title: 'HR & Culture Manager',
-    titleFr: 'HR & Culture Manager',
+
+  rh_manager: {
+    id: 'rh_manager',
+    title: 'HR Manager',
+    titleFr: 'Responsable RH',
     poles: ['rh'],
-    description: 'Recrutement, onboarding, culture interne',
+    description:
+      'Recrutement, dossiers collaborateurs, Onboarding RH — intégration collaborateur, présence, congés et formation.',
+  },
+
+  data_bi_manager: {
+    id: 'data_bi_manager',
+    title: 'Data & BI Manager',
+    titleFr: 'Responsable Data & BI',
+    poles: ['data'],
+    description:
+      'KPI, reporting, business intelligence, demandes data et gouvernance des versions.',
+  },
+
+  security_it_manager: {
+    id: 'security_it_manager',
+    title: 'Security & IT Manager',
+    titleFr: 'Responsable Security & IT',
+    poles: ['security'],
+    description:
+      'Accès, sécurité, infrastructure, environnements, VPN et journalisation.',
   },
 };
 
-export const getEmployeeRole = (roleId: EmployeeRole): EmployeeRoleInfo => {
+export const getEmployeeRole = (
+  roleId: EmployeeRole,
+): EmployeeRoleInfo => {
   return employeeRoles[roleId];
 };
