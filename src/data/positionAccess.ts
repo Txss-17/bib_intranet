@@ -9,143 +9,113 @@ export interface PositionAccess {
 }
 
 export const positionAccess: Record<EmployeePosition, PositionAccess> = {
-  supplier_manager: {
-    poles: ['supplier'],
-    screens: [
-      'supplier.overview', 'supplier.inbox-catalogues', 'supplier.fiche-fournisseur',
-      'supplier.validation-produit', 'supplier.pending', 'supplier.validated',
-      'supplier.suppliers', 'supplier.certifications', 'supplier.decisions',
-      'supplier.alerts', 'supplier.transmission-tech', 'supplier.applications',
-      'supplier.restock_orders', 'supplier.catalog_inbox'
-    ],
-    restricted: ['finance.*', 'lifecycle.comptes-utilisateurs', 'rh.*']
-  },
+customer_success_manager: {
+  poles: ['marketplace', 'support'],
+  screens: [
+    'marketplace.overview',
+    'marketplace.stores',
+    'marketplace.customers',
+    'marketplace.orders',
+    'marketplace.subscribers',
+    'marketplace.favorites',
+    'marketplace.rewards',
+    'marketplace.recycling',
+    'support.overview',
+    'support.tickets',
+    'support.customer-success',
+    'support.monitoring',
+    'support.escalations',
+  ],
+  restricted: ['finance.*', 'rh.*'],
+},
 
-  user_success_manager: {
-    poles: ['lifecycle'],
-    screens: [
-      'lifecycle.overview', 'lifecycle.user-accounts', 'lifecycle.risk-alerts',
-      'lifecycle.email-campaigns', 'lifecycle.trustpilot', 'lifecycle.support',
-      'lifecycle.onboarding', 'lifecycle.monitoring', 'lifecycle.scoring',
-      'audit.independent', 'audit.declare', 'audit.resolution'
-    ],
-    restricted: ['supplier.negotiations', 'rh.*', 'finance.salaries']
-  },
-  ops_logistics_manager: {
-    poles: ['ops'],
-    screens: [
-      'ops.overview', 'ops.orders', 'ops.shipments', 'ops.logistics',
-      'ops.incidents', 'ops.partners', 'ops.packaging-instructions', 'ops.daily-reports'
-    ],
-    restricted: ['lifecycle.comptes-utilisateurs', 'supplier.decisions']
-  },
-  finance_manager: {
-    poles: ['finance'],
-    screens: [
-      'finance.overview', 'finance.cashflow', 'finance.transactions',
-      'finance.supplier-payments', 'finance.subscriptions', 'finance.salaries',
-      'finance.guarantee', 'finance.expenses', 'finance.fundraising', 'finance.reports'
-    ],
-    restricted: ['rh.confidential', 'supplier.product-details']
-  },
-  audit_compliance_lead: {
-    poles: ['audit', 'compliance'],
-    screens: [
-      'audit.overview', 'audit.field', 'audit.supplier', 'audit.ops',
-      'audit.reports', 'audit.nonconformities', 'audit.sanctions',
-      'audit.independent', 'audit.declare', 'audit.resolution',
-      'compliance.overview', 'compliance.contracts', 'compliance.policies',
-      'compliance.disputes', 'compliance.risks',
-      'supplier.dossiers', 'supplier.certifications'
-    ],
-    restricted: ['finance.cashflow', 'lifecycle.support-daily']
-  },
-  rse_packaging_manager: {
-    poles: ['rse'],
-    screens: [
-      'rse.overview', 'rse.packaging', 'rse.packaging-validation', 'rse.recycling',
-      'rse.points', 'rse.co2', 'rse.esg', 'rse.transmission-ops', 'modules.packaging'
-    ],
-    restricted: ['finance.*', 'supplier.negotiations']
-  },
-  tech_platform_manager: {
-    poles: ['tech'],
-    screens: [
-      'tech.overview', 'tech.access', 'tech.vpn', 'tech.logs',
-      'tech.deployments', 'tech.environments', 'tech.security', 'tech.dataflow',
-      'tech.catalog', 'tech.product-catalogue', 'tech.user-site',
-      'tech.intranet', 'tech.infrastructure', 'tech.logs-monitoring'
-    ],
-    restricted: ['rh.decisions', 'finance.arbitrage']
-  },
-  marketing_manager: {
-    poles: ['marketing'],
-    screens: [
-      'marketing.overview', 'marketing.campaigns', 'marketing.analytics',
-      'marketing.content', 'marketing.podcasts'
-    ],
-    restricted: ['finance.salaries', 'rh.*', 'supplier.negotiations']
-  },
-  rh_manager: {
-    poles: ['rh'],
-    screens: [
-      'rh.overview', 'rh.employees', 'rh.employee-files', 'rh.leave',
-      'rh.attendance', 'rh.training', 'rh.onboarding', 'rh.publications', 'rh.alerts'
-    ],
-    restricted: ['finance.cashflow', 'supplier.*']
-  },
-  risk_manager: {
-    poles: ['risk'],
-    screens: [
-      'risk.overview', 'risk.active-incidents', 'risk.history',
-      'risk.metrics', 'risk.register'
-    ],
-    restricted: ['finance.salaries', 'rh.confidential']
-  },
-  rd_manager: {
-    poles: ['rd', 'supplier', 'lifecycle'],
-    screens: [
-      'rd.overview', 'rd.products', 'rd.frictions', 'rd.reports',
-      'rd.shops', 'rd.suppliers', 'rd.tickets'
-    ],
-    restricted: ['finance.*', 'rh.*']
-  },
-  ceo: {
-    poles: [
-      'direction', 'finance', 'ops', 'tech', 'rh', 'supplier',
-      'audit', 'compliance', 'rse', 'marketing', 'risk', 'lifecycle', 'data'
-    ],
-    screens: ['*'],
-    restricted: []
-  },
-  data_analyst: {
-    poles: ['data'],
-    screens: [
-      'data.overview', 'data.kpi', 'data.reports', 'data.bi',
-      'data.requests', 'data.backlog', 'data.versions'
-    ],
-    restricted: ['finance.salaries', 'rh.confidential']
-  }
-};
+rse_impact_manager: {
+  poles: ['rse'],
+  screens: [
+    'rse.overview',
+    'rse.packaging',
+    'rse.recycling',
+    'rse.co2',
+    'rse.esg',
+  ],
+  restricted: ['finance.*'],
+},
 
+product_engineering_manager: {
+  poles: ['product'],
+  screens: [
+    'product.overview',
+    'product.product',
+    'product.roadmap',
+    'product.backlog',
+    'product.engineering',
+    'product.studio',
+    'product.integrations',
+    'product.documentation',
+    'product.innovation',
+  ],
+  restricted: ['finance.*', 'rh.*'],
+},
+
+marketing_communication_manager: {
+  poles: ['marketing'],
+  screens: [
+    'marketing.overview',
+    'marketing.campaigns',
+    'marketing.content',
+    'marketing.crm',
+    'marketing.journeys',
+    'marketing.analytics',
+    'marketing.reputation',
+  ],
+  restricted: ['finance.salaries', 'rh.*'],
+},
+
+security_it_manager: {
+  poles: ['security'],
+  screens: [
+    'security.overview',
+    'security.access',
+    'security.security',
+    'security.infrastructure',
+    'security.environments',
+    'security.vpn',
+    'security.logs',
+  ],
+  restricted: ['finance.salaries', 'rh.*'],
+},
+
+data_bi_manager: {
+  poles: ['data'],
+  screens: [
+    'data.overview',
+    'data.kpi',
+    'data.reports',
+    'data.bi',
+    'data.requests',
+    'data.versions',
+  ],
+  restricted: ['finance.salaries', 'rh.confidential'],
+},
 
 // Build a union of "implicit" extra access from a list of additional poles
 // stored on the profile (profile.poles). For each extra pole, we union in the
 // poles + screens of the default position covering that pole.
 const POLE_DEFAULT_POSITION: Record<string, EmployeePosition> = {
-  supplier: 'supplier_manager',
-  ops: 'ops_logistics_manager',
+  direction: 'ceo',
   finance: 'finance_manager',
+  ops: 'ops_logistics_manager',
+  supplier: 'supplier_manager',
+  marketplace: 'customer_success_manager',
+  support: 'customer_success_manager',
+  marketing: 'marketing_communication_manager',
+  rh: 'rh_manager',
   audit: 'audit_compliance_lead',
   compliance: 'audit_compliance_lead',
-  rse: 'rse_packaging_manager',
-  tech: 'tech_platform_manager',
-  marketing: 'marketing_manager',
-  rh: 'rh_manager',
-  risk: 'risk_manager',
-  rd: 'rd_manager',
-  lifecycle: 'user_success_manager',
-  data: 'data_analyst',
+  rse: 'rse_impact_manager',
+  product: 'product_engineering_manager',
+  data: 'data_bi_manager',
+  security: 'security_it_manager',
 };
 
 
