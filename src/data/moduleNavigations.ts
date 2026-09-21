@@ -1,210 +1,1058 @@
-import { PoleId } from '@/types';
+import type { LucideIcon } from 'lucide-react';
 
-export interface SubNavigationItem {
+export interface ModuleNavigationItem {
   id: string;
   label: string;
-  labelFr: string;
   path: string;
+  icon?: string;
+  description?: string;
+  badge?: string;
 }
 
-export type ModuleNavigations = Record<PoleId, SubNavigationItem[]>;
+export interface ModuleNavigation {
+  id: string;
+  label: string;
+  description: string;
+  items: ModuleNavigationItem[];
+}
 
-export const moduleNavigations: ModuleNavigations = {
-  // Direction (Executive)
-  direction: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/direction' },
-    { id: 'global', label: 'Group Dashboard', labelFr: 'Dashboard Groupe', path: '/pole/direction/global' },
-    { id: 'kpi', label: 'Strategic KPIs', labelFr: 'KPI stratégiques', path: '/pole/direction/kpi' },
-    { id: 'alerts', label: 'Critical Alerts', labelFr: 'Alertes critiques', path: '/pole/direction/alerts' },
-    { id: 'decisions', label: 'Decisions', labelFr: 'Décisions', path: '/pole/direction/decisions' },
-    { id: 'reports', label: 'Consolidated Reports', labelFr: 'Rapports consolidés', path: '/pole/direction/reports' },
-    { id: 'vision', label: 'Vision & Roadmap', labelFr: 'Vision & Roadmap', path: '/pole/direction/vision' },
-    { id: 'governance', label: 'Group Governance', labelFr: 'Gouvernance Groupe', path: '/pole/direction/governance' },
-    { id: 'access', label: 'Module Access', labelFr: 'Accès lecture modules', path: '/pole/direction/access' },
-  ],
+/**
+ * Navigation principale BIB
+ *
+ * Architecture cible :
+ * Direction
+ * Finance
+ * Opérations & Logistique
+ * Fournisseurs & Produits
+ * Marketplace & Customer
+ * Support & Customer Success
+ * Marketing & Communication
+ * RH
+ * Qualité & Audit
+ * Conformité & Juridique
+ * RSE & Impact
+ * Produit & Engineering
+ * Data & BI
+ * Security & IT
+ */
+export const moduleNavigations: Record<string, ModuleNavigation> = {
+  direction: {
+    id: 'direction',
+    label: 'Direction',
+    description: 'Pilotage stratégique et gouvernance',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/direction',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'strategy',
+        label: 'Stratégie & KPIs',
+        path: '/pole/direction/strategic-kpis',
+        icon: 'Target',
+      },
+      {
+        id: 'alerts',
+        label: 'Alertes critiques',
+        path: '/pole/direction/critical-alerts',
+        icon: 'AlertTriangle',
+      },
+      {
+        id: 'arbitrage',
+        label: 'Arbitrages',
+        path: '/pole/direction/decision-arbitrage',
+        icon: 'Scale',
+      },
+      {
+        id: 'roadmap',
+        label: 'Vision & Roadmap',
+        path: '/pole/direction/vision-roadmap',
+        icon: 'Map',
+      },
+      {
+        id: 'governance',
+        label: 'Gouvernance',
+        path: '/pole/direction/group-governance',
+        icon: 'Building2',
+      },
+      {
+        id: 'reports',
+        label: 'Rapports de direction',
+        path: '/pole/direction/board-reports',
+        icon: 'FileText',
+      },
+    ],
+  },
 
-  // Finance
-  finance: [
-    { id: 'overview', label: 'Dashboard', labelFr: 'Dashboard', path: '/pole/finance' },
-    { id: 'cashflow', label: 'Real-time Cashflow', labelFr: 'Cashflow temps réel', path: '/pole/finance/cashflow' },
-    { id: 'transactions', label: 'Transactions', labelFr: 'Transactions', path: '/pole/finance/transactions' },
-    { id: 'supplier-payments', label: 'Supplier Payments', labelFr: 'Paiements fournisseurs', path: '/pole/finance/supplier-payments' },
-    { id: 'subscriptions', label: 'Subscriptions', labelFr: 'Abonnements', path: '/pole/finance/subscriptions' },
-    { id: 'salaries', label: 'Salaries & Bonuses', labelFr: 'Salaires & Primes', path: '/pole/finance/salaries' },
-    { id: 'cards', label: 'Corporate Cards', labelFr: 'Cartes entreprise', path: '/pole/finance/cards' },
-    { id: 'guarantee', label: 'Guarantee Fund', labelFr: 'Fonds de garantie', path: '/pole/finance/guarantee' },
-  ],
+  finance: {
+    id: 'finance',
+    label: 'Finance',
+    description: 'Pilotage financier, paiements et facturation',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/finance',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'cashflow',
+        label: 'Trésorerie',
+        path: '/pole/finance/cashflow',
+        icon: 'Landmark',
+      },
+      {
+        id: 'transactions',
+        label: 'Transactions',
+        path: '/pole/finance/transactions',
+        icon: 'ArrowLeftRight',
+      },
+      {
+        id: 'billing',
+        label: 'Facturation',
+        path: '/pole/finance/billing',
+        icon: 'Receipt',
+      },
+      {
+        id: 'payouts',
+        label: 'Paiements partenaires',
+        path: '/pole/finance/payouts',
+        icon: 'WalletCards',
+      },
+      {
+        id: 'reconciliation',
+        label: 'Rapprochement',
+        path: '/pole/finance/reconciliation',
+        icon: 'GitCompare',
+      },
+      {
+        id: 'subscriptions',
+        label: 'Abonnements',
+        path: '/pole/finance/subscriptions',
+        icon: 'CreditCard',
+      },
+      {
+        id: 'cards',
+        label: 'Cartes',
+        path: '/pole/finance/cards',
+        icon: 'CreditCard',
+      },
+      {
+        id: 'guarantee',
+        label: 'Fonds de garantie',
+        path: '/pole/finance/guarantee',
+        icon: 'ShieldCheck',
+      },
+    ],
+  },
 
-  // Ops — Control Tower
-  ops: [
-    { id: 'overview', label: 'Dashboard', labelFr: 'Vue globale', path: '/pole/ops' },
-    { id: 'pipeline', label: 'Order Pipeline', labelFr: 'Cycle commandes', path: '/pole/ops/pipeline' },
-    { id: 'stocks', label: 'Distributed Stocks', labelFr: 'Stocks distribués', path: '/pole/ops/stocks' },
-    { id: 'catalog', label: 'Product Catalog', labelFr: 'Référentiel produits', path: '/pole/ops/catalog' },
-    { id: 'partners', label: 'Partners', labelFr: 'Partenaires', path: '/pole/ops/partners' },
-    { id: 'flows', label: 'Sync Flows', labelFr: 'Flux & sync', path: '/pole/ops/flows' },
-    { id: 'incidents', label: 'Incidents', labelFr: 'Incidents', path: '/pole/ops/incidents' },
-    { id: 'thresholds', label: 'Thresholds & Alerts', labelFr: 'Seuils & alertes', path: '/pole/ops/thresholds' },
-    { id: 'forecast', label: 'Demand Forecast', labelFr: 'Prévision demande', path: '/pole/ops/forecast' },
-    { id: 'replenishment', label: 'Replenishment', labelFr: 'Réapprovisionnement', path: '/pole/ops/replenishment' },
-    { id: 'suppliers-lt', label: 'Supplier Lead Times', labelFr: 'Fournisseurs logistiques', path: '/pole/ops/suppliers-lead-times' },
-    { id: 'audit-link', label: 'Audit Link', labelFr: 'Audit ↔ OPS', path: '/pole/ops/audit-link' },
-  ],
+  ops: {
+    id: 'ops',
+    label: 'Opérations & Logistique',
+    description: 'Commandes, stocks, expéditions et partenaires',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/ops',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'orders',
+        label: 'Commandes',
+        path: '/pole/ops/pipeline',
+        icon: 'ShoppingBag',
+      },
+      {
+        id: 'shipments',
+        label: 'Expéditions',
+        path: '/pole/ops/shipments',
+        icon: 'Truck',
+      },
+      {
+        id: 'stocks',
+        label: 'Stocks',
+        path: '/pole/ops/stocks',
+        icon: 'Boxes',
+      },
+      {
+        id: 'partners',
+        label: 'Partenaires logistiques',
+        path: '/pole/ops/partners',
+        icon: 'Handshake',
+      },
+      {
+        id: 'flows',
+        label: 'Flux & synchronisations',
+        path: '/pole/ops/flows',
+        icon: 'RefreshCw',
+      },
+      {
+        id: 'incidents',
+        label: 'Incidents logistiques',
+        path: '/pole/ops/incidents',
+        icon: 'AlertTriangle',
+      },
+      {
+        id: 'thresholds',
+        label: 'Seuils de stock',
+        path: '/pole/ops/thresholds',
+        icon: 'Gauge',
+      },
+      {
+        id: 'forecast',
+        label: 'Prévisions',
+        path: '/pole/ops/forecast',
+        icon: 'TrendingUp',
+      },
+      {
+        id: 'replenishment',
+        label: 'Réapprovisionnement',
+        path: '/pole/ops/replenishment',
+        icon: 'PackagePlus',
+      },
+      {
+        id: 'supplier-lead-times',
+        label: 'Délais fournisseurs',
+        path: '/pole/ops/suppliers-lt',
+        icon: 'Timer',
+      },
+    ],
+  },
 
-  // Tech (Système de contrôle distribué)
-  tech: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/tech' },
-    { id: 'studio', label: 'Tech Studio', labelFr: 'Tech Studio (demandes)', path: '/pole/tech/studio' },
-    { id: 'access', label: 'Access & Users', labelFr: 'Accès & utilisateurs', path: '/pole/tech/access' },
-    { id: 'vpn', label: 'VPN / Network', labelFr: 'Réseau / VPN', path: '/pole/tech/vpn' },
-    { id: 'logs', label: 'Logs & Activity', labelFr: 'Logs & activité', path: '/pole/tech/logs' },
-    { id: 'environments', label: 'Environments & Deployments', labelFr: 'Environnements & Déploiements', path: '/pole/tech/environments' },
-    { id: 'security', label: 'Security', labelFr: 'Sécurité', path: '/pole/tech/security' },
-    { id: 'dataflow', label: 'Data Flow', labelFr: 'Flux de données', path: '/pole/tech/dataflow' },
-    { id: 'received-products', label: 'Received Products', labelFr: 'Réception produits', path: '/pole/tech/received-products' },
-    { id: 'catalog', label: 'Catalog', labelFr: 'Catalogue', path: '/pole/tech/catalog' },
-    { id: 'infrastructure', label: 'Infrastructure', labelFr: 'Infra', path: '/pole/tech/infrastructure' },
-    { id: 'sandbox', label: 'Sandbox', labelFr: 'Sandbox (simulation)', path: '/pole/tech/sandbox' },
-    { id: 'test-accounts', label: 'Test Accounts', labelFr: 'Comptes de test', path: '/pole/tech/test-accounts' },
-    { id: 'integrations', label: 'Integrations', labelFr: 'Intégrations', path: '/pole/tech/integrations' },
-    { id: 'code', label: 'Code & GitHub', labelFr: 'Code & GitHub', path: '/pole/tech/code' },
-    { id: 'supervision', label: 'Supervision', labelFr: 'Supervision', path: '/pole/tech/supervision' },
-    { id: 'documentation', label: 'Documentation', labelFr: 'Documentation', path: '/pole/tech/documentation' },
-    { id: 'console', label: 'Console', labelFr: 'Console', path: '/pole/tech/console' },
-  ],
+  supplier: {
+    id: 'supplier',
+    label: 'Fournisseurs & Produits',
+    description: 'Qualification, produits, catalogues et certifications',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/supplier',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'applications',
+        label: 'Candidatures',
+        path: '/pole/supplier/applications',
+        icon: 'ClipboardList',
+      },
+      {
+        id: 'catalog-inbox',
+        label: 'Catalogue à contrôler',
+        path: '/pole/supplier/catalog-inbox',
+        icon: 'Inbox',
+      },
+      {
+        id: 'pending-products',
+        label: 'Produits en attente',
+        path: '/pole/supplier/pending',
+        icon: 'Clock3',
+      },
+      {
+        id: 'validated-products',
+        label: 'Produits validés',
+        path: '/pole/supplier/validated',
+        icon: 'BadgeCheck',
+      },
+      {
+        id: 'portfolios',
+        label: 'Portefeuilles',
+        path: '/pole/supplier/portfolios',
+        icon: 'PackageOpen',
+      },
+      {
+        id: 'certifications',
+        label: 'Certifications',
+        path: '/pole/supplier/certifications',
+        icon: 'FileCheck',
+      },
+      {
+        id: 'decisions',
+        label: 'Historique des décisions',
+        path: '/pole/supplier/decisions',
+        icon: 'History',
+      },
+      {
+        id: 'restock',
+        label: 'Réapprovisionnement',
+        path: '/pole/supplier/restock-orders',
+        icon: 'PackagePlus',
+      },
+    ],
+  },
 
-  // RH
-  rh: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/rh' },
-    { id: 'employees', label: 'Employees', labelFr: 'Employés', path: '/pole/rh/employees' },
-    { id: 'files', label: 'Employee Files', labelFr: 'Dossiers employés', path: '/pole/rh/files' },
-    { id: 'alerts', label: 'HR Alerts', labelFr: 'Alertes RH', path: '/pole/rh/alerts' },
-    { id: 'onboarding', label: 'Onboarding', labelFr: 'Onboarding', path: '/pole/rh/onboarding' },
-    { id: 'attendance', label: 'Attendance', labelFr: 'Pointage', path: '/pole/rh/attendance' },
-    { id: 'leave', label: 'Leave', labelFr: 'Congés', path: '/pole/rh/leave' },
-    { id: 'training', label: 'Training', labelFr: 'Formations', path: '/pole/rh/training' },
-    { id: 'trips', label: 'Business Trips', labelFr: 'Déplacements pro', path: '/pole/rh/trips' },
-    { id: 'publications', label: 'Publications', labelFr: 'Publications internes', path: '/pole/rh/publications' },
-    { id: 'ethics', label: 'Ethics', labelFr: 'Éthique & Signalements', path: '/pole/rh/ethics' },
-  ],
+  marketplace: {
+    id: 'marketplace',
+    label: 'Marketplace & Customer',
+    description: 'Marketplace, boutiques, clients et engagement',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/marketplace',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'stores',
+        label: 'Boutiques',
+        path: '/pole/marketplace/stores',
+        icon: 'Store',
+      },
+      {
+        id: 'products',
+        label: 'Produits',
+        path: '/pole/marketplace/products',
+        icon: 'Package',
+      },
+      {
+        id: 'customers',
+        label: 'Clients',
+        path: '/pole/marketplace/customers',
+        icon: 'Users',
+      },
+      {
+        id: 'orders',
+        label: 'Commandes',
+        path: '/pole/marketplace/orders',
+        icon: 'ShoppingBag',
+      },
+      {
+        id: 'subscriptions',
+        label: 'Abonnés BIB',
+        path: '/pole/marketplace/subscribers',
+        icon: 'BadgeCheck',
+      },
+      {
+        id: 'favorites',
+        label: 'Favoris & suivi',
+        path: '/pole/marketplace/favorites',
+        icon: 'Heart',
+      },
+      {
+        id: 'rewards',
+        label: 'Points & récompenses',
+        path: '/pole/marketplace/rewards',
+        icon: 'Gift',
+      },
+      {
+        id: 'recycling',
+        label: 'Recyclage client',
+        path: '/pole/marketplace/recycling',
+        icon: 'Recycle',
+      },
+    ],
+  },
 
-  // Supplier & Product
-  supplier: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/supplier' },
-    { id: 'applications', label: 'Applications', labelFr: 'Candidatures', path: '/pole/supplier/applications' },
-    { id: 'restock-orders', label: 'Restock Orders', labelFr: 'Ordres de restock', path: '/pole/supplier/restock-orders' },
-    { id: 'catalog-inbox', label: 'Catalog Inbox', labelFr: 'Inbox catalogues', path: '/pole/supplier/catalog-inbox' },
-    { id: 'portfolios', label: 'Portfolios', labelFr: 'Portefeuilles', path: '/pole/supplier/portfolios' },
-    { id: 'pending', label: 'Pending Products', labelFr: 'Produits en attente', path: '/pole/supplier/pending' },
-    { id: 'validated', label: 'Validated Products', labelFr: 'Produits validés', path: '/pole/supplier/validated' },
-    { id: 'suppliers', label: 'Supplier Files', labelFr: 'Fiches fournisseurs', path: '/pole/supplier/suppliers' },
-    { id: 'certifications', label: 'Certifications', labelFr: 'Certifications', path: '/pole/supplier/certifications' },
-    { id: 'decisions', label: 'Decision History', labelFr: 'Historique décisions', path: '/pole/supplier/decisions' },
-    { id: 'alerts', label: 'Quality Alerts', labelFr: 'Alertes qualité', path: '/pole/supplier/alerts' },
-  ],
+  support: {
+    id: 'support',
+    label: 'Support & Customer Success',
+    description: 'Support, accompagnement et qualité de l’expérience',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/support',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'tickets',
+        label: 'Tickets',
+        path: '/pole/support/tickets',
+        icon: 'Ticket',
+      },
+      {
+        id: 'customer-success',
+        label: 'Customer Success',
+        path: '/pole/support/customer-success',
+        icon: 'HeartHandshake',
+      },
+      {
+        id: 'monitoring',
+        label: 'Suivi clients',
+        path: '/pole/support/monitoring',
+        icon: 'Activity',
+      },
+      {
+        id: 'escalations',
+        label: 'Escalades',
+        path: '/pole/support/escalations',
+        icon: 'ArrowUpCircle',
+      },
+    ],
+  },
 
+  marketing: {
+    id: 'marketing',
+    label: 'Marketing & Communication',
+    description: 'Marque, contenu, campagnes, CRM et réputation',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/marketing',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'campaigns',
+        label: 'Campagnes',
+        path: '/pole/marketing/campaigns',
+        icon: 'Megaphone',
+      },
+      {
+        id: 'content',
+        label: 'Contenus',
+        path: '/pole/marketing/content',
+        icon: 'FileText',
+      },
+      {
+        id: 'crm',
+        label: 'CRM',
+        path: '/pole/marketing/crm',
+        icon: 'UsersRound',
+      },
+      {
+        id: 'journeys',
+        label: 'Parcours & automatisations',
+        path: '/pole/marketing/journeys',
+        icon: 'Route',
+      },
+      {
+        id: 'analytics',
+        label: 'Analytics',
+        path: '/pole/marketing/analytics',
+        icon: 'BarChart3',
+      },
+      {
+        id: 'reputation',
+        label: 'Réputation',
+        path: '/pole/marketing/reputation',
+        icon: 'Star',
+      },
+    ],
+  },
 
-  // Audit
-  audit: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/audit' },
-    { id: 'field', label: 'Field Audits', labelFr: 'Audits terrain', path: '/pole/audit/field' },
-    { id: 'supplier', label: 'Supplier Audits', labelFr: 'Audits fournisseurs', path: '/pole/audit/supplier' },
-    { id: 'ops', label: 'Ops Audits', labelFr: 'Audits Ops', path: '/pole/audit/ops' },
-    { id: 'reports', label: 'Reports', labelFr: 'Rapports', path: '/pole/audit/reports' },
-    { id: 'nonconformities', label: 'Non-conformities', labelFr: 'Non-conformités', path: '/pole/audit/nonconformities' },
-    { id: 'sanctions', label: 'Sanctions History', labelFr: 'Historique sanctions', path: '/pole/audit/sanctions' },
-  ],
+  rh: {
+    id: 'rh',
+    label: 'Ressources Humaines',
+    description: 'Collaborateurs, recrutement et développement',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/rh',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'employees',
+        label: 'Collaborateurs',
+        path: '/pole/rh/employees',
+        icon: 'Users',
+      },
+      {
+        id: 'recruitment',
+        label: 'Recrutement',
+        path: '/pole/rh/recruitment',
+        icon: 'UserPlus',
+      },
+      {
+        id: 'files',
+        label: 'Dossiers collaborateurs',
+        path: '/pole/rh/files',
+        icon: 'FolderOpen',
+      },
+      {
+        id: 'onboarding',
+        label: 'Onboarding',
+        path: '/pole/rh/onboarding',
+        icon: 'DoorOpen',
+      },
+      {
+        id: 'attendance',
+        label: 'Présences',
+        path: '/pole/rh/attendance',
+        icon: 'CalendarCheck',
+      },
+      {
+        id: 'leave',
+        label: 'Congés',
+        path: '/pole/rh/leave',
+        icon: 'CalendarDays',
+      },
+      {
+        id: 'training',
+        label: 'Formation',
+        path: '/pole/rh/training',
+        icon: 'GraduationCap',
+      },
+      {
+        id: 'trips',
+        label: 'Déplacements',
+        path: '/pole/rh/trips',
+        icon: 'Plane',
+      },
+      {
+        id: 'alerts',
+        label: 'Alertes RH',
+        path: '/pole/rh/alerts',
+        icon: 'AlertTriangle',
+      },
+    ],
+  },
 
-  // Compliance & Legal
-  compliance: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/compliance' },
-    { id: 'contracts', label: 'Contracts', labelFr: 'Contrats', path: '/pole/compliance/contracts' },
-    { id: 'policies', label: 'Policies', labelFr: 'Politiques', path: '/pole/compliance/policies' },
-    { id: 'disputes', label: 'Disputes', labelFr: 'Litiges', path: '/pole/compliance/disputes' },
-    { id: 'risks', label: 'Risk Register', labelFr: 'Registre des risques', path: '/pole/compliance/risks' },
-  ],
+  audit: {
+    id: 'audit',
+    label: 'Qualité & Audit',
+    description: 'Audits, contrôles, non-conformités et actions correctives',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/audit',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'field',
+        label: 'Audits terrain',
+        path: '/pole/audit/field',
+        icon: 'MapPinCheck',
+      },
+      {
+        id: 'supplier',
+        label: 'Audits fournisseurs',
+        path: '/pole/audit/supplier',
+        icon: 'Factory',
+      },
+      {
+        id: 'operations',
+        label: 'Audits opérations',
+        path: '/pole/audit/ops',
+        icon: 'ClipboardCheck',
+      },
+      {
+        id: 'reports',
+        label: 'Rapports',
+        path: '/pole/audit/reports',
+        icon: 'FileText',
+      },
+      {
+        id: 'nonconformities',
+        label: 'Non-conformités',
+        path: '/pole/audit/nonconformities',
+        icon: 'TriangleAlert',
+      },
+      {
+        id: 'corrective-actions',
+        label: 'Actions correctives',
+        path: '/pole/audit/corrective-actions',
+        icon: 'CheckCircle2',
+      },
+      {
+        id: 'sanctions',
+        label: 'Sanctions',
+        path: '/pole/audit/sanctions',
+        icon: 'Ban',
+      },
+    ],
+  },
 
-  // RSE
-  rse: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/rse' },
-    { id: 'packaging', label: 'Validated Packaging', labelFr: 'Packaging validés', path: '/pole/rse/packaging' },
-    { id: 'packaging-lifecycle', label: 'Packaging Lifecycle', labelFr: 'Cycle de vie Packaging', path: '/pole/rse/packaging-lifecycle' },
-    { id: 'recycling', label: 'Recycling Stats', labelFr: 'Recyclage (stats)', path: '/pole/rse/recycling' },
-    { id: 'points', label: 'Customer Points', labelFr: 'Points clients finaux', path: '/pole/rse/points' },
-    { id: 'co2', label: 'CO₂ Impact', labelFr: 'Impact CO₂', path: '/pole/rse/co2' },
-    { id: 'esg', label: 'ESG Reports', labelFr: 'Rapports ESG', path: '/pole/rse/esg' },
-  ],
+  compliance: {
+    id: 'compliance',
+    label: 'Conformité & Juridique',
+    description: 'Cadre juridique, contrats et conformité',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/compliance',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'contracts',
+        label: 'Contrats',
+        path: '/pole/compliance/contracts',
+        icon: 'FileSignature',
+      },
+      {
+        id: 'policies',
+        label: 'Politiques',
+        path: '/pole/compliance/policies',
+        icon: 'ScrollText',
+      },
+      {
+        id: 'disputes',
+        label: 'Litiges',
+        path: '/pole/compliance/disputes',
+        icon: 'Gavel',
+      },
+      {
+        id: 'risks',
+        label: 'Registre des risques',
+        path: '/pole/compliance/risks',
+        icon: 'ShieldAlert',
+      },
+    ],
+  },
 
-  // Marketing & Media
-  marketing: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/marketing' },
-    { id: 'campaigns', label: 'Campaigns', labelFr: 'Campagnes', path: '/pole/marketing/campaigns' },
-    { id: 'content', label: 'Content', labelFr: 'Contenu', path: '/pole/marketing/content' },
-    { id: 'podcasts', label: 'Podcasts', labelFr: 'Podcasts', path: '/pole/marketing/podcasts' },
-    { id: 'analytics', label: 'Analytics', labelFr: 'Analytiques', path: '/pole/marketing/analytics' },
-  ],
+  rse: {
+    id: 'rse',
+    label: 'RSE & Impact',
+    description: 'Recyclage, emballages, environnement et ESG',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/rse',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'packaging',
+        label: 'Emballages',
+        path: '/pole/rse/packaging',
+        icon: 'Package',
+      },
+      {
+        id: 'recycling',
+        label: 'Recyclage',
+        path: '/pole/rse/recycling',
+        icon: 'Recycle',
+      },
+      {
+        id: 'co2',
+        label: 'Impact CO₂',
+        path: '/pole/rse/co2',
+        icon: 'Cloud',
+      },
+      {
+        id: 'esg',
+        label: 'Reporting ESG',
+        path: '/pole/rse/esg',
+        icon: 'BarChart3',
+      },
+    ],
+  },
 
-  // Risk & Incidents (module retiré)
-  risk: [],
+  product: {
+    id: 'product',
+    label: 'Produit & Engineering',
+    description: 'Produit, développement, plateforme et innovation',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/product',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'product',
+        label: 'Produit',
+        path: '/pole/product/product',
+        icon: 'Boxes',
+      },
+      {
+        id: 'roadmap',
+        label: 'Roadmap produit',
+        path: '/pole/product/roadmap',
+        icon: 'Map',
+      },
+      {
+        id: 'backlog',
+        label: 'Backlog',
+        path: '/pole/product/backlog',
+        icon: 'ListTodo',
+      },
+      {
+        id: 'engineering',
+        label: 'Engineering',
+        path: '/pole/product/engineering',
+        icon: 'Code2',
+      },
+      {
+        id: 'studio',
+        label: 'Studio',
+        path: '/pole/product/studio',
+        icon: 'PanelsTopLeft',
+      },
+      {
+        id: 'integrations',
+        label: 'Intégrations',
+        path: '/pole/product/integrations',
+        icon: 'Cable',
+      },
+      {
+        id: 'documentation',
+        label: 'Documentation',
+        path: '/pole/product/documentation',
+        icon: 'BookOpen',
+      },
+      {
+        id: 'innovation',
+        label: 'Innovation & R&D',
+        path: '/pole/product/innovation',
+        icon: 'FlaskConical',
+      },
+    ],
+  },
 
-  // User & Supplier Lifecycle (Pole 12)
-  lifecycle: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/pole/lifecycle' },
-    { id: 'onboarding', label: 'Onboarding', labelFr: 'Onboarding', path: '/pole/lifecycle/onboarding' },
-    { id: 'user-accounts', label: 'User Accounts', labelFr: 'Comptes utilisateurs', path: '/pole/lifecycle/user-accounts' },
-    { id: 'monitoring', label: 'Activity Monitoring', labelFr: 'Suivi activité', path: '/pole/lifecycle/monitoring' },
-    { id: 'compliance', label: 'Compliance Status', labelFr: 'Statut conformité', path: '/pole/lifecycle/compliance' },
-    { id: 'scoring', label: 'Risk Scoring', labelFr: 'Scoring risque', path: '/pole/lifecycle/scoring' },
-    { id: 'risk-alerts', label: 'Risk Alerts', labelFr: 'Alertes risque', path: '/pole/lifecycle/risk-alerts' },
-    { id: 'emails', label: 'Email Campaigns', labelFr: 'Campagnes email', path: '/pole/lifecycle/emails' },
-    { id: 'trustpilot', label: 'Trustpilot', labelFr: 'Trustpilot', path: '/pole/lifecycle/trustpilot' },
-    { id: 'support', label: 'Support Tickets', labelFr: 'Tickets support', path: '/pole/lifecycle/support' },
-  ],
+  data: {
+    id: 'data',
+    label: 'Data & BI',
+    description: 'Données, KPI, BI et gouvernance de la donnée',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/data',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'kpi',
+        label: 'Catalogue KPI',
+        path: '/pole/data/kpi',
+        icon: 'Gauge',
+      },
+      {
+        id: 'reports',
+        label: 'Rapports',
+        path: '/pole/data/reports',
+        icon: 'FileBarChart',
+      },
+      {
+        id: 'bi',
+        label: 'Business Intelligence',
+        path: '/pole/data/bi',
+        icon: 'BarChart3',
+      },
+      {
+        id: 'requests',
+        label: 'Demandes Data',
+        path: '/pole/data/requests',
+        icon: 'Inbox',
+      },
+      {
+        id: 'versions',
+        label: 'Versions & gouvernance',
+        path: '/pole/data/versions',
+        icon: 'GitBranch',
+      },
+    ],
+  },
 
-  // R&D (Pole 13)
-  rd: [
-    { id: 'overview', label: 'Dashboard', labelFr: 'Dashboard', path: '/pole/rd' },
-    { id: 'products', label: 'Product Analysis', labelFr: 'Analyse Produits', path: '/pole/rd/products' },
-    { id: 'shops', label: 'Shop Analysis', labelFr: 'Analyse Boutiques', path: '/pole/rd/shops' },
-    { id: 'suppliers', label: 'Supplier Analysis', labelFr: 'Analyse Fournisseurs', path: '/pole/rd/suppliers' },
-    { id: 'frictions', label: 'System Frictions', labelFr: 'Frictions Système', path: '/pole/rd/frictions' },
-    { id: 'reports', label: 'Reports & Recommendations', labelFr: 'Rapports & Recommandations', path: '/pole/rd/reports' },
-  ],
+  security: {
+    id: 'security',
+    label: 'Security & IT',
+    description: 'Sécurité, accès, infrastructure et systèmes IT',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/pole/security',
+        icon: 'LayoutDashboard',
+      },
+      {
+        id: 'access',
+        label: 'Accès & identités',
+        path: '/pole/security/access',
+        icon: 'KeyRound',
+      },
+      {
+        id: 'security',
+        label: 'Sécurité',
+        path: '/pole/security/security',
+        icon: 'ShieldCheck',
+      },
+      {
+        id: 'infrastructure',
+        label: 'Infrastructure',
+        path: '/pole/security/infrastructure',
+        icon: 'Server',
+      },
+      {
+        id: 'environments',
+        label: 'Environnements',
+        path: '/pole/security/environments',
+        icon: 'Layers3',
+      },
+      {
+        id: 'vpn',
+        label: 'VPN',
+        path: '/pole/security/vpn',
+        icon: 'Shield',
+      },
+      {
+        id: 'logs',
+        label: 'Logs & supervision',
+        path: '/pole/security/logs',
+        icon: 'ScrollText',
+      },
+    ],
+  },
 
-  // Data & Analytics
-  data: [
-    { id: 'overview', label: 'Dashboard', labelFr: 'Vue globale', path: '/pole/data' },
-    { id: 'kpi', label: 'KPI Catalog', labelFr: 'Catalogue KPI', path: '/pole/data/kpi' },
-    { id: 'reports', label: 'Reports', labelFr: 'Rapports', path: '/pole/data/reports' },
-    { id: 'bi', label: 'Business Intelligence', labelFr: 'BI', path: '/pole/data/bi' },
-    { id: 'requests', label: 'Publication Requests', labelFr: 'Demandes de publication', path: '/pole/data/requests' },
-    { id: 'backlog', label: 'Tech Backlog', labelFr: 'Backlog Tech', path: '/pole/data/backlog' },
-    { id: 'versions', label: 'Version History', labelFr: 'Historique versions', path: '/pole/data/versions' },
-  ],
+  /**
+   * Legacy
+   *
+   * Ces entrées ne doivent plus être considérées comme des pôles
+   * fonctionnels de l'architecture cible.
+   *
+   * Elles restent temporairement disponibles pour éviter de casser
+   * les anciennes routes pendant la migration.
+   */
+  tech: {
+    id: 'tech',
+    label: 'Legacy — Technology',
+    description: 'Ancienne structure technique en cours de migration',
+    items: [],
+  },
+
+  lifecycle: {
+    id: 'lifecycle',
+    label: 'Legacy — Lifecycle',
+    description: 'Ancienne structure lifecycle en cours de migration',
+    items: [],
+  },
+
+  rd: {
+    id: 'rd',
+    label: 'Legacy — R&D',
+    description: 'Ancienne structure R&D en cours de migration',
+    items: [],
+  },
+
+  risk: {
+    id: 'risk',
+    label: 'Legacy — Risk',
+    description: 'Fonction désormais transversale',
+    items: [],
+  },
 };
 
+/**
+ * Modules transversaux BIB.
+ *
+ * Ils ne dépendent pas d'un pôle métier unique.
+ */
+export const transversalNavigations: Record<string, ModuleNavigation> = {
+  work: {
+    id: 'work',
+    label: 'Travail',
+    description: 'Tâches, projets, processus et activités',
+    items: [
+      {
+        id: 'tasks',
+        label: 'Tâches',
+        path: '/work/tasks',
+        icon: 'ListTodo',
+      },
+      {
+        id: 'projects',
+        label: 'Projets',
+        path: '/work/projects',
+        icon: 'FolderKanban',
+      },
+      {
+        id: 'processes',
+        label: 'Processus',
+        path: '/work/processes',
+        icon: 'Workflow',
+      },
+      {
+        id: 'validations',
+        label: 'Validations',
+        path: '/work/validations',
+        icon: 'CheckCheck',
+      },
+      {
+        id: 'escalations',
+        label: 'Escalades',
+        path: '/work/escalations',
+        icon: 'ArrowUpCircle',
+      },
+      {
+        id: 'activities',
+        label: 'Activités',
+        path: '/work/activities',
+        icon: 'Activity',
+      },
+    ],
+  },
 
-export const getModuleNavigation = (poleId: PoleId): SubNavigationItem[] => {
-  return moduleNavigations[poleId] || [];
+  notifications: {
+    id: 'notifications',
+    label: 'Notifications',
+    description: 'Alertes et notifications système',
+    items: [
+      {
+        id: 'all',
+        label: 'Toutes les notifications',
+        path: '/notifications',
+        icon: 'Bell',
+      },
+    ],
+  },
+
+  gateway: {
+    id: 'gateway',
+    label: 'Gateway & Messages',
+    description: 'Centre opérationnel des communications',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/modules/gateway',
+        icon: 'Inbox',
+      },
+      {
+        id: 'inbox',
+        label: 'Boîte de réception',
+        path: '/modules/gateway/inbox',
+        icon: 'Inbox',
+      },
+      {
+        id: 'compose',
+        label: 'Nouveau message',
+        path: '/modules/gateway/compose',
+        icon: 'PenLine',
+      },
+      {
+        id: 'routing',
+        label: 'Routage',
+        path: '/modules/gateway/routing',
+        icon: 'GitBranch',
+      },
+      {
+        id: 'validation',
+        label: 'Validations',
+        path: '/modules/gateway/validation',
+        icon: 'CheckCheck',
+      },
+      {
+        id: 'responses',
+        label: 'Réponses',
+        path: '/modules/gateway/responses',
+        icon: 'Reply',
+      },
+      {
+        id: 'journal',
+        label: 'Journal',
+        path: '/modules/gateway/journal',
+        icon: 'History',
+      },
+    ],
+  },
+
+  documents: {
+    id: 'documents',
+    label: 'Documents',
+    description: 'Documents et pièces liés aux activités BIB',
+    items: [
+      {
+        id: 'all',
+        label: 'Tous les documents',
+        path: '/documents',
+        icon: 'Files',
+      },
+    ],
+  },
+
+  feed: {
+    id: 'feed',
+    label: 'Fil interne',
+    description: 'Informations et communications internes',
+    items: [
+      {
+        id: 'all',
+        label: 'Fil interne',
+        path: '/feed',
+        icon: 'Rss',
+      },
+    ],
+  },
+
+  ethics: {
+    id: 'ethics',
+    label: 'Éthique & Signalements',
+    description: 'Signalements éthiques et traitement confidentiel',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/modules/ethics',
+        icon: 'ShieldAlert',
+      },
+      {
+        id: 'report',
+        label: 'Nouveau signalement',
+        path: '/modules/ethics/report',
+        icon: 'Flag',
+      },
+      {
+        id: 'received',
+        label: 'Signalements reçus',
+        path: '/modules/ethics/received',
+        icon: 'Inbox',
+      },
+      {
+        id: 'ongoing',
+        label: 'En cours',
+        path: '/modules/ethics/ongoing',
+        icon: 'Clock3',
+      },
+      {
+        id: 'closed',
+        label: 'Clôturés',
+        path: '/modules/ethics/closed',
+        icon: 'ArchiveCheck',
+      },
+      {
+        id: 'stats',
+        label: 'Statistiques',
+        path: '/modules/ethics/stats',
+        icon: 'BarChart3',
+      },
+    ],
+  },
+
+  independentAudit: {
+    id: 'independent-audit',
+    label: 'Audit indépendant',
+    description: 'Déclarations et suivi des incidents soumis à audit',
+    items: [
+      {
+        id: 'overview',
+        label: 'Vue d’ensemble',
+        path: '/modules/independent-audit',
+        icon: 'Scale',
+      },
+      {
+        id: 'incident',
+        label: 'Déclarer un incident',
+        path: '/modules/independent-audit/incident',
+        icon: 'TriangleAlert',
+      },
+      {
+        id: 'resolution',
+        label: 'Suivi des résolutions',
+        path: '/modules/independent-audit/resolution',
+        icon: 'CheckCircle2',
+      },
+    ],
+  },
+
+  permissions: {
+    id: 'permissions',
+    label: 'Rôles & Permissions',
+    description: 'Gestion des rôles, droits et périmètres d’accès',
+    items: [
+      {
+        id: 'roles',
+        label: 'Rôles & permissions',
+        path: '/admin/roles-permissions',
+        icon: 'ShieldCheck',
+      },
+    ],
+  },
 };
 
-// Transversal modules navigation (Ethics, Gateway, etc.)
-export const transversalNavigations: Record<string, SubNavigationItem[]> = {
-  ethics: [
-    { id: 'report', label: 'Report', labelFr: 'Faire un signalement', path: '/modules/ethics' },
-  ],
-  gateway: [
-    { id: 'overview', label: 'Overview', labelFr: 'Vue globale', path: '/modules/gateway' },
-    { id: 'inbox', label: 'Inbox', labelFr: 'Réception', path: '/modules/gateway/inbox' },
-    { id: 'compose', label: 'Compose', labelFr: 'Composer & envoyer', path: '/modules/gateway/compose' },
-    { id: 'validation', label: 'Validation', labelFr: 'Validation', path: '/modules/gateway/validation' },
-    { id: 'routing', label: 'Routing', labelFr: 'Routage', path: '/modules/gateway/routing' },
-    { id: 'responses', label: 'Responses', labelFr: 'Réponses', path: '/modules/gateway/responses' },
-    { id: 'journal', label: 'Journal', labelFr: 'Traçabilité', path: '/modules/gateway/journal' },
-  ],
-  'independent-audit': [
-    { id: 'overview', label: 'Overview', labelFr: 'Visibilité audit', path: '/modules/independent-audit' },
-    { id: 'declare', label: 'Declare', labelFr: 'Déclarer un incident', path: '/modules/independent-audit/declare' },
-    { id: 'resolution', label: 'Resolution', labelFr: 'Suivi résolution', path: '/modules/independent-audit/resolution' },
-  ],
-};
+export default moduleNavigations;
