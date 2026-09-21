@@ -8,12 +8,19 @@ import { PoleId } from '@/types';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { usePermissions } from '@/hooks/usePermissions';
 
+export type TransversalModuleId =
+  | 'work'
+  | 'notifications'
+  | 'gateway'
+  | 'documents'
+  | 'feed'
+  | 'ethics'
+  | 'independentAudit'
+  | 'permissions';
+
 interface ModuleNavigationProps {
   poleId?: PoleId;
-  transversalModule?:
-    | 'ethics'
-    | 'gateway'
-    | 'independent-audit';
+  transversalModule?: TransversalModuleId;
   sidebarCollapsed: boolean;
 }
 
@@ -25,105 +32,68 @@ export function ModuleNavigation({
   const location = useLocation();
   const { canViewPage } = usePermissions();
 
-  // -------------------------------------------------------------------------
-  // CONTEXTE
-  // -------------------------------------------------------------------------
-
   const scope = poleId ?? transversalModule;
 
   const allItems = poleId
     ? getModuleNavigation(poleId)
     : transversalModule
-      ? transversalNavigations[
-          transversalModule
-        ] || []
+      ? transversalNavigations[transversalModule]?.items ?? []
       : [];
-
-  // -------------------------------------------------------------------------
-  // RBAC
-  // -------------------------------------------------------------------------
-  //
-  // Chaque entrée est filtrée individuellement.
-  // Une page non autorisée ne doit pas apparaître dans la navigation.
-  // -------------------------------------------------------------------------
 
   const navItems = scope
     ? allItems.filter((item) =>
-        canViewPage(
-          `${scope}.${item.id}`,
-        ),
+        canViewPage(`${scope}.${item.id}`),
       )
-    : [];
+    : allItems;
 
   if (navItems.length === 0) {
     return null;
   }
 
-  // -------------------------------------------------------------------------
-  // ACTIVE STATE
-  // -------------------------------------------------------------------------
-
-  const isActive = (
-    path: string,
-  ) => {
-    const poleBasePath = poleId
-      ? `/pole/${poleId}`
-      : undefined;
-
-    const moduleBasePath =
-      transversalModule
+  const basePath = poleId
+    ? `/pole/${poleId}`
+    : transversalModule === 'independentAudit'
+      ? '/modules/independent-audit'
+      : transversalModule
         ? `/modules/${transversalModule}`
-        : undefined;
+        : '';
 
-    // Page d'accueil du pôle / module
-    if (
-      poleBasePath &&
-      path === poleBasePath
-    ) {
-      return location.pathname === path;
+  const isActive = (path: string) => {
+    if (location.pathname === path) {
+      return true;
     }
 
     if (
-      moduleBasePath &&
-      path === moduleBasePath
+      path !== basePath &&
+      location.pathname.startsWith(`${path}/`)
     ) {
-      return location.pathname === path;
+      return true;
     }
 
-    // Pour les sous-pages, on permet aux routes enfants
-    // de rester actives.
-    return (
-      location.pathname === path ||
-      location.pathname.startsWith(
-        `${path}/`,
-      )
-    );
+    return false;
   };
-
-  // -------------------------------------------------------------------------
-  // RENDER
-  // -------------------------------------------------------------------------
 
   return (
     <nav
       className={cn(
-        'fixed top-16 right-0 z-20 h-12 border-b border-border bg-background/95 backdrop-blur transition-all duration-300',
+        'fixed top-16 z-30 h-12 border-b border-border bg-background/95 backdrop-blur',
+        'transition-all duration-300',
         sidebarCollapsed
-          ? 'left-16'
-          : 'left-64',
+          ? 'left-16 right-0'
+          : 'left-64 right-0',
       )}
     >
       <ScrollArea className="h-full w-full">
-        <div className="flex h-full items-center gap-1 px-4">
+        <div className="flex h-12 items-center gap-1 px-4">
           {navItems.map((item) => (
             <Link
               key={item.id}
               to={item.path}
               className={cn(
-                'flex h-full items-center whitespace-nowrap border-b-2 px-4 text-sm font-medium transition-colors',
+                'flex h-9 shrink-0 items-center rounded-md px-3 text-sm font-medium transition-colors',
                 isActive(item.path)
-                  ? 'border-accent text-accent'
-                  : 'border-transparent text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground',
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
             >
               {item.label}
