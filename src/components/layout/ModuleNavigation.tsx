@@ -1,46 +1,116 @@
-import { useLocation, Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { getModuleNavigation, transversalNavigations } from '@/data/moduleNavigations';
+import {
+  getModuleNavigation,
+  transversalNavigations,
+} from '@/data/moduleNavigations';
 import { PoleId } from '@/types';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { usePermissions } from '@/hooks/usePermissions';
 
 interface ModuleNavigationProps {
   poleId?: PoleId;
-  transversalModule?: 'ethics' | 'gateway' | 'independent-audit';
+  transversalModule?:
+    | 'ethics'
+    | 'gateway'
+    | 'independent-audit';
   sidebarCollapsed: boolean;
 }
 
-export function ModuleNavigation({ poleId, transversalModule, sidebarCollapsed }: ModuleNavigationProps) {
+export function ModuleNavigation({
+  poleId,
+  transversalModule,
+  sidebarCollapsed,
+}: ModuleNavigationProps) {
   const location = useLocation();
   const { canViewPage } = usePermissions();
 
-  // Get navigation items based on pole or transversal module
+  // -------------------------------------------------------------------------
+  // CONTEXTE
+  // -------------------------------------------------------------------------
+
   const scope = poleId ?? transversalModule;
+
   const allItems = poleId
     ? getModuleNavigation(poleId)
     : transversalModule
-      ? transversalNavigations[transversalModule] || []
+      ? transversalNavigations[
+          transversalModule
+        ] || []
       : [];
-  // Moindre privilège : les pages non autorisées n'apparaissent pas.
-  const navItems = scope ? allItems.filter((i) => canViewPage(`${scope}.${i.id}`)) : allItems;
 
-  if (navItems.length === 0) return null;
+  // -------------------------------------------------------------------------
+  // RBAC
+  // -------------------------------------------------------------------------
+  //
+  // Chaque entrée est filtrée individuellement.
+  // Une page non autorisée ne doit pas apparaître dans la navigation.
+  // -------------------------------------------------------------------------
 
-  const isActive = (path: string) => {
-    if (path.endsWith(`/pole/${poleId}`) || path.endsWith(`/modules/${transversalModule}`)) {
-      // For overview, check exact match or if there's no sub-section
-      const basePath = poleId ? `/pole/${poleId}` : `/modules/${transversalModule}`;
-      return location.pathname === basePath;
+  const navItems = scope
+    ? allItems.filter((item) =>
+        canViewPage(
+          `${scope}.${item.id}`,
+        ),
+      )
+    : [];
+
+  if (navItems.length === 0) {
+    return null;
+  }
+
+  // -------------------------------------------------------------------------
+  // ACTIVE STATE
+  // -------------------------------------------------------------------------
+
+  const isActive = (
+    path: string,
+  ) => {
+    const poleBasePath = poleId
+      ? `/pole/${poleId}`
+      : undefined;
+
+    const moduleBasePath =
+      transversalModule
+        ? `/modules/${transversalModule}`
+        : undefined;
+
+    // Page d'accueil du pôle / module
+    if (
+      poleBasePath &&
+      path === poleBasePath
+    ) {
+      return location.pathname === path;
     }
-    return location.pathname === path;
+
+    if (
+      moduleBasePath &&
+      path === moduleBasePath
+    ) {
+      return location.pathname === path;
+    }
+
+    // Pour les sous-pages, on permet aux routes enfants
+    // de rester actives.
+    return (
+      location.pathname === path ||
+      location.pathname.startsWith(
+        `${path}/`,
+      )
+    );
   };
+
+  // -------------------------------------------------------------------------
+  // RENDER
+  // -------------------------------------------------------------------------
 
   return (
     <nav
       className={cn(
         'fixed top-16 right-0 z-20 h-12 border-b border-border bg-background/95 backdrop-blur transition-all duration-300',
-        sidebarCollapsed ? 'left-16' : 'left-64'
+        sidebarCollapsed
+          ? 'left-16'
+          : 'left-64',
       )}
     >
       <ScrollArea className="h-full w-full">
@@ -50,16 +120,17 @@ export function ModuleNavigation({ poleId, transversalModule, sidebarCollapsed }
               key={item.id}
               to={item.path}
               className={cn(
-                'flex h-full items-center px-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap',
+                'flex h-full items-center whitespace-nowrap border-b-2 px-4 text-sm font-medium transition-colors',
                 isActive(item.path)
                   ? 'border-accent text-accent'
-                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/30'
+                  : 'border-transparent text-muted-foreground hover:border-muted-foreground/30 hover:text-foreground',
               )}
             >
-              {item.labelFr}
+              {item.label}
             </Link>
           ))}
         </div>
+
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </nav>
