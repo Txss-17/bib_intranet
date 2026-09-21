@@ -12,11 +12,4 @@ export type PoleId =
   | 'rse'
   | 'product'
   | 'data'
-  | 'security'
-
-  // Identifiants legacy conservés temporairement
-  // pour assurer la compatibilité pendant la migration.
-  | 'tech'
-  | 'lifecycle'
-  | 'rd'
-  | 'risk';
+  | 'security';
