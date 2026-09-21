@@ -3,29 +3,50 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
   Activity,
-  Shield,
   FileText,
-  TrendingUp,
   Loader2,
+  Shield,
+  TrendingUp,
 } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+
 import { useAuth } from '@/hooks/useAuth';
+import { useDashboardKPIs } from '@/hooks/useDashboardKPIs';
+import { usePermissions } from '@/hooks/usePermissions';
+import { supabase } from '@/integrations/supabase/client';
+
 import { MetricCard } from '@/components/dashboard/MetricCard';
 import { FeedCard } from '@/components/dashboard/FeedCard';
 import { IncidentCard } from '@/components/dashboard/IncidentCard';
 import { AuditLogItem } from '@/components/dashboard/AuditLogItem';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { PoleOverview } from '@/components/dashboard/PoleOverview';
+
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
-import { FeedItem } from '@/types';
-import { useDashboardKPIs } from '@/hooks/useDashboardKPIs';
-import { usePermissions } from '@/hooks/usePermissions';
+
+import type { FeedItem, PoleId } from '@/types';
+
+const TARGET_POLES: readonly PoleId[] = [
+  'direction',
+  'finance',
+  'ops',
+  'supplier',
+  'marketplace',
+  'support',
+  'marketing',
+  'rh',
+  'audit',
+  'compliance',
+  'rse',
+  'product',
+  'data',
+  'security',
+];
 
 function useDashboardFeed() {
   return useQuery({
@@ -37,7 +58,9 @@ function useDashboardFeed() {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return (data || []).map((post) => ({
         id: post.id,
@@ -49,7 +72,8 @@ function useDashboardFeed() {
         title: post.title,
         content: post.content,
         type: (post.type || 'update') as FeedItem['type'],
-        visibility: (post.visibility || 'company') as FeedItem['visibility'],
+        visibility: (post.visibility ||
+          'company') as FeedItem['visibility'],
         createdAt: post.created_at || '',
         reactions: post.reactions || 0,
         comments: post.comments || 0,
@@ -70,9 +94,11 @@ function useRecentIncidents(enabled: boolean) {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      return data.map((incident) => ({
+      return (data || []).map((incident) => ({
         id: incident.id,
         title: incident.incident_type,
         description: incident.description,
@@ -105,16 +131,18 @@ function useRecentAuditLogs(enabled: boolean) {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      return data.map((log) => ({
+      return (data || []).map((log) => ({
         id: log.id,
         userId: log.user_id || '',
         userName: log.user_name || 'System',
         action: log.action,
         resource: log.resource,
         resourceId: log.resource_id || '',
-        poleId: log.pole_id as any,
+        poleId: log.pole_id as PoleId,
         timestamp: log.created_at || '',
       }));
     },
@@ -123,29 +151,41 @@ function useRecentAuditLogs(enabled: boolean) {
 
 export default function Dashboard() {
   const { profile } = useAuth();
-  const { poles: permissionPoles, isSuperAdmin } = usePermissions();
 
-  const userPoles = permissionPoles.length
-    ? permissionPoles
-    : (profile?.poles ?? []);
+  const {
+    poles: permissionPoles,
+    isSuperAdmin,
+  } = usePermissions();
+
+  const userPoles = (
+    permissionPoles.length
+      ? permissionPoles
+      : (profile?.poles ?? [])
+  ).filter((pole): pole is PoleId =>
+    TARGET_POLES.includes(pole as PoleId),
+  );
 
   const isLeadership =
     isSuperAdmin ||
     userPoles.includes('direction') ||
     profile?.position === 'ceo';
 
-  const canSee = (poles: string[]) =>
-    isLeadership || poles.some((pole) => userPoles.includes(pole));
-
-  /*
-   * Les incidents restent rattachés aux Opérations.
+  /**
+   * Vérifie si l'utilisateur peut consulter un périmètre
+   * fonctionnel donné.
    *
-   * Le pôle Risk ayant été supprimé de l'architecture,
-   * la gestion des risques reste transversale entre :
-   * - Opérations
-   * - Audit
-   * - Conformité
-   * - Security & IT selon la nature du risque.
+   * La visibilité du Dashboard reste une couche UX.
+   * Les permissions backend/RLS restent la source d'autorité.
+   */
+  const canSee = (poles: readonly PoleId[]) =>
+    isLeadership ||
+    poles.some((pole) => userPoles.includes(pole));
+
+  /**
+   * Les incidents logistiques sont rattachés au pôle Opérations.
+   *
+   * La gestion du risque n'est plus un pôle autonome :
+   * elle est traitée transversalement selon la nature du risque.
    */
   const canSeeIncidents = canSee([
     'ops',
@@ -183,20 +223,30 @@ export default function Dashboard() {
     isLoading: auditLogsLoading,
   } = useRecentAuditLogs(canSeeAudit);
 
-  /*
-   * Moindre privilège :
-   * seules les métriques rattachées aux pôles accessibles
-   * au collaborateur sont affichées.
+  /**
+   * Moindre privilège côté interface :
+   * seules les métriques associées à un périmètre
+   * accessible sont présentées.
    */
   const metrics = allMetrics.filter((metric) =>
-    canSee(metric.poles),
+    canSee(
+      metric.poles.filter(
+        (pole): pole is PoleId =>
+          TARGET_POLES.includes(pole as PoleId),
+      ),
+    ),
   );
 
   const greeting = () => {
     const hour = new Date().getHours();
 
-    if (hour < 12) return 'Bonjour';
-    if (hour < 18) return 'Bon après-midi';
+    if (hour < 12) {
+      return 'Bonjour';
+    }
+
+    if (hour < 18) {
+      return 'Bon après-midi';
+    }
 
     return 'Bonsoir';
   };
@@ -210,16 +260,16 @@ export default function Dashboard() {
         return 'Suivi financier · Trésorerie, paiements et budgets';
 
       case 'supplier_manager':
-        return 'Gestion fournisseurs · Portefeuilles, audits et qualité';
+        return 'Fournisseurs & Produits · Portefeuilles, validations et qualité';
 
       case 'ops_logistics_manager':
-        return 'Opérations · Commandes, expéditions et logistique';
+        return 'Opérations & Logistique · Commandes, expéditions et flux';
 
       case 'customer_success_manager':
         return 'Marketplace & Customer Success · Clients, commandes et support';
 
       case 'audit_compliance_lead':
-        return 'Audit & Conformité · Contrôles, risques et rapports';
+        return 'Qualité, Audit & Conformité · Contrôles, risques et rapports';
 
       case 'rse_impact_manager':
         return 'RSE & Impact · Recyclage, emballages et indicateurs ESG';
@@ -234,7 +284,7 @@ export default function Dashboard() {
         return 'Ressources Humaines · Collaborateurs, recrutement et intégration';
 
       case 'data_bi_manager':
-        return 'Data & BI · KPIs, reporting et analyse décisionnelle';
+        return 'Data & BI · KPI, reporting et analyse décisionnelle';
 
       case 'security_it_manager':
         return 'Security & IT · Accès, infrastructure et sécurité';
@@ -309,6 +359,7 @@ export default function Dashboard() {
 
         <div className="flex items-center gap-2 text-sm">
           <span className="status-dot status-active animate-pulse-subtle" />
+
           <span className="text-muted-foreground">
             All systems operational
           </span>
@@ -506,12 +557,12 @@ export default function Dashboard() {
               <Shield className="h-4 w-4 text-muted-foreground" />
 
               <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-                Poles Overview
+                Pôles Overview
               </h2>
             </div>
 
             <span className="text-xs text-muted-foreground">
-              14 active poles
+              14 pôles actifs
             </span>
           </div>
 
