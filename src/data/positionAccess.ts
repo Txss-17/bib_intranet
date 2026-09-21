@@ -9,118 +9,205 @@ export interface PositionAccess {
 }
 
 export const positionAccess: Record<EmployeePosition, PositionAccess> = {
-ceo: {
-  poles: [
-    'direction',
-    'finance',
-    'ops',
-    'supplier',
-    'marketplace',
-    'support',
-    'marketing',
-    'rh',
-    'audit',
-    'compliance',
-    'rse',
-    'product',
-    'data',
-    'security',
-  ],
-  screens: ['*'],
-  restricted: [],
-},
+  supplier_manager: {
+    poles: ['supplier'],
+    screens: [
+      'supplier.overview',
+      'supplier.applications',
+      'supplier.catalog-inbox',
+      'supplier.pending',
+      'supplier.validated',
+      'supplier.suppliers',
+      'supplier.certifications',
+      'supplier.decisions',
+      'supplier.portfolios',
+      'supplier.restock-orders',
+    ],
+    restricted: ['finance.*', 'rh.*'],
+  },
+
   customer_success_manager: {
-  poles: ['marketplace', 'support'],
-  screens: [
-    'marketplace.overview',
-    'marketplace.stores',
-    'marketplace.customers',
-    'marketplace.orders',
-    'marketplace.subscribers',
-    'marketplace.favorites',
-    'marketplace.rewards',
-    'marketplace.recycling',
-    'support.overview',
-    'support.tickets',
-    'support.customer-success',
-    'support.monitoring',
-    'support.escalations',
-  ],
-  restricted: ['finance.*', 'rh.*'],
-},
+    poles: ['marketplace', 'support'],
+    screens: [
+      'marketplace.overview',
+      'marketplace.stores',
+      'marketplace.products',
+      'marketplace.customers',
+      'marketplace.orders',
+      'marketplace.subscribers',
+      'marketplace.favorites',
+      'marketplace.rewards',
+      'marketplace.recycling',
+      'support.overview',
+      'support.tickets',
+      'support.customer-success',
+      'support.monitoring',
+      'support.escalations',
+    ],
+    restricted: ['finance.*', 'rh.*', 'supplier.*'],
+  },
 
-rse_impact_manager: {
-  poles: ['rse'],
-  screens: [
-    'rse.overview',
-    'rse.packaging',
-    'rse.recycling',
-    'rse.co2',
-    'rse.esg',
-  ],
-  restricted: ['finance.*'],
-},
+  ops_logistics_manager: {
+    poles: ['ops'],
+    screens: [
+      'ops.overview',
+      'ops.pipeline',
+      'ops.shipments',
+      'ops.stocks',
+      'ops.partners',
+      'ops.flows',
+      'ops.incidents',
+      'ops.thresholds',
+      'ops.forecast',
+      'ops.replenishment',
+      'ops.suppliers-lt',
+    ],
+    restricted: ['finance.*', 'rh.*', 'supplier.decisions'],
+  },
 
-product_engineering_manager: {
-  poles: ['product'],
-  screens: [
-    'product.overview',
-    'product.product',
-    'product.roadmap',
-    'product.backlog',
-    'product.engineering',
-    'product.studio',
-    'product.integrations',
-    'product.documentation',
-    'product.innovation',
-  ],
-  restricted: ['finance.*', 'rh.*'],
-},
+  finance_manager: {
+    poles: ['finance'],
+    screens: [
+      'finance.overview',
+      'finance.cashflow',
+      'finance.transactions',
+      'finance.billing',
+      'finance.payouts',
+      'finance.reconciliation',
+      'finance.subscriptions',
+      'finance.cards',
+      'finance.guarantee',
+    ],
+    restricted: ['rh.*', 'supplier.*'],
+  },
 
-marketing_communication_manager: {
-  poles: ['marketing'],
-  screens: [
-    'marketing.overview',
-    'marketing.campaigns',
-    'marketing.content',
-    'marketing.crm',
-    'marketing.journeys',
-    'marketing.analytics',
-    'marketing.reputation',
-  ],
-  restricted: ['finance.salaries', 'rh.*'],
-},
+  audit_compliance_lead: {
+    poles: ['audit', 'compliance'],
+    screens: [
+      'audit.overview',
+      'audit.field',
+      'audit.supplier',
+      'audit.ops',
+      'audit.reports',
+      'audit.nonconformities',
+      'audit.corrective-actions',
+      'audit.sanctions',
+      'compliance.overview',
+      'compliance.contracts',
+      'compliance.policies',
+      'compliance.disputes',
+      'compliance.risks',
+    ],
+    restricted: ['finance.cashflow', 'finance.cards', 'rh.*'],
+  },
 
-security_it_manager: {
-  poles: ['security'],
-  screens: [
-    'security.overview',
-    'security.access',
-    'security.security',
-    'security.infrastructure',
-    'security.environments',
-    'security.vpn',
-    'security.logs',
-  ],
-  restricted: ['finance.salaries', 'rh.*'],
-},
+  rse_impact_manager: {
+    poles: ['rse'],
+    screens: [
+      'rse.overview',
+      'rse.packaging',
+      'rse.recycling',
+      'rse.co2',
+      'rse.esg',
+    ],
+    restricted: ['finance.*', 'supplier.*', 'rh.*'],
+  },
 
-data_bi_manager: {
-  poles: ['data'],
-  screens: [
-    'data.overview',
-    'data.kpi',
-    'data.reports',
-    'data.bi',
-    'data.requests',
-    'data.versions',
-  ],
-  restricted: ['finance.salaries', 'rh.confidential'],
-},
+  product_engineering_manager: {
+    poles: ['product'],
+    screens: [
+      'product.overview',
+      'product.roadmap',
+      'product.backlog',
+      'product.engineering',
+      'product.studio',
+      'product.integrations',
+      'product.documentation',
+      'product.innovation',
+    ],
+    restricted: ['finance.*', 'rh.*'],
+  },
 
-// Build a union of "implicit" extra access from a list of additional poles
-// stored on the profile (profile.poles). For each extra pole, we union in the
-// poles + screens of the default position covering that pole.
+  marketing_communication_manager: {
+    poles: ['marketing'],
+    screens: [
+      'marketing.overview',
+      'marketing.campaigns',
+      'marketing.content',
+      'marketing.crm',
+      'marketing.journeys',
+      'marketing.analytics',
+      'marketing.reputation',
+    ],
+    restricted: ['finance.*', 'rh.*', 'supplier.*'],
+  },
+
+  rh_manager: {
+    poles: ['rh'],
+    screens: [
+      'rh.overview',
+      'rh.employees',
+      'rh.recruitment',
+      'rh.files',
+      'rh.onboarding',
+      'rh.attendance',
+      'rh.leave',
+      'rh.training',
+      'rh.trips',
+      'rh.alerts',
+    ],
+    restricted: ['finance.*', 'supplier.*'],
+  },
+
+  data_bi_manager: {
+    poles: ['data'],
+    screens: [
+      'data.overview',
+      'data.kpi',
+      'data.reports',
+      'data.bi',
+      'data.requests',
+      'data.versions',
+    ],
+    restricted: ['finance.*', 'rh.*'],
+  },
+
+  security_it_manager: {
+    poles: ['security'],
+    screens: [
+      'security.overview',
+      'security.access',
+      'security.security',
+      'security.infrastructure',
+      'security.environments',
+      'security.vpn',
+      'security.logs',
+    ],
+    restricted: ['finance.*', 'rh.*'],
+  },
+
+  ceo: {
+    poles: [
+      'direction',
+      'finance',
+      'ops',
+      'supplier',
+      'marketplace',
+      'support',
+      'marketing',
+      'rh',
+      'audit',
+      'compliance',
+      'rse',
+      'product',
+      'data',
+      'security',
+    ],
+    screens: ['*'],
+    restricted: [],
+  },
+};
+
 const POLE_DEFAULT_POSITION: Record<string, EmployeePosition> = {
   direction: 'ceo',
   finance: 'finance_manager',
@@ -138,20 +225,28 @@ const POLE_DEFAULT_POSITION: Record<string, EmployeePosition> = {
   security: 'security_it_manager',
 };
 
-
 const collectExtraScreens = (extraPoles?: string[]): Set<string> => {
   const out = new Set<string>();
-  if (!extraPoles) return out;
-  for (const p of extraPoles) {
-    const pos = POLE_DEFAULT_POSITION[p];
-    if (!pos) continue;
-    for (const s of positionAccess[pos].screens) out.add(s);
+
+  if (!extraPoles?.length) {
+    return out;
   }
+
+  for (const pole of extraPoles) {
+    const position = POLE_DEFAULT_POSITION[pole];
+
+    if (!position) {
+      continue;
+    }
+
+    for (const screen of positionAccess[position].screens) {
+      out.add(screen);
+    }
+  }
+
   return out;
 };
 
-// Le mode construction (accès ouvert) est piloté depuis
-// Administration → Rôles & Permissions (interrupteur « Moindre privilège »).
 export const isBuildModeOpen = (): boolean => !isRbacEnforced();
 
 export const canAccessPole = (
@@ -159,18 +254,29 @@ export const canAccessPole = (
   poleId: PoleId,
   extraPoles?: string[],
 ): boolean => {
-  if (isBuildModeOpen()) return true;
-  if (!position) return false;
-  if (position === 'ceo') return true;
-  if (positionAccess[position].poles.includes(poleId)) return true;
-  return !!extraPoles && extraPoles.includes(poleId);
+  if (isBuildModeOpen()) {
+    return true;
+  }
+
+  if (!position) {
+    return false;
+  }
+
+  if (position === 'ceo') {
+    return true;
+  }
+
+  if (positionAccess[position].poles.includes(poleId)) {
+    return true;
+  }
+
+  return Boolean(extraPoles?.includes(poleId));
 };
 
-// Screens that any authenticated employee can access (transversal rights)
 const PUBLIC_SCREENS = new Set<string>([
-  'audit.declare',           // Anyone can declare an incident
-  'audit.independent',       // Independent audit visibility
-  'audit.resolution',        // Resolution tracking visibility
+  'audit.declare',
+  'audit.independent',
+  'audit.resolution',
 ]);
 
 export const canAccessScreen = (
@@ -178,29 +284,47 @@ export const canAccessScreen = (
   screenId: string,
   extraPoles?: string[],
 ): boolean => {
-  if (isBuildModeOpen()) return true;
-  if (!position) return false;
-  if (position === 'ceo') return true;
-  if (PUBLIC_SCREENS.has(screenId)) return true;
+  if (isBuildModeOpen()) {
+    return true;
+  }
+
+  if (!position) {
+    return false;
+  }
+
+  if (position === 'ceo') {
+    return true;
+  }
+
+  if (PUBLIC_SCREENS.has(screenId)) {
+    return true;
+  }
 
   const access = positionAccess[position];
 
   for (const restriction of access.restricted) {
     if (restriction.endsWith('.*')) {
-      const prefix = restriction.replace('.*', '');
-      if (screenId.startsWith(prefix)) {
-        // Allow if the screen's pole is explicitly granted via profile.poles
-        if (!(extraPoles && extraPoles.includes(prefix))) return false;
+      const prefix = restriction.slice(0, -2);
+
+      if (screenId.startsWith(`${prefix}.`)) {
+        if (!(extraPoles && extraPoles.includes(prefix))) {
+          return false;
+        }
       }
     } else if (restriction === screenId) {
       return false;
     }
   }
 
-  if (access.screens.includes(screenId) || access.screens.includes('*')) return true;
+  if (
+    access.screens.includes(screenId) ||
+    access.screens.includes('*')
+  ) {
+    return true;
+  }
 
-  // Fall back to extra-pole-derived screens
   const extraScreens = collectExtraScreens(extraPoles);
+
   return extraScreens.has(screenId);
 };
 
@@ -208,12 +332,25 @@ export const getAccessiblePoles = (
   position: EmployeePosition | undefined,
   extraPoles?: string[],
 ): PoleId[] => {
-  if (isBuildModeOpen()) return [...positionAccess.ceo.poles];
-  if (!position) return [];
+  if (isBuildModeOpen()) {
+    return [...positionAccess.ceo.poles];
+  }
+
+  if (!position) {
+    return [];
+  }
+
   const base = positionAccess[position].poles;
-  if (!extraPoles?.length) return base;
+
+  if (!extraPoles?.length) {
+    return base;
+  }
+
   const merged = new Set<PoleId>(base);
-  for (const p of extraPoles) merged.add(p as PoleId);
+
+  for (const pole of extraPoles) {
+    merged.add(pole as PoleId);
+  }
+
   return Array.from(merged);
 };
-
