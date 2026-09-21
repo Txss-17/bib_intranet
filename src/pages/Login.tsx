@@ -11,17 +11,16 @@ import { EmployeePosition } from '@/types/positions';
 const positionDefaultRoute: Record<EmployeePosition, string> = {
   ceo: '/pole/direction',
   supplier_manager: '/pole/supplier',
-  user_success_manager: '/pole/lifecycle',
+  customer_success_manager: '/pole/support',
   ops_logistics_manager: '/pole/ops',
   finance_manager: '/pole/finance',
   audit_compliance_lead: '/pole/audit',
-  rse_packaging_manager: '/pole/rse',
-  tech_platform_manager: '/pole/tech',
-  marketing_manager: '/pole/marketing',
+  rse_impact_manager: '/pole/rse',
+  product_engineering_manager: '/pole/product',
+  marketing_communication_manager: '/pole/marketing',
   rh_manager: '/pole/rh',
-  risk_manager: '/pole/risk',
-  rd_manager: '/pole/rd',
-  data_analyst: '/pole/data',
+  data_bi_manager: '/pole/data',
+  security_it_manager: '/pole/security',
 };
 
 
