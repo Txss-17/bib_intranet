@@ -37,13 +37,12 @@ import TestAccounts from "./pages/admin/TestAccounts";
 import RolesPermissions from "@/pages/admin/RolesPermissions";
 
 /* ============================================================
-   COMPLIANCE / LEGACY GLOBAL
+   COMPATIBILITY / GLOBAL AUDIT
    ============================================================ */
 
 import ComplianceAudit from "./pages/ComplianceAudit";
 import FinanceCompliance from "./pages/compliance/FinanceCompliance";
 import OpsCompliance from "./pages/compliance/OpsCompliance";
-import TechCompliance from "./pages/compliance/TechCompliance";
 
 /* ============================================================
    DIRECTION
@@ -57,10 +56,9 @@ import DecisionArbitrage from "./pages/modules/direction/DecisionArbitrage";
 import VisionRoadmap from "./pages/modules/direction/VisionRoadmap";
 import GroupGovernance from "./pages/modules/direction/GroupGovernance";
 import BoardReports from "./pages/modules/direction/BoardReports";
-import ModuleAccess from "./pages/modules/direction/ModuleAccess";
 
 /* ============================================================
-   SUPPLIERS & PRODUCTS
+   FOURNISSEURS & PRODUITS
    ============================================================ */
 
 import SupplierDashboard from "./pages/modules/supplier/SupplierDashboard";
@@ -77,7 +75,7 @@ import SupplierRestockOrders from "./pages/modules/supplier/SupplierRestockOrder
 import SupplierCatalogInbox from "./pages/modules/supplier/SupplierCatalogInbox";
 
 /* ============================================================
-   OPERATIONS & LOGISTICS
+   OPÉRATIONS & LOGISTIQUE
    ============================================================ */
 
 import OpsDashboard from "./pages/modules/ops/OpsDashboard";
@@ -96,21 +94,6 @@ import StockThresholds from "./pages/modules/ops/StockThresholds";
 import SupplierLeadTimes from "./pages/modules/ops/SupplierLeadTimes";
 
 /* ============================================================
-   LIFECYCLE — LEGACY
-   ============================================================ */
-
-import LifecycleDashboard from "./pages/modules/lifecycle/LifecycleDashboard";
-import LifecycleOnboarding from "./pages/modules/lifecycle/Onboarding";
-import ActivityMonitoring from "./pages/modules/lifecycle/ActivityMonitoring";
-import UserAccounts from "./pages/modules/lifecycle/UserAccounts";
-import ManagedRiskAlerts from "./pages/modules/lifecycle/ManagedRiskAlerts";
-import LifecycleEmailCampaignsPage from "./pages/modules/lifecycle/LifecycleEmailCampaigns";
-import TrustpilotAnalytics from "./pages/modules/lifecycle/TrustpilotAnalytics";
-import SupportTickets from "./pages/modules/lifecycle/SupportTickets";
-import RiskScoring from "./pages/modules/lifecycle/RiskScoring";
-import ComplianceStatusPage from "./pages/modules/lifecycle/ComplianceStatus";
-
-/* ============================================================
    FINANCE
    ============================================================ */
 
@@ -124,27 +107,29 @@ import CorporateCards from "./pages/modules/finance/CorporateCards";
 import GuaranteeFund from "./pages/modules/finance/GuaranteeFund";
 
 /* ============================================================
-   TECH — LEGACY / MIGRATION VERS SECURITY + PRODUCT
+   MARKETPLACE & CUSTOMER
    ============================================================ */
 
-import TechDashboard from "./pages/modules/tech/TechDashboard";
-import Infrastructure from "./pages/modules/tech/Infrastructure";
-import Security from "./pages/modules/tech/Security";
-import Catalog from "./pages/modules/tech/Catalog";
-import ReceivedProducts from "./pages/modules/tech/ReceivedProducts";
-import TechAccess from "./pages/modules/tech/TechAccess";
-import TechVPN from "./pages/modules/tech/TechVPN";
-import TechLogs from "./pages/modules/tech/TechLogs";
-import TechEnvironments from "./pages/modules/tech/TechEnvironments";
-import TechSecurity from "./pages/modules/tech/TechSecurity";
-import TechDataFlow from "./pages/modules/tech/TechDataFlow";
-import TechSandbox from "./pages/modules/tech/TechSandbox";
-import TechStudio from "./pages/TechStudio";
-import TechIntegrations from "./pages/modules/tech/TechIntegrations";
-import TechCode from "./pages/modules/tech/TechCode";
-import TechSupervision from "./pages/modules/tech/TechSupervision";
-import TechDocumentation from "./pages/modules/tech/TechDocumentation";
-import TechConsole from "./pages/modules/tech/TechConsole";
+import ActivityMonitoring from "./pages/modules/lifecycle/ActivityMonitoring";
+
+/* ============================================================
+   SUPPORT & CUSTOMER SUCCESS
+   Implémentations historiques conservées temporairement
+   derrière le nouveau pôle Support.
+   ============================================================ */
+
+import SupportTickets from "./pages/modules/lifecycle/SupportTickets";
+import ManagedRiskAlerts from "./pages/modules/lifecycle/ManagedRiskAlerts";
+
+/* ============================================================
+   MARKETING & COMMUNICATION
+   ============================================================ */
+
+import MarketingDashboard from "./pages/modules/marketing/MarketingDashboard";
+import Campaigns from "./pages/modules/marketing/Campaigns";
+import Content from "./pages/modules/marketing/Content";
+import Podcasts from "./pages/modules/marketing/Podcasts";
+import Analytics from "./pages/modules/marketing/Analytics";
 
 /* ============================================================
    RH
@@ -160,10 +145,9 @@ import Leave from "./pages/modules/rh/Leave";
 import Training from "./pages/modules/rh/Training";
 import BusinessTrips from "./pages/modules/rh/BusinessTrips";
 import Publications from "./pages/modules/rh/Publications";
-import RHEthics from "./pages/modules/rh/RHEthics";
 
 /* ============================================================
-   QUALITY & AUDIT
+   QUALITÉ & AUDIT
    ============================================================ */
 
 import AuditDashboard from "./pages/modules/audit/AuditDashboard";
@@ -175,7 +159,7 @@ import NonConformities from "./pages/modules/audit/NonConformities";
 import Sanctions from "./pages/modules/audit/Sanctions";
 
 /* ============================================================
-   COMPLIANCE & LEGAL
+   CONFORMITÉ & JURIDIQUE
    ============================================================ */
 
 import ComplianceDashboard from "./pages/modules/compliance/ComplianceDashboard";
@@ -197,14 +181,45 @@ import CO2Impact from "./pages/modules/rse/CO2Impact";
 import ESGReports from "./pages/modules/rse/ESGReports";
 
 /* ============================================================
-   MARKETING & COMMUNICATION
+   PRODUIT & ENGINEERING
+   Les composants historiques Tech/R&D restent utilisés comme
+   implémentations internes pendant la migration fonctionnelle.
    ============================================================ */
 
-import MarketingDashboard from "./pages/modules/marketing/MarketingDashboard";
-import Campaigns from "./pages/modules/marketing/Campaigns";
-import Content from "./pages/modules/marketing/Content";
-import Podcasts from "./pages/modules/marketing/Podcasts";
-import Analytics from "./pages/modules/marketing/Analytics";
+import {
+  default as ProductEngineeringDashboard,
+} from "./pages/modules/tech/TechDashboard";
+
+import {
+  default as ProductInfrastructure,
+} from "./pages/modules/tech/Infrastructure";
+
+import {
+  default as ProductIntegrations,
+} from "./pages/modules/tech/TechIntegrations";
+
+import {
+  default as ProductDocumentation,
+} from "./pages/modules/tech/TechDocumentation";
+
+import ProductStudio from "./pages/TechStudio";
+
+import {
+  default as ProductInnovation,
+} from "./pages/modules/rd/RDDashboard";
+
+/* ============================================================
+   SECURITY & IT
+   Les composants historiques Tech restent utilisés comme
+   implémentations internes pendant la migration fonctionnelle.
+   ============================================================ */
+
+import SecurityAccess from "./pages/modules/tech/TechAccess";
+import SecurityVPN from "./pages/modules/tech/TechVPN";
+import SecurityLogs from "./pages/modules/tech/TechLogs";
+import SecurityEnvironments from "./pages/modules/tech/TechEnvironments";
+import SecurityOperations from "./pages/modules/tech/TechSecurity";
+import SecurityInfrastructure from "./pages/modules/tech/Infrastructure";
 
 /* ============================================================
    DATA & BI
@@ -226,19 +241,7 @@ import BIWidgetLibrary from "./pages/modules/data/bi/BIWidgetLibrary";
 import BIHistory from "./pages/modules/data/bi/BIHistory";
 
 /* ============================================================
-   R&D — LEGACY
-   ============================================================ */
-
-import RDDashboard from "./pages/modules/rd/RDDashboard";
-import RDProducts from "./pages/modules/rd/RDProducts";
-import RDShops from "./pages/modules/rd/RDShops";
-import RDSuppliers from "./pages/modules/rd/RDSuppliers";
-import RDFrictions from "./pages/modules/rd/RDFrictions";
-import RDReports from "./pages/modules/rd/RDReports";
-import RDTicketDetail from "./pages/modules/rd/RDTicketDetail";
-
-/* ============================================================
-   ETHICS
+   TRANSVERSAL — ETHICS
    ============================================================ */
 
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
@@ -249,7 +252,7 @@ import EthicsClosed from "./pages/modules/ethics/EthicsClosed";
 import EthicsStats from "./pages/modules/ethics/EthicsStats";
 
 /* ============================================================
-   GATEWAY
+   TRANSVERSAL — GATEWAY
    ============================================================ */
 
 import GatewayDashboard from "./pages/modules/gateway/GatewayDashboard";
@@ -262,30 +265,25 @@ import GatewayJournal from "./pages/modules/gateway/GatewayJournal";
 import GatewayMessageDetail from "./pages/modules/gateway/GatewayMessageDetail";
 
 /* ============================================================
-   INDEPENDENT AUDIT
+   TRANSVERSAL — AUDIT INDÉPENDANT
    ============================================================ */
 
 import IndependentAuditDashboard from "./pages/modules/independent-audit/IndependentAuditDashboard";
 import IncidentDeclaration from "./pages/modules/independent-audit/IncidentDeclaration";
 import ResolutionTracking from "./pages/modules/independent-audit/ResolutionTracking";
 
-
 const queryClient = new QueryClient();
-
 
 const AppInner = () => {
   useAuthLogger();
-
   return null;
 };
-
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
         <SandboxProvider>
-
           <AppInner />
 
           <Toaster />
@@ -293,18 +291,16 @@ const App = () => (
 
           <BrowserRouter>
             <Routes>
-
               {/* ======================================================
-                  PUBLIC ROUTES
+                  PUBLIC
                   ====================================================== */}
 
               <Route path="/login" element={<Login />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/unsubscribe" element={<Unsubscribe />} />
 
-
               {/* ======================================================
-                  AUTHENTICATED APPLICATION
+                  APPLICATION AUTHENTIFIÉE
                   ====================================================== */}
 
               <Route
@@ -314,16 +310,14 @@ const App = () => (
                   </AuthGuard>
                 }
               >
-
                 {/* ====================================================
-                    HOME
+                    ACCUEIL
                     ==================================================== */}
 
                 <Route path="/" element={<Index />} />
 
-
                 {/* ====================================================
-                    DIRECTION
+                    1. DIRECTION
                     ==================================================== */}
 
                 <Route
@@ -341,7 +335,6 @@ const App = () => (
                   element={<StrategicKPIs />}
                 />
 
-                {/* Nouvelle nomenclature */}
                 <Route
                   path="/pole/direction/strategic-kpis"
                   element={<StrategicKPIs />}
@@ -397,15 +390,18 @@ const App = () => (
                   element={<BoardReports />}
                 />
 
-                {/* ModuleAccess devient progressivement transversal */}
                 <Route
                   path="/pole/direction/access"
-                  element={<Navigate to="/admin/roles-permissions" replace />}
+                  element={
+                    <Navigate
+                      to="/admin/roles-permissions"
+                      replace
+                    />
+                  }
                 />
 
-
                 {/* ====================================================
-                    FINANCE
+                    2. FINANCE
                     ==================================================== */}
 
                 <Route
@@ -448,7 +444,6 @@ const App = () => (
                   element={<GuaranteeFund />}
                 />
 
-                {/* Future Finance V2 */}
                 <Route
                   path="/pole/finance/billing"
                   element={<SubSectionPage />}
@@ -464,9 +459,8 @@ const App = () => (
                   element={<SubSectionPage />}
                 />
 
-
                 {/* ====================================================
-                    OPERATIONS & LOGISTICS
+                    3. OPÉRATIONS & LOGISTIQUE
                     ==================================================== */}
 
                 <Route
@@ -534,7 +528,6 @@ const App = () => (
                   element={<SupplierLeadTimes />}
                 />
 
-                {/* Nouveau chemin utilisé par la navigation V2 */}
                 <Route
                   path="/pole/ops/suppliers-lt"
                   element={<SupplierLeadTimes />}
@@ -545,9 +538,8 @@ const App = () => (
                   element={<AuditLink />}
                 />
 
-
                 {/* ====================================================
-                    FOURNISSEURS & PRODUITS
+                    4. FOURNISSEURS & PRODUITS
                     ==================================================== */}
 
                 <Route
@@ -610,9 +602,8 @@ const App = () => (
                   element={<SupplierCatalogInbox />}
                 />
 
-
                 {/* ====================================================
-                    MARKETPLACE & CUSTOMER
+                    5. MARKETPLACE & CUSTOMER
                     ==================================================== */}
 
                 <Route
@@ -660,9 +651,8 @@ const App = () => (
                   element={<SubSectionPage />}
                 />
 
-
                 {/* ====================================================
-                    SUPPORT & CUSTOMER SUCCESS
+                    6. SUPPORT & CUSTOMER SUCCESS
                     ==================================================== */}
 
                 <Route
@@ -690,9 +680,8 @@ const App = () => (
                   element={<ManagedRiskAlerts />}
                 />
 
-
                 {/* ====================================================
-                    MARKETING & COMMUNICATION
+                    7. MARKETING & COMMUNICATION
                     ==================================================== */}
 
                 <Route
@@ -720,7 +709,6 @@ const App = () => (
                   element={<Analytics />}
                 />
 
-                {/* Future V2 */}
                 <Route
                   path="/pole/marketing/crm"
                   element={<SubSectionPage />}
@@ -736,9 +724,8 @@ const App = () => (
                   element={<SubSectionPage />}
                 />
 
-
                 {/* ====================================================
-                    RH
+                    8. RH
                     ==================================================== */}
 
                 <Route
@@ -791,21 +778,23 @@ const App = () => (
                   element={<Publications />}
                 />
 
-                {/* Ethics quitte progressivement RH */}
                 <Route
                   path="/pole/rh/ethics"
-                  element={<Navigate to="/modules/ethics" replace />}
+                  element={
+                    <Navigate
+                      to="/modules/ethics"
+                      replace
+                    />
+                  }
                 />
 
-                {/* Future RH */}
                 <Route
                   path="/pole/rh/recruitment"
                   element={<SubSectionPage />}
                 />
 
-
                 {/* ====================================================
-                    QUALITÉ & AUDIT
+                    9. QUALITÉ & AUDIT
                     ==================================================== */}
 
                 <Route
@@ -843,15 +832,13 @@ const App = () => (
                   element={<Sanctions />}
                 />
 
-                {/* Future workflow */}
                 <Route
                   path="/pole/audit/corrective-actions"
                   element={<SubSectionPage />}
                 />
 
-
                 {/* ====================================================
-                    CONFORMITÉ & JURIDIQUE
+                    10. CONFORMITÉ & JURIDIQUE
                     ==================================================== */}
 
                 <Route
@@ -879,9 +866,8 @@ const App = () => (
                   element={<ComplianceRiskRegister />}
                 />
 
-
                 {/* ====================================================
-                    RSE & IMPACT
+                    11. RSE & IMPACT
                     ==================================================== */}
 
                 <Route
@@ -919,9 +905,8 @@ const App = () => (
                   element={<ESGReports />}
                 />
 
-
                 {/* ====================================================
-                    PRODUIT & ENGINEERING
+                    12. PRODUIT & ENGINEERING
                     ==================================================== */}
 
                 <Route
@@ -946,32 +931,31 @@ const App = () => (
 
                 <Route
                   path="/pole/product/engineering"
-                  element={<TechDashboard />}
+                  element={<ProductEngineeringDashboard />}
                 />
 
                 <Route
                   path="/pole/product/studio"
-                  element={<TechStudio />}
+                  element={<ProductStudio />}
                 />
 
                 <Route
                   path="/pole/product/integrations"
-                  element={<TechIntegrations />}
+                  element={<ProductIntegrations />}
                 />
 
                 <Route
                   path="/pole/product/documentation"
-                  element={<TechDocumentation />}
+                  element={<ProductDocumentation />}
                 />
 
                 <Route
                   path="/pole/product/innovation"
-                  element={<RDDashboard />}
+                  element={<ProductInnovation />}
                 />
 
-
                 {/* ====================================================
-                    DATA & BI
+                    13. DATA & BI
                     ==================================================== */}
 
                 <Route
@@ -1039,247 +1023,428 @@ const App = () => (
                   element={<BIHistory />}
                 />
 
-
                 {/* ====================================================
-                    SECURITY & IT
+                    14. SECURITY & IT
                     ==================================================== */}
 
                 <Route
                   path="/pole/security"
-                  element={<TechDashboard />}
+                  element={<SecurityOperations />}
                 />
 
                 <Route
                   path="/pole/security/access"
-                  element={<TechAccess />}
+                  element={<SecurityAccess />}
                 />
 
                 <Route
                   path="/pole/security/security"
-                  element={<TechSecurity />}
+                  element={<SecurityOperations />}
                 />
 
                 <Route
                   path="/pole/security/infrastructure"
-                  element={<Infrastructure />}
+                  element={<SecurityInfrastructure />}
                 />
 
                 <Route
                   path="/pole/security/environments"
-                  element={<TechEnvironments />}
+                  element={<SecurityEnvironments />}
                 />
 
                 <Route
                   path="/pole/security/vpn"
-                  element={<TechVPN />}
+                  element={<SecurityVPN />}
                 />
 
                 <Route
                   path="/pole/security/logs"
-                  element={<TechLogs />}
+                  element={<SecurityLogs />}
                 />
 
-
                 {/* ====================================================
-                    LEGACY TECH
-                    Conservé pendant la migration.
+                    COMPATIBILITÉ — ANCIEN PÔLE TECH
+                    Les anciennes URL ne constituent plus un pôle.
+                    Elles redirigent vers l'architecture cible.
                     ==================================================== */}
 
                 <Route
                   path="/pole/tech"
-                  element={<Navigate to="/pole/product" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/product"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/access"
-                  element={<Navigate to="/pole/security/access" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/security/access"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/vpn"
-                  element={<Navigate to="/pole/security/vpn" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/security/vpn"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/logs"
-                  element={<Navigate to="/pole/security/logs" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/security/logs"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/deployments"
-                  element={<Navigate to="/pole/security/environments" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/security/environments"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/environments"
-                  element={<Navigate to="/pole/security/environments" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/security/environments"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/security"
-                  element={<Navigate to="/pole/security/security" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/security/security"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/infrastructure"
-                  element={<Navigate to="/pole/security/infrastructure" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/security/infrastructure"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/catalog"
-                  element={<Catalog />}
+                  element={
+                    <Navigate
+                      to="/pole/product"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/received-products"
-                  element={<ReceivedProducts />}
+                  element={
+                    <Navigate
+                      to="/pole/product"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/dataflow"
-                  element={<TechDataFlow />}
+                  element={
+                    <Navigate
+                      to="/pole/data"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/sandbox"
-                  element={<TechSandbox />}
+                  element={
+                    <Navigate
+                      to="/pole/product/studio"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/test-accounts"
-                  element={<TestAccounts />}
+                  element={
+                    <Navigate
+                      to="/pole/security/access"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/integrations"
-                  element={<TechIntegrations />}
+                  element={
+                    <Navigate
+                      to="/pole/product/integrations"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/code"
-                  element={<TechCode />}
+                  element={
+                    <Navigate
+                      to="/pole/product/engineering"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/supervision"
-                  element={<TechSupervision />}
+                  element={
+                    <Navigate
+                      to="/pole/security"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/documentation"
-                  element={<TechDocumentation />}
+                  element={
+                    <Navigate
+                      to="/pole/product/documentation"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/console"
-                  element={<TechConsole />}
+                  element={
+                    <Navigate
+                      to="/pole/security"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/tech/studio"
-                  element={<TechStudio />}
+                  element={
+                    <Navigate
+                      to="/pole/product/studio"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/tech-studio"
-                  element={<TechStudio />}
+                  element={
+                    <Navigate
+                      to="/pole/product/studio"
+                      replace
+                    />
+                  }
                 />
 
-
                 {/* ====================================================
-                    LEGACY LIFECYCLE
+                    COMPATIBILITÉ — ANCIEN PÔLE LIFECYCLE
                     ==================================================== */}
 
                 <Route
                   path="/pole/lifecycle"
-                  element={<Navigate to="/pole/support" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/support"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/lifecycle/onboarding"
-                  element={<Navigate to="/pole/rh/onboarding" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/rh/onboarding"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/lifecycle/monitoring"
-                  element={<Navigate to="/pole/support/monitoring" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/support/monitoring"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/lifecycle/user-accounts"
-                  element={<Navigate to="/pole/marketplace/customers" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/marketplace/customers"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/lifecycle/risk-alerts"
-                  element={<Navigate to="/pole/support/escalations" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/support/escalations"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/lifecycle/emails"
-                  element={<Navigate to="/pole/marketing/journeys" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/marketing/journeys"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/lifecycle/trustpilot"
-                  element={<Navigate to="/pole/marketing/reputation" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/marketing/reputation"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/lifecycle/support"
-                  element={<Navigate to="/pole/support/tickets" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/support/tickets"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/lifecycle/scoring"
-                  element={<Navigate to="/pole/support/customer-success" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/support/customer-success"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/lifecycle/compliance"
-                  element={<Navigate to="/pole/compliance" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/compliance"
+                      replace
+                    />
+                  }
                 />
 
-
                 {/* ====================================================
-                    LEGACY R&D
+                    COMPATIBILITÉ — ANCIEN PÔLE R&D
                     ==================================================== */}
 
                 <Route
                   path="/pole/rd"
-                  element={<Navigate to="/pole/product/innovation" replace />}
+                  element={
+                    <Navigate
+                      to="/pole/product/innovation"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/rd/products"
-                  element={<RDProducts />}
+                  element={
+                    <Navigate
+                      to="/pole/product/innovation"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/rd/shops"
-                  element={<RDShops />}
+                  element={
+                    <Navigate
+                      to="/pole/product/innovation"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/rd/suppliers"
-                  element={<RDSuppliers />}
+                  element={
+                    <Navigate
+                      to="/pole/product/innovation"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/rd/frictions"
-                  element={<RDFrictions />}
+                  element={
+                    <Navigate
+                      to="/pole/product/innovation"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/rd/reports"
-                  element={<RDReports />}
+                  element={
+                    <Navigate
+                      to="/pole/product/innovation"
+                      replace
+                    />
+                  }
                 />
 
                 <Route
                   path="/pole/rd/tickets/:id"
-                  element={<RDTicketDetail />}
+                  element={
+                    <Navigate
+                      to="/pole/product/innovation"
+                      replace
+                    />
+                  }
                 />
-
 
                 {/* ====================================================
                     TRANSVERSAL — GATEWAY
@@ -1330,9 +1495,8 @@ const App = () => (
                   element={<GatewayDashboard />}
                 />
 
-
                 {/* ====================================================
-                    TRANSVERSAL — ETHICS
+                    TRANSVERSAL — ÉTHIQUE
                     ==================================================== */}
 
                 <Route
@@ -1375,9 +1539,8 @@ const App = () => (
                   element={<EthicsDashboard />}
                 />
 
-
                 {/* ====================================================
-                    TRANSVERSAL — INDEPENDENT AUDIT
+                    TRANSVERSAL — AUDIT INDÉPENDANT
                     ==================================================== */}
 
                 <Route
@@ -1395,10 +1558,8 @@ const App = () => (
                   element={<ResolutionTracking />}
                 />
 
-
                 {/* ====================================================
                     TRANSVERSAL — WORK
-                    Préparation de la nouvelle architecture.
                     ==================================================== */}
 
                 <Route
@@ -1431,12 +1592,10 @@ const App = () => (
                   element={<SubSectionPage />}
                 />
 
-                {/* Notifications */}
                 <Route
                   path="/notifications"
                   element={<SubSectionPage />}
                 />
-
 
                 {/* ====================================================
                     CORE TRANSVERSAL
@@ -1461,6 +1620,10 @@ const App = () => (
                   path="/profile"
                   element={<Profile />}
                 />
+
+                {/* ====================================================
+                    ADMINISTRATION
+                    ==================================================== */}
 
                 <Route
                   path="/admin/test-accounts"
@@ -1487,9 +1650,8 @@ const App = () => (
                   }
                 />
 
-
                 {/* ====================================================
-                    LEGACY COMPLIANCE AUDIT
+                    COMPATIBILITÉ — AUDIT GLOBAL
                     ==================================================== */}
 
                 <Route
@@ -1509,12 +1671,16 @@ const App = () => (
 
                 <Route
                   path="/compliance-audit/tech"
-                  element={<TechCompliance />}
+                  element={
+                    <Navigate
+                      to="/pole/security"
+                      replace
+                    />
+                  }
                 />
 
-
                 {/* ====================================================
-                    LEGACY WHATS-NEW
+                    COMPATIBILITÉ — WHAT'S NEW
                     ==================================================== */}
 
                 <Route
@@ -1527,9 +1693,8 @@ const App = () => (
                   }
                 />
 
-
                 {/* ====================================================
-                    GENERIC POLE ROUTES
+                    ROUTES GÉNÉRIQUES
                     ==================================================== */}
 
                 <Route
@@ -1542,17 +1707,11 @@ const App = () => (
                   element={<SubSectionPage />}
                 />
 
-                {/* ====================================================
-                    GENERIC MODULE ROUTES
-                    ==================================================== */}
-
                 <Route
                   path="/modules/:moduleId/:subSection"
                   element={<SubSectionPage />}
                 />
-
               </Route>
-
 
               {/* ======================================================
                   404
@@ -1562,15 +1721,12 @@ const App = () => (
                 path="*"
                 element={<NotFound />}
               />
-
             </Routes>
           </BrowserRouter>
-
         </SandboxProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
-
 
 export default App;
