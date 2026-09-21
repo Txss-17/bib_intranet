@@ -17,6 +17,24 @@
 -- afin d'éviter une rupture avec d'éventuelles données historiques.
 -- ============================================================
 
+-- ============================================================
+-- Alignement de l'enum pole_id avec l'architecture BIB actuelle
+-- ============================================================
+
+ALTER TYPE public.pole_id
+  ADD VALUE IF NOT EXISTS 'marketplace';
+
+ALTER TYPE public.pole_id
+  ADD VALUE IF NOT EXISTS 'support';
+
+ALTER TYPE public.pole_id
+  ADD VALUE IF NOT EXISTS 'product';
+
+ALTER TYPE public.pole_id
+  ADD VALUE IF NOT EXISTS 'data';
+
+ALTER TYPE public.pole_id
+  ADD VALUE IF NOT EXISTS 'security';
 
 -- ============================================================
 -- 1. Ajouter les positions actuelles à employee_position
