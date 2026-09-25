@@ -37,9 +37,15 @@ const invoicesData = [
 
 const budgetData = { monthly: 185000, surplus: 12500, primeTeams: 8200 };
 
+const CAT_LABELS: Record<string, string> = {
+  subscription: 'Abonnements', commission: 'Commissions', sale: 'Ventes', payment_fee: 'Frais de paiement',
+  refund: 'Remboursements', merchant_payout: 'Reversements',
+};
+
 const FinanceDashboard = () => {
   const { data: stats, isLoading: statsLoading } = useCashflowStats();
   const { data: recentCashflows, isLoading: cashflowsLoading } = useCashflows({ limit: 5 });
+  const { data: allCashflows } = useCashflows({ limit: 2000 });
   const { data: paymentStats } = useSupplierPaymentStats();
 
   const invoicesTable = useTableInteractions({
@@ -47,17 +53,37 @@ const FinanceDashboard = () => {
     searchFields: ['id', 'pole'],
   });
 
-  const displayChartData = [
-    { month: 'Jan', income: 145000, expenses: 98000 },
-    { month: 'Fév', income: 162000, expenses: 105000 },
-    { month: 'Mar', income: 178000, expenses: 112000 },
-    { month: 'Avr', income: 195000, expenses: 118000 },
-    { month: 'Mai', income: 210000, expenses: 125000 },
-    { month: 'Juin', income: 228000, expenses: 130000 },
+  const cf = allCashflows ?? [];
+  const byCat = new Map<string, number>();
+  cf.filter(c => c.type === 'income').forEach(c => {
+    const k = CAT_LABELS[c.category] ?? c.category;
+    byCat.set(k, (byCat.get(k) ?? 0) + Number(c.amount));
+  });
+  const incomeBreakdown = [...byCat.entries()].map(([name, value], i) => ({ name, value, color: `hsl(var(--chart-${(i % 5) + 1}))` }));
+  const sumCat = (cat: string) => cf.filter(c => c.category === cat).reduce((s, c) => s + Number(c.amount), 0);
+  const platformTotals = [
+    { label: 'Abonnements', value: sumCat('subscription') },
+    { label: 'Commissions', value: sumCat('commission') },
+    { label: 'Ventes', value: sumCat('sale') },
+    { label: 'Remboursements', value: sumCat('refund') },
+    { label: 'Reversements marchands', value: sumCat('merchant_payout') },
+    { label: 'Frais de paiement', value: sumCat('payment_fee') },
   ];
 
-  const currentBalance = stats?.balance ?? 1245000;
-  const monthlyIncome = stats?.monthlyIncome ?? 228000;
+  const months = new Map<string, { month: string; income: number; expenses: number }>();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
+    const key = d.toISOString().slice(0, 7);
+    months.set(key, { month: d.toLocaleDateString('fr-FR', { month: 'short' }), income: 0, expenses: 0 });
+  }
+  cf.forEach(c => {
+    const m = months.get(String(c.transaction_date).slice(0, 7));
+    if (m) { if (c.type === 'income') m.income += Number(c.amount); else m.expenses += Number(c.amount); }
+  });
+  const displayChartData = [...months.values()];
+
+  const currentBalance = stats?.balance ?? 0;
+  const monthlyIncome = stats?.monthlyIncome ?? 0;
   const monthlyExpenses = stats?.burnRate ?? 145000;
   const isLoading = statsLoading || cashflowsLoading;
 
