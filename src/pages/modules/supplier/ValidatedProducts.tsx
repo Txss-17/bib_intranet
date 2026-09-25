@@ -57,6 +57,7 @@ interface ValidatedProduct {
 }
 
 export default function ValidatedProducts() {
+  const { pushProduct } = usePlatformActions();
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState<ValidatedProduct[]>([]);
   const [loading, setLoading] = useState(true);
