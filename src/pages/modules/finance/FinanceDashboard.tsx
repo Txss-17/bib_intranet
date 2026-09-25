@@ -181,7 +181,22 @@ const FinanceDashboard = () => {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-        <Card>
+      <Card>
+        <CardHeader><CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-primary" /> Revenus B.I.B Platform</CardTitle></CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {platformTotals.map(t => (
+              <div key={t.label} className="rounded-lg border p-3">
+                <p className="text-xs text-muted-foreground">{t.label}</p>
+                <p className="text-lg font-semibold">{t.value.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 })}</p>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-muted-foreground mt-3">Alimenté par la synchronisation B.I.B Platform (Tech → Intégrations).</p>
+        </CardContent>
+      </Card>
+
+      <Card>
           <CardHeader><CardTitle>Entrées du Mois</CardTitle></CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
