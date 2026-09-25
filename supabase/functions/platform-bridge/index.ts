@@ -246,6 +246,11 @@ Deno.serve(async (req) => {
     await admin.from('platform_sync_runs').update({
       status: 'error', items_count: count, errors: [...errors, msg], finished_at: new Date().toISOString(),
     }).eq('id', run!.id)
+    await admin.from('anomalies').insert({
+      source: 'platform', type: 'Échec de synchronisation', severity: 'high',
+      title: `Échec ${body.action} B.I.B Platform`, description: msg.slice(0, 1000),
+      object_type: 'platform_sync_run', object_id: run!.id, created_by: uid,
+    })
     return json({ error: msg }, 502)
   }
 })
