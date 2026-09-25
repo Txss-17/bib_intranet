@@ -15,6 +15,13 @@
       "when": 1790359454991,
       "tag": "0001_platform_bridge_and_contracts",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790359470578,
+      "tag": "0002_contract_check_service_bypass",
+      "breakpoints": true
     }
   ]
 }
