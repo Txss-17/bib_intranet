@@ -164,6 +164,41 @@ Deno.serve(async (req) => {
         else { count++; if (!ex) notify('lifecycle', 'Nouveau compte marchand', row.company_name, '/pole/lifecycle/user-accounts') }
       }
 
+      // Flux financiers -> pôle Finance (cashflows, source 'platform')
+      // Plateforme = source des événements ; l'intranet reste la référence d'analyse.
+      if (!shopMap.size) {
+        const { data: known } = await admin.from('shops').select('id, platform_id').not('platform_id', 'is', null)
+        for (const s of known ?? []) shopMap.set(s.platform_id as string, s.id)
+      }
+      const FIN: Array<[string, string, 'income' | 'expense', string]> = [
+        ['subscriptions', 'subscription', 'income', 'Abonnement'],
+        ['commissions', 'commission', 'income', 'Commission'],
+        ['payments', 'sale', 'income', 'Paiement'],
+        ['fees', 'payment_fee', 'expense', 'Frais de paiement'],
+        ['refunds', 'refund', 'expense', 'Remboursement'],
+        ['payouts', 'merchant_payout', 'expense', 'Reversement marchand'],
+      ]
+      for (const [key, category, type, label] of FIN) {
+        for (const f of (data[key] ?? []) as any[]) {
+          const amount = Math.abs(Number(f.amount ?? 0))
+          if (!f.id || !amount) continue
+          const row = {
+            platform_id: `${category}:${f.id}`, type, category, amount,
+            currency: (f.currency ?? 'EUR').toUpperCase(),
+            description: f.description ?? `${label}${f.plan ? ' — ' + f.plan : ''}`,
+            reference: f.stripe_id ?? f.payment_intent ?? f.order_number ?? f.reference ?? null,
+            transaction_date: String(f.date ?? f.created_at ?? now).slice(0, 10),
+            shop_id: f.boutique_id ? shopMap.get(f.boutique_id) ?? null : null,
+            source: 'platform', platform_synced_at: now,
+          }
+          const { error } = await admin.from('cashflows').upsert(row, { onConflict: 'platform_id' })
+          if (error) errors.push(`${label} ${f.id}: ${error.message}`)
+          else count++
+        }
+      }
+      const finCount = FIN.reduce((n, [k]) => n + ((data[k] ?? []) as any[]).length, 0)
+      if (finCount) notify('finance', 'Flux financiers synchronisés', `${finCount} opérations depuis B.I.B Platform`, '/pole/finance')
+
       if (notes.length) {
         const { error: nErr } = await admin.from('notifications').insert(notes)
         if (nErr) errors.push(`notifications: ${nErr.message}`)
