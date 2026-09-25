@@ -139,13 +139,13 @@ const buildRegistry = (): PageDescriptor[] => {
 
   Object.entries(moduleNavigations).forEach(
     ([pole, items]) => {
-      push(pole, items);
+      push(pole, items.items);
     },
   );
 
   Object.entries(transversalNavigations).forEach(
     ([module, items]) => {
-      push(module, items, true);
+      push(module, (items as any).items ?? items, true);
     },
   );
 

@@ -55,7 +55,7 @@ const iconMap: Record<
  * des pôles dans le dashboard. Elles pourront ensuite être
  * remplacées par les KPI réels issus de Supabase.
  */
-const poleActivity: Record<PoleId, PoleActivity> = {
+const poleActivity: Partial<Record<PoleId, PoleActivity>> = {
   direction: {
     tasks: 5,
     incidents: 0,
