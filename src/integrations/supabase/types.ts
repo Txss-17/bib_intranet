@@ -241,6 +241,47 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_mission_events: {
+        Row: {
+          audit_id: string
+          created_at: string
+          from_status: string | null
+          id: string
+          message: string | null
+          origin: string
+          performed_by: string | null
+          to_status: string | null
+        }
+        Insert: {
+          audit_id: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          message?: string | null
+          origin?: string
+          performed_by?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          audit_id?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          message?: string | null
+          origin?: string
+          performed_by?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_mission_events_audit_id_fkey"
+            columns: ["audit_id"]
+            isOneToOne: false
+            referencedRelation: "field_audits"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auth_logs: {
         Row: {
           app_origin: string | null
@@ -1354,57 +1395,98 @@ export type Database = {
       }
       field_audits: {
         Row: {
+          anomaly_id: string | null
           app_origin: string
+          assigned_at: string | null
           audit_type: string
           auditor_id: string | null
+          closed_at: string | null
           completed_date: string | null
+          corrective_action: string | null
+          corrective_due_date: string | null
           created_at: string | null
+          decided_at: string | null
+          decision_reason: string | null
+          field_started_at: string | null
           findings: string | null
           id: string
+          mission_reference: string | null
           recommendations: string | null
           scheduled_date: string | null
           score: number | null
           status: string | null
+          synced_at: string | null
           target_id: string | null
           target_name: string | null
           target_type: string
           updated_at: string | null
+          workflow_status: string
         }
         Insert: {
+          anomaly_id?: string | null
           app_origin?: string
+          assigned_at?: string | null
           audit_type: string
           auditor_id?: string | null
+          closed_at?: string | null
           completed_date?: string | null
+          corrective_action?: string | null
+          corrective_due_date?: string | null
           created_at?: string | null
+          decided_at?: string | null
+          decision_reason?: string | null
+          field_started_at?: string | null
           findings?: string | null
           id?: string
+          mission_reference?: string | null
           recommendations?: string | null
           scheduled_date?: string | null
           score?: number | null
           status?: string | null
+          synced_at?: string | null
           target_id?: string | null
           target_name?: string | null
           target_type: string
           updated_at?: string | null
+          workflow_status?: string
         }
         Update: {
+          anomaly_id?: string | null
           app_origin?: string
+          assigned_at?: string | null
           audit_type?: string
           auditor_id?: string | null
+          closed_at?: string | null
           completed_date?: string | null
+          corrective_action?: string | null
+          corrective_due_date?: string | null
           created_at?: string | null
+          decided_at?: string | null
+          decision_reason?: string | null
+          field_started_at?: string | null
           findings?: string | null
           id?: string
+          mission_reference?: string | null
           recommendations?: string | null
           scheduled_date?: string | null
           score?: number | null
           status?: string | null
+          synced_at?: string | null
           target_id?: string | null
           target_name?: string | null
           target_type?: string
           updated_at?: string | null
+          workflow_status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "field_audits_anomaly_id_fkey"
+            columns: ["anomaly_id"]
+            isOneToOne: false
+            referencedRelation: "anomalies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       fundraising_rounds: {
         Row: {
