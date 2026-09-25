@@ -146,7 +146,7 @@ export function PoleOverview() {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {poles.map((pole) => {
         const Icon = iconMap[pole.icon] ?? Crown;
-        const activity = poleActivity[pole.id];
+        const activity = poleActivity[pole.id] ?? { tasks: 0, incidents: 0, updates: 0 };
 
         return (
           <Link
