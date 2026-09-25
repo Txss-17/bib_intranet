@@ -645,6 +645,81 @@ export type Database = {
           },
         ]
       }
+      contracts: {
+        Row: {
+          contract_number: string
+          created_at: string
+          created_by: string | null
+          document_url: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          party: string | null
+          shop_id: string | null
+          signed_at: string | null
+          start_date: string | null
+          status: string
+          supplier_id: string | null
+          title: string
+          type: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          contract_number: string
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          party?: string | null
+          shop_id?: string | null
+          signed_at?: string | null
+          start_date?: string | null
+          status?: string
+          supplier_id?: string | null
+          title: string
+          type?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          contract_number?: string
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          party?: string | null
+          shop_id?: string | null
+          signed_at?: string | null
+          start_date?: string | null
+          status?: string
+          supplier_id?: string | null
+          title?: string
+          type?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contracts_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contracts_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       corporate_card_transactions: {
         Row: {
           amount: number
@@ -2007,6 +2082,8 @@ export type Database = {
           order_number: string
           ordered_at: string | null
           partner_id: string | null
+          platform_id: string | null
+          platform_synced_at: string | null
           region: string | null
           shipped_at: string | null
           shipping_address: string | null
@@ -2029,6 +2106,8 @@ export type Database = {
           order_number: string
           ordered_at?: string | null
           partner_id?: string | null
+          platform_id?: string | null
+          platform_synced_at?: string | null
           region?: string | null
           shipped_at?: string | null
           shipping_address?: string | null
@@ -2051,6 +2130,8 @@ export type Database = {
           order_number?: string
           ordered_at?: string | null
           partner_id?: string | null
+          platform_id?: string | null
+          platform_synced_at?: string | null
           region?: string | null
           shipped_at?: string | null
           shipping_address?: string | null
@@ -2279,6 +2360,45 @@ export type Database = {
           },
         ]
       }
+      platform_sync_runs: {
+        Row: {
+          action: string
+          details: Json | null
+          direction: string
+          errors: Json
+          finished_at: string | null
+          id: string
+          items_count: number
+          started_at: string
+          status: string
+          triggered_by: string | null
+        }
+        Insert: {
+          action: string
+          details?: Json | null
+          direction: string
+          errors?: Json
+          finished_at?: string | null
+          id?: string
+          items_count?: number
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Update: {
+          action?: string
+          details?: Json | null
+          direction?: string
+          errors?: Json
+          finished_at?: string | null
+          id?: string
+          items_count?: number
+          started_at?: string
+          status?: string
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       portfolio_assignments: {
         Row: {
           assigned_at: string | null
@@ -2450,6 +2570,9 @@ export type Database = {
           name: string
           origin: string | null
           packaging_status: string | null
+          platform_id: string | null
+          platform_publish_status: string | null
+          platform_synced_at: string | null
           product_sheet_url: string | null
           rejection_reason: string | null
           selling_price: number | null
@@ -2482,6 +2605,9 @@ export type Database = {
           name: string
           origin?: string | null
           packaging_status?: string | null
+          platform_id?: string | null
+          platform_publish_status?: string | null
+          platform_synced_at?: string | null
           product_sheet_url?: string | null
           rejection_reason?: string | null
           selling_price?: number | null
@@ -2514,6 +2640,9 @@ export type Database = {
           name?: string
           origin?: string | null
           packaging_status?: string | null
+          platform_id?: string | null
+          platform_publish_status?: string | null
+          platform_synced_at?: string | null
           product_sheet_url?: string | null
           rejection_reason?: string | null
           selling_price?: number | null
@@ -3168,6 +3297,8 @@ export type Database = {
           merchant_phone: string | null
           name: string
           notes: string | null
+          platform_id: string | null
+          platform_synced_at: string | null
           shop_code: string
           slug: string | null
           status: string
@@ -3196,6 +3327,8 @@ export type Database = {
           merchant_phone?: string | null
           name: string
           notes?: string | null
+          platform_id?: string | null
+          platform_synced_at?: string | null
           shop_code: string
           slug?: string | null
           status?: string
@@ -3224,6 +3357,8 @@ export type Database = {
           merchant_phone?: string | null
           name?: string
           notes?: string | null
+          platform_id?: string | null
+          platform_synced_at?: string | null
           shop_code?: string
           slug?: string | null
           status?: string
@@ -3569,6 +3704,8 @@ export type Database = {
           created_at: string | null
           description: string
           id: string
+          platform_id: string | null
+          platform_synced_at: string | null
           priority: string | null
           resolution: string | null
           resolved_at: string | null
@@ -3583,6 +3720,8 @@ export type Database = {
           created_at?: string | null
           description: string
           id?: string
+          platform_id?: string | null
+          platform_synced_at?: string | null
           priority?: string | null
           resolution?: string | null
           resolved_at?: string | null
@@ -3597,6 +3736,8 @@ export type Database = {
           created_at?: string | null
           description?: string
           id?: string
+          platform_id?: string | null
+          platform_synced_at?: string | null
           priority?: string | null
           resolution?: string | null
           resolved_at?: string | null

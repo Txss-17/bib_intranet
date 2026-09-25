@@ -8,6 +8,13 @@
       "when": 1790358316326,
       "tag": "0000_create_shops_supervision",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790359454991,
+      "tag": "0001_platform_bridge_and_contracts",
+      "breakpoints": true
     }
   ]
 }
