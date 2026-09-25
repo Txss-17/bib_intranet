@@ -109,7 +109,7 @@ export default function AuditMissions() {
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-2">
-                      <SourceBadge origin={m.app_origin} />
+                      <SourceBadge source={m.app_origin} />
                       <Badge variant={statusVariant(m.workflow_status)}>{MISSION_LABELS[m.workflow_status]}</Badge>
                     </span>
                   </button>
@@ -171,7 +171,7 @@ export default function AuditMissions() {
                   })}
                   {!MISSION_STEPS.includes(sel.workflow_status) && <Badge variant={statusVariant(sel.workflow_status)}>{MISSION_LABELS[sel.workflow_status]}</Badge>}
                 </div>
-                <p className="text-muted-foreground">{sel.mission_reference} · <SourceBadge origin={sel.app_origin} /></p>
+                <p className="text-muted-foreground">{sel.mission_reference} · <SourceBadge source={sel.app_origin} /></p>
 
                 {['mission', 'planned'].includes(sel.workflow_status) && (
                   <div className="grid grid-cols-2 gap-3">

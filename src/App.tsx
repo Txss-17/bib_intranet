@@ -155,6 +155,7 @@ import Publications from "./pages/modules/rh/Publications";
 
 import AuditDashboard from "./pages/modules/audit/AuditDashboard";
 import FieldAudits from "./pages/modules/audit/FieldAudits";
+import AuditMissions from "./pages/modules/audit/AuditMissions";
 import SupplierAudits from "./pages/modules/audit/SupplierAudits";
 import OpsAudits from "./pages/modules/audit/OpsAudits";
 import AuditReports from "./pages/modules/audit/Reports";
@@ -818,6 +819,10 @@ const App = () => (
                 <Route
                   path="/pole/audit/field"
                   element={<FieldAudits />}
+                />
+                <Route
+                  path="/pole/audit/missions"
+                  element={<AuditMissions />}
                 />
 
                 <Route
