@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
         const { data: ex } = await admin.from('support_tickets').select('id').eq('platform_id', t.id).maybeSingle()
         const res = ex
           ? await admin.from('support_tickets').update(row).eq('id', ex.id)
-          : await admin.from('support_tickets').insert({ ...row, ticket_number: `BOS-${String(t.id).slice(0, 8)}` })
+          : await admin.from('support_tickets').insert(row)
         if (res.error) errors.push(`ticket: ${res.error.message}`)
         else count++
       }
