@@ -545,8 +545,12 @@ export type Database = {
           currency: string | null
           description: string | null
           id: string
+          platform_id: string | null
+          platform_synced_at: string | null
           recorded_by: string | null
           reference: string | null
+          shop_id: string | null
+          source: string
           transaction_date: string
           type: string
           updated_at: string | null
@@ -558,8 +562,12 @@ export type Database = {
           currency?: string | null
           description?: string | null
           id?: string
+          platform_id?: string | null
+          platform_synced_at?: string | null
           recorded_by?: string | null
           reference?: string | null
+          shop_id?: string | null
+          source?: string
           transaction_date: string
           type: string
           updated_at?: string | null
@@ -571,13 +579,25 @@ export type Database = {
           currency?: string | null
           description?: string | null
           id?: string
+          platform_id?: string | null
+          platform_synced_at?: string | null
           recorded_by?: string | null
           reference?: string | null
+          shop_id?: string | null
+          source?: string
           transaction_date?: string
           type?: string
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cashflows_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       certifications: {
         Row: {
