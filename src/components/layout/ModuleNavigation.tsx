@@ -16,7 +16,8 @@ export type TransversalModuleId =
   | 'feed'
   | 'ethics'
   | 'independentAudit'
-  | 'permissions';
+  | 'permissions'
+  | 'independent-audit';
 
 interface ModuleNavigationProps {
   poleId?: PoleId;
