@@ -15,7 +15,7 @@ export const MISSION_LABELS: Record<MissionStatus, string> = {
 };
 
 export const MISSION_TRANSITIONS: Record<MissionStatus, MissionStatus[]> = {
-  mission: ['planned'],
+  mission: ['planned', 'assigned'],
   planned: ['assigned'],
   assigned: ['in_field', 'planned'],
   in_field: ['synced'],
@@ -67,7 +67,7 @@ export const useAuditors = () =>
   useQuery({
     queryKey: ['auditors'],
     queryFn: async () => {
-      const { data, error } = await db.from('profiles').select('id, first_name, last_name, poles');
+      const { data, error } = await db.from('profiles').select('id, first_name, last_name, email, poles');
       if (error) throw error;
       return ((data || []) as any[]).filter((p) => (p.poles || []).includes('audit'));
     },

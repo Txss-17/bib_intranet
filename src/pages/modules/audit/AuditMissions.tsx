@@ -28,7 +28,7 @@ export default function AuditMissions() {
   const [step, setStep] = useState<string>('open');
   const [open, setOpen] = useState(false);
   const [selId, setSelId] = useState<string | null>(null);
-  const [form, setForm] = useState({ target_name: '', target_type: 'supplier', audit_type: 'quality', scheduled_date: '' });
+  const [form, setForm] = useState({ target_name: '', target_type: 'supplier', audit_type: 'quality', scheduled_date: '', auditor_id: '' });
   const [reason, setReason] = useState('');
   const [corrective, setCorrective] = useState({ action: '', due: '' });
 
@@ -147,11 +147,24 @@ export default function AuditMissions() {
                   </SelectContent>
                 </Select></div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Date prévue</Label><Input type="date" value={form.scheduled_date} onChange={(e) => setForm({ ...form, scheduled_date: e.target.value })} /></div>
+              <div><Label>Auditeur</Label>
+                <Select value={form.auditor_id} onValueChange={(v) => setForm({ ...form, auditor_id: v })}>
+                  <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
+                  <SelectContent>{auditors.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.first_name} {a.last_name} · {a.email}</SelectItem>)}</SelectContent>
+                </Select></div>
+            </div>
+            <p className="text-xs text-muted-foreground">Avec une date et un auditeur, la mission est envoyée directement à l’app B.I.B Audit Hub de l’auditeur (même adresse e-mail).</p>
           </div>
           <DialogFooter>
-            <Button disabled={!form.target_name || create.isPending}
-              onClick={() => create.mutate({ ...form, scheduled_date: null } as any, { onSuccess: () => { setOpen(false); setForm({ ...form, target_name: '' }); } })}>
-              Créer
+            <Button variant="outline" disabled={!form.target_name || create.isPending}
+              onClick={() => create.mutate({ ...form, scheduled_date: form.scheduled_date || null, auditor_id: form.auditor_id || null } as any, { onSuccess: () => { setOpen(false); setForm({ ...form, target_name: '' }); } })}>
+              Créer en brouillon
+            </Button>
+            <Button disabled={!form.target_name || !form.scheduled_date || !form.auditor_id || create.isPending}
+              onClick={() => create.mutate({ ...form, workflow_status: 'assigned', assigned_at: new Date().toISOString() } as any, { onSuccess: () => { setOpen(false); setForm({ ...form, target_name: '' }); } })}>
+              Envoyer à Audit Hub
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -173,14 +186,14 @@ export default function AuditMissions() {
                 </div>
                 <p className="text-muted-foreground">{sel.mission_reference} · <SourceBadge source={sel.app_origin} /></p>
 
-                {['mission', 'planned'].includes(sel.workflow_status) && (
+                {['mission', 'planned', 'assigned'].includes(sel.workflow_status) && (
                   <div className="grid grid-cols-2 gap-3">
                     <div><Label>Date prévue</Label>
                       <Input type="date" defaultValue={sel.scheduled_date ?? ''} onBlur={(e) => e.target.value && update.mutate({ id: sel.id, scheduled_date: e.target.value })} /></div>
                     <div><Label>Auditeur</Label>
                       <Select value={sel.auditor_id ?? ''} onValueChange={(v) => update.mutate({ id: sel.id, auditor_id: v })}>
                         <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
-                        <SelectContent>{auditors.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.first_name} {a.last_name}</SelectItem>)}</SelectContent>
+                        <SelectContent>{auditors.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.first_name} {a.last_name} · {a.email}</SelectItem>)}</SelectContent>
                       </Select></div>
                   </div>
                 )}
@@ -219,12 +232,12 @@ export default function AuditMissions() {
                       <Button key={to} size="sm" variant={to === 'non_compliant' ? 'destructive' : 'default'}
                         disabled={update.isPending || needsReason || needsAction || needsAssign}
                         onClick={() => move(sel, to)}>
-                        → {MISSION_LABELS[to]}
+                        {to === 'assigned' ? 'Envoyer à Audit Hub' : `→ ${MISSION_LABELS[to]}`}
                       </Button>
                     );
                   })}
                 </div>
-                {sel.workflow_status === 'planned' && (!sel.auditor_id || !sel.scheduled_date) && (
+                {['mission', 'planned'].includes(sel.workflow_status) && (!sel.auditor_id || !sel.scheduled_date) && (
                   <p className="text-xs text-muted-foreground">Choisissez une date et un auditeur pour affecter la mission.</p>
                 )}
 
