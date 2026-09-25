@@ -176,6 +176,12 @@ export const moduleNavigations: Record<
         icon: 'Store',
       },
       {
+        id: 'anomalies',
+        label: 'Anomalies',
+        path: '/pole/ops/anomalies',
+        icon: 'AlertTriangle',
+      },
+      {
         id: 'orders',
         label: 'Commandes',
         path: '/pole/ops/pipeline',

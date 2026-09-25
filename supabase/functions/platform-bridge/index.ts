@@ -233,12 +233,24 @@ Deno.serve(async (req) => {
     await admin.from('platform_sync_runs').update({
       status: errors.length ? 'partial' : 'success', items_count: count, errors, finished_at: new Date().toISOString(),
     }).eq('id', run!.id)
+    if (errors.length) {
+      await admin.from('anomalies').insert({
+        source: 'platform', type: 'Synchronisation partielle', severity: errors.length > 5 ? 'high' : 'medium',
+        title: `Synchronisation B.I.B Platform : ${errors.length} rejet(s)`, description: errors.slice(0, 20).join('\n'),
+        object_type: 'platform_sync_run', object_id: run!.id, created_by: uid,
+      })
+    }
     return json({ success: true, items: count, errors })
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e)
     await admin.from('platform_sync_runs').update({
       status: 'error', items_count: count, errors: [...errors, msg], finished_at: new Date().toISOString(),
     }).eq('id', run!.id)
+    await admin.from('anomalies').insert({
+      source: 'platform', type: 'Échec de synchronisation', severity: 'high',
+      title: `Échec ${body.action} B.I.B Platform`, description: msg.slice(0, 1000),
+      object_type: 'platform_sync_run', object_id: run!.id, created_by: uid,
+    })
     return json({ error: msg }, 502)
   }
 })

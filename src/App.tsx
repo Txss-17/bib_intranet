@@ -93,6 +93,7 @@ import DemandForecast from "./pages/modules/ops/DemandForecast";
 import StockThresholds from "./pages/modules/ops/StockThresholds";
 import SupplierLeadTimes from "./pages/modules/ops/SupplierLeadTimes";
 import ShopsSupervision from "./pages/modules/ops/ShopsSupervision";
+import Anomalies from "./pages/modules/ops/Anomalies";
 
 
 /* ============================================================
@@ -473,6 +474,10 @@ const App = () => (
                 <Route
                   path="/pole/ops/shops"
                   element={<ShopsSupervision />}
+                />
+                <Route
+                  path="/pole/ops/anomalies"
+                  element={<Anomalies />}
                 />
 
                 <Route

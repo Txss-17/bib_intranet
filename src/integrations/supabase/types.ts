@@ -14,6 +14,104 @@ export type Database = {
   }
   public: {
     Tables: {
+      anomalies: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          object_id: string | null
+          object_type: string | null
+          owner_id: string | null
+          reference: string
+          resolved_at: string | null
+          severity: string
+          source: string
+          status: string
+          title: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          object_id?: string | null
+          object_type?: string | null
+          owner_id?: string | null
+          reference?: string
+          resolved_at?: string | null
+          severity?: string
+          source: string
+          status?: string
+          title: string
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          object_id?: string | null
+          object_type?: string | null
+          owner_id?: string | null
+          reference?: string
+          resolved_at?: string | null
+          severity?: string
+          source?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      anomaly_events: {
+        Row: {
+          anomaly_id: string
+          created_at: string
+          from_status: string | null
+          id: string
+          kind: string
+          message: string | null
+          performed_by: string | null
+          to_status: string | null
+        }
+        Insert: {
+          anomaly_id: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          kind?: string
+          message?: string | null
+          performed_by?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          anomaly_id?: string
+          created_at?: string
+          from_status?: string | null
+          id?: string
+          kind?: string
+          message?: string | null
+          performed_by?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anomaly_events_anomaly_id_fkey"
+            columns: ["anomaly_id"]
+            isOneToOne: false
+            referencedRelation: "anomalies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       approval_history: {
         Row: {
           action: string
@@ -4225,6 +4323,7 @@ export type Database = {
     }
     Functions: {
       calculate_demand_forecast: { Args: never; Returns: number }
+      can_access_anomalies: { Args: { _uid: string }; Returns: boolean }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
