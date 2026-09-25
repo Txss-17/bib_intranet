@@ -146,7 +146,7 @@ Deno.serve(async (req) => {
           ? await admin.from('suppliers').update(row).eq('id', ex.id)
           : await admin.from('suppliers').insert({ ...row, status: 'pending', audit_status: 'pending' })
         if (res.error) errors.push(`candidature ${row.name}: ${res.error.message}`)
-        else { count++; if (!ex) notify('supplier', 'Nouvelle candidature fournisseur', `${row.name}${row.country ? ' — ' + row.country : ''}`, '/pole/supplier') }
+        else { count++; if (!ex) notify('supplier', 'Nouvelle candidature fournisseur', `${row.name}${row.country ? ' — ' + row.country : ''}`, '/pole/supplier/pending') }
       }
 
       // Nouveaux comptes marchands -> pôle Lifecycle
@@ -161,7 +161,7 @@ Deno.serve(async (req) => {
           ? await admin.from('user_accounts').update(row).eq('id', ex.id)
           : await admin.from('user_accounts').insert(row)
         if (res.error) errors.push(`marchand ${row.company_name}: ${res.error.message}`)
-        else { count++; if (!ex) notify('lifecycle', 'Nouveau compte marchand', row.company_name, '/pole/lifecycle/accounts') }
+        else { count++; if (!ex) notify('lifecycle', 'Nouveau compte marchand', row.company_name, '/pole/lifecycle/user-accounts') }
       }
 
       if (notes.length) {
