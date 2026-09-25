@@ -92,6 +92,8 @@ import AuditLink from "./pages/modules/ops/AuditLink";
 import DemandForecast from "./pages/modules/ops/DemandForecast";
 import StockThresholds from "./pages/modules/ops/StockThresholds";
 import SupplierLeadTimes from "./pages/modules/ops/SupplierLeadTimes";
+import ShopsSupervision from "./pages/modules/ops/ShopsSupervision";
+
 
 /* ============================================================
    FINANCE
@@ -469,9 +471,15 @@ const App = () => (
                 />
 
                 <Route
+                  path="/pole/ops/shops"
+                  element={<ShopsSupervision />}
+                />
+
+                <Route
                   path="/pole/ops/pipeline"
                   element={<OrderPipeline />}
                 />
+
 
                 <Route
                   path="/pole/ops/orders"
