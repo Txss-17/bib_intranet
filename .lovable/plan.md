@@ -1,75 +1,41 @@
-# Plan — Workflows d'approbation + Module BI complet
+# Liaison Intranet ↔ B.I.B Platform + contrats rattachés aux boutiques
 
-Deux chantiers distincts livrés dans le même cycle.
+## Constat
+- B.I.B Platform (marketplace) a **sa propre base**, séparée de l'intranet. Aucun lien n'existe aujourd'hui.
+- Côté plateforme : `boutiques`, `supplier_products` (catalogue fournisseur), `products` (produits en boutique), `orders`, `payments`, `subscriptions`, `support_tickets`, `order_issues`.
+- Côté intranet : `shops`, `products`, `suppliers`, `orders`, `support_tickets`… La page Contrats (Compliance) pointe vers une table `contracts` qui n'existe pas encore.
+- Règle BIB respectée : la plateforme reste la source des boutiques/commandes ; l'intranet supervise, et publie uniquement ce qu'il valide (produits fournisseurs). Les infos internes fournisseurs (coûts, audits, notes) ne sont jamais envoyées.
 
-## Chantier 1 — Workflows d'approbation (Déplacements pro & Carte entreprise)
+## Flux prévus
 
-### Backend
-- **`business_trips`** : ajouter colonnes `submitted_at`, `approved_at`, `approved_by`, `rejected_at`, `rejected_by`, `rejection_reason`. Étendre `status` : `draft → submitted → approved | rejected → completed`.
-- **`corporate_card_transactions`** : ajouter `approval_status` (`pending | approved | rejected`), `approved_by`, `approved_at`, `rejection_reason`, `submitted_at`.
-- Politiques RLS : le collaborateur soumet et voit son propre historique ; manager N+1, RH, Direction, Finance valident/rejettent.
-- Table `approval_history` (polymorphe : `entity_type`, `entity_id`, `action`, `actor_id`, `comment`, `created_at`) pour traçabilité.
-
-### UI
-- **Déplacements pro** (`BusinessTrips.tsx`) : filtres par statut, boutons "Soumettre", "Approuver", "Rejeter (motif)", timeline de statut, badge coloré.
-- **Carte entreprise** (`CorporateCards.tsx`) : file d'attente des transactions en attente, actions Approuver/Rejeter, motif obligatoire au rejet, journal d'approbation.
-- Toast + notification intranet à chaque transition.
-
-## Chantier 2 — Module BI
-
-### Nouvelles tables
-- `bi_dashboards` (name, pole_id, status: `draft|validation|published|archived`, version, owner_id, template_id, publish_at, archive_at, target_filiale, target_pole, target_role, target_users[]).
-- `bi_dashboard_widgets` (dashboard_id, type, config JSONB, x/y/w/h grid position, kpi_id nullable, data_source).
-- `bi_dashboard_versions` (dashboard_id, version, snapshot JSONB, author_id, kpis_added, kpis_removed, created_at).
-- `bi_templates` (name, pole_id, preset JSONB).
-- `bi_data_sources` (name, type: `kpi|sql_view|api|dataset|export|custom`, config JSONB).
-
-### Pages (`src/pages/modules/data/bi/`)
-1. **`BIOverview.tsx`** — Cartes : publiés / brouillons / en validation / archivés / widgets perso / déploiements planifiés + accès rapides.
-2. **`BIDashboardsList.tsx`** — Mes tableaux de bord (table Nom/Pôle/Version/Statut/Dernière modif + actions Ouvrir, Dupliquer, Archiver, Historique, Publier).
-3. **`BIDesigner.tsx`** ⭐ — Éditeur 3 colonnes :
-   - Gauche : bibliothèque composants (KPI Card, Graphiques, Tableau, Jauge, Carte, Heatmap, Timeline, Texte, Image, Séparateur, Filtre, Bouton) + sources de données.
-   - Centre : canevas grille responsive drag & drop (react-grid-layout), onglets multi-pages.
-   - Droite : panneau propriétés du widget sélectionné (titre, KPI source, couleur, taille, icône, format, sparkline…).
-   - Toolbar haute : Aperçu, Mode responsive (Desktop/Tablette/Mobile), Undo/Redo, Enregistrer, Envoyer en publication.
-   - Barre basse : stepper workflow (Brouillon → Validation Data → En dev → Test → Planifié → Publié).
-4. **`BIWidgetLibrary.tsx`** — Catalogue widgets disponibles avec preview.
-5. **`BIDataSources.tsx`** — Gestion des sources (KPI catalog / Vues SQL / API / Dataset / Export / Calcul).
-6. **`BITemplates.tsx`** — Templates (Direction, Finance, Audit, Supplier, Marketplace, RH) → "Utiliser ce template".
-7. **`BIPreview.tsx`** — Prévisualisation Desktop/Tablette/Mobile avant publication.
-8. **`BIAssignment.tsx`** — Modal d'affectation (Filiale/Pôle/Rôle/Manager/Utilisateur).
-9. **`BIPublication.tsx`** — Actions : Enregistrer, Envoyer en validation, Publier, Planifier publication, Programmer archivage.
-10. **`BIHistory.tsx`** — Historique versions : KPI ajoutés/supprimés, auteur, date, diff.
-
-### Hooks
-`src/hooks/useBI.ts` : `useDashboards`, `useDashboard`, `useCreateDashboard`, `useUpdateDashboard`, `useDashboardWidgets`, `useDashboardVersions`, `useTemplates`, `useDataSources`, `usePublishDashboard`, `useDuplicateDashboard`, `useArchiveDashboard`.
-
-### Intégration
-- Router : `/pole/data/bi`, `/pole/data/bi/dashboards`, `/pole/data/bi/designer/:id`, `/pole/data/bi/templates`, `/pole/data/bi/library`, `/pole/data/bi/sources`, `/pole/data/bi/history/:id`.
-- Sidebar Data : ajouter entrée "BI" avec icône `LayoutDashboard`.
-- Envoi en publication → crée une `publication_requests` liée au dashboard → alimente le Backlog Tech existant.
-
-### Flux
 ```text
-Catalogue KPI → Sélection KPI → BI Designer → Prévisualisation
-→ Validation → Demande de publication → Backlog Tech → Déploiement
+PLATEFORME  --(lecture)-->  INTRANET
+  boutiques            -> shops (Boutiques & Marchands)
+  orders / payments    -> orders (1 commande = 1 boutique)
+  subscriptions        -> shops.subscription_plan
+  support_tickets,
+  order_issues         -> support_tickets
+
+INTRANET  --(envoi)-->  PLATEFORME
+  produit fournisseur validé -> supplier_products (catalogue)
+  statut boutique (test/active/suspendue) -> boutiques.status
 ```
 
+## Ce qui sera construit (intranet)
+1. **Rattachement des données** : chaque boutique, produit, commande et ticket garde l'identifiant de son équivalent plateforme (pas de doublon, resynchronisation sûre).
+2. **Journal de synchronisation** : chaque échange (date, sens, nb d'éléments, erreurs) est tracé et visible dans Tech → Intégrations, avec un bouton « Synchroniser maintenant ».
+3. **Publication au catalogue** : bouton « Publier sur la plateforme » dans Fournisseurs → Produits validés (prix public, MOQ, marge max, visuel). Statut « Publié / À republier ».
+4. **Contrats ↔ boutiques** : création de la table des contrats (numéro, type, boutique, fournisseur optionnel, dates, valeur, statut, document). 
+   - Page Contrats : choix de la boutique, filtre par boutique.
+   - Fiche boutique (Boutiques & Marchands) : onglet « Contrats », statut contractuel mis à jour automatiquement.
+   - Blocage : une boutique ne peut passer « Active » sans contrat signé.
+5. **Droits** : lecture/écriture des contrats limitées à Direction, Admin, Compliance, Ops, Lifecycle ; synchronisation limitée à Tech/Admin.
+
+## Côté B.I.B Platform (à faire dans ce projet-là)
+Je ne peux pas modifier l'autre projet depuis ici. Je vous fournirai un message prêt à coller dans B.I.B Platform pour y créer deux points d'accès sécurisés : « export vers l'intranet » et « réception depuis l'intranet ».
+
 ## Détails techniques
-
-- Drag & drop grille : `react-grid-layout` (léger, mature).
-- Charts : `recharts` (déjà présent).
-- Snapshot version stocké en JSONB (config widgets + layout).
-- Le stepper workflow réutilise les statuts existants de `publication_requests` pour cohérence avec le Backlog Tech.
-- Toutes tables `public.*` avec GRANT authenticated/service_role + RLS auth.uid() ou has_role.
-- Auto-notification intranet à chaque transition (soumission, validation, publication).
-
-## Ordre de livraison
-
-1. Migration Chantier 1 (workflows trips/cards).
-2. UI Chantier 1 (BusinessTrips + CorporateCards).
-3. Migration Chantier 2 (tables BI).
-4. Hook `useBI` + pages Overview / List / Templates / Sources / Library.
-5. BI Designer (drag & drop + panneau propriétés).
-6. Preview / Publication / Assignment / History.
-7. Routes + sidebar + intégration Publication Requests.
+- Migration : colonnes `platform_id` (+ `platform_synced_at`) sur shops, products, orders, support_tickets ; tables `platform_sync_runs` et `contracts` (shop_id FK, supplier_id FK nullable) avec GRANT + RLS via `has_any_pole`/`is_leadership` ; trigger bloquant `active` sans contrat `signed` ; trigger qui met à jour `shops.contract_status`.
+- Edge Function intranet `platform-bridge` (actions `pull`, `push_product`, `push_shop_status`), appelant les fonctions plateforme `intranet-export` / `intranet-import` avec un secret partagé `BIB_PLATFORM_BRIDGE_SECRET` (à saisir des deux côtés) et l'URL de la plateforme.
+- Upsert idempotent par `platform_id`; commandes rejetées si boutique inconnue.
+- Hooks : `usePlatformSync.ts`, `useContracts.ts` réécrit ; UI : TechIntegrations, ValidatedProducts, Contracts, ContractForm, ShopsSupervision.
