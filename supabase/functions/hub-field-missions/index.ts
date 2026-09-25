@@ -1,5 +1,5 @@
 // Point d'entrée pour B.I.B Audit Hub : missions terrain (field_audits) de l'auditeur.
-// Auth : secret partagé LINKSY_API_SECRET_KEY (en-tête x-linksy-secret) + e-mail de l'auditeur,
+// Auth : secret partagé AUDIT_HUB_MISSIONS_SECRET (en-tête x-linksy-secret) + e-mail de l'auditeur,
 // qui doit correspondre à un profil intranet. L'auditeur ne voit/modifie que ses missions.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers })
   if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
-  const expected = Deno.env.get('LINKSY_API_SECRET_KEY')
+  const expected = Deno.env.get('AUDIT_HUB_MISSIONS_SECRET')
   const provided = req.headers.get('x-linksy-secret') ?? ''
   if (!expected || !safeEqual(provided, expected)) return json({ error: 'Unauthorized' }, 401)
 
