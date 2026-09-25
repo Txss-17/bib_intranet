@@ -1051,3 +1051,6 @@ export const transversalNavigations: Record<
 };
 
 export default moduleNavigations;
+
+export const getModuleNavigation = (poleId: string): (ModuleNavigationItem & { labelFr?: string })[] =>
+  (moduleNavigations[poleId]?.items ?? []).map((i) => ({ ...i, labelFr: i.label }));
