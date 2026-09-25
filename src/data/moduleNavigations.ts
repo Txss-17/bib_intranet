@@ -170,11 +170,18 @@ export const moduleNavigations: Record<
         icon: 'LayoutDashboard',
       },
       {
+        id: 'shops',
+        label: 'Boutiques & Marchands',
+        path: '/pole/ops/shops',
+        icon: 'Store',
+      },
+      {
         id: 'orders',
         label: 'Commandes',
         path: '/pole/ops/pipeline',
         icon: 'ShoppingBag',
       },
+
       {
         id: 'shipments',
         label: 'Expéditions',
