@@ -181,7 +181,7 @@ const FinanceDashboard = () => {
             </ResponsiveContainer>
           </CardContent>
         </Card>
-      <Card>
+      <Card className="lg:col-span-3">
         <CardHeader><CardTitle className="flex items-center gap-2"><Building2 className="h-5 w-5 text-primary" /> Revenus B.I.B Platform</CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
