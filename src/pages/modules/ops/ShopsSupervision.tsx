@@ -36,6 +36,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ShopContractsPanel } from '@/components/ops/ShopContractsPanel';
 import {
   Store,
   FlaskConical,
@@ -409,6 +410,8 @@ export default function ShopsSupervision() {
                     <p className="text-muted-foreground">{selected.suspension_reason}</p>
                   </div>
                 )}
+
+                <ShopContractsPanel shop={selected} />
 
                 <div>
                   <p className="mb-2 text-sm font-medium">Décisions disponibles</p>
