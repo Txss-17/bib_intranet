@@ -16,15 +16,24 @@ export type Database = {
     Tables: {
       anomalies: {
         Row: {
+          ai_decision: string | null
+          ai_suggestion: Json | null
+          ai_validated_at: string | null
+          ai_validated_by: string | null
+          category: string | null
+          checks: Json
           closed_at: string | null
           created_at: string
           created_by: string | null
           description: string | null
+          due_at: string | null
           id: string
+          last_reminded_at: string | null
           object_id: string | null
           object_type: string | null
           owner_id: string | null
           reference: string
+          reminder_at: string | null
           resolved_at: string | null
           severity: string
           source: string
@@ -34,15 +43,24 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          ai_decision?: string | null
+          ai_suggestion?: Json | null
+          ai_validated_at?: string | null
+          ai_validated_by?: string | null
+          category?: string | null
+          checks?: Json
           closed_at?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          due_at?: string | null
           id?: string
+          last_reminded_at?: string | null
           object_id?: string | null
           object_type?: string | null
           owner_id?: string | null
           reference?: string
+          reminder_at?: string | null
           resolved_at?: string | null
           severity?: string
           source: string
@@ -52,15 +70,24 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          ai_decision?: string | null
+          ai_suggestion?: Json | null
+          ai_validated_at?: string | null
+          ai_validated_by?: string | null
+          category?: string | null
+          checks?: Json
           closed_at?: string | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          due_at?: string | null
           id?: string
+          last_reminded_at?: string | null
           object_id?: string | null
           object_type?: string | null
           owner_id?: string | null
           reference?: string
+          reminder_at?: string | null
           resolved_at?: string | null
           severity?: string
           source?: string
@@ -105,6 +132,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "anomaly_events_anomaly_id_fkey"
+            columns: ["anomaly_id"]
+            isOneToOne: false
+            referencedRelation: "anomalies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      anomaly_notifications: {
+        Row: {
+          anomaly_id: string
+          id: string
+          kind: string
+          message: string | null
+          recipient_id: string | null
+          sent_at: string
+        }
+        Insert: {
+          anomaly_id: string
+          id?: string
+          kind: string
+          message?: string | null
+          recipient_id?: string | null
+          sent_at?: string
+        }
+        Update: {
+          anomaly_id?: string
+          id?: string
+          kind?: string
+          message?: string | null
+          recipient_id?: string | null
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anomaly_notifications_anomaly_id_fkey"
             columns: ["anomaly_id"]
             isOneToOne: false
             referencedRelation: "anomalies"
@@ -1738,6 +1800,72 @@ export type Database = {
         }
         Relationships: []
       }
+      invoices: {
+        Row: {
+          amount_ht: number
+          amount_ttc: number
+          created_at: string
+          currency: string
+          id: string
+          invoice_number: string
+          issued_at: string
+          kind: string
+          order_id: string | null
+          platform_id: string | null
+          shop_id: string | null
+          status: string
+          updated_at: string
+          vat_amount: number
+        }
+        Insert: {
+          amount_ht?: number
+          amount_ttc?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_number: string
+          issued_at?: string
+          kind?: string
+          order_id?: string | null
+          platform_id?: string | null
+          shop_id?: string | null
+          status?: string
+          updated_at?: string
+          vat_amount?: number
+        }
+        Update: {
+          amount_ht?: number
+          amount_ttc?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          invoice_number?: string
+          issued_at?: string
+          kind?: string
+          order_id?: string | null
+          platform_id?: string | null
+          shop_id?: string | null
+          status?: string
+          updated_at?: string
+          vat_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kpi_catalog: {
         Row: {
           app_origin: string
@@ -2094,6 +2222,60 @@ export type Database = {
           id?: string
         }
         Relationships: []
+      }
+      merchant_payouts: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          order_id: string | null
+          paid_at: string | null
+          platform_id: string | null
+          shop_id: string | null
+          status: string
+          stripe_payout_id: string | null
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id?: string | null
+          paid_at?: string | null
+          platform_id?: string | null
+          shop_id?: string | null
+          status?: string
+          stripe_payout_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          order_id?: string | null
+          paid_at?: string | null
+          platform_id?: string | null
+          shop_id?: string | null
+          status?: string
+          stripe_payout_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_payouts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_payouts_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_routing_log: {
         Row: {
@@ -3243,6 +3425,88 @@ export type Database = {
         }
         Relationships: []
       }
+      reconciliation_items: {
+        Row: {
+          anomaly_id: string | null
+          commission_amount: number | null
+          computed_at: string
+          expected_payout: number | null
+          gaps: string[]
+          id: string
+          invoice_amount: number | null
+          order_amount: number
+          order_id: string
+          payout_amount: number | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          shop_id: string | null
+          status: string
+          stripe_amount: number | null
+          stripe_fee: number | null
+        }
+        Insert: {
+          anomaly_id?: string | null
+          commission_amount?: number | null
+          computed_at?: string
+          expected_payout?: number | null
+          gaps?: string[]
+          id?: string
+          invoice_amount?: number | null
+          order_amount?: number
+          order_id: string
+          payout_amount?: number | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          shop_id?: string | null
+          status?: string
+          stripe_amount?: number | null
+          stripe_fee?: number | null
+        }
+        Update: {
+          anomaly_id?: string | null
+          commission_amount?: number | null
+          computed_at?: string
+          expected_payout?: number | null
+          gaps?: string[]
+          id?: string
+          invoice_amount?: number | null
+          order_amount?: number
+          order_id?: string
+          payout_amount?: number | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          shop_id?: string | null
+          status?: string
+          stripe_amount?: number | null
+          stripe_fee?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliation_items_anomaly_id_fkey"
+            columns: ["anomaly_id"]
+            isOneToOne: false
+            referencedRelation: "anomalies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reconciliation_items_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       replenishment_suggestions: {
         Row: {
           approved_at: string | null
@@ -3629,6 +3893,69 @@ export type Database = {
             columns: ["target_partner_id"]
             isOneToOne: false
             referencedRelation: "logistics_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stripe_events: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          event_type: string
+          fee_amount: number
+          id: string
+          occurred_at: string
+          order_id: string | null
+          order_number: string | null
+          payment_intent: string | null
+          shop_id: string | null
+          status: string
+          stripe_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          event_type?: string
+          fee_amount?: number
+          id?: string
+          occurred_at?: string
+          order_id?: string | null
+          order_number?: string | null
+          payment_intent?: string | null
+          shop_id?: string | null
+          status?: string
+          stripe_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          event_type?: string
+          fee_amount?: number
+          id?: string
+          occurred_at?: string
+          order_id?: string | null
+          order_number?: string | null
+          payment_intent?: string | null
+          shop_id?: string | null
+          status?: string
+          stripe_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stripe_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
         ]
@@ -4406,6 +4733,7 @@ export type Database = {
     Functions: {
       calculate_demand_forecast: { Args: never; Returns: number }
       can_access_anomalies: { Args: { _uid: string }; Returns: boolean }
+      can_access_finance: { Args: { _uid: string }; Returns: boolean }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -4439,6 +4767,14 @@ export type Database = {
         Returns: number
       }
       my_poles: { Args: never; Returns: string[] }
+      notify_anomaly: {
+        Args: {
+          _a: Database["public"]["Tables"]["anomalies"]["Row"]
+          _kind: string
+          _msg: string
+        }
+        Returns: undefined
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -4447,6 +4783,8 @@ export type Database = {
           read_ct: number
         }[]
       }
+      run_reconciliation: { Args: never; Returns: number }
+      send_anomaly_reminders: { Args: never; Returns: number }
     }
     Enums: {
       app_role:
