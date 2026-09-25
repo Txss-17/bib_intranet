@@ -2011,6 +2011,7 @@ export type Database = {
           shipped_at: string | null
           shipping_address: string | null
           shipping_method: string | null
+          shop_id: string | null
           shop_sku: string | null
           status: string | null
           total_amount: number | null
@@ -2032,6 +2033,7 @@ export type Database = {
           shipped_at?: string | null
           shipping_address?: string | null
           shipping_method?: string | null
+          shop_id?: string | null
           shop_sku?: string | null
           status?: string | null
           total_amount?: number | null
@@ -2053,6 +2055,7 @@ export type Database = {
           shipped_at?: string | null
           shipping_address?: string | null
           shipping_method?: string | null
+          shop_id?: string | null
           shop_sku?: string | null
           status?: string | null
           total_amount?: number | null
@@ -2073,6 +2076,13 @@ export type Database = {
             columns: ["partner_id"]
             isOneToOne: false
             referencedRelation: "logistics_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
             referencedColumns: ["id"]
           },
           {
@@ -3095,6 +3105,134 @@ export type Database = {
           source?: string | null
           status?: string
           title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      shop_status_events: {
+        Row: {
+          action: string | null
+          from_status: string | null
+          id: string
+          performed_at: string
+          performed_by: string | null
+          reason: string | null
+          shop_id: string
+          to_status: string
+        }
+        Insert: {
+          action?: string | null
+          from_status?: string | null
+          id?: string
+          performed_at?: string
+          performed_by?: string | null
+          reason?: string | null
+          shop_id: string
+          to_status: string
+        }
+        Update: {
+          action?: string | null
+          from_status?: string | null
+          id?: string
+          performed_at?: string
+          performed_by?: string | null
+          reason?: string | null
+          shop_id?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shop_status_events_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shops: {
+        Row: {
+          activated_at: string | null
+          app_origin: string
+          category: string | null
+          closed_at: string | null
+          commission_rate: number | null
+          contract_signed_at: string | null
+          contract_status: string | null
+          country: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          merchant_email: string | null
+          merchant_name: string | null
+          merchant_phone: string | null
+          name: string
+          notes: string | null
+          shop_code: string
+          slug: string | null
+          status: string
+          subscription_plan: string | null
+          suspended_at: string | null
+          suspension_reason: string | null
+          test_ends_at: string | null
+          test_extensions: number
+          test_started_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          app_origin?: string
+          category?: string | null
+          closed_at?: string | null
+          commission_rate?: number | null
+          contract_signed_at?: string | null
+          contract_status?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          merchant_email?: string | null
+          merchant_name?: string | null
+          merchant_phone?: string | null
+          name: string
+          notes?: string | null
+          shop_code: string
+          slug?: string | null
+          status?: string
+          subscription_plan?: string | null
+          suspended_at?: string | null
+          suspension_reason?: string | null
+          test_ends_at?: string | null
+          test_extensions?: number
+          test_started_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          app_origin?: string
+          category?: string | null
+          closed_at?: string | null
+          commission_rate?: number | null
+          contract_signed_at?: string | null
+          contract_status?: string | null
+          country?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          merchant_email?: string | null
+          merchant_name?: string | null
+          merchant_phone?: string | null
+          name?: string
+          notes?: string | null
+          shop_code?: string
+          slug?: string | null
+          status?: string
+          subscription_plan?: string | null
+          suspended_at?: string | null
+          suspension_reason?: string | null
+          test_ends_at?: string | null
+          test_extensions?: number
+          test_started_at?: string | null
           updated_at?: string
         }
         Relationships: []
