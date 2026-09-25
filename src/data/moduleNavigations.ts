@@ -549,6 +549,12 @@ export const moduleNavigations: Record<
         icon: 'MapPinCheck',
       },
       {
+        id: 'missions',
+        label: 'Suivi des missions',
+        path: '/pole/audit/missions',
+        icon: 'ClipboardCheck',
+      },
+      {
         id: 'supplier',
         label: 'Audits fournisseurs',
         path: '/pole/audit/supplier',
