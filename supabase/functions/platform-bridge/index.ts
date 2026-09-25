@@ -69,6 +69,10 @@ Deno.serve(async (req) => {
   const errors: string[] = []
   let count = 0
   const now = new Date().toISOString()
+  // Notifications routées vers le pôle concerné (une par nouvel élément)
+  const notes: Record<string, unknown>[] = []
+  const notify = (pole_id: string, title: string, message: string, action_url: string, type = 'info') =>
+    notes.push({ pole_id, title, message, action_url, type })
 
   try {
     if (body.action === 'pull') {
@@ -88,7 +92,13 @@ Deno.serve(async (req) => {
           ? await admin.from('shops').update(row).eq('id', ex.id).select('id').single()
           : await admin.from('shops').insert({ ...row, shop_code: `BOS-${String(b.id).slice(0, 8).toUpperCase()}` }).select('id').single()
         if (res.error) errors.push(`boutique ${b.name}: ${res.error.message}`)
-        else { shopMap.set(b.id, res.data.id); count++ }
+        else {
+          shopMap.set(b.id, res.data.id); count++
+          if (!ex) {
+            notify('ops', 'Nouvelle boutique à examiner', b.name, '/pole/ops/shops')
+            notify('lifecycle', 'Nouvelle boutique sur la plateforme', b.name, '/pole/ops/shops')
+          }
+        }
       }
       if ((data.orders ?? []).length) {
         const { data: known } = await admin.from('shops').select('id, platform_id').not('platform_id', 'is', null)
@@ -120,7 +130,43 @@ Deno.serve(async (req) => {
           ? await admin.from('support_tickets').update(row).eq('id', ex.id)
           : await admin.from('support_tickets').insert(row)
         if (res.error) errors.push(`ticket: ${res.error.message}`)
-        else count++
+        else { count++; if (!ex) notify('lifecycle', `Nouveau ticket plateforme`, row.subject, '/pole/lifecycle/support', row.priority === 'high' ? 'warning' : 'info') }
+      }
+
+      // Candidatures fournisseurs -> pôle Fournisseurs
+      for (const a of data.supplier_applications ?? []) {
+        const row = {
+          platform_id: a.id, name: a.company_name ?? a.name ?? 'Candidature fournisseur',
+          contact_name: a.contact_name ?? null, contact_email: a.contact_email ?? a.email ?? null,
+          email: a.contact_email ?? a.email ?? null, phone: a.contact_phone ?? a.phone ?? null,
+          country: a.country ?? null, notes: a.message ?? a.description ?? null, platform_synced_at: now,
+        }
+        const { data: ex } = await admin.from('suppliers').select('id').eq('platform_id', a.id).maybeSingle()
+        const res = ex
+          ? await admin.from('suppliers').update(row).eq('id', ex.id)
+          : await admin.from('suppliers').insert({ ...row, status: 'pending', audit_status: 'pending' })
+        if (res.error) errors.push(`candidature ${row.name}: ${res.error.message}`)
+        else { count++; if (!ex) notify('supplier', 'Nouvelle candidature fournisseur', `${row.name}${row.country ? ' — ' + row.country : ''}`, '/pole/supplier') }
+      }
+
+      // Nouveaux comptes marchands -> pôle Lifecycle
+      for (const m of data.merchants ?? []) {
+        const row = {
+          platform_id: m.id, company_name: m.company_name ?? m.business_name ?? m.full_name ?? m.email ?? 'Marchand',
+          contact_name: m.full_name ?? m.contact_name ?? null, contact_email: m.email ?? 'inconnu@platform',
+          subscription_status: m.subscription_status ?? null, platform_synced_at: now,
+        }
+        const { data: ex } = await admin.from('user_accounts').select('id').eq('platform_id', m.id).maybeSingle()
+        const res = ex
+          ? await admin.from('user_accounts').update(row).eq('id', ex.id)
+          : await admin.from('user_accounts').insert(row)
+        if (res.error) errors.push(`marchand ${row.company_name}: ${res.error.message}`)
+        else { count++; if (!ex) notify('lifecycle', 'Nouveau compte marchand', row.company_name, '/pole/lifecycle/accounts') }
+      }
+
+      if (notes.length) {
+        const { error: nErr } = await admin.from('notifications').insert(notes)
+        if (nErr) errors.push(`notifications: ${nErr.message}`)
       }
     }
 
