@@ -2947,6 +2947,7 @@ export type Database = {
           id: string
           image_url: string | null
           ingredients: string | null
+          lifecycle_status: string
           margin: number | null
           moq: number | null
           name: string
@@ -2982,6 +2983,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           ingredients?: string | null
+          lifecycle_status?: string
           margin?: number | null
           moq?: number | null
           name: string
@@ -3017,6 +3019,7 @@ export type Database = {
           id?: string
           image_url?: string | null
           ingredients?: string | null
+          lifecycle_status?: string
           margin?: number | null
           moq?: number | null
           name?: string
