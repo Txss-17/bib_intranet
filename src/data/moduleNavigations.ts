@@ -187,6 +187,12 @@ export const moduleNavigations: Record<
         path: '/pole/ops/pipeline',
         icon: 'ShoppingBag',
       },
+      {
+        id: 'product-lifecycle',
+        label: 'Cycle de vie produits',
+        path: '/pole/ops/product-lifecycle',
+        icon: 'GitBranch',
+      },
 
       {
         id: 'shipments',

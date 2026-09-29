@@ -85,6 +85,7 @@ import LogisticsIncidents from "./pages/modules/ops/LogisticsIncidents";
 import Partners from "./pages/modules/ops/Partners";
 import DistributedStocks from "./pages/modules/ops/DistributedStocks";
 import ProductCatalog from "./pages/modules/ops/ProductCatalog";
+import ProductLifecycle from "./pages/modules/ops/ProductLifecycle";
 import SyncFlows from "./pages/modules/ops/SyncFlows";
 import Replenishment from "./pages/modules/ops/Replenishment";
 import OrderPipeline from "./pages/modules/ops/OrderPipeline";
@@ -506,6 +507,11 @@ const App = () => (
                 <Route
                   path="/pole/ops/catalog"
                   element={<ProductCatalog />}
+                />
+
+                <Route
+                  path="/pole/ops/product-lifecycle"
+                  element={<ProductLifecycle />}
                 />
 
                 <Route
