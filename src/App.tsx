@@ -95,6 +95,7 @@ import StockThresholds from "./pages/modules/ops/StockThresholds";
 import SupplierLeadTimes from "./pages/modules/ops/SupplierLeadTimes";
 import ShopsSupervision from "./pages/modules/ops/ShopsSupervision";
 import Anomalies from "./pages/modules/ops/Anomalies";
+import WorkTasks from "./pages/modules/work/WorkTasks";
 import Reconciliation from './pages/modules/finance/Reconciliation';
 
 
@@ -1589,7 +1590,7 @@ const App = () => (
 
                 <Route
                   path="/work/tasks"
-                  element={<SubSectionPage />}
+                  element={<WorkTasks />}
                 />
 
                 <Route

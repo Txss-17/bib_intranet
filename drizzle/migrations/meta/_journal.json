@@ -57,6 +57,13 @@
       "when": 1790362503642,
       "tag": "0007_finance_reconciliation_and_anomaly_deadlines",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790741761015,
+      "tag": "0008_work_tasks_select_scoped",
+      "breakpoints": true
     }
   ]
 }
