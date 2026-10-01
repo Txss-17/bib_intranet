@@ -16,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTableInteractions } from '@/hooks/useTableInteractions';
 import { useExecutiveKPIs, useRecentCriticalAlerts, usePolePerformance } from '@/hooks/useExecutiveKPIs';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import DirectionOpsPanel from '@/components/direction/DirectionOpsPanel';
 
 const ExecutiveDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -112,6 +113,8 @@ const ExecutiveDashboard = () => {
           </Card>
         ))}
       </div>
+
+      <DirectionOpsPanel />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList>
