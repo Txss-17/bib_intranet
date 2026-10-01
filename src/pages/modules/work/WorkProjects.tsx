@@ -89,9 +89,11 @@ export default function WorkProjects() {
           <SelectContent>
             <SelectItem value="active">En cours</SelectItem>
             <SelectItem value="all">Tous</SelectItem>
-            {Object.entries(PROJECT_STATUS_LABELS).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
-            ))}
+            {Object.entries(PROJECT_STATUS_LABELS)
+              .filter(([k]) => k !== 'active')
+              .map(([k, v]) => (
+                <SelectItem key={k} value={k}>{v}</SelectItem>
+              ))}
           </SelectContent>
         </Select>
       </div>

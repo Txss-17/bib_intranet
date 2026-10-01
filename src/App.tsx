@@ -96,6 +96,11 @@ import SupplierLeadTimes from "./pages/modules/ops/SupplierLeadTimes";
 import ShopsSupervision from "./pages/modules/ops/ShopsSupervision";
 import Anomalies from "./pages/modules/ops/Anomalies";
 import WorkTasks from "./pages/modules/work/WorkTasks";
+import WorkProjects from "./pages/modules/work/WorkProjects";
+import WorkProcesses from "./pages/modules/work/WorkProcesses";
+import WorkValidations from "./pages/modules/work/WorkValidations";
+import WorkEscalations from "./pages/modules/work/WorkEscalations";
+import WorkActivities from "./pages/modules/work/WorkActivities";
 import Reconciliation from './pages/modules/finance/Reconciliation';
 
 
@@ -1595,27 +1600,27 @@ const App = () => (
 
                 <Route
                   path="/work/projects"
-                  element={<SubSectionPage />}
+                  element={<WorkProjects />}
                 />
 
                 <Route
                   path="/work/processes"
-                  element={<SubSectionPage />}
+                  element={<WorkProcesses />}
                 />
 
                 <Route
                   path="/work/validations"
-                  element={<SubSectionPage />}
+                  element={<WorkValidations />}
                 />
 
                 <Route
                   path="/work/escalations"
-                  element={<SubSectionPage />}
+                  element={<WorkEscalations />}
                 />
 
                 <Route
                   path="/work/activities"
-                  element={<SubSectionPage />}
+                  element={<WorkActivities />}
                 />
 
                 <Route
