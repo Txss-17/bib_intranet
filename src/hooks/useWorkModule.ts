@@ -156,6 +156,7 @@ export interface WorkEscalation {
   assigned_to: string | null;
   assigned_name?: string | null;
   resolved_at: string | null;
+  resolution_note: string | null;
   created_at: string;
 }
 

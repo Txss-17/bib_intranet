@@ -1182,6 +1182,87 @@ export type Database = {
         }
         Relationships: []
       }
+      direction_roadmap_history: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          item_id: string | null
+          item_title: string | null
+          new_value: Json | null
+          old_value: Json | null
+          performed_by: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          item_title?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          performed_by?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          item_id?: string | null
+          item_title?: string | null
+          new_value?: Json | null
+          old_value?: Json | null
+          performed_by?: string | null
+        }
+        Relationships: []
+      }
+      direction_roadmap_items: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          kind: string
+          objectives: Json
+          phase: string | null
+          progress: number
+          sort_order: number
+          status: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          objectives?: Json
+          phase?: string | null
+          progress?: number
+          sort_order?: number
+          status?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          kind?: string
+          objectives?: Json
+          phase?: string | null
+          progress?: number
+          sort_order?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+          weight?: number
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           access_level: string
@@ -1592,6 +1673,39 @@ export type Database = {
           target_amount?: number
           updated_at?: string | null
           valuation?: number | null
+        }
+        Relationships: []
+      }
+      governance_documents: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          name: string
+          uploaded_by: string | null
+          version: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          name: string
+          uploaded_by?: string | null
+          version?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          name?: string
+          uploaded_by?: string | null
+          version?: string | null
         }
         Relationships: []
       }
@@ -4737,6 +4851,7 @@ export type Database = {
           id: string
           pole: string | null
           raised_by: string | null
+          resolution_note: string | null
           resolved_at: string | null
           severity: string
           status: string
@@ -4749,6 +4864,7 @@ export type Database = {
           id?: string
           pole?: string | null
           raised_by?: string | null
+          resolution_note?: string | null
           resolved_at?: string | null
           severity?: string
           status?: string
@@ -4761,6 +4877,7 @@ export type Database = {
           id?: string
           pole?: string | null
           raised_by?: string | null
+          resolution_note?: string | null
           resolved_at?: string | null
           severity?: string
           status?: string
