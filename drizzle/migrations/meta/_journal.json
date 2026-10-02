@@ -71,6 +71,13 @@
       "when": 1790741884539,
       "tag": "0009_work_module_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790916805998,
+      "tag": "0010_direction_editable_content",
+      "breakpoints": true
     }
   ]
 }
