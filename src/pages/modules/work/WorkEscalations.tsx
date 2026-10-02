@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { AlertOctagon, Plus, Search, Trash2 } from 'lucide-react';
@@ -31,8 +31,21 @@ export default function WorkEscalations() {
   const [open, setOpen] = useState(false);
   const [selId, setSelId] = useState<string | null>(null);
   const [form, setForm] = useState({ title: '', description: '', pole: '', severity: 'medium', assigned_to: '' });
+  const [edit, setEdit] = useState({ title: '', description: '', pole: '', severity: 'medium', assigned_to: '', resolution_note: '' });
 
   const sel = rows.find((r) => r.id === selId) ?? null;
+  useEffect(() => {
+    if (sel)
+      setEdit({
+        title: sel.title,
+        description: sel.description ?? '',
+        pole: sel.pole ?? '',
+        severity: sel.severity,
+        assigned_to: sel.assigned_to ?? '',
+        resolution_note: sel.resolution_note ?? '',
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selId, sel?.id, sel?.status]);
 
   const filtered = useMemo(
     () =>
@@ -213,15 +226,79 @@ export default function WorkEscalations() {
                   <Badge variant={statusVariant(sel.status)}>{ESCALATION_STATUS_LABELS[sel.status]}</Badge>
                   <Badge variant={severityVariant(sel.severity)}>{ESCALATION_SEVERITY_LABELS[sel.severity]}</Badge>
                 </div>
-                {sel.description && <p className="whitespace-pre-wrap">{sel.description}</p>}
+                <div className="grid gap-3 rounded-md border p-3">
+                  <p className="text-xs font-medium text-muted-foreground">Modifier l'escalade</p>
+                  <div>
+                    <Label>Titre</Label>
+                    <Input value={edit.title} onChange={(e) => setEdit({ ...edit, title: e.target.value })} />
+                  </div>
+                  <div>
+                    <Label>Description</Label>
+                    <Textarea value={edit.description} onChange={(e) => setEdit({ ...edit, description: e.target.value })} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <Label>Pôle</Label>
+                      <Input value={edit.pole} onChange={(e) => setEdit({ ...edit, pole: e.target.value })} />
+                    </div>
+                    <div>
+                      <Label>Gravité</Label>
+                      <Select value={edit.severity} onValueChange={(v) => setEdit({ ...edit, severity: v })}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(ESCALATION_SEVERITY_LABELS).map(([k, v]) => (
+                            <SelectItem key={k} value={k}>{v}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Assignée à</Label>
+                    <Select value={edit.assigned_to || 'none'} onValueChange={(v) => setEdit({ ...edit, assigned_to: v === 'none' ? '' : v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Personne</SelectItem>
+                        {people.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Note de résolution</Label>
+                    <Textarea
+                      value={edit.resolution_note}
+                      placeholder="Obligatoire pour passer en « Résolue »"
+                      onChange={(e) => setEdit({ ...edit, resolution_note: e.target.value })}
+                    />
+                  </div>
+                  <Button
+                    size="sm"
+                    disabled={!edit.title || escalations.update.isPending}
+                    onClick={() =>
+                      escalations.update.mutate({
+                        id: sel.id,
+                        title: edit.title,
+                        description: edit.description || null,
+                        pole: edit.pole || null,
+                        severity: edit.severity,
+                        assigned_to: edit.assigned_to || null,
+                        resolution_note: edit.resolution_note || null,
+                      })
+                    }
+                  >
+                    Enregistrer les modifications
+                  </Button>
+                </div>
                 <div className="grid grid-cols-2 gap-3 rounded-md border p-3">
                   <div>
                     <p className="text-xs text-muted-foreground">Remontée par</p>
                     <p className="font-medium">{sel.raised_by_name ?? '—'}</p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground">Assignée à</p>
-                    <p className="font-medium">{sel.assigned_name ?? '—'}</p>
+                    <p className="text-xs text-muted-foreground">Résolue le</p>
+                    <p className="font-medium">{sel.resolved_at ? format(new Date(sel.resolved_at), 'dd MMM yyyy HH:mm', { locale: fr }) : '—'}</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -238,10 +315,27 @@ export default function WorkEscalations() {
                   {sel.status !== 'resolved' && (
                     <Button
                       size="sm"
-                      disabled={escalations.update.isPending}
-                      onClick={() => escalations.update.mutate({ id: sel.id, status: 'resolved', resolved_at: new Date().toISOString() })}
+                      disabled={!edit.resolution_note.trim() || escalations.update.isPending}
+                      onClick={() =>
+                        escalations.update.mutate({
+                          id: sel.id,
+                          status: 'resolved',
+                          resolved_at: new Date().toISOString(),
+                          resolution_note: edit.resolution_note.trim(),
+                        })
+                      }
                     >
                       → Résolue
+                    </Button>
+                  )}
+                  {sel.status === 'resolved' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={escalations.update.isPending}
+                      onClick={() => escalations.update.mutate({ id: sel.id, status: 'open', resolved_at: null })}
+                    >
+                      Rouvrir
                     </Button>
                   )}
                   <Button
