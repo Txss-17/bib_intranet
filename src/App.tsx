@@ -818,51 +818,29 @@ const App = () => (
                     ==================================================== */}
 
                 <Route
-                  path="/pole/product"
-                  element={<PoleDashboard />}
-                />
-                <Route
-                  path="/pole/product/product"
-                  element={<SubSectionPage />}
-                />
-                <Route
-                  path="/pole/product/roadmap"
-                  element={<SubSectionPage />}
-                />
-                <Route
-                  path="/pole/product/backlog"
-                  element={<SubSectionPage />}
-                />
-                <Route
-                  path="/pole/product/engineering"
-                  element={<ProductEngineeringDashboard />}
-                />
-                <Route
-                  path="/pole/product/studio"
-                  element={<ProductStudio />}
-                />
-                <Route
-                  path="/pole/product/integrations"
-                  element={<ProductIntegrations />}
-                />
-                <Route
-                  path="/pole/product/documentation"
-                  element={<ProductDocumentation />}
-                />
-                <Route
-                  path="/pole/product/innovation"
-                  element={<ProductInnovation />}
-                />
+  path="/pole/product/performance"
+  element={<ProductPerformance />}
+/>
 
-                {/* Nouveau workflow R&D migré vers Produit & Engineering */}
-                <Route
-                  path="/pole/product/reports"
-                  element={<ProductReports />}
-                />
-                <Route
-                  path="/pole/product/tickets/:id"
-                  element={<ProductTicketDetail />}
-                />
+<Route
+  path="/pole/product/supplier-performance"
+  element={<SupplierPerformance />}
+/>
+
+<Route
+  path="/pole/product/frictions"
+  element={<ProductFrictions />}
+/>
+
+<Route
+  path="/pole/product/reports"
+  element={<ProductReports />}
+/>
+
+<Route
+  path="/pole/product/tickets/:id"
+  element={<ProductTicketDetail />}
+/>
 
                 {/* ====================================================
                     13. DATA & BI
