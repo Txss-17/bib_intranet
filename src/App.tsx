@@ -90,6 +90,7 @@ import StockThresholds from "./pages/modules/ops/StockThresholds";
 import SupplierLeadTimes from "./pages/modules/ops/SupplierLeadTimes";
 import ShopsSupervision from "./pages/modules/ops/ShopsSupervision";
 import Anomalies from "./pages/modules/ops/Anomalies";
+import ShopDetail from "./pages/modules/ops/ShopDetail";
 
 /* ============================================================
    WORK / TRANSVERSAL OPERATIONS
@@ -434,6 +435,10 @@ const App = () => (
                   path="/pole/ops/product-lifecycle"
                   element={<ProductLifecycle />}
                 />
+                <Route
+  path="/pole/ops/shops/:id"
+  element={<ShopDetail />}
+/>
                 <Route path="/pole/ops/partners" element={<Partners />} />
                 <Route path="/pole/ops/flows" element={<SyncFlows />} />
                 <Route path="/pole/ops/incidents" element={<LogisticsIncidents />} />
