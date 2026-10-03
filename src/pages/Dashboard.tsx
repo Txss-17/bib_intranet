@@ -380,7 +380,7 @@ export default function Dashboard() {
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
 
           <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-            Key Metrics
+            Indicateurs clés par pôle
           </h2>
         </div>
 

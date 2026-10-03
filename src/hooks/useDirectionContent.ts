@@ -17,7 +17,7 @@ export const useIsLeadership = () => {
   });
 };
 
-export interface RoadmapObjective { name: string; completed: boolean }
+export interface RoadmapObjective { name: string; completed: boolean; start_date?: string | null; end_date?: string | null }
 export interface RoadmapItem {
   id: string;
   kind: 'milestone' | 'priority';
@@ -28,6 +28,8 @@ export interface RoadmapItem {
   weight: number;
   objectives: RoadmapObjective[];
   sort_order: number;
+  start_date: string | null;
+  end_date: string | null;
 }
 export interface RoadmapHistory {
   id: string;
@@ -150,4 +152,45 @@ export const openGovernanceDoc = async (doc: GovernanceDoc) => {
   const { data, error } = await supabase.storage.from('governance-documents').createSignedUrl(doc.file_path, 300);
   if (error || !data) { toast.error('Lecture impossible', { description: error?.message }); return; }
   window.open(data.signedUrl, '_blank', 'noopener');
+};
+
+export interface GovernanceBlock {
+  id: string; kind: 'entity' | 'board_member'; name: string; subtitle: string | null;
+  description: string | null; detail: string | null; status: string; sort_order: number;
+}
+
+export const useGovernanceBlocks = () =>
+  useQuery({
+    queryKey: ['governance-blocks'],
+    queryFn: async () => {
+      const { data, error } = await db.from('governance_blocks').select('*').order('sort_order');
+      if (error) throw error;
+      return (data || []) as GovernanceBlock[];
+    },
+  });
+
+export const useGovernanceBlockActions = () => {
+  const qc = useQueryClient();
+  const done = (m: string) => { toast.success(m); qc.invalidateQueries({ queryKey: ['governance-blocks'] }); };
+  const onError = (e: Error) => toast.error('Gouvernance', { description: e.message });
+  return {
+    save: useMutation({
+      mutationFn: async ({ id, ...patch }: Partial<GovernanceBlock>) => {
+        const { error } = id
+          ? await db.from('governance_blocks').update(patch).eq('id', id)
+          : await db.from('governance_blocks').insert(patch);
+        if (error) throw error;
+      },
+      onSuccess: () => done('Bloc enregistré'),
+      onError,
+    }),
+    remove: useMutation({
+      mutationFn: async (id: string) => {
+        const { error } = await db.from('governance_blocks').delete().eq('id', id);
+        if (error) throw error;
+      },
+      onSuccess: () => done('Bloc supprimé'),
+      onError,
+    }),
+  };
 };

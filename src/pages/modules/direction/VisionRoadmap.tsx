@@ -20,14 +20,19 @@ const MILESTONE_STATUS: Record<string, string> = { planned: 'Planifié', in_prog
 const PRIORITY_STATUS: Record<string, string> = { on_track: 'On track', at_risk: 'At risk' };
 const ACTION_LABELS: Record<string, string> = { create: 'Création', update: 'Modification', delete: 'Suppression' };
 const FIELD_LABELS: Record<string, string> = {
-  title: 'Titre', phase: 'Période', status: 'Statut', progress: 'Progression', weight: 'Poids', objectives: 'Objectifs',
+  title: 'Titre', phase: 'Période', start_date: 'Début', end_date: 'Fin', status: 'Statut', progress: 'Progression', weight: 'Poids', objectives: 'Objectifs',
 };
 
-type Draft = { id?: string; kind: 'milestone' | 'priority'; title: string; phase: string; status: string; progress: number; weight: number; objectivesText: string };
+type ObjDraft = { name: string; completed: boolean; start_date: string; end_date: string };
+type Draft = { id?: string; kind: 'milestone' | 'priority'; title: string; phase: string; start_date: string; end_date: string; status: string; progress: number; weight: number; objectives: ObjDraft[] };
+
+const fmtD = (d?: string | null) => (d ? format(new Date(d), 'dd MMM yyyy', { locale: fr }) : '');
+const period = (a?: string | null, b?: string | null) => (a || b ? `${fmtD(a) || '…'} → ${fmtD(b) || '…'}` : '');
 
 const toDraft = (i: RoadmapItem): Draft => ({
-  id: i.id, kind: i.kind, title: i.title, phase: i.phase ?? '', status: i.status, progress: i.progress, weight: i.weight,
-  objectivesText: i.objectives.map((o) => `${o.completed ? '[x] ' : ''}${o.name}`).join('\n'),
+  id: i.id, kind: i.kind, title: i.title, phase: i.phase ?? '', start_date: i.start_date ?? '', end_date: i.end_date ?? '',
+  status: i.status, progress: i.progress, weight: i.weight,
+  objectives: i.objectives.map((o) => ({ name: o.name, completed: !!o.completed, start_date: o.start_date ?? '', end_date: o.end_date ?? '' })),
 });
 
 const changedFields = (o: any, n: any) =>
@@ -45,9 +50,10 @@ const VisionRoadmap = () => {
 
   const submit = () => {
     if (!draft) return;
-    const objectives = draft.objectivesText.split('\n').map((l) => l.trim()).filter(Boolean)
-      .map((l) => ({ completed: l.startsWith('[x]'), name: l.replace(/^\[x\]\s*/, '') }));
-    const base = { kind: draft.kind, title: draft.title, status: draft.status };
+    if (draft.start_date && draft.end_date && draft.end_date < draft.start_date) { alert('La date de fin doit suivre la date de début.'); return; }
+    const objectives = draft.objectives.filter((o) => o.name.trim())
+      .map((o) => ({ name: o.name.trim(), completed: o.completed, start_date: o.start_date || null, end_date: o.end_date || null }));
+    const base = { kind: draft.kind, title: draft.title, status: draft.status, start_date: draft.start_date || null, end_date: draft.end_date || null };
     const payload = draft.kind === 'milestone'
       ? { ...base, phase: draft.phase || null, progress: Math.max(0, Math.min(100, Number(draft.progress) || 0)), objectives }
       : { ...base, weight: Number(draft.weight) || 0 };
@@ -72,7 +78,8 @@ const VisionRoadmap = () => {
       </div>
     ) : null;
 
-  const newDraft = (kind: Draft['kind']): Draft => ({ kind, title: '', phase: '', status: kind === 'milestone' ? 'planned' : 'on_track', progress: 0, weight: 0, objectivesText: '' });
+  const newDraft = (kind: Draft['kind']): Draft => ({ kind, title: '', phase: '', start_date: '', end_date: '', status: kind === 'milestone' ? 'planned' : 'on_track', progress: 0, weight: 0, objectives: [] });
+  const setObj = (i: number, patch: Partial<ObjDraft>) => draft && setDraft({ ...draft, objectives: draft.objectives.map((o, j) => (j === i ? { ...o, ...patch } : o)) });
 
   return (
     <div className="space-y-6 p-6">
@@ -106,6 +113,7 @@ const VisionRoadmap = () => {
                       <EditButtons item={p} />
                     </div>
                     <Badge variant={p.status === 'at_risk' ? 'destructive' : 'default'}>{PRIORITY_STATUS[p.status] ?? p.status}</Badge>
+                    {period(p.start_date, p.end_date) && <p className="mt-1 text-xs text-muted-foreground">{period(p.start_date, p.end_date)}</p>}
                     <div className="text-2xl font-bold mt-2">{p.weight}%</div>
                     <Progress value={p.weight} className="mt-2 h-2" />
                   </div>
@@ -134,7 +142,7 @@ const VisionRoadmap = () => {
                         </div>
                         <EditButtons item={item} />
                       </div>
-                      <p className="text-sm text-muted-foreground mb-4">{item.phase}</p>
+                      <p className="text-sm text-muted-foreground mb-4">{[item.phase, period(item.start_date, item.end_date)].filter(Boolean).join(' · ')}</p>
                       {item.status !== 'planned' && (
                         <div className="mb-4">
                           <div className="flex items-center justify-between text-sm mb-1"><span>Progression</span><span className="font-medium">{item.progress}%</span></div>
@@ -146,6 +154,7 @@ const VisionRoadmap = () => {
                           <button key={i} type="button" disabled={!canEdit} onClick={() => toggleObjective(item, i)} className="flex items-center gap-2 text-left disabled:cursor-default">
                             {obj.completed ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
                             <span className={obj.completed ? 'line-through text-muted-foreground' : ''}>{obj.name}</span>
+                            {period(obj.start_date, obj.end_date) && <span className="text-xs text-muted-foreground">({period(obj.start_date, obj.end_date)})</span>}
                           </button>
                         ))}
                       </div>
@@ -188,7 +197,7 @@ const VisionRoadmap = () => {
       </Tabs>
 
       <Dialog open={!!draft} onOpenChange={(o) => !o && setDraft(null)}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{draft?.id ? 'Modifier' : 'Ajouter'} {draft?.kind === 'priority' ? 'une priorité' : 'une étape'}</DialogTitle>
           </DialogHeader>
@@ -206,15 +215,36 @@ const VisionRoadmap = () => {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Date de début</Label><Input type="date" value={draft.start_date} onChange={(e) => setDraft({ ...draft, start_date: e.target.value })} /></div>
+                <div><Label>Date de fin</Label><Input type="date" value={draft.end_date} onChange={(e) => setDraft({ ...draft, end_date: e.target.value })} /></div>
+              </div>
               {draft.kind === 'milestone' ? (
                 <>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><Label>Période</Label><Input value={draft.phase} placeholder="Q1 2027" onChange={(e) => setDraft({ ...draft, phase: e.target.value })} /></div>
+                    <div><Label>Libellé de période</Label><Input value={draft.phase} placeholder="Q1 2027" onChange={(e) => setDraft({ ...draft, phase: e.target.value })} /></div>
                     <div><Label>Progression (%)</Label><Input type="number" min={0} max={100} value={draft.progress} onChange={(e) => setDraft({ ...draft, progress: Number(e.target.value) })} /></div>
                   </div>
-                  <div>
-                    <Label>Objectifs (un par ligne, préfixer « [x] » si atteint)</Label>
-                    <Textarea rows={5} value={draft.objectivesText} onChange={(e) => setDraft({ ...draft, objectivesText: e.target.value })} />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Objectifs</Label>
+                      <Button type="button" size="sm" variant="outline" onClick={() => setDraft({ ...draft, objectives: [...draft.objectives, { name: '', completed: false, start_date: '', end_date: '' }] })}>
+                        <Plus className="mr-1 h-4 w-4" />Objectif
+                      </Button>
+                    </div>
+                    {draft.objectives.map((o, i) => (
+                      <div key={i} className="space-y-2 rounded-md border p-2">
+                        <div className="flex items-center gap-2">
+                          <input type="checkbox" aria-label="Atteint" checked={o.completed} onChange={(e) => setObj(i, { completed: e.target.checked })} />
+                          <Input value={o.name} placeholder="Intitulé de l'objectif" onChange={(e) => setObj(i, { name: e.target.value })} />
+                          <Button type="button" size="icon" variant="ghost" aria-label="Retirer" onClick={() => setDraft({ ...draft, objectives: draft.objectives.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></Button>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input type="date" aria-label="Début" value={o.start_date} onChange={(e) => setObj(i, { start_date: e.target.value })} />
+                          <Input type="date" aria-label="Fin" value={o.end_date} onChange={(e) => setObj(i, { end_date: e.target.value })} />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </>
               ) : (
