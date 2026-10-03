@@ -12,11 +12,7 @@ export type PoleId =
   | 'rse'
   | 'product'
   | 'data'
-  | 'security'
-  | 'tech'
-  | 'risk'
-  | 'lifecycle'
-  | 'rd';
+  | 'security';
 
 export interface Pole {
   id: PoleId;
@@ -35,11 +31,16 @@ export interface User {
   role: UserRole;
   poles: PoleId[];
   avatarUrl?: string;
-  seniority: 'junior' | 'mid' | 'senior' | 'lead' | 'executive';
+  seniority:
+    | 'junior'
+    | 'mid'
+    | 'senior'
+    | 'lead'
+    | 'executive';
   joinedAt: string;
 }
 
-export type UserRole = 
+export type UserRole =
   | 'admin'
   | 'executive'
   | 'manager'
@@ -51,7 +52,11 @@ export interface Notification {
   id: string;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'success' | 'critical';
+  type:
+    | 'info'
+    | 'warning'
+    | 'success'
+    | 'critical';
   poleId?: PoleId;
   read: boolean;
   createdAt: string;
@@ -62,8 +67,16 @@ export interface Task {
   id: string;
   title: string;
   description: string;
-  status: 'pending' | 'in_progress' | 'review' | 'completed';
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  status:
+    | 'pending'
+    | 'in_progress'
+    | 'review'
+    | 'completed';
+  priority:
+    | 'low'
+    | 'medium'
+    | 'high'
+    | 'critical';
   poleId: PoleId;
   assigneeId: string;
   dueDate: string;
@@ -80,8 +93,15 @@ export interface FeedItem {
   poleId?: PoleId;
   title: string;
   content: string;
-  type: 'announcement' | 'update' | 'policy' | 'achievement';
-  visibility: 'company' | 'pole' | 'restricted';
+  type:
+    | 'announcement'
+    | 'update'
+    | 'policy'
+    | 'achievement';
+  visibility:
+    | 'company'
+    | 'pole'
+    | 'restricted';
   createdAt: string;
   reactions: number;
   comments: number;
@@ -90,13 +110,25 @@ export interface FeedItem {
 export interface Document {
   id: string;
   name: string;
-  type: 'contract' | 'policy' | 'report' | 'procedure' | 'template';
+  type:
+    | 'contract'
+    | 'policy'
+    | 'report'
+    | 'procedure'
+    | 'template';
   poleId: PoleId;
   version: string;
   lastModified: string;
   modifiedBy: string;
-  status: 'draft' | 'review' | 'approved' | 'archived';
-  accessLevel: 'public' | 'restricted' | 'confidential';
+  status:
+    | 'draft'
+    | 'review'
+    | 'approved'
+    | 'archived';
+  accessLevel:
+    | 'public'
+    | 'restricted'
+    | 'confidential';
 }
 
 export interface AuditLog {
@@ -116,7 +148,10 @@ export interface Metric {
   label: string;
   value: number | string;
   change?: number;
-  changeType?: 'positive' | 'negative' | 'neutral';
+  changeType?:
+    | 'positive'
+    | 'negative'
+    | 'neutral';
   unit?: string;
 }
 
@@ -124,8 +159,16 @@ export interface Incident {
   id: string;
   title: string;
   description: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-  status: 'open' | 'investigating' | 'resolved' | 'closed';
+  severity:
+    | 'low'
+    | 'medium'
+    | 'high'
+    | 'critical';
+  status:
+    | 'open'
+    | 'investigating'
+    | 'resolved'
+    | 'closed';
   poleId: PoleId;
   reportedBy: string;
   assignedTo?: string;
