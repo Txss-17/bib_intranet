@@ -196,6 +196,7 @@ import ESGReports from "./pages/modules/rse/ESGReports";
    PRODUIT & ENGINEERING
    ============================================================ */
 
+import ProductEngineeringDashboard from "./pages/modules/product/ProductEngineeringDashboard";
 import ProductStudio from './pages/modules/product/ProductStudio';
 import ProductIntegrations from './pages/modules/product/ProductIntegrations';
 import ProductDocumentation from './pages/modules/product/ProductDocumentation';
