@@ -33,7 +33,6 @@ import InternalFeed from "./pages/InternalFeed";
 import Documents from "./pages/Documents";
 import Settings from "./pages/Settings";
 
-import TestAccounts from "./pages/admin/TestAccounts";
 import RolesPermissions from "@/pages/admin/RolesPermissions";
 
 /* ============================================================
@@ -95,14 +94,15 @@ import StockThresholds from "./pages/modules/ops/StockThresholds";
 import SupplierLeadTimes from "./pages/modules/ops/SupplierLeadTimes";
 import ShopsSupervision from "./pages/modules/ops/ShopsSupervision";
 import Anomalies from "./pages/modules/ops/Anomalies";
+
 import WorkTasks from "./pages/modules/work/WorkTasks";
 import WorkProjects from "./pages/modules/work/WorkProjects";
 import WorkProcesses from "./pages/modules/work/WorkProcesses";
 import WorkValidations from "./pages/modules/work/WorkValidations";
 import WorkEscalations from "./pages/modules/work/WorkEscalations";
 import WorkActivities from "./pages/modules/work/WorkActivities";
-import Reconciliation from './pages/modules/finance/Reconciliation';
 
+import Reconciliation from "./pages/modules/finance/Reconciliation";
 
 /* ============================================================
    FINANCE
@@ -119,8 +119,6 @@ import GuaranteeFund from "./pages/modules/finance/GuaranteeFund";
 
 /* ============================================================
    SUPPORT & CUSTOMER SUCCESS
-   Implémentations historiques conservées temporairement
-   derrière le nouveau pôle Support.
    ============================================================ */
 
 import SupportTickets from "./pages/modules/support/SupportTickets";
@@ -204,13 +202,12 @@ import ProductTicketDetail from "./pages/modules/product/ProductTicketDetail";
    SECURITY & IT
    ============================================================ */
 
-import SecurityDashboard from './pages/modules/security/SecurityDashboard';
-import SecurityAccess from './pages/modules/security/SecurityAccess';
-import SecurityVPN from './pages/modules/security/SecurityVPN';
-import SecurityLogs from './pages/modules/security/SecurityLogs';
-import SecurityEnvironments from './pages/modules/security/SecurityEnvironments';
-import SecurityOperations from './pages/modules/security/Security';
-import SecurityInfrastructure from './pages/modules/security/SecurityInfrastructure';
+import SecurityAccess from "./pages/modules/security/SecurityAccess";
+import SecurityVPN from "./pages/modules/security/SecurityVPN";
+import SecurityLogs from "./pages/modules/security/SecurityLogs";
+import SecurityEnvironments from "./pages/modules/security/SecurityEnvironments";
+import SecurityOperations from "./pages/modules/security/Security";
+import SecurityInfrastructure from "./pages/modules/security/SecurityInfrastructure";
 
 /* ============================================================
    DATA & BI
@@ -232,7 +229,7 @@ import BIWidgetLibrary from "./pages/modules/data/bi/BIWidgetLibrary";
 import BIHistory from "./pages/modules/data/bi/BIHistory";
 
 /* ============================================================
-   TRANSVERSAL — ETHICS
+   TRANSVERSAL — ÉTHIQUE
    ============================================================ */
 
 import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
@@ -315,72 +312,58 @@ const App = () => (
                   path="/pole/direction"
                   element={<ExecutiveDashboard />}
                 />
-
                 <Route
                   path="/pole/direction/global"
                   element={<DirectionGlobal />}
                 />
-
                 <Route
                   path="/pole/direction/kpi"
                   element={<StrategicKPIs />}
                 />
-
                 <Route
                   path="/pole/direction/strategic-kpis"
                   element={<StrategicKPIs />}
                 />
-
                 <Route
                   path="/pole/direction/alerts"
                   element={<CriticalAlertsPage />}
                 />
-
                 <Route
                   path="/pole/direction/critical-alerts"
                   element={<CriticalAlertsPage />}
                 />
-
                 <Route
                   path="/pole/direction/decisions"
                   element={<DecisionArbitrage />}
                 />
-
                 <Route
                   path="/pole/direction/decision-arbitrage"
                   element={<DecisionArbitrage />}
                 />
-
                 <Route
                   path="/pole/direction/vision"
                   element={<VisionRoadmap />}
                 />
-
                 <Route
                   path="/pole/direction/vision-roadmap"
                   element={<VisionRoadmap />}
                 />
-
                 <Route
                   path="/pole/direction/governance"
                   element={<GroupGovernance />}
                 />
-
                 <Route
                   path="/pole/direction/group-governance"
                   element={<GroupGovernance />}
                 />
-
                 <Route
                   path="/pole/direction/reports"
                   element={<BoardReports />}
                 />
-
                 <Route
                   path="/pole/direction/board-reports"
                   element={<BoardReports />}
                 />
-
                 <Route
                   path="/pole/direction/access"
                   element={
@@ -399,52 +382,42 @@ const App = () => (
                   path="/pole/finance"
                   element={<FinanceDashboard />}
                 />
-
                 <Route
                   path="/pole/finance/cashflow"
                   element={<CashflowRealtime />}
                 />
-
                 <Route
                   path="/pole/finance/transactions"
                   element={<Transactions />}
                 />
-
                 <Route
                   path="/pole/finance/supplier-payments"
                   element={<SupplierPayments />}
                 />
-
                 <Route
                   path="/pole/finance/subscriptions"
                   element={<Subscriptions />}
                 />
-
                 <Route
                   path="/pole/finance/salaries"
                   element={<Salaries />}
                 />
-
                 <Route
                   path="/pole/finance/cards"
                   element={<CorporateCards />}
                 />
-
                 <Route
                   path="/pole/finance/guarantee"
                   element={<GuaranteeFund />}
                 />
-
                 <Route
                   path="/pole/finance/billing"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/finance/payouts"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/finance/reconciliation"
                   element={<Reconciliation />}
@@ -458,7 +431,6 @@ const App = () => (
                   path="/pole/ops"
                   element={<OpsDashboard />}
                 />
-
                 <Route
                   path="/pole/ops/shops"
                   element={<ShopsSupervision />}
@@ -467,78 +439,62 @@ const App = () => (
                   path="/pole/ops/anomalies"
                   element={<Anomalies />}
                 />
-
                 <Route
                   path="/pole/ops/pipeline"
                   element={<OrderPipeline />}
                 />
-
-
                 <Route
                   path="/pole/ops/orders"
                   element={<Orders />}
                 />
-
                 <Route
                   path="/pole/ops/shipments"
                   element={<Shipments />}
                 />
-
                 <Route
                   path="/pole/ops/stocks"
                   element={<DistributedStocks />}
                 />
-
                 <Route
                   path="/pole/ops/catalog"
                   element={<ProductCatalog />}
                 />
-
                 <Route
                   path="/pole/ops/product-lifecycle"
                   element={<ProductLifecycle />}
                 />
-
                 <Route
                   path="/pole/ops/partners"
                   element={<Partners />}
                 />
-
                 <Route
                   path="/pole/ops/flows"
                   element={<SyncFlows />}
                 />
-
                 <Route
                   path="/pole/ops/incidents"
                   element={<LogisticsIncidents />}
                 />
-
                 <Route
                   path="/pole/ops/replenishment"
                   element={<Replenishment />}
                 />
-
                 <Route
                   path="/pole/ops/forecast"
                   element={<DemandForecast />}
                 />
-
                 <Route
                   path="/pole/ops/thresholds"
                   element={<StockThresholds />}
                 />
-
                 <Route
                   path="/pole/ops/suppliers-lead-times"
                   element={<SupplierLeadTimes />}
                 />
-
                 <Route
                   path="/pole/ops/suppliers-lt"
                   element={<SupplierLeadTimes />}
                 />
-
                 <Route
                   path="/pole/ops/audit-link"
                   element={<AuditLink />}
@@ -552,57 +508,46 @@ const App = () => (
                   path="/pole/supplier"
                   element={<SupplierDashboard />}
                 />
-
                 <Route
                   path="/pole/supplier/pending"
                   element={<PendingProducts />}
                 />
-
                 <Route
                   path="/pole/supplier/validated"
                   element={<ValidatedProducts />}
                 />
-
                 <Route
                   path="/pole/supplier/suppliers"
                   element={<SupplierFiles />}
                 />
-
                 <Route
                   path="/pole/supplier/certifications"
                   element={<Certifications />}
                 />
-
                 <Route
                   path="/pole/supplier/decisions"
                   element={<DecisionHistory />}
                 />
-
                 <Route
                   path="/pole/supplier/alerts"
                   element={<QualityAlerts />}
                 />
-
                 <Route
                   path="/pole/supplier/portfolios"
                   element={<SupplierPortfolios />}
                 />
-
                 <Route
                   path="/pole/supplier/applications"
                   element={<SupplierApplications />}
                 />
-
                 <Route
                   path="/pole/supplier/applications/:id"
                   element={<SupplierApplicationDetail />}
                 />
-
                 <Route
                   path="/pole/supplier/restock-orders"
                   element={<SupplierRestockOrders />}
                 />
-
                 <Route
                   path="/pole/supplier/catalog-inbox"
                   element={<SupplierCatalogInbox />}
@@ -616,42 +561,34 @@ const App = () => (
                   path="/pole/marketplace"
                   element={<PoleDashboard />}
                 />
-
                 <Route
                   path="/pole/marketplace/products"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/marketplace/stores"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/marketplace/customers"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/marketplace/orders"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/marketplace/subscribers"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/marketplace/favorites"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/marketplace/rewards"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/marketplace/recycling"
                   element={<SubSectionPage />}
@@ -665,22 +602,18 @@ const App = () => (
                   path="/pole/support"
                   element={<PoleDashboard />}
                 />
-
                 <Route
                   path="/pole/support/tickets"
                   element={<SupportTickets />}
                 />
-
                 <Route
                   path="/pole/support/customer-success"
                   element={<CustomerSuccess />}
                 />
-
                 <Route
                   path="/pole/support/monitoring"
                   element={<SupportMonitoring />}
                 />
-
                 <Route
                   path="/pole/support/escalations"
                   element={<SupportEscalations />}
@@ -694,37 +627,30 @@ const App = () => (
                   path="/pole/marketing"
                   element={<MarketingDashboard />}
                 />
-
                 <Route
                   path="/pole/marketing/campaigns"
                   element={<Campaigns />}
                 />
-
                 <Route
                   path="/pole/marketing/content"
                   element={<Content />}
                 />
-
                 <Route
                   path="/pole/marketing/podcasts"
                   element={<Podcasts />}
                 />
-
                 <Route
                   path="/pole/marketing/analytics"
                   element={<Analytics />}
                 />
-
                 <Route
                   path="/pole/marketing/crm"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/marketing/journeys"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/marketing/reputation"
                   element={<SubSectionPage />}
@@ -738,52 +664,42 @@ const App = () => (
                   path="/pole/rh"
                   element={<RHDashboard />}
                 />
-
                 <Route
                   path="/pole/rh/employees"
                   element={<Employees />}
                 />
-
                 <Route
                   path="/pole/rh/files"
                   element={<EmployeeFiles />}
                 />
-
                 <Route
                   path="/pole/rh/alerts"
                   element={<HRAlerts />}
                 />
-
                 <Route
                   path="/pole/rh/onboarding"
                   element={<RHOnboarding />}
                 />
-
                 <Route
                   path="/pole/rh/attendance"
                   element={<Attendance />}
                 />
-
                 <Route
                   path="/pole/rh/leave"
                   element={<Leave />}
                 />
-
                 <Route
                   path="/pole/rh/training"
                   element={<Training />}
                 />
-
                 <Route
                   path="/pole/rh/trips"
                   element={<BusinessTrips />}
                 />
-
                 <Route
                   path="/pole/rh/publications"
                   element={<Publications />}
                 />
-
                 <Route
                   path="/pole/rh/ethics"
                   element={
@@ -793,7 +709,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/rh/recruitment"
                   element={<SubSectionPage />}
@@ -807,7 +722,6 @@ const App = () => (
                   path="/pole/audit"
                   element={<AuditDashboard />}
                 />
-
                 <Route
                   path="/pole/audit/field"
                   element={<FieldAudits />}
@@ -816,32 +730,26 @@ const App = () => (
                   path="/pole/audit/missions"
                   element={<AuditMissions />}
                 />
-
                 <Route
                   path="/pole/audit/supplier"
                   element={<SupplierAudits />}
                 />
-
                 <Route
                   path="/pole/audit/ops"
                   element={<OpsAudits />}
                 />
-
                 <Route
                   path="/pole/audit/reports"
                   element={<AuditReports />}
                 />
-
                 <Route
                   path="/pole/audit/nonconformities"
                   element={<NonConformities />}
                 />
-
                 <Route
                   path="/pole/audit/sanctions"
                   element={<Sanctions />}
                 />
-
                 <Route
                   path="/pole/audit/corrective-actions"
                   element={<SubSectionPage />}
@@ -855,22 +763,18 @@ const App = () => (
                   path="/pole/compliance"
                   element={<ComplianceDashboard />}
                 />
-
                 <Route
                   path="/pole/compliance/contracts"
                   element={<Contracts />}
                 />
-
                 <Route
                   path="/pole/compliance/policies"
                   element={<Policies />}
                 />
-
                 <Route
                   path="/pole/compliance/disputes"
                   element={<Disputes />}
                 />
-
                 <Route
                   path="/pole/compliance/risks"
                   element={<ComplianceRiskRegister />}
@@ -884,32 +788,26 @@ const App = () => (
                   path="/pole/rse"
                   element={<RSEDashboard />}
                 />
-
                 <Route
                   path="/pole/rse/packaging"
                   element={<ValidatedPackaging />}
                 />
-
                 <Route
                   path="/pole/rse/packaging-lifecycle"
                   element={<PackagingDashboard />}
                 />
-
                 <Route
                   path="/pole/rse/recycling"
                   element={<RecyclingStats />}
                 />
-
                 <Route
                   path="/pole/rse/points"
                   element={<CustomerPoints />}
                 />
-
                 <Route
                   path="/pole/rse/co2"
                   element={<CO2Impact />}
                 />
-
                 <Route
                   path="/pole/rse/esg"
                   element={<ESGReports />}
@@ -923,45 +821,47 @@ const App = () => (
                   path="/pole/product"
                   element={<PoleDashboard />}
                 />
-
                 <Route
                   path="/pole/product/product"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/product/roadmap"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/product/backlog"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/pole/product/engineering"
                   element={<ProductEngineeringDashboard />}
                 />
-
                 <Route
                   path="/pole/product/studio"
                   element={<ProductStudio />}
                 />
-
                 <Route
                   path="/pole/product/integrations"
                   element={<ProductIntegrations />}
                 />
-
                 <Route
                   path="/pole/product/documentation"
                   element={<ProductDocumentation />}
                 />
-
                 <Route
                   path="/pole/product/innovation"
                   element={<ProductInnovation />}
+                />
+
+                {/* Nouveau workflow R&D migré vers Produit & Engineering */}
+                <Route
+                  path="/pole/product/reports"
+                  element={<ProductReports />}
+                />
+                <Route
+                  path="/pole/product/tickets/:id"
+                  element={<ProductTicketDetail />}
                 />
 
                 {/* ====================================================
@@ -972,62 +872,50 @@ const App = () => (
                   path="/pole/data"
                   element={<DataDashboard />}
                 />
-
                 <Route
                   path="/pole/data/kpi"
                   element={<KPICatalog />}
                 />
-
                 <Route
                   path="/pole/data/requests"
                   element={<PublicationRequestsPage />}
                 />
-
                 <Route
                   path="/pole/data/backlog"
                   element={<TechBacklogPage />}
                 />
-
                 <Route
                   path="/pole/data/versions"
                   element={<KPIVersions />}
                 />
-
                 <Route
                   path="/pole/data/reports"
                   element={<DataReports />}
                 />
-
                 <Route
                   path="/pole/data/bi"
                   element={<BIOverview />}
                 />
-
                 <Route
                   path="/pole/data/bi/dashboards"
                   element={<BIDashboardsList />}
                 />
-
                 <Route
                   path="/pole/data/bi/designer/:id"
                   element={<BIDesigner />}
                 />
-
                 <Route
                   path="/pole/data/bi/templates"
                   element={<BITemplates />}
                 />
-
                 <Route
                   path="/pole/data/bi/sources"
                   element={<BIDataSources />}
                 />
-
                 <Route
                   path="/pole/data/bi/library"
                   element={<BIWidgetLibrary />}
                 />
-
                 <Route
                   path="/pole/data/bi/history/:id"
                   element={<BIHistory />}
@@ -1041,32 +929,26 @@ const App = () => (
                   path="/pole/security"
                   element={<SecurityOperations />}
                 />
-
                 <Route
                   path="/pole/security/access"
                   element={<SecurityAccess />}
                 />
-
                 <Route
                   path="/pole/security/security"
                   element={<SecurityOperations />}
                 />
-
                 <Route
                   path="/pole/security/infrastructure"
                   element={<SecurityInfrastructure />}
                 />
-
                 <Route
                   path="/pole/security/environments"
                   element={<SecurityEnvironments />}
                 />
-
                 <Route
                   path="/pole/security/vpn"
                   element={<SecurityVPN />}
                 />
-
                 <Route
                   path="/pole/security/logs"
                   element={<SecurityLogs />}
@@ -1074,8 +956,6 @@ const App = () => (
 
                 {/* ====================================================
                     COMPATIBILITÉ — ANCIEN PÔLE TECH
-                    Les anciennes URL ne constituent plus un pôle.
-                    Elles redirigent vers l'architecture cible.
                     ==================================================== */}
 
                 <Route
@@ -1087,7 +967,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/access"
                   element={
@@ -1097,7 +976,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/vpn"
                   element={
@@ -1107,7 +985,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/logs"
                   element={
@@ -1117,7 +994,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/deployments"
                   element={
@@ -1127,7 +1003,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/environments"
                   element={
@@ -1137,7 +1012,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/security"
                   element={
@@ -1147,7 +1021,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/infrastructure"
                   element={
@@ -1157,7 +1030,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/catalog"
                   element={
@@ -1167,7 +1039,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/received-products"
                   element={
@@ -1177,7 +1048,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/dataflow"
                   element={
@@ -1187,7 +1057,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/sandbox"
                   element={
@@ -1197,7 +1066,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/test-accounts"
                   element={
@@ -1207,7 +1075,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/integrations"
                   element={
@@ -1217,7 +1084,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/code"
                   element={
@@ -1227,7 +1093,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/supervision"
                   element={
@@ -1237,7 +1102,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/documentation"
                   element={
@@ -1247,7 +1111,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/console"
                   element={
@@ -1257,7 +1120,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/tech/studio"
                   element={
@@ -1267,7 +1129,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/tech-studio"
                   element={
@@ -1291,7 +1152,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/lifecycle/onboarding"
                   element={
@@ -1301,7 +1161,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/lifecycle/monitoring"
                   element={
@@ -1311,7 +1170,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/lifecycle/user-accounts"
                   element={
@@ -1321,7 +1179,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/lifecycle/risk-alerts"
                   element={
@@ -1331,7 +1188,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/lifecycle/emails"
                   element={
@@ -1341,7 +1197,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/lifecycle/trustpilot"
                   element={
@@ -1351,7 +1206,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/lifecycle/support"
                   element={
@@ -1361,7 +1215,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/lifecycle/scoring"
                   element={
@@ -1371,7 +1224,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/lifecycle/compliance"
                   element={
@@ -1395,7 +1247,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/rd/products"
                   element={
@@ -1405,7 +1256,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/rd/shops"
                   element={
@@ -1415,7 +1265,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/rd/suppliers"
                   element={
@@ -1425,7 +1274,6 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/rd/frictions"
                   element={
@@ -1435,22 +1283,20 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/pole/rd/reports"
                   element={
                     <Navigate
-                      to="/pole/product/innovation"
+                      to="/pole/product/reports"
                       replace
                     />
                   }
                 />
-
                 <Route
                   path="/pole/rd/tickets/:id"
                   element={
                     <Navigate
-                      to="/pole/product/innovation"
+                      to="/pole/product/tickets/:id"
                       replace
                     />
                   }
@@ -1464,42 +1310,34 @@ const App = () => (
                   path="/modules/gateway"
                   element={<GatewayDashboard />}
                 />
-
                 <Route
                   path="/modules/gateway/inbox"
                   element={<GatewayInbox />}
                 />
-
                 <Route
                   path="/modules/gateway/validation"
                   element={<GatewayValidation />}
                 />
-
                 <Route
                   path="/modules/gateway/routing"
                   element={<GatewayRouting />}
                 />
-
                 <Route
                   path="/modules/gateway/responses"
                   element={<GatewayResponses />}
                 />
-
                 <Route
                   path="/modules/gateway/compose"
                   element={<GatewayCompose />}
                 />
-
                 <Route
                   path="/modules/gateway/journal"
                   element={<GatewayJournal />}
                 />
-
                 <Route
                   path="/modules/gateway/message/:messageId"
                   element={<GatewayMessageDetail />}
                 />
-
                 <Route
                   path="/modules/gateway/:subSection"
                   element={<GatewayDashboard />}
@@ -1513,37 +1351,30 @@ const App = () => (
                   path="/modules/ethics"
                   element={<EthicsDashboard />}
                 />
-
                 <Route
                   path="/modules/ethics/report"
                   element={<EthicsReport />}
                 />
-
                 <Route
                   path="/modules/ethics/dashboard"
                   element={<EthicsDashboard />}
                 />
-
                 <Route
                   path="/modules/ethics/received"
                   element={<EthicsReceived />}
                 />
-
                 <Route
                   path="/modules/ethics/ongoing"
                   element={<EthicsOngoing />}
                 />
-
                 <Route
                   path="/modules/ethics/closed"
                   element={<EthicsClosed />}
                 />
-
                 <Route
                   path="/modules/ethics/stats"
                   element={<EthicsStats />}
                 />
-
                 <Route
                   path="/modules/ethics/:subSection"
                   element={<EthicsDashboard />}
@@ -1557,12 +1388,10 @@ const App = () => (
                   path="/modules/independent-audit"
                   element={<IndependentAuditDashboard />}
                 />
-
                 <Route
                   path="/modules/independent-audit/declare"
                   element={<IncidentDeclaration />}
                 />
-
                 <Route
                   path="/modules/independent-audit/resolution"
                   element={<ResolutionTracking />}
@@ -1576,27 +1405,22 @@ const App = () => (
                   path="/work/tasks"
                   element={<WorkTasks />}
                 />
-
                 <Route
                   path="/work/projects"
                   element={<WorkProjects />}
                 />
-
                 <Route
                   path="/work/processes"
                   element={<WorkProcesses />}
                 />
-
                 <Route
                   path="/work/validations"
                   element={<WorkValidations />}
                 />
-
                 <Route
                   path="/work/escalations"
                   element={<WorkEscalations />}
                 />
-
                 <Route
                   path="/work/activities"
                   element={<WorkActivities />}
@@ -1615,17 +1439,14 @@ const App = () => (
                   path="/feed"
                   element={<InternalFeed />}
                 />
-
                 <Route
                   path="/documents"
                   element={<Documents />}
                 />
-
                 <Route
                   path="/settings"
                   element={<Settings />}
                 />
-
                 <Route
                   path="/profile"
                   element={<Profile />}
@@ -1668,17 +1489,14 @@ const App = () => (
                   path="/compliance-audit"
                   element={<ComplianceAudit />}
                 />
-
                 <Route
                   path="/compliance-audit/finance"
                   element={<FinanceCompliance />}
                 />
-
                 <Route
                   path="/compliance-audit/ops"
                   element={<OpsCompliance />}
                 />
-
                 <Route
                   path="/compliance-audit/tech"
                   element={
