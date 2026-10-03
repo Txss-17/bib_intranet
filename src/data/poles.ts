@@ -114,3 +114,11 @@ export const poles: Pole[] = [
     color: 'pole-security',
   },
 ];
+
+export type { PoleId } from '@/types';
+
+export const getPoleById = (id: string): Pole | undefined =>
+  poles.find((pole) => pole.id === id);
+
+export const getPoleColor = (id: string): string =>
+  getPoleById(id)?.color || 'pole-direction';

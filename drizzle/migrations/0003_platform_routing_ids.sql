@@ -1,0 +1,2 @@
+ALTER TABLE public.user_accounts ADD COLUMN IF NOT EXISTS platform_id text UNIQUE, ADD COLUMN IF NOT EXISTS platform_synced_at timestamptz;
+ALTER TABLE public.suppliers ADD COLUMN IF NOT EXISTS platform_id text UNIQUE, ADD COLUMN IF NOT EXISTS platform_synced_at timestamptz;

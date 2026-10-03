@@ -170,11 +170,30 @@ export const moduleNavigations: Record<
         icon: 'LayoutDashboard',
       },
       {
+        id: 'shops',
+        label: 'Boutiques & Marchands',
+        path: '/pole/ops/shops',
+        icon: 'Store',
+      },
+      {
+        id: 'anomalies',
+        label: 'Anomalies',
+        path: '/pole/ops/anomalies',
+        icon: 'AlertTriangle',
+      },
+      {
         id: 'orders',
         label: 'Commandes',
         path: '/pole/ops/pipeline',
         icon: 'ShoppingBag',
       },
+      {
+        id: 'product-lifecycle',
+        label: 'Cycle de vie produits',
+        path: '/pole/ops/product-lifecycle',
+        icon: 'GitBranch',
+      },
+
       {
         id: 'shipments',
         label: 'Expéditions',
@@ -534,6 +553,12 @@ export const moduleNavigations: Record<
         label: 'Audits terrain',
         path: '/pole/audit/field',
         icon: 'MapPinCheck',
+      },
+      {
+        id: 'missions',
+        label: 'Suivi des missions',
+        path: '/pole/audit/missions',
+        icon: 'ClipboardCheck',
       },
       {
         id: 'supplier',
@@ -1051,3 +1076,6 @@ export const transversalNavigations: Record<
 };
 
 export default moduleNavigations;
+
+export const getModuleNavigation = (poleId: string): (ModuleNavigationItem & { labelFr?: string })[] =>
+  (moduleNavigations[poleId]?.items ?? []).map((i) => ({ ...i, labelFr: i.label }));

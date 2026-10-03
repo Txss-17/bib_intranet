@@ -1,0 +1,90 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1790358316326,
+      "tag": "0000_create_shops_supervision",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790359454991,
+      "tag": "0001_platform_bridge_and_contracts",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790359470578,
+      "tag": "0002_contract_check_service_bypass",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1790360462287,
+      "tag": "0003_platform_routing_ids",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1790360794426,
+      "tag": "0004_cashflows_platform_source",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1790361620676,
+      "tag": "0005_create_anomalies",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790361914200,
+      "tag": "0006_audit_mission_workflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790362503642,
+      "tag": "0007_finance_reconciliation_and_anomaly_deadlines",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1790741761015,
+      "tag": "0008_work_tasks_select_scoped",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790741884539,
+      "tag": "0009_work_module_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790916805998,
+      "tag": "0010_direction_editable_content",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791019058250,
+      "tag": "0011_roadmap_periods_governance_permissions",
+      "breakpoints": true
+    }
+  ]
+}

@@ -407,6 +407,15 @@ export const loadOverrides = (): OverrideMap => {
 export const saveOverrides = (map: OverrideMap) => {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
   window.dispatchEvent(new Event('permission-rules-changed'));
+  void import('@/integrations/supabase/client').then(({ supabase }) =>
+    (supabase as any).from('permission_settings').upsert({ key: 'sensitive_rules', value: map }, { onConflict: 'key' })
+      .then(({ error }: any) => error && console.error('[permissions] synchronisation refusée', error.message)));
+};
+
+/** Applique les règles sensibles reçues du backend (sans renvoi). */
+export const applyRemoteOverrides = (map: OverrideMap) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(map ?? {}));
+  window.dispatchEvent(new Event('permission-rules-changed'));
 };
 
 // ---------------------------------------------------------------------------

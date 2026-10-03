@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/tabs';
 
 import type { FeedItem, PoleId } from '@/types';
+import { poles } from '@/data/poles';
 
 const TARGET_POLES: readonly PoleId[] = [
   'direction',
@@ -155,6 +156,7 @@ export default function Dashboard() {
   const {
     poles: permissionPoles,
     isSuperAdmin,
+    canViewPath,
   } = usePermissions();
 
   const userPoles = (
@@ -229,12 +231,19 @@ export default function Dashboard() {
    * accessible sont présentées.
    */
   const metrics = allMetrics.filter((metric) =>
+    (!metric.href || canViewPath(metric.href)) &&
     canSee(
       metric.poles.filter(
         (pole): pole is PoleId =>
           TARGET_POLES.includes(pole as PoleId),
       ),
     ),
+  );
+
+  /** Un bloc par pôle de l'utilisateur (tous les pôles pour la Direction). */
+  const dashboardPoles = poles.filter((p) =>
+    (isLeadership ? true : userPoles.includes(p.id as PoleId)) &&
+    (isLeadership || p.id !== 'direction'),
   );
 
   const greeting = () => {
@@ -371,7 +380,7 @@ export default function Dashboard() {
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
 
           <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-            Key Metrics
+            Indicateurs clés par pôle
           </h2>
         </div>
 
@@ -381,25 +390,26 @@ export default function Dashboard() {
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : metrics.length > 0 ? (
-            metrics.map((metric) =>
-              metric.href ? (
-                <Link
-                  key={metric.id}
-                  to={metric.href}
-                  className="block"
-                >
-                  <MetricCard
-                    metric={metric}
-                    className="h-full transition-colors hover:border-accent/60"
-                  />
-                </Link>
-              ) : (
-                <MetricCard
-                  key={metric.id}
-                  metric={metric}
-                />
-              ),
-            )
+            dashboardPoles.map((pole) => {
+              const poleMetrics = metrics.filter((m) => m.poles.includes(pole.id));
+              if (!poleMetrics.length) return null;
+              return (
+                <div key={pole.id} className="col-span-full space-y-2">
+                  <h3 className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{pole.name}</h3>
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+                    {poleMetrics.map((metric) =>
+                      metric.href ? (
+                        <Link key={metric.id} to={metric.href} className="block">
+                          <MetricCard metric={metric} className="h-full transition-colors hover:border-accent/60" />
+                        </Link>
+                      ) : (
+                        <MetricCard key={metric.id} metric={metric} />
+                      ),
+                    )}
+                  </div>
+                </div>
+              );
+            })
           ) : (
             <p className="col-span-full text-sm text-muted-foreground">
               Aucun indicateur rattaché à vos pôles pour le moment.

@@ -55,7 +55,7 @@ const iconMap: Record<
  * des pôles dans le dashboard. Elles pourront ensuite être
  * remplacées par les KPI réels issus de Supabase.
  */
-const poleActivity: Record<PoleId, PoleActivity> = {
+const poleActivity: Partial<Record<PoleId, PoleActivity>> = {
   direction: {
     tasks: 5,
     incidents: 0,
@@ -146,7 +146,7 @@ export function PoleOverview() {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {poles.map((pole) => {
         const Icon = iconMap[pole.icon] ?? Crown;
-        const activity = poleActivity[pole.id];
+        const activity = poleActivity[pole.id] ?? { tasks: 0, incidents: 0, updates: 0 };
 
         return (
           <Link

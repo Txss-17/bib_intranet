@@ -1,0 +1,3 @@
+ALTER TABLE public.cashflows ADD COLUMN IF NOT EXISTS platform_id text UNIQUE, ADD COLUMN IF NOT EXISTS platform_synced_at timestamptz, ADD COLUMN IF NOT EXISTS shop_id uuid REFERENCES public.shops(id) ON DELETE SET NULL, ADD COLUMN IF NOT EXISTS source text NOT NULL DEFAULT 'manual';
+CREATE INDEX IF NOT EXISTS cashflows_shop_idx ON public.cashflows(shop_id);
+CREATE INDEX IF NOT EXISTS cashflows_category_idx ON public.cashflows(category);

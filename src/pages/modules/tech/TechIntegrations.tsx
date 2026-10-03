@@ -18,6 +18,7 @@ import {
   ShieldCheck, RotateCcw, Search, BookOpen, Store, Download,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { PlatformBridgeCard } from '@/components/tech/PlatformBridgeCard';
 
 type ProjectId = 'marketplace' | 'intranet' | 'audit-hub' | 'business-os' | 'global';
 
@@ -156,6 +157,7 @@ export default function TechIntegrations() {
 
   return (
     <div className="space-y-6">
+      <PlatformBridgeCard />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-3xl font-bold">

@@ -102,7 +102,7 @@ export default function DecisionHistory() {
       </div>
 
       <div className="space-y-6">
-        {Object.entries(groupedDecisions).map(([date, decs]) => (
+        {(Object.entries(groupedDecisions) as [string, any[]][]).map(([date, decs]) => (
           <div key={date}>
             <div className="flex items-center gap-3 mb-3">
               <div className="h-px flex-1 bg-border" />

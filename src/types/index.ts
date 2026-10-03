@@ -12,7 +12,11 @@ export type PoleId =
   | 'rse'
   | 'product'
   | 'data'
-  | 'security';
+  | 'security'
+  | 'tech'
+  | 'risk'
+  | 'lifecycle'
+  | 'rd';
 
 export interface Pole {
   id: PoleId;
@@ -35,7 +39,7 @@ export interface User {
   joinedAt: string;
 }
 
-export type UserRole =
+export type UserRole = 
   | 'admin'
   | 'executive'
   | 'manager'

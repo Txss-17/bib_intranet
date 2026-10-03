@@ -15,7 +15,9 @@ import {
   TrendingDown,
   Send,
   Loader2,
+  Upload,
 } from 'lucide-react';
+import { usePlatformActions } from '@/hooks/usePlatformSync';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -55,6 +57,7 @@ interface ValidatedProduct {
 }
 
 export default function ValidatedProducts() {
+  const { pushProduct } = usePlatformActions();
   const [searchParams] = useSearchParams();
   const [products, setProducts] = useState<ValidatedProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -358,6 +361,9 @@ export default function ValidatedProducts() {
                             <Send className="h-4 w-4 mr-2" />Transmettre au Tech
                           </DropdownMenuItem>
                         )}
+                        <DropdownMenuItem onClick={() => pushProduct.mutate(product.id)} disabled={pushProduct.isPending}>
+                          <Upload className="h-4 w-4 mr-2" />Publier sur B.I.B Platform
+                        </DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive"><Archive className="h-4 w-4 mr-2" />Archiver</DropdownMenuItem>
                       </DropdownMenuContent>

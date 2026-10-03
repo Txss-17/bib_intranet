@@ -7,7 +7,7 @@ import { Seniority } from '@/data/permissionRules';
 import {
   ActionSet, DataScope, MATRIX_EVENT, PermissionAction, getDataScope,
   getPageByPath, isRbacEnforced, loadMatrixOverrides, pageRegistry,
-  resolvePagePermissions, NO_ACCESS,
+  resolvePagePermissions, NO_ACCESS, startPermissionSync,
 } from '@/data/permissionMatrix';
 
 /** Rôle métier effectif : rôle simulé (« Visualiser comme ») sinon déduit du profil. */
@@ -45,6 +45,10 @@ export const usePermissions = (): UsePermissionsReturn => {
   const { isAdmin } = useUserRole();
   const { role: simulatedRole } = useViewAs();
   const [tick, setTick] = useState(0);
+
+  useEffect(() => {
+    if (profile) startPermissionSync();
+  }, [profile]);
 
   useEffect(() => {
     const handler = () => setTick((t) => t + 1);

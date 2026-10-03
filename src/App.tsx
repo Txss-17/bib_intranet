@@ -85,6 +85,7 @@ import LogisticsIncidents from "./pages/modules/ops/LogisticsIncidents";
 import Partners from "./pages/modules/ops/Partners";
 import DistributedStocks from "./pages/modules/ops/DistributedStocks";
 import ProductCatalog from "./pages/modules/ops/ProductCatalog";
+import ProductLifecycle from "./pages/modules/ops/ProductLifecycle";
 import SyncFlows from "./pages/modules/ops/SyncFlows";
 import Replenishment from "./pages/modules/ops/Replenishment";
 import OrderPipeline from "./pages/modules/ops/OrderPipeline";
@@ -92,6 +93,16 @@ import AuditLink from "./pages/modules/ops/AuditLink";
 import DemandForecast from "./pages/modules/ops/DemandForecast";
 import StockThresholds from "./pages/modules/ops/StockThresholds";
 import SupplierLeadTimes from "./pages/modules/ops/SupplierLeadTimes";
+import ShopsSupervision from "./pages/modules/ops/ShopsSupervision";
+import Anomalies from "./pages/modules/ops/Anomalies";
+import WorkTasks from "./pages/modules/work/WorkTasks";
+import WorkProjects from "./pages/modules/work/WorkProjects";
+import WorkProcesses from "./pages/modules/work/WorkProcesses";
+import WorkValidations from "./pages/modules/work/WorkValidations";
+import WorkEscalations from "./pages/modules/work/WorkEscalations";
+import WorkActivities from "./pages/modules/work/WorkActivities";
+import Reconciliation from './pages/modules/finance/Reconciliation';
+
 
 /* ============================================================
    FINANCE
@@ -152,6 +163,7 @@ import Publications from "./pages/modules/rh/Publications";
 
 import AuditDashboard from "./pages/modules/audit/AuditDashboard";
 import FieldAudits from "./pages/modules/audit/FieldAudits";
+import AuditMissions from "./pages/modules/audit/AuditMissions";
 import SupplierAudits from "./pages/modules/audit/SupplierAudits";
 import OpsAudits from "./pages/modules/audit/OpsAudits";
 import AuditReports from "./pages/modules/audit/Reports";
@@ -456,7 +468,7 @@ const App = () => (
 
                 <Route
                   path="/pole/finance/reconciliation"
-                  element={<SubSectionPage />}
+                  element={<Reconciliation />}
                 />
 
                 {/* ====================================================
@@ -469,9 +481,19 @@ const App = () => (
                 />
 
                 <Route
+                  path="/pole/ops/shops"
+                  element={<ShopsSupervision />}
+                />
+                <Route
+                  path="/pole/ops/anomalies"
+                  element={<Anomalies />}
+                />
+
+                <Route
                   path="/pole/ops/pipeline"
                   element={<OrderPipeline />}
                 />
+
 
                 <Route
                   path="/pole/ops/orders"
@@ -491,6 +513,11 @@ const App = () => (
                 <Route
                   path="/pole/ops/catalog"
                   element={<ProductCatalog />}
+                />
+
+                <Route
+                  path="/pole/ops/product-lifecycle"
+                  element={<ProductLifecycle />}
                 />
 
                 <Route
@@ -805,6 +832,10 @@ const App = () => (
                 <Route
                   path="/pole/audit/field"
                   element={<FieldAudits />}
+                />
+                <Route
+                  path="/pole/audit/missions"
+                  element={<AuditMissions />}
                 />
 
                 <Route
@@ -1564,32 +1595,32 @@ const App = () => (
 
                 <Route
                   path="/work/tasks"
-                  element={<SubSectionPage />}
+                  element={<WorkTasks />}
                 />
 
                 <Route
                   path="/work/projects"
-                  element={<SubSectionPage />}
+                  element={<WorkProjects />}
                 />
 
                 <Route
                   path="/work/processes"
-                  element={<SubSectionPage />}
+                  element={<WorkProcesses />}
                 />
 
                 <Route
                   path="/work/validations"
-                  element={<SubSectionPage />}
+                  element={<WorkValidations />}
                 />
 
                 <Route
                   path="/work/escalations"
-                  element={<SubSectionPage />}
+                  element={<WorkEscalations />}
                 />
 
                 <Route
                   path="/work/activities"
-                  element={<SubSectionPage />}
+                  element={<WorkActivities />}
                 />
 
                 <Route

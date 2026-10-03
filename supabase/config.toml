@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.provision-test-accounts]
 verify_jwt = true
+
+[functions.hub-field-missions]
+verify_jwt = false
