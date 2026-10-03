@@ -24,10 +24,12 @@ import {
   Search,
   Truck,
   XCircle,
+  Users,
+  Activity,
 } from 'lucide-react';
 import { useOpsPartners } from '@/hooks/useOpsControl';
 
-interface PartnerEnriched {
+interface Partner {
   id: string;
   name: string;
   type: string | null;
@@ -37,6 +39,7 @@ interface PartnerEnriched {
   volume_processed: number | null;
   avg_lead_time_hours: number | null;
   error_rate: number | null;
+  api_integrated?: boolean | null;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -65,41 +68,58 @@ const formatType = (type: string | null) => {
 };
 
 const Partners = () => {
-  const { data: rawPartners = [], isLoading, isError } = useOpsPartners();
+  const {
+    data: rawPartners = [],
+    isLoading,
+    isError,
+  } = useOpsPartners();
 
   const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'active' | 'pending' | 'suspended' | 'inactive'
+  >('all');
 
-  const partners = rawPartners as PartnerEnriched[];
+  const partners = rawPartners as Partner[];
 
   const filteredPartners = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    if (!query) return partners;
-
     return partners.filter((partner) => {
-      return [
-        partner.name,
-        partner.type,
-        partner.status,
-        partner.region,
-        partner.contact_email,
-      ].some((value) =>
-        (value ?? '').toLowerCase().includes(query),
-      );
+      const matchesSearch =
+        !query ||
+        [
+          partner.name,
+          partner.type,
+          partner.status,
+          partner.region,
+          partner.contact_email,
+        ].some((value) =>
+          (value ?? '').toLowerCase().includes(query),
+        );
+
+      const matchesStatus =
+        statusFilter === 'all' ||
+        partner.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
     });
-  }, [partners, search]);
+  }, [partners, search, statusFilter]);
 
   const stats = useMemo(() => {
     const active = partners.filter(
       (partner) => partner.status === 'active',
     ).length;
 
+    const pending = partners.filter(
+      (partner) => partner.status === 'pending',
+    ).length;
+
     const suspended = partners.filter(
       (partner) => partner.status === 'suspended',
     ).length;
 
-    const pending = partners.filter(
-      (partner) => partner.status === 'pending',
+    const inactive = partners.filter(
+      (partner) => partner.status === 'inactive',
     ).length;
 
     const totalVolume = partners.reduce(
@@ -130,18 +150,25 @@ const Partners = () => {
         ? 0
         : partnersWithLeadTime.reduce(
             (total, partner) =>
-              total + Number(partner.avg_lead_time_hours ?? 0),
+              total +
+              Number(partner.avg_lead_time_hours ?? 0),
             0,
           ) / partnersWithLeadTime.length;
+
+    const apiIntegrated = partners.filter(
+      (partner) => partner.api_integrated === true,
+    ).length;
 
     return {
       total: partners.length,
       active,
-      suspended,
       pending,
+      suspended,
+      inactive,
       totalVolume,
       averageErrorRate,
       averageLeadTime,
+      apiIntegrated,
     };
   }, [partners]);
 
@@ -187,7 +214,7 @@ const Partners = () => {
     }
   };
 
-  const getErrorRateState = (errorRate: number | null) => {
+  const getErrorState = (errorRate: number | null) => {
     const value = Number(errorRate ?? 0);
 
     if (value >= 5) {
@@ -212,7 +239,7 @@ const Partners = () => {
 
   if (isLoading) {
     return (
-      <div className="flex min-h-[320px] items-center justify-center">
+      <div className="flex min-h-[360px] items-center justify-center">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Loader2 className="h-5 w-5 animate-spin" />
           Chargement des partenaires logistiques…
@@ -227,13 +254,15 @@ const Partners = () => {
         <Card className="border-destructive/30">
           <CardContent className="flex items-center gap-3 py-8">
             <AlertTriangle className="h-5 w-5 text-destructive" />
+
             <div>
               <p className="font-medium">
-                Impossible de charger les partenaires logistiques
+                Impossible de charger les partenaires
               </p>
+
               <p className="text-sm text-muted-foreground">
-                Vérifie la connexion à Supabase et les droits d'accès
-                à la table des partenaires.
+                Vérifie la connexion Supabase et les droits
+                d'accès à la table des partenaires.
               </p>
             </div>
           </CardContent>
@@ -245,26 +274,26 @@ const Partners = () => {
   return (
     <div className="space-y-6 p-6">
       {/* Header */}
-      <div className="flex flex-col gap-2">
+      <div>
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
             <Truck className="h-5 w-5 text-primary" />
           </div>
 
           <div>
-            <h1 className="text-3xl font-bold">
+            <h1 className="text-3xl font-bold tracking-tight">
               Partenaires logistiques
             </h1>
 
-            <p className="text-muted-foreground">
-              Supervision des transporteurs, distributeurs et partenaires
-              opérationnels BIB.
+            <p className="mt-1 text-muted-foreground">
+              Supervision des transporteurs, distributeurs et
+              partenaires opérationnels BIB.
             </p>
           </div>
         </div>
       </div>
 
-      {/* KPIs */}
+      {/* KPI */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
@@ -279,7 +308,7 @@ const Partners = () => {
                 </p>
               </div>
 
-              <Truck className="h-5 w-5 text-muted-foreground" />
+              <Users className="h-5 w-5 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -315,7 +344,7 @@ const Partners = () => {
                 </p>
               </div>
 
-              <PackageIcon />
+              <Truck className="h-5 w-5 text-muted-foreground" />
             </div>
           </CardContent>
         </Card>
@@ -339,7 +368,7 @@ const Partners = () => {
         </Card>
       </div>
 
-      {/* Secondary indicators */}
+      {/* État du réseau */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardContent className="flex items-center gap-3 py-4">
@@ -347,7 +376,7 @@ const Partners = () => {
 
             <div>
               <p className="text-sm font-medium">
-                Partenaires actifs
+                Réseau actif
               </p>
 
               <p className="text-xs text-muted-foreground">
@@ -375,30 +404,28 @@ const Partners = () => {
 
         <Card>
           <CardContent className="flex items-center gap-3 py-4">
-            <AlertTriangle className="h-5 w-5 text-muted-foreground" />
+            <Activity className="h-5 w-5 text-muted-foreground" />
 
             <div>
               <p className="text-sm font-medium">
-                Taux d'erreur moyen
+                Intégration API
               </p>
 
               <p className="text-xs text-muted-foreground">
-                {stats.averageErrorRate.toFixed(1)} %
-                {stats.suspended > 0 &&
-                  ` · ${stats.suspended} suspendu(s)`}
+                {stats.apiIntegrated} / {stats.total} intégré(s)
               </p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Partners table */}
+      {/* Recherche + filtres */}
       <Card>
         <CardHeader>
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-col gap-4">
             <div>
               <CardTitle>
-                Partenaires ({filteredPartners.length})
+                Réseau partenaires
               </CardTitle>
 
               <p className="mt-1 text-sm text-muted-foreground">
@@ -406,15 +433,46 @@ const Partners = () => {
               </p>
             </div>
 
-            <div className="relative w-full lg:w-80">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="flex flex-col gap-3 lg:flex-row">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
-              <Input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Rechercher un partenaire, type, région…"
-                className="pl-9"
-              />
+                <Input
+                  value={search}
+                  onChange={(event) =>
+                    setSearch(event.target.value)
+                  }
+                  placeholder="Rechercher un partenaire, type, région…"
+                  className="pl-9"
+                />
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                {[
+                  ['all', 'Tous'],
+                  ['active', 'Actifs'],
+                  ['pending', 'En attente'],
+                  ['suspended', 'Suspendus'],
+                  ['inactive', 'Inactifs'],
+                ].map(([value, label]) => (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() =>
+                      setStatusFilter(
+                        value as typeof statusFilter,
+                      )
+                    }
+                    className={`rounded-md border px-3 py-2 text-sm transition-colors ${
+                      statusFilter === value
+                        ? 'bg-primary text-primary-foreground'
+                        : 'hover:bg-muted'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -432,7 +490,7 @@ const Partners = () => {
 
               <p className="mt-1 text-sm text-muted-foreground">
                 {partners.length === 0
-                  ? 'Les partenaires logistiques apparaîtront ici lorsqu’ils seront enregistrés.'
+                  ? 'Les partenaires apparaîtront ici lorsqu’ils seront enregistrés.'
                   : 'Modifie les critères de recherche.'}
               </p>
             </div>
@@ -454,6 +512,9 @@ const Partners = () => {
                       Taux d'erreur
                     </TableHead>
                     <TableHead>
+                      API
+                    </TableHead>
+                    <TableHead>
                       Statut
                     </TableHead>
                   </TableRow>
@@ -466,7 +527,7 @@ const Partners = () => {
                     );
 
                     const errorState =
-                      getErrorRateState(partner.error_rate);
+                      getErrorState(partner.error_rate);
 
                     return (
                       <TableRow key={partner.id}>
@@ -509,7 +570,7 @@ const Partners = () => {
                         </TableCell>
 
                         <TableCell>
-                          <div className="flex min-w-[180px] items-center gap-3">
+                          <div className="flex min-w-[170px] items-center gap-2">
                             <Progress
                               value={Math.min(
                                 errorRate * 10,
@@ -532,6 +593,22 @@ const Partners = () => {
                         </TableCell>
 
                         <TableCell>
+                          {partner.api_integrated ? (
+                            <Badge
+                              variant="secondary"
+                              className="gap-1"
+                            >
+                              <CheckCircle2 className="h-3 w-3" />
+                              Oui
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline">
+                              Non
+                            </Badge>
+                          )}
+                        </TableCell>
+
+                        <TableCell>
                           {getStatusBadge(partner.status)}
                         </TableCell>
                       </TableRow>
@@ -546,28 +623,5 @@ const Partners = () => {
     </div>
   );
 };
-
-const PackageIcon = () => (
-  <div className="flex h-9 w-9 items-center justify-center">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="20"
-      height="20"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className="text-muted-foreground"
-      aria-hidden="true"
-    >
-      <path d="m16.5 9.4-9-5.19" />
-      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-      <polyline points="3.29 7 12 12 20.71 7" />
-      <line x1="12" x2="12" y1="22" y2="12" />
-    </svg>
-  </div>
-);
 
 export default Partners;
