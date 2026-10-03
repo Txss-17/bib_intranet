@@ -24,61 +24,165 @@ import {
 
 import { useSecurityAlerts } from '@/hooks/useTechData';
 
+type SecurityAlertSeverity =
+  | 'critical'
+  | 'high'
+  | 'medium'
+  | 'low'
+  | string;
+
+type SecurityAlertStatus =
+  | 'open'
+  | 'investigating'
+  | 'resolved'
+  | 'dismissed'
+  | string;
+
 interface SecurityAlert {
   id: string;
   created_at: string;
   alert_type: string;
   title: string;
-  severity: 'critical' | 'high' | 'medium' | 'low';
-  ip_address: string | null;
-  status: 'open' | 'investigating' | 'resolved' | 'dismissed';
+  severity: SecurityAlertSeverity;
+  ip_address?: string | null;
+  status: SecurityAlertStatus;
+  resolved_at?: string | null;
 }
 
-export default function Security() {
-  const { data = [], isLoading, update } = useSecurityAlerts();
+const formatSeverity = (
+  severity: SecurityAlertSeverity,
+) => {
+  switch (severity) {
+    case 'critical':
+      return 'Critique';
+    case 'high':
+      return 'Haute';
+    case 'medium':
+      return 'Moyenne';
+    case 'low':
+      return 'Basse';
+    default:
+      return severity;
+  }
+};
 
-  const [statusFilter, setStatusFilter] = useState<
-    SecurityAlert['status'] | 'all'
-  >('open');
+const formatStatus = (
+  status: SecurityAlertStatus,
+) => {
+  switch (status) {
+    case 'open':
+      return 'Ouverte';
+    case 'investigating':
+      return 'En cours';
+    case 'resolved':
+      return 'Résolue';
+    case 'dismissed':
+      return 'Ignorée';
+    default:
+      return status;
+  }
+};
 
-  const [severityFilter, setSeverityFilter] = useState<
-    SecurityAlert['severity'] | 'all'
-  >('all');
+const severityVariant = (
+  severity: SecurityAlertSeverity,
+): 'destructive' | 'secondary' => {
+  return severity === 'critical' ||
+    severity === 'high'
+    ? 'destructive'
+    : 'secondary';
+};
 
-  const alerts = data as SecurityAlert[];
+const statusVariant = (
+  status: SecurityAlertStatus,
+): 'default' | 'secondary' => {
+  return status === 'resolved'
+    ? 'default'
+    : 'secondary';
+};
 
-  const filtered = useMemo(
-    () =>
-      alerts.filter(
-        (alert) =>
-          (statusFilter === 'all' ||
-            alert.status === statusFilter) &&
-          (severityFilter === 'all' ||
-            alert.severity === severityFilter),
-      ),
-    [alerts, statusFilter, severityFilter],
+const formatAlertDate = (
+  value: string,
+) => {
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return '—';
+  }
+
+  return format(
+    date,
+    'dd/MM HH:mm',
   );
+};
+
+export default function Security() {
+  const {
+    data = [],
+    isLoading,
+    update,
+  } = useSecurityAlerts();
+
+  const alerts =
+    data as SecurityAlert[];
+
+  const [statusFilter, setStatusFilter] =
+    useState('open');
+
+  const [severityFilter, setSeverityFilter] =
+    useState('all');
+
+  const filtered = useMemo(() => {
+    return alerts.filter((alert) => {
+      const statusMatches =
+        statusFilter === 'all' ||
+        alert.status === statusFilter;
+
+      const severityMatches =
+        severityFilter === 'all' ||
+        alert.severity === severityFilter;
+
+      return (
+        statusMatches &&
+        severityMatches
+      );
+    });
+  }, [
+    alerts,
+    statusFilter,
+    severityFilter,
+  ]);
 
   const counts = useMemo(
     () => ({
       critical: alerts.filter(
         (alert) =>
-          alert.severity === 'critical' &&
+          alert.severity ===
+            'critical' &&
           alert.status === 'open',
       ).length,
 
       high: alerts.filter(
         (alert) =>
-          alert.severity === 'high' &&
+          alert.severity ===
+            'high' &&
           alert.status === 'open',
       ).length,
 
       open: alerts.filter(
-        (alert) => alert.status === 'open',
+        (alert) =>
+          alert.status === 'open',
+      ).length,
+
+      investigating: alerts.filter(
+        (alert) =>
+          alert.status ===
+          'investigating',
       ).length,
 
       resolved: alerts.filter(
-        (alert) => alert.status === 'resolved',
+        (alert) =>
+          alert.status ===
+          'resolved',
       ).length,
     }),
     [alerts],
@@ -86,44 +190,49 @@ export default function Security() {
 
   const setStatus = async (
     id: string,
-    status: SecurityAlert['status'],
+    status: SecurityAlertStatus,
   ) => {
     try {
       await update.mutateAsync({
         id,
         status,
-        ...(status === 'resolved'
+        ...(status ===
+        'resolved'
           ? {
-              resolved_at: new Date().toISOString(),
+              resolved_at:
+                new Date().toISOString(),
             }
           : {}),
       });
 
-      toast.success('Statut mis à jour');
+      toast.success(
+        'Statut de l’alerte mis à jour',
+      );
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : 'Impossible de mettre à jour le statut.';
+          : 'Impossible de mettre à jour l’alerte.';
 
       toast.error(message);
     }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6">
       <div>
         <h1 className="flex items-center gap-2 text-3xl font-bold">
           <Shield className="h-7 w-7" />
           Sécurité
         </h1>
 
-        <p className="mt-1 text-muted-foreground">
-          Alertes, incidents et anomalies détectées.
+        <p className="text-muted-foreground">
+          Alertes, incidents et anomalies
+          détectées sur les systèmes BIB.
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">
@@ -163,6 +272,18 @@ export default function Security() {
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">
+              En investigation
+            </p>
+
+            <p className="text-2xl font-bold">
+              {counts.investigating}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">
               Résolues
             </p>
 
@@ -174,7 +295,7 @@ export default function Security() {
       </div>
 
       <Card>
-        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <CardTitle>
             Alertes ({filtered.length})
           </CardTitle>
@@ -182,41 +303,8 @@ export default function Security() {
           <div className="flex flex-wrap gap-2">
             <Select
               value={statusFilter}
-              onValueChange={(value) =>
-                setStatusFilter(
-                  value as SecurityAlert['status'] | 'all',
-                )
-              }
-            >
-              <SelectTrigger className="w-36">
-                <SelectValue />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="all">
-                  Tous statuts
-                </SelectItem>
-                <SelectItem value="open">
-                  Ouvertes
-                </SelectItem>
-                <SelectItem value="investigating">
-                  En cours
-                </SelectItem>
-                <SelectItem value="resolved">
-                  Résolues
-                </SelectItem>
-                <SelectItem value="dismissed">
-                  Ignorées
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={severityFilter}
-              onValueChange={(value) =>
-                setSeverityFilter(
-                  value as SecurityAlert['severity'] | 'all',
-                )
+              onValueChange={
+                setStatusFilter
               }
             >
               <SelectTrigger className="w-40">
@@ -225,17 +313,54 @@ export default function Security() {
 
               <SelectContent>
                 <SelectItem value="all">
-                  Toutes sévérités
+                  Tous les statuts
                 </SelectItem>
+
+                <SelectItem value="open">
+                  Ouvertes
+                </SelectItem>
+
+                <SelectItem value="investigating">
+                  En cours
+                </SelectItem>
+
+                <SelectItem value="resolved">
+                  Résolues
+                </SelectItem>
+
+                <SelectItem value="dismissed">
+                  Ignorées
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={severityFilter}
+              onValueChange={
+                setSeverityFilter
+              }
+            >
+              <SelectTrigger className="w-40">
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">
+                  Toutes les sévérités
+                </SelectItem>
+
                 <SelectItem value="critical">
                   Critique
                 </SelectItem>
+
                 <SelectItem value="high">
                   Haute
                 </SelectItem>
+
                 <SelectItem value="medium">
                   Moyenne
                 </SelectItem>
+
                 <SelectItem value="low">
                   Basse
                 </SelectItem>
@@ -250,91 +375,139 @@ export default function Security() {
               Chargement…
             </p>
           ) : filtered.length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">
-              Aucune alerte.
+            <p className="text-sm text-muted-foreground">
+              Aucune alerte correspondant
+              aux filtres sélectionnés.
             </p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Titre</TableHead>
-                  <TableHead>Sévérité</TableHead>
-                  <TableHead>IP</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead />
+                  <TableHead>
+                    Date
+                  </TableHead>
+
+                  <TableHead>
+                    Type
+                  </TableHead>
+
+                  <TableHead>
+                    Titre
+                  </TableHead>
+
+                  <TableHead>
+                    Sévérité
+                  </TableHead>
+
+                  <TableHead>
+                    IP
+                  </TableHead>
+
+                  <TableHead>
+                    Statut
+                  </TableHead>
+
+                  <TableHead className="text-right">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
 
               <TableBody>
-                {filtered.map((alert) => (
-                  <TableRow key={alert.id}>
-                    <TableCell className="text-xs">
-                      {format(
-                        new Date(alert.created_at),
-                        'dd/MM HH:mm',
-                      )}
-                    </TableCell>
+                {filtered.map(
+                  (alert) => (
+                    <TableRow
+                      key={alert.id}
+                    >
+                      <TableCell className="text-xs">
+                        {formatAlertDate(
+                          alert.created_at,
+                        )}
+                      </TableCell>
 
-                    <TableCell>
-                      <Badge variant="outline">
-                        {alert.alert_type}
-                      </Badge>
-                    </TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {alert.alert_type}
+                        </Badge>
+                      </TableCell>
 
-                    <TableCell className="font-medium">
-                      {alert.title}
-                    </TableCell>
+                      <TableCell className="font-medium">
+                        {alert.title}
+                      </TableCell>
 
-                    <TableCell>
-                      <Badge
-                        variant={
-                          alert.severity === 'critical' ||
-                          alert.severity === 'high'
-                            ? 'destructive'
-                            : 'secondary'
-                        }
-                      >
-                        {alert.severity}
-                      </Badge>
-                    </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={severityVariant(
+                            alert.severity,
+                          )}
+                        >
+                          {formatSeverity(
+                            alert.severity,
+                          )}
+                        </Badge>
+                      </TableCell>
 
-                    <TableCell className="font-mono text-xs">
-                      {alert.ip_address ?? '—'}
-                    </TableCell>
+                      <TableCell className="font-mono text-xs">
+                        {alert.ip_address ||
+                          '—'}
+                      </TableCell>
 
-                    <TableCell>
-                      <Badge
-                        variant={
-                          alert.status === 'resolved'
-                            ? 'default'
-                            : 'secondary'
-                        }
-                      >
-                        {alert.status}
-                      </Badge>
-                    </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={statusVariant(
+                            alert.status,
+                          )}
+                        >
+                          {formatStatus(
+                            alert.status,
+                          )}
+                        </Badge>
+                      </TableCell>
 
-                    <TableCell>
-                      {alert.status === 'open' && (
-                        <div className="flex gap-1">
+                      <TableCell className="text-right">
+                        {alert.status ===
+                        'open' ? (
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={
+                                update.isPending
+                              }
+                              onClick={() =>
+                                setStatus(
+                                  alert.id,
+                                  'investigating',
+                                )
+                              }
+                            >
+                              Enquêter
+                            </Button>
+
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              disabled={
+                                update.isPending
+                              }
+                              onClick={() =>
+                                setStatus(
+                                  alert.id,
+                                  'resolved',
+                                )
+                              }
+                            >
+                              Résoudre
+                            </Button>
+                          </div>
+                        ) : alert.status ===
+                          'investigating' ? (
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() =>
-                              setStatus(
-                                alert.id,
-                                'investigating',
-                              )
+                            disabled={
+                              update.isPending
                             }
-                          >
-                            Enquêter
-                          </Button>
-
-                          <Button
-                            size="sm"
-                            variant="ghost"
                             onClick={() =>
                               setStatus(
                                 alert.id,
@@ -344,11 +517,15 @@ export default function Security() {
                           >
                             Résoudre
                           </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                        ) : (
+                          <span className="text-xs text-muted-foreground">
+                            —
+                          </span>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ),
+                )}
               </TableBody>
             </Table>
           )}
