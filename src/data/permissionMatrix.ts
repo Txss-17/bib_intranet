@@ -1,3 +1,5 @@
+import { applyRemoteOverrides } from '@/data/permissionRules';
+import { supabase } from '@/integrations/supabase/client';
 // ---------------------------------------------------------------------------
 // MATRICE CENTRALISÉE DES PERMISSIONS
 // RBAC + restrictions de données + actions
@@ -637,6 +639,7 @@ export const saveMatrixOverrides = (
   window.dispatchEvent(
     new Event(MATRIX_EVENT),
   );
+  void pushPermissionSetting('matrix_overrides', matrix);
 };
 
 export const loadMatrixHistory =
@@ -707,6 +710,45 @@ export const setRbacEnforced = (
   window.dispatchEvent(
     new Event(MATRIX_EVENT),
   );
+  void pushPermissionSetting('rbac_enforced', enabled);
+};
+
+// ---------------------------------------------------------------------------
+// SYNCHRONISATION BACKEND (source de vérité partagée entre tous les postes)
+// ---------------------------------------------------------------------------
+
+const pushPermissionSetting = async (key: string, value: unknown) => {
+  const { error } = await (supabase as any)
+    .from('permission_settings')
+    .upsert({ key, value }, { onConflict: 'key' });
+  if (error) console.error('[permissions] synchronisation refusée', error.message);
+};
+
+const applyRemoteSetting = (key: string, value: unknown) => {
+  try {
+    if (key === 'matrix_overrides') localStorage.setItem(MATRIX_KEY, JSON.stringify(value ?? {}));
+    if (key === 'sensitive_rules') applyRemoteOverrides(value as any);
+    if (key === 'rbac_enforced') localStorage.setItem(ENFORCE_KEY, value === false ? 'off' : 'on');
+  } catch {
+    // localStorage indisponible
+  }
+  window.dispatchEvent(new Event(MATRIX_EVENT));
+};
+
+let syncStarted = false;
+
+/** Charge les permissions enregistrées en base et écoute leurs modifications en temps réel. */
+export const startPermissionSync = () => {
+  if (syncStarted) return;
+  syncStarted = true;
+  const db = supabase as any;
+  db.from('permission_settings').select('key, value').then(({ data }: any) => {
+    (data || []).forEach((r: any) => applyRemoteSetting(r.key, r.value));
+  });
+  db.channel('permission-settings-sync')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'permission_settings' },
+      (payload: any) => payload.new?.key && applyRemoteSetting(payload.new.key, payload.new.value))
+    .subscribe();
 };
 
 // ---------------------------------------------------------------------------

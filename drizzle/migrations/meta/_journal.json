@@ -78,6 +78,13 @@
       "when": 1790916805998,
       "tag": "0010_direction_editable_content",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791019058250,
+      "tag": "0011_roadmap_periods_governance_permissions",
+      "breakpoints": true
     }
   ]
 }

@@ -1,7 +1,9 @@
 import React, { useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Building, Users, FileText, Heart, Briefcase, Upload, Eye, Trash2 } from 'lucide-react';
+import { Building, Users, FileText, Heart, Briefcase, Upload, Eye, Trash2, Pencil, Plus } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,19 +11,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
-  openGovernanceDoc, useGovernanceDocActions, useGovernanceDocs, useIsLeadership,
+  GovernanceBlock, openGovernanceDoc, useGovernanceBlockActions, useGovernanceBlocks, useGovernanceDocActions, useGovernanceDocs, useIsLeadership,
 } from '@/hooks/useDirectionContent';
 
-const governanceEntities = [
-  { id: 'bib-sas', name: 'BIB SAS', type: 'Société Opérationnelle', description: 'Entité principale - marketplace Brand-in-a-box', capital: '50,000€', status: 'active' },
-  { id: 'bib-foundation', name: 'Fondation BIB', type: 'Fondation', description: 'Actions RSE, éducation, impact social', capital: 'Dotation initiale', status: 'planned' },
-];
-
-const boardMembers = [
-  { id: '1', name: 'Fondatrice', role: 'Présidente', entity: 'BIB SAS' },
-  { id: '2', name: 'Investisseur Lead', role: 'Administrateur', entity: 'BIB SAS' },
-  { id: '3', name: 'Expert Industrie', role: 'Conseiller', entity: 'BIB SAS' },
-];
+type BlockDraft = { id?: string; kind: 'entity' | 'board_member'; name: string; subtitle: string; description: string; detail: string; status: string };
 
 const formatSize = (n: number | null) => (!n ? '' : n > 1048576 ? `${(n / 1048576).toFixed(1)} Mo` : `${Math.round(n / 1024)} Ko`);
 
@@ -35,6 +28,26 @@ const GroupGovernance = () => {
   const [version, setVersion] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const { data: blocks = [] } = useGovernanceBlocks();
+  const blockActions = useGovernanceBlockActions();
+  const [bd, setBd] = useState<BlockDraft | null>(null);
+  const governanceEntities = blocks.filter((b) => b.kind === 'entity');
+  const boardMembers = blocks.filter((b) => b.kind === 'board_member');
+  const editBlock = (b: GovernanceBlock) => setBd({ id: b.id, kind: b.kind, name: b.name, subtitle: b.subtitle ?? '', description: b.description ?? '', detail: b.detail ?? '', status: b.status });
+  const newBlock = (kind: BlockDraft['kind']) => setBd({ kind, name: '', subtitle: '', description: '', detail: kind === 'board_member' ? 'BIB SAS' : '', status: kind === 'entity' ? 'planned' : 'active' });
+  const BlockButtons = ({ b }: { b: GovernanceBlock }) => isLeader ? (
+    <div className="flex">
+      <Button size="icon" variant="ghost" aria-label="Modifier" onClick={() => editBlock(b)}><Pencil className="h-4 w-4" /></Button>
+      <Button size="icon" variant="ghost" aria-label="Supprimer" onClick={() => confirm(`Supprimer « ${b.name} » ?`) && blockActions.remove.mutate(b.id)}><Trash2 className="h-4 w-4" /></Button>
+    </div>
+  ) : null;
+  const saveBlock = () => {
+    if (!bd) return;
+    const { id, ...rest } = bd;
+    const payload = { ...rest, subtitle: rest.subtitle || null, description: rest.description || null, detail: rest.detail || null };
+    blockActions.save.mutate(id ? { id, ...payload } : { ...payload, sort_order: blocks.filter((b) => b.kind === bd.kind).length + 1 }, { onSuccess: () => setBd(null) });
+  };
+
   const reset = () => { setOpen(false); setFile(null); setName(''); setVersion(''); };
 
   return (
@@ -46,6 +59,11 @@ const GroupGovernance = () => {
         </h1>
         <p className="text-muted-foreground mt-1">Structure juridique et gouvernance BIB</p>
       </div>
+      {isLeader && (
+        <div className="flex justify-end">
+          <Button size="sm" variant="outline" onClick={() => newBlock('entity')}><Plus className="mr-1 h-4 w-4" />Entité</Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {governanceEntities.map((entity) => (
@@ -53,18 +71,21 @@ const GroupGovernance = () => {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
-                  {entity.type === 'Fondation' ? <Heart className="h-5 w-5 text-primary" /> : <Building className="h-5 w-5 text-primary" />}
+                  {entity.subtitle === 'Fondation' ? <Heart className="h-5 w-5 text-primary" /> : <Building className="h-5 w-5 text-primary" />}
                   {entity.name}
                 </CardTitle>
-                <Badge variant={entity.status === 'active' ? 'default' : 'outline'}>{entity.status === 'active' ? 'Actif' : 'Planifié'}</Badge>
+                <div className="flex items-center gap-1">
+                  <Badge variant={entity.status === 'active' ? 'default' : 'outline'}>{entity.status === 'active' ? 'Actif' : 'Planifié'}</Badge>
+                  <BlockButtons b={entity} />
+                </div>
               </div>
-              <CardDescription>{entity.type}</CardDescription>
+              <CardDescription>{entity.subtitle}</CardDescription>
             </CardHeader>
             <CardContent>
               <p className="text-sm mb-4">{entity.description}</p>
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">Capital</span>
-                <span className="font-medium">{entity.capital}</span>
+                <span className="font-medium">{entity.detail}</span>
               </div>
             </CardContent>
           </Card>
@@ -73,7 +94,10 @@ const GroupGovernance = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" />Conseil d'Administration</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" />Conseil d'Administration</CardTitle>
+            {isLeader && <Button size="sm" variant="outline" onClick={() => newBlock('board_member')}><Plus className="mr-1 h-4 w-4" />Membre</Button>}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -83,10 +107,12 @@ const GroupGovernance = () => {
                   <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center"><Briefcase className="h-5 w-5" /></div>
                   <div>
                     <p className="font-medium">{m.name}</p>
-                    <p className="text-sm text-muted-foreground">{m.role}</p>
+                    <p className="text-sm text-muted-foreground">{m.subtitle}</p>
                   </div>
+                  <div className="ml-auto"><BlockButtons b={m} /></div>
                 </div>
-                <Badge variant="outline">{m.entity}</Badge>
+                {m.description && <p className="mb-2 text-sm">{m.description}</p>}
+                {m.detail && <Badge variant="outline">{m.detail}</Badge>}
               </div>
             ))}
           </div>
@@ -131,6 +157,30 @@ const GroupGovernance = () => {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!bd} onOpenChange={(o) => !o && setBd(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{bd?.id ? 'Modifier' : 'Ajouter'} {bd?.kind === 'entity' ? 'une entité' : 'un membre'}</DialogTitle></DialogHeader>
+          {bd && (
+            <div className="grid gap-3">
+              <div><Label>Nom</Label><Input value={bd.name} onChange={(e) => setBd({ ...bd, name: e.target.value })} /></div>
+              <div><Label>{bd.kind === 'entity' ? 'Type' : 'Fonction'}</Label><Input value={bd.subtitle} onChange={(e) => setBd({ ...bd, subtitle: e.target.value })} /></div>
+              <div><Label>Description</Label><Textarea value={bd.description} onChange={(e) => setBd({ ...bd, description: e.target.value })} /></div>
+              <div><Label>{bd.kind === 'entity' ? 'Capital' : 'Entité'}</Label><Input value={bd.detail} onChange={(e) => setBd({ ...bd, detail: e.target.value })} /></div>
+              {bd.kind === 'entity' && (
+                <div>
+                  <Label>Statut</Label>
+                  <Select value={bd.status} onValueChange={(v) => setBd({ ...bd, status: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="active">Actif</SelectItem><SelectItem value="planned">Planifié</SelectItem></SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter><Button disabled={!bd?.name || blockActions.save.isPending} onClick={saveBlock}>Enregistrer</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={open} onOpenChange={(o) => !o && reset()}>
         <DialogContent>

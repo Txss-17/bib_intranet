@@ -1219,12 +1219,14 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          end_date: string | null
           id: string
           kind: string
           objectives: Json
           phase: string | null
           progress: number
           sort_order: number
+          start_date: string | null
           status: string
           title: string
           updated_at: string
@@ -1234,12 +1236,14 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          end_date?: string | null
           id?: string
           kind?: string
           objectives?: Json
           phase?: string | null
           progress?: number
           sort_order?: number
+          start_date?: string | null
           status?: string
           title: string
           updated_at?: string
@@ -1249,12 +1253,14 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          end_date?: string | null
           id?: string
           kind?: string
           objectives?: Json
           phase?: string | null
           progress?: number
           sort_order?: number
+          start_date?: string | null
           status?: string
           title?: string
           updated_at?: string
@@ -1673,6 +1679,48 @@ export type Database = {
           target_amount?: number
           updated_at?: string | null
           valuation?: number | null
+        }
+        Relationships: []
+      }
+      governance_blocks: {
+        Row: {
+          created_at: string
+          description: string | null
+          detail: string | null
+          id: string
+          kind: string
+          name: string
+          sort_order: number
+          status: string
+          subtitle: string | null
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          detail?: string | null
+          id?: string
+          kind: string
+          name: string
+          sort_order?: number
+          status?: string
+          subtitle?: string | null
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          detail?: string | null
+          id?: string
+          kind?: string
+          name?: string
+          sort_order?: number
+          status?: string
+          subtitle?: string | null
+          updated_at?: string
+          updated_by?: string | null
         }
         Relationships: []
       }
@@ -2855,6 +2903,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      permission_change_log: {
+        Row: {
+          created_at: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          performed_by: string | null
+          setting_key: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          performed_by?: string | null
+          setting_key: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          performed_by?: string | null
+          setting_key?: string
+        }
+        Relationships: []
+      }
+      permission_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
       }
       platform_sync_runs: {
         Row: {
