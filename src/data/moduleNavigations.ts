@@ -677,11 +677,11 @@ export const moduleNavigations: Record<
     ],
   },
 
-  product: {
+    product: {
     id: 'product',
     label: 'Produit & Engineering',
     description:
-      'Produit, développement, plateforme et innovation',
+      'Produit, développement, plateforme, performance et innovation',
     items: [
       {
         id: 'overview',
@@ -736,6 +736,30 @@ export const moduleNavigations: Record<
         label: 'Innovation & R&D',
         path: '/pole/product/innovation',
         icon: 'FlaskConical',
+      },
+      {
+        id: 'performance',
+        label: 'Performance produit',
+        path: '/pole/product/performance',
+        icon: 'BarChart3',
+      },
+      {
+        id: 'supplier-performance',
+        label: 'Performance fournisseurs',
+        path: '/pole/product/supplier-performance',
+        icon: 'Users',
+      },
+      {
+        id: 'frictions',
+        label: 'Frictions produit',
+        path: '/pole/product/frictions',
+        icon: 'AlertTriangle',
+      },
+      {
+        id: 'reports',
+        label: 'Rapports & recommandations',
+        path: '/pole/product/reports',
+        icon: 'FileBarChart',
       },
     ],
   },
