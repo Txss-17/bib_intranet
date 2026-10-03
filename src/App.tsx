@@ -118,19 +118,15 @@ import CorporateCards from "./pages/modules/finance/CorporateCards";
 import GuaranteeFund from "./pages/modules/finance/GuaranteeFund";
 
 /* ============================================================
-   MARKETPLACE & CUSTOMER
-   ============================================================ */
-
-import ActivityMonitoring from "./pages/modules/lifecycle/ActivityMonitoring";
-
-/* ============================================================
    SUPPORT & CUSTOMER SUCCESS
    Implémentations historiques conservées temporairement
    derrière le nouveau pôle Support.
    ============================================================ */
 
-import SupportTickets from "./pages/modules/lifecycle/SupportTickets";
-import ManagedRiskAlerts from "./pages/modules/lifecycle/ManagedRiskAlerts";
+import SupportTickets from "./pages/modules/support/SupportTickets";
+import CustomerSuccess from "./pages/modules/support/CustomerSuccess";
+import SupportMonitoring from "./pages/modules/support/SupportMonitoring";
+import SupportEscalations from "./pages/modules/support/SupportEscalations";
 
 /* ============================================================
    MARKETING & COMMUNICATION
@@ -675,17 +671,17 @@ const App = () => (
 
                 <Route
                   path="/pole/support/customer-success"
-                  element={<ActivityMonitoring />}
+                  element={<CustomerSuccess />}
                 />
 
                 <Route
                   path="/pole/support/monitoring"
-                  element={<ActivityMonitoring />}
+                  element={<SupportMonitoring />}
                 />
 
                 <Route
                   path="/pole/support/escalations"
-                  element={<ManagedRiskAlerts />}
+                  element={<SupportEscalations />}
                 />
 
                 {/* ====================================================
