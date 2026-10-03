@@ -1,29 +1,83 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Lightbulb } from 'lucide-react';
+import { toast } from 'sonner';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Lightbulb } from 'lucide-react';
-import { useCreateRDRecommendation, useRDReports } from '@/hooks/useRD';
-import { toast } from 'sonner';
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+import {
+  useCreateProductRecommendation,
+  useProductReports,
+  type ProductRecommendationTargetPole,
+} from '@/hooks/useRD';
 
 interface Props {
   trigger?: React.ReactNode;
   defaultDetail?: string;
   defaultCategory?: string;
-  defaultPole?: 'tech' | 'ops' | 'supplier' | 'rse';
+  defaultPole?: ProductRecommendationTargetPole;
 }
 
-export default function CreateRecommendationDialog({ trigger, defaultDetail = '', defaultCategory = '', defaultPole = 'ops' }: Props) {
+const POLE_LABELS: Record<
+  ProductRecommendationTargetPole,
+  string
+> = {
+  product: 'Produit & Engineering',
+  ops: 'Opérations & Logistique',
+  supplier: 'Fournisseurs & Produits',
+  rse: 'RSE & Impact',
+};
+
+export default function CreateRecommendationDialog({
+  trigger,
+  defaultDetail = '',
+  defaultCategory = '',
+  defaultPole = 'product',
+}: Props) {
   const [open, setOpen] = useState(false);
-  const [detail, setDetail] = useState(defaultDetail);
-  const [category, setCategory] = useState(defaultCategory);
-  const [priority, setPriority] = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
-  const [pole, setPole] = useState<'tech' | 'ops' | 'supplier' | 'rse'>(defaultPole);
-  const [reportId, setReportId] = useState<string>('none');
-  const { data: reports } = useRDReports();
-  const create = useCreateRDRecommendation();
+
+  const [detail, setDetail] =
+    useState(defaultDetail);
+
+  const [category, setCategory] =
+    useState(defaultCategory);
+
+  const [priority, setPriority] =
+    useState<
+      'low' | 'medium' | 'high' | 'critical'
+    >('medium');
+
+  const [pole, setPole] =
+    useState<ProductRecommendationTargetPole>(
+      defaultPole,
+    );
+
+  const [reportId, setReportId] =
+    useState<string>('none');
+
+  const { data: reports } =
+    useProductReports();
+
+  const create =
+    useCreateProductRecommendation();
 
   const reset = () => {
     setDetail(defaultDetail);
@@ -34,7 +88,11 @@ export default function CreateRecommendationDialog({ trigger, defaultDetail = ''
   };
 
   const submit = async () => {
-    if (!detail.trim()) { toast.error('Détail requis'); return; }
+    if (!detail.trim()) {
+      toast.error('Détail requis');
+      return;
+    }
+
     try {
       await create.mutateAsync({
         detail: detail.trim(),
@@ -42,83 +100,269 @@ export default function CreateRecommendationDialog({ trigger, defaultDetail = ''
         priority,
         target_pole: pole,
         status: 'proposed',
-        report_id: reportId === 'none' ? null : reportId,
+        report_id:
+          reportId === 'none'
+            ? null
+            : reportId,
       });
-      toast.success('Recommandation R&D créée');
+
+      toast.success(
+        'Recommandation créée',
+      );
+
       setOpen(false);
       reset();
-    } catch (e: any) { toast.error(e.message); }
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Impossible de créer la recommandation';
+
+      toast.error(message);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (o) setDetail(defaultDetail); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(value) => {
+        setOpen(value);
+
+        if (value) {
+          setDetail(defaultDetail);
+        }
+      }}
+    >
       <DialogTrigger asChild>
-        {trigger ?? <Button size="sm" variant="outline"><Lightbulb className="h-4 w-4 mr-1" />Créer reco</Button>}
+        {trigger ?? (
+          <Button
+            size="sm"
+            variant="outline"
+          >
+            <Lightbulb className="mr-1 h-4 w-4" />
+            Créer une recommandation
+          </Button>
+        )}
       </DialogTrigger>
+
       <DialogContent>
-        <DialogHeader><DialogTitle>Nouvelle recommandation R&D</DialogTitle></DialogHeader>
-        <div className="space-y-3">
+        <DialogHeader>
+          <DialogTitle>
+            Nouvelle recommandation Produit
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-4">
           <div>
             <Label>Détail</Label>
-            <Textarea rows={3} value={detail} onChange={e => setDetail(e.target.value)} placeholder="Description de la recommandation..." />
+
+            <Textarea
+              rows={4}
+              value={detail}
+              onChange={(event) =>
+                setDetail(
+                  event.target.value,
+                )
+              }
+              placeholder="Décrire la recommandation..."
+            />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label>Catégorie</Label>
-              <Select value={category || 'none'} onValueChange={v => setCategory(v === 'none' ? '' : v)}>
-                <SelectTrigger><SelectValue placeholder="—" /></SelectTrigger>
+              <Label>
+                Catégorie
+              </Label>
+
+              <Select
+                value={
+                  category || 'none'
+                }
+                onValueChange={(value) =>
+                  setCategory(
+                    value === 'none'
+                      ? ''
+                      : value,
+                  )
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="—" />
+                </SelectTrigger>
+
                 <SelectContent>
-                  <SelectItem value="none">—</SelectItem>
-                  <SelectItem value="product">Produit</SelectItem>
-                  <SelectItem value="supplier">Fournisseur</SelectItem>
-                  <SelectItem value="ux">UX</SelectItem>
-                  <SelectItem value="performance">Performance</SelectItem>
-                  <SelectItem value="bug">Bug</SelectItem>
-                  <SelectItem value="process">Process</SelectItem>
+                  <SelectItem value="none">
+                    —
+                  </SelectItem>
+
+                  <SelectItem value="product">
+                    Produit
+                  </SelectItem>
+
+                  <SelectItem value="supplier">
+                    Fournisseur
+                  </SelectItem>
+
+                  <SelectItem value="ux">
+                    UX
+                  </SelectItem>
+
+                  <SelectItem value="performance">
+                    Performance
+                  </SelectItem>
+
+                  <SelectItem value="bug">
+                    Bug
+                  </SelectItem>
+
+                  <SelectItem value="process">
+                    Process
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <Label>Priorité</Label>
-              <Select value={priority} onValueChange={(v: any) => setPriority(v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Label>
+                Priorité
+              </Label>
+
+              <Select
+                value={priority}
+                onValueChange={(value) => {
+                  if (
+                    value === 'low' ||
+                    value === 'medium' ||
+                    value === 'high' ||
+                    value === 'critical'
+                  ) {
+                    setPriority(value);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+
                 <SelectContent>
-                  <SelectItem value="low">Basse</SelectItem>
-                  <SelectItem value="medium">Moyenne</SelectItem>
-                  <SelectItem value="high">Haute</SelectItem>
-                  <SelectItem value="critical">Critique</SelectItem>
+                  <SelectItem value="low">
+                    Basse
+                  </SelectItem>
+
+                  <SelectItem value="medium">
+                    Moyenne
+                  </SelectItem>
+
+                  <SelectItem value="high">
+                    Haute
+                  </SelectItem>
+
+                  <SelectItem value="critical">
+                    Critique
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <Label>Pôle cible</Label>
-              <Select value={pole} onValueChange={(v: any) => setPole(v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Label>
+                Pôle cible
+              </Label>
+
+              <Select
+                value={pole}
+                onValueChange={(value) => {
+                  if (
+                    value === 'product' ||
+                    value === 'ops' ||
+                    value === 'supplier' ||
+                    value === 'rse'
+                  ) {
+                    setPole(value);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+
                 <SelectContent>
-                  <SelectItem value="ops">Ops</SelectItem>
-                  <SelectItem value="tech">Tech</SelectItem>
-                  <SelectItem value="supplier">Supplier</SelectItem>
-                  <SelectItem value="rse">RSE</SelectItem>
+                  {(
+                    Object.keys(
+                      POLE_LABELS,
+                    ) as ProductRecommendationTargetPole[]
+                  ).map(
+                    (poleId) => (
+                      <SelectItem
+                        key={poleId}
+                        value={poleId}
+                      >
+                        {
+                          POLE_LABELS[
+                            poleId
+                          ]
+                        }
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <Label>Rapport associé</Label>
-              <Select value={reportId} onValueChange={setReportId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Label>
+                Rapport associé
+              </Label>
+
+              <Select
+                value={reportId}
+                onValueChange={
+                  setReportId
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+
                 <SelectContent>
-                  <SelectItem value="none">Aucun</SelectItem>
-                  {(reports ?? []).map((r: any) => (
-                    <SelectItem key={r.id} value={r.id}>{r.title}</SelectItem>
-                  ))}
+                  <SelectItem value="none">
+                    Aucun
+                  </SelectItem>
+
+                  {(reports ?? []).map(
+                    (report) => (
+                      <SelectItem
+                        key={report.id}
+                        value={report.id}
+                      >
+                        {report.title}
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
             </div>
           </div>
         </div>
+
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>Annuler</Button>
-          <Button onClick={submit} disabled={create.isPending}>Créer</Button>
+          <Button
+            variant="ghost"
+            onClick={() =>
+              setOpen(false)
+            }
+          >
+            Annuler
+          </Button>
+
+          <Button
+            onClick={submit}
+            disabled={create.isPending}
+          >
+            {create.isPending
+              ? 'Création...'
+              : 'Créer'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
