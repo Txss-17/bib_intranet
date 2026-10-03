@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, FileText, Download, Eye, Check, Clock } from 'lucide-react';
-import { TechRequestButton } from '@/components/tech/TechRequestButton';
+import { ProductRequestButton } from '@/components/product/ProductRequestButton';
 
 const reports = [
   { id: 1, title: 'Rapport audit FreshFarm Bio', type: 'Fournisseur', author: 'Paul Lefevre', date: '2025-02-01', status: 'pending_validation', pages: 12 },

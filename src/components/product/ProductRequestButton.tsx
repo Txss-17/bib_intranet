@@ -9,9 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
-import { PRIORITIES, TECH_REQUEST_CATEGORIES, useTechRequestActions } from '@/hooks/useTechRequests';
+import { PRIORITIES, TECH_REQUEST_CATEGORIES, useTechRequestActions } from '@/hooks/useProductRequests';
 
-interface TechRequestButtonProps {
+interface ProductRequestButtonProps {
   /** Pôle demandeur (ex : 'data', 'finance', 'audit', 'lifecycle') */
   pole: string;
   /** Catégorie par défaut (voir TECH_REQUEST_CATEGORIES) */
@@ -29,7 +29,7 @@ interface TechRequestButtonProps {
   className?: string;
 }
 
-export function TechRequestButton({
+export function ProductRequestButton({
   pole,
   category = 'evolution',
   defaultTitle = '',
@@ -41,7 +41,7 @@ export function TechRequestButton({
   variant = 'outline',
   size = 'sm',
   className,
-}: TechRequestButtonProps) {
+}: ProductRequestButtonProps) {
   const [open, setOpen] = useState(false);
   const { create } = useTechRequestActions();
   const [form, setForm] = useState({

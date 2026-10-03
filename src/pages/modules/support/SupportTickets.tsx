@@ -25,7 +25,7 @@ import {
 
 import { ExportButtons } from '@/components/ExportButtons';
 import SupportTicketForm from '@/components/forms/SupportTicketForm';
-import { TechRequestButton } from '@/components/tech/TechRequestButton';
+import { ProductRequestButton } from '@/components/product/ProductRequestButton';
 
 import {
   useSupportTickets,
