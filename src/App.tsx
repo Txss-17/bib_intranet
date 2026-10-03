@@ -206,8 +206,31 @@ import SecurityAccess from "./pages/modules/security/SecurityAccess";
 import SecurityVPN from "./pages/modules/security/SecurityVPN";
 import SecurityLogs from "./pages/modules/security/SecurityLogs";
 import SecurityEnvironments from "./pages/modules/security/SecurityEnvironments";
+import SecurityEdgeFunctions from "./pages/modules/security/SecurityEdgeFunctions";
+import SecurityEdgeFunctionDetail from "./pages/modules/security/SecurityEdgeFunctionDetail";
+import SecurityEdgeFunctionLogs from "./pages/modules/security/SecurityEdgeFunctionLogs";
+import SecurityReports from "./pages/modules/security/SecurityReports";
+import SecuritySandbox from "./pages/modules/security/SecuritySandbox";
+import SecurityAuthLogs from "./pages/modules/security/SecurityAuthLogs";
+import SecurityEdgeLogs from "./pages/modules/security/SecurityEdgeLogs";
+import SecurityIncidentList from "./pages/modules/security/SecurityIncidentList";
+import SecurityIncidentDetail from "./pages/modules/security/SecurityIncidentDetail";
 import SecurityOperations from "./pages/modules/security/Security";
 import SecurityInfrastructure from "./pages/modules/security/SecurityInfrastructure";
+import SecurityDashboard from "./pages/modules/security/SecurityDashboard";
+import SecurityAlerts from "./pages/modules/security/SecurityAlerts";
+import SecurityIncidentDetail from "./pages/modules/security/SecurityIncidentDetail";
+import SecurityIncidentReport from "./pages/modules/security/SecurityIncidentReport";
+import SecurityIncidentList from "./pages/modules/security/SecurityIncidentList";
+import SecurityIncidentCreate from "./pages/modules/security/SecurityIncidentCreate";
+import SecurityIncidentUpdate from "./pages/modules/security/SecurityIncidentUpdate";
+import SecurityIncidentDelete from "./pages/modules/security/SecurityIncidentDelete";
+import SecurityIncidentAssign from "./pages/modules/security/SecurityIncidentAssign";
+import SecurityIncidentClose from "./pages/modules/security/SecurityIncidentClose";
+import SecurityIncidentReopen from "./pages/modules/security/SecurityIncidentReopen";
+import SecurityIncidentEscalate from "./pages/modules/security/SecurityIncidentEscalate";
+import SecurityIncidentDeescalate from "./pages/modules/security/SecurityIncidentDeescalate";
+import SecurityIncidentComment from "./pages/modules/security/SecurityIncidentComment";
 
 /* ============================================================
    DATA & BI
