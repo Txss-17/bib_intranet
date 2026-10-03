@@ -1,31 +1,65 @@
 import { useEffect, useState } from 'react';
-import { Send, Loader2 } from 'lucide-react';
+import { Loader2, Send } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
 } from '@/components/ui/dialog';
-import { PRIORITIES, TECH_REQUEST_CATEGORIES, useTechRequestActions } from '@/hooks/useProductRequests';
+
+import {
+  PRIORITIES,
+  PRODUCT_REQUEST_CATEGORIES,
+  useProductRequestActions,
+} from '@/hooks/useTechRequests';
 
 interface ProductRequestButtonProps {
-  /** Pôle demandeur (ex : 'data', 'finance', 'audit', 'lifecycle') */
+  /** Pôle à l'origine de la demande. */
   pole: string;
-  /** Catégorie par défaut (voir TECH_REQUEST_CATEGORIES) */
+
+  /** Catégorie de demande par défaut. */
   category?: string;
-  /** Objet pré-rempli */
+
+  /** Objet pré-rempli. */
   defaultTitle?: string;
-  /** Description pré-remplie */
+
+  /** Description pré-remplie. */
   defaultDescription?: string;
+
+  /** Priorité pré-remplie. */
   defaultPriority?: string;
+
+  /** Libellé du bouton. */
   label?: string;
+
+  /** Titre de la fenêtre de demande. */
   dialogTitle?: string;
+
+  /** Description de la fenêtre de demande. */
   dialogDescription?: string;
+
+  /** Variante visuelle du bouton. */
   variant?: 'default' | 'outline' | 'secondary' | 'ghost';
+
+  /** Taille du bouton. */
   size?: 'default' | 'sm' | 'lg' | 'icon';
+
+  /** Classe CSS complémentaire. */
   className?: string;
 }
 
@@ -35,15 +69,18 @@ export function ProductRequestButton({
   defaultTitle = '',
   defaultDescription = '',
   defaultPriority = 'medium',
-  label = 'Demander au Tech Studio',
-  dialogTitle = 'Demande au Tech Studio',
-  dialogDescription = "La Tech reçoit la demande, la valide ou la refuse avec un motif, et vous suivez l'avancement.",
+  label = 'Demander au Product & Engineering',
+  dialogTitle = 'Demande au Product & Engineering',
+  dialogDescription =
+    "Transmettez votre besoin au pôle Product & Engineering. La demande sera évaluée, priorisée et suivie jusqu'à sa résolution ou sa clôture.",
   variant = 'outline',
   size = 'sm',
   className,
 }: ProductRequestButtonProps) {
   const [open, setOpen] = useState(false);
-  const { create } = useTechRequestActions();
+
+  const { create } = useProductRequestActions();
+
   const [form, setForm] = useState({
     title: defaultTitle,
     description: defaultDescription,
@@ -53,75 +90,204 @@ export function ProductRequestButton({
   });
 
   useEffect(() => {
-    if (open) {
-      setForm({ title: defaultTitle, description: defaultDescription, category, priority: defaultPriority, target_date: '' });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+    if (!open) return;
+
+    setForm({
+      title: defaultTitle,
+      description: defaultDescription,
+      category,
+      priority: defaultPriority,
+      target_date: '',
+    });
+  }, [
+    open,
+    defaultTitle,
+    defaultDescription,
+    category,
+    defaultPriority,
+  ]);
 
   const submit = async () => {
-    if (!form.title.trim() || !form.description.trim()) return;
+    const title = form.title.trim();
+    const description = form.description.trim();
+
+    if (!title || !description) return;
+
     await create.mutateAsync({
-      title: form.title.trim(),
-      description: form.description.trim(),
+      title,
+      description,
       requester_pole: pole,
       category: form.category,
       priority: form.priority,
       target_date: form.target_date || null,
     });
+
     setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant={variant} size={size} className={className}>
-          <Send className="mr-1.5 h-3.5 w-3.5" /> {label}
+        <Button
+          variant={variant}
+          size={size}
+          className={className}
+        >
+          <Send className="mr-1.5 h-3.5 w-3.5" />
+          {label}
         </Button>
       </DialogTrigger>
+
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
-          <DialogDescription>{dialogDescription}</DialogDescription>
+          <DialogDescription>
+            {dialogDescription}
+          </DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label htmlFor="trb-title">Objet</Label>
-            <Input id="trb-title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} />
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="product-request-title">
+              Objet
+            </Label>
+
+            <Input
+              id="product-request-title"
+              value={form.title}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  title: event.target.value,
+                }))
+              }
+              placeholder="Décrivez brièvement le besoin"
+            />
           </div>
-          <div>
-            <Label htmlFor="trb-desc">Description du besoin</Label>
-            <Textarea id="trb-desc" rows={5} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+
+          <div className="space-y-1.5">
+            <Label htmlFor="product-request-description">
+              Description du besoin
+            </Label>
+
+            <Textarea
+              id="product-request-description"
+              rows={5}
+              value={form.description}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  description: event.target.value,
+                }))
+              }
+              placeholder="Décrivez le contexte, le problème rencontré ou le résultat attendu."
+            />
           </div>
+
           <div className="grid grid-cols-2 gap-3">
-            <div>
+            <div className="space-y-1.5">
               <Label>Catégorie</Label>
-              <Select value={form.category} onValueChange={(v) => setForm({ ...form, category: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+
+              <Select
+                value={form.category}
+                onValueChange={(value) =>
+                  setForm((current) => ({
+                    ...current,
+                    category: value,
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner" />
+                </SelectTrigger>
+
                 <SelectContent>
-                  {TECH_REQUEST_CATEGORIES.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+                  {PRODUCT_REQUEST_CATEGORIES.map((item) => (
+                    <SelectItem
+                      key={item.value}
+                      value={item.value}
+                    >
+                      {item.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-            <div>
+
+            <div className="space-y-1.5">
               <Label>Priorité</Label>
-              <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+
+              <Select
+                value={form.priority}
+                onValueChange={(value) =>
+                  setForm((current) => ({
+                    ...current,
+                    priority: value,
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner" />
+                </SelectTrigger>
+
                 <SelectContent>
-                  {PRIORITIES.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+                  {PRIORITIES.map((item) => (
+                    <SelectItem
+                      key={item.value}
+                      value={item.value}
+                    >
+                      {item.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
-          <div>
-            <Label htmlFor="trb-date">Échéance souhaitée (optionnel)</Label>
-            <Input id="trb-date" type="date" value={form.target_date} onChange={(e) => setForm({ ...form, target_date: e.target.value })} />
+
+          <div className="space-y-1.5">
+            <Label htmlFor="product-request-date">
+              Échéance souhaitée
+              <span className="ml-1 text-muted-foreground">
+                (optionnel)
+              </span>
+            </Label>
+
+            <Input
+              id="product-request-date"
+              type="date"
+              value={form.target_date}
+              onChange={(event) =>
+                setForm((current) => ({
+                  ...current,
+                  target_date: event.target.value,
+                }))
+              }
+            />
           </div>
         </div>
+
         <DialogFooter>
-          <Button variant="ghost" onClick={() => setOpen(false)}>Annuler</Button>
-          <Button onClick={submit} disabled={create.isPending || !form.title.trim() || !form.description.trim()}>
-            {create.isPending ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Send className="mr-1.5 h-4 w-4" />}
+          <Button
+            variant="ghost"
+            onClick={() => setOpen(false)}
+          >
+            Annuler
+          </Button>
+
+          <Button
+            onClick={submit}
+            disabled={
+              create.isPending ||
+              !form.title.trim() ||
+              !form.description.trim()
+            }
+          >
+            {create.isPending ? (
+              <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            ) : (
+              <Send className="mr-1.5 h-4 w-4" />
+            )}
+
             Transmettre
           </Button>
         </DialogFooter>
@@ -130,4 +296,4 @@ export function ProductRequestButton({
   );
 }
 
-export default TechRequestButton;
+export default ProductRequestButton;
