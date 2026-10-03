@@ -61,7 +61,7 @@ import {
   Download,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { PlatformBridgeCard } from '@/components/tech/PlatformBridgeCard';
+import { PlatformBridgeCard } from '@/components/product/PlatformBridgeCard';
 
 type ProjectId =
   | 'marketplace'
