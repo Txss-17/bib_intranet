@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/table';
 
 import { positionAccess } from '@/data/positionAccess';
-import { useSecurityAccess } from '@/hooks/useTechData';
+import { useSecurityAccess } from '@/hooks/useSecurityData';
 
 type Position = keyof typeof positionAccess;
 

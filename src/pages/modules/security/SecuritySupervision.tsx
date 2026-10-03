@@ -29,7 +29,7 @@ import { toast } from '@/hooks/use-toast';
 import {
   useProductEdgeFunctionLogs,
   useSecurityAlerts,
-} from '@/hooks/useTechData';
+} from '@/hooks/useSecurityData';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 

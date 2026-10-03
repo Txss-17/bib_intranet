@@ -28,7 +28,7 @@ import {
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 
-import { useSecurityAlerts } from "@/hooks/useTechData";
+import { useSecurityAlerts } from "@/hooks/useSecurityData";
 
 type SecurityAlertStatus =
   | "open"

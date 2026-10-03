@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-import { useSecurityAlerts } from '@/hooks/useTechData';
+import { useSecurityAlerts } from '@/hooks/useSecurityData';
 
 type SecurityAlertSeverity =
   | 'critical'

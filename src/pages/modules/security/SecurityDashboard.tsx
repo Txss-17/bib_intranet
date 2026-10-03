@@ -24,7 +24,7 @@ import {
   useProductEdgeFunctionLogs,
   useSecurityVpnAccess,
   useSecurityAlerts,
-} from '@/hooks/useTechData';
+} from '@/hooks/useSecurityData';
 
 export default function SecurityDashboard() {
   const { data: authLogs = [] } = useSecurityAuthLogs(20);
