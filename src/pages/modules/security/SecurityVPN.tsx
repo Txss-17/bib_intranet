@@ -35,7 +35,7 @@ import {
   Alert,
   AlertDescription,
 } from '@/components/ui/alert';
-import { useVpnAccess } from '@/hooks/useTechData';
+import { useVpnAccess } from '@/hooks/useSecurityData';
 import {
   Wifi,
   Plus,
