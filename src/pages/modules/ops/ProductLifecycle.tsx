@@ -1,239 +1,338 @@
-import { useMemo, useState } from 'react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { GitBranch, Search } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import {
-  LifecycleProduct, LifecycleStatus, LIFECYCLE_LABELS, LIFECYCLE_TRANSITIONS,
-  useLifecycleActions, useLifecycleProducts, useProductDecisions,
-} from '@/hooks/useProductLifecycle';
+```tsx
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
-const variant = (s: LifecycleStatus) =>
-  s === 'rejected' ? 'destructive' : s === 'active' || s === 'approved' ? 'default' : 'outline';
+export type LifecycleStatus =
+  | 'draft'
+  | 'review'
+  | 'audit_required'
+  | 'audit'
+  | 'approved'
+  | 'rejected'
+  | 'active'
+  | 'suspended'
+  | 'archived';
 
-const fmtPrice = (v: number | null, c: string | null) =>
-  v === null ? '—' : `${v.toFixed(2)} ${c ?? 'EUR'}`;
+export const LIFECYCLE_LABELS: Record<LifecycleStatus, string> = {
+  draft: 'Brouillon',
+  review: 'En revue',
+  audit_required: 'Audit requis',
+  audit: 'En audit',
+  approved: 'Validé',
+  rejected: 'Refusé',
+  active: 'Actif',
+  suspended: 'Suspendu',
+  archived: 'Archivé',
+};
 
-export default function ProductLifecycle() {
-  const { data: rows = [], isLoading } = useLifecycleProducts();
-  const { move } = useLifecycleActions();
-  const [q, setQ] = useState('');
-  const [step, setStep] = useState<string>('open');
-  const [selId, setSelId] = useState<string | null>(null);
-  const [reason, setReason] = useState('');
+export const LIFECYCLE_TRANSITIONS: Record<
+  LifecycleStatus,
+  LifecycleStatus[]
+> = {
+  draft: ['review', 'archived'],
+  review: ['audit_required', 'approved', 'rejected', 'draft'],
+  audit_required: ['audit', 'rejected'],
+  audit: ['approved', 'rejected'],
+  approved: ['active', 'archived'],
+  rejected: ['draft', 'archived'],
+  active: ['suspended', 'archived'],
+  suspended: ['active', 'archived'],
+  archived: [],
+};
 
-  const sel = rows.find((r) => r.id === selId) ?? null;
-  const { data: decisions = [] } = useProductDecisions(sel?.id);
+export interface LifecycleProduct {
+  id: string;
+  name: string;
+  sku: string | null;
+  category: string | null;
+  status: string | null;
+  lifecycle_status: LifecycleStatus;
+  unit_price: number | null;
+  selling_price: number | null;
+  margin: number | null;
+  moq: number | null;
+  currency: string | null;
+  supplier_id: string | null;
+  supplier_name?: string | null;
+  rejection_reason: string | null;
+  created_at: string;
+}
 
-  const filtered = useMemo(
-    () =>
-      rows.filter(
-        (r) =>
-          (step === 'all' ||
-            (step === 'open'
-              ? !['archived', 'rejected'].includes(r.lifecycle_status)
-              : r.lifecycle_status === step)) &&
-          (!q || `${r.name} ${r.sku} ${r.supplier_name}`.toLowerCase().includes(q.toLowerCase())),
-      ),
-    [rows, q, step],
-  );
+export interface ProductDecision {
+  id: string;
+  previous_status: string | null;
+  new_status: string | null;
+  reason: string;
+  decision_type: string;
+  decision_by: string;
+  decision_at: string;
+}
 
-  const count = (s: LifecycleStatus[]) => rows.filter((r) => s.includes(r.lifecycle_status)).length;
+const db = supabase as any;
 
-  const go = (p: LifecycleProduct, to: LifecycleStatus) => {
-    if (to === 'rejected' && !reason) return;
-    move.mutate(
-      { id: p.id, to, reason: reason || undefined },
-      { onSuccess: () => setReason('') },
-    );
+export const useLifecycleProducts = () =>
+  useQuery({
+    queryKey: ['product-lifecycle'],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from('products')
+        .select(
+          `
+            id,
+            name,
+            sku,
+            category,
+            status,
+            lifecycle_status,
+            unit_price,
+            selling_price,
+            margin,
+            moq,
+            currency,
+            supplier_id,
+            rejection_reason,
+            created_at,
+            suppliers(name)
+          `,
+        )
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data ?? []).map((product: any) => ({
+        ...product,
+        supplier_name: product.suppliers?.name ?? null,
+      })) as LifecycleProduct[];
+    },
+  });
+
+export const useProductDecisions = (productId?: string) =>
+  useQuery({
+    queryKey: ['product-decisions', productId],
+    enabled: Boolean(productId),
+    queryFn: async () => {
+      if (!productId) return [];
+
+      const { data, error } = await db
+        .from('product_decisions')
+        .select(
+          `
+            id,
+            previous_status,
+            new_status,
+            reason,
+            decision_type,
+            decision_by,
+            decision_at
+          `,
+        )
+        .eq('product_id', productId)
+        .order('decision_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data ?? []) as ProductDecision[];
+    },
+  });
+
+const getDecisionType = (
+  from: LifecycleStatus,
+  to: LifecycleStatus,
+): string => {
+  if (to === 'rejected') return 'rejection';
+  if (to === 'archived') return 'archive';
+
+  if (from === 'rejected' && to === 'draft') {
+    return 'reactivation';
+  }
+
+  if (to === 'approved' || to === 'active') {
+    return 'validation';
+  }
+
+  return 'validation';
+};
+
+export const useLifecycleActions = () => {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+
+  const invalidate = async (productId?: string) => {
+    await Promise.all([
+      qc.invalidateQueries({
+        queryKey: ['product-lifecycle'],
+      }),
+      qc.invalidateQueries({
+        queryKey: ['product-decisions'],
+      }),
+      productId
+        ? qc.invalidateQueries({
+            queryKey: ['product-decisions', productId],
+          })
+        : Promise.resolve(),
+    ]);
   };
 
-  const marginOk = (p: LifecycleProduct) =>
-    p.unit_price !== null && p.selling_price !== null && p.selling_price >= p.unit_price * 1.2 - 0.001;
+  const move = useMutation({
+    mutationFn: async ({
+      id,
+      to,
+      reason,
+    }: {
+      id: string;
+      to: LifecycleStatus;
+      reason?: string;
+    }) => {
+      if (!user?.id) {
+        throw new Error(
+          'Utilisateur non authentifié. Impossible d’enregistrer la décision.',
+        );
+      }
 
-  return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold">
-          <GitBranch className="h-5 w-5" />
-          Cycle de vie produits
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Brouillon → revue → audit → validation → actif → suspendu → archivé. Prix de vente minimum : coût × 1,20.
-        </p>
-      </div>
+      /*
+       * 1. Récupération du statut réel en base.
+       * Cela évite de valider une transition à partir d'un état
+       * potentiellement obsolète affiché dans l'interface.
+       */
+      const { data: product, error: productError } = await db
+        .from('products')
+        .select(
+          `
+            id,
+            lifecycle_status,
+            rejection_reason
+          `,
+        )
+        .eq('id', id)
+        .single();
 
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        {([
-          ['À traiter', ['draft', 'review']],
-          ['En audit', ['audit_required', 'audit']],
-          ['Validés', ['approved']],
-          ['Actifs', ['active']],
-          ['Refusés / archivés', ['rejected', 'archived']],
-        ] as [string, LifecycleStatus[]][]).map(([l, s]) => (
-          <Card key={l}>
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">{l}</p>
-              <p className="text-2xl font-semibold">{count(s)}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      if (productError) throw productError;
 
-      <div className="flex flex-wrap gap-2">
-        <div className="relative min-w-[220px] flex-1">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Rechercher…" value={q} onChange={(e) => setQ(e.target.value)} />
-        </div>
-        <Select value={step} onValueChange={setStep}>
-          <SelectTrigger className="w-52">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="open">En cours</SelectItem>
-            <SelectItem value="all">Tous</SelectItem>
-            {Object.entries(LIFECYCLE_LABELS).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      const currentStatus = product.lifecycle_status as LifecycleStatus;
 
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <p className="p-6 text-sm text-muted-foreground">Chargement…</p>
-          ) : filtered.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground">Aucun produit.</p>
-          ) : (
-            <ul className="divide-y">
-              {filtered.map((p) => (
-                <li key={p.id}>
-                  <button
-                    className="flex w-full items-center justify-between gap-3 p-4 text-left hover:bg-muted/50"
-                    onClick={() => setSelId(p.id)}
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate font-medium">{p.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {p.sku ?? '—'} · {p.supplier_name ?? 'Sans fournisseur'} · Coût {fmtPrice(p.unit_price, p.currency)} → Vente {fmtPrice(p.selling_price, p.currency)}
-                      </span>
-                    </span>
-                    <Badge variant={variant(p.lifecycle_status)}>{LIFECYCLE_LABELS[p.lifecycle_status]}</Badge>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
+      /*
+       * 2. Vérification de la transition autorisée.
+       */
+      const allowedTransitions =
+        LIFECYCLE_TRANSITIONS[currentStatus] ?? [];
 
-      <Sheet open={!!sel} onOpenChange={(o) => !o && setSelId(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-          {sel && (
-            <>
-              <SheetHeader>
-                <SheetTitle>{sel.name}</SheetTitle>
-              </SheetHeader>
-              <div className="mt-4 space-y-5 text-sm">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={variant(sel.lifecycle_status)}>{LIFECYCLE_LABELS[sel.lifecycle_status]}</Badge>
-                  <span className="text-muted-foreground">
-                    {sel.sku ?? '—'} · {sel.category ?? 'Sans catégorie'}
-                  </span>
-                </div>
+      if (!allowedTransitions.includes(to)) {
+        throw new Error(
+          `Transition impossible : ${LIFECYCLE_LABELS[currentStatus]} → ${LIFECYCLE_LABELS[to]}.`,
+        );
+      }
 
-                <div className="grid grid-cols-2 gap-3 rounded-md border p-3">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Coût fournisseur</p>
-                    <p className="font-medium">{fmtPrice(sel.unit_price, sel.currency)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Prix de vente</p>
-                    <p className="font-medium">{fmtPrice(sel.selling_price, sel.currency)}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Marge</p>
-                    <p className="font-medium">{sel.margin !== null ? `${sel.margin}%` : '—'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">MOQ</p>
-                    <p className="font-medium">{sel.moq ?? '—'}</p>
-                  </div>
-                </div>
+      /*
+       * 3. Une justification est obligatoire pour un refus.
+       */
+      const normalizedReason = reason?.trim() ?? '';
 
-                {sel.lifecycle_status === 'approved' && !marginOk(sel) && (
-                  <p className="rounded-md border border-destructive/50 p-3 text-xs text-destructive">
-                    Activation impossible : le prix de vente doit être au moins égal au coût × 1,20.
-                  </p>
-                )}
-                {sel.rejection_reason && (
-                  <div className="rounded-md border p-3">
-                    <p className="font-medium">Motif du refus</p>
-                    <p className="mt-1">{sel.rejection_reason}</p>
-                  </div>
-                )}
+      if (to === 'rejected' && !normalizedReason) {
+        throw new Error(
+          'Une justification est obligatoire pour refuser un produit.',
+        );
+      }
 
-                {['review', 'audit_required', 'audit'].includes(sel.lifecycle_status) && (
-                  <div>
-                    <Label>Motif (obligatoire pour un refus)</Label>
-                    <Textarea value={reason} onChange={(e) => setReason(e.target.value)} />
-                  </div>
-                )}
+      /*
+       * 4. Préparation de la mise à jour du produit.
+       */
+      const productPatch: Record<string, unknown> = {
+        lifecycle_status: to,
+      };
 
-                <div className="flex flex-wrap gap-2">
-                  {LIFECYCLE_TRANSITIONS[sel.lifecycle_status].map((to) => (
-                    <Button
-                      key={to}
-                      size="sm"
-                      variant={to === 'rejected' ? 'destructive' : 'default'}
-                      disabled={
-                        move.isPending ||
-                        (to === 'rejected' && !reason) ||
-                        (to === 'active' && !marginOk(sel))
-                      }
-                      onClick={() => go(sel, to)}
-                    >
-                      → {LIFECYCLE_LABELS[to]}
-                    </Button>
-                  ))}
-                </div>
+      if (to === 'rejected') {
+        productPatch.rejection_reason = normalizedReason;
+      } else if (currentStatus === 'rejected' && to === 'draft') {
+        productPatch.rejection_reason = null;
+      }
 
-                <div>
-                  <p className="mb-2 font-medium">Historique des décisions</p>
-                  {decisions.length === 0 ? (
-                    <p className="text-xs text-muted-foreground">Aucune décision enregistrée.</p>
-                  ) : (
-                    <ul className="space-y-2">
-                      {decisions.map((d) => (
-                        <li key={d.id} className="border-l-2 pl-3">
-                          <span className="text-xs text-muted-foreground">
-                            {format(new Date(d.decision_at), 'dd MMM yyyy HH:mm', { locale: fr })}
-                          </span>
-                          <p>
-                            {d.previous_status
-                              ? `${LIFECYCLE_LABELS[d.previous_status as LifecycleStatus] ?? d.previous_status} → `
-                              : ''}
-                            {LIFECYCLE_LABELS[d.new_status as LifecycleStatus] ?? d.new_status}
-                          </p>
-                          {d.reason && <p className="text-muted-foreground">{d.reason}</p>}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
-    </div>
-  );
-}
+      /*
+       * 5. Mise à jour du produit.
+       */
+      const { error: updateError } = await db
+        .from('products')
+        .update(productPatch)
+        .eq('id', id)
+        .eq('lifecycle_status', currentStatus);
+
+      if (updateError) throw updateError;
+
+      /*
+       * 6. Création d'une vraie entrée d'historique.
+       *
+       * product_decisions exige :
+       * - decision_type
+       * - decision_by
+       * - reason
+       */
+      const decisionType = getDecisionType(currentStatus, to);
+
+      const decisionReason =
+        normalizedReason ||
+        `Transition du cycle produit : ${LIFECYCLE_LABELS[currentStatus]} → ${LIFECYCLE_LABELS[to]}.`;
+
+      const { error: decisionError } = await db
+        .from('product_decisions')
+        .insert({
+          product_id: id,
+          decision_type: decisionType,
+          previous_status: currentStatus,
+          new_status: to,
+          decision_by: user.id,
+          decision_at: new Date().toISOString(),
+          reason: decisionReason,
+          details: {
+            source: 'ops_product_lifecycle',
+            from: currentStatus,
+            to,
+          },
+        });
+
+      /*
+       * Le produit a déjà été modifié.
+       * Si l'insertion de l'historique échoue, on tente donc
+       * immédiatement de restaurer son statut précédent.
+       */
+      if (decisionError) {
+        await db
+          .from('products')
+          .update({
+            lifecycle_status: currentStatus,
+            rejection_reason: product.rejection_reason ?? null,
+          })
+          .eq('id', id);
+
+        throw decisionError;
+      }
+
+      return {
+        id,
+        previousStatus: currentStatus,
+        newStatus: to,
+      };
+    },
+
+    onSuccess: async (result) => {
+      await invalidate(result.id);
+
+      toast.success(
+        `Étape : ${LIFECYCLE_LABELS[result.newStatus as LifecycleStatus]}`,
+      );
+    },
+
+    onError: (error: Error) => {
+      toast.error('Cycle de vie produit', {
+        description:
+          error.message ||
+          'Impossible de mettre à jour le cycle de vie du produit.',
+      });
+    },
+  });
+
+  return {
+    move,
+  };
+};
+```
