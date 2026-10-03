@@ -44,6 +44,42 @@ const eur = (n: number) =>
     maximumFractionDigits: 1,
   }).format(n);
 
+/** Indicateurs clés des modules de pilotage (boutiques, anomalies, rapprochement, audits, cycle produit, travail). */
+const moduleKPIs = async (): Promise<DashboardKPI[]> => {
+  const now = new Date().toISOString();
+  const [shopsActive, shopsTest, anomaliesOpen, anomaliesOverdue, reconGaps, auditsToAnalyse, auditsNC,
+    productsInReview, escalationsOpen, tasksOpen, validationsPending, contractsPending] = await Promise.all([
+    count('shops', (q) => q.eq('status', 'active')),
+    count('shops', (q) => q.eq('status', 'test')),
+    count('anomalies', (q) => q.not('status', 'in', '(resolved,closed)')),
+    count('anomalies', (q) => q.not('status', 'in', '(resolved,closed)').lt('due_at', now)),
+    count('reconciliation_items', (q) => q.in('status', ['gap', 'reviewing'])),
+    count('field_audits', (q) => q.in('workflow_status', ['synced', 'analysis'])),
+    count('field_audits', (q) => q.in('workflow_status', ['non_compliant', 'corrective_action'])),
+    count('products', (q) => q.in('lifecycle_status', ['review', 'audit_required', 'audit'])),
+    count('work_escalations', (q) => q.neq('status', 'resolved')),
+    count('work_tasks', (q) => q.neq('status', 'completed')),
+    count('work_validations', (q) => q.eq('status', 'pending')),
+    count('contracts', (q) => q.in('status', ['draft', 'pending', 'sent'])),
+  ]);
+  const k = (id: string, domain: string, label: string, value: number, poles: string[], href: string, alert = false): DashboardKPI =>
+    ({ id, domain, label, value, changeType: alert && value > 0 ? 'negative' : 'neutral', poles, href } as DashboardKPI);
+  return [
+    k('kpi_shops_active', 'Boutiques', 'Boutiques actives', shopsActive, ['ops', 'marketplace', 'support', 'finance', 'direction'], '/pole/ops/shops'),
+    k('kpi_shops_test', 'Boutiques', 'Boutiques en test', shopsTest, ['ops', 'marketplace', 'direction'], '/pole/ops/shops'),
+    k('kpi_anomalies_open', 'Anomalies', 'Anomalies ouvertes', anomaliesOpen, ['ops', 'finance', 'audit', 'supplier', 'compliance', 'support', 'direction'], '/pole/ops/anomalies', true),
+    k('kpi_anomalies_late', 'Anomalies', 'Anomalies en retard', anomaliesOverdue, ['ops', 'finance', 'audit', 'direction'], '/pole/ops/anomalies', true),
+    k('kpi_recon_gaps', 'Finance', 'Écarts de rapprochement', reconGaps, ['finance', 'direction'], '/pole/finance/reconciliation', true),
+    k('kpi_audits_analyse', 'Audit', 'Audits à analyser', auditsToAnalyse, ['audit', 'compliance', 'supplier', 'direction'], '/pole/audit/missions'),
+    k('kpi_audits_nc', 'Audit', 'Non-conformités en cours', auditsNC, ['audit', 'compliance', 'supplier', 'direction'], '/pole/audit/missions', true),
+    k('kpi_products_review', 'Produits', 'Produits en validation', productsInReview, ['supplier', 'ops', 'product', 'audit', 'direction'], '/pole/ops/product-lifecycle'),
+    k('kpi_contracts_pending', 'Juridique', 'Contrats à signer', contractsPending, ['compliance', 'ops', 'direction'], '/pole/compliance/contracts'),
+    k('kpi_escalations', 'Travail', 'Escalades ouvertes', escalationsOpen, ['direction', 'ops', 'finance', 'rh', 'audit', 'supplier', 'data', 'security', 'marketing', 'support', 'compliance', 'rse', 'product', 'marketplace'], '/work/escalations', true),
+    k('kpi_tasks', 'Travail', 'Tâches en cours', tasksOpen, ['direction', 'ops', 'finance', 'rh', 'audit', 'supplier', 'data', 'security', 'marketing', 'support', 'compliance', 'rse', 'product', 'marketplace'], '/work/tasks'),
+    k('kpi_validations', 'Travail', 'Validations en attente', validationsPending, ['direction', 'ops', 'finance', 'rh', 'audit', 'supplier', 'data', 'security', 'marketing', 'support', 'compliance', 'rse', 'product', 'marketplace'], '/work/validations'),
+  ];
+};
+
 export function useDashboardKPIs(enabled: boolean) {
   return useQuery({
     queryKey: ['dashboard_kpis_real'],
@@ -590,6 +626,7 @@ export function useDashboardKPIs(enabled: boolean) {
           ],
           href: '/pole/finance/cards',
         },
+        ...(await moduleKPIs()),
       ];
     },
   });
