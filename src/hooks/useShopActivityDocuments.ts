@@ -1,4 +1,3 @@
-```ts
 import {
   useMutation,
   useQuery,

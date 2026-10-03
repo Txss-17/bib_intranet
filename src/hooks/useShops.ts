@@ -1,4 +1,3 @@
-```tsx
 import {
   useMutation,
   useQuery,
@@ -28,10 +27,7 @@ export const SHOP_STATUS_LABELS: Record<ShopStatus, string> = {
   closed: 'Clôturée',
 };
 
-export const SHOP_TRANSITIONS: Record<
-  ShopStatus,
-  ShopStatus[]
-> = {
+export const SHOP_TRANSITIONS: Record<ShopStatus, ShopStatus[]> = {
   draft: ['application', 'closed'],
   application: ['review', 'closed'],
   review: ['test', 'active', 'closed'],
@@ -44,20 +40,41 @@ export const SHOP_TRANSITIONS: Record<
 
 export interface Shop {
   id: string;
-  platform_id?: string | null;
-  platform_synced_at?: string | null;
+
+  // ==========================================================
+  // IDENTIFICATION / SYNCHRONISATION
+  // ==========================================================
+
+  platform_id: string | null;
+  platform_synced_at: string | null;
 
   shop_code: string;
   name: string;
   slug: string | null;
 
+  // ==========================================================
+  // INFORMATIONS LIÉES À L'ACTIVITÉ
+  // ==========================================================
+
+  activity_type: string | null;
+  activity_description: string | null;
+  website_url: string | null;
+
   country: string | null;
   category: string | null;
+
+  // ==========================================================
+  // STATUT / OFFRE
+  // ==========================================================
 
   status: ShopStatus;
 
   subscription_plan: string | null;
   commission_rate: number | null;
+
+  // ==========================================================
+  // CYCLE DE VIE
+  // ==========================================================
 
   test_started_at: string | null;
   test_ends_at: string | null;
@@ -69,9 +86,15 @@ export interface Shop {
   closed_at: string | null;
 
   suspension_reason: string | null;
+
+  // ==========================================================
+  // INFORMATIONS INTERNES
+  // ==========================================================
+
   notes: string | null;
 
   app_origin: string;
+
   created_at: string;
   updated_at: string;
 }
@@ -112,47 +135,72 @@ export const testDaysLeft = (
 };
 
 // ============================================================
+// REQUÊTE COMMUNE
+// ============================================================
+
+const SHOP_SELECT = `
+  id,
+  platform_id,
+  platform_synced_at,
+
+  shop_code,
+  name,
+  slug,
+
+  activity_type,
+  activity_description,
+  website_url,
+
+  country,
+  category,
+
+  status,
+
+  subscription_plan,
+  commission_rate,
+
+  test_started_at,
+  test_ends_at,
+  test_extensions,
+
+  activated_at,
+  inactive_at,
+  suspended_at,
+  closed_at,
+
+  suspension_reason,
+  notes,
+
+  app_origin,
+
+  created_at,
+  updated_at
+`;
+
+// ============================================================
 // QUERIES
 // ============================================================
 
 export const useShops = () =>
   useQuery({
     queryKey: ['shops'],
+
     queryFn: async () => {
       const db = supabase as any;
 
-      const { data, error } = await db
+      const {
+        data,
+        error,
+      } = await db
         .from('shops')
-        .select(`
-          id,
-          platform_id,
-          platform_synced_at,
-          shop_code,
-          name,
-          slug,
-          country,
-          category,
-          status,
-          subscription_plan,
-          commission_rate,
-          test_started_at,
-          test_ends_at,
-          test_extensions,
-          activated_at,
-          inactive_at,
-          suspended_at,
-          closed_at,
-          suspension_reason,
-          notes,
-          app_origin,
-          created_at,
-          updated_at
-        `)
+        .select(SHOP_SELECT)
         .order('created_at', {
           ascending: false,
         });
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return (data ?? []) as Shop[];
     },
@@ -162,42 +210,29 @@ export const useShop = (
   shopId?: string,
 ) =>
   useQuery({
-    queryKey: ['shops', 'detail', shopId],
+    queryKey: [
+      'shops',
+      'detail',
+      shopId,
+    ],
+
     enabled: !!shopId,
+
     queryFn: async () => {
       const db = supabase as any;
 
-      const { data, error } = await db
+      const {
+        data,
+        error,
+      } = await db
         .from('shops')
-        .select(`
-          id,
-          platform_id,
-          platform_synced_at,
-          shop_code,
-          name,
-          slug,
-          country,
-          category,
-          status,
-          subscription_plan,
-          commission_rate,
-          test_started_at,
-          test_ends_at,
-          test_extensions,
-          activated_at,
-          inactive_at,
-          suspended_at,
-          closed_at,
-          suspension_reason,
-          notes,
-          app_origin,
-          created_at,
-          updated_at
-        `)
+        .select(SHOP_SELECT)
         .eq('id', shopId!)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       return data as Shop;
     },
@@ -212,18 +247,24 @@ export const useShopEvents = (
       'events',
       shopId,
     ],
-    enabled: !!shopId,
-    queryFn: async () => {
-      const { data, error } =
-        await supabase
-          .from('shop_status_events')
-          .select('*')
-          .eq('shop_id', shopId!)
-          .order('performed_at', {
-            ascending: false,
-          });
 
-      if (error) throw error;
+    enabled: !!shopId,
+
+    queryFn: async () => {
+      const {
+        data,
+        error,
+      } = await supabase
+        .from('shop_status_events')
+        .select('*')
+        .eq('shop_id', shopId!)
+        .order('performed_at', {
+          ascending: false,
+        });
+
+      if (error) {
+        throw error;
+      }
 
       return (data ?? []) as ShopStatusEvent[];
     },
@@ -235,16 +276,21 @@ export const useShopOrderSummaries = () =>
       'shops',
       'order-summaries',
     ],
-    queryFn: async () => {
-      const { data, error } =
-        await supabase
-          .from('orders')
-          .select(
-            'shop_id, total_amount, status',
-          )
-          .not('shop_id', 'is', null);
 
-      if (error) throw error;
+    queryFn: async () => {
+      const {
+        data,
+        error,
+      } = await supabase
+        .from('orders')
+        .select(
+          'shop_id, total_amount, status',
+        )
+        .not('shop_id', 'is', null);
+
+      if (error) {
+        throw error;
+      }
 
       const map = new Map<
         string,
@@ -252,7 +298,8 @@ export const useShopOrderSummaries = () =>
       >();
 
       for (const row of data ?? []) {
-        const key = row.shop_id as string;
+        const key =
+          row.shop_id as string;
 
         const entry =
           map.get(key) ?? {
@@ -263,6 +310,7 @@ export const useShopOrderSummaries = () =>
           };
 
         entry.orders += 1;
+
         entry.revenue += Number(
           row.total_amount ?? 0,
         );
@@ -272,12 +320,17 @@ export const useShopOrderSummaries = () =>
             'delivered',
             'cancelled',
             'refunded',
-          ].includes(row.status ?? '')
+          ].includes(
+            row.status ?? '',
+          )
         ) {
           entry.inProgress += 1;
         }
 
-        map.set(key, entry);
+        map.set(
+          key,
+          entry,
+        );
       }
 
       return map;
@@ -293,21 +346,38 @@ export const useShopOrders = (
       'orders',
       shopId,
     ],
-    enabled: !!shopId,
-    queryFn: async () => {
-      const { data, error } =
-        await supabase
-          .from('orders')
-          .select(
-            'id, order_number, status, current_stage, total_amount, currency, created_at',
-          )
-          .eq('shop_id', shopId!)
-          .order('created_at', {
-            ascending: false,
-          })
-          .limit(50);
 
-      if (error) throw error;
+    enabled: !!shopId,
+
+    queryFn: async () => {
+      const {
+        data,
+        error,
+      } = await supabase
+        .from('orders')
+        .select(
+          `
+            id,
+            order_number,
+            status,
+            current_stage,
+            total_amount,
+            currency,
+            created_at
+          `,
+        )
+        .eq(
+          'shop_id',
+          shopId!,
+        )
+        .order('created_at', {
+          ascending: false,
+        })
+        .limit(50);
+
+      if (error) {
+        throw error;
+      }
 
       return data ?? [];
     },
@@ -325,6 +395,10 @@ export const useShopActions = () => {
       queryKey: ['shops'],
     });
   };
+
+  // ==========================================================
+  // CHANGEMENT DE STATUT
+  // ==========================================================
 
   const changeStatus = useMutation({
     mutationFn: async (params: {
@@ -347,7 +421,9 @@ export const useShopActions = () => {
       }
 
       const allowed =
-        SHOP_TRANSITIONS[shop.status] ?? [];
+        SHOP_TRANSITIONS[
+          shop.status
+        ] ?? [];
 
       if (!allowed.includes(to)) {
         throw new Error(
@@ -394,11 +470,17 @@ export const useShopActions = () => {
         status: to,
       };
 
+      // --------------------------------------------------------
+      // TEST
+      // --------------------------------------------------------
+
       if (to === 'test') {
         const days =
           testDurationDays ?? 30;
 
-        patch.test_started_at = now;
+        patch.test_started_at =
+          now;
+
         patch.test_ends_at =
           new Date(
             Date.now() +
@@ -407,39 +489,76 @@ export const useShopActions = () => {
           ).toISOString();
       }
 
+      // --------------------------------------------------------
+      // ACTIVE
+      // --------------------------------------------------------
+
       if (to === 'active') {
-        patch.activated_at = now;
-        patch.inactive_at = null;
-        patch.suspended_at = null;
-        patch.suspension_reason = null;
+        patch.activated_at =
+          now;
+
+        patch.inactive_at =
+          null;
+
+        patch.suspended_at =
+          null;
+
+        patch.suspension_reason =
+          null;
       }
+
+      // --------------------------------------------------------
+      // INACTIVE
+      // --------------------------------------------------------
 
       if (to === 'inactive') {
-        patch.inactive_at = now;
+        patch.inactive_at =
+          now;
+
         patch.suspension_reason =
           reason!.trim();
       }
+
+      // --------------------------------------------------------
+      // SUSPENDED
+      // --------------------------------------------------------
 
       if (to === 'suspended') {
-        patch.suspended_at = now;
+        patch.suspended_at =
+          now;
+
         patch.suspension_reason =
           reason!.trim();
       }
+
+      // --------------------------------------------------------
+      // CLOSED
+      // --------------------------------------------------------
 
       if (to === 'closed') {
-        patch.closed_at = now;
+        patch.closed_at =
+          now;
+
         patch.suspension_reason =
           reason!.trim();
       }
 
-      const db = supabase as any;
+      const db =
+        supabase as any;
 
-      const { error } = await db
+      const {
+        error,
+      } = await db
         .from('shops')
         .update(patch)
-        .eq('id', shop.id);
+        .eq(
+          'id',
+          shop.id,
+        );
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
     },
 
     onSuccess: () => {
@@ -457,9 +576,18 @@ export const useShopActions = () => {
       );
     },
 
-    onError: (e: Error) =>
-      toast.error(e.message),
+    onError: (
+      error: Error,
+    ) => {
+      toast.error(
+        error.message,
+      );
+    },
   });
+
+  // ==========================================================
+  // PROLONGATION DE LA PÉRIODE DE TEST
+  // ==========================================================
 
   const extendTest = useMutation({
     mutationFn: async (params: {
@@ -473,7 +601,9 @@ export const useShopActions = () => {
         reason,
       } = params;
 
-      if (shop.status !== 'test') {
+      if (
+        shop.status !== 'test'
+      ) {
         throw new Error(
           'Seule une boutique en période de test peut être prolongée.',
         );
@@ -503,30 +633,51 @@ export const useShopActions = () => {
               86_400_000,
         ).toISOString();
 
-      const db = supabase as any;
+      const db =
+        supabase as any;
 
-      const { error } =
-        await db
-          .from('shops')
-          .update({
-            test_ends_at: newEnd,
-            test_extensions:
-              (shop.test_extensions ?? 0) +
-              1,
-          })
-          .eq('id', shop.id);
+      const {
+        error,
+      } = await db
+        .from('shops')
+        .update({
+          test_ends_at:
+            newEnd,
 
-      if (error) throw error;
+          test_extensions:
+            (
+              shop.test_extensions ??
+              0
+            ) + 1,
+        })
+        .eq(
+          'id',
+          shop.id,
+        );
+
+      if (error) {
+        throw error;
+      }
 
       const {
         error: eventError,
       } = await supabase
-        .from('shop_status_events')
+        .from(
+          'shop_status_events',
+        )
         .insert({
-          shop_id: shop.id,
-          from_status: shop.status,
-          to_status: shop.status,
-          action: 'test_extended',
+          shop_id:
+            shop.id,
+
+          from_status:
+            shop.status,
+
+          to_status:
+            shop.status,
+
+          action:
+            'test_extended',
+
           reason:
             reason?.trim() ||
             `Prolongation de ${days} jours`,
@@ -552,8 +703,13 @@ export const useShopActions = () => {
       );
     },
 
-    onError: (e: Error) =>
-      toast.error(e.message),
+    onError: (
+      error: Error,
+    ) => {
+      toast.error(
+        error.message,
+      );
+    },
   });
 
   return {
@@ -561,4 +717,3 @@ export const useShopActions = () => {
     extendTest,
   };
 };
-```
