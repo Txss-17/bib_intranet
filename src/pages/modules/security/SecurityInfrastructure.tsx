@@ -12,7 +12,7 @@ const services = [
   { name: 'Storage', status: 'operational', uptime: 99.99, cpu: 15, memory: 55, icon: HardDrive },
 ];
 
-export default function Infrastructure() {
+export default function SecurityInfrastructure() {
   return (
     <div className="space-y-6">
       <div>
