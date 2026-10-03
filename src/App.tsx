@@ -194,36 +194,14 @@ import ESGReports from "./pages/modules/rse/ESGReports";
 
 /* ============================================================
    PRODUIT & ENGINEERING
-   Les composants historiques Tech/R&D restent utilisés comme
-   implémentations internes pendant la migration fonctionnelle.
    ============================================================ */
 
-import {
-  default as ProductEngineeringDashboard,
-} from "./pages/modules/tech/TechDashboard";
-
-import {
-  default as ProductInfrastructure,
-} from "./pages/modules/tech/Infrastructure";
-
-import {
-  default as ProductIntegrations,
-} from "./pages/modules/tech/TechIntegrations";
-
-import {
-  default as ProductDocumentation,
-} from "./pages/modules/tech/TechDocumentation";
-
-import ProductStudio from "./pages/TechStudio";
-
-import {
-  default as ProductInnovation,
-} from "./pages/modules/rd/RDDashboard";
+import ProductStudio from './pages/modules/product/ProductStudio';
+import ProductIntegrations from './pages/modules/product/ProductIntegrations';
+import ProductDocumentation from './pages/modules/product/ProductDocumentation';
 
 /* ============================================================
    SECURITY & IT
-   Les composants historiques Tech restent utilisés comme
-   implémentations internes pendant la migration fonctionnelle.
    ============================================================ */
 
 import SecurityDashboard from './pages/modules/security/SecurityDashboard';
@@ -232,10 +210,7 @@ import SecurityVPN from './pages/modules/security/SecurityVPN';
 import SecurityLogs from './pages/modules/security/SecurityLogs';
 import SecurityEnvironments from './pages/modules/security/SecurityEnvironments';
 import SecurityOperations from './pages/modules/security/Security';
-import SecurityInfrastructure from './pages/modules/security/Infrastructure';
-
-import ProductIntegrations from './pages/modules/product/ProductIntegrations';
-import ProductDocumentation from './pages/modules/product/ProductDocumentation';
+import SecurityInfrastructure from './pages/modules/security/SecurityInfrastructure';
 
 /* ============================================================
    DATA & BI
