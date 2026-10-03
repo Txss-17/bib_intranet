@@ -1,583 +1,741 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import {
-  Building2,
+  AlertCircle,
+  CheckCircle2,
   ChevronDown,
+  Clock3,
   Eye,
   Filter,
   Loader2,
-  MoreHorizontal,
+  MapPin,
   Package,
   Search,
+  Store,
   Truck,
-} from "lucide-react";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+  XCircle,
+} from 'lucide-react';
 
-import { ExportButtons } from "@/components/ExportButtons";
-import { useOrders, Order } from "@/hooks/useOps";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 
-const statusLabels: Record<Order["status"], string> = {
-  pending: "En attente",
-  confirmed: "Confirmée",
-  processing: "En traitement",
-  shipped: "Expédiée",
-  delivered: "Livrée",
-  cancelled: "Annulée",
+import { ExportButtons } from '@/components/ExportButtons';
+import { useOrders, Order } from '@/hooks/useOps';
+
+// ============================================================
+// CONFIGURATION
+// ============================================================
+
+const STATUS_LABELS: Record<Order['status'], string> = {
+  pending: 'En attente',
+  confirmed: 'Confirmée',
+  processing: 'En préparation',
+  shipped: 'Expédiée',
+  delivered: 'Livrée',
+  cancelled: 'Annulée',
 };
 
-const statusVariants: Record<
-  Order["status"],
-  "default" | "secondary" | "destructive" | "outline"
+const STATUS_VARIANTS: Record<
+  Order['status'],
+  'default' | 'secondary' | 'outline' | 'destructive'
 > = {
-  pending: "outline",
-  confirmed: "secondary",
-  processing: "default",
-  shipped: "default",
-  delivered: "secondary",
-  cancelled: "destructive",
+  pending: 'outline',
+  confirmed: 'secondary',
+  processing: 'secondary',
+  shipped: 'default',
+  delivered: 'default',
+  cancelled: 'destructive',
 };
 
-function formatAmount(order: Order) {
-  return order.total_amount.toLocaleString("fr-FR", {
-    style: "currency",
-    currency: order.currency || "EUR",
-  });
-}
+const STAGE_LABELS: Record<string, string> = {
+  created: 'Créée',
+  confirmed: 'Confirmée',
+  transmitted: 'Transmise',
+  accepted: 'Acceptée',
+  prepared: 'Préparée',
+  preparing: 'Préparation',
+  processing: 'Traitement',
+  shipped: 'Expédiée',
+  in_transit: 'En transit',
+  out_for_delivery: 'En livraison',
+  delivered: 'Livrée',
+  cancelled: 'Annulée',
+  refunded: 'Remboursée',
+};
 
-function formatDate(value: string) {
-  const date = new Date(value);
+const formatStage = (stage?: string | null) => {
+  if (!stage) return '—';
 
-  if (Number.isNaN(date.getTime())) {
-    return "—";
+  return (
+    STAGE_LABELS[stage.toLowerCase()] ??
+    stage.replace(/_/g, ' ')
+  );
+};
+
+const formatCurrency = (
+  amount: number,
+  currency = 'EUR'
+) => {
+  return new Intl.NumberFormat('fr-FR', {
+    style: 'currency',
+    currency,
+  }).format(amount);
+};
+
+const formatDate = (date?: string | null) => {
+  if (!date) return '—';
+
+  try {
+    return format(
+      new Date(date),
+      'dd/MM/yyyy HH:mm',
+      { locale: fr }
+    );
+  } catch {
+    return '—';
   }
+};
 
-  return format(date, "dd MMM yyyy", {
-    locale: fr,
-  });
-}
-
-function getShopName(order: Order & Record<string, any>) {
-  return (
-    order.shop_name ??
-    order.shop?.name ??
-    order.store_name ??
-    order.store?.name ??
-    "Boutique non renseignée"
-  );
-}
-
-function getShopCode(order: Order & Record<string, any>) {
-  return (
-    order.shop_code ??
-    order.shop?.shop_code ??
-    order.store_code ??
-    "—"
-  );
-}
+// ============================================================
+// PAGE
+// ============================================================
 
 const Orders = () => {
-  const { data: orders = [], isLoading, error } = useOrders();
+  const {
+    data: orders = [],
+    isLoading,
+    isError,
+    error,
+  } = useOrders();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] =
-    useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [shopFilter, setShopFilter] = useState<string>('all');
 
-  const typedOrders = orders as (Order & Record<string, any>)[];
+  // ============================================================
+  // BOUTIQUES DISPONIBLES
+  // ============================================================
+
+  const shops = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        id: string;
+        name: string;
+        code: string;
+      }
+    >();
+
+    for (const order of orders) {
+      if (!order.shop_id) continue;
+
+      if (!map.has(order.shop_id)) {
+        map.set(order.shop_id, {
+          id: order.shop_id,
+          name: order.shop_name || 'Boutique inconnue',
+          code: order.shop_code || order.shop_id,
+        });
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) =>
+      a.name.localeCompare(b.name, 'fr')
+    );
+  }, [orders]);
+
+  // ============================================================
+  // FILTRAGE
+  // ============================================================
 
   const filteredOrders = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
 
-    return typedOrders.filter((order) => {
-      const shopName = getShopName(order);
-      const shopCode = getShopCode(order);
-
+    return orders.filter((order) => {
       const matchesSearch =
         !query ||
-        order.order_number
-          .toLowerCase()
-          .includes(query) ||
-        (order.shipping_address ?? "")
-          .toLowerCase()
-          .includes(query) ||
-        shopName.toLowerCase().includes(query) ||
-        shopCode.toLowerCase().includes(query);
+        order.order_number.toLowerCase().includes(query) ||
+        (order.shop_name ?? '').toLowerCase().includes(query) ||
+        (order.shop_code ?? '').toLowerCase().includes(query) ||
+        (order.shipping_address ?? '').toLowerCase().includes(query) ||
+        (order.tracking_number ?? '').toLowerCase().includes(query) ||
+        (order.platform_id ?? '').toLowerCase().includes(query);
 
       const matchesStatus =
-        statusFilter === "all" ||
+        statusFilter === 'all' ||
         order.status === statusFilter;
 
-      return matchesSearch && matchesStatus;
-    });
-  }, [typedOrders, searchQuery, statusFilter]);
+      const matchesShop =
+        shopFilter === 'all' ||
+        order.shop_id === shopFilter;
 
-  const stats = useMemo(() => {
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesShop
+      );
+    });
+  }, [
+    orders,
+    searchQuery,
+    statusFilter,
+    shopFilter,
+  ]);
+
+  // ============================================================
+  // KPI
+  // ============================================================
+
+  const kpis = useMemo(() => {
+    const total = orders.length;
+
+    const pending = orders.filter(
+      (o) => o.status === 'pending'
+    ).length;
+
+    const processing = orders.filter(
+      (o) => o.status === 'processing'
+    ).length;
+
+    const shipped = orders.filter(
+      (o) => o.status === 'shipped'
+    ).length;
+
+    const delivered = orders.filter(
+      (o) => o.status === 'delivered'
+    ).length;
+
+    const cancelled = orders.filter(
+      (o) => o.status === 'cancelled'
+    ).length;
+
+    const revenue = orders
+      .filter((o) => o.status !== 'cancelled')
+      .reduce(
+        (sum, order) => sum + order.total_amount,
+        0
+      );
+
     return {
-      total: typedOrders.length,
-      pending: typedOrders.filter(
-        (order) => order.status === "pending",
-      ).length,
-      processing: typedOrders.filter(
-        (order) => order.status === "processing",
-      ).length,
-      shipped: typedOrders.filter(
-        (order) => order.status === "shipped",
-      ).length,
-      delivered: typedOrders.filter(
-        (order) => order.status === "delivered",
-      ).length,
+      total,
+      pending,
+      processing,
+      shipped,
+      delivered,
+      cancelled,
+      revenue,
     };
-  }, [typedOrders]);
+  }, [orders]);
+
+  // ============================================================
+  // EXPORT
+  // ============================================================
+
+  const exportData = filteredOrders.map((order) => ({
+    commande: order.order_number,
+    boutique: order.shop_name ?? '',
+    code_boutique: order.shop_code ?? '',
+    statut: STATUS_LABELS[order.status],
+    etape: formatStage(order.current_stage),
+    montant: order.total_amount,
+    devise: order.currency,
+    destination: order.shipping_address ?? '',
+    methode_livraison: order.shipping_method ?? '',
+    suivi: order.tracking_number ?? '',
+    region: order.region ?? '',
+    date: formatDate(
+      order.ordered_at ?? order.created_at
+    ),
+  }));
+
+  // ============================================================
+  // LOADING
+  // ============================================================
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Chargement des commandes...</span>
+        </div>
       </div>
     );
   }
 
-  if (error) {
+  // ============================================================
+  // ERROR
+  // ============================================================
+
+  if (isError) {
     return (
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
+          <h1 className="text-2xl font-semibold">
             Commandes
           </h1>
-
-          <p className="text-muted-foreground">
-            Supervision des commandes marketplace BIB
+          <p className="text-sm text-muted-foreground">
+            Supervision des commandes Marketplace BIB
           </p>
         </div>
 
-        <Card>
-          <CardContent className="py-12 text-center">
-            <Package className="mx-auto mb-4 h-10 w-10 text-muted-foreground/40" />
+        <Card className="border-destructive/50">
+          <CardContent className="flex items-center gap-3 py-8">
+            <AlertCircle className="h-5 w-5 text-destructive" />
 
-            <p className="font-medium">
-              Impossible de charger les commandes
-            </p>
+            <div>
+              <p className="font-medium">
+                Impossible de charger les commandes
+              </p>
 
-            <p className="mt-1 text-sm text-muted-foreground">
-              Vérifiez la connexion aux données
-              marketplace.
-            </p>
+              <p className="text-sm text-muted-foreground">
+                {error instanceof Error
+                  ? error.message
+                  : 'Une erreur Supabase est survenue.'}
+              </p>
+            </div>
           </CardContent>
         </Card>
       </div>
     );
   }
 
+  // ============================================================
+  // RENDER
+  // ============================================================
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+      {/* HEADER */}
+
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary">
-              <Package className="h-5 w-5" />
-            </div>
+          <h1 className="text-2xl font-semibold tracking-tight">
+            Commandes
+          </h1>
 
-            <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Commandes
-              </h1>
-
-              <p className="text-muted-foreground">
-                Supervision et suivi des commandes
-                marketplace BIB
-              </p>
-            </div>
-          </div>
+          <p className="text-sm text-muted-foreground">
+            Supervision des commandes Marketplace BIB
+          </p>
         </div>
 
         <ExportButtons
-          filename="commandes"
-          title="Liste des commandes BIB"
-          columns={[
-            {
-              header: "N° Commande",
-              accessor: "order_number",
-            },
-            {
-              header: "Boutique",
-              accessor: "shop_name",
-            },
-            {
-              header: "Code boutique",
-              accessor: "shop_code",
-            },
-            {
-              header: "Date",
-              accessor: "created_at",
-            },
-            {
-              header: "Montant",
-              accessor: "total_amount",
-            },
-            {
-              header: "Destination",
-              accessor: "shipping_address",
-            },
-            {
-              header: "Statut",
-              accessor: "status",
-            },
-          ]}
-          data={filteredOrders.map((order) => ({
-            ...order,
-            shop_name: getShopName(order),
-            shop_code: getShopCode(order),
-          }))}
+          data={exportData}
+          filename="bib-commandes"
+          title="Commandes BIB"
         />
       </div>
 
       {/* KPI */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Card>
-          <CardContent className="p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
+          <CardContent className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-sm text-muted-foreground">
                 Commandes
-              </span>
+              </p>
 
-              <Package className="h-4 w-4 text-muted-foreground" />
+              <p className="mt-1 text-2xl font-semibold">
+                {kpis.total}
+              </p>
             </div>
 
-            <p className="text-2xl font-semibold">
-              {stats.total}
-            </p>
+            <Package className="h-5 w-5 text-muted-foreground" />
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                En attente
-              </span>
+          <CardContent className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                En cours
+              </p>
 
-              <Filter className="h-4 w-4 text-muted-foreground" />
+              <p className="mt-1 text-2xl font-semibold">
+                {kpis.pending + kpis.processing + kpis.shipped}
+              </p>
             </div>
 
-            <p className="text-2xl font-semibold">
-              {stats.pending}
-            </p>
+            <Clock3 className="h-5 w-5 text-muted-foreground" />
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                En traitement
-              </span>
+          <CardContent className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                Livrées
+              </p>
 
-              <Package className="h-4 w-4 text-muted-foreground" />
+              <p className="mt-1 text-2xl font-semibold">
+                {kpis.delivered}
+              </p>
             </div>
 
-            <p className="text-2xl font-semibold">
-              {stats.processing}
-            </p>
+            <CheckCircle2 className="h-5 w-5 text-muted-foreground" />
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-5">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Expédiées
-              </span>
+          <CardContent className="flex items-center justify-between p-5">
+            <div>
+              <p className="text-sm text-muted-foreground">
+                CA commandes
+              </p>
 
-              <Truck className="h-4 w-4 text-muted-foreground" />
+              <p className="mt-1 text-2xl font-semibold">
+                {formatCurrency(kpis.revenue)}
+              </p>
             </div>
 
-            <p className="text-2xl font-semibold">
-              {stats.shipped}
-            </p>
+            <Truck className="h-5 w-5 text-muted-foreground" />
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
+      {/* FILTRES */}
+
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col gap-4 lg:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <CardContent className="flex flex-col gap-3 p-4 lg:flex-row">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
-              <Input
-                placeholder="Rechercher par commande, boutique, code ou adresse..."
-                value={searchQuery}
-                onChange={(event) =>
-                  setSearchQuery(event.target.value)
-                }
-                className="pl-10"
-              />
-            </div>
-
-            <Select
-              value={statusFilter}
-              onValueChange={setStatusFilter}
-            >
-              <SelectTrigger className="w-full lg:w-[210px]">
-                <Filter className="mr-2 h-4 w-4" />
-
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="all">
-                  Tous les statuts
-                </SelectItem>
-
-                <SelectItem value="pending">
-                  En attente
-                </SelectItem>
-
-                <SelectItem value="confirmed">
-                  Confirmée
-                </SelectItem>
-
-                <SelectItem value="processing">
-                  En traitement
-                </SelectItem>
-
-                <SelectItem value="shipped">
-                  Expédiée
-                </SelectItem>
-
-                <SelectItem value="delivered">
-                  Livrée
-                </SelectItem>
-
-                <SelectItem value="cancelled">
-                  Annulée
-                </SelectItem>
-              </SelectContent>
-            </Select>
+            <Input
+              value={searchQuery}
+              onChange={(event) =>
+                setSearchQuery(event.target.value)
+              }
+              placeholder="Rechercher une commande, boutique, destination ou suivi..."
+              className="pl-9"
+            />
           </div>
+
+          <Select
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+          >
+            <SelectTrigger className="w-full lg:w-[190px]">
+              <Filter className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Statut" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="all">
+                Tous les statuts
+              </SelectItem>
+
+              {Object.entries(STATUS_LABELS).map(
+                ([value, label]) => (
+                  <SelectItem
+                    key={value}
+                    value={value}
+                  >
+                    {label}
+                  </SelectItem>
+                )
+              )}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={shopFilter}
+            onValueChange={setShopFilter}
+          >
+            <SelectTrigger className="w-full lg:w-[220px]">
+              <Store className="mr-2 h-4 w-4" />
+              <SelectValue placeholder="Boutique" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="all">
+                Toutes les boutiques
+              </SelectItem>
+
+              {shops.map((shop) => (
+                <SelectItem
+                  key={shop.id}
+                  value={shop.id}
+                >
+                  {shop.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </CardContent>
       </Card>
 
-      {/* Orders table */}
+      {/* TABLE */}
+
       <Card>
-        <CardHeader>
-          <CardTitle>
-            Commandes ({filteredOrders.length})
-          </CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>
+              Commandes Marketplace
+            </CardTitle>
+
+            <p className="mt-1 text-sm text-muted-foreground">
+              {filteredOrders.length} commande
+              {filteredOrders.length > 1 ? 's' : ''}
+              affichée
+              {filteredOrders.length > 1 ? 's' : ''}
+            </p>
+          </div>
         </CardHeader>
 
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>N° Commande</TableHead>
+          {filteredOrders.length === 0 ? (
+            <div className="flex min-h-[240px] flex-col items-center justify-center text-center">
+              <Package className="mb-3 h-10 w-10 text-muted-foreground/50" />
 
-                  <TableHead>Boutique</TableHead>
+              <p className="font-medium">
+                Aucune commande trouvée
+              </p>
 
-                  <TableHead>Date</TableHead>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Modifiez vos filtres ou attendez la
+                synchronisation d'une commande Marketplace.
+              </p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      Commande
+                    </TableHead>
 
-                  <TableHead>Articles</TableHead>
+                    <TableHead>
+                      Boutique
+                    </TableHead>
 
-                  <TableHead>Montant</TableHead>
+                    <TableHead>
+                      Date
+                    </TableHead>
 
-                  <TableHead>Destination</TableHead>
+                    <TableHead>
+                      Montant
+                    </TableHead>
 
-                  <TableHead>Statut</TableHead>
+                    <TableHead>
+                      Destination
+                    </TableHead>
 
-                  <TableHead className="text-right">
-                    Actions
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
+                    <TableHead>
+                      Étape
+                    </TableHead>
 
-              <TableBody>
-                {filteredOrders.map((order) => {
-                  const shopName = getShopName(order);
-                  const shopCode = getShopCode(order);
+                    <TableHead>
+                      Statut
+                    </TableHead>
 
-                  return (
+                    <TableHead className="text-right">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {filteredOrders.map((order) => (
                     <TableRow key={order.id}>
-                      {/* Order */}
-                      <TableCell className="font-medium">
-                        <div>
-                          <span>
+                      {/* COMMANDE */}
+
+                      <TableCell>
+                        <div className="flex flex-col">
+                          <span className="font-medium">
                             {order.order_number}
                           </span>
 
-                          <p className="text-xs text-muted-foreground">
-                            Commande BIB
-                          </p>
+                          {order.platform_id && (
+                            <span className="text-xs text-muted-foreground">
+                              Plateforme :{' '}
+                              {order.platform_id.slice(0, 12)}
+                            </span>
+                          )}
                         </div>
                       </TableCell>
 
-                      {/* Shop */}
+                      {/* BOUTIQUE */}
+
                       <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                        {order.shop_id ? (
+                          <div className="flex items-center gap-2">
+                            <Store className="h-4 w-4 text-muted-foreground" />
 
-                          <div>
-                            <p className="text-sm font-medium">
-                              {shopName}
-                            </p>
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {order.shop_name ||
+                                  'Boutique inconnue'}
+                              </span>
 
-                            <p className="text-xs text-muted-foreground">
-                              {shopCode}
-                            </p>
+                              {order.shop_code && (
+                                <span className="text-xs text-muted-foreground">
+                                  {order.shop_code}
+                                </span>
+                              )}
+                            </div>
                           </div>
+                        ) : (
+                          <span className="text-sm text-destructive">
+                            Boutique non rattachée
+                          </span>
+                        )}
+                      </TableCell>
+
+                      {/* DATE */}
+
+                      <TableCell className="whitespace-nowrap">
+                        {formatDate(
+                          order.ordered_at ??
+                            order.created_at
+                        )}
+                      </TableCell>
+
+                      {/* MONTANT */}
+
+                      <TableCell className="whitespace-nowrap font-medium">
+                        {formatCurrency(
+                          order.total_amount,
+                          order.currency
+                        )}
+                      </TableCell>
+
+                      {/* DESTINATION */}
+
+                      <TableCell>
+                        <div className="flex max-w-[220px] items-start gap-2">
+                          <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+
+                          <span className="truncate text-sm">
+                            {order.shipping_address ||
+                              order.region ||
+                              'Non renseignée'}
+                          </span>
                         </div>
                       </TableCell>
 
-                      {/* Date */}
+                      {/* ÉTAPE */}
+
                       <TableCell>
-                        {formatDate(order.created_at)}
-                      </TableCell>
-
-                      {/* Items */}
-                      <TableCell>
-                        {order.items_count} article
-                        {order.items_count > 1
-                          ? "s"
-                          : ""}
-                      </TableCell>
-
-                      {/* Amount */}
-                      <TableCell className="font-semibold">
-                        {formatAmount(order)}
-                      </TableCell>
-
-                      {/* Destination */}
-                      <TableCell className="max-w-[220px]">
-                        <span
-                          className="block truncate"
-                          title={
-                            order.shipping_address ||
-                            undefined
-                          }
-                        >
-                          {order.shipping_address || "—"}
+                        <span className="text-sm">
+                          {formatStage(
+                            order.current_stage
+                          )}
                         </span>
                       </TableCell>
 
-                      {/* Status */}
+                      {/* STATUT */}
+
                       <TableCell>
                         <Badge
                           variant={
-                            statusVariants[order.status]
+                            STATUS_VARIANTS[
+                              order.status
+                            ]
                           }
                         >
-                          {statusLabels[order.status]}
+                          {STATUS_LABELS[
+                            order.status
+                          ]}
                         </Badge>
                       </TableCell>
 
-                      {/* Actions */}
+                      {/* ACTIONS */}
+
                       <TableCell className="text-right">
                         <DropdownMenu>
-                          <DropdownMenuTrigger
-                            asChild
-                          >
+                          <DropdownMenuTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
                             >
-                              <MoreHorizontal className="h-4 w-4" />
+                              <ChevronDown className="h-4 w-4" />
+                              <span className="sr-only">
+                                Actions
+                              </span>
                             </Button>
                           </DropdownMenuTrigger>
 
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem>
                               <Eye className="mr-2 h-4 w-4" />
-                              Voir les détails
+                              Voir le détail
                             </DropdownMenuItem>
+
+                            {order.tracking_number && (
+                              <DropdownMenuItem>
+                                <Truck className="mr-2 h-4 w-4" />
+                                Suivi transport
+                              </DropdownMenuItem>
+                            )}
 
                             <DropdownMenuSeparator />
 
-                            {order.status ===
-                              "pending" && (
+                            {order.status === 'pending' && (
                               <DropdownMenuItem>
-                                Confirmer la commande
+                                <CheckCircle2 className="mr-2 h-4 w-4" />
+                                Examiner la commande
                               </DropdownMenuItem>
                             )}
 
-                            {(
-                              [
-                                "confirmed",
-                                "processing",
-                              ] as Order["status"][]
-                            ).includes(order.status) && (
+                            {(order.status === 'confirmed' ||
+                              order.status === 'processing') && (
                               <DropdownMenuItem>
-                                Préparer l'expédition
+                                <Package className="mr-2 h-4 w-4" />
+                                Voir la préparation
                               </DropdownMenuItem>
                             )}
 
-                            {order.status ===
-                              "processing" && (
+                            {order.status === 'shipped' && (
                               <DropdownMenuItem>
-                                Créer l'expédition
+                                <Truck className="mr-2 h-4 w-4" />
+                                Voir la livraison
                               </DropdownMenuItem>
                             )}
 
-                            {order.status !==
-                              "delivered" &&
-                              order.status !==
-                                "cancelled" && (
-                                <>
-                                  <DropdownMenuSeparator />
-
-                                  <DropdownMenuItem className="text-destructive">
-                                    Annuler la commande
-                                  </DropdownMenuItem>
-                                </>
-                              )}
+                            {order.status === 'cancelled' && (
+                              <DropdownMenuItem disabled>
+                                <XCircle className="mr-2 h-4 w-4" />
+                                Commande annulée
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
-                  );
-                })}
-
-                {filteredOrders.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={8}
-                      className="py-12 text-center"
-                    >
-                      <Package className="mx-auto mb-3 h-8 w-8 text-muted-foreground/40" />
-
-                      <p className="font-medium">
-                        Aucune commande trouvée
-                      </p>
-
-                      <p className="mt-1 text-sm text-muted-foreground">
-                        Modifiez les critères de recherche
-                        ou de filtrage.
-                      </p>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
