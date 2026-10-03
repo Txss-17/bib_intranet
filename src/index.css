@@ -6,7 +6,11 @@
 
 @layer base {
   :root {
-    /* LINKSY Enterprise Design System - Light Mode */
+    /* ============================================================
+       BIB INTRANET — ENTERPRISE DESIGN SYSTEM
+       LIGHT MODE
+       ============================================================ */
+
     --background: 210 20% 98%;
     --foreground: 222 47% 11%;
 
@@ -43,22 +47,29 @@
 
     --radius: 0.5rem;
 
-    /* Pole accent colors */
+    /* ============================================================
+       14 PÔLES — ACCENT COLORS
+       ============================================================ */
+
     --pole-direction: 222 47% 20%;
     --pole-finance: 142 71% 35%;
     --pole-ops: 262 83% 58%;
-    --pole-tech: 217 91% 60%;
-    --pole-rh: 330 81% 60%;
     --pole-supplier: 25 95% 53%;
+    --pole-marketplace: 199 89% 48%;
+    --pole-support: 217 91% 60%;
+    --pole-marketing: 330 81% 60%;
+    --pole-rh: 340 82% 52%;
     --pole-audit: 47 96% 53%;
     --pole-compliance: 172 66% 50%;
     --pole-rse: 142 76% 36%;
-    --pole-marketing: 330 81% 60%;
-    --pole-risk: 0 84% 60%;
-    --pole-lifecycle: 199 89% 48%;
-    --pole-rd: 280 67% 55%;
+    --pole-product: 280 67% 55%;
+    --pole-data: 190 80% 42%;
+    --pole-security: 0 84% 60%;
 
-    /* Sidebar */
+    /* ============================================================
+       SIDEBAR
+       ============================================================ */
+
     --sidebar-background: 222 47% 11%;
     --sidebar-foreground: 210 20% 90%;
     --sidebar-primary: 217 91% 60%;
@@ -71,7 +82,11 @@
   }
 
   .dark {
-    /* LINKSY Enterprise Design System - Dark Mode */
+    /* ============================================================
+       BIB INTRANET — ENTERPRISE DESIGN SYSTEM
+       DARK MODE
+       ============================================================ */
+
     --background: 222 47% 6%;
     --foreground: 210 20% 95%;
 
@@ -106,7 +121,10 @@
     --input: 222 47% 18%;
     --ring: 217 91% 60%;
 
-    /* Sidebar dark */
+    /* ============================================================
+       SIDEBAR DARK
+       ============================================================ */
+
     --sidebar-background: 222 47% 4%;
     --sidebar-foreground: 210 20% 85%;
     --sidebar-primary: 217 91% 60%;
@@ -129,7 +147,10 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
 
-  /* Enterprise scrollbar */
+  /* ============================================================
+     ENTERPRISE SCROLLBAR
+     ============================================================ */
+
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -149,25 +170,74 @@
 }
 
 @layer components {
-  /* Pole indicator badges */
+  /* ============================================================
+     POLE INDICATOR
+     ============================================================ */
+
   .pole-indicator {
     @apply w-2 h-2 rounded-full;
   }
 
-  .pole-direction { background-color: hsl(var(--pole-direction)); }
-  .pole-finance { background-color: hsl(var(--pole-finance)); }
-  .pole-ops { background-color: hsl(var(--pole-ops)); }
-  .pole-tech { background-color: hsl(var(--pole-tech)); }
-  .pole-rh { background-color: hsl(var(--pole-rh)); }
-  .pole-supplier { background-color: hsl(var(--pole-supplier)); }
-  .pole-audit { background-color: hsl(var(--pole-audit)); }
-  .pole-compliance { background-color: hsl(var(--pole-compliance)); }
-  .pole-rse { background-color: hsl(var(--pole-rse)); }
-  .pole-marketing { background-color: hsl(var(--pole-marketing)); }
-  .pole-risk { background-color: hsl(var(--pole-risk)); }
-  .pole-lifecycle { background-color: hsl(var(--pole-lifecycle)); }
+  .pole-direction {
+    background-color: hsl(var(--pole-direction));
+  }
 
-  /* Status indicators */
+  .pole-finance {
+    background-color: hsl(var(--pole-finance));
+  }
+
+  .pole-ops {
+    background-color: hsl(var(--pole-ops));
+  }
+
+  .pole-supplier {
+    background-color: hsl(var(--pole-supplier));
+  }
+
+  .pole-marketplace {
+    background-color: hsl(var(--pole-marketplace));
+  }
+
+  .pole-support {
+    background-color: hsl(var(--pole-support));
+  }
+
+  .pole-marketing {
+    background-color: hsl(var(--pole-marketing));
+  }
+
+  .pole-rh {
+    background-color: hsl(var(--pole-rh));
+  }
+
+  .pole-audit {
+    background-color: hsl(var(--pole-audit));
+  }
+
+  .pole-compliance {
+    background-color: hsl(var(--pole-compliance));
+  }
+
+  .pole-rse {
+    background-color: hsl(var(--pole-rse));
+  }
+
+  .pole-product {
+    background-color: hsl(var(--pole-product));
+  }
+
+  .pole-data {
+    background-color: hsl(var(--pole-data));
+  }
+
+  .pole-security {
+    background-color: hsl(var(--pole-security));
+  }
+
+  /* ============================================================
+     STATUS INDICATORS
+     ============================================================ */
+
   .status-dot {
     @apply w-2 h-2 rounded-full;
   }
@@ -184,7 +254,10 @@
     @apply bg-destructive;
   }
 
-  /* Enterprise card hover effect */
+  /* ============================================================
+     ENTERPRISE CARD
+     ============================================================ */
+
   .enterprise-card {
     @apply bg-card border border-border rounded-lg transition-all duration-200;
   }
@@ -193,7 +266,10 @@
     @apply border-accent/30 shadow-lg shadow-accent/5;
   }
 
-  /* Data table row */
+  /* ============================================================
+     DATA TABLE ROW
+     ============================================================ */
+
   .data-row {
     @apply border-b border-border/50 transition-colors;
   }
@@ -202,24 +278,36 @@
     @apply bg-muted/50;
   }
 
-  /* Module header */
+  /* ============================================================
+     MODULE HEADER
+     ============================================================ */
+
   .module-header {
     @apply flex items-center justify-between pb-4 border-b border-border mb-4;
   }
 
-  /* Metric card */
+  /* ============================================================
+     METRIC CARD
+     ============================================================ */
+
   .metric-card {
     @apply p-4 rounded-lg bg-secondary/50 border border-border;
   }
 
-  /* Timeline connector */
+  /* ============================================================
+     TIMELINE CONNECTOR
+     ============================================================ */
+
   .timeline-connector {
     @apply absolute left-4 top-8 bottom-0 w-px bg-border;
   }
 }
 
 @layer utilities {
-  /* Fade animations */
+  /* ============================================================
+     FADE ANIMATIONS
+     ============================================================ */
+
   .animate-fade-in {
     animation: fadeIn 0.3s ease-out;
   }
@@ -229,28 +317,41 @@
       opacity: 0;
       transform: translateY(4px);
     }
+
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
 
-  /* Subtle pulse for live indicators */
+  /* ============================================================
+     SUBTLE PULSE
+     ============================================================ */
+
   .animate-pulse-subtle {
     animation: pulse-subtle 2s infinite;
   }
 
   @keyframes pulse-subtle {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 1;
     }
+
     50% {
       opacity: 0.6;
     }
   }
 
-  /* Trust gradient for headers */
+  /* ============================================================
+     TRUST GRADIENT
+     ============================================================ */
+
   .trust-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary)) 0%,
+      hsl(var(--accent)) 100%
+    );
   }
 }
