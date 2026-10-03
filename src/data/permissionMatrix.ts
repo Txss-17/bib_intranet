@@ -1,3 +1,4 @@
+import { applyRemoteOverrides } from '@/data/permissionRules';
 import { supabase } from '@/integrations/supabase/client';
 // ---------------------------------------------------------------------------
 // MATRICE CENTRALISÉE DES PERMISSIONS
@@ -726,6 +727,7 @@ const pushPermissionSetting = async (key: string, value: unknown) => {
 const applyRemoteSetting = (key: string, value: unknown) => {
   try {
     if (key === 'matrix_overrides') localStorage.setItem(MATRIX_KEY, JSON.stringify(value ?? {}));
+    if (key === 'sensitive_rules') applyRemoteOverrides(value as any);
     if (key === 'rbac_enforced') localStorage.setItem(ENFORCE_KEY, value === false ? 'off' : 'on');
   } catch {
     // localStorage indisponible
