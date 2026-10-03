@@ -26,7 +26,7 @@ import {
   useSecurityAlerts,
 } from '@/hooks/useTechData';
 
-export default function TechDashboard() {
+export default function SecurityDashboard() {
   const { data: authLogs = [] } = useSecurityAuthLogs(20);
   const { data: edgeLogs = [] } = useProductEdgeFunctionLogs(20);
   const { data: vpn = [] } = useSecurityVpnAccess();
