@@ -463,20 +463,20 @@ export const useProductRequestActions = () => {
  * vers les noms Produit & Engineering.
  */
 
-export type TechRequestStatus = ProductRequestStatus;
+export type ProductRequestStatus = ProductRequestStatus;
 
-export const TECH_REQUEST_STATUS = PRODUCT_REQUEST_STATUS;
+export const Product_REQUEST_STATUS = PRODUCT_REQUEST_STATUS;
 
-export const TECH_REQUEST_CATEGORIES = PRODUCT_REQUEST_CATEGORIES;
+export const PRODUCT_REQUEST_CATEGORIES = PRODUCT_REQUEST_CATEGORIES;
 
-export type TechRequest = ProductRequest;
+export type ProductRequest = ProductRequest;
 
-export type TechRequestComment = ProductRequestComment;
+export type ProductRequestComment = ProductRequestComment;
 
-export type TechRequestEvent = ProductRequestEvent;
+export type ProductRequestEvent = ProductRequestEvent;
 
-export const useTechRequests = useProductRequests;
+export const useProductRequests = useProductRequests;
 
-export const useTechRequestThread = useProductRequestThread;
+export const useProductRequestThread = useProductRequestThread;
 
-export const useTechRequestActions = useProductRequestActions;
+export const useProductRequestActions = useProductRequestActions;
