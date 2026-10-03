@@ -4,19 +4,19 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   BrowserRouter,
-  Routes,
-  Route,
   Navigate,
+  Route,
+  Routes,
 } from "react-router-dom";
 
 import { MainLayout } from "./components/layout/MainLayout";
+import { AuthGuard } from "./components/AuthGuard";
 import { useAuthLogger } from "./hooks/useAuthLogger";
 import { AuthProvider } from "./hooks/useAuth";
-import { AuthGuard } from "./components/AuthGuard";
 import { SandboxProvider } from "@/hooks/useSandbox";
 
 /* ============================================================
-   AUTH / CORE
+   CORE / AUTH
    ============================================================ */
 
 import Login from "./pages/Login";
@@ -25,7 +25,6 @@ import Unsubscribe from "./pages/Unsubscribe";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Profile from "./pages/Profile";
-
 import PoleDashboard from "./pages/PoleDashboard";
 import SubSectionPage from "./pages/modules/SubSectionPage";
 
@@ -36,7 +35,7 @@ import Settings from "./pages/Settings";
 import RolesPermissions from "@/pages/admin/RolesPermissions";
 
 /* ============================================================
-   COMPATIBILITY / GLOBAL AUDIT
+   GLOBAL AUDIT
    ============================================================ */
 
 import ComplianceAudit from "./pages/ComplianceAudit";
@@ -44,7 +43,7 @@ import FinanceCompliance from "./pages/compliance/FinanceCompliance";
 import OpsCompliance from "./pages/compliance/OpsCompliance";
 
 /* ============================================================
-   DIRECTION
+   1. DIRECTION
    ============================================================ */
 
 import ExecutiveDashboard from "./pages/modules/direction/ExecutiveDashboard";
@@ -57,24 +56,21 @@ import GroupGovernance from "./pages/modules/direction/GroupGovernance";
 import BoardReports from "./pages/modules/direction/BoardReports";
 
 /* ============================================================
-   FOURNISSEURS & PRODUITS
+   2. FINANCE
    ============================================================ */
 
-import SupplierDashboard from "./pages/modules/supplier/SupplierDashboard";
-import PendingProducts from "./pages/modules/supplier/PendingProducts";
-import ValidatedProducts from "./pages/modules/supplier/ValidatedProducts";
-import SupplierFiles from "./pages/modules/supplier/SupplierFiles";
-import Certifications from "./pages/modules/supplier/Certifications";
-import DecisionHistory from "./pages/modules/supplier/DecisionHistory";
-import QualityAlerts from "./pages/modules/supplier/QualityAlerts";
-import SupplierPortfolios from "./pages/modules/supplier/SupplierPortfolios";
-import SupplierApplications from "./pages/modules/supplier/SupplierApplications";
-import SupplierApplicationDetail from "./pages/modules/supplier/SupplierApplicationDetail";
-import SupplierRestockOrders from "./pages/modules/supplier/SupplierRestockOrders";
-import SupplierCatalogInbox from "./pages/modules/supplier/SupplierCatalogInbox";
+import FinanceDashboard from "./pages/modules/finance/FinanceDashboard";
+import CashflowRealtime from "./pages/modules/finance/CashflowRealtime";
+import Transactions from "./pages/modules/finance/Transactions";
+import SupplierPayments from "./pages/modules/finance/SupplierPayments";
+import Subscriptions from "./pages/modules/finance/Subscriptions";
+import Salaries from "./pages/modules/finance/Salaries";
+import CorporateCards from "./pages/modules/finance/CorporateCards";
+import GuaranteeFund from "./pages/modules/finance/GuaranteeFund";
+import Reconciliation from "./pages/modules/finance/Reconciliation";
 
 /* ============================================================
-   OPÉRATIONS & LOGISTIQUE
+   3. OPÉRATIONS & LOGISTIQUE
    ============================================================ */
 
 import OpsDashboard from "./pages/modules/ops/OpsDashboard";
@@ -95,6 +91,10 @@ import SupplierLeadTimes from "./pages/modules/ops/SupplierLeadTimes";
 import ShopsSupervision from "./pages/modules/ops/ShopsSupervision";
 import Anomalies from "./pages/modules/ops/Anomalies";
 
+/* ============================================================
+   WORK / TRANSVERSAL OPERATIONS
+   ============================================================ */
+
 import WorkTasks from "./pages/modules/work/WorkTasks";
 import WorkProjects from "./pages/modules/work/WorkProjects";
 import WorkProcesses from "./pages/modules/work/WorkProcesses";
@@ -102,23 +102,31 @@ import WorkValidations from "./pages/modules/work/WorkValidations";
 import WorkEscalations from "./pages/modules/work/WorkEscalations";
 import WorkActivities from "./pages/modules/work/WorkActivities";
 
-import Reconciliation from "./pages/modules/finance/Reconciliation";
-
 /* ============================================================
-   FINANCE
+   4. FOURNISSEURS & PRODUITS
    ============================================================ */
 
-import FinanceDashboard from "./pages/modules/finance/FinanceDashboard";
-import CashflowRealtime from "./pages/modules/finance/CashflowRealtime";
-import Transactions from "./pages/modules/finance/Transactions";
-import SupplierPayments from "./pages/modules/finance/SupplierPayments";
-import Subscriptions from "./pages/modules/finance/Subscriptions";
-import Salaries from "./pages/modules/finance/Salaries";
-import CorporateCards from "./pages/modules/finance/CorporateCards";
-import GuaranteeFund from "./pages/modules/finance/GuaranteeFund";
+import SupplierDashboard from "./pages/modules/supplier/SupplierDashboard";
+import PendingProducts from "./pages/modules/supplier/PendingProducts";
+import ValidatedProducts from "./pages/modules/supplier/ValidatedProducts";
+import SupplierFiles from "./pages/modules/supplier/SupplierFiles";
+import Certifications from "./pages/modules/supplier/Certifications";
+import DecisionHistory from "./pages/modules/supplier/DecisionHistory";
+import QualityAlerts from "./pages/modules/supplier/QualityAlerts";
+import SupplierPortfolios from "./pages/modules/supplier/SupplierPortfolios";
+import SupplierApplications from "./pages/modules/supplier/SupplierApplications";
+import SupplierApplicationDetail from "./pages/modules/supplier/SupplierApplicationDetail";
+import SupplierRestockOrders from "./pages/modules/supplier/SupplierRestockOrders";
+import SupplierCatalogInbox from "./pages/modules/supplier/SupplierCatalogInbox";
 
 /* ============================================================
-   SUPPORT & CUSTOMER SUCCESS
+   5. MARKETPLACE & CUSTOMER
+   ============================================================ */
+
+import MarketplaceDashboard from "./pages/PoleDashboard";
+
+/* ============================================================
+   6. SUPPORT & CUSTOMER SUCCESS
    ============================================================ */
 
 import SupportTickets from "./pages/modules/support/SupportTickets";
@@ -127,7 +135,7 @@ import SupportMonitoring from "./pages/modules/support/SupportMonitoring";
 import SupportEscalations from "./pages/modules/support/SupportEscalations";
 
 /* ============================================================
-   MARKETING & COMMUNICATION
+   7. MARKETING & COMMUNICATION
    ============================================================ */
 
 import MarketingDashboard from "./pages/modules/marketing/MarketingDashboard";
@@ -137,7 +145,7 @@ import Podcasts from "./pages/modules/marketing/Podcasts";
 import Analytics from "./pages/modules/marketing/Analytics";
 
 /* ============================================================
-   RH
+   8. RH
    ============================================================ */
 
 import RHDashboard from "./pages/modules/rh/RHDashboard";
@@ -152,7 +160,7 @@ import BusinessTrips from "./pages/modules/rh/BusinessTrips";
 import Publications from "./pages/modules/rh/Publications";
 
 /* ============================================================
-   QUALITÉ & AUDIT
+   9. QUALITÉ & AUDIT
    ============================================================ */
 
 import AuditDashboard from "./pages/modules/audit/AuditDashboard";
@@ -165,7 +173,7 @@ import NonConformities from "./pages/modules/audit/NonConformities";
 import Sanctions from "./pages/modules/audit/Sanctions";
 
 /* ============================================================
-   CONFORMITÉ & JURIDIQUE
+   10. CONFORMITÉ & JURIDIQUE
    ============================================================ */
 
 import ComplianceDashboard from "./pages/modules/compliance/ComplianceDashboard";
@@ -175,7 +183,7 @@ import Disputes from "./pages/modules/compliance/Disputes";
 import ComplianceRiskRegister from "./pages/modules/compliance/RiskRegister";
 
 /* ============================================================
-   RSE & IMPACT
+   11. RSE & IMPACT
    ============================================================ */
 
 import RSEDashboard from "./pages/modules/rse/RSEDashboard";
@@ -187,53 +195,22 @@ import CO2Impact from "./pages/modules/rse/CO2Impact";
 import ESGReports from "./pages/modules/rse/ESGReports";
 
 /* ============================================================
-   PRODUIT & ENGINEERING
+   12. PRODUIT & ENGINEERING
    ============================================================ */
 
 import ProductEngineeringDashboard from "./pages/modules/product/ProductEngineeringDashboard";
 import ProductStudio from "./pages/modules/product/ProductStudio";
 import ProductIntegrations from "./pages/modules/product/ProductIntegrations";
-import ProductDocumentation from "./pages/modules/product/ProductDocumentation";
+import ProductDocumentation from "./pages/modules/product/ProductDocumention";
 import ProductInnovation from "./pages/modules/product/ProductInnovation";
+import ProductPerformance from "./pages/modules/product/ProductPerformance";
+import SupplierPerformance from "./pages/modules/product/SupplierPerformance";
+import ProductFrictions from "./pages/modules/product/ProductFrictions";
 import ProductReports from "./pages/modules/product/ProductReports";
 import ProductTicketDetail from "./pages/modules/product/ProductTicketDetail";
 
 /* ============================================================
-   SECURITY & IT
-   ============================================================ */
-
-import SecurityAccess from "./pages/modules/security/SecurityAccess";
-import SecurityVPN from "./pages/modules/security/SecurityVPN";
-import SecurityLogs from "./pages/modules/security/SecurityLogs";
-import SecurityEnvironments from "./pages/modules/security/SecurityEnvironments";
-import SecurityEdgeFunctions from "./pages/modules/security/SecurityEdgeFunctions";
-import SecurityEdgeFunctionDetail from "./pages/modules/security/SecurityEdgeFunctionDetail";
-import SecurityEdgeFunctionLogs from "./pages/modules/security/SecurityEdgeFunctionLogs";
-import SecurityReports from "./pages/modules/security/SecurityReports";
-import SecuritySandbox from "./pages/modules/security/SecuritySandbox";
-import SecurityAuthLogs from "./pages/modules/security/SecurityAuthLogs";
-import SecurityEdgeLogs from "./pages/modules/security/SecurityEdgeLogs";
-import SecurityIncidentList from "./pages/modules/security/SecurityIncidentList";
-import SecurityIncidentDetail from "./pages/modules/security/SecurityIncidentDetail";
-import SecurityOperations from "./pages/modules/security/Security";
-import SecurityInfrastructure from "./pages/modules/security/SecurityInfrastructure";
-import SecurityDashboard from "./pages/modules/security/SecurityDashboard";
-import SecurityAlerts from "./pages/modules/security/SecurityAlerts";
-import SecurityIncidentDetail from "./pages/modules/security/SecurityIncidentDetail";
-import SecurityIncidentReport from "./pages/modules/security/SecurityIncidentReport";
-import SecurityIncidentList from "./pages/modules/security/SecurityIncidentList";
-import SecurityIncidentCreate from "./pages/modules/security/SecurityIncidentCreate";
-import SecurityIncidentUpdate from "./pages/modules/security/SecurityIncidentUpdate";
-import SecurityIncidentDelete from "./pages/modules/security/SecurityIncidentDelete";
-import SecurityIncidentAssign from "./pages/modules/security/SecurityIncidentAssign";
-import SecurityIncidentClose from "./pages/modules/security/SecurityIncidentClose";
-import SecurityIncidentReopen from "./pages/modules/security/SecurityIncidentReopen";
-import SecurityIncidentEscalate from "./pages/modules/security/SecurityIncidentEscalate";
-import SecurityIncidentDeescalate from "./pages/modules/security/SecurityIncidentDeescalate";
-import SecurityIncidentComment from "./pages/modules/security/SecurityIncidentComment";
-
-/* ============================================================
-   DATA & BI
+   13. DATA & BI
    ============================================================ */
 
 import DataDashboard from "./pages/modules/data/DataDashboard";
@@ -250,6 +227,44 @@ import BITemplates from "./pages/modules/data/bi/BITemplates";
 import BIDataSources from "./pages/modules/data/bi/BIDataSources";
 import BIWidgetLibrary from "./pages/modules/data/bi/BIWidgetLibrary";
 import BIHistory from "./pages/modules/data/bi/BIHistory";
+
+/* ============================================================
+   14. SECURITY & IT
+   ============================================================ */
+
+import SecurityDashboard from "./pages/modules/security/SecurityDashboard";
+import SecurityOperations from "./pages/modules/security/Security";
+import SecurityAccess from "./pages/modules/security/SecurityAccess";
+import SecurityInfrastructure from "./pages/modules/security/SecurityInfrastructure";
+import SecurityEnvironments from "./pages/modules/security/SecurityEnvironments";
+import SecurityVPN from "./pages/modules/security/SecurityVPN";
+import SecurityLogs from "./pages/modules/security/SecurityLogs";
+import SecurityCode from "./pages/modules/security/SecurityCode";
+import SecurityConsole from "./pages/modules/security/SecurityConsole";
+import SecurityDocumentation from "./pages/modules/security/SecurityDocumentation";
+import SecuritySandbox from "./pages/modules/security/SecuritySandbox";
+import SecuritySupervision from "./pages/modules/security/SecuritySupervision";
+import SecurityDataFlow from "./pages/modules/security/SecurityDataFlow";
+
+import SecurityEdgeFunctions from "./pages/modules/security/SecurityEdgeFunctions";
+import SecurityEdgeFunctionDetail from "./pages/modules/security/SecurityEdgeFunctionDetail";
+import SecurityEdgeFunctionLogs from "./pages/modules/security/SecurityEdgeFunctionLogs";
+import SecurityAuthLogs from "./pages/modules/security/SecurityAuthLogs";
+import SecurityEdgeLogs from "./pages/modules/security/SecurityEdgeLogs";
+import SecurityReports from "./pages/modules/security/SecurityReports";
+
+import SecurityIncidentList from "./pages/modules/security/SecurityIncidentList";
+import SecurityIncidentDetail from "./pages/modules/security/SecurityIncidentDetail";
+import SecurityIncidentReport from "./pages/modules/security/SecurityIncidentReport";
+import SecurityIncidentCreate from "./pages/modules/security/SecurityIncidentCreate";
+import SecurityIncidentUpdate from "./pages/modules/security/SecurityIncidentUpdate";
+import SecurityIncidentDelete from "./pages/modules/security/SecurityIncidentDelete";
+import SecurityIncidentAssign from "./pages/modules/security/SecurityIncidentAssign";
+import SecurityIncidentClose from "./pages/modules/security/SecurityIncidentClose";
+import SecurityIncidentReopen from "./pages/modules/security/SecurityIncidentReopen";
+import SecurityIncidentEscalate from "./pages/modules/security/SecurityIncidentEscalate";
+import SecurityIncidentDeescalate from "./pages/modules/security/SecurityIncidentDeescalate";
+import SecurityIncidentComment from "./pages/modules/security/SecurityIncidentComment";
 
 /* ============================================================
    TRANSVERSAL — ÉTHIQUE
@@ -282,6 +297,10 @@ import GatewayMessageDetail from "./pages/modules/gateway/GatewayMessageDetail";
 import IndependentAuditDashboard from "./pages/modules/independent-audit/IndependentAuditDashboard";
 import IncidentDeclaration from "./pages/modules/independent-audit/IncidentDeclaration";
 import ResolutionTracking from "./pages/modules/independent-audit/ResolutionTracking";
+
+/* ============================================================
+   TRANSVERSAL — WORK
+   ============================================================ */
 
 const queryClient = new QueryClient();
 
@@ -331,26 +350,14 @@ const App = () => (
                     1. DIRECTION
                     ==================================================== */}
 
-                <Route
-                  path="/pole/direction"
-                  element={<ExecutiveDashboard />}
-                />
-                <Route
-                  path="/pole/direction/global"
-                  element={<DirectionGlobal />}
-                />
-                <Route
-                  path="/pole/direction/kpi"
-                  element={<StrategicKPIs />}
-                />
+                <Route path="/pole/direction" element={<ExecutiveDashboard />} />
+                <Route path="/pole/direction/global" element={<DirectionGlobal />} />
+                <Route path="/pole/direction/kpi" element={<StrategicKPIs />} />
                 <Route
                   path="/pole/direction/strategic-kpis"
                   element={<StrategicKPIs />}
                 />
-                <Route
-                  path="/pole/direction/alerts"
-                  element={<CriticalAlertsPage />}
-                />
+                <Route path="/pole/direction/alerts" element={<CriticalAlertsPage />} />
                 <Route
                   path="/pole/direction/critical-alerts"
                   element={<CriticalAlertsPage />}
@@ -363,10 +370,7 @@ const App = () => (
                   path="/pole/direction/decision-arbitrage"
                   element={<DecisionArbitrage />}
                 />
-                <Route
-                  path="/pole/direction/vision"
-                  element={<VisionRoadmap />}
-                />
+                <Route path="/pole/direction/vision" element={<VisionRoadmap />} />
                 <Route
                   path="/pole/direction/vision-roadmap"
                   element={<VisionRoadmap />}
@@ -379,40 +383,23 @@ const App = () => (
                   path="/pole/direction/group-governance"
                   element={<GroupGovernance />}
                 />
-                <Route
-                  path="/pole/direction/reports"
-                  element={<BoardReports />}
-                />
+                <Route path="/pole/direction/reports" element={<BoardReports />} />
                 <Route
                   path="/pole/direction/board-reports"
                   element={<BoardReports />}
                 />
                 <Route
                   path="/pole/direction/access"
-                  element={
-                    <Navigate
-                      to="/admin/roles-permissions"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/admin/roles-permissions" replace />}
                 />
 
                 {/* ====================================================
                     2. FINANCE
                     ==================================================== */}
 
-                <Route
-                  path="/pole/finance"
-                  element={<FinanceDashboard />}
-                />
-                <Route
-                  path="/pole/finance/cashflow"
-                  element={<CashflowRealtime />}
-                />
-                <Route
-                  path="/pole/finance/transactions"
-                  element={<Transactions />}
-                />
+                <Route path="/pole/finance" element={<FinanceDashboard />} />
+                <Route path="/pole/finance/cashflow" element={<CashflowRealtime />} />
+                <Route path="/pole/finance/transactions" element={<Transactions />} />
                 <Route
                   path="/pole/finance/supplier-payments"
                   element={<SupplierPayments />}
@@ -421,26 +408,11 @@ const App = () => (
                   path="/pole/finance/subscriptions"
                   element={<Subscriptions />}
                 />
-                <Route
-                  path="/pole/finance/salaries"
-                  element={<Salaries />}
-                />
-                <Route
-                  path="/pole/finance/cards"
-                  element={<CorporateCards />}
-                />
-                <Route
-                  path="/pole/finance/guarantee"
-                  element={<GuaranteeFund />}
-                />
-                <Route
-                  path="/pole/finance/billing"
-                  element={<SubSectionPage />}
-                />
-                <Route
-                  path="/pole/finance/payouts"
-                  element={<SubSectionPage />}
-                />
+                <Route path="/pole/finance/salaries" element={<Salaries />} />
+                <Route path="/pole/finance/cards" element={<CorporateCards />} />
+                <Route path="/pole/finance/guarantee" element={<GuaranteeFund />} />
+                <Route path="/pole/finance/billing" element={<SubSectionPage />} />
+                <Route path="/pole/finance/payouts" element={<SubSectionPage />} />
                 <Route
                   path="/pole/finance/reconciliation"
                   element={<Reconciliation />}
@@ -450,66 +422,24 @@ const App = () => (
                     3. OPÉRATIONS & LOGISTIQUE
                     ==================================================== */}
 
-                <Route
-                  path="/pole/ops"
-                  element={<OpsDashboard />}
-                />
-                <Route
-                  path="/pole/ops/shops"
-                  element={<ShopsSupervision />}
-                />
-                <Route
-                  path="/pole/ops/anomalies"
-                  element={<Anomalies />}
-                />
-                <Route
-                  path="/pole/ops/pipeline"
-                  element={<OrderPipeline />}
-                />
-                <Route
-                  path="/pole/ops/orders"
-                  element={<Orders />}
-                />
-                <Route
-                  path="/pole/ops/shipments"
-                  element={<Shipments />}
-                />
-                <Route
-                  path="/pole/ops/stocks"
-                  element={<DistributedStocks />}
-                />
-                <Route
-                  path="/pole/ops/catalog"
-                  element={<ProductCatalog />}
-                />
+                <Route path="/pole/ops" element={<OpsDashboard />} />
+                <Route path="/pole/ops/shops" element={<ShopsSupervision />} />
+                <Route path="/pole/ops/anomalies" element={<Anomalies />} />
+                <Route path="/pole/ops/pipeline" element={<OrderPipeline />} />
+                <Route path="/pole/ops/orders" element={<Orders />} />
+                <Route path="/pole/ops/shipments" element={<Shipments />} />
+                <Route path="/pole/ops/stocks" element={<DistributedStocks />} />
+                <Route path="/pole/ops/catalog" element={<ProductCatalog />} />
                 <Route
                   path="/pole/ops/product-lifecycle"
                   element={<ProductLifecycle />}
                 />
-                <Route
-                  path="/pole/ops/partners"
-                  element={<Partners />}
-                />
-                <Route
-                  path="/pole/ops/flows"
-                  element={<SyncFlows />}
-                />
-                <Route
-                  path="/pole/ops/incidents"
-                  element={<LogisticsIncidents />}
-                />
-                <Route
-                  path="/pole/ops/replenishment"
-                  element={<Replenishment />}
-                />
-                <Route
-                  path="/pole/ops/forecast"
-                  element={<DemandForecast />}
-                />
-                <Route
-                  path="/pole/ops/thresholds"
-                  element={<StockThresholds />}
-                />
+                <Route path="/pole/ops/partners" element={<Partners />} />
+                <Route path="/pole/ops/flows" element={<SyncFlows />} />
+                <Route path="/pole/ops/incidents" element={<LogisticsIncidents />} />
+                <Route path="/pole/ops/replenishment" element={<Replenishment />} />
+                <Route path="/pole/ops/forecast" element={<DemandForecast />} />
+                <Route path="/pole/ops/thresholds" element={<StockThresholds />} />
                 <Route
                   path="/pole/ops/suppliers-lead-times"
                   element={<SupplierLeadTimes />}
@@ -518,19 +448,13 @@ const App = () => (
                   path="/pole/ops/suppliers-lt"
                   element={<SupplierLeadTimes />}
                 />
-                <Route
-                  path="/pole/ops/audit-link"
-                  element={<AuditLink />}
-                />
+                <Route path="/pole/ops/audit-link" element={<AuditLink />} />
 
                 {/* ====================================================
                     4. FOURNISSEURS & PRODUITS
                     ==================================================== */}
 
-                <Route
-                  path="/pole/supplier"
-                  element={<SupplierDashboard />}
-                />
+                <Route path="/pole/supplier" element={<SupplierDashboard />} />
                 <Route
                   path="/pole/supplier/pending"
                   element={<PendingProducts />}
@@ -539,10 +463,7 @@ const App = () => (
                   path="/pole/supplier/validated"
                   element={<ValidatedProducts />}
                 />
-                <Route
-                  path="/pole/supplier/suppliers"
-                  element={<SupplierFiles />}
-                />
+                <Route path="/pole/supplier/suppliers" element={<SupplierFiles />} />
                 <Route
                   path="/pole/supplier/certifications"
                   element={<Certifications />}
@@ -551,10 +472,7 @@ const App = () => (
                   path="/pole/supplier/decisions"
                   element={<DecisionHistory />}
                 />
-                <Route
-                  path="/pole/supplier/alerts"
-                  element={<QualityAlerts />}
-                />
+                <Route path="/pole/supplier/alerts" element={<QualityAlerts />} />
                 <Route
                   path="/pole/supplier/portfolios"
                   element={<SupplierPortfolios />}
@@ -580,10 +498,7 @@ const App = () => (
                     5. MARKETPLACE & CUSTOMER
                     ==================================================== */}
 
-                <Route
-                  path="/pole/marketplace"
-                  element={<PoleDashboard />}
-                />
+                <Route path="/pole/marketplace" element={<MarketplaceDashboard />} />
                 <Route
                   path="/pole/marketplace/products"
                   element={<SubSectionPage />}
@@ -621,10 +536,7 @@ const App = () => (
                     6. SUPPORT & CUSTOMER SUCCESS
                     ==================================================== */}
 
-                <Route
-                  path="/pole/support"
-                  element={<PoleDashboard />}
-                />
+                <Route path="/pole/support" element={<PoleDashboard />} />
                 <Route
                   path="/pole/support/tickets"
                   element={<SupportTickets />}
@@ -646,30 +558,15 @@ const App = () => (
                     7. MARKETING & COMMUNICATION
                     ==================================================== */}
 
-                <Route
-                  path="/pole/marketing"
-                  element={<MarketingDashboard />}
-                />
+                <Route path="/pole/marketing" element={<MarketingDashboard />} />
                 <Route
                   path="/pole/marketing/campaigns"
                   element={<Campaigns />}
                 />
-                <Route
-                  path="/pole/marketing/content"
-                  element={<Content />}
-                />
-                <Route
-                  path="/pole/marketing/podcasts"
-                  element={<Podcasts />}
-                />
-                <Route
-                  path="/pole/marketing/analytics"
-                  element={<Analytics />}
-                />
-                <Route
-                  path="/pole/marketing/crm"
-                  element={<SubSectionPage />}
-                />
+                <Route path="/pole/marketing/content" element={<Content />} />
+                <Route path="/pole/marketing/podcasts" element={<Podcasts />} />
+                <Route path="/pole/marketing/analytics" element={<Analytics />} />
+                <Route path="/pole/marketing/crm" element={<SubSectionPage />} />
                 <Route
                   path="/pole/marketing/journeys"
                   element={<SubSectionPage />}
@@ -683,54 +580,19 @@ const App = () => (
                     8. RH
                     ==================================================== */}
 
-                <Route
-                  path="/pole/rh"
-                  element={<RHDashboard />}
-                />
-                <Route
-                  path="/pole/rh/employees"
-                  element={<Employees />}
-                />
-                <Route
-                  path="/pole/rh/files"
-                  element={<EmployeeFiles />}
-                />
-                <Route
-                  path="/pole/rh/alerts"
-                  element={<HRAlerts />}
-                />
-                <Route
-                  path="/pole/rh/onboarding"
-                  element={<RHOnboarding />}
-                />
-                <Route
-                  path="/pole/rh/attendance"
-                  element={<Attendance />}
-                />
-                <Route
-                  path="/pole/rh/leave"
-                  element={<Leave />}
-                />
-                <Route
-                  path="/pole/rh/training"
-                  element={<Training />}
-                />
-                <Route
-                  path="/pole/rh/trips"
-                  element={<BusinessTrips />}
-                />
-                <Route
-                  path="/pole/rh/publications"
-                  element={<Publications />}
-                />
+                <Route path="/pole/rh" element={<RHDashboard />} />
+                <Route path="/pole/rh/employees" element={<Employees />} />
+                <Route path="/pole/rh/files" element={<EmployeeFiles />} />
+                <Route path="/pole/rh/alerts" element={<HRAlerts />} />
+                <Route path="/pole/rh/onboarding" element={<RHOnboarding />} />
+                <Route path="/pole/rh/attendance" element={<Attendance />} />
+                <Route path="/pole/rh/leave" element={<Leave />} />
+                <Route path="/pole/rh/training" element={<Training />} />
+                <Route path="/pole/rh/trips" element={<BusinessTrips />} />
+                <Route path="/pole/rh/publications" element={<Publications />} />
                 <Route
                   path="/pole/rh/ethics"
-                  element={
-                    <Navigate
-                      to="/modules/ethics"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/modules/ethics" replace />}
                 />
                 <Route
                   path="/pole/rh/recruitment"
@@ -741,38 +603,17 @@ const App = () => (
                     9. QUALITÉ & AUDIT
                     ==================================================== */}
 
-                <Route
-                  path="/pole/audit"
-                  element={<AuditDashboard />}
-                />
-                <Route
-                  path="/pole/audit/field"
-                  element={<FieldAudits />}
-                />
-                <Route
-                  path="/pole/audit/missions"
-                  element={<AuditMissions />}
-                />
-                <Route
-                  path="/pole/audit/supplier"
-                  element={<SupplierAudits />}
-                />
-                <Route
-                  path="/pole/audit/ops"
-                  element={<OpsAudits />}
-                />
-                <Route
-                  path="/pole/audit/reports"
-                  element={<AuditReports />}
-                />
+                <Route path="/pole/audit" element={<AuditDashboard />} />
+                <Route path="/pole/audit/field" element={<FieldAudits />} />
+                <Route path="/pole/audit/missions" element={<AuditMissions />} />
+                <Route path="/pole/audit/supplier" element={<SupplierAudits />} />
+                <Route path="/pole/audit/ops" element={<OpsAudits />} />
+                <Route path="/pole/audit/reports" element={<AuditReports />} />
                 <Route
                   path="/pole/audit/nonconformities"
                   element={<NonConformities />}
                 />
-                <Route
-                  path="/pole/audit/sanctions"
-                  element={<Sanctions />}
-                />
+                <Route path="/pole/audit/sanctions" element={<Sanctions />} />
                 <Route
                   path="/pole/audit/corrective-actions"
                   element={<SubSectionPage />}
@@ -782,22 +623,13 @@ const App = () => (
                     10. CONFORMITÉ & JURIDIQUE
                     ==================================================== */}
 
-                <Route
-                  path="/pole/compliance"
-                  element={<ComplianceDashboard />}
-                />
+                <Route path="/pole/compliance" element={<ComplianceDashboard />} />
                 <Route
                   path="/pole/compliance/contracts"
                   element={<Contracts />}
                 />
-                <Route
-                  path="/pole/compliance/policies"
-                  element={<Policies />}
-                />
-                <Route
-                  path="/pole/compliance/disputes"
-                  element={<Disputes />}
-                />
+                <Route path="/pole/compliance/policies" element={<Policies />} />
+                <Route path="/pole/compliance/disputes" element={<Disputes />} />
                 <Route
                   path="/pole/compliance/risks"
                   element={<ComplianceRiskRegister />}
@@ -807,10 +639,7 @@ const App = () => (
                     11. RSE & IMPACT
                     ==================================================== */}
 
-                <Route
-                  path="/pole/rse"
-                  element={<RSEDashboard />}
-                />
+                <Route path="/pole/rse" element={<RSEDashboard />} />
                 <Route
                   path="/pole/rse/packaging"
                   element={<ValidatedPackaging />}
@@ -827,56 +656,76 @@ const App = () => (
                   path="/pole/rse/points"
                   element={<CustomerPoints />}
                 />
-                <Route
-                  path="/pole/rse/co2"
-                  element={<CO2Impact />}
-                />
-                <Route
-                  path="/pole/rse/esg"
-                  element={<ESGReports />}
-                />
+                <Route path="/pole/rse/co2" element={<CO2Impact />} />
+                <Route path="/pole/rse/esg" element={<ESGReports />} />
 
                 {/* ====================================================
                     12. PRODUIT & ENGINEERING
                     ==================================================== */}
 
                 <Route
-  path="/pole/product/performance"
-  element={<ProductPerformance />}
-/>
-
-<Route
-  path="/pole/product/supplier-performance"
-  element={<SupplierPerformance />}
-/>
-
-<Route
-  path="/pole/product/frictions"
-  element={<ProductFrictions />}
-/>
-
-<Route
-  path="/pole/product/reports"
-  element={<ProductReports />}
-/>
-
-<Route
-  path="/pole/product/tickets/:id"
-  element={<ProductTicketDetail />}
-/>
+                  path="/pole/product"
+                  element={<ProductEngineeringDashboard />}
+                />
+                <Route
+                  path="/pole/product/product"
+                  element={<ProductEngineeringDashboard />}
+                />
+                <Route
+                  path="/pole/product/roadmap"
+                  element={<SubSectionPage />}
+                />
+                <Route
+                  path="/pole/product/backlog"
+                  element={<SubSectionPage />}
+                />
+                <Route
+                  path="/pole/product/engineering"
+                  element={<ProductEngineeringDashboard />}
+                />
+                <Route
+                  path="/pole/product/studio"
+                  element={<ProductStudio />}
+                />
+                <Route
+                  path="/pole/product/integrations"
+                  element={<ProductIntegrations />}
+                />
+                <Route
+                  path="/pole/product/documentation"
+                  element={<ProductDocumentation />}
+                />
+                <Route
+                  path="/pole/product/innovation"
+                  element={<ProductInnovation />}
+                />
+                <Route
+                  path="/pole/product/performance"
+                  element={<ProductPerformance />}
+                />
+                <Route
+                  path="/pole/product/supplier-performance"
+                  element={<SupplierPerformance />}
+                />
+                <Route
+                  path="/pole/product/frictions"
+                  element={<ProductFrictions />}
+                />
+                <Route
+                  path="/pole/product/reports"
+                  element={<ProductReports />}
+                />
+                <Route
+                  path="/pole/product/tickets/:id"
+                  element={<ProductTicketDetail />}
+                />
 
                 {/* ====================================================
                     13. DATA & BI
                     ==================================================== */}
 
-                <Route
-                  path="/pole/data"
-                  element={<DataDashboard />}
-                />
-                <Route
-                  path="/pole/data/kpi"
-                  element={<KPICatalog />}
-                />
+                <Route path="/pole/data" element={<DataDashboard />} />
+                <Route path="/pole/data/kpi" element={<KPICatalog />} />
                 <Route
                   path="/pole/data/requests"
                   element={<PublicationRequestsPage />}
@@ -885,18 +734,10 @@ const App = () => (
                   path="/pole/data/backlog"
                   element={<TechBacklogPage />}
                 />
-                <Route
-                  path="/pole/data/versions"
-                  element={<KPIVersions />}
-                />
-                <Route
-                  path="/pole/data/reports"
-                  element={<DataReports />}
-                />
-                <Route
-                  path="/pole/data/bi"
-                  element={<BIOverview />}
-                />
+                <Route path="/pole/data/versions" element={<KPIVersions />} />
+                <Route path="/pole/data/reports" element={<DataReports />} />
+
+                <Route path="/pole/data/bi" element={<BIOverview />} />
                 <Route
                   path="/pole/data/bi/dashboards"
                   element={<BIDashboardsList />}
@@ -928,15 +769,15 @@ const App = () => (
 
                 <Route
                   path="/pole/security"
+                  element={<SecurityDashboard />}
+                />
+                <Route
+                  path="/pole/security/security"
                   element={<SecurityOperations />}
                 />
                 <Route
                   path="/pole/security/access"
                   element={<SecurityAccess />}
-                />
-                <Route
-                  path="/pole/security/security"
-                  element={<SecurityOperations />}
                 />
                 <Route
                   path="/pole/security/infrastructure"
@@ -946,13 +787,104 @@ const App = () => (
                   path="/pole/security/environments"
                   element={<SecurityEnvironments />}
                 />
+                <Route path="/pole/security/vpn" element={<SecurityVPN />} />
+                <Route path="/pole/security/logs" element={<SecurityLogs />} />
+                <Route path="/pole/security/code" element={<SecurityCode />} />
                 <Route
-                  path="/pole/security/vpn"
-                  element={<SecurityVPN />}
+                  path="/pole/security/console"
+                  element={<SecurityConsole />}
                 />
                 <Route
-                  path="/pole/security/logs"
-                  element={<SecurityLogs />}
+                  path="/pole/security/documentation"
+                  element={<SecurityDocumentation />}
+                />
+                <Route
+                  path="/pole/security/sandbox"
+                  element={<SecuritySandbox />}
+                />
+                <Route
+                  path="/pole/security/supervision"
+                  element={<SecuritySupervision />}
+                />
+                <Route
+                  path="/pole/security/dataflow"
+                  element={<SecurityDataFlow />}
+                />
+
+                {/* Security / Supabase supervision */}
+                <Route
+                  path="/pole/security/edge-functions"
+                  element={<SecurityEdgeFunctions />}
+                />
+                <Route
+                  path="/pole/security/edge-functions/:id"
+                  element={<SecurityEdgeFunctionDetail />}
+                />
+                <Route
+                  path="/pole/security/edge-functions/:id/logs"
+                  element={<SecurityEdgeFunctionLogs />}
+                />
+                <Route
+                  path="/pole/security/auth-logs"
+                  element={<SecurityAuthLogs />}
+                />
+                <Route
+                  path="/pole/security/edge-logs"
+                  element={<SecurityEdgeLogs />}
+                />
+                <Route
+                  path="/pole/security/reports"
+                  element={<SecurityReports />}
+                />
+
+                {/* Security incidents */}
+                <Route
+                  path="/pole/security/incidents"
+                  element={<SecurityIncidentList />}
+                />
+                <Route
+                  path="/pole/security/incidents/new"
+                  element={<SecurityIncidentCreate />}
+                />
+                <Route
+                  path="/pole/security/incidents/:id"
+                  element={<SecurityIncidentDetail />}
+                />
+                <Route
+                  path="/pole/security/incidents/:id/report"
+                  element={<SecurityIncidentReport />}
+                />
+                <Route
+                  path="/pole/security/incidents/:id/update"
+                  element={<SecurityIncidentUpdate />}
+                />
+                <Route
+                  path="/pole/security/incidents/:id/delete"
+                  element={<SecurityIncidentDelete />}
+                />
+                <Route
+                  path="/pole/security/incidents/:id/assign"
+                  element={<SecurityIncidentAssign />}
+                />
+                <Route
+                  path="/pole/security/incidents/:id/close"
+                  element={<SecurityIncidentClose />}
+                />
+                <Route
+                  path="/pole/security/incidents/:id/reopen"
+                  element={<SecurityIncidentReopen />}
+                />
+                <Route
+                  path="/pole/security/incidents/:id/escalate"
+                  element={<SecurityIncidentEscalate />}
+                />
+                <Route
+                  path="/pole/security/incidents/:id/deescalate"
+                  element={<SecurityIncidentDeescalate />}
+                />
+                <Route
+                  path="/pole/security/incidents/:id/comment"
+                  element={<SecurityIncidentComment />}
                 />
 
                 {/* ====================================================
@@ -961,39 +893,19 @@ const App = () => (
 
                 <Route
                   path="/pole/tech"
-                  element={
-                    <Navigate
-                      to="/pole/product"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/product" replace />}
                 />
                 <Route
                   path="/pole/tech/access"
-                  element={
-                    <Navigate
-                      to="/pole/security/access"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/security/access" replace />}
                 />
                 <Route
                   path="/pole/tech/vpn"
-                  element={
-                    <Navigate
-                      to="/pole/security/vpn"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/security/vpn" replace />}
                 />
                 <Route
                   path="/pole/tech/logs"
-                  element={
-                    <Navigate
-                      to="/pole/security/logs"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/security/logs" replace />}
                 />
                 <Route
                   path="/pole/tech/deployments"
@@ -1015,12 +927,7 @@ const App = () => (
                 />
                 <Route
                   path="/pole/tech/security"
-                  element={
-                    <Navigate
-                      to="/pole/security/security"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/tech/infrastructure"
@@ -1033,48 +940,28 @@ const App = () => (
                 />
                 <Route
                   path="/pole/tech/catalog"
-                  element={
-                    <Navigate
-                      to="/pole/product"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/product" replace />}
                 />
                 <Route
                   path="/pole/tech/received-products"
-                  element={
-                    <Navigate
-                      to="/pole/product"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/product" replace />}
                 />
                 <Route
                   path="/pole/tech/dataflow"
                   element={
                     <Navigate
-                      to="/pole/data"
+                      to="/pole/security/dataflow"
                       replace
                     />
                   }
                 />
                 <Route
                   path="/pole/tech/sandbox"
-                  element={
-                    <Navigate
-                      to="/pole/product/studio"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/security/sandbox" replace />}
                 />
                 <Route
                   path="/pole/tech/test-accounts"
-                  element={
-                    <Navigate
-                      to="/pole/security/access"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/security/access" replace />}
                 />
                 <Route
                   path="/pole/tech/integrations"
@@ -1087,18 +974,13 @@ const App = () => (
                 />
                 <Route
                   path="/pole/tech/code"
-                  element={
-                    <Navigate
-                      to="/pole/product/engineering"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/security/code" replace />}
                 />
                 <Route
                   path="/pole/tech/supervision"
                   element={
                     <Navigate
-                      to="/pole/security"
+                      to="/pole/security/supervision"
                       replace
                     />
                   }
@@ -1107,37 +989,22 @@ const App = () => (
                   path="/pole/tech/documentation"
                   element={
                     <Navigate
-                      to="/pole/product/documentation"
+                      to="/pole/security/documentation"
                       replace
                     />
                   }
                 />
                 <Route
                   path="/pole/tech/console"
-                  element={
-                    <Navigate
-                      to="/pole/security"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/security/console" replace />}
                 />
                 <Route
                   path="/pole/tech/studio"
-                  element={
-                    <Navigate
-                      to="/pole/product/studio"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/product/studio" replace />}
                 />
                 <Route
                   path="/tech-studio"
-                  element={
-                    <Navigate
-                      to="/pole/product/studio"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/product/studio" replace />}
                 />
 
                 {/* ====================================================
@@ -1146,21 +1013,11 @@ const App = () => (
 
                 <Route
                   path="/pole/lifecycle"
-                  element={
-                    <Navigate
-                      to="/pole/support"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/support" replace />}
                 />
                 <Route
                   path="/pole/lifecycle/onboarding"
-                  element={
-                    <Navigate
-                      to="/pole/rh/onboarding"
-                      replace
-                    />
-                  }
+                  element={<Navigate to="/pole/rh/onboarding" replace />}
                 />
                 <Route
                   path="/pole/lifecycle/monitoring"
@@ -1279,7 +1136,7 @@ const App = () => (
                   path="/pole/rd/frictions"
                   element={
                     <Navigate
-                      to="/pole/product/innovation"
+                      to="/pole/product/frictions"
                       replace
                     />
                   }
@@ -1295,12 +1152,7 @@ const App = () => (
                 />
                 <Route
                   path="/pole/rd/tickets/:id"
-                  element={
-                    <Navigate
-                      to="/pole/product/tickets/:id"
-                      replace
-                    />
-                  }
+                  element={<ProductTicketDetail />}
                 />
 
                 {/* ====================================================
@@ -1353,12 +1205,12 @@ const App = () => (
                   element={<EthicsDashboard />}
                 />
                 <Route
-                  path="/modules/ethics/report"
-                  element={<EthicsReport />}
-                />
-                <Route
                   path="/modules/ethics/dashboard"
                   element={<EthicsDashboard />}
+                />
+                <Route
+                  path="/modules/ethics/report"
+                  element={<EthicsReport />}
                 />
                 <Route
                   path="/modules/ethics/received"
@@ -1402,18 +1254,9 @@ const App = () => (
                     TRANSVERSAL — WORK
                     ==================================================== */}
 
-                <Route
-                  path="/work/tasks"
-                  element={<WorkTasks />}
-                />
-                <Route
-                  path="/work/projects"
-                  element={<WorkProjects />}
-                />
-                <Route
-                  path="/work/processes"
-                  element={<WorkProcesses />}
-                />
+                <Route path="/work/tasks" element={<WorkTasks />} />
+                <Route path="/work/projects" element={<WorkProjects />} />
+                <Route path="/work/processes" element={<WorkProcesses />} />
                 <Route
                   path="/work/validations"
                   element={<WorkValidations />}
@@ -1427,31 +1270,18 @@ const App = () => (
                   element={<WorkActivities />}
                 />
 
-                <Route
-                  path="/notifications"
-                  element={<SubSectionPage />}
-                />
-
                 {/* ====================================================
                     CORE TRANSVERSAL
                     ==================================================== */}
 
                 <Route
-                  path="/feed"
-                  element={<InternalFeed />}
+                  path="/notifications"
+                  element={<SubSectionPage />}
                 />
-                <Route
-                  path="/documents"
-                  element={<Documents />}
-                />
-                <Route
-                  path="/settings"
-                  element={<Settings />}
-                />
-                <Route
-                  path="/profile"
-                  element={<Profile />}
-                />
+                <Route path="/feed" element={<InternalFeed />} />
+                <Route path="/documents" element={<Documents />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/profile" element={<Profile />} />
 
                 {/* ====================================================
                     ADMINISTRATION
@@ -1466,12 +1296,10 @@ const App = () => (
                     />
                   }
                 />
-
                 <Route
                   path="/admin/roles-permissions"
                   element={<RolesPermissions />}
                 />
-
                 <Route
                   path="/permissions"
                   element={
@@ -1483,7 +1311,7 @@ const App = () => (
                 />
 
                 {/* ====================================================
-                    COMPATIBILITÉ — AUDIT GLOBAL
+                    AUDIT GLOBAL
                     ==================================================== */}
 
                 <Route
@@ -1509,7 +1337,7 @@ const App = () => (
                 />
 
                 {/* ====================================================
-                    COMPATIBILITÉ — WHAT'S NEW
+                    WHAT'S NEW
                     ==================================================== */}
 
                 <Route
@@ -1530,12 +1358,10 @@ const App = () => (
                   path="/pole/:poleId"
                   element={<PoleDashboard />}
                 />
-
                 <Route
                   path="/pole/:poleId/:subSection"
                   element={<SubSectionPage />}
                 />
-
                 <Route
                   path="/modules/:moduleId/:subSection"
                   element={<SubSectionPage />}
@@ -1546,10 +1372,7 @@ const App = () => (
                   404
                   ====================================================== */}
 
-              <Route
-                path="*"
-                element={<NotFound />}
-              />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </SandboxProvider>

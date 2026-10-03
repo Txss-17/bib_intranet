@@ -567,7 +567,7 @@ function RequestDetail({
   );
 }
 
-export default function Security-IT() {
+export default function ProductStudio() {
   const { profile } = useAuth();
 
   const profilePoles = profile?.poles ?? [];
