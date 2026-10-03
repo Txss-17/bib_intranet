@@ -1,97 +1,327 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+
 import { supabase } from '@/integrations/supabase/client';
 
-export const useAuthLogs = (limit = 100) => {
+/**
+ * Données transversales exploitées par :
+ *
+ * - Security & IT
+ *   - journaux d'authentification
+ *   - accès VPN
+ *   - alertes de sécurité
+ *   - annuaire des accès
+ *
+ * - Produit & Engineering
+ *   - journaux Edge Functions
+ *
+ * Les noms de tables Supabase restent historiques pour le moment.
+ * Le renommage éventuel du schéma sera effectué dans une migration dédiée.
+ */
+
+const db = supabase as unknown as {
+  from: (table: string) => any;
+};
+
+/* -------------------------------------------------------------------------- */
+/* Types                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export interface AuthLog {
+  id: string;
+  user_id: string | null;
+  action: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+export interface EdgeFunctionLog {
+  id: string;
+  function_name: string | null;
+  level: string | null;
+  message: string | null;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+export interface VpnAccess {
+  id: string;
+  user_id: string | null;
+  status: string | null;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+export interface SecurityAlert {
+  id: string;
+  severity: string | null;
+  status: string | null;
+  title: string | null;
+  description: string | null;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+export interface SecurityAccessUser {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  position: string | null;
+  poles: string[] | null;
+  avatar_url: string | null;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Security & IT — Auth logs                                                  */
+/* -------------------------------------------------------------------------- */
+
+export const useSecurityAuthLogs = (limit = 100) => {
   return useQuery({
-    queryKey: ['auth_logs', limit],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('auth_logs').select('*').order('created_at', { ascending: false }).limit(limit);
-      if (error) throw error;
-      return data || [];
+    queryKey: ['security_auth_logs', limit],
+
+    queryFn: async (): Promise<AuthLog[]> => {
+      const { data, error } = await db
+        .from('auth_logs')
+        .select('*')
+        .order('created_at', {
+          ascending: false,
+        })
+        .limit(limit);
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as AuthLog[];
     },
   });
 };
 
-export const useEdgeFunctionLogs = (limit = 100) => {
+/* -------------------------------------------------------------------------- */
+/* Produit & Engineering — Edge Function logs                                 */
+/* -------------------------------------------------------------------------- */
+
+export const useProductEdgeFunctionLogs = (limit = 100) => {
   return useQuery({
-    queryKey: ['edge_function_logs', limit],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('edge_function_logs').select('*').order('created_at', { ascending: false }).limit(limit);
-      if (error) throw error;
-      return data || [];
+    queryKey: ['product_edge_function_logs', limit],
+
+    queryFn: async (): Promise<EdgeFunctionLog[]> => {
+      const { data, error } = await db
+        .from('edge_function_logs')
+        .select('*')
+        .order('created_at', {
+          ascending: false,
+        })
+        .limit(limit);
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as EdgeFunctionLog[];
     },
   });
 };
 
-export const useVpnAccess = () => {
-  const qc = useQueryClient();
+/* -------------------------------------------------------------------------- */
+/* Security & IT — VPN                                                       */
+/* -------------------------------------------------------------------------- */
+
+export const useSecurityVpnAccess = () => {
+  const queryClient = useQueryClient();
+
   const list = useQuery({
-    queryKey: ['vpn_access'],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('vpn_access').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
+    queryKey: ['security_vpn_access'],
+
+    queryFn: async (): Promise<VpnAccess[]> => {
+      const { data, error } = await db
+        .from('vpn_access')
+        .select('*')
+        .order('created_at', {
+          ascending: false,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as VpnAccess[];
     },
   });
 
   const create = useMutation({
-    mutationFn: async (payload: any) => {
-      const { data, error } = await (supabase as any).from('vpn_access').insert(payload).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async (
+      payload: Record<string, unknown>,
+    ): Promise<VpnAccess> => {
+      const { data, error } = await db
+        .from('vpn_access')
+        .insert(payload)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data as VpnAccess;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['vpn_access'] }),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['security_vpn_access'],
+      });
+    },
   });
 
   const update = useMutation({
-    mutationFn: async ({ id, ...payload }: any) => {
-      const { data, error } = await (supabase as any).from('vpn_access').update(payload).eq('id', id).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async ({
+      id,
+      ...payload
+    }: {
+      id: string;
+      [key: string]: unknown;
+    }): Promise<VpnAccess> => {
+      const { data, error } = await db
+        .from('vpn_access')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data as VpnAccess;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['vpn_access'] }),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['security_vpn_access'],
+      });
+    },
   });
 
-  return { ...list, create, update };
+  return {
+    ...list,
+    create,
+    update,
+  };
 };
+
+/* -------------------------------------------------------------------------- */
+/* Security & IT — Security alerts                                            */
+/* -------------------------------------------------------------------------- */
 
 export const useSecurityAlerts = () => {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
+
   const list = useQuery({
     queryKey: ['security_alerts'],
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('security_alerts').select('*').order('created_at', { ascending: false }).limit(200);
-      if (error) throw error;
-      return data || [];
+
+    queryFn: async (): Promise<SecurityAlert[]> => {
+      const { data, error } = await db
+        .from('security_alerts')
+        .select('*')
+        .order('created_at', {
+          ascending: false,
+        })
+        .limit(200);
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as SecurityAlert[];
     },
   });
 
   const update = useMutation({
-    mutationFn: async ({ id, ...payload }: any) => {
-      const { data, error } = await (supabase as any).from('security_alerts').update(payload).eq('id', id).select().single();
-      if (error) throw error;
-      return data;
+    mutationFn: async ({
+      id,
+      ...payload
+    }: {
+      id: string;
+      [key: string]: unknown;
+    }): Promise<SecurityAlert> => {
+      const { data, error } = await db
+        .from('security_alerts')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data as SecurityAlert;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['security_alerts'] }),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['security_alerts'],
+      });
+    },
   });
 
-  return { ...list, update };
+  return {
+    ...list,
+    update,
+  };
 };
 
-export const useTechAccess = () => {
+/* -------------------------------------------------------------------------- */
+/* Security & IT — Annuaire des accès                                         */
+/* -------------------------------------------------------------------------- */
+
+export const useSecurityAccess = () => {
   return useQuery({
-    queryKey: ['tech_access_users'],
-    queryFn: async () => {
-      const { data, error } = await supabase
+    queryKey: ['security_access_users'],
+
+    queryFn: async (): Promise<SecurityAccessUser[]> => {
+      const { data, error } = await db
         .from('profiles')
-        .select('id, first_name, last_name, email, position, poles, avatar_url')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
+        .select(
+          'id, first_name, last_name, email, position, poles, avatar_url',
+        )
+        .order('created_at', {
+          ascending: false,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as SecurityAccessUser[];
     },
   });
 };
+
+/* -------------------------------------------------------------------------- */
+/* Compatibilité temporaire                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Ces alias permettent aux anciens écrans encore rattachés au module Tech
+ * de continuer à compiler pendant la migration vers les 14 pôles.
+ *
+ * Ils seront supprimés après migration des consommateurs.
+ */
+
+export const useAuthLogs = useSecurityAuthLogs;
+
+export const useEdgeFunctionLogs =
+  useProductEdgeFunctionLogs;
+
+export const useVpnAccess =
+  useSecurityVpnAccess;
+
+export const useTechAccess =
+  useSecurityAccess;

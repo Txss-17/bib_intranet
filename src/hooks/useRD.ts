@@ -1,232 +1,817 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+
 import { supabase } from '@/integrations/supabase/client';
 
-const sb = supabase as any;
+/**
+ * Produit & Engineering
+ *
+ * Ce hook remplace progressivement l'ancien périmètre R&D.
+ *
+ * IMPORTANT :
+ * Les tables Supabase conservent temporairement leurs noms historiques :
+ *
+ * - rd_reports
+ * - rd_recommendations
+ *
+ * Ces noms seront traités lors de la migration du schéma Supabase.
+ */
 
-export const useRDReports = () =>
+const db = supabase as unknown as {
+  from: (table: string) => any;
+};
+
+/* -------------------------------------------------------------------------- */
+/* Types                                                                      */
+/* -------------------------------------------------------------------------- */
+
+export type ProductRecommendationTargetPole =
+  | 'product'
+  | 'ops'
+  | 'supplier'
+  | 'rse';
+
+export interface ProductReport {
+  id: string;
+  title: string;
+  type: string | null;
+  status: string | null;
+  author_id: string | null;
+  author_name: string | null;
+  published_at: string | null;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+export interface ProductRecommendation {
+  id: string;
+  report_id: string | null;
+  detail: string;
+  priority: string;
+  status: string;
+  target_pole: ProductRecommendationTargetPole | null;
+  ticket_id: string | null;
+  ticket_type: string | null;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+export interface ProductTicket {
+  recommendation_id: string;
+  detail: string;
+  priority: string;
+  target_pole: string | null;
+  created_at: string;
+  ticket_id: string;
+  ticket_type: string | null;
+  ticket_title: string | null;
+  ticket_status: string;
+  ticket_severity: string | null;
+  assignee_id: string | null;
+  assignee_name: string | null;
+}
+
+export interface ProductProfile {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  full_name: string;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Rapports Produit & Engineering                                             */
+/* -------------------------------------------------------------------------- */
+
+export const useProductReports = () =>
   useQuery({
-    queryKey: ['rd_reports'],
-    queryFn: async () => {
-      const { data, error } = await sb.from('rd_reports').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
-  });
+    queryKey: ['product_reports'],
 
-export const useCreateRDReport = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload: any) => {
-      const { data: u } = await supabase.auth.getUser();
-      const { data: profile } = await sb.from('profiles').select('first_name,last_name').eq('id', u.user?.id).maybeSingle();
-      const author_name = profile ? `${profile.first_name} ${profile.last_name}` : null;
-      const { error } = await sb.from('rd_reports').insert({ ...payload, author_id: u.user?.id, author_name });
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['rd_reports'] }),
-  });
-};
+    queryFn: async (): Promise<ProductReport[]> => {
+      const { data, error } = await db
+        .from('rd_reports')
+        .select('*')
+        .order('created_at', {
+          ascending: false,
+        });
 
-export const useUpdateRDReportStatus = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const updates: any = { status };
-      if (status === 'published') updates.published_at = new Date().toISOString();
-      const { error } = await sb.from('rd_reports').update(updates).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['rd_reports'] }),
-  });
-};
-
-export const useRDRecommendations = (reportId?: string) =>
-  useQuery({
-    queryKey: ['rd_recommendations', reportId ?? 'all'],
-    queryFn: async () => {
-      let q = sb.from('rd_recommendations').select('*').order('created_at', { ascending: false });
-      if (reportId) q = q.eq('report_id', reportId);
-      const { data, error } = await q;
-      if (error) throw error;
-      return data || [];
-    },
-  });
-
-export const useCreateRDRecommendation = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (payload: any) => {
-      const { data: u } = await supabase.auth.getUser();
-      const { error } = await sb.from('rd_recommendations').insert({ ...payload, created_by: u.user?.id });
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['rd_recommendations'] }),
-  });
-};
-
-export const useUpdateRecommendationStatus = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const { error } = await sb.from('rd_recommendations').update({ status }).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['rd_recommendations'] }),
-  });
-};
-
-// Tickets created from R&D recommendations (joined with audit_incidents + assignee profile)
-export const useRDTickets = () =>
-  useQuery({
-    queryKey: ['rd_tickets'],
-    queryFn: async () => {
-      const { data: recos, error: rErr } = await sb
-        .from('rd_recommendations')
-        .select('id, detail, priority, status, target_pole, ticket_id, ticket_type, created_at')
-        .not('ticket_id', 'is', null)
-        .order('created_at', { ascending: false });
-      if (rErr) throw rErr;
-      const ids = (recos || []).map((r: any) => r.ticket_id).filter(Boolean);
-      if (ids.length === 0) return [];
-      const { data: incidents, error: iErr } = await sb
-        .from('audit_incidents')
-        .select('id, title, status, severity, pole_id, assigned_to, resolved_at, updated_at')
-        .in('id', ids);
-      if (iErr) throw iErr;
-      const assigneeIds = Array.from(new Set((incidents || []).map((i: any) => i.assigned_to).filter(Boolean)));
-      let profilesMap: Record<string, string> = {};
-      if (assigneeIds.length > 0) {
-        const { data: profiles } = await sb.from('profiles').select('id, first_name, last_name').in('id', assigneeIds);
-        (profiles || []).forEach((p: any) => { profilesMap[p.id] = `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim(); });
+      if (error) {
+        throw error;
       }
-      const incidentMap: Record<string, any> = {};
-      (incidents || []).forEach((i: any) => { incidentMap[i.id] = i; });
-      return (recos || []).map((r: any) => {
-        const inc = incidentMap[r.ticket_id];
-        return {
-          recommendation_id: r.id,
-          detail: r.detail,
-          priority: r.priority,
-          target_pole: r.target_pole,
-          created_at: r.created_at,
-          ticket_id: r.ticket_id,
-          ticket_type: r.ticket_type,
-          ticket_title: inc?.title,
-          ticket_status: inc?.status ?? 'unknown',
-          ticket_severity: inc?.severity,
-          assignee_id: inc?.assigned_to,
-          assignee_name: inc?.assigned_to ? (profilesMap[inc.assigned_to] || '—') : null,
-        };
+
+      return (data ?? []) as ProductReport[];
+    },
+  });
+
+export const useCreateProductReport = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      payload: Record<string, unknown>,
+    ): Promise<void> => {
+      const { data: auth } = await supabase.auth.getUser();
+
+      let authorName: string | null = null;
+
+      if (auth.user?.id) {
+        const { data: profile } = await db
+          .from('profiles')
+          .select('first_name, last_name')
+          .eq('id', auth.user.id)
+          .maybeSingle();
+
+        if (profile) {
+          authorName =
+            `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() ||
+            null;
+        }
+      }
+
+      const { error } = await db
+        .from('rd_reports')
+        .insert({
+          ...payload,
+          author_id: auth.user?.id ?? null,
+          author_name: authorName,
+        });
+
+      if (error) {
+        throw error;
+      }
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['product_reports'],
       });
     },
   });
+};
 
-// Transform a recommendation into a downstream ticket (audit_incidents as a generic actionable ticket).
-export const useConvertRecommendationToTicket = () => {
-  const qc = useQueryClient();
+export const useUpdateProductReportStatus = () => {
+  const queryClient = useQueryClient();
+
   return useMutation({
-    mutationFn: async ({ recommendation, targetPole }: { recommendation: any; targetPole: 'tech' | 'ops' | 'supplier' | 'rse' }) => {
-      const { data: u } = await supabase.auth.getUser();
-      const { data: incident, error: insErr } = await sb.from('audit_incidents').insert({
-        title: `[R&D] ${recommendation.detail.slice(0, 80)}`,
-        description: `Issu de la recommandation R&D #${recommendation.id}\n\n${recommendation.detail}`,
-        category: 'operational',
-        severity: recommendation.priority === 'critical' ? 'critical' : recommendation.priority === 'high' ? 'high' : 'medium',
-        pole_id: targetPole,
-        declared_by: u.user?.id,
-      }).select().single();
-      if (insErr) throw insErr;
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: string;
+    }): Promise<void> => {
+      const updates: Record<string, unknown> = {
+        status,
+      };
 
-      const { error: updErr } = await sb.from('rd_recommendations')
-        .update({ status: 'in_progress', target_pole: targetPole, ticket_type: 'audit_incident', ticket_id: incident.id })
-        .eq('id', recommendation.id);
-      if (updErr) throw updErr;
+      if (status === 'published') {
+        updates.published_at = new Date().toISOString();
+      }
+
+      const { error } = await db
+        .from('rd_reports')
+        .update(updates)
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['product_reports'],
+      });
+    },
+  });
+};
+
+/* -------------------------------------------------------------------------- */
+/* Recommandations Produit & Engineering                                      */
+/* -------------------------------------------------------------------------- */
+
+export const useProductRecommendations = (
+  reportId?: string,
+) =>
+  useQuery({
+    queryKey: [
+      'product_recommendations',
+      reportId ?? 'all',
+    ],
+
+    queryFn: async (): Promise<ProductRecommendation[]> => {
+      let query = db
+        .from('rd_recommendations')
+        .select('*')
+        .order('created_at', {
+          ascending: false,
+        });
+
+      if (reportId) {
+        query = query.eq('report_id', reportId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as ProductRecommendation[];
+    },
+  });
+
+export const useCreateProductRecommendation = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (
+      payload: Record<string, unknown>,
+    ): Promise<void> => {
+      const { data: auth } = await supabase.auth.getUser();
+
+      const { error } = await db
+        .from('rd_recommendations')
+        .insert({
+          ...payload,
+          created_by: auth.user?.id ?? null,
+        });
+
+      if (error) {
+        throw error;
+      }
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['product_recommendations'],
+      });
+    },
+  });
+};
+
+export const useUpdateProductRecommendationStatus = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      status,
+    }: {
+      id: string;
+      status: string;
+    }): Promise<void> => {
+      const { error } = await db
+        .from('rd_recommendations')
+        .update({
+          status,
+        })
+        .eq('id', id);
+
+      if (error) {
+        throw error;
+      }
+    },
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['product_recommendations'],
+      });
+    },
+  });
+};
+
+/* -------------------------------------------------------------------------- */
+/* Tickets issus des recommandations                                          */
+/* -------------------------------------------------------------------------- */
+
+export const useProductTickets = () =>
+  useQuery({
+    queryKey: ['product_tickets'],
+
+    queryFn: async (): Promise<ProductTicket[]> => {
+      const {
+        data: recommendations,
+        error: recommendationsError,
+      } = await db
+        .from('rd_recommendations')
+        .select(
+          `
+            id,
+            detail,
+            priority,
+            status,
+            target_pole,
+            ticket_id,
+            ticket_type,
+            created_at
+          `,
+        )
+        .not('ticket_id', 'is', null)
+        .order('created_at', {
+          ascending: false,
+        });
+
+      if (recommendationsError) {
+        throw recommendationsError;
+      }
+
+      const ticketIds = (recommendations ?? [])
+        .map(
+          (recommendation: {
+            ticket_id: string | null;
+          }) => recommendation.ticket_id,
+        )
+        .filter(Boolean);
+
+      if (ticketIds.length === 0) {
+        return [];
+      }
+
+      const {
+        data: incidents,
+        error: incidentsError,
+      } = await db
+        .from('audit_incidents')
+        .select(
+          `
+            id,
+            title,
+            status,
+            severity,
+            pole_id,
+            assigned_to,
+            resolved_at,
+            updated_at
+          `,
+        )
+        .in('id', ticketIds);
+
+      if (incidentsError) {
+        throw incidentsError;
+      }
+
+      const assigneeIds = Array.from(
+        new Set(
+          (incidents ?? [])
+            .map(
+              (incident: {
+                assigned_to: string | null;
+              }) => incident.assigned_to,
+            )
+            .filter(Boolean),
+        ),
+      );
+
+      const profilesMap: Record<string, string> = {};
+
+      if (assigneeIds.length > 0) {
+        const { data: profiles } = await db
+          .from('profiles')
+          .select(
+            'id, first_name, last_name',
+          )
+          .in('id', assigneeIds);
+
+        (profiles ?? []).forEach(
+          (profile: {
+            id: string;
+            first_name: string | null;
+            last_name: string | null;
+          }) => {
+            profilesMap[profile.id] =
+              `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim();
+          },
+        );
+      }
+
+      const incidentMap: Record<string, any> = {};
+
+      (incidents ?? []).forEach(
+        (incident: {
+          id: string;
+          [key: string]: unknown;
+        }) => {
+          incidentMap[incident.id] = incident;
+        },
+      );
+
+      return (recommendations ?? []).map(
+        (recommendation: {
+          id: string;
+          detail: string;
+          priority: string;
+          target_pole: string | null;
+          created_at: string;
+          ticket_id: string;
+          ticket_type: string | null;
+        }): ProductTicket => {
+          const incident =
+            incidentMap[recommendation.ticket_id];
+
+          return {
+            recommendation_id: recommendation.id,
+            detail: recommendation.detail,
+            priority: recommendation.priority,
+            target_pole: recommendation.target_pole,
+            created_at: recommendation.created_at,
+
+            ticket_id: recommendation.ticket_id,
+            ticket_type: recommendation.ticket_type,
+
+            ticket_title: incident?.title ?? null,
+            ticket_status:
+              incident?.status ?? 'unknown',
+            ticket_severity:
+              incident?.severity ?? null,
+
+            assignee_id:
+              incident?.assigned_to ?? null,
+
+            assignee_name: incident?.assigned_to
+              ? profilesMap[incident.assigned_to] || '—'
+              : null,
+          };
+        },
+      );
+    },
+  });
+
+/* -------------------------------------------------------------------------- */
+/* Conversion recommandation → ticket                                         */
+/* -------------------------------------------------------------------------- */
+
+export const useConvertProductRecommendationToTicket = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      recommendation,
+      targetPole,
+    }: {
+      recommendation: ProductRecommendation;
+      targetPole: ProductRecommendationTargetPole;
+    }) => {
+      const { data: auth } =
+        await supabase.auth.getUser();
+
+      const titlePrefix =
+        '[Produit & Engineering]';
+
+      const description =
+        `Issue de la recommandation Produit & Engineering #${recommendation.id}\n\n${recommendation.detail}`;
+
+      const { data: incident, error: incidentError } =
+        await db
+          .from('audit_incidents')
+          .insert({
+            title: `${titlePrefix} ${recommendation.detail.slice(
+              0,
+              80,
+            )}`,
+
+            description,
+
+            category: 'operational',
+
+            severity:
+              recommendation.priority === 'critical'
+                ? 'critical'
+                : recommendation.priority === 'high'
+                  ? 'high'
+                  : 'medium',
+
+            pole_id: targetPole,
+
+            declared_by: auth.user?.id ?? null,
+          })
+          .select()
+          .single();
+
+      if (incidentError) {
+        throw incidentError;
+      }
+
+      const { error: recommendationError } =
+        await db
+          .from('rd_recommendations')
+          .update({
+            status: 'in_progress',
+            target_pole: targetPole,
+            ticket_type: 'audit_incident',
+            ticket_id: incident.id,
+          })
+          .eq('id', recommendation.id);
+
+      if (recommendationError) {
+        throw recommendationError;
+      }
+
       return incident;
     },
+
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['rd_recommendations'] });
-      qc.invalidateQueries({ queryKey: ['audit_incidents'] });
-      qc.invalidateQueries({ queryKey: ['rd_tickets'] });
-    },
-  });
-};
+      queryClient.invalidateQueries({
+        queryKey: ['product_recommendations'],
+      });
 
+      queryClient.invalidateQueries({
+        queryKey: ['product_tickets'],
+      });
 
-// Fetch a single R&D ticket detail: incident + originating recommendation + history (audit_logs)
-export const useRDTicket = (ticketId?: string) =>
-  useQuery({
-    queryKey: ['rd_ticket', ticketId],
-    enabled: !!ticketId,
-    queryFn: async () => {
-      const { data: incident, error: iErr } = await sb
-        .from('audit_incidents').select('*').eq('id', ticketId).maybeSingle();
-      if (iErr) throw iErr;
-      if (!incident) return null;
-
-      const { data: reco } = await sb
-        .from('rd_recommendations').select('*').eq('ticket_id', ticketId).maybeSingle();
-
-      let report = null;
-      if (reco?.report_id) {
-        const { data: r } = await sb.from('rd_reports').select('id,title,type').eq('id', reco.report_id).maybeSingle();
-        report = r;
-      }
-
-      let assignee: any = null;
-      if (incident.assigned_to) {
-        const { data: p } = await sb.from('profiles').select('id,first_name,last_name,email').eq('id', incident.assigned_to).maybeSingle();
-        assignee = p;
-      }
-
-      const { data: history } = await sb
-        .from('audit_logs').select('*')
-        .eq('resource', 'audit_incident').eq('resource_id', ticketId)
-        .order('created_at', { ascending: false });
-
-      return { incident, recommendation: reco, report, assignee, history: history || [] };
-    },
-  });
-
-// List of profiles for assignee selection
-export const useProfiles = () =>
-  useQuery({
-    queryKey: ['profiles_min'],
-    queryFn: async () => {
-      const { data, error } = await sb.from('profiles').select('id,first_name,last_name,email').order('first_name');
-      if (error) throw error;
-      return (data || []).map((p: any) => ({ ...p, full_name: `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim() || p.email }));
-    },
-  });
-
-// Update an R&D-originated ticket (audit_incident) + write history entry
-export const useUpdateRDTicket = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ ticketId, updates, changeNote }: { ticketId: string; updates: Record<string, any>; changeNote: string }) => {
-      const { data: u } = await supabase.auth.getUser();
-      const cleaned: any = { ...updates };
-      if (updates.status === 'resolved' && !updates.resolved_at) cleaned.resolved_at = new Date().toISOString();
-      const { error } = await sb.from('audit_incidents').update(cleaned).eq('id', ticketId);
-      if (error) throw error;
-
-      let user_name: string | null = null;
-      if (u.user?.id) {
-        const { data: prof } = await sb.from('profiles').select('first_name,last_name').eq('id', u.user.id).maybeSingle();
-        if (prof) user_name = `${prof.first_name ?? ''} ${prof.last_name ?? ''}`.trim();
-      }
-      await sb.from('audit_logs').insert({
-        resource: 'audit_incident',
-        resource_id: ticketId,
-        action: 'rd_ticket_update',
-        user_id: u.user?.id,
-        user_name,
-        details: { changes: updates, note: changeNote },
+      queryClient.invalidateQueries({
+        queryKey: ['audit_incidents'],
       });
     },
-    onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: ['rd_ticket', vars.ticketId] });
-      qc.invalidateQueries({ queryKey: ['rd_tickets'] });
-      qc.invalidateQueries({ queryKey: ['audit_incidents'] });
+  });
+};
+
+/* -------------------------------------------------------------------------- */
+/* Détail d'un ticket Produit & Engineering                                   */
+/* -------------------------------------------------------------------------- */
+
+export const useProductTicket = (
+  ticketId?: string,
+) =>
+  useQuery({
+    queryKey: ['product_ticket', ticketId],
+
+    enabled: Boolean(ticketId),
+
+    queryFn: async () => {
+      const {
+        data: incident,
+        error: incidentError,
+      } = await db
+        .from('audit_incidents')
+        .select('*')
+        .eq('id', ticketId)
+        .maybeSingle();
+
+      if (incidentError) {
+        throw incidentError;
+      }
+
+      if (!incident) {
+        return null;
+      }
+
+      const { data: recommendation } =
+        await db
+          .from('rd_recommendations')
+          .select('*')
+          .eq('ticket_id', ticketId)
+          .maybeSingle();
+
+      let report = null;
+
+      if (recommendation?.report_id) {
+        const { data } =
+          await db
+            .from('rd_reports')
+            .select(
+              'id, title, type',
+            )
+            .eq(
+              'id',
+              recommendation.report_id,
+            )
+            .maybeSingle();
+
+        report = data;
+      }
+
+      let assignee = null;
+
+      if (incident.assigned_to) {
+        const { data } =
+          await db
+            .from('profiles')
+            .select(
+              'id, first_name, last_name, email',
+            )
+            .eq(
+              'id',
+              incident.assigned_to,
+            )
+            .maybeSingle();
+
+        assignee = data;
+      }
+
+      const { data: history } =
+        await db
+          .from('audit_logs')
+          .select('*')
+          .eq(
+            'resource',
+            'audit_incident',
+          )
+          .eq(
+            'resource_id',
+            ticketId,
+          )
+          .order('created_at', {
+            ascending: false,
+          });
+
+      return {
+        incident,
+        recommendation,
+        report,
+        assignee,
+        history: history ?? [],
+      };
+    },
+  });
+
+/* -------------------------------------------------------------------------- */
+/* Profils — sélection des responsables                                       */
+/* -------------------------------------------------------------------------- */
+
+export const useProductProfiles = () =>
+  useQuery({
+    queryKey: ['product_profiles'],
+
+    queryFn: async (): Promise<ProductProfile[]> => {
+      const { data, error } = await db
+        .from('profiles')
+        .select(
+          'id, first_name, last_name, email',
+        )
+        .order('first_name');
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []).map(
+        (profile: {
+          id: string;
+          first_name: string | null;
+          last_name: string | null;
+          email: string | null;
+        }) => ({
+          ...profile,
+
+          full_name:
+            `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() ||
+            profile.email ||
+            'Utilisateur',
+        }),
+      );
+    },
+  });
+
+/* -------------------------------------------------------------------------- */
+/* Mise à jour d'un ticket                                                    */
+/* -------------------------------------------------------------------------- */
+
+export const useUpdateProductTicket = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      ticketId,
+      updates,
+      changeNote,
+    }: {
+      ticketId: string;
+      updates: Record<string, unknown>;
+      changeNote: string;
+    }) => {
+      const { data: auth } =
+        await supabase.auth.getUser();
+
+      const cleaned = {
+        ...updates,
+      };
+
+      if (
+        updates.status === 'resolved' &&
+        !updates.resolved_at
+      ) {
+        cleaned.resolved_at =
+          new Date().toISOString();
+      }
+
+      const { error } = await db
+        .from('audit_incidents')
+        .update(cleaned)
+        .eq('id', ticketId);
+
+      if (error) {
+        throw error;
+      }
+
+      let userName: string | null = null;
+
+      if (auth.user?.id) {
+        const { data: profile } =
+          await db
+            .from('profiles')
+            .select(
+              'first_name, last_name',
+            )
+            .eq(
+              'id',
+              auth.user.id,
+            )
+            .maybeSingle();
+
+        if (profile) {
+          userName =
+            `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim() ||
+            null;
+        }
+      }
+
+      const { error: historyError } =
+        await db
+          .from('audit_logs')
+          .insert({
+            resource: 'audit_incident',
+            resource_id: ticketId,
+
+            action:
+              'product_ticket_update',
+
+            user_id:
+              auth.user?.id ?? null,
+
+            user_name: userName,
+
+            details: {
+              changes: updates,
+              note: changeNote,
+            },
+          });
+
+      if (historyError) {
+        throw historyError;
+      }
+    },
+
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: [
+          'product_ticket',
+          variables.ticketId,
+        ],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ['product_tickets'],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ['audit_incidents'],
+      });
     },
   });
 };
+
+/* -------------------------------------------------------------------------- */
+/* Compatibilité temporaire                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Alias historiques.
+ *
+ * Ils seront supprimés lorsque les anciens écrans R&D auront été migrés.
+ */
+
+export const useRDReports = useProductReports;
+
+export const useCreateRDReport =
+  useCreateProductReport;
+
+export const useUpdateRDReportStatus =
+  useUpdateProductReportStatus;
+
+export const useRDRecommendations =
+  useProductRecommendations;
+
+export const useCreateRDRecommendation =
+  useCreateProductRecommendation;
+
+export const useUpdateRecommendationStatus =
+  useUpdateProductRecommendationStatus;
+
+export const useRDTickets =
+  useProductTickets;
+
+export const useConvertRecommendationToTicket =
+  useConvertProductRecommendationToTicket;
+
+export const useRDTicket =
+  useProductTicket;
+
+export const useProfiles =
+  useProductProfiles;
+
+export const useUpdateRDTicket =
+  useUpdateProductTicket;
