@@ -197,9 +197,10 @@ import ESGReports from "./pages/modules/rse/ESGReports";
    ============================================================ */
 
 import ProductEngineeringDashboard from "./pages/modules/product/ProductEngineeringDashboard";
-import ProductStudio from './pages/modules/product/ProductStudio';
-import ProductIntegrations from './pages/modules/product/ProductIntegrations';
-import ProductDocumentation from './pages/modules/product/ProductDocumentation';
+import ProductStudio from "./pages/modules/product/ProductStudio";
+import ProductIntegrations from "./pages/modules/product/ProductIntegrations";
+import ProductDocumentation from "./pages/modules/product/ProductDocumentation";
+import ProductInnovation from "./pages/modules/product/ProductInnovation";
 
 /* ============================================================
    SECURITY & IT
