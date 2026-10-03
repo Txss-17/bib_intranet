@@ -226,12 +226,16 @@ import {
    implémentations internes pendant la migration fonctionnelle.
    ============================================================ */
 
-import SecurityAccess from "./pages/modules/tech/TechAccess";
-import SecurityVPN from "./pages/modules/tech/TechVPN";
-import SecurityLogs from "./pages/modules/tech/TechLogs";
-import SecurityEnvironments from "./pages/modules/tech/TechEnvironments";
-import SecurityOperations from "./pages/modules/tech/TechSecurity";
-import SecurityInfrastructure from "./pages/modules/tech/Infrastructure";
+import SecurityDashboard from './pages/modules/security/SecurityDashboard';
+import SecurityAccess from './pages/modules/security/SecurityAccess';
+import SecurityVPN from './pages/modules/security/SecurityVPN';
+import SecurityLogs from './pages/modules/security/SecurityLogs';
+import SecurityEnvironments from './pages/modules/security/SecurityEnvironments';
+import SecurityOperations from './pages/modules/security/Security';
+import SecurityInfrastructure from './pages/modules/security/Infrastructure';
+
+import ProductIntegrations from './pages/modules/product/ProductIntegrations';
+import ProductDocumentation from './pages/modules/product/ProductDocumentation';
 
 /* ============================================================
    DATA & BI
