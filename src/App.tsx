@@ -197,6 +197,8 @@ import ProductStudio from "./pages/modules/product/ProductStudio";
 import ProductIntegrations from "./pages/modules/product/ProductIntegrations";
 import ProductDocumentation from "./pages/modules/product/ProductDocumentation";
 import ProductInnovation from "./pages/modules/product/ProductInnovation";
+import ProductReports from "./pages/modules/product/ProductReports";
+import ProductTicketDetail from "./pages/modules/product/ProductTicketDetail";
 
 /* ============================================================
    SECURITY & IT
