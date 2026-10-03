@@ -1,4 +1,4 @@
-```tsx id="q7m4pz"
+```tsx
 import {
   useMutation,
   useQuery,
@@ -8,69 +8,69 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 export type ShopStatus =
+  | 'draft'
   | 'application'
   | 'review'
   | 'test'
   | 'active'
+  | 'inactive'
   | 'suspended'
   | 'closed';
 
-export const SHOP_STATUS_LABELS: Record<
-  ShopStatus,
-  string
-> = {
+export const SHOP_STATUS_LABELS: Record<ShopStatus, string> = {
+  draft: 'Brouillon',
   application: 'Candidature',
   review: 'En revue',
   test: 'Période de test',
   active: 'Active',
+  inactive: 'Inactive',
   suspended: 'Suspendue',
   closed: 'Clôturée',
 };
 
-/**
- * Transitions autorisées du cycle de vie BIB.
- *
- * application → review → test → active
- *                              ↘ suspended
- *
- * Une boutique suspendue peut revenir active.
- * Une boutique clôturée est terminale.
- */
 export const SHOP_TRANSITIONS: Record<
   ShopStatus,
   ShopStatus[]
 > = {
+  draft: ['application', 'closed'],
   application: ['review', 'closed'],
   review: ['test', 'active', 'closed'],
-  test: ['active', 'suspended', 'closed'],
-  active: ['suspended', 'closed'],
-  suspended: ['active', 'closed'],
+  test: ['active', 'inactive', 'suspended', 'closed'],
+  active: ['inactive', 'suspended', 'closed'],
+  inactive: ['active', 'suspended', 'closed'],
+  suspended: ['active', 'inactive', 'closed'],
   closed: [],
 };
 
 export interface Shop {
   id: string;
+  platform_id?: string | null;
+  platform_synced_at?: string | null;
+
   shop_code: string;
   name: string;
   slug: string | null;
-  merchant_name: string | null;
-  merchant_email: string | null;
-  merchant_phone: string | null;
+
   country: string | null;
   category: string | null;
+
   status: ShopStatus;
+
   subscription_plan: string | null;
   commission_rate: number | null;
-  contract_status: string | null;
-  contract_signed_at: string | null;
+
   test_started_at: string | null;
   test_ends_at: string | null;
   test_extensions: number;
+
   activated_at: string | null;
+  inactive_at: string | null;
   suspended_at: string | null;
   closed_at: string | null;
+
   suspension_reason: string | null;
   notes: string | null;
+
   app_origin: string;
   created_at: string;
   updated_at: string;
@@ -119,13 +119,38 @@ export const useShops = () =>
   useQuery({
     queryKey: ['shops'],
     queryFn: async () => {
-      const { data, error } =
-        await supabase
-          .from('shops')
-          .select('*')
-          .order('created_at', {
-            ascending: false,
-          });
+      const db = supabase as any;
+
+      const { data, error } = await db
+        .from('shops')
+        .select(`
+          id,
+          platform_id,
+          platform_synced_at,
+          shop_code,
+          name,
+          slug,
+          country,
+          category,
+          status,
+          subscription_plan,
+          commission_rate,
+          test_started_at,
+          test_ends_at,
+          test_extensions,
+          activated_at,
+          inactive_at,
+          suspended_at,
+          closed_at,
+          suspension_reason,
+          notes,
+          app_origin,
+          created_at,
+          updated_at
+        `)
+        .order('created_at', {
+          ascending: false,
+        });
 
       if (error) throw error;
 
@@ -140,12 +165,37 @@ export const useShop = (
     queryKey: ['shops', 'detail', shopId],
     enabled: !!shopId,
     queryFn: async () => {
-      const { data, error } =
-        await supabase
-          .from('shops')
-          .select('*')
-          .eq('id', shopId!)
-          .single();
+      const db = supabase as any;
+
+      const { data, error } = await db
+        .from('shops')
+        .select(`
+          id,
+          platform_id,
+          platform_synced_at,
+          shop_code,
+          name,
+          slug,
+          country,
+          category,
+          status,
+          subscription_plan,
+          commission_rate,
+          test_started_at,
+          test_ends_at,
+          test_extensions,
+          activated_at,
+          inactive_at,
+          suspended_at,
+          closed_at,
+          suspension_reason,
+          notes,
+          app_origin,
+          created_at,
+          updated_at
+        `)
+        .eq('id', shopId!)
+        .single();
 
       if (error) throw error;
 
@@ -175,67 +225,64 @@ export const useShopEvents = (
 
       if (error) throw error;
 
-      return (data ??
-        []) as ShopStatusEvent[];
+      return (data ?? []) as ShopStatusEvent[];
     },
   });
 
-export const useShopOrderSummaries =
-  () =>
-    useQuery({
-      queryKey: [
-        'shops',
-        'order-summaries',
-      ],
-      queryFn: async () => {
-        const { data, error } =
-          await supabase
-            .from('orders')
-            .select(
-              'shop_id, total_amount, status',
-            )
-            .not('shop_id', 'is', null);
+export const useShopOrderSummaries = () =>
+  useQuery({
+    queryKey: [
+      'shops',
+      'order-summaries',
+    ],
+    queryFn: async () => {
+      const { data, error } =
+        await supabase
+          .from('orders')
+          .select(
+            'shop_id, total_amount, status',
+          )
+          .not('shop_id', 'is', null);
 
-        if (error) throw error;
+      if (error) throw error;
 
-        const map = new Map<
-          string,
-          ShopOrderSummary
-        >();
+      const map = new Map<
+        string,
+        ShopOrderSummary
+      >();
 
-        for (const row of data ?? []) {
-          const key =
-            row.shop_id as string;
+      for (const row of data ?? []) {
+        const key = row.shop_id as string;
 
-          const entry =
-            map.get(key) ?? {
-              shop_id: key,
-              orders: 0,
-              revenue: 0,
-              inProgress: 0,
-            };
+        const entry =
+          map.get(key) ?? {
+            shop_id: key,
+            orders: 0,
+            revenue: 0,
+            inProgress: 0,
+          };
 
-          entry.orders += 1;
-          entry.revenue += Number(
-            row.total_amount ?? 0,
-          );
+        entry.orders += 1;
+        entry.revenue += Number(
+          row.total_amount ?? 0,
+        );
 
-          if (
-            ![
-              'delivered',
-              'cancelled',
-              'refunded',
-            ].includes(row.status ?? '')
-          ) {
-            entry.inProgress += 1;
-          }
-
-          map.set(key, entry);
+        if (
+          ![
+            'delivered',
+            'cancelled',
+            'refunded',
+          ].includes(row.status ?? '')
+        ) {
+          entry.inProgress += 1;
         }
 
-        return map;
-      },
-    });
+        map.set(key, entry);
+      }
+
+      return map;
+    },
+  });
 
 export const useShopOrders = (
   shopId?: string,
@@ -270,18 +317,6 @@ export const useShopOrders = (
 // MUTATIONS
 // ============================================================
 
-export interface NewShopInput {
-  name: string;
-  merchant_name?: string;
-  merchant_email?: string;
-  merchant_phone?: string;
-  country?: string;
-  category?: string;
-  subscription_plan?: string;
-  commission_rate?: number;
-  notes?: string;
-}
-
 export const useShopActions = () => {
   const qc = useQueryClient();
 
@@ -290,57 +325,6 @@ export const useShopActions = () => {
       queryKey: ['shops'],
     });
   };
-
-  const create = useMutation({
-    mutationFn: async (
-      input: NewShopInput,
-    ) => {
-      const { data: auth } =
-        await supabase.auth.getUser();
-
-      const code = `SHOP-${Date.now()
-        .toString(36)
-        .toUpperCase()}`;
-
-      const slug = input.name
-        .toLowerCase()
-        .normalize('NFD')
-        .replace(
-          /[\u0300-\u036f]/g,
-          '',
-        )
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
-
-      const { data, error } =
-        await supabase
-          .from('shops')
-          .insert({
-            ...input,
-            shop_code: code,
-            slug,
-            status: 'application',
-            created_by:
-              auth.user?.id ?? null,
-          })
-          .select()
-          .single();
-
-      if (error) throw error;
-
-      return data as Shop;
-    },
-
-    onSuccess: () => {
-      invalidate();
-      toast.success(
-        'Candidature boutique enregistrée',
-      );
-    },
-
-    onError: (e: Error) =>
-      toast.error(e.message),
-  });
 
   const changeStatus = useMutation({
     mutationFn: async (params: {
@@ -358,50 +342,42 @@ export const useShopActions = () => {
 
       if (shop.status === to) {
         throw new Error(
-          `La boutique est déjà au statut « ${
-            SHOP_STATUS_LABELS[to]
-          } ».`,
+          `La boutique est déjà au statut « ${SHOP_STATUS_LABELS[to]} ».`,
         );
       }
 
       const allowed =
-        SHOP_TRANSITIONS[
-          shop.status
-        ] ?? [];
+        SHOP_TRANSITIONS[shop.status] ?? [];
 
       if (!allowed.includes(to)) {
         throw new Error(
-          `Transition interdite : ${
-            SHOP_STATUS_LABELS[
-              shop.status
-            ]
-          } → ${
-            SHOP_STATUS_LABELS[to]
-          }.`,
+          `Transition interdite : ${SHOP_STATUS_LABELS[shop.status]} → ${SHOP_STATUS_LABELS[to]}.`,
         );
       }
 
       if (
-        (to === 'suspended' ||
-          to === 'closed') &&
+        [
+          'inactive',
+          'suspended',
+          'closed',
+        ].includes(to) &&
         !reason?.trim()
       ) {
         throw new Error(
-          `Une justification est obligatoire pour ${
-            SHOP_STATUS_LABELS[to].toLowerCase()
-          }.`,
+          `Une justification est obligatoire pour ${SHOP_STATUS_LABELS[to].toLowerCase()}.`,
         );
       }
 
       if (
         to === 'test' &&
-        testDurationDays !==
-          undefined &&
-        (!Number.isInteger(
-          testDurationDays,
-        ) ||
+        testDurationDays !== undefined &&
+        (
+          !Number.isInteger(
+            testDurationDays,
+          ) ||
           testDurationDays <= 0 ||
-          testDurationDays > 365)
+          testDurationDays > 365
+        )
       ) {
         throw new Error(
           'La durée de test doit être comprise entre 1 et 365 jours.',
@@ -433,8 +409,15 @@ export const useShopActions = () => {
 
       if (to === 'active') {
         patch.activated_at = now;
+        patch.inactive_at = null;
+        patch.suspended_at = null;
+        patch.suspension_reason = null;
+      }
+
+      if (to === 'inactive') {
+        patch.inactive_at = now;
         patch.suspension_reason =
-          null;
+          reason!.trim();
       }
 
       if (to === 'suspended') {
@@ -449,11 +432,12 @@ export const useShopActions = () => {
           reason!.trim();
       }
 
-      const { error } =
-        await supabase
-          .from('shops')
-          .update(patch)
-          .eq('id', shop.id);
+      const db = supabase as any;
+
+      const { error } = await db
+        .from('shops')
+        .update(patch)
+        .eq('id', shop.id);
 
       if (error) throw error;
     },
@@ -469,7 +453,7 @@ export const useShopActions = () => {
       });
 
       toast.success(
-        'Décision enregistrée et journalisée',
+        'Statut de la boutique mis à jour',
       );
     },
 
@@ -519,14 +503,16 @@ export const useShopActions = () => {
               86_400_000,
         ).toISOString();
 
+      const db = supabase as any;
+
       const { error } =
-        await supabase
+        await db
           .from('shops')
           .update({
             test_ends_at: newEnd,
             test_extensions:
-              (shop.test_extensions ??
-                0) + 1,
+              (shop.test_extensions ?? 0) +
+              1,
           })
           .eq('id', shop.id);
 
@@ -540,8 +526,7 @@ export const useShopActions = () => {
           shop_id: shop.id,
           from_status: shop.status,
           to_status: shop.status,
-          action:
-            'test_extended',
+          action: 'test_extended',
           reason:
             reason?.trim() ||
             `Prolongation de ${days} jours`,
@@ -572,7 +557,6 @@ export const useShopActions = () => {
   });
 
   return {
-    create,
     changeStatus,
     extendTest,
   };
