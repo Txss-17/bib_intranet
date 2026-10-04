@@ -130,6 +130,7 @@ import MerchantDetail from "./pages/modules/marketplace/MerchantDetail";
 import MarketplaceStoreDetail from "./pages/modules/marketplace/MarketplaceStoreDetail";
 import MarketplaceStores from "./pages/modules/marketplace/MarketplaceStores";
 import MarketplaceOpportunities from "./pages/modules/marketplace/MarketplaceOpportunities";
+import MarketplaceAnalytics from "./pages/modules/marketplace/MarketplaceAnalytics";
 
 /* ============================================================
    6. SUPPORT & CUSTOMER SUCCESS
@@ -517,12 +518,12 @@ const App = () => (
 
 <Route
   path="/pole/marketplace/products"
-  element={<SubSectionPage />}
+  element={<MarketplaceProducts />}
 />
 
 <Route
   path="/pole/marketplace/customers"
-  element={<SubSectionPage />}
+  element={<MarketplaceCustomers />}
 />
 
 <Route
@@ -532,22 +533,22 @@ const App = () => (
 
 <Route
   path="/pole/marketplace/subscribers"
-  element={<SubSectionPage />}
+  element={<MarketplaceSubscribers />}
 />
 
 <Route
   path="/pole/marketplace/favorites"
-  element={<SubSectionPage />}
+  element={<MarketplaceFavorites />}
 />
 
 <Route
   path="/pole/marketplace/rewards"
-  element={<SubSectionPage />}
+  element={<MarketlaceRewards />}
 />
 
 <Route
   path="/pole/marketplace/recycling"
-  element={<SubSectionPage />}
+  element={<MarketplaceRecycling />}
 />
 
 <Route
@@ -557,12 +558,12 @@ const App = () => (
 
 <Route
   path="/pole/marketplace/analytics"
-  element={<SubSectionPage />}
+  element={<MarketplaceAnalytics />}
 />
 
 <Route
   path="/pole/marketplace/subscriptions"
-  element={<SubSectionPage />}
+  element={<MarketplaceSubscriptions />}
 />
 
                 {/* ====================================================
