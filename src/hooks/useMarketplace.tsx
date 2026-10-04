@@ -387,6 +387,159 @@ export function useMerchantCommunicationTemplates() {
         .order('label', { ascending: true });
 
       if (error) throw error;
+export type MarketplaceCustomer = {
+  id: string;
+  contact_name: string | null;
+  contact_email: string | null;
+  created_at: string | null;
+  last_order_date: string | null;
+  order_count: number;
+  total_spent: number;
+  currency: string;
+};
+
+export function useMarketplaceCustomers(search = "") {
+  return useQuery({
+    queryKey: ["marketplace", "customers", search],
+
+    queryFn: async () => {
+      const [
+        { data: accounts, error: accountsError },
+        { data: orders, error: ordersError },
+        { data: shops, error: shopsError },
+      ] = await Promise.all([
+        (supabase as any)
+          .from("user_accounts")
+          .select(
+            "id, contact_name, contact_email, created_at, last_order_date",
+          ),
+
+        (supabase as any)
+          .from("orders")
+          .select(
+            "user_account_id, total_amount, currency, ordered_at, created_at",
+          ),
+
+        (supabase as any)
+          .from("shops")
+          .select("merchant_id")
+          .not("merchant_id", "is", null),
+      ]);
+
+      if (accountsError) throw accountsError;
+      if (ordersError) throw ordersError;
+      if (shopsError) throw shopsError;
+
+      const merchantIds = new Set(
+        (shops ?? [])
+          .map((shop: any) => shop.merchant_id)
+          .filter(Boolean),
+      );
+
+      const stats = new Map<
+        string,
+        {
+          count: number;
+          total: number;
+          currency: string;
+          lastOrder: string | null;
+        }
+      >();
+
+      for (const order of orders ?? []) {
+        const customerId = order.user_account_id;
+
+        if (
+          !customerId ||
+          merchantIds.has(customerId)
+        ) {
+          continue;
+        }
+
+        const current = stats.get(customerId) ?? {
+          count: 0,
+          total: 0,
+          currency: order.currency ?? "EUR",
+          lastOrder: null,
+        };
+
+        const orderDate =
+          order.ordered_at ??
+          order.created_at ??
+          null;
+
+        current.count += 1;
+        current.total += Number(
+          order.total_amount ?? 0,
+        );
+
+        if (
+          orderDate &&
+          (!current.lastOrder ||
+            orderDate > current.lastOrder)
+        ) {
+          current.lastOrder = orderDate;
+        }
+
+        stats.set(customerId, current);
+      }
+
+      const term = search
+        .trim()
+        .toLowerCase();
+
+      return (accounts ?? [])
+        .filter((account: any) => {
+          if (
+            merchantIds.has(account.id) ||
+            !stats.has(account.id)
+          ) {
+            return false;
+          }
+
+          if (!term) {
+            return true;
+          }
+
+          return (
+            String(
+              account.contact_name ?? "",
+            )
+              .toLowerCase()
+              .includes(term) ||
+            String(
+              account.contact_email ?? "",
+            )
+              .toLowerCase()
+              .includes(term)
+          );
+        })
+        .map(
+          (account: any): MarketplaceCustomer => {
+            const current =
+              stats.get(account.id)!;
+
+            return {
+              id: account.id,
+              contact_name:
+                account.contact_name ?? null,
+              contact_email:
+                account.contact_email ?? null,
+              created_at:
+                account.created_at ?? null,
+              last_order_date:
+                current.lastOrder ??
+                account.last_order_date ??
+                null,
+              order_count: current.count,
+              total_spent: current.total,
+              currency: current.currency,
+            };
+          },
+        );
+    },
+  });
+}
 
       return data ?? [];
     },
