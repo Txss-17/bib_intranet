@@ -319,11 +319,11 @@ export const moduleNavigations: Record<
     ],
   },
 
-  marketplace: {
+    marketplace: {
     id: 'marketplace',
     label: 'Marketplace & Customer',
     description:
-      'Marketplace, boutiques, clients et engagement',
+      'Marchands, portefeuilles, boutiques et développement commercial',
     items: [
       {
         id: 'overview',
@@ -332,10 +332,34 @@ export const moduleNavigations: Record<
         icon: 'LayoutDashboard',
       },
       {
+        id: 'merchants',
+        label: 'Marchands & portefeuilles',
+        path: '/pole/marketplace/merchants',
+        icon: 'UsersRound',
+      },
+      {
         id: 'stores',
         label: 'Boutiques',
         path: '/pole/marketplace/stores',
         icon: 'Store',
+      },
+      {
+        id: 'opportunities',
+        label: 'Opportunités & développement',
+        path: '/pole/marketplace/opportunities',
+        icon: 'TrendingUp',
+      },
+      {
+        id: 'analytics',
+        label: 'Performance portefeuille',
+        path: '/pole/marketplace/analytics',
+        icon: 'BarChart3',
+      },
+      {
+        id: 'subscriptions',
+        label: 'Abonnements & add-ons marchands',
+        path: '/pole/marketplace/subscriptions',
+        icon: 'CreditCard',
       },
       {
         id: 'products',
@@ -356,7 +380,7 @@ export const moduleNavigations: Record<
         icon: 'ShoppingBag',
       },
       {
-        id: 'subscriptions',
+        id: 'subscribers',
         label: 'Abonnés BIB',
         path: '/pole/marketplace/subscribers',
         icon: 'BadgeCheck',
