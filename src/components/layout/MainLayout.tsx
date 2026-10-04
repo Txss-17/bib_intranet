@@ -10,7 +10,7 @@ import { TopBar } from './TopBar';
 import { ModuleNavigation } from './ModuleNavigation';
 
 import { ViewAsBanner } from '@/components/admin/ViewAsBanner';
-import { SandboxBanner } from '@/components/product/SandboxBanner';
+import { SandboxBanner } from '@/components/sandbox/SandboxBanner';
 
 import { PoleId } from '@/types';
 

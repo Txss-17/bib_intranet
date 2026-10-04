@@ -40,7 +40,7 @@ export default function BIDashboardsList() {
           <h1 className="text-2xl font-semibold">Mes tableaux de bord</h1>
         </div>
         <div className="flex gap-2">
-          <TechRequestButton
+          <ProductRequestButton
             pole="data"
             category="data"
             defaultTitle="Besoin BI : "

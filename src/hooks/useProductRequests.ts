@@ -450,33 +450,3 @@ export const useProductRequestActions = () => {
     comment,
   };
 };
-
-/**
- * ---------------------------------------------------------------------------
- * COMPATIBILITÉ TEMPORAIRE
- * ---------------------------------------------------------------------------
- *
- * TechStudio.tsx et d'autres écrans historiques utilisent encore les anciens
- * noms. Ces alias évitent de casser le build pendant la migration des écrans.
- *
- * Ils pourront être supprimés lorsque tous les consommateurs auront migré
- * vers les noms Produit & Engineering.
- */
-
-export type ProductRequestStatus = ProductRequestStatus;
-
-export const Product_REQUEST_STATUS = PRODUCT_REQUEST_STATUS;
-
-export const PRODUCT_REQUEST_CATEGORIES = PRODUCT_REQUEST_CATEGORIES;
-
-export type ProductRequest = ProductRequest;
-
-export type ProductRequestComment = ProductRequestComment;
-
-export type ProductRequestEvent = ProductRequestEvent;
-
-export const useProductRequests = useProductRequests;
-
-export const useProductRequestThread = useProductRequestThread;
-
-export const useProductRequestActions = useProductRequestActions;

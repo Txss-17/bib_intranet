@@ -53,7 +53,7 @@ export default function Reports() {
           <h1 className="text-3xl font-bold">Rapports d'Audit</h1>
           <p className="text-muted-foreground">Bibliothèque des rapports d'audit</p>
         </div>
-        <TechRequestButton
+        <ProductRequestButton
           pole="audit"
           category="evolution"
           defaultTitle="Modèle de rapport d'audit : "
