@@ -38,11 +38,10 @@ import { Switch } from '@/components/ui/switch';
 
 import { toast } from '@/hooks/use-toast';
 import {
-  SANDBOX_SPACES,
   domainsForSpace,
   DOMAIN_LABELS,
 } from '@/data/sandboxSeed';
-import { useSandbox } from '@/hooks/useSandbox';
+import { SANDBOX_SPACES, useSandbox } from '@/hooks/useSandbox';
 
 interface Scenario {
   id: string;
