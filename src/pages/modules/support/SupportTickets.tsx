@@ -358,7 +358,7 @@ const SupportTickets = () => {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <TechRequestButton
+                    <ProductRequestButton
                       pole="support"
                       category="bug"
                       defaultTitle={`Ticket support ${ticket.id.substring(
