@@ -247,12 +247,6 @@ import SecuritySandbox from "./pages/modules/security/SecuritySandbox";
 import SecuritySupervision from "./pages/modules/security/SecuritySupervision";
 import SecurityDataFlow from "./pages/modules/security/SecurityDataFlow";
 
-import SecurityEdgeFunctions from "./pages/modules/security/SecurityEdgeFunctions";
-import SecurityEdgeFunctionDetail from "./pages/modules/security/SecurityEdgeFunctionDetail";
-import SecurityEdgeFunctionLogs from "./pages/modules/security/SecurityEdgeFunctionLogs";
-import SecurityAuthLogs from "./pages/modules/security/SecurityAuthLogs";
-import SecurityEdgeLogs from "./pages/modules/security/SecurityEdgeLogs";
-import SecurityReports from "./pages/modules/security/SecurityReports";
 
 import SecurityIncidentList from "./pages/modules/security/SecurityIncidentList";
 import SecurityIncidentDetail from "./pages/modules/security/SecurityIncidentDetail";
