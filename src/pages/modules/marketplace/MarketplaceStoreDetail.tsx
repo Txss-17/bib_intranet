@@ -1,56 +1,35 @@
 import { Link, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
-  ExternalLink,
-  FileCheck,
-  Globe2,
-  Mail,
+  Globe,
   Store,
+  ExternalLink,
 } from 'lucide-react';
 
 import {
-  useMarketplaceMerchant,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+
+import {
   useMarketplaceShop,
-  useMerchantPortfolio,
   useShopDocuments,
 } from '@/hooks/useMarketplace';
 
-import {
-  SHOP_STATUS_LABELS,
-  useShopActions,
-} from '@/hooks/useShops';
-
-function StatusBadge({ status }: { status: string }) {
-  return (
-    <span className="inline-flex rounded-full border px-2.5 py-1 text-xs font-medium">
-      {SHOP_STATUS_LABELS[
-        status as keyof typeof SHOP_STATUS_LABELS
-      ] ?? status}
-    </span>
-  );
-}
+import { SHOP_STATUS_LABELS } from '@/hooks/useShops';
 
 export default function MarketplaceStoreDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { id } = useParams();
 
   const { data: shop, isLoading } =
     useMarketplaceShop(id);
 
   const { data: documents = [] } =
     useShopDocuments(id);
-
-  const { data: merchant } =
-    useMarketplaceMerchant(
-      shop?.merchant_id ?? undefined,
-    );
-
-  const { data: portfolioAssignment } =
-    useMerchantPortfolio(
-      shop?.merchant_id ?? undefined,
-    );
-
-  const { changeStatus } =
-    useShopActions();
 
   if (isLoading) {
     return (
@@ -62,329 +41,193 @@ export default function MarketplaceStoreDetail() {
 
   if (!shop) {
     return (
-      <div className="space-y-4 p-6">
-        <Link
-          to="/pole/marketplace/stores"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Boutiques
-        </Link>
-
-        <div className="rounded-xl border p-8 text-center">
-          Boutique introuvable.
-        </div>
+      <div className="p-6 text-sm text-muted-foreground">
+        Boutique introuvable.
       </div>
     );
   }
 
-  const transitionMap: Record<string, string[]> = {
-    draft: ['application', 'closed'],
-    application: ['review', 'closed'],
-    review: ['active', 'closed'],
-    active: ['inactive', 'suspended', 'closed'],
-    inactive: ['active', 'suspended', 'closed'],
-    suspended: ['active', 'inactive', 'closed'],
-    closed: [],
-  };
-
-  const availableTransitions =
-    transitionMap[shop.status] ?? [];
-
-  const handleStatus = async (
-    nextStatus: string,
-  ) => {
-    const reasonRequired = [
-      'inactive',
-      'suspended',
-      'closed',
-    ].includes(nextStatus);
-
-    let reason: string | undefined;
-
-    if (reasonRequired) {
-      reason =
-        window.prompt(
-          'Justification obligatoire :',
-        )?.trim();
-
-      if (!reason) return;
-    }
-
-    await changeStatus.mutateAsync({
-      shop: shop as any,
-      to: nextStatus as any,
-      reason,
-    });
-  };
-
   return (
     <div className="space-y-6 p-6">
-      <Link
-        to="/pole/marketplace/stores"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
+      <Button
+        asChild
+        variant="ghost"
+        className="-ml-3"
       >
-        <ArrowLeft className="h-4 w-4" />
-        Boutiques Marketplace
-      </Link>
+        <Link to="/pole/marketplace/stores">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Retour aux boutiques
+        </Link>
+      </Button>
 
-      <section className="rounded-2xl border bg-card p-6">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div className="flex items-start gap-3">
+          <Store className="mt-1 h-6 w-6 text-muted-foreground" />
+
           <div>
-            <div className="flex items-center gap-3">
-              <div className="rounded-xl border p-3">
-                <Store className="h-5 w-5" />
-              </div>
+            <h1 className="text-2xl font-semibold">
+              {shop.name}
+            </h1>
 
-              <div>
-                <h1 className="text-2xl font-semibold">
-                  {shop.name}
-                </h1>
-
-                <div className="mt-1 text-sm text-muted-foreground">
-                  {shop.shop_code}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              <StatusBadge
-                status={shop.status}
-              />
-            </div>
+            <p className="text-sm text-muted-foreground">
+              {shop.shop_code}
+            </p>
           </div>
-
-          {shop.website_url && (
-            <a
-              href={shop.website_url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-sm font-medium hover:bg-muted"
-            >
-              <ExternalLink className="h-4 w-4" />
-              Site de la boutique
-            </a>
-          )}
         </div>
-      </section>
 
-      <section className="rounded-xl border bg-card p-5">
-        <h2 className="font-semibold">
-          Marchand responsable
-        </h2>
+        <Badge
+          variant={
+            shop.status === 'active'
+              ? 'default'
+              : 'outline'
+          }
+        >
+          {SHOP_STATUS_LABELS[shop.status]}
+        </Badge>
+      </div>
 
-        {merchant ? (
-          <div className="mt-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Identité de la boutique
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-3 text-sm">
             <div>
-              <Link
-                to={`/pole/marketplace/merchants/${merchant.id}`}
-                className="font-medium hover:underline"
+              <span className="text-muted-foreground">
+                Activité :
+              </span>{' '}
+              {shop.activity_type || '—'}
+            </div>
+
+            <div>
+              <span className="text-muted-foreground">
+                Description :
+              </span>{' '}
+              {shop.activity_description || '—'}
+            </div>
+
+            <div>
+              <span className="text-muted-foreground">
+                Catégorie :
+              </span>{' '}
+              {shop.category || '—'}
+            </div>
+
+            <div>
+              <span className="text-muted-foreground">
+                Pays :
+              </span>{' '}
+              {shop.country || '—'}
+            </div>
+
+            {shop.website_url && (
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
               >
-                {merchant.company_name ||
-                  'Marchand sans nom'}
-              </Link>
-
-              <div className="mt-1 text-sm text-muted-foreground">
-                {merchant.contact_name ||
-                  'Contact non renseigné'}
-              </div>
-
-              {merchant.contact_email && (
-                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                  <Mail className="h-3.5 w-3.5" />
-                  {merchant.contact_email}
-                </div>
-              )}
-            </div>
-
-            {portfolioAssignment?.merchant_portfolios && (
-              <div className="rounded-lg bg-muted p-3 text-sm">
-                <div className="text-xs text-muted-foreground">
-                  Portefeuille
-                </div>
-
-                <div className="mt-1 font-medium">
-                  {
-                    portfolioAssignment
-                      .merchant_portfolios
-                      .name
-                  }
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="mt-4 text-sm text-amber-600">
-            Aucun marchand rattaché.
-          </div>
-        )}
-      </section>
-
-      <section className="rounded-xl border bg-card p-5">
-        <h2 className="font-semibold">
-          Activité
-        </h2>
-
-        <div className="mt-4 grid gap-5 md:grid-cols-2">
-          <div>
-            <div className="text-xs text-muted-foreground">
-              Catégorie
-            </div>
-
-            <div className="mt-1 text-sm">
-              {shop.category ||
-                'Non renseignée'}
-            </div>
-          </div>
-
-          <div>
-            <div className="text-xs text-muted-foreground">
-              Type d’activité
-            </div>
-
-            <div className="mt-1 text-sm">
-              {shop.activity_type ||
-                'Non renseigné'}
-            </div>
-          </div>
-
-          <div>
-            <div className="text-xs text-muted-foreground">
-              Pays
-            </div>
-
-            <div className="mt-1 flex items-center gap-2 text-sm">
-              <Globe2 className="h-4 w-4" />
-              {shop.country ||
-                'Non renseigné'}
-            </div>
-          </div>
-
-          <div>
-            <div className="text-xs text-muted-foreground">
-              Abonnement
-            </div>
-
-            <div className="mt-1 text-sm">
-              {shop.subscription_plan ||
-                'Non renseigné'}
-            </div>
-          </div>
-        </div>
-
-        {shop.activity_description && (
-          <div className="mt-5 rounded-lg bg-muted p-4">
-            <div className="text-xs text-muted-foreground">
-              Description
-            </div>
-
-            <p className="mt-2 text-sm leading-6">
-              {shop.activity_description}
-            </p>
-          </div>
-        )}
-      </section>
-
-      <section className="rounded-xl border bg-card p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="font-semibold">
-              Cycle de vie Marketplace
-            </h2>
-
-            <p className="mt-1 text-sm text-muted-foreground">
-              La gestion du statut de la boutique appartient au
-              Marketplace. Ops n’intervient pas dans ce cycle.
-            </p>
-          </div>
-
-          <StatusBadge
-            status={shop.status}
-          />
-        </div>
-
-        {availableTransitions.length > 0 && (
-          <div className="mt-5 flex flex-wrap gap-2">
-            {availableTransitions.map(
-              (nextStatus) => (
-                <button
-                  key={nextStatus}
-                  type="button"
-                  disabled={
-                    changeStatus.isPending
-                  }
-                  onClick={() =>
-                    handleStatus(nextStatus)
-                  }
-                  className="rounded-lg border px-3 py-2 text-sm hover:bg-muted disabled:opacity-50"
+                <a
+                  href={shop.website_url}
+                  target="_blank"
+                  rel="noreferrer"
                 >
-                  →{' '}
-                  {SHOP_STATUS_LABELS[
-                    nextStatus as keyof typeof SHOP_STATUS_LABELS
-                  ] ?? nextStatus}
-                </button>
-              ),
+                  <Globe className="mr-2 h-4 w-4" />
+                  Site de la boutique
+                  <ExternalLink className="ml-2 h-3 w-3" />
+                </a>
+              </Button>
             )}
-          </div>
-        )}
-      </section>
+          </CardContent>
+        </Card>
 
-      <section className="rounded-xl border bg-card">
-        <div className="border-b p-5">
-          <div className="flex items-center gap-2">
-            <FileCheck className="h-5 w-5" />
-            <h2 className="font-semibold">
-              Justificatifs d’activité
-            </h2>
-          </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Commercial
+            </CardTitle>
+          </CardHeader>
 
-          <p className="mt-1 text-sm text-muted-foreground">
-            Documents examinés dans le cadre du suivi de la boutique.
-          </p>
-        </div>
+          <CardContent className="space-y-3 text-sm">
+            <div>
+              <span className="text-muted-foreground">
+                Abonnement :
+              </span>{' '}
+              {shop.subscription_plan || '—'}
+            </div>
 
-        {documents.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            Aucun justificatif enregistré.
-          </div>
-        ) : (
-          <div className="divide-y">
-            {documents.map((document: any) => (
-              <div
-                key={document.id}
-                className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between"
-              >
-                <div>
-                  <div className="font-medium">
-                    {document.title}
+            <div>
+              <span className="text-muted-foreground">
+                Commission :
+              </span>{' '}
+              {shop.commission_rate ?? 0}%
+            </div>
+
+            <div>
+              <span className="text-muted-foreground">
+                Créée le :
+              </span>{' '}
+              {new Date(
+                shop.created_at,
+              ).toLocaleDateString('fr-FR')}
+            </div>
+
+            <div>
+              <span className="text-muted-foreground">
+                Activée le :
+              </span>{' '}
+              {shop.activated_at
+                ? new Date(
+                    shop.activated_at,
+                  ).toLocaleDateString(
+                    'fr-FR',
+                  )
+                : '—'}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Documents d’activité
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          {documents.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Aucun document enregistré.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {documents.map((doc: any) => (
+                <div
+                  key={doc.id}
+                  className="flex items-center justify-between rounded-lg border p-3"
+                >
+                  <div>
+                    <p className="font-medium">
+                      {doc.title}
+                    </p>
+
+                    <p className="text-xs text-muted-foreground">
+                      {doc.document_type}
+                    </p>
                   </div>
 
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {document.document_type}
-                  </div>
+                  <Badge variant="outline">
+                    {doc.status}
+                  </Badge>
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <span className="rounded-full border px-2.5 py-1 text-xs">
-                    {document.status}
-                  </span>
-
-                  {document.document_url && (
-                    <a
-                      href={document.document_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-sm underline"
-                    >
-                      Ouvrir
-                    </a>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
