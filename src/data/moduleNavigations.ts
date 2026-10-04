@@ -1010,17 +1010,35 @@ export const transversalNavigations: Record<
     ],
   },
 
-  documents: {
+    documents: {
     id: 'documents',
-    label: 'Documents',
+    label: 'Documents BIB',
     description:
-      'Documents et pièces liés aux activités BIB',
+      'Gestion documentaire transverse, Google Workspace et échanges contrôlés',
     items: [
       {
         id: 'all',
         label: 'Tous les documents',
         path: '/documents',
         icon: 'Files',
+      },
+      {
+        id: 'imports',
+        label: 'Imports depuis Google Drive',
+        path: '/documents/imports',
+        icon: 'CloudDownload',
+      },
+      {
+        id: 'exports',
+        label: 'Exports vers Google Drive',
+        path: '/documents/exports',
+        icon: 'CloudUpload',
+      },
+      {
+        id: 'journal',
+        label: 'Journal documentaire',
+        path: '/documents/journal',
+        icon: 'History',
       },
     ],
   },
