@@ -58,7 +58,7 @@ export function ShopContractsPanel({ shop }: { shop: Shop }) {
         defaultShopId={shop.id}
         onSubmit={(data) => {
           const num = `C-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-5)}`;
-          create.mutate({ contract_number: num, party: shop.merchant_name, ...data, shop_id: shop.id }, {
+          create.mutate({ contract_number: num, party: shop.name, ...data, shop_id: shop.id }, {
             onSuccess: () => toast.success('Contrat rattaché à la boutique'),
             onError: (e: Error) => toast.error('Erreur', { description: e.message }),
           });

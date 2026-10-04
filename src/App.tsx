@@ -248,18 +248,6 @@ import SecuritySupervision from "./pages/modules/security/SecuritySupervision";
 import SecurityDataFlow from "./pages/modules/security/SecurityDataFlow";
 
 
-import SecurityIncidentList from "./pages/modules/security/SecurityIncidentList";
-import SecurityIncidentDetail from "./pages/modules/security/SecurityIncidentDetail";
-import SecurityIncidentReport from "./pages/modules/security/SecurityIncidentReport";
-import SecurityIncidentCreate from "./pages/modules/security/SecurityIncidentCreate";
-import SecurityIncidentUpdate from "./pages/modules/security/SecurityIncidentUpdate";
-import SecurityIncidentDelete from "./pages/modules/security/SecurityIncidentDelete";
-import SecurityIncidentAssign from "./pages/modules/security/SecurityIncidentAssign";
-import SecurityIncidentClose from "./pages/modules/security/SecurityIncidentClose";
-import SecurityIncidentReopen from "./pages/modules/security/SecurityIncidentReopen";
-import SecurityIncidentEscalate from "./pages/modules/security/SecurityIncidentEscalate";
-import SecurityIncidentDeescalate from "./pages/modules/security/SecurityIncidentDeescalate";
-import SecurityIncidentComment from "./pages/modules/security/SecurityIncidentComment";
 
 /* ============================================================
    TRANSVERSAL — ÉTHIQUE
@@ -813,77 +801,77 @@ const App = () => (
                 {/* Security / Supabase supervision */}
                 <Route
                   path="/pole/security/edge-functions"
-                  element={<SecurityEdgeFunctions />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/edge-functions/:id"
-                  element={<SecurityEdgeFunctionDetail />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/edge-functions/:id/logs"
-                  element={<SecurityEdgeFunctionLogs />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/auth-logs"
-                  element={<SecurityAuthLogs />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/edge-logs"
-                  element={<SecurityEdgeLogs />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/reports"
-                  element={<SecurityReports />}
+                  element={<SubSectionPage />} />
                 />
 
                 {/* Security incidents */}
                 <Route
                   path="/pole/security/incidents"
-                  element={<SecurityIncidentList />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/incidents/new"
-                  element={<SecurityIncidentCreate />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/incidents/:id"
-                  element={<SecurityIncidentDetail />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/incidents/:id/report"
-                  element={<SecurityIncidentReport />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/incidents/:id/update"
-                  element={<SecurityIncidentUpdate />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/incidents/:id/delete"
-                  element={<SecurityIncidentDelete />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/incidents/:id/assign"
-                  element={<SecurityIncidentAssign />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/incidents/:id/close"
-                  element={<SecurityIncidentClose />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/incidents/:id/reopen"
-                  element={<SecurityIncidentReopen />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/incidents/:id/escalate"
-                  element={<SecurityIncidentEscalate />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/incidents/:id/deescalate"
-                  element={<SecurityIncidentDeescalate />}
+                  element={<SubSectionPage />} />
                 />
                 <Route
                   path="/pole/security/incidents/:id/comment"
-                  element={<SecurityIncidentComment />}
+                  element={<SubSectionPage />} />
                 />
 
                 {/* ====================================================
