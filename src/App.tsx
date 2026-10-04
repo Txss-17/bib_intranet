@@ -125,6 +125,9 @@ import SupplierCatalogInbox from "./pages/modules/supplier/SupplierCatalogInbox"
    ============================================================ */
 
 import MarketplaceDashboard from "./pages/PoleDashboard";
+import MerchantPortfolio from "./pages/modules/marketplace/MerchantPortfolio";
+import MerchantDetail from "./pages/modules/marketplace/MerchantDetail";
+import MarketplaceStoreDetail from "./pages/modules/marketplace/MarketplaceStoreDetail";
 
 /* ============================================================
    6. SUPPORT & CUSTOMER SUCCESS
@@ -482,42 +485,83 @@ const App = () => (
                 />
 
                 {/* ====================================================
-                    5. MARKETPLACE & CUSTOMER
-                    ==================================================== */}
+    5. MARKETPLACE & CUSTOMER
+    ==================================================== */}
 
-                <Route path="/pole/marketplace" element={<MarketplaceDashboard />} />
-                <Route
-                  path="/pole/marketplace/products"
-                  element={<SubSectionPage />}
-                />
-                <Route
-                  path="/pole/marketplace/stores"
-                  element={<SubSectionPage />}
-                />
-                <Route
-                  path="/pole/marketplace/customers"
-                  element={<SubSectionPage />}
-                />
-                <Route
-                  path="/pole/marketplace/orders"
-                  element={<SubSectionPage />}
-                />
-                <Route
-                  path="/pole/marketplace/subscribers"
-                  element={<SubSectionPage />}
-                />
-                <Route
-                  path="/pole/marketplace/favorites"
-                  element={<SubSectionPage />}
-                />
-                <Route
-                  path="/pole/marketplace/rewards"
-                  element={<SubSectionPage />}
-                />
-                <Route
-                  path="/pole/marketplace/recycling"
-                  element={<SubSectionPage />}
-                />
+<Route
+  path="/pole/marketplace"
+  element={<MarketplaceDashboard />}
+/>
+
+<Route
+  path="/pole/marketplace/merchants"
+  element={<MerchantPortfolio />}
+/>
+
+<Route
+  path="/pole/marketplace/merchants/:id"
+  element={<MerchantDetail />}
+/>
+
+<Route
+  path="/pole/marketplace/stores"
+  element={<MerchantPortfolio />}
+/>
+
+<Route
+  path="/pole/marketplace/stores/:id"
+  element={<MarketplaceStoreDetail />}
+/>
+
+<Route
+  path="/pole/marketplace/products"
+  element={<SubSectionPage />}
+/>
+
+<Route
+  path="/pole/marketplace/customers"
+  element={<SubSectionPage />}
+/>
+
+<Route
+  path="/pole/marketplace/orders"
+  element={<SubSectionPage />}
+/>
+
+<Route
+  path="/pole/marketplace/subscribers"
+  element={<SubSectionPage />}
+/>
+
+<Route
+  path="/pole/marketplace/favorites"
+  element={<SubSectionPage />}
+/>
+
+<Route
+  path="/pole/marketplace/rewards"
+  element={<SubSectionPage />}
+/>
+
+<Route
+  path="/pole/marketplace/recycling"
+  element={<SubSectionPage />}
+/>
+
+<Route
+  path="/pole/marketplace/opportunities"
+  element={<SubSectionPage />}
+/>
+
+<Route
+  path="/pole/marketplace/analytics"
+  element={<SubSectionPage />}
+/>
+
+<Route
+  path="/pole/marketplace/subscriptions"
+  element={<SubSectionPage />}
+/>
 
                 {/* ====================================================
                     6. SUPPORT & CUSTOMER SUCCESS
