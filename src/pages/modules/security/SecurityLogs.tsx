@@ -573,8 +573,7 @@ export default function SecurityLogs() {
                               '—'}
                           </TableCell>
                         </TableRow>
-                      ))
-                  )}
+                      ))}
                   </TableBody>
                 </Table>
               )}
