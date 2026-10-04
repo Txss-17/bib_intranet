@@ -254,6 +254,7 @@ export const moduleNavigations: Record<
     icon: 'Timer',
   },
 ],
+  },
 
   supplier: {
     id: 'supplier',

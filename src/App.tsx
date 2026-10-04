@@ -131,7 +131,7 @@ import MarketplaceDashboard from "./pages/PoleDashboard";
    ============================================================ */
 
 import SupportTickets from "./pages/modules/support/SupportTickets";
-import CustomerSuccess from "./pages/modules/support/CustomerSuccess";
+import CustomerSuccess from "./pages/modules/support/CustomerSucces";
 import SupportMonitoring from "./pages/modules/support/SupportMonitoring";
 import SupportEscalations from "./pages/modules/support/SupportEscalations";
 
