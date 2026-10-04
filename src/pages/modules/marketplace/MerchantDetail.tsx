@@ -156,305 +156,328 @@ export default function MerchantDetail() {
                   {merchant.contact_name ||
                     'Contact non renseigné'}
                 </p>
-              </div>
-            </div>
+              </import { Link, useParams } from 'react-router-dom';
+import {
+  ArrowLeft,
+  Mail,
+  Store,
+  FileText,
+  TrendingUp,
+} from 'lucide-react';
 
-            <div className="mt-4 flex flex-wrap gap-2">
-              {merchant.subscription_status && (
-                <span className="rounded-full bg-muted px-3 py-1 text-xs">
-                  Abonnement : {merchant.subscription_status}
-                </span>
-              )}
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
-              {merchant.risk_level && (
-                <span className="rounded-full bg-muted px-3 py-1 text-xs">
-                  Risque : {merchant.risk_level}
-                </span>
-              )}
+import {
+  useMarketplaceMerchant,
+  useMerchantPortfolio,
+  useMerchantShops,
+  useMerchantCommunications,
+} from '@/hooks/useMarketplace';
 
-              {merchant.payment_status && (
-                <span className="rounded-full bg-muted px-3 py-1 text-xs">
-                  Paiement : {merchant.payment_status}
-                </span>
-              )}
-            </div>
-          </div>
+import { SHOP_STATUS_LABELS } from '@/hooks/useShops';
 
-          {merchant.contact_email && (
-            <a
-              href={`mailto:${merchant.contact_email}`}
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium hover:bg-muted"
-            >
-              <Mail className="h-4 w-4" />
-              Contacter le marchand
-            </a>
-          )}
+export default function MerchantDetail() {
+  const { id } = useParams();
+
+  const { data: merchant, isLoading } =
+    useMarketplaceMerchant(id);
+
+  const { data: shops = [] } =
+    useMerchantShops(id);
+
+  const { data: assignment } =
+    useMerchantPortfolio(id);
+
+  const { data: communications = [] } =
+    useMerchantCommunications(id);
+
+  if (isLoading) {
+    return (
+      <div className="p-6 text-sm text-muted-foreground">
+        Chargement du marchand…
+      </div>
+    );
+  }
+
+  if (!merchant) {
+    return (
+      <div className="p-6 text-sm text-muted-foreground">
+        Marchand introuvable.
+      </div>
+    );
+  }
+
+  const portfolio = Array.isArray(
+    (assignment as any)?.merchant_portfolios,
+  )
+    ? (assignment as any).merchant_portfolios[0]
+    : (assignment as any)?.merchant_portfolios;
+
+  return (
+    <div className="space-y-6 p-6">
+      <Button
+        asChild
+        variant="ghost"
+        className="-ml-3"
+      >
+        <Link to="/pole/marketplace/merchants">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Retour aux marchands
+        </Link>
+      </Button>
+
+      <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold">
+            {merchant.company_name}
+          </h1>
+
+          <p className="text-sm text-muted-foreground">
+            {merchant.contact_name ||
+              'Contact non renseigné'}{' '}
+            · {merchant.contact_email}
+          </p>
         </div>
-      </section>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <div className="rounded-xl border bg-card p-4">
-          <div className="text-sm text-muted-foreground">
-            Boutiques
-          </div>
-
-          <div className="mt-2 text-2xl font-semibold">
-            {globalPerformance.total}
-          </div>
-        </div>
-
-        <div className="rounded-xl border bg-card p-4">
-          <div className="text-sm text-muted-foreground">
-            Actives
-          </div>
-
-          <div className="mt-2 flex items-center gap-2 text-2xl font-semibold">
-            <CheckCircle2 className="h-5 w-5" />
-            {globalPerformance.active}
-          </div>
-        </div>
-
-        <div className="rounded-xl border bg-card p-4">
-          <div className="text-sm text-muted-foreground">
-            Suspendues
-          </div>
-
-          <div className="mt-2 text-2xl font-semibold">
-            {globalPerformance.suspended}
-          </div>
-        </div>
-
-        <div className="rounded-xl border bg-card p-4">
-          <div className="text-sm text-muted-foreground">
-            Catégories
-          </div>
-
-          <div className="mt-2 text-2xl font-semibold">
-            {globalPerformance.categories}
-          </div>
-        </div>
+        <Button asChild>
+          <a
+            href={
+              'mailto:' + merchant.contact_email
+            }
+          >
+            <Mail className="mr-2 h-4 w-4" />
+            Préparer un contact
+          </a>
+        </Button>
       </div>
 
-      <section className="rounded-xl border bg-card p-5">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <h2 className="font-semibold">
-              Portefeuille responsable
-            </h2>
-
-            <p className="mt-1 text-sm text-muted-foreground">
-              Toutes les boutiques de ce marchand restent rattachées
-              au même portefeuille.
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-2xl font-semibold">
+              {shops.length}
             </p>
 
-            {portfolio ? (
-              <div className="mt-3 rounded-lg bg-muted p-3">
-                <div className="font-medium">
-                  {portfolio.name}
-                </div>
+            <p className="text-xs text-muted-foreground">
+              Boutiques
+            </p>
+          </CardContent>
+        </Card>
 
-                <div className="mt-1 text-xs text-muted-foreground">
-                  {portfolio.role_scope}
-                </div>
-              </div>
-            ) : (
-              <div className="mt-3 text-sm text-amber-600">
-                Aucun portefeuille actuellement affecté.
-              </div>
-            )}
-          </div>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-2xl font-semibold">
+              {Number(
+                merchant.revenue ?? 0,
+              ).toLocaleString('fr-FR')}{' '}
+              €
+            </p>
 
-          <div className="flex gap-2">
-            <select
-              value={selectedPortfolio}
-              onChange={(event) =>
-                setSelectedPortfolio(event.target.value)
-              }
-              className="h-10 min-w-56 rounded-lg border bg-background px-3 text-sm"
-            >
-              <option value="">
-                Changer de portefeuille…
-              </option>
+            <p className="text-xs text-muted-foreground">
+              CA suivi
+            </p>
+          </CardContent>
+        </Card>
 
-              {portfolios
-                .filter(
-                  (item) =>
-                    item.status === 'active',
-                )
-                .map((item) => (
-                  <option
-                    key={item.id}
-                    value={item.id}
-                  >
-                    {item.name}
-                  </option>
-                ))}
-            </select>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm font-medium">
+              {merchant.subscription_plan ||
+                'Non renseigné'}
+            </p>
 
-            <button
-              type="button"
-              disabled={
-                !selectedPortfolio ||
-                assignPortfolio.isPending
-              }
-              onClick={handleAssign}
-              className="h-10 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground disabled:opacity-50"
-            >
-              Affecter
-            </button>
-          </div>
-        </div>
-      </section>
+            <p className="text-xs text-muted-foreground">
+              Abonnement
+            </p>
+          </CardContent>
+        </Card>
 
-      <section className="rounded-xl border bg-card">
-        <div className="border-b p-5">
-          <div className="flex items-center gap-2">
-            <Store className="h-5 w-5" />
-            <h2 className="font-semibold">
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm font-medium">
+              {portfolio?.name ||
+                'Non affecté'}
+            </p>
+
+            <p className="text-xs text-muted-foreground">
+              Portefeuille
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>
               Boutiques du marchand
-            </h2>
-          </div>
-        </div>
+            </CardTitle>
+          </CardHeader>
 
-        {shops.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            Aucune boutique rattachée à ce marchand.
-          </div>
-        ) : (
-          <div className="divide-y">
-            {shops.map((shop) => (
-              <Link
-                key={shop.id}
-                to={`/pole/marketplace/stores/${shop.id}`}
-                className="flex items-center justify-between gap-4 p-5 hover:bg-muted/40"
-              >
-                <div>
-                  <div className="font-medium">
-                    {shop.name}
+          <CardContent className="space-y-3">
+            {shops.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Aucune boutique rattachée à ce marchand.
+              </p>
+            ) : (
+              shops.map((shop) => (
+                <div
+                  key={shop.id}
+                  className="flex items-center justify-between rounded-lg border p-4"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <Store className="h-5 w-5 shrink-0 text-muted-foreground" />
+
+                    <div className="min-w-0">
+                      <Link
+                        className="font-medium hover:underline"
+                        to={
+                          '/pole/marketplace/stores/' +
+                          shop.id
+                        }
+                      >
+                        {shop.name}
+                      </Link>
+
+                      <p className="text-xs text-muted-foreground">
+                        {shop.category ||
+                          'Catégorie non renseignée'}{' '}
+                        ·{' '}
+                        {shop.country ||
+                          'Pays non renseigné'}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="mt-1 text-xs text-muted-foreground">
-                    {shop.category ||
-                      'Catégorie non renseignée'}
-                    {shop.country
-                      ? ` · ${shop.country}`
-                      : ''}
+                  <Badge
+                    variant={
+                      shop.status === 'active'
+                        ? 'default'
+                        : 'outline'
+                    }
+                  >
+                    {SHOP_STATUS_LABELS[
+                      shop.status
+                    ]}
+                  </Badge>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Indicateurs
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="space-y-4 text-sm">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Risque :
+              <strong>
+                {merchant.risk_level ||
+                  'non évalué'}
+              </strong>
+            </div>
+
+            <div>
+              Statut abonnement :
+              <strong className="ml-1">
+                {merchant.subscription_status ||
+                  'non renseigné'}
+              </strong>
+            </div>
+
+            <div>
+              Paiement :
+              <strong className="ml-1">
+                {merchant.payment_status ||
+                  'non renseigné'}
+              </strong>
+            </div>
+
+            <div>
+              Dernière commande :
+              <strong className="ml-1">
+                {merchant.last_order_date
+                  ? new Date(
+                      merchant.last_order_date,
+                    ).toLocaleDateString(
+                      'fr-FR',
+                    )
+                  : '—'}
+              </strong>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Historique des communications
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent>
+          {communications.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Aucune communication journalisée.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {communications.map(
+                (communication) => (
+                  <div
+                    key={communication.id}
+                    className="rounded-lg border p-4"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium">
+                        {communication.subject}
+                      </p>
+
+                      <Badge variant="outline">
+                        {communication.status}
+                      </Badge>
+                    </div>
+
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {communication.situation}
+                    </p>
                   </div>
-                </div>
-
-                <StatusBadge
-                  status={shop.status}
-                />
-              </Link>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="rounded-xl border bg-card">
-        <div className="border-b p-5">
-          <div className="flex items-center gap-2">
-            <MessageSquare className="h-5 w-5" />
-            <h2 className="font-semibold">
-              Historique des communications
-            </h2>
-          </div>
-        </div>
-
-        {communications.length === 0 ? (
-          <div className="p-8 text-center text-sm text-muted-foreground">
-            Aucune communication enregistrée.
-          </div>
-        ) : (
-          <div className="divide-y">
-            {communications.map((communication) => (
-              <div
-                key={communication.id}
-                className="p-5"
-              >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="font-medium">
-                    {communication.subject}
-                  </div>
-
-                  <span className="rounded-full border px-2 py-1 text-xs">
-                    {communication.status}
-                  </span>
-                </div>
-
-                <p className="mt-2 text-sm text-muted-foreground">
-                  {communication.situation}
-                </p>
-
-                <div className="mt-2 text-xs text-muted-foreground">
-                  {communication.recipient}
-                  {communication.sent_at
-                    ? ` · ${new Date(
-                        communication.sent_at,
-                      ).toLocaleString('fr-FR')}`
-                    : ''}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      <section className="rounded-xl border bg-card p-5">
-        <h2 className="font-semibold">
-          Informations relationnelles
-        </h2>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
-            <div className="text-xs text-muted-foreground">
-              Contact
+                ),
+              )}
             </div>
-            <div className="mt-1 flex items-center gap-2 text-sm">
-              <UserRound className="h-4 w-4" />
-              {merchant.contact_name ||
-                'Non renseigné'}
-            </div>
-          </div>
+          )}
+        </CardContent>
+      </Card>
 
-          <div>
-            <div className="text-xs text-muted-foreground">
-              Email
-            </div>
-            <div className="mt-1 text-sm">
-              {merchant.contact_email ||
-                'Non renseigné'}
-            </div>
-          </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Documents & relation documentaire
+          </CardTitle>
+        </CardHeader>
 
-          <div>
-            <div className="text-xs text-muted-foreground">
-              Chiffre d’affaires
-            </div>
-            <div className="mt-1 flex items-center gap-2 text-sm">
-              <CircleDollarSign className="h-4 w-4" />
-              {merchant.revenue != null
-                ? `${Number(
-                    merchant.revenue,
-                  ).toLocaleString('fr-FR')} €`
-                : 'Non renseigné'}
-            </div>
-          </div>
+        <CardContent className="flex items-center gap-3 text-sm text-muted-foreground">
+          <FileText className="h-5 w-5" />
 
-          <div>
-            <div className="text-xs text-muted-foreground">
-              Dernière commande
-            </div>
-            <div className="mt-1 text-sm">
-              {merchant.last_order_date
-                ? new Date(
-                    merchant.last_order_date,
-                  ).toLocaleDateString('fr-FR')
-                : 'Non renseignée'}
-            </div>
-          </div>
-        </div>
-      </section>
+          Les documents liés au marchand seront
+          consultables via l’index documentaire BIB
+          et Google Workspace.
+        </CardContent>
+      </Card>
     </div>
   );
 }
