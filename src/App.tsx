@@ -129,6 +129,7 @@ import MerchantPortfolio from "./pages/modules/marketplace/MerchantPortfolio";
 import MerchantDetail from "./pages/modules/marketplace/MerchantDetail";
 import MarketplaceStoreDetail from "./pages/modules/marketplace/MarketplaceStoreDetail";
 import MarketplaceStores from "./pages/modules/marketplace/MarketplaceStores";
+import MarketplaceOpportunities from "./pages/modules/marketplace/MarketplaceOpportunities";
 
 /* ============================================================
    6. SUPPORT & CUSTOMER SUCCESS
@@ -551,7 +552,7 @@ const App = () => (
 
 <Route
   path="/pole/marketplace/opportunities"
-  element={<SubSectionPage />}
+  element={<MarketplaceOpportunities />}
 />
 
 <Route
