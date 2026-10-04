@@ -1,518 +1,122 @@
-import { useEffect, useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import type { ShipmentRecord } from '@/hooks/useShipments';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Truck, Search, Filter, Loader2, MapPin, ExternalLink, Plus, Edit } from 'lucide-react';
+import { ExportButtons } from '@/components/ExportButtons';
+import ShipmentForm from '@/components/forms/ShipmentForm';
+import { useShipmentRecords, useCreateShipment, useUpdateShipment, type ShipmentRecord } from '@/hooks/useShipments';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-interface ShipmentFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  shipment?: ShipmentRecord | null;
-  onSubmit: (
-    data: Omit<
-      ShipmentRecord,
-      'id' | 'created_at' | 'updated_at'
-    >,
-  ) => void;
-}
-
-type FormState = {
-  order_id: string;
-  tracking_number: string;
-  carrier: string;
-  status: ShipmentRecord['status'];
-  destination_address: string;
-  origin_address: string;
-  weight_kg: string;
-  estimated_delivery: string;
-  shipping_cost: string;
-  notes: string;
+const statusLabels: Record<string, string> = {
+  preparing: 'Préparation', picked_up: 'Collecté', in_transit: 'En transit',
+  out_for_delivery: 'En livraison', delivered: 'Livré', returned: 'Retourné',
 };
 
-const EMPTY_FORM: FormState = {
-  order_id: '',
-  tracking_number: '',
-  carrier: '',
-  status: 'preparing',
-  destination_address: '',
-  origin_address: '',
-  weight_kg: '',
-  estimated_delivery: '',
-  shipping_cost: '',
-  notes: '',
+const statusColors: Record<string, string> = {
+  preparing: 'bg-muted text-muted-foreground', picked_up: 'bg-blue-500/10 text-blue-500',
+  in_transit: 'bg-primary/10 text-primary', out_for_delivery: 'bg-orange-500/10 text-orange-500',
+  delivered: 'bg-green-500/10 text-green-500', returned: 'bg-destructive/10 text-destructive',
 };
 
-const ShipmentForm = ({
-  open,
-  onOpenChange,
-  shipment,
-  onSubmit,
-}: ShipmentFormProps) => {
-  const [formData, setFormData] =
-    useState<FormState>(EMPTY_FORM);
+const Shipments = () => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingShipment, setEditingShipment] = useState<any>(null);
 
-  const [submitError, setSubmitError] =
-    useState<string | null>(null);
+  const { data: shipments = [], isLoading } = useShipmentRecords({ status: statusFilter });
+  const createShipment = useCreateShipment();
+  const updateShipment = useUpdateShipment();
 
-  useEffect(() => {
-    if (!open) return;
+  const filteredShipments = shipments.filter(s =>
+    s.tracking_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.destination_address?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
-    setSubmitError(null);
-
-    if (shipment) {
-      setFormData({
-        order_id: shipment.order_id ?? '',
-        tracking_number:
-          shipment.tracking_number ?? '',
-        carrier: shipment.carrier ?? '',
-        status:
-          shipment.status ?? 'preparing',
-        destination_address:
-          shipment.destination_address ?? '',
-        origin_address:
-          shipment.origin_address ?? '',
-        weight_kg:
-          shipment.weight_kg !== null &&
-          shipment.weight_kg !== undefined
-            ? String(shipment.weight_kg)
-            : '',
-        estimated_delivery:
-          shipment.estimated_delivery
-            ? shipment.estimated_delivery.split(
-                'T',
-              )[0]
-            : '',
-        shipping_cost:
-          shipment.shipping_cost !== null &&
-          shipment.shipping_cost !== undefined
-            ? String(shipment.shipping_cost)
-            : '',
-        notes: shipment.notes ?? '',
-      });
+  const handleSubmit = (data: any) => {
+    if (editingShipment) {
+      updateShipment.mutate({ id: editingShipment.id, ...data }, { onSuccess: () => toast.success('Expédition modifiée') });
     } else {
-      setFormData(EMPTY_FORM);
+      createShipment.mutate(data, { onSuccess: () => toast.success('Expédition créée') });
     }
-  }, [shipment, open]);
-
-  const updateField = <
-    K extends keyof FormState,
-  >(
-    field: K,
-    value: FormState[K],
-  ) => {
-    setFormData((current) => ({
-      ...current,
-      [field]: value,
-    }));
+    setEditingShipment(null);
   };
 
-  const handleSubmit = () => {
-    setSubmitError(null);
+  const handleEdit = (s: any) => { setEditingShipment(s); setFormOpen(true); };
+  const handleNew = () => { setEditingShipment(null); setFormOpen(true); };
 
-    const carrier =
-      formData.carrier.trim();
-
-    const destination =
-      formData.destination_address.trim();
-
-    const origin =
-      formData.origin_address.trim();
-
-    if (!carrier) {
-      setSubmitError(
-        'Le transporteur est obligatoire.',
-      );
-      return;
-    }
-
-    if (!destination) {
-      setSubmitError(
-        'L’adresse de destination est obligatoire.',
-      );
-      return;
-    }
-
-    const weight = formData.weight_kg
-      ? Number(formData.weight_kg)
-      : null;
-
-    if (
-      weight !== null &&
-      (!Number.isFinite(weight) ||
-        weight < 0)
-    ) {
-      setSubmitError(
-        'Le poids doit être un nombre positif.',
-      );
-      return;
-    }
-
-    const shippingCost =
-      formData.shipping_cost
-        ? Number(formData.shipping_cost)
-        : null;
-
-    if (
-      shippingCost !== null &&
-      (!Number.isFinite(
-        shippingCost,
-      ) || shippingCost < 0)
-    ) {
-      setSubmitError(
-        'Le coût de transport doit être un nombre positif.',
-      );
-      return;
-    }
-
-    onSubmit({
-      order_id:
-        formData.order_id.trim() || null,
-
-      tracking_number:
-        formData.tracking_number.trim() ||
-        null,
-
-      carrier,
-
-      status: formData.status,
-
-      destination_address: destination,
-
-      origin_address:
-        origin || null,
-
-      weight_kg: weight,
-
-      estimated_delivery:
-        formData.estimated_delivery ||
-        null,
-
-      actual_delivery:
-        shipment?.actual_delivery ??
-        null,
-
-      shipping_cost: shippingCost,
-
-      notes:
-        formData.notes.trim() || null,
-    });
-  };
-
-  const isEditing = Boolean(shipment);
+  if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {isEditing
-              ? "Modifier l'expédition"
-              : 'Nouvelle expédition'}
-          </DialogTitle>
-
-          <DialogDescription>
-            {isEditing
-              ? "Modifier les informations opérationnelles de l'expédition."
-              : "Créer un enregistrement d'expédition dans le suivi logistique BIB."}
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="grid gap-5 py-4">
-          {/* Commande */}
-          <div className="grid gap-2">
-            <Label htmlFor="shipment-order">
-              ID commande
-            </Label>
-
-            <Input
-              id="shipment-order"
-              placeholder="UUID de la commande"
-              value={formData.order_id}
-              onChange={(event) =>
-                updateField(
-                  'order_id',
-                  event.target.value,
-                )
-              }
-            />
-
-            <p className="text-xs text-muted-foreground">
-              Facultatif. À renseigner lorsqu'une
-              expédition est directement rattachée à
-              une commande BIB.
-            </p>
-          </div>
-
-          {/* Suivi / transporteur */}
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="shipment-tracking">
-                N° de suivi
-              </Label>
-
-              <Input
-                id="shipment-tracking"
-                placeholder="Ex. DHL-FR-123456"
-                value={
-                  formData.tracking_number
-                }
-                onChange={(event) =>
-                  updateField(
-                    'tracking_number',
-                    event.target.value,
-                  )
-                }
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="shipment-carrier">
-                Transporteur
-              </Label>
-
-              <Input
-                id="shipment-carrier"
-                placeholder="Nom du transporteur"
-                value={formData.carrier}
-                onChange={(event) =>
-                  updateField(
-                    'carrier',
-                    event.target.value,
-                  )
-                }
-              />
-            </div>
-          </div>
-
-          {/* Origine / destination */}
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="grid gap-2">
-              <Label htmlFor="shipment-origin">
-                Adresse d'origine
-              </Label>
-
-              <Input
-                id="shipment-origin"
-                placeholder="Hub / entrepôt / point d'expédition"
-                value={
-                  formData.origin_address
-                }
-                onChange={(event) =>
-                  updateField(
-                    'origin_address',
-                    event.target.value,
-                  )
-                }
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="shipment-destination">
-                Adresse de destination
-              </Label>
-
-              <Input
-                id="shipment-destination"
-                placeholder="Adresse de livraison"
-                value={
-                  formData.destination_address
-                }
-                onChange={(event) =>
-                  updateField(
-                    'destination_address',
-                    event.target.value,
-                  )
-                }
-              />
-            </div>
-          </div>
-
-          {/* Données opérationnelles */}
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="grid gap-2">
-              <Label htmlFor="shipment-weight">
-                Poids (kg)
-              </Label>
-
-              <Input
-                id="shipment-weight"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={formData.weight_kg}
-                onChange={(event) =>
-                  updateField(
-                    'weight_kg',
-                    event.target.value,
-                  )
-                }
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="shipment-cost">
-                Coût (€)
-              </Label>
-
-              <Input
-                id="shipment-cost"
-                type="number"
-                min="0"
-                step="0.01"
-                placeholder="0.00"
-                value={
-                  formData.shipping_cost
-                }
-                onChange={(event) =>
-                  updateField(
-                    'shipping_cost',
-                    event.target.value,
-                  )
-                }
-              />
-            </div>
-
-            <div className="grid gap-2">
-              <Label htmlFor="shipment-status">
-                Statut
-              </Label>
-
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  updateField(
-                    'status',
-                    value as ShipmentRecord['status'],
-                  )
-                }
-              >
-                <SelectTrigger id="shipment-status">
-                  <SelectValue />
-                </SelectTrigger>
-
-                <SelectContent>
-                  <SelectItem value="preparing">
-                    Préparation
-                  </SelectItem>
-
-                  <SelectItem value="picked_up">
-                    Collecté
-                  </SelectItem>
-
-                  <SelectItem value="in_transit">
-                    En transit
-                  </SelectItem>
-
-                  <SelectItem value="out_for_delivery">
-                    En livraison
-                  </SelectItem>
-
-                  <SelectItem value="delivered">
-                    Livré
-                  </SelectItem>
-
-                  <SelectItem value="returned">
-                    Retourné
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Date */}
-          <div className="grid gap-2 md:max-w-xs">
-            <Label htmlFor="shipment-estimated">
-              Livraison prévue
-            </Label>
-
-            <Input
-              id="shipment-estimated"
-              type="date"
-              value={
-                formData.estimated_delivery
-              }
-              onChange={(event) =>
-                updateField(
-                  'estimated_delivery',
-                  event.target.value,
-                )
-              }
-            />
-          </div>
-
-          {/* Notes */}
-          <div className="grid gap-2">
-            <Label htmlFor="shipment-notes">
-              Notes opérationnelles
-            </Label>
-
-            <Textarea
-              id="shipment-notes"
-              placeholder="Informations complémentaires concernant l'expédition…"
-              value={formData.notes}
-              onChange={(event) =>
-                updateField(
-                  'notes',
-                  event.target.value,
-                )
-              }
-              rows={4}
-            />
-          </div>
-
-          {submitError && (
-            <div className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
-              {submitError}
-            </div>
-          )}
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Expéditions</h1>
+          <p className="text-muted-foreground">Suivi des colis et livraisons</p>
         </div>
+        <div className="flex gap-2">
+          <ExportButtons filename="expeditions" title="Liste des expéditions" poleName="Ops" columns={[
+            { header: 'N° Suivi', accessor: 'tracking_number' }, { header: 'Transporteur', accessor: 'carrier' },
+            { header: 'Destination', accessor: 'destination_address' }, { header: 'Poids (kg)', accessor: 'weight_kg' },
+            { header: 'Livraison prévue', accessor: 'estimated_delivery' }, { header: 'Coût', accessor: 'shipping_cost' },
+            { header: 'Statut', accessor: 'status' },
+          ]} data={filteredShipments} />
+          <Button onClick={handleNew}><Truck className="h-4 w-4 mr-2" />Nouvelle expédition</Button>
+        </div>
+      </div>
 
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() =>
-              onOpenChange(false)
-            }
-          >
-            Annuler
-          </Button>
+      <div className="grid gap-4 md:grid-cols-4">
+        <Card><CardContent className="pt-6"><div className="text-2xl font-bold">{shipments.filter(s => s.status === 'preparing').length}</div><p className="text-xs text-muted-foreground">En préparation</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="text-2xl font-bold text-primary">{shipments.filter(s => s.status === 'in_transit').length}</div><p className="text-xs text-muted-foreground">En transit</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="text-2xl font-bold text-orange-500">{shipments.filter(s => s.status === 'out_for_delivery').length}</div><p className="text-xs text-muted-foreground">En livraison</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><div className="text-2xl font-bold text-green-500">{shipments.filter(s => s.status === 'delivered').length}</div><p className="text-xs text-muted-foreground">Livrées</p></CardContent></Card>
+      </div>
 
-          <Button
-            onClick={handleSubmit}
-            disabled={
-              !formData.carrier.trim() ||
-              !formData.destination_address.trim()
-            }
-          >
-            {isEditing
-              ? 'Enregistrer les modifications'
-              : "Créer l'expédition"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <Card><CardContent className="pt-6"><div className="flex flex-col sm:flex-row gap-4">
+        <div className="relative flex-1"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Rechercher par n° suivi ou destination..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10" /></div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}><SelectTrigger className="w-full sm:w-[180px]"><Filter className="h-4 w-4 mr-2" /><SelectValue placeholder="Statut" /></SelectTrigger><SelectContent>
+          <SelectItem value="all">Tous les statuts</SelectItem><SelectItem value="preparing">Préparation</SelectItem>
+          <SelectItem value="in_transit">En transit</SelectItem><SelectItem value="delivered">Livré</SelectItem>
+        </SelectContent></Select>
+      </div></CardContent></Card>
+
+      <Card>
+        <CardHeader><CardTitle>Liste des expéditions ({filteredShipments.length})</CardTitle></CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader><TableRow>
+              <TableHead>N° Suivi</TableHead><TableHead>Transporteur</TableHead><TableHead>Destination</TableHead>
+              <TableHead>Poids</TableHead><TableHead>Livraison prévue</TableHead><TableHead>Coût</TableHead>
+              <TableHead>Statut</TableHead><TableHead className="text-right">Actions</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {filteredShipments.map((shipment) => (
+                <TableRow key={shipment.id}>
+                  <TableCell className="font-mono text-sm">{shipment.tracking_number || '-'}</TableCell>
+                  <TableCell><Badge variant="outline">{shipment.carrier}</Badge></TableCell>
+                  <TableCell className="max-w-[200px]"><div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-muted-foreground flex-shrink-0" /><span className="truncate">{shipment.destination_address || '-'}</span></div></TableCell>
+                  <TableCell>{shipment.weight_kg ? `${shipment.weight_kg} kg` : '-'}</TableCell>
+                  <TableCell>{shipment.estimated_delivery ? format(new Date(shipment.estimated_delivery), 'dd MMM yyyy', { locale: fr }) : '-'}</TableCell>
+                  <TableCell>{shipment.shipping_cost ? `${Number(shipment.shipping_cost).toFixed(2)} €` : '-'}</TableCell>
+                  <TableCell><span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColors[shipment.status] || ''}`}>{statusLabels[shipment.status] || shipment.status}</span></TableCell>
+                  <TableCell className="text-right"><Button variant="ghost" size="sm" onClick={() => handleEdit(shipment)}><Edit className="h-4 w-4 mr-2" />Modifier</Button></TableCell>
+                </TableRow>
+              ))}
+              {filteredShipments.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucune expédition trouvée</TableCell></TableRow>}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      <ShipmentForm open={formOpen} onOpenChange={setFormOpen} shipment={editingShipment} onSubmit={handleSubmit} />
+    </div>
   );
 };
 
-export default ShipmentForm;
-```
+export default Shipments;
