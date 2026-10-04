@@ -801,77 +801,77 @@ const App = () => (
                 {/* Security / Supabase supervision */}
                 <Route
                   path="/pole/security/edge-functions"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/edge-functions/:id"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/edge-functions/:id/logs"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/auth-logs"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/edge-logs"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/reports"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
 
                 {/* Security incidents */}
                 <Route
                   path="/pole/security/incidents"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/incidents/new"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/incidents/:id"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/incidents/:id/report"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/incidents/:id/update"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/incidents/:id/delete"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/incidents/:id/assign"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/incidents/:id/close"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/incidents/:id/reopen"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/incidents/:id/escalate"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/incidents/:id/deescalate"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
                 <Route
                   path="/pole/security/incidents/:id/comment"
-                  element={<SubSectionPage />} />
+                  element={<SubSectionPage />
                 />
 
                 {/* ====================================================
