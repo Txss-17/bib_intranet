@@ -34,6 +34,10 @@ type FavoriteView = {
 
   shopId: string | null;
   shopName: string | null;
+
+  platform_boutique_id: string | null;
+  target_name: string | null;
+  target_sku: string | null;
 };
 
 type FilterType =
@@ -321,6 +325,20 @@ export default function MarketplaceFavorites() {
     setSearch("");
     setTypeFilter("all");
   };
+
+  const FAVORITE_FIELDS = `
+  id,
+  platform_user_id,
+  favorite_type,
+  platform_target_id,
+  platform_boutique_id,
+  target_name,
+  target_sku,
+  shop_id,
+  created_at,
+  platform_synced_at,
+  source
+  `;
 
   return (
     <div className="space-y-6">
