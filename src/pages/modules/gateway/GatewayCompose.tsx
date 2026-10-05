@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import {
   Card,
@@ -21,9 +21,12 @@ import {
   X,
   ShieldCheck,
   UserCircle2,
+  Reply,
+  ArrowLeft,
 } from 'lucide-react';
 
 import {
+  GatewayMessage,
   useGatewayMessages,
 } from '@/hooks/useGatewayMessages';
 
@@ -46,6 +49,15 @@ export type GatewayComposePrefill = {
   message?: string;
 };
 
+export type GatewayReplyPrefill = {
+  mode: 'reply';
+  message: GatewayMessage;
+};
+
+type GatewayComposeState =
+  | GatewayComposePrefill
+  | GatewayReplyPrefill;
+
 interface ContactAutocompleteProps {
   value: string;
   onChange: (email: string, name?: string) => void;
@@ -66,7 +78,7 @@ const ContactAutocomplete = ({
   const matches = useMemo(() => {
     const v = value.trim().toLowerCase();
 
-    if (!v || v.length < 1) {
+    if (!v) {
       return [];
     }
 
@@ -136,11 +148,22 @@ const ContactAutocomplete = ({
 
 export default function GatewayCompose() {
   const location = useLocation();
+  const navigate = useNavigate();
 
-  const prefill =
-    (location.state as GatewayComposePrefill | null) ?? null;
+  const state =
+    (location.state as GatewayComposeState | null) ?? null;
 
-  const { sendOutbound } = useGatewayMessages();
+  const isReply =
+    state?.mode === 'reply';
+
+  const replyMessage =
+    isReply ? state.message : null;
+
+  const normalPrefill =
+    !isReply ? (state as GatewayComposePrefill | null) : null;
+
+  const { sendOutbound, sendReply } =
+    useGatewayMessages();
 
   const { data: contacts = [] } =
     useBibContacts();
@@ -149,12 +172,16 @@ export default function GatewayCompose() {
     useCurrentBibContact();
 
   const [to, setTo] = useState(
-    prefill?.to ?? '',
+    isReply
+      ? replyMessage?.sender_email ?? ''
+      : normalPrefill?.to ?? '',
   );
 
   const [recipientName, setRecipientName] =
     useState(
-      prefill?.recipientName ?? '',
+      isReply
+        ? replyMessage?.sender_name ?? ''
+        : normalPrefill?.recipientName ?? '',
     );
 
   const [ccInput, setCcInput] =
@@ -170,10 +197,18 @@ export default function GatewayCompose() {
     useState(false);
 
   const [subject, setSubject] =
-    useState(prefill?.subject ?? '');
+    useState(
+      isReply
+        ? `Re: ${replyMessage?.subject ?? ''}`
+        : normalPrefill?.subject ?? '',
+    );
 
   const [message, setMessage] =
-    useState(prefill?.message ?? '');
+    useState(
+      isReply
+        ? ''
+        : normalPrefill?.message ?? '',
+    );
 
   const cc = splitEmails(ccInput);
   const bcc = splitEmails(bccInput);
@@ -183,16 +218,37 @@ export default function GatewayCompose() {
     cc.length +
     bcc.length;
 
+  const isSending =
+    sendOutbound.isPending ||
+    sendReply.isPending;
+
   const handleSend = async () => {
-    await sendOutbound.mutateAsync({
-      to: to.trim(),
-      cc: cc.length ? cc : undefined,
-      bcc: bcc.length ? bcc : undefined,
-      recipientName:
-        recipientName.trim() || undefined,
-      subject: subject.trim(),
-      message,
-    });
+    if (isReply && replyMessage) {
+      await sendReply.mutateAsync({
+        msg: replyMessage,
+        response: message,
+      });
+    } else {
+      await sendOutbound.mutateAsync({
+        to: to.trim(),
+        cc: cc.length ? cc : undefined,
+        bcc: bcc.length ? bcc : undefined,
+        recipientName:
+          recipientName.trim() || undefined,
+        subject: subject.trim(),
+        message,
+      });
+    }
+
+    if (isReply && replyMessage) {
+      navigate(
+        `/modules/gateway/message/${replyMessage.id}`,
+        {
+          replace: true,
+        },
+      );
+      return;
+    }
 
     setTo('');
     setRecipientName('');
@@ -205,6 +261,11 @@ export default function GatewayCompose() {
   };
 
   const handleClear = () => {
+    if (isReply && replyMessage) {
+      setMessage('');
+      return;
+    }
+
     setTo('');
     setRecipientName('');
     setCcInput('');
@@ -217,20 +278,90 @@ export default function GatewayCompose() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">
-          Composer & envoyer
-        </h1>
+      <div className="flex items-start gap-3">
+        {isReply && replyMessage && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              navigate(
+                `/modules/gateway/message/${replyMessage.id}`,
+              )
+            }
+            className="mt-1 gap-1"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Retour
+          </Button>
+        )}
 
-        <p className="text-muted-foreground">
-          Envoi sortant via{' '}
-          <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-            notify.brand-in-a-box.space
-          </code>
-        </p>
+        <div>
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
+            {isReply ? (
+              <Reply className="h-6 w-6 text-primary" />
+            ) : (
+              <Mail className="h-6 w-6 text-primary" />
+            )}
+
+            {isReply
+              ? 'Répondre au message'
+              : 'Composer & envoyer'}
+          </h1>
+
+          <p className="text-muted-foreground">
+            Envoi sortant via{' '}
+            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
+              notify.brand-in-a-box.space
+            </code>
+          </p>
+        </div>
       </div>
 
-      {prefill?.to && (
+      {isReply && replyMessage && (
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="space-y-2 pb-4 pt-4">
+            <div className="flex items-center gap-3">
+              <Reply className="h-5 w-5 text-primary" />
+
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">
+                  Réponse au message entrant
+                </p>
+
+                <p className="truncate text-xs text-muted-foreground">
+                  {replyMessage.sender_name
+                    ? `${replyMessage.sender_name} · `
+                    : ''}
+                  {replyMessage.sender_email}
+                </p>
+              </div>
+
+              <Badge
+                variant="outline"
+                className="shrink-0 text-xs"
+              >
+                Réponse
+              </Badge>
+            </div>
+
+            <div className="rounded-md border border-border bg-background/70 p-3">
+              <p className="text-xs font-medium text-muted-foreground">
+                Message original
+              </p>
+
+              <p className="mt-1 text-sm font-medium">
+                {replyMessage.subject}
+              </p>
+
+              <p className="mt-2 whitespace-pre-wrap text-sm text-muted-foreground">
+                {replyMessage.content}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {!isReply && normalPrefill?.to && (
         <Card className="border-primary/30 bg-primary/5">
           <CardContent className="flex items-center gap-3 pb-4 pt-4">
             <Mail className="h-5 w-5 text-primary" />
@@ -241,10 +372,10 @@ export default function GatewayCompose() {
               </p>
 
               <p className="truncate text-xs text-muted-foreground">
-                {prefill.recipientName
-                  ? `${prefill.recipientName} · `
+                {normalPrefill.recipientName
+                  ? `${normalPrefill.recipientName} · `
                   : ''}
-                {prefill.to}
+                {normalPrefill.to}
               </p>
             </div>
 
@@ -269,9 +400,8 @@ export default function GatewayCompose() {
               </p>
 
               <p className="text-xs text-muted-foreground">
-                {me.positionLabel ||
-                  'Poste non défini'}{' '}
-                · {me.email}
+                {me.positionLabel || 'Poste non défini'} ·{' '}
+                {me.email}
               </p>
             </div>
 
@@ -288,8 +418,15 @@ export default function GatewayCompose() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-2">
-            <Mail className="h-5 w-5" />
-            Nouveau message sortant
+            {isReply ? (
+              <Reply className="h-5 w-5" />
+            ) : (
+              <Mail className="h-5 w-5" />
+            )}
+
+            {isReply
+              ? 'Réponse'
+              : 'Nouveau message sortant'}
           </CardTitle>
 
           {totalRecipients > 0 && (
@@ -298,6 +435,7 @@ export default function GatewayCompose() {
               className="gap-1"
             >
               <Users className="h-3 w-3" />
+
               {totalRecipients}{' '}
               destinataire
               {totalRecipients > 1 ? 's' : ''}
@@ -308,9 +446,7 @@ export default function GatewayCompose() {
         <CardContent className="space-y-4">
           <div className="grid gap-3 md:grid-cols-2">
             <div>
-              <Label>
-                Destinataire (À) *
-              </Label>
+              <Label>Destinataire (À) *</Label>
 
               <ContactAutocomplete
                 value={to}
@@ -327,144 +463,136 @@ export default function GatewayCompose() {
             </div>
 
             <div>
-              <Label>
-                Nom du destinataire
-              </Label>
+              <Label>Nom du destinataire</Label>
 
               <Input
                 value={recipientName}
                 onChange={(e) =>
-                  setRecipientName(
-                    e.target.value,
-                  )
+                  setRecipientName(e.target.value)
                 }
                 placeholder="Marie Dupont"
               />
             </div>
           </div>
 
-          <div className="flex gap-2 text-xs">
-            {!showCc && (
-              <button
-                type="button"
-                className="text-primary hover:underline"
-                onClick={() =>
-                  setShowCc(true)
-                }
-              >
-                + Ajouter Cc
-              </button>
-            )}
+          {!isReply && (
+            <>
+              <div className="flex gap-2 text-xs">
+                {!showCc && (
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => setShowCc(true)}
+                  >
+                    + Ajouter Cc
+                  </button>
+                )}
 
-            {!showBcc && (
-              <button
-                type="button"
-                className="text-primary hover:underline"
-                onClick={() =>
-                  setShowBcc(true)
-                }
-              >
-                + Ajouter Cci
-              </button>
-            )}
-          </div>
-
-          {showCc && (
-            <div>
-              <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-1.5">
-                  <Users className="h-3.5 w-3.5" />
-                  Cc (visible par tous)
-                </Label>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCc(false);
-                    setCcInput('');
-                  }}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
+                {!showBcc && (
+                  <button
+                    type="button"
+                    className="text-primary hover:underline"
+                    onClick={() => setShowBcc(true)}
+                  >
+                    + Ajouter Cci
+                  </button>
+                )}
               </div>
 
-              <Input
-                value={ccInput}
-                onChange={(e) =>
-                  setCcInput(
-                    e.target.value,
-                  )
-                }
-                placeholder="email1@x.com, email2@x.com"
-              />
+              {showCc && (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-1.5">
+                      <Users className="h-3.5 w-3.5" />
+                      Cc (visible par tous)
+                    </Label>
 
-              {cc.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {cc.map((email) => (
-                    <Badge
-                      key={email}
-                      variant="secondary"
-                      className="text-xs"
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowCc(false);
+                        setCcInput('');
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
                     >
-                      {email}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
 
-          {showBcc && (
-            <div>
-              <div className="flex items-center justify-between">
-                <Label className="flex items-center gap-1.5">
-                  <EyeOff className="h-3.5 w-3.5" />
-                  Cci (copie cachée)
-                </Label>
+                  <Input
+                    value={ccInput}
+                    onChange={(e) =>
+                      setCcInput(e.target.value)
+                    }
+                    placeholder="email1@x.com, email2@x.com"
+                  />
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowBcc(false);
-                    setBccInput('');
-                  }}
-                  className="text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-              </div>
-
-              <Input
-                value={bccInput}
-                onChange={(e) =>
-                  setBccInput(
-                    e.target.value,
-                  )
-                }
-                placeholder="caché1@x.com, caché2@x.com"
-              />
-
-              {bcc.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {bcc.map((email) => (
-                    <Badge
-                      key={email}
-                      variant="secondary"
-                      className="text-xs"
-                    >
-                      {email}
-                      <EyeOff className="ml-1 h-2.5 w-2.5" />
-                    </Badge>
-                  ))}
+                  {cc.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {cc.map((email) => (
+                        <Badge
+                          key={email}
+                          variant="secondary"
+                          className="text-xs"
+                        >
+                          {email}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              <p className="mt-1 text-xs text-muted-foreground">
-                Les Cci ne sont visibles ni par le
-                destinataire principal ni par les Cc.
-              </p>
-            </div>
+              {showBcc && (
+                <div>
+                  <div className="flex items-center justify-between">
+                    <Label className="flex items-center gap-1.5">
+                      <EyeOff className="h-3.5 w-3.5" />
+                      Cci (copie cachée)
+                    </Label>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowBcc(false);
+                        setBccInput('');
+                      }}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+
+                  <Input
+                    value={bccInput}
+                    onChange={(e) =>
+                      setBccInput(e.target.value)
+                    }
+                    placeholder="caché1@x.com, caché2@x.com"
+                  />
+
+                  {bcc.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {bcc.map((email) => (
+                        <Badge
+                          key={email}
+                          variant="secondary"
+                          className="text-xs"
+                        >
+                          {email}
+                          <EyeOff className="ml-1 h-2.5 w-2.5" />
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Les Cci ne sont visibles ni par le
+                    destinataire principal ni par les Cc.
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
           <div>
@@ -475,11 +603,21 @@ export default function GatewayCompose() {
               onChange={(e) =>
                 setSubject(e.target.value)
               }
+              readOnly={isReply}
+              className={
+                isReply
+                  ? 'bg-muted/40'
+                  : undefined
+              }
             />
           </div>
 
           <div>
-            <Label>Message *</Label>
+            <Label>
+              {isReply
+                ? 'Votre réponse *'
+                : 'Message *'}
+            </Label>
 
             <Textarea
               rows={10}
@@ -487,7 +625,11 @@ export default function GatewayCompose() {
               onChange={(e) =>
                 setMessage(e.target.value)
               }
-              placeholder="Rédigez votre message…"
+              placeholder={
+                isReply
+                  ? 'Rédigez votre réponse…'
+                  : 'Rédigez votre message…'
+              }
             />
           </div>
 
@@ -527,7 +669,7 @@ export default function GatewayCompose() {
               variant="outline"
               onClick={handleClear}
             >
-              Vider
+              {isReply ? 'Effacer' : 'Vider'}
             </Button>
 
             <Button
@@ -536,19 +678,25 @@ export default function GatewayCompose() {
                 !to.trim() ||
                 !subject.trim() ||
                 !message.trim() ||
-                sendOutbound.isPending
+                isSending
               }
               className="gap-2"
             >
-              <Send className="h-4 w-4" />
+              {isReply ? (
+                <Reply className="h-4 w-4" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
 
-              {sendOutbound.isPending
+              {isSending
                 ? 'Envoi…'
-                : `Envoyer${
-                    totalRecipients > 1
-                      ? ` à ${totalRecipients}`
-                      : ''
-                  }`}
+                : isReply
+                  ? 'Envoyer la réponse'
+                  : `Envoyer${
+                      totalRecipients > 1
+                        ? ` à ${totalRecipients}`
+                        : ''
+                    }`}
             </Button>
           </div>
         </CardContent>
