@@ -136,6 +136,11 @@ import MarketplaceCustomers from "./pages/modules/marketplace/MarketplaceCustome
 import MarketplaceSubscriptions from "./pages/modules/marketplace/MarketplaceSubscriptions";
 import MarketplaceFavorites from "./pages/modules/marketplace/MarketplaceFavorites";
 import MarketplaceOrders from "./pages/modules/marketplace/MarketplaceOrders";
+<<<<<<< HEAD
+=======
+import MarketplaceRewards from "./pages/modules/marketplace/MarketplaceRewards";
+import MarketplaceRecycling from "./pages/modules/marketplace/MarketplaceRecycling";
+>>>>>>> 3f772a1 (fix)
 
 /* ============================================================
    6. SUPPORT & CUSTOMER SUCCESS
