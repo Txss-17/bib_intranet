@@ -192,6 +192,8 @@ export default function MarketplaceSubscriptions() {
             shop.category || "Non catégorisée",
           country:
             shop.country || "Non renseigné",
+          merchantEmail:
+            merchant?.contact_email || null,
         };
       });
   }, [shops, merchantMap]);
