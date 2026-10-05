@@ -776,7 +776,30 @@ syncDetails.pull = {
           'Export B.I.B Platform invalide : customer_favorites absent ou non-tableau',
         )
       }
-      
+      syncDetails.favorites = {
+  mode:
+    'full_snapshot',
+
+  received:
+    favorites.length,
+
+  products:
+    favorites.filter(
+      (favorite: any) =>
+        favorite.favorite_type ===
+        'product',
+    ).length,
+
+  boutiques:
+    favorites.filter(
+      (favorite: any) =>
+        favorite.favorite_type ===
+        'boutique',
+    ).length,
+
+  snapshot_replaced:
+    false,
+}
       
       // ------------------------------------------------------
       // Nettoyage du snapshot précédent
