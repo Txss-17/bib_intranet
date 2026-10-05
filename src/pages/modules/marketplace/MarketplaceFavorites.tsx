@@ -941,4 +941,3 @@ export default function MarketplaceFavorites() {
     </div>
   );
 }
-}
