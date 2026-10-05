@@ -143,7 +143,9 @@ export default function MarketplaceSubscriptions() {
   const [search, setSearch] = useState("");
   const [planFilter, setPlanFilter] =
     useState<SubscriptionFilter>("all");
-
+  
+  const navigate = useNavigate();
+  
   const isLoading =
     merchantsLoading || shopsLoading;
 
