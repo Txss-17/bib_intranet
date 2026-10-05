@@ -391,18 +391,6 @@ export const moduleNavigations: Record<
         path: '/pole/marketplace/favorites',
         icon: 'Heart',
       },
-      {
-        id: 'rewards',
-        label: 'Points & récompenses',
-        path: '/pole/marketplace/rewards',
-        icon: 'Gift',
-      },
-      {
-        id: 'recycling',
-        label: 'Recyclage client',
-        path: '/pole/marketplace/recycling',
-        icon: 'Recycle',
-      },
     ],
   },
 
