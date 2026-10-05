@@ -328,3 +328,10 @@ export const useShopActions = () => {
     changeStatus,
   };
 };
+
+/** Jours restants de la phase de test (null si non applicable). */
+export const testDaysLeft = (shop: Partial<Shop> & Record<string, any>): number | null => {
+  const end = shop?.test_end_date ?? shop?.test_ends_at ?? null;
+  if (!end) return null;
+  return Math.ceil((new Date(end).getTime() - Date.now()) / 86_400_000);
+};
