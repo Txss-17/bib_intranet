@@ -124,7 +124,7 @@ import SupplierCatalogInbox from "./pages/modules/supplier/SupplierCatalogInbox"
    5. MARKETPLACE & CUSTOMER
    ============================================================ */
 
-import MarketplaceDashboard from "./pages/PoleDashboard";
+import MarketplaceDashboard from "./pages/modules/marketplace/MarketplaceDashboard";
 import MerchantPortfolio from "./pages/modules/marketplace/MerchantPortfolio";
 import MerchantDetail from "./pages/modules/marketplace/MerchantDetail";
 import MarketplaceStoreDetail from "./pages/modules/marketplace/MarketplaceStoreDetail";
