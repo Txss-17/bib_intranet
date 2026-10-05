@@ -749,6 +749,18 @@ function SubscriptionRowItem({
             Boutique
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
+          
+          {row.merchantEmail ? (
+            <button
+              type="button"
+              onClick={onContact}
+              className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted"
+            >
+              {row.hasSubscription
+                ? "Proposer évolution / add-on"
+                : "Proposer un abonnement"}
+            </button>
+          ) : null}
         </div>
       </td>
     </tr>
