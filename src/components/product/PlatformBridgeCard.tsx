@@ -1,727 +1,481 @@
-import { useState } from 'react';
-import { format, formatDistanceStrict } from 'date-fns';
-import { fr } from 'date-fns/locale';
 import {
-  AlertTriangle,
+  AlertCircle,
   CheckCircle2,
-  ChevronDown,
-  ChevronRight,
   Clock3,
-  Link2,
   RefreshCw,
-  Store,
-  Users,
-  Wallet,
-  Heart,
-  ShoppingBag,
-  Ticket,
-  Truck,
-} from 'lucide-react';
+  Settings2,
+  XCircle,
+} from "lucide-react";
 
+import {
+  usePlatformActions,
+  usePlatformStatus,
+  usePlatformSyncRuns,
+} from "@/hooks/usePlatformSync";
+
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@/components/ui/card';
-
-import { Badge } from '@/components/ui/badge';
-
-import { Button } from '@/components/ui/button';
-
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
 
-import {
-  Separator,
-} from '@/components/ui/separator';
-
-import {
-  usePlatformActions,
-  usePlatformStatus,
-  usePlatformSyncRuns,
-  type PlatformSyncRun,
-} from '@/hooks/usePlatformSync';
-
-const STATUS: Record<
-  string,
-  {
-    label: string;
-    variant:
-      | 'default'
-      | 'secondary'
-      | 'destructive'
-      | 'outline';
+const formatDate = (value: string | null) => {
+  if (!value) {
+    return "—";
   }
-> = {
-  running: {
-    label: 'En cours',
-    variant: 'outline',
-  },
 
-  success: {
-    label: 'Succès',
-    variant: 'default',
-  },
+  const date = new Date(value);
 
-  partial: {
-    label: 'Partiel',
-    variant: 'secondary',
-  },
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
 
-  error: {
-    label: 'Erreur',
-    variant: 'destructive',
-  },
+  return new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
 };
 
-function Metric({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: typeof Users;
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="rounded-lg border border-border p-3">
-      <div className="flex items-center gap-2 text-muted-foreground">
-        <Icon className="h-4 w-4" />
+const getDuration = (
+  startedAt: string,
+  finishedAt: string | null,
+) => {
+  if (!finishedAt) {
+    return "En cours";
+  }
 
-        <span className="text-xs">
-          {label}
-        </span>
-      </div>
+  const start = new Date(startedAt).getTime();
+  const end = new Date(finishedAt).getTime();
 
-      <p className="mt-1 text-xl font-semibold">
-        {value}
-      </p>
-    </div>
-  );
-}
+  if (Number.isNaN(start) || Number.isNaN(end)) {
+    return "—";
+  }
 
-function RunDetail({
-  run,
-}: {
-  run: PlatformSyncRun;
-}) {
-  const received =
-    run.details?.pull?.received;
+  const durationMs = Math.max(0, end - start);
+  const durationSeconds = Math.round(durationMs / 1000);
 
-  const favorites =
-    run.details?.favorites;
+  if (durationSeconds < 60) {
+    return `${durationSeconds} s`;
+  }
 
-  const summary =
-    run.details?.summary;
+  const minutes = Math.floor(durationSeconds / 60);
+  const seconds = durationSeconds % 60;
 
-  const duration =
-    summary?.duration_ms != null
-      ? `${(summary.duration_ms / 1000).toFixed(2)} s`
-      : run.finished_at
-        ? formatDistanceStrict(
-            new Date(run.started_at),
-            new Date(run.finished_at),
-            {
-              locale: fr,
-            },
-          )
-        : '—';
+  return `${minutes} min ${seconds} s`;
+};
 
-  return (
-    <div className="space-y-5">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric
-          icon={Users}
-          label="Marchands"
-          value={received?.merchants ?? 0}
-        />
+const getErrorCount = (errors: unknown) => {
+  if (Array.isArray(errors)) {
+    return errors.length;
+  }
 
-        <Metric
-          icon={Store}
-          label="Boutiques"
-          value={received?.boutiques ?? 0}
-        />
+  return errors ? 1 : 0;
+};
 
-        <Metric
-          icon={ShoppingBag}
-          label="Commandes"
-          value={received?.orders ?? 0}
-        />
+const getErrorMessage = (error: unknown) => {
+  if (!error) {
+    return "Erreur inconnue.";
+  }
 
-        <Metric
-          icon={Ticket}
-          label="Tickets"
-          value={received?.tickets ?? 0}
-        />
-      </div>
+  if (typeof error === "string") {
+    return error;
+  }
 
-      <div>
-        <div className="mb-3 flex items-center justify-between">
-          <div>
-            <h3 className="font-medium">
-              Flux complémentaires
-            </h3>
+  if (typeof error === "object") {
+    const value = error as Record<string, unknown>;
 
-            <p className="text-xs text-muted-foreground">
-              Données reçues depuis B.I.B Platform
-            </p>
-          </div>
-        </div>
+    if (typeof value.message === "string") {
+      return value.message;
+    }
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <Metric
-            icon={Truck}
-            label="Candidatures fournisseurs"
-            value={
-              received?.supplier_applications ?? 0
-            }
-          />
+    if (typeof value.error === "string") {
+      return value.error;
+    }
 
-          <Metric
-            icon={Wallet}
-            label="Flux financiers"
-            value={
-              received?.financials ?? 0
-            }
-          />
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return "Erreur inconnue.";
+    }
+  }
 
-          <Metric
-            icon={Heart}
-            label="Favoris clients"
-            value={
-              received?.customer_favorites?.total ??
-              favorites?.received ??
-              0
-            }
-          />
-        </div>
-      </div>
+  return String(error);
+};
 
-      <Separator />
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case "success":
+      return "Succès";
 
-      <div>
-        <h3 className="font-medium">
-          Favoris clients
-        </h3>
+    case "partial":
+      return "Partiel";
 
-        <p className="mt-1 text-xs text-muted-foreground">
-          Source de vérité : B.I.B Platform
-        </p>
+    case "error":
+      return "Erreur";
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <Metric
-            icon={Heart}
-            label="Total"
-            value={
-              favorites?.received ??
-              received?.customer_favorites?.total ??
-              0
-            }
-          />
+    case "running":
+      return "En cours";
 
-          <Metric
-            icon={ShoppingBag}
-            label="Produits"
-            value={
-              favorites?.products ??
-              received?.customer_favorites?.products ??
-              0
-            }
-          />
+    default:
+      return status || "Inconnu";
+  }
+};
 
-          <Metric
-            icon={Store}
-            label="Boutiques"
-            value={
-              favorites?.boutiques ??
-              received?.customer_favorites?.boutiques ??
-              0
-            }
-          />
-        </div>
+const getStatusIcon = (status: string) => {
+  switch (status) {
+    case "success":
+      return (
+        <CheckCircle2 className="h-4 w-4" />
+      );
 
-        <div className="mt-3 rounded-lg border border-border bg-muted/30 p-3 text-sm">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span>
-              Mode de synchronisation
-            </span>
+    case "partial":
+      return (
+        <AlertCircle className="h-4 w-4" />
+      );
 
-            <Badge variant="outline">
-              Snapshot complet
-            </Badge>
-          </div>
+    case "error":
+      return (
+        <XCircle className="h-4 w-4" />
+      );
 
-          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
-            <span>
-              Remplacement du snapshot local
-            </span>
+    case "running":
+      return (
+        <RefreshCw className="h-4 w-4 animate-spin" />
+      );
 
-            <Badge
-              variant={
-                favorites?.snapshot_replaced
-                  ? 'default'
-                  : 'outline'
-              }
-            >
-              {favorites?.snapshot_replaced
-                ? 'Effectué'
-                : 'Non confirmé'}
-            </Badge>
-          </div>
-        </div>
-      </div>
+    default:
+      return (
+        <Clock3 className="h-4 w-4" />
+      );
+  }
+};
 
-      <Separator />
+const getStatusVariant = (
+  status: string,
+): "default" | "secondary" | "destructive" | "outline" => {
+  switch (status) {
+    case "success":
+      return "default";
 
-      <div>
-        <h3 className="font-medium">
-          Résultat de l'exécution
-        </h3>
+    case "error":
+      return "destructive";
 
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-lg border border-border p-3">
-            <p className="text-xs text-muted-foreground">
-              Éléments synchronisés
-            </p>
+    case "partial":
+      return "secondary";
 
-            <p className="mt-1 text-xl font-semibold">
-              {summary?.items_count ??
-                run.items_count}
-            </p>
-          </div>
-
-          <div className="rounded-lg border border-border p-3">
-            <p className="text-xs text-muted-foreground">
-              Anomalies
-            </p>
-
-            <p className="mt-1 text-xl font-semibold">
-              {summary?.errors_count ??
-                run.errors?.length ??
-                0}
-            </p>
-          </div>
-
-          <div className="rounded-lg border border-border p-3">
-            <p className="text-xs text-muted-foreground">
-              Durée
-            </p>
-
-            <p className="mt-1 text-xl font-semibold">
-              {duration}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {run.errors?.length > 0 && (
-        <>
-          <Separator />
-
-          <div>
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-destructive" />
-
-              <h3 className="font-medium text-destructive">
-                Anomalies détectées
-              </h3>
-            </div>
-
-            <div className="mt-3 space-y-2">
-              {run.errors.map(
-                (error, index) => (
-                  <div
-                    key={`${run.id}-error-${index}`}
-                    className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm"
-                  >
-                    {error}
-                  </div>
-                ),
-              )}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-function RunRow({
-  run,
-  onOpen,
-}: {
-  run: PlatformSyncRun;
-  onOpen: () => void;
-}) {
-  const meta =
-    STATUS[run.status] ??
-    STATUS.error;
-
-  const favoriteCount =
-    run.details?.favorites?.received ??
-    run.details?.pull?.received?.customer_favorites
-      ?.total ??
-    0;
-
-  return (
-    <li className="border-t py-3 first:border-t-0">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={meta.variant}>
-              {meta.label}
-            </Badge>
-
-            <span className="font-medium">
-              {run.direction === 'pull'
-                ? 'Lecture'
-                : 'Envoi'}
-            </span>
-
-            <span className="text-muted-foreground">
-              · {run.action}
-            </span>
-          </div>
-
-          <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
-            <span>
-              {run.items_count} élément(s)
-            </span>
-
-            {favoriteCount > 0 && (
-              <span>
-                {favoriteCount} favori(s)
-              </span>
-            )}
-
-            <span>
-              {format(
-                new Date(run.started_at),
-                'dd MMM yyyy · HH:mm',
-                {
-                  locale: fr,
-                },
-              )}
-            </span>
-          </div>
-
-          {run.errors?.length > 0 && (
-            <p className="mt-1 truncate text-xs text-destructive">
-              {run.errors[0]}
-            </p>
-          )}
-        </div>
-
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={onOpen}
-        >
-          Voir le détail
-        </Button>
-      </div>
-    </li>
-  );
-}
+    default:
+      return "outline";
+  }
+};
 
 export function PlatformBridgeCard() {
-  const {
-    data: status,
-    isLoading: statusLoading,
-  } = usePlatformStatus();
+  const { data: platformStatus, isLoading: isStatusLoading } =
+    usePlatformStatus();
 
   const {
     data: runs = [],
-    isLoading: runsLoading,
+    isLoading: isRunsLoading,
   } = usePlatformSyncRuns();
 
-  const {
-    pull,
-  } = usePlatformActions();
+  const { pull } = usePlatformActions();
 
-  const [
-    selectedRun,
-    setSelectedRun,
-  ] =
-    useState<PlatformSyncRun | null>(
-      null,
-    );
+  const lastRun = runs[0];
 
-  const latestRun =
-    runs[0] ?? null;
+  const configured = Boolean(platformStatus?.configured);
 
-  const latestReceived =
-    latestRun?.details?.pull?.received;
+  const isSynchronizing = pull.isPending;
 
-  const latestFavorites =
-    latestRun?.details?.favorites;
+  const lastRunErrorCount = lastRun
+    ? getErrorCount(lastRun.errors)
+    : 0;
 
   return (
-    <>
-      <Card>
-        <CardHeader className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div>
+    <Card>
+      <CardHeader>
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
             <CardTitle className="flex items-center gap-2">
-              <Link2 className="h-4 w-4" />
-
-              B.I.B Platform
-
-              <Badge
-                variant={
-                  status?.configured
-                    ? 'default'
-                    : 'outline'
-                }
-              >
-                {statusLoading
-                  ? 'Vérification…'
-                  : status?.configured
-                    ? 'Connectée'
-                    : 'À configurer'}
-              </Badge>
+              <Settings2 className="h-5 w-5" />
+              Liaison B.I.B Platform
             </CardTitle>
 
-            <CardDescription className="mt-1">
-              Liaison opérationnelle entre B.I.B Platform
-              et BIB Intranet.
+            <CardDescription>
+              Synchronisation entre B.I.B Platform et B.I.B Intranet.
             </CardDescription>
+          </div>
+
+          <Badge
+            variant={configured ? "default" : "outline"}
+            className="w-fit"
+          >
+            {isStatusLoading
+              ? "Vérification…"
+              : configured
+                ? "Connectée"
+                : "À configurer"}
+          </Badge>
+        </div>
+      </CardHeader>
+
+      <CardContent className="space-y-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="text-sm font-medium">
+              Synchronisation Platform → Intranet
+            </p>
+
+            <p className="text-sm text-muted-foreground">
+              Lance une nouvelle synchronisation des données nécessaires à
+              l'Intranet.
+            </p>
           </div>
 
           <Button
             size="sm"
-            onClick={() =>
-              pull.mutate()
-            }
-            disabled={
-              pull.isPending ||
-              !status?.configured
-            }
+            onClick={() => pull.mutate()}
+            disabled={!configured || isSynchronizing}
           >
             <RefreshCw
               className={`mr-2 h-4 w-4 ${
-                pull.isPending
-                  ? 'animate-spin'
-                  : ''
+                isSynchronizing ? "animate-spin" : ""
               }`}
             />
 
-            {pull.isPending
-              ? 'Synchronisation…'
-              : 'Synchroniser maintenant'}
+            {isSynchronizing
+              ? "Synchronisation…"
+              : "Synchroniser maintenant"}
           </Button>
-        </CardHeader>
+        </div>
 
-        <CardContent className="space-y-5">
-          {latestRun ? (
-            <>
-              <div className="rounded-lg border border-border bg-muted/30 p-4">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-medium">
-                        Dernière synchronisation
-                      </span>
+        <Separator />
 
-                      <Badge
-                        variant={
-                          STATUS[
-                            latestRun.status
-                          ]?.variant ??
-                          'outline'
-                        }
-                      >
-                        {
-                          STATUS[
-                            latestRun.status
-                          ]?.label ??
-                          latestRun.status
-                        }
-                      </Badge>
-                    </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold">
+                Dernier résultat
+              </h3>
 
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {format(
-                        new Date(
-                          latestRun.started_at,
-                        ),
-                        'dd MMMM yyyy · HH:mm',
-                        {
-                          locale: fr,
-                        },
-                      )}
-                    </p>
-                  </div>
+              <p className="text-sm text-muted-foreground">
+                État de la dernière synchronisation exécutée.
+              </p>
+            </div>
 
+            {lastRun && (
+              <Dialog>
+                <DialogTrigger asChild>
                   <Button
-                    size="sm"
                     variant="outline"
-                    onClick={() =>
-                      setSelectedRun(
-                        latestRun,
-                      )
-                    }
+                    size="sm"
                   >
                     Voir le rapport
                   </Button>
-                </div>
+                </DialogTrigger>
 
-                <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <Metric
-                    icon={Users}
-                    label="Marchands"
-                    value={
-                      latestReceived
-                        ?.merchants ?? 0
-                    }
-                  />
+                <DialogContent className="max-w-lg">
+                  <DialogHeader>
+                    <DialogTitle>
+                      Rapport de synchronisation
+                    </DialogTitle>
 
-                  <Metric
-                    icon={Store}
-                    label="Boutiques"
-                    value={
-                      latestReceived
-                        ?.boutiques ?? 0
-                    }
-                  />
+                    <DialogDescription>
+                      Résultat de l'exécution. Ce rapport présente
+                      uniquement l'état de succès ou d'erreur de la
+                      synchronisation.
+                    </DialogDescription>
+                  </DialogHeader>
 
-                  <Metric
-                    icon={Heart}
-                    label="Favoris"
-                    value={
-                      latestFavorites
-                        ?.received ??
-                      latestReceived
-                        ?.customer_favorites
-                        ?.total ??
-                      0
-                    }
-                  />
+                  <div className="space-y-5">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-full border">
+                        {getStatusIcon(lastRun.status)}
+                      </div>
 
-                  <Metric
-                    icon={CheckCircle2}
-                    label="Total synchronisé"
-                    value={
-                      latestRun.items_count
-                    }
-                  />
-                </div>
+                      <div>
+                        <p className="font-medium">
+                          {getStatusLabel(lastRun.status)}
+                        </p>
 
-                <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1">
-                    <Clock3 className="h-3.5 w-3.5" />
+                        <p className="text-sm text-muted-foreground">
+                          {formatDate(lastRun.started_at)}
+                        </p>
+                      </div>
+                    </div>
 
-                    {latestRun.details
-                      ?.summary
-                      ?.duration_ms != null
-                      ? `${(
-                          latestRun.details.summary
-                            .duration_ms / 1000
-                        ).toFixed(2)} s`
-                      : 'Durée non disponible'}
-                  </span>
+                    <Separator />
 
-                  <span>
-                    {latestRun.errors?.length ?? 0}{' '}
-                    anomalie(s)
-                  </span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="rounded-lg border border-dashed border-border p-6 text-center">
-              <p className="font-medium">
-                Aucune synchronisation enregistrée
-              </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Éléments traités
+                        </p>
 
-              <p className="mt-1 text-sm text-muted-foreground">
-                Lance une première synchronisation pour
-                alimenter le journal d'intégration.
-              </p>
-            </div>
-          )}
+                        <p className="mt-1 text-lg font-semibold">
+                          {lastRun.items_count ?? 0}
+                        </p>
+                      </div>
 
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <div>
-                <h3 className="font-medium">
-                  Historique des échanges
-                </h3>
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Erreurs
+                        </p>
 
-                <p className="text-xs text-muted-foreground">
-                  Les rapports sont conservés dans
-                  platform_sync_runs.
-                </p>
-              </div>
-            </div>
+                        <p className="mt-1 text-lg font-semibold">
+                          {lastRunErrorCount}
+                        </p>
+                      </div>
 
-            {runsLoading ? (
-              <p className="py-4 text-sm text-muted-foreground">
-                Chargement de l'historique…
-              </p>
-            ) : runs.length === 0 ? (
-              <p className="py-4 text-sm text-muted-foreground">
-                Aucun échange enregistré.
-              </p>
-            ) : (
-              <ul className="rounded-lg border px-3">
-                {runs.map((run) => (
-                  <RunRow
-                    key={run.id}
-                    run={run}
-                    onOpen={() =>
-                      setSelectedRun(run)
-                    }
-                  />
-                ))}
-              </ul>
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Début
+                        </p>
+
+                        <p className="mt-1 text-sm font-medium">
+                          {formatDate(lastRun.started_at)}
+                        </p>
+                      </div>
+
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Durée
+                        </p>
+
+                        <p className="mt-1 text-sm font-medium">
+                          {getDuration(
+                            lastRun.started_at,
+                            lastRun.finished_at,
+                          )}
+                        </p>
+                      </div>
+                    </div>
+
+                    {lastRunErrorCount > 0 && (
+                      <>
+                        <Separator />
+
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-destructive" />
+
+                            <p className="text-sm font-semibold">
+                              Erreurs rencontrées
+                            </p>
+                          </div>
+
+                          <div className="max-h-48 space-y-2 overflow-y-auto rounded-md border p-3">
+                            {Array.isArray(lastRun.errors) ? (
+                              lastRun.errors.map(
+                                (error, index) => (
+                                  <div
+                                    key={index}
+                                    className="text-sm text-muted-foreground"
+                                  >
+                                    {getErrorMessage(error)}
+                                  </div>
+                                ),
+                              )
+                            ) : (
+                              <div className="text-sm text-muted-foreground">
+                                {getErrorMessage(lastRun.errors)}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </DialogContent>
+              </Dialog>
             )}
           </div>
-        </CardContent>
-      </Card>
 
-      <Dialog
-        open={!!selectedRun}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedRun(null);
-          }
-        }}
-      >
-        <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              Rapport de synchronisation B.I.B Platform
-            </DialogTitle>
+          {isRunsLoading ? (
+            <div className="rounded-md border p-4 text-sm text-muted-foreground">
+              Chargement du dernier résultat…
+            </div>
+          ) : !lastRun ? (
+            <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
+              Aucune synchronisation n'a encore été exécutée.
+            </div>
+          ) : (
+            <div className="rounded-lg border p-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full border">
+                    {getStatusIcon(lastRun.status)}
+                  </div>
 
-            <DialogDescription>
-              {selectedRun
-                ? `${selectedRun.direction === 'pull' ? 'Lecture depuis' : 'Envoi vers'} B.I.B Platform · ${format(
-                    new Date(
-                      selectedRun.started_at,
-                    ),
-                    'dd MMMM yyyy · HH:mm',
-                    {
-                      locale: fr,
-                    },
-                  )}`
-                : ''}
-            </DialogDescription>
-          </DialogHeader>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">
+                        {getStatusLabel(lastRun.status)}
+                      </p>
 
-          {selectedRun && (
-            <RunDetail
-              run={selectedRun}
-            />
+                      <Badge
+                        variant={getStatusVariant(lastRun.status)}
+                      >
+                        {lastRun.status}
+                      </Badge>
+                    </div>
+
+                    <p className="text-sm text-muted-foreground">
+                      {formatDate(lastRun.started_at)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-6 text-sm">
+                  <div>
+                    <p className="text-muted-foreground">
+                      Éléments
+                    </p>
+
+                    <p className="font-medium">
+                      {lastRun.items_count ?? 0}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-muted-foreground">
+                      Erreurs
+                    </p>
+
+                    <p className="font-medium">
+                      {lastRunErrorCount}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-muted-foreground">
+                      Durée
+                    </p>
+
+                    <p className="font-medium">
+                      {getDuration(
+                        lastRun.started_at,
+                        lastRun.finished_at,
+                      )}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
-        </DialogContent>
-      </Dialog>
-    </>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
