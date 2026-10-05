@@ -8,18 +8,75 @@ export type MarketplaceFavoriteType =
 export interface MarketplaceCustomerFavorite {
   id: string;
 
+  /**
+   * Identifiant du client dans BIB Platform.
+   * La source de vérité reste BIB Platform.
+   */
   platform_user_id: string;
 
+  /**
+   * Type de favori enregistré sur BIB Platform.
+   */
   favorite_type: MarketplaceFavoriteType;
 
+  /**
+   * Identifiant de la cible dans BIB Platform :
+   * - product_id pour un produit
+   * - boutique_id pour une boutique
+   */
   platform_target_id: string;
 
+  /**
+   * Identifiant de la boutique BIB Platform associée
+   * à la cible.
+   *
+   * Pour un favori boutique :
+   * platform_boutique_id = platform_target_id
+   *
+   * Pour un favori produit :
+   * platform_boutique_id = products.boutique_id
+   */
+  platform_boutique_id: string | null;
+
+  /**
+   * Nom d'affichage exporté depuis BIB Platform.
+   *
+   * Produit :
+   * supplier_products.name
+   *
+   * Boutique :
+   * boutiques.name
+   */
+  target_name: string | null;
+
+  /**
+   * SKU produit lorsqu'il existe sur BIB Platform.
+   *
+   * Actuellement null pour les produits Platform
+   * qui ne disposent pas d'un SKU public autonome.
+   */
+  target_sku: string | null;
+
+  /**
+   * Identifiant de la boutique correspondante dans
+   * BIB Intranet, lorsqu'elle a pu être résolue.
+   */
   shop_id: string | null;
 
+  /**
+   * Date originale du favori sur BIB Platform.
+   */
   created_at: string;
 
+  /**
+   * Date à laquelle le snapshot a été synchronisé
+   * dans BIB Intranet.
+   */
   platform_synced_at: string;
 
+  /**
+   * Source du snapshot.
+   */
   source: 'platform';
 }
 
@@ -34,6 +91,9 @@ const FAVORITE_FIELDS = `
   platform_user_id,
   favorite_type,
   platform_target_id,
+  platform_boutique_id,
+  target_name,
+  target_sku,
   shop_id,
   created_at,
   platform_synced_at,
@@ -96,15 +156,13 @@ export function useMarketplaceFavorites(
         throw error;
       }
 
-      return (data ??
-        []) as MarketplaceCustomerFavorite[];
+      return (
+        data ?? []
+      ) as MarketplaceCustomerFavorite[];
     },
   });
 }
 
-/**
- * Nombre total de favoris synchronisés.
- */
 export function useMarketplaceFavoritesCount() {
   return useQuery({
     queryKey: [
@@ -135,9 +193,6 @@ export function useMarketplaceFavoritesCount() {
   });
 }
 
-/**
- * Nombre de favoris par type.
- */
 export function useMarketplaceFavoriteStats() {
   return useQuery({
     queryKey: [
@@ -154,9 +209,7 @@ export function useMarketplaceFavoriteStats() {
         .from(
           'marketplace_customer_favorites',
         )
-        .select(
-          'favorite_type',
-        );
+        .select('favorite_type');
 
       if (error) {
         throw error;
