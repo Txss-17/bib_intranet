@@ -620,16 +620,51 @@ export default function MarketplaceSubscriptions() {
                   <SubscriptionRowItem
                     key={row.shopId}
                     row={row}
+                    onContact={() => {
+                      if (!row.merchantEmail) return;
+                  
+                      const hasPlan = row.hasSubscription;
+                  
+                      const subject = hasPlan
+                        ? `Évolution de l’offre / add-on — ${row.shopName}`
+                        : `Proposition d’abonnement — ${row.shopName}`;
+                  
+                      const message = hasPlan
+                        ? `Bonjour ${row.merchantName},
+                  
+                  Je vous contacte au nom de B.I.B concernant la boutique « ${row.shopName} ».
+                  
+                  Nous souhaitons faire un point sur votre offre actuelle (${formatPlan(row.subscriptionPlan)}) et étudier avec vous une éventuelle évolution de l’abonnement ou l’ajout d’un add-on adapté à votre activité.
+                  
+                  Nous pouvons vous présenter les options disponibles et identifier celles qui seraient les plus pertinentes pour votre boutique.
+                  
+                  Bien cordialement,
+                  
+                  Équipe Marketplace
+                  B.I.B`
+                        : `Bonjour ${row.merchantName},
+                  
+                  Je vous contacte au nom de B.I.B concernant la boutique « ${row.shopName} ».
+                  
+                  Votre boutique est actuellement active et nous souhaitons vous présenter les possibilités d’abonnement et les services complémentaires disponibles sur B.I.B.
+                  
+                  Nous pouvons faire un point avec vous afin d’identifier l’offre la plus adaptée à votre activité.
+                  
+                  Bien cordialement,
+                  
+                  Équipe Marketplace
+                  B.I.B`;
+                  
+                      navigate("/modules/gateway/compose", {
+                        state: {
+                          to: row.merchantEmail,
+                          recipientName: row.merchantName,
+                          subject,
+                          message,
+                        },
+                      });
+                    }}
                   />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-    </div>
-  );
-}
 
 function SubscriptionRowItem({
   row,
