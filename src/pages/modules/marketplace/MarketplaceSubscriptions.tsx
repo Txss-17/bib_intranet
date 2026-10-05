@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   AlertCircle,
   ArrowRight,
@@ -39,6 +39,7 @@ type SubscriptionRow = {
   hasSubscription: boolean;
   category: string;
   country: string;
+  merchantEmail: string | null;
 };
 
 function normalize(value: unknown) {
