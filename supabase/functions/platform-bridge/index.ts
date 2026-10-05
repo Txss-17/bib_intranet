@@ -263,7 +263,84 @@ Deno.serve(async (req) => {
     return JSON.parse(text)
   }
 
+  // ------------------------------------------------------
+// RAPPORT DE RÉCEPTION
+// ------------------------------------------------------
 
+const financialKeys = [
+  'subscriptions',
+  'commissions',
+  'payments',
+  'fees',
+  'refunds',
+  'payouts',
+] as const
+
+const receivedFinancials =
+  financialKeys.reduce(
+    (total, key) =>
+      total +
+      ((data[key] ?? []) as unknown[]).length,
+    0,
+  )
+
+const receivedFavorites =
+  Array.isArray(
+    data.customer_favorites,
+  )
+    ? data.customer_favorites
+    : []
+
+const receivedFavoriteProducts =
+  receivedFavorites.filter(
+    (favorite: any) =>
+      favorite.favorite_type ===
+      'product',
+  ).length
+
+const receivedFavoriteBoutiques =
+  receivedFavorites.filter(
+    (favorite: any) =>
+      favorite.favorite_type ===
+      'boutique',
+  ).length
+
+syncDetails.pull = {
+  received: {
+    merchants:
+      (data.merchants ?? []).length,
+
+    boutiques:
+      (data.boutiques ?? []).length,
+
+    orders:
+      (data.orders ?? []).length,
+
+    tickets:
+      (data.tickets ?? []).length,
+
+    supplier_applications:
+      (
+        data.supplier_applications ??
+        []
+      ).length,
+
+    financials:
+      receivedFinancials,
+
+    customer_favorites: {
+      total:
+        receivedFavorites.length,
+
+      products:
+        receivedFavoriteProducts,
+
+      boutiques:
+        receivedFavoriteBoutiques,
+    },
+  },
+}
+  
   // ==========================================================
   // SYNC RUN
   // ==========================================================
