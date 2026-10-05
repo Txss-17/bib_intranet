@@ -137,8 +137,6 @@ import MarketplaceSubscriptions from "./pages/modules/marketplace/MarketplaceSub
 import MarketplaceFavorites from "./pages/modules/marketplace/MarketplaceFavorites";
 import MarketplaceOrders from "./pages/modules/marketplace/MarketplaceOrders";
 import MarketplaceSubscribers from "./pages/modules/marketplace/MarketplaceSubscribers";
-import MarketplaceRewards from "./pages/modules/marketplace/MarketplaceRewards";
-import MarketplaceRecycling from "./pages/modules/marketplace/MarketplaceRecycling";
 
 /* ============================================================
    6. SUPPORT & CUSTOMER SUCCESS
@@ -539,19 +537,22 @@ const App = () => (
                   path="/pole/marketplace/favorites"
                   element={<MarketplaceFavorites />}
                 />            
+                
+                {/* Fonctionnalités futures — masquées du MVP actuel */}
                 <Route
                   path="/pole/marketplace/rewards"
-                  element={<MarketplaceRewards />}
+                  element={<Navigate to="/pole/marketplace" replace />}
                 />
                 
                 <Route
                   path="/pole/marketplace/recycling"
-                  element={<MarketplaceRecycling />}
-                />                
+                  element={<Navigate to="/pole/marketplace" replace />}
+                />
                 <Route
                   path="/pole/marketplace/opportunities"
                   element={<MarketplaceOpportunities />}
-                />                
+                />         
+                
                 <Route
                   path="/pole/marketplace/analytics"
                   element={<MarketplaceAnalytics />}
