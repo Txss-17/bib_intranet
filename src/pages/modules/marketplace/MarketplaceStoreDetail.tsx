@@ -1,9 +1,11 @@
-import { Link, useParams } from 'react-router-dom';
+```tsx
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Globe,
   Store,
   ExternalLink,
+  Mail,
 } from 'lucide-react';
 
 import {
@@ -24,6 +26,7 @@ import { SHOP_STATUS_LABELS } from '@/hooks/useShops';
 
 export default function MarketplaceStoreDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const { data: shop, isLoading } =
     useMarketplaceShop(id);
@@ -46,6 +49,61 @@ export default function MarketplaceStoreDetail() {
       </div>
     );
   }
+
+  /*
+   * Le contact marchand passe exclusivement
+   * par le Gateway de l'Intranet.
+   *
+   * Aucun mailto:
+   * Aucun lancement de Gmail externe.
+   */
+  const handleContactMerchant = () => {
+    const merchantEmail =
+      (shop as any).contact_email ??
+      (shop as any).merchant_email ??
+      null;
+
+    const merchantName =
+      (shop as any).contact_name ??
+      (shop as any).merchant_name ??
+      (shop as any).merchant?.name ??
+      shop.name;
+
+    if (!merchantEmail) {
+      return;
+    }
+
+    navigate('/modules/gateway/compose', {
+      state: {
+        to: merchantEmail,
+        recipientName: merchantName,
+        subject: `Contact boutique — ${shop.name}`,
+        message: `Bonjour ${
+          merchantName || ''
+        },
+
+Je vous contacte au nom de B.I.B concernant votre boutique « ${
+          shop.name
+        } » présente sur la Marketplace.
+
+Bien cordialement,
+
+Équipe Marketplace
+B.I.B`,
+      },
+    });
+  };
+
+  const merchantEmail =
+    (shop as any).contact_email ??
+    (shop as any).merchant_email ??
+    null;
+
+  const merchantName =
+    (shop as any).contact_name ??
+    (shop as any).merchant_name ??
+    (shop as any).merchant?.name ??
+    null;
 
   return (
     <div className="space-y-6 p-6">
@@ -75,15 +133,30 @@ export default function MarketplaceStoreDetail() {
           </div>
         </div>
 
-        <Badge
-          variant={
-            shop.status === 'active'
-              ? 'default'
-              : 'outline'
-          }
-        >
-          {SHOP_STATUS_LABELS[shop.status]}
-        </Badge>
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge
+            variant={
+              shop.status === 'active'
+                ? 'default'
+                : 'outline'
+            }
+          >
+            {SHOP_STATUS_LABELS[shop.status]}
+          </Badge>
+
+          {merchantEmail && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={
+                handleContactMerchant
+              }
+            >
+              <Mail className="mr-2 h-4 w-4" />
+              Contacter le marchand
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -122,6 +195,24 @@ export default function MarketplaceStoreDetail() {
               </span>{' '}
               {shop.country || '—'}
             </div>
+
+            {merchantName && (
+              <div>
+                <span className="text-muted-foreground">
+                  Marchand :
+                </span>{' '}
+                {merchantName}
+              </div>
+            )}
+
+            {merchantEmail && (
+              <div>
+                <span className="text-muted-foreground">
+                  E-mail :
+                </span>{' '}
+                {merchantEmail}
+              </div>
+            )}
 
             {shop.website_url && (
               <Button
@@ -231,3 +322,4 @@ export default function MarketplaceStoreDetail() {
     </div>
   );
 }
+```
