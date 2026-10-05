@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { useQueries } from "@tanstack/react-query";
 import {
   Building2,
   ChevronDown,
@@ -39,6 +40,11 @@ type FilterType =
   | "all"
   | MarketplaceFavoriteType;
 
+type ReferenceRecord = Record<
+  string,
+  unknown
+>;
+
 function normalize(value: unknown) {
   return String(value ?? "")
     .trim()
@@ -70,13 +76,17 @@ function shortenId(value: string) {
   return `${value.slice(0, 8)}…${value.slice(-6)}`;
 }
 
-function getTypeLabel(type: MarketplaceFavoriteType) {
+function getTypeLabel(
+  type: MarketplaceFavoriteType,
+) {
   return type === "product"
     ? "Produit"
     : "Boutique";
 }
 
-function getTypeClasses(type: MarketplaceFavoriteType) {
+function getTypeClasses(
+  type: MarketplaceFavoriteType,
+) {
   return type === "product"
     ? "bg-blue-50 text-blue-700 border-blue-200"
     : "bg-violet-50 text-violet-700 border-violet-200";
@@ -103,49 +113,60 @@ export default function MarketplaceFavorites() {
     isLoading: statsLoading,
   } = useMarketplaceFavoriteStats();
 
-  const [productsResult, shopsResult, usersResult] =
-    useMarketplaceFavoriteReferences(
-      favorites,
-    );
+  const {
+    productsQuery,
+    shopsQuery,
+    usersQuery,
+  } = useMarketplaceFavoriteReferences(
+    favorites,
+  );
 
   const isLoading =
     favoritesLoading ||
-    productsResult.isLoading ||
-    shopsResult.isLoading ||
-    usersResult.isLoading;
+    productsQuery.isLoading ||
+    shopsQuery.isLoading ||
+    usersQuery.isLoading;
+
+  const referenceError =
+    productsQuery.error ??
+    shopsQuery.error ??
+    usersQuery.error;
 
   const productMap = useMemo(() => {
     return new Map(
-      (productsResult.data ?? []).map(
-        (product: any) => [
-          String(product.platform_id),
-          product,
-        ],
-      ),
+      (
+        (productsQuery.data ??
+          []) as ReferenceRecord[]
+      ).map((product) => [
+        String(product.platform_id),
+        product,
+      ]),
     );
-  }, [productsResult.data]);
+  }, [productsQuery.data]);
 
   const shopMap = useMemo(() => {
     return new Map(
-      (shopsResult.data ?? []).map(
-        (shop: any) => [
-          String(shop.platform_id),
-          shop,
-        ],
-      ),
+      (
+        (shopsQuery.data ??
+          []) as ReferenceRecord[]
+      ).map((shop) => [
+        String(shop.platform_id),
+        shop,
+      ]),
     );
-  }, [shopsResult.data]);
+  }, [shopsQuery.data]);
 
   const customerMap = useMemo(() => {
     return new Map(
-      (usersResult.data ?? []).map(
-        (user: any) => [
-          String(user.platform_id),
-          user,
-        ],
-      ),
+      (
+        (usersQuery.data ??
+          []) as ReferenceRecord[]
+      ).map((user) => [
+        String(user.platform_id),
+        user,
+      ]),
     );
-  }, [usersResult.data]);
+  }, [usersQuery.data]);
 
   const rows = useMemo<FavoriteView[]>(() => {
     return favorites.map((favorite) => {
@@ -154,18 +175,26 @@ export default function MarketplaceFavorites() {
           favorite.platform_user_id,
         );
 
-      if (favorite.favorite_type === "product") {
+      const customerName =
+        typeof customer?.contact_name ===
+        "string"
+          ? customer.contact_name
+          : null;
+
+      const customerEmail =
+        typeof customer?.contact_email ===
+        "string"
+          ? customer.contact_email
+          : null;
+
+      if (
+        favorite.favorite_type ===
+        "product"
+      ) {
         const product =
           productMap.get(
             favorite.platform_target_id,
           );
-
-        const shop = product?.shop_id
-          ? (shopsResult.data ?? []).find(
-              (item: any) =>
-                item.id === product.shop_id,
-            )
-          : null;
 
         return {
           id: favorite.id,
@@ -176,31 +205,27 @@ export default function MarketplaceFavorites() {
 
           customerId:
             favorite.platform_user_id,
-          customerName:
-            customer?.contact_name ??
-            null,
-          customerEmail:
-            customer?.contact_email ??
-            null,
+          customerName,
+          customerEmail,
 
           targetName:
-            product?.name ??
-            product?.product_name ??
-            null,
+            typeof product?.name === "string"
+              ? product.name
+              : null,
 
           targetSku:
-            product?.sku ??
-            product?.product_sku ??
-            null,
+            typeof product?.sku === "string"
+              ? product.sku
+              : null,
 
-          shopId:
-            shop?.id ??
-            favorite.shop_id ??
-            null,
-
-          shopName:
-            shop?.name ??
-            null,
+          /*
+           * Le snapshot produit ne contient pas de
+           * shop_id confirmé dans le schéma actuel.
+           * On ne fabrique donc pas de relation produit
+           * → boutique.
+           */
+          shopId: null,
+          shopName: null,
         };
       }
 
@@ -208,6 +233,16 @@ export default function MarketplaceFavorites() {
         shopMap.get(
           favorite.platform_target_id,
         );
+
+      const shopName =
+        typeof shop?.name === "string"
+          ? shop.name
+          : null;
+
+      const shopId =
+        typeof shop?.id === "string"
+          ? shop.id
+          : favorite.shop_id;
 
       return {
         id: favorite.id,
@@ -218,27 +253,14 @@ export default function MarketplaceFavorites() {
 
         customerId:
           favorite.platform_user_id,
-        customerName:
-          customer?.contact_name ??
-          null,
-        customerEmail:
-          customer?.contact_email ??
-          null,
+        customerName,
+        customerEmail,
 
-        targetName:
-          shop?.name ??
-          null,
-
+        targetName: shopName,
         targetSku: null,
 
-        shopId:
-          shop?.id ??
-          favorite.shop_id ??
-          null,
-
-        shopName:
-          shop?.name ??
-          null,
+        shopId,
+        shopName,
       };
     });
   }, [
@@ -246,7 +268,6 @@ export default function MarketplaceFavorites() {
     customerMap,
     productMap,
     shopMap,
-    shopsResult.data,
   ]);
 
   const filteredRows = useMemo(() => {
@@ -283,6 +304,15 @@ export default function MarketplaceFavorites() {
     });
   }, [rows, search]);
 
+  const uniqueCustomers = useMemo(() => {
+    return new Set(
+      favorites.map(
+        (favorite) =>
+          favorite.platform_user_id,
+      ),
+    ).size;
+  }, [favorites]);
+
   const hasFilters =
     Boolean(search) ||
     typeFilter !== "all";
@@ -309,15 +339,16 @@ export default function MarketplaceFavorites() {
           </h1>
 
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Vue opérationnelle des produits et boutiques
-            enregistrés en favoris sur BIB Platform. La
-            plateforme reste la source de vérité ; cette
-            interface est une copie de suivi en lecture seule.
+            Vue opérationnelle des produits et
+            boutiques enregistrés en favoris sur
+            BIB Platform. La plateforme reste la
+            source de vérité ; cette interface est
+            une copie de suivi en lecture seule.
           </p>
         </div>
       </div>
 
-      {/* Source of truth notice */}
+      {/* Source of truth */}
       <div className="rounded-xl border bg-card p-5 shadow-sm">
         <div className="flex items-start gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background">
@@ -330,11 +361,11 @@ export default function MarketplaceFavorites() {
             </h2>
 
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Les favoris sont exportés depuis les tables
-              client de BIB Platform puis synchronisés dans
-              l'Intranet. Aucun ajout, suppression ou
-              modification de favori n'est effectué depuis
-              l'Intranet.
+              Les favoris sont exportés depuis les
+              tables client de BIB Platform puis
+              synchronisés dans l'Intranet. Aucun
+              ajout, suppression ou modification de
+              favori n'est effectué depuis l'Intranet.
             </p>
           </div>
         </div>
@@ -367,20 +398,13 @@ export default function MarketplaceFavorites() {
 
         <KpiCard
           label="Clients concernés"
-          value={
-            new Set(
-              favorites.map(
-                (favorite) =>
-                  favorite.platform_user_id,
-              ),
-            ).size
-          }
+          value={uniqueCustomers}
           icon={UserRound}
           loading={favoritesLoading}
         />
       </div>
 
-      {/* Filters */}
+      {/* Main table */}
       <section className="rounded-xl border bg-card shadow-sm">
         <div className="border-b px-5 py-4">
           <h2 className="font-semibold">
@@ -388,11 +412,12 @@ export default function MarketplaceFavorites() {
           </h2>
 
           <p className="mt-1 text-xs text-muted-foreground">
-            Recherchez un client, produit, boutique ou
-            identifiant Platform.
+            Recherchez un client, produit, boutique
+            ou identifiant Platform.
           </p>
         </div>
 
+        {/* Filters */}
         <div className="border-b bg-muted/20 p-4">
           <div className="flex flex-col gap-3 xl:flex-row">
             <div className="relative flex-1">
@@ -445,26 +470,34 @@ export default function MarketplaceFavorites() {
         </div>
 
         {/* Error */}
-        {favoritesError ? (
+        {favoritesError ||
+        referenceError ? (
           <div className="p-5">
             <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
               Impossible de charger les favoris
               synchronisés.
+
               <div className="mt-1 text-xs">
-                {favoritesError instanceof Error
+                {favoritesError instanceof
+                  Error
                   ? favoritesError.message
-                  : "Erreur inconnue"}
+                  : referenceError instanceof
+                      Error
+                    ? referenceError.message
+                    : "Erreur inconnue"}
               </div>
             </div>
           </div>
         ) : isLoading ? (
           <div className="space-y-3 p-5">
-            {[1, 2, 3, 4, 5].map((item) => (
-              <div
-                key={item}
-                className="h-16 animate-pulse rounded-lg bg-muted"
-              />
-            ))}
+            {[1, 2, 3, 4, 5].map(
+              (item) => (
+                <div
+                  key={item}
+                  className="h-16 animate-pulse rounded-lg bg-muted"
+                />
+              ),
+            )}
           </div>
         ) : filteredRows.length === 0 ? (
           <div className="flex min-h-[280px] flex-col items-center justify-center px-6 text-center">
@@ -475,9 +508,10 @@ export default function MarketplaceFavorites() {
             </h3>
 
             <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-              Aucun favori correspondant aux critères
-              actuels n'est présent dans le snapshot
-              synchronisé depuis BIB Platform.
+              Aucun favori correspondant aux
+              critères actuels n'est présent dans
+              le snapshot synchronisé depuis
+              BIB Platform.
             </p>
 
             {hasFilters && (
@@ -531,6 +565,8 @@ export default function MarketplaceFavorites() {
         )}
 
         {!isLoading &&
+          !favoritesError &&
+          !referenceError &&
           filteredRows.length > 0 && (
             <div className="border-t bg-muted/10 px-5 py-3 text-xs text-muted-foreground">
               {filteredRows.length} favori
@@ -540,8 +576,7 @@ export default function MarketplaceFavorites() {
               affiché
               {filteredRows.length > 1
                 ? "s"
-                : ""}
-              .
+                : ""}.
             </div>
           )}
       </section>
@@ -583,7 +618,7 @@ function FavoriteRow({
         </div>
       </td>
 
-      {/* Favori */}
+      {/* Favorite */}
       <td className="px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background">
@@ -613,6 +648,15 @@ function FavoriteRow({
             {row.targetSku && (
               <div className="mt-0.5 font-mono text-xs text-muted-foreground">
                 SKU : {row.targetSku}
+              </div>
+            )}
+
+            {!row.targetName && (
+              <div className="mt-0.5 font-mono text-xs text-muted-foreground">
+                Platform :{" "}
+                {shortenId(
+                  row.targetId,
+                )}
               </div>
             )}
           </div>
@@ -731,15 +775,15 @@ function FilterSelect({
 }
 
 /**
- * Charge uniquement les références nécessaires aux favoris.
+ * Charge les références nécessaires à l'affichage.
  *
- * On ne fait pas de gros JOIN Supabase ici :
- * - produits : platform_id
- * - boutiques : platform_id
- * - comptes : platform_id
+ * Source de vérité :
+ * - favoris : marketplace_customer_favorites
+ * - produits : products.platform_id
+ * - boutiques : shops.platform_id
+ * - clients : user_accounts.platform_id
  *
- * Cela garde le bridge et la page indépendants des relations
- * internes éventuelles de Supabase.
+ * Aucun JOIN ou mapping artificiel n'est créé ici.
  */
 function useMarketplaceFavoriteReferences(
   favorites: Array<{
@@ -799,179 +843,133 @@ function useMarketplaceFavoriteReferences(
     [favorites],
   );
 
-  const productsQuery =
-    useReferenceQuery(
-      "marketplace-favorites-products",
-      async () => {
-        if (!productIds.length) {
-          return [];
-        }
-
-        const {
-          data,
-          error,
-        } = await (supabase as any)
-          .from("products")
-          .select(
-            `
-              id,
-              platform_id,
-              name,
-              sku,
-              category,
-              status,
-              shop_id
-            `,
-          )
-          .in(
-            "platform_id",
-            productIds,
-          );
-
-        if (error) {
-          throw error;
-        }
-
-        return data ?? [];
-      },
-      [productIds],
-    );
-
-  const shopsQuery =
-    useReferenceQuery(
-      "marketplace-favorites-shops",
-      async () => {
-        if (!boutiqueIds.length) {
-          return [];
-        }
-
-        const {
-          data,
-          error,
-        } = await (supabase as any)
-          .from("shops")
-          .select(
-            `
-              id,
-              platform_id,
-              name,
-              shop_code
-            `,
-          )
-          .in(
-            "platform_id",
-            boutiqueIds,
-          );
-
-        if (error) {
-          throw error;
-        }
-
-        return data ?? [];
-      },
-      [boutiqueIds],
-    );
-
-  const usersQuery =
-    useReferenceQuery(
-      "marketplace-favorites-users",
-      async () => {
-        if (!userIds.length) {
-          return [];
-        }
-
-        const {
-          data,
-          error,
-        } = await (supabase as any)
-          .from("user_accounts")
-          .select(
-            `
-              id,
-              platform_id,
-              contact_name,
-              contact_email
-            `,
-          )
-          .in(
-            "platform_id",
-            userIds,
-          );
-
-        if (error) {
-          throw error;
-        }
-
-        return data ?? [];
-      },
-      [userIds],
-    );
-
-  return [
+  const [
     productsQuery,
     shopsQuery,
     usersQuery,
-  ] as const;
-}
+  ] = useQueries({
+    queries: [
+      {
+        queryKey: [
+          "marketplace",
+          "favorites",
+          "references",
+          "products",
+          productIds,
+        ],
 
-function useReferenceQuery(
-  key: string,
-  queryFn: () => Promise<any[]>,
-  dependencies: unknown[],
-) {
-  const [state, setState] = useState<{
-    data: any[] | null;
-    error: Error | null;
-    isLoading: boolean;
-  }>({
-    data: null,
-    error: null,
-    isLoading: true,
+        enabled: productIds.length > 0,
+
+        queryFn: async () => {
+          const {
+            data,
+            error,
+          } = await (supabase as any)
+            .from("products")
+            .select(
+              `
+                id,
+                platform_id,
+                name,
+                sku,
+                category,
+                status
+              `,
+            )
+            .in(
+              "platform_id",
+              productIds,
+            );
+
+          if (error) {
+            throw error;
+          }
+
+          return data ?? [];
+        },
+      },
+
+      {
+        queryKey: [
+          "marketplace",
+          "favorites",
+          "references",
+          "shops",
+          boutiqueIds,
+        ],
+
+        enabled: boutiqueIds.length > 0,
+
+        queryFn: async () => {
+          const {
+            data,
+            error,
+          } = await (supabase as any)
+            .from("shops")
+            .select(
+              `
+                id,
+                platform_id,
+                name,
+                shop_code
+              `,
+            )
+            .in(
+              "platform_id",
+              boutiqueIds,
+            );
+
+          if (error) {
+            throw error;
+          }
+
+          return data ?? [];
+        },
+      },
+
+      {
+        queryKey: [
+          "marketplace",
+          "favorites",
+          "references",
+          "users",
+          userIds,
+        ],
+
+        enabled: userIds.length > 0,
+
+        queryFn: async () => {
+          const {
+            data,
+            error,
+          } = await (supabase as any)
+            .from("user_accounts")
+            .select(
+              `
+                id,
+                platform_id,
+                contact_name,
+                contact_email
+              `,
+            )
+            .in(
+              "platform_id",
+              userIds,
+            );
+
+          if (error) {
+            throw error;
+          }
+
+          return data ?? [];
+        },
+      },
+    ],
   });
 
-  const dependencyKey = JSON.stringify(
-    dependencies,
-  );
-
-  useMemo(() => {
-    let cancelled = false;
-
-    setState((current) => ({
-      ...current,
-      isLoading: true,
-      error: null,
-    }));
-
-    queryFn()
-      .then((data) => {
-        if (!cancelled) {
-          setState({
-            data,
-            error: null,
-            isLoading: false,
-          });
-        }
-      })
-      .catch((error) => {
-        if (!cancelled) {
-          setState({
-            data: [],
-            error:
-              error instanceof Error
-                ? error
-                : new Error(
-                    "Erreur de chargement",
-                  ),
-            isLoading: false,
-          });
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key, dependencyKey]);
-
-  return state;
+  return {
+    productsQuery,
+    shopsQuery,
+    usersQuery,
+  };
 }
