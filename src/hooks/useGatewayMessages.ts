@@ -353,10 +353,10 @@ export const useGatewayMessages = () => {
        * gmail_message_id_header is the actual Message-ID header
        * used for In-Reply-To / References.
        */
-      const originalMessageId =
-        msg.gmail_message_id_header ||
-        msg.gmail_message_id ||
-        undefined;
+    const originalMessageId =
+      msg.gmail_message_id_header ||
+      msg.gmail_message_id ||
+      undefined;
 
       /*
        * Build References correctly.
