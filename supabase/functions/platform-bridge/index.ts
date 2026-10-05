@@ -610,126 +610,240 @@ Deno.serve(async (req) => {
 
       }
 
-      // ------------------------------------------------------
-      // 3 BIS. FAVORIS CLIENTS
-      // ------------------------------------------------------
-      //
-      // BIB Platform reste la source de vérité.
-      // L'Intranet reçoit un snapshot complet.
-      //
-      // On supprime d'abord le snapshot précédent afin que
-      // les favoris retirés côté Platform disparaissent aussi
-      // de l'Intranet.
-      // ------------------------------------------------------
+// ------------------------------------------------------
+// 3 BIS. FAVORIS CLIENTS
+// ------------------------------------------------------
+//
+// BIB Platform reste la source de vérité.
+// L'Intranet reçoit un snapshot complet.
+//
+// IMPORTANT :
+// shopMap ne doit pas dépendre uniquement des boutiques
+// présentes dans le pull incrémental courant.
+//
+// Une boutique peut être inchangée sur BIB Platform,
+// donc absente de data.boutiques, tout en étant déjà
+// synchronisée dans l'Intranet.
+//
+// On recharge donc toutes les boutiques locales liées
+// à BIB Platform avant de résoudre les favoris.
+// ------------------------------------------------------
 
-      const {
-        error: deleteFavoritesError,
-      } = await admin
-        .from('marketplace_customer_favorites')
-        .delete()
-        .eq('source', 'platform')
+const {
+  data: knownFavoriteShops,
+  error: knownFavoriteShopsError,
+} = await admin
+  .from('shops')
+  .select('id, platform_id')
+  .not(
+    'platform_id',
+    'is',
+    null,
+  )
 
-      if (deleteFavoritesError) {
-        errors.push(
-          `favoris clients — nettoyage : ${deleteFavoritesError.message}`,
-        )
-      } else {
-        const favorites =
-          Array.isArray(data.customer_favorites)
-            ? data.customer_favorites
-            : []
+if (knownFavoriteShopsError) {
+  errors.push(
+    `favoris clients — index boutiques : ${knownFavoriteShopsError.message}`,
+  )
+} else {
+  for (
+    const shop
+    of knownFavoriteShops ?? []
+  ) {
+    if (
+      shop.platform_id
+    ) {
+      shopMap.set(
+        shop.platform_id,
+        shop.id,
+      )
+    }
+  }
+}
 
-        const favoriteRows =
-          favorites.map(
-            (favorite: any) => ({
-              platform_user_id:
-                favorite.user_id,
-        
-              favorite_type:
-                favorite.favorite_type,
-        
-              platform_target_id:
-                favorite.target_id,
-        
-              platform_boutique_id:
-                favorite.platform_boutique_id ??
-                (
-                  favorite.favorite_type === 'boutique'
-                    ? favorite.target_id
-                    : null
-                ),
-        
-              target_name:
-                favorite.target_name ??
-                null,
-        
-              target_sku:
-                favorite.target_sku ??
-                null,
-        
-              shop_id:
-                favorite.platform_boutique_id
-                  ? (
-                      shopMap.get(
-                        favorite.platform_boutique_id,
-                      ) ?? null
-                    )
-                  : favorite.favorite_type === 'boutique'
-                    ? (
-                        shopMap.get(
-                          favorite.target_id,
-                        ) ?? null
-                      )
-                    : null,
-        
-              created_at:
-                favorite.created_at ??
-                now,
-        
-              platform_synced_at:
-                now,
-        
-              source:
-                'platform',
-            }),
+
+      // ------------------------------------------------------
+// 3 BIS. FAVORIS CLIENTS
+// ------------------------------------------------------
+//
+// BIB Platform reste la source de vérité.
+// L'Intranet reçoit un snapshot complet.
+//
+// IMPORTANT :
+// shopMap ne doit pas dépendre uniquement des boutiques
+// présentes dans le pull incrémental courant.
+//
+// Une boutique peut être inchangée sur BIB Platform,
+// donc absente de data.boutiques, tout en étant déjà
+// synchronisée dans l'Intranet.
+//
+// On recharge donc toutes les boutiques locales liées
+// à BIB Platform avant de résoudre les favoris.
+// ------------------------------------------------------
+
+const {
+  data: knownFavoriteShops,
+  error: knownFavoriteShopsError,
+} = await admin
+  .from('shops')
+  .select('id, platform_id')
+  .not(
+    'platform_id',
+    'is',
+    null,
+  )
+
+if (knownFavoriteShopsError) {
+  errors.push(
+    `favoris clients — index boutiques : ${knownFavoriteShopsError.message}`,
+  )
+} else {
+  for (
+    const shop
+    of knownFavoriteShops ?? []
+  ) {
+    if (
+      shop.platform_id
+    ) {
+      shopMap.set(
+        shop.platform_id,
+        shop.id,
+      )
+    }
+  }
+}
+
+
+// ------------------------------------------------------
+// Snapshot des favoris
+// ------------------------------------------------------
+//
+// Les favoris sont synchronisés en snapshot complet.
+//
+// Pourquoi ?
+// customer_product_favorites et
+// customer_boutique_favorites ne possèdent pas de
+// deleted_at ni de journal de changements permettant
+// de reconstruire proprement les suppressions avec
+// un simple paramètre "since".
+//
+// On supprime donc le snapshot Platform précédent,
+// puis on insère l'état actuel retourné par Platform.
+// ------------------------------------------------------
+
+const {
+  error: deleteFavoritesError,
+} = await admin
+  .from('marketplace_customer_favorites')
+  .delete()
+  .eq(
+    'source',
+    'platform',
+  )
+
+if (deleteFavoritesError) {
+  errors.push(
+    `favoris clients — nettoyage : ${deleteFavoritesError.message}`,
+  )
+} else {
+  const favorites =
+    Array.isArray(
+      data.customer_favorites,
+    )
+      ? data.customer_favorites
+      : []
+
+  const favoriteRows =
+    favorites.map(
+      (favorite: any) => {
+        const platformBoutiqueId =
+          favorite.platform_boutique_id ??
+          (
+            favorite.favorite_type ===
+            'boutique'
+              ? favorite.target_id
+              : null
           )
-        
-        const chunkSize = 500
 
-        for (
-          let i = 0;
-          i < favoriteRows.length;
-          i += chunkSize
-        ) {
-          const chunk =
-            favoriteRows.slice(
-              i,
-              i + chunkSize,
-            )
+        return {
+          platform_user_id:
+            favorite.user_id,
 
-          if (!chunk.length) {
-            continue
-          }
+          favorite_type:
+            favorite.favorite_type,
 
-          const {
-            error,
-          } = await admin
-            .from(
-              'marketplace_customer_favorites',
-            )
-            .insert(chunk)
+          platform_target_id:
+            favorite.target_id,
 
-          if (error) {
-            errors.push(
-              `favoris clients : ${error.message}`,
-            )
+          platform_boutique_id:
+            platformBoutiqueId,
 
-            break
-          }
+          target_name:
+            favorite.target_name ??
+            null,
 
-          count += chunk.length
+          target_sku:
+            favorite.target_sku ??
+            null,
+
+          shop_id:
+            platformBoutiqueId
+              ? (
+                  shopMap.get(
+                    platformBoutiqueId,
+                  ) ?? null
+                )
+              : null,
+
+          created_at:
+            favorite.created_at ??
+            now,
+
+          platform_synced_at:
+            now,
+
+          source:
+            'platform',
         }
-      }
+      },
+    )
+
+  const chunkSize = 500
+
+  for (
+    let i = 0;
+    i < favoriteRows.length;
+    i += chunkSize
+  ) {
+    const chunk =
+      favoriteRows.slice(
+        i,
+        i + chunkSize,
+      )
+
+    if (!chunk.length) {
+      continue
+    }
+
+    const {
+      error,
+    } = await admin
+      .from(
+        'marketplace_customer_favorites',
+      )
+      .insert(chunk)
+
+    if (error) {
+      errors.push(
+        `favoris clients : ${error.message}`,
+      )
+
+      break
+    }
+
+    count += chunk.length
+  }
+}
 
       // ------------------------------------------------------
       // 4. COMMANDES
