@@ -134,6 +134,7 @@ import MarketplaceAnalytics from "./pages/modules/marketplace/MarketplaceAnalyti
 import MarketplaceProducts from "./pages/modules/marketplace/MarketplaceProducts";
 import MarketplaceCustomers from "./pages/modules/marketplace/MarketplaceCustomers";
 import MarketplaceSubscriptions from "./pages/modules/marketplace/MarketplaceSubscriptions";
+import MarketplaceFavorites from "./pages/modules/marketplace/MarketplaceFavorites";
 
 /* ============================================================
    6. SUPPORT & CUSTOMER SUCCESS
@@ -491,83 +492,70 @@ const App = () => (
                 />
 
                 {/* ====================================================
-    5. MARKETPLACE & CUSTOMER
-    ==================================================== */}
+                  5. MARKETPLACE & CUSTOMER
+                  ==================================================== */}
 
-<Route
-  path="/pole/marketplace"
-  element={<MarketplaceDashboard />}
-/>
-
-<Route
-  path="/pole/marketplace/merchants"
-  element={<MerchantPortfolio />}
-/>
-
-<Route
-  path="/pole/marketplace/merchants/:id"
-  element={<MerchantDetail />}
-/>
-
-<Route
-  path="/pole/marketplace/stores"
-  element={<MarketplaceStores />}
-/>
-
-<Route
-  path="/pole/marketplace/stores/:id"
-  element={<MarketplaceStoreDetail />}
-/>
-
-<Route
-  path="/pole/marketplace/products"
-  element={<MarketplaceProducts />}
-/>
-
-<Route
-  path="/pole/marketplace/customers"
-  element={<MarketplaceCustomers />}
-/>
-
-<Route
-  path="/pole/marketplace/orders"
-  element={<SubSectionPage />}
-/>
-
-<Route
-  path="/pole/marketplace/subscribers"
-  element={<SubSectionPage />}
-/>
-
-<Route
-  path="/pole/marketplace/favorites"
-  element={<SubSectionPage />}
-/>
-
-<Route
-  path="/pole/marketplace/rewards"
-  element={<SubSectionPage />}
-/>
-
-<Route
-  path="/pole/marketplace/recycling"
-  element={<SubSectionPage />}
-/>
-
-<Route
-  path="/pole/marketplace/opportunities"
-  element={<MarketplaceOpportunities />}
-/>
-
-<Route
-  path="/pole/marketplace/analytics"
-  element={<MarketplaceAnalytics />}
-/>
-
-<Route
-  path="/pole/marketplace/subscriptions"
-  element={<MarketplaceSubscriptions />}
-/>
+                <Route
+                  path="/pole/marketplace"
+                  element={<MarketplaceDashboard />
+                />
+                <Route
+                  path="/pole/marketplace/merchants"
+                  element={<MerchantPortfolio />}
+                />
+                <Route
+                  path="/pole/marketplace/merchants/:id"
+                  element={<MerchantDetail />}
+                />
+                <Route
+                  path="/pole/marketplace/stores"
+                  element={<MarketplaceStores />}
+                />                
+                <Route
+                  path="/pole/marketplace/stores/:id"
+                  element={<MarketplaceStoreDetail />}
+                />                
+                <Route
+                  path="/pole/marketplace/products"
+                  element={<MarketplaceProducts />}
+                />                
+                <Route
+                  path="/pole/marketplace/customers"
+                  element={<MarketplaceCustomers />}
+                />                
+                <Route
+                  path="/pole/marketplace/orders"
+                  element={<MarketplaceOrders />}
+                />                
+                <Route
+                  path="/pole/marketplace/subscribers"
+                  element={<MarketplaceSubscribers />}
+                />                
+                <Route
+                  path="/pole/marketplace/favorites"
+                  element={<MarketplaceFavorites />}
+                />            
+                <Route
+                  path="/pole/marketplace/rewards"
+                  element={<MarketplaceRewards />}
+                />
+                
+                <Route
+                  path="/pole/marketplace/recycling"
+                  element={<MarketplaceRecycling />}
+                />                
+                <Route
+                  path="/pole/marketplace/opportunities"
+                  element={<MarketplaceOpportunities />}
+                />                
+                <Route
+                  path="/pole/marketplace/analytics"
+                  element={<MarketplaceAnalytics />}
+                />
+                <Route
+                  path="/pole/marketplace/subscriptions"
+                  element={<MarketplaceSubscriptions />}
+                />
 
                 {/* ====================================================
                     6. SUPPORT & CUSTOMER SUCCESS
