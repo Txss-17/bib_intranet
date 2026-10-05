@@ -633,8 +633,10 @@ export default function MarketplaceSubscriptions() {
 
 function SubscriptionRowItem({
   row,
+  onContact,
 }: {
   row: SubscriptionRow;
+  onContact: () => void;
 }) {
   return (
     <tr className="transition hover:bg-muted/20">
