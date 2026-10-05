@@ -644,34 +644,56 @@ Deno.serve(async (req) => {
             (favorite: any) => ({
               platform_user_id:
                 favorite.user_id,
-
+        
               favorite_type:
                 favorite.favorite_type,
-
+        
               platform_target_id:
                 favorite.target_id,
-
+        
+              platform_boutique_id:
+                favorite.platform_boutique_id ??
+                (
+                  favorite.favorite_type === 'boutique'
+                    ? favorite.target_id
+                    : null
+                ),
+        
+              target_name:
+                favorite.target_name ??
+                null,
+        
+              target_sku:
+                favorite.target_sku ??
+                null,
+        
               shop_id:
-                favorite.favorite_type === 'boutique'
+                favorite.platform_boutique_id
                   ? (
                       shopMap.get(
-                        favorite.target_id,
+                        favorite.platform_boutique_id,
                       ) ?? null
                     )
-                  : null,
-
+                  : favorite.favorite_type === 'boutique'
+                    ? (
+                        shopMap.get(
+                          favorite.target_id,
+                        ) ?? null
+                      )
+                    : null,
+        
               created_at:
                 favorite.created_at ??
                 now,
-
+        
               platform_synced_at:
                 now,
-
+        
               source:
                 'platform',
             }),
           )
-
+        
         const chunkSize = 500
 
         for (
