@@ -1,8 +1,13 @@
 import { SignJWT, importPKCS8 } from "npm:jose@5.10.0";
 
-const GMAIL_SCOPE = "https://www.googleapis.com/auth/gmail.modify";
-const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
-const GMAIL_API_BASE = "https://gmail.googleapis.com/gmail/v1/users";
+const GMAIL_SCOPE =
+  "https://www.googleapis.com/auth/gmail.modify";
+
+const GOOGLE_TOKEN_URL =
+  "https://oauth2.googleapis.com/token";
+
+const GMAIL_API_BASE =
+  "https://gmail.googleapis.com/gmail/v1/users";
 
 type GmailConfig = {
   serviceAccountEmail: string;
@@ -93,7 +98,9 @@ function getConfig(): GmailConfig {
   };
 }
 
-function normalizePrivateKey(privateKey: string): string {
+function normalizePrivateKey(
+  privateKey: string,
+): string {
   return privateKey
     .replace(/\\n/g, "\n")
     .replace(/\r\n/g, "\n")
@@ -103,7 +110,9 @@ function normalizePrivateKey(privateKey: string): string {
 async function createAccessToken(): Promise<string> {
   const config = getConfig();
 
-  const now = Math.floor(Date.now() / 1000);
+  const now = Math.floor(
+    Date.now() / 1000,
+  );
 
   const privateKey = await importPKCS8(
     config.privateKey,
@@ -117,34 +126,48 @@ async function createAccessToken(): Promise<string> {
       alg: "RS256",
       typ: "JWT",
     })
-    .setIssuer(config.serviceAccountEmail)
-    .setSubject(config.impersonatedUser)
-    .setAudience(GOOGLE_TOKEN_URL)
+    .setIssuer(
+      config.serviceAccountEmail,
+    )
+    .setSubject(
+      config.impersonatedUser,
+    )
+    .setAudience(
+      GOOGLE_TOKEN_URL,
+    )
     .setIssuedAt(now)
-    .setExpirationTime(now + 3600)
+    .setExpirationTime(
+      now + 3600,
+    )
     .sign(privateKey);
 
-  const response = await fetch(GOOGLE_TOKEN_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
+  const response = await fetch(
+    GOOGLE_TOKEN_URL,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({
+        grant_type:
+          "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion,
+      }),
     },
-    body: new URLSearchParams({
-      grant_type:
-        "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion,
-    }),
-  });
+  );
 
   if (!response.ok) {
-    const errorText = await response.text();
+    const errorText =
+      await response.text();
 
     throw new Error(
       `Google OAuth token request failed (${response.status}): ${errorText}`,
     );
   }
 
-  const tokenData = await response.json();
+  const tokenData =
+    await response.json();
 
   if (!tokenData.access_token) {
     throw new Error(
@@ -159,9 +182,12 @@ async function gmailRequest<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
-  const accessToken = await createAccessToken();
+  const accessToken =
+    await createAccessToken();
 
-  const headers = new Headers(options.headers);
+  const headers = new Headers(
+    options.headers,
+  );
 
   headers.set(
     "Authorization",
@@ -187,7 +213,8 @@ async function gmailRequest<T>(
   );
 
   if (!response.ok) {
-    const errorText = await response.text();
+    const errorText =
+      await response.text();
 
     throw new Error(
       `Gmail API request failed (${response.status}): ${errorText}`,
@@ -227,7 +254,10 @@ function encodeBase64Url(
     binary += String.fromCharCode(
       ...value.subarray(
         index,
-        Math.min(index + chunkSize, value.length),
+        Math.min(
+          index + chunkSize,
+          value.length,
+        ),
       ),
     );
   }
@@ -265,32 +295,50 @@ function decodeBase64Url(
     binary.length,
   );
 
-  for (let index = 0; index < binary.length; index++) {
-    bytes[index] = binary.charCodeAt(index);
+  for (
+    let index = 0;
+    index < binary.length;
+    index++
+  ) {
+    bytes[index] =
+      binary.charCodeAt(index);
   }
 
-  return new TextDecoder().decode(bytes);
+  return new TextDecoder().decode(
+    bytes,
+  );
 }
 
 function encodeMimeHeader(
   value: string,
 ): string {
-  if (/^[\x20-\x7E]*$/.test(value)) {
+  if (
+    /^[\x20-\x7E]*$/.test(value)
+  ) {
     return value;
   }
 
-  const encoded = textToBase64Url(value)
-    .replace(/-/g, "+")
-    .replace(/_/g, "/");
+  const bytes =
+    new TextEncoder().encode(value);
 
-  return `=?UTF-8?B?${encoded}=`;
+  let binary = "";
+
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte);
+  }
+
+  const encoded =
+    btoa(binary);
+
+  return `=?UTF-8?B?${encoded}?=`;
 }
 
 function normalizeEmailAddress(
   value: string,
   fieldName: string,
 ): string {
-  const normalized = value.trim();
+  const normalized =
+    value.trim();
 
   assertSafeHeaderValue(
     normalized,
@@ -310,31 +358,38 @@ function buildMimeMessage(options: {
   to: string;
   subject: string;
   text: string;
+  html?: string;
   from?: string;
   replyTo?: string;
   inReplyTo?: string;
   references?: string;
 }): string {
-  const config = getConfig();
+  const config =
+    getConfig();
 
-  const to = normalizeEmailAddress(
-    options.to,
-    "recipient",
-  );
+  const to =
+    normalizeEmailAddress(
+      options.to,
+      "recipient",
+    );
 
-  const from = normalizeEmailAddress(
-    options.from ?? config.impersonatedUser,
-    "sender",
-  );
+  const from =
+    normalizeEmailAddress(
+      options.from ??
+        config.impersonatedUser,
+      "sender",
+    );
 
-  const replyTo = options.replyTo
-    ? normalizeEmailAddress(
-        options.replyTo,
-        "replyTo",
-      )
-    : undefined;
+  const replyTo =
+    options.replyTo
+      ? normalizeEmailAddress(
+          options.replyTo,
+          "replyTo",
+        )
+      : undefined;
 
-  const subject = options.subject.trim();
+  const subject =
+    options.subject.trim();
 
   assertSafeHeaderValue(
     subject,
@@ -353,7 +408,9 @@ function buildMimeMessage(options: {
   ];
 
   if (replyTo) {
-    lines.push(`Reply-To: ${replyTo}`);
+    lines.push(
+      `Reply-To: ${replyTo}`,
+    );
   }
 
   if (options.inReplyTo) {
@@ -386,53 +443,85 @@ function buildMimeMessage(options: {
     "",
     options.text,
     "",
+  );
+
+  if (options.html) {
+    lines.push(
+      `--${boundary}`,
+      'Content-Type: text/html; charset="UTF-8"',
+      "Content-Transfer-Encoding: 8bit",
+      "",
+      options.html,
+      "",
+    );
+  }
+
+  lines.push(
     `--${boundary}--`,
   );
 
-  return lines.join("\r\n");
+  return lines.join(
+    "\r\n",
+  );
 }
 
-export async function sendGmailMessage(options: {
-  to: string;
-  subject: string;
-  text: string;
-  from?: string;
-  replyTo?: string;
-  inReplyTo?: string;
-  references?: string;
-  threadId?: string;
-}): Promise<GmailMessage> {
-  const rawMime = buildMimeMessage(options);
+export async function sendGmailMessage(
+  options: {
+    to: string;
+    subject: string;
+    text: string;
+    html?: string;
+    from?: string;
+    replyTo?: string;
+    inReplyTo?: string;
+    references?: string;
+    threadId?: string;
+  },
+): Promise<GmailMessage> {
+  const rawMime =
+    buildMimeMessage(options);
 
   const body: {
     raw: string;
     threadId?: string;
   } = {
-    raw: textToBase64Url(rawMime),
+    raw:
+      textToBase64Url(
+        rawMime,
+      ),
   };
 
   if (options.threadId) {
-    body.threadId = options.threadId;
+    body.threadId =
+      options.threadId;
   }
 
   return await gmailRequest<GmailMessage>(
     "/messages/send",
     {
       method: "POST",
-      body: JSON.stringify(body),
+      body: JSON.stringify(
+        body,
+      ),
     },
   );
 }
 
-export async function listGmailMessages(options?: {
-  query?: string;
-  maxResults?: number;
-  pageToken?: string;
-}): Promise<GmailMessageListResponse> {
-  const params = new URLSearchParams();
+export async function listGmailMessages(
+  options?: {
+    query?: string;
+    maxResults?: number;
+    pageToken?: string;
+  },
+): Promise<GmailMessageListResponse> {
+  const params =
+    new URLSearchParams();
 
   if (options?.query) {
-    params.set("q", options.query);
+    params.set(
+      "q",
+      options.query,
+    );
   }
 
   if (options?.maxResults) {
@@ -440,7 +529,10 @@ export async function listGmailMessages(options?: {
       "maxResults",
       String(
         Math.min(
-          Math.max(options.maxResults, 1),
+          Math.max(
+            options.maxResults,
+            1,
+          ),
           500,
         ),
       ),
@@ -454,10 +546,15 @@ export async function listGmailMessages(options?: {
     );
   }
 
-  const queryString = params.toString();
+  const queryString =
+    params.toString();
 
   return await gmailRequest<GmailMessageListResponse>(
-    `/messages${queryString ? `?${queryString}` : ""}`,
+    `/messages${
+      queryString
+        ? `?${queryString}`
+        : ""
+    }`,
     {
       method: "GET",
     },
@@ -473,7 +570,9 @@ export async function getGmailMessage(
   );
 
   return await gmailRequest<GmailMessage>(
-    `/messages/${encodeURIComponent(messageId)}?format=full`,
+    `/messages/${encodeURIComponent(
+      messageId,
+    )}?format=full`,
     {
       method: "GET",
     },
@@ -494,70 +593,103 @@ export function getGmailHeader(
   name: string,
 ): string | null {
   const headers =
-    message.payload?.headers ?? [];
+    message.payload?.headers ??
+    [];
 
-  const header = headers.find(
-    (item) =>
-      item.name.toLowerCase() ===
-      name.toLowerCase(),
+  const header =
+    headers.find(
+      (item) =>
+        item.name.toLowerCase() ===
+        name.toLowerCase(),
+    );
+
+  return (
+    header?.value ?? null
   );
-
-  return header?.value ?? null;
 }
 
 export function getGmailMessageText(
   message: GmailMessage,
 ): string {
-  const payload = message.payload;
+  const payload =
+    message.payload;
 
   if (!payload) {
     return "";
   }
 
-  const plainTextParts: string[] = [];
-  const htmlParts: string[] = [];
+  const plainTextParts: string[] =
+    [];
+
+  const htmlParts: string[] =
+    [];
 
   function visit(
     part: GmailMessagePart,
   ): void {
     const mimeType =
-      part.mimeType?.toLowerCase() ?? "";
+      part.mimeType?.toLowerCase() ??
+      "";
 
     if (
       part.body?.data &&
-      mimeType === "text/plain"
+      mimeType ===
+        "text/plain"
     ) {
       plainTextParts.push(
-        decodeBase64Url(part.body.data),
+        decodeBase64Url(
+          part.body.data,
+        ),
       );
     }
 
     if (
       part.body?.data &&
-      mimeType === "text/html"
+      mimeType ===
+        "text/html"
     ) {
       htmlParts.push(
-        decodeBase64Url(part.body.data),
+        decodeBase64Url(
+          part.body.data,
+        ),
       );
     }
 
-    for (const child of part.parts ?? []) {
+    for (
+      const child of
+        part.parts ?? []
+    ) {
       visit(child);
     }
   }
 
   visit(payload);
 
-  if (plainTextParts.length > 0) {
-    return plainTextParts.join("\n\n").trim();
+  if (
+    plainTextParts.length > 0
+  ) {
+    return plainTextParts
+      .join("\n\n")
+      .trim();
   }
 
-  if (htmlParts.length > 0) {
+  if (
+    htmlParts.length > 0
+  ) {
     return htmlParts
       .join("\n\n")
-      .replace(/<br\s*\/?>/gi, "\n")
-      .replace(/<\/p>/gi, "\n\n")
-      .replace(/<[^>]+>/g, "")
+      .replace(
+        /<br\s*\/?>/gi,
+        "\n",
+      )
+      .replace(
+        /<\/p>/gi,
+        "\n\n",
+      )
+      .replace(
+        /<[^>]+>/g,
+        "",
+      )
       .trim();
   }
 
@@ -574,15 +706,20 @@ export function getGmailMessageDate(
   message: GmailMessage,
 ): string {
   if (message.internalDate) {
-    const timestamp = Number(
-      message.internalDate,
-    );
+    const timestamp =
+      Number(
+        message.internalDate,
+      );
 
     if (
-      Number.isFinite(timestamp) &&
+      Number.isFinite(
+        timestamp,
+      ) &&
       timestamp > 0
     ) {
-      return new Date(timestamp).toISOString();
+      return new Date(
+        timestamp,
+      ).toISOString();
     }
   }
 
@@ -590,5 +727,6 @@ export function getGmailMessageDate(
 }
 
 export function getImpersonatedGmailUser(): string {
-  return getConfig().impersonatedUser;
+  return getConfig()
+    .impersonatedUser;
 }
