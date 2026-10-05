@@ -21,7 +21,7 @@ import {
 
 import { cn } from '@/lib/utils';
 
-const STATUS_STYLES: Record<ShopStatus, string> = {
+const STATUS_STYLES: Partial<Record<ShopStatus, string>> = {
   application:
     'bg-slate-500/10 text-slate-700 dark:text-slate-300',
   review:
