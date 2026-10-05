@@ -1,5 +1,6 @@
+```tsx
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ChevronDown,
   Filter,
@@ -24,7 +25,10 @@ function formatDate(value: string | null) {
   }).format(new Date(value));
 }
 
-function formatCurrency(value: number, currency = "EUR") {
+function formatCurrency(
+  value: number,
+  currency = "EUR",
+) {
   return new Intl.NumberFormat("fr-FR", {
     style: "currency",
     currency,
@@ -32,11 +36,9 @@ function formatCurrency(value: number, currency = "EUR") {
   }).format(value);
 }
 
-function normalize(value: unknown) {
-  return String(value ?? "").trim().toLowerCase();
-}
-
 export default function MarketplaceCustomers() {
+  const navigate = useNavigate();
+
   const [search, setSearch] = useState("");
   const [filter, setFilter] =
     useState<CustomerFilter>("all");
@@ -53,7 +55,9 @@ export default function MarketplaceCustomers() {
       if (filter === "active") {
         return customer.last_order_date
           ? Date.now() -
-              new Date(customer.last_order_date).getTime() <=
+              new Date(
+                customer.last_order_date,
+              ).getTime() <=
               90 * 24 * 60 * 60 * 1000
           : false;
       }
@@ -69,27 +73,36 @@ export default function MarketplaceCustomers() {
   const stats = useMemo(() => {
     const total = customers.length;
 
-    const active = customers.filter((customer) => {
-      if (!customer.last_order_date) return false;
+    const active = customers.filter(
+      (customer) => {
+        if (!customer.last_order_date) {
+          return false;
+        }
 
-      return (
-        Date.now() -
-          new Date(customer.last_order_date).getTime() <=
-        90 * 24 * 60 * 60 * 1000
-      );
-    }).length;
+        return (
+          Date.now() -
+            new Date(
+              customer.last_order_date,
+            ).getTime() <=
+          90 * 24 * 60 * 60 * 1000
+        );
+      },
+    ).length;
 
     const highValue = customers.filter(
-      (customer) => customer.total_spent >= 250,
+      (customer) =>
+        customer.total_spent >= 250,
     ).length;
 
     const totalRevenue = customers.reduce(
-      (sum, customer) => sum + customer.total_spent,
+      (sum, customer) =>
+        sum + customer.total_spent,
       0,
     );
 
     const totalOrders = customers.reduce(
-      (sum, customer) => sum + customer.order_count,
+      (sum, customer) =>
+        sum + customer.order_count,
       0,
     );
 
@@ -110,6 +123,35 @@ export default function MarketplaceCustomers() {
   const hasFilters =
     Boolean(search) || filter !== "all";
 
+  const handleContactCustomer = (
+    customer: {
+      contact_name: string | null;
+      contact_email: string | null;
+    },
+  ) => {
+    if (!customer.contact_email) {
+      return;
+    }
+
+    navigate("/modules/gateway/compose", {
+      state: {
+        to: customer.contact_email,
+        recipientName:
+          customer.contact_name ||
+          customer.contact_email,
+        subject: "Contact client — Marketplace",
+        message: `Bonjour ${
+          customer.contact_name || ""
+        },
+
+Je vous contacte au nom de B.I.B concernant votre activité sur la Marketplace.
+
+Bien cordialement,
+`,
+      },
+    });
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -127,10 +169,11 @@ export default function MarketplaceCustomers() {
           </h1>
 
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Vue commerciale des clients ayant effectué au moins une
-            commande sur la marketplace. Cette vue sert à comprendre
-            l'activité client, la valeur commerciale et les comportements
-            d'achat.
+            Vue commerciale des clients ayant
+            effectué au moins une commande sur la
+            marketplace. Cette vue sert à comprendre
+            l'activité client, la valeur commerciale
+            et les comportements d'achat.
           </p>
         </div>
       </div>
@@ -165,7 +208,9 @@ export default function MarketplaceCustomers() {
 
         <KpiCard
           label="CA des clients"
-          value={formatCurrency(stats.totalRevenue)}
+          value={formatCurrency(
+            stats.totalRevenue,
+          )}
           icon={ShoppingBag}
         />
       </div>
@@ -183,11 +228,13 @@ export default function MarketplaceCustomers() {
             </h2>
 
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              La Marketplace analyse ici les clients ayant réellement
-              commandé. Les données sont agrégées depuis les commandes
-              enregistrées dans BIB. Les comptes marchands rattachés à une
-              boutique sont exclus de cette vue afin de séparer le périmètre
-              marchand du périmètre client.
+              La Marketplace analyse ici les clients
+              ayant réellement commandé. Les données
+              sont agrégées depuis les commandes
+              enregistrées dans BIB. Les comptes
+              marchands rattachés à une boutique sont
+              exclus de cette vue afin de séparer le
+              périmètre marchand du périmètre client.
             </p>
           </div>
         </div>
@@ -201,7 +248,8 @@ export default function MarketplaceCustomers() {
           </h2>
 
           <p className="mt-1 text-xs text-muted-foreground">
-            Recherchez un client ou segmentez la base selon son activité.
+            Recherchez un client ou segmentez la base
+            selon son activité.
           </p>
         </div>
 
@@ -227,7 +275,8 @@ export default function MarketplaceCustomers() {
                 value={filter}
                 onChange={(event) =>
                   setFilter(
-                    event.target.value as CustomerFilter,
+                    event.target
+                      .value as CustomerFilter,
                   )
                 }
                 className="h-10 min-w-[220px] appearance-none rounded-lg border bg-background py-2 pl-9 pr-9 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
@@ -264,12 +313,14 @@ export default function MarketplaceCustomers() {
         {/* Loading */}
         {isLoading && (
           <div className="space-y-3 p-5">
-            {[1, 2, 3, 4, 5].map((item) => (
-              <div
-                key={item}
-                className="h-16 animate-pulse rounded-lg bg-muted"
-              />
-            ))}
+            {[1, 2, 3, 4, 5].map(
+              (item) => (
+                <div
+                  key={item}
+                  className="h-16 animate-pulse rounded-lg bg-muted"
+                />
+              ),
+            )}
           </div>
         )}
 
@@ -302,7 +353,8 @@ export default function MarketplaceCustomers() {
               </h3>
 
               <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-                Aucun client ne correspond aux critères actuels.
+                Aucun client ne correspond aux critères
+                actuels.
               </p>
 
               {hasFilters && (
@@ -353,12 +405,17 @@ export default function MarketplaceCustomers() {
                 </thead>
 
                 <tbody className="divide-y">
-                  {filteredCustomers.map((customer) => (
-                    <CustomerRow
-                      key={customer.id}
-                      customer={customer}
-                    />
-                  ))}
+                  {filteredCustomers.map(
+                    (customer) => (
+                      <CustomerRow
+                        key={customer.id}
+                        customer={customer}
+                        onContact={
+                          handleContactCustomer
+                        }
+                      />
+                    ),
+                  )}
                 </tbody>
               </table>
             </div>
@@ -370,6 +427,7 @@ export default function MarketplaceCustomers() {
 
 function CustomerRow({
   customer,
+  onContact,
 }: {
   customer: {
     id: string;
@@ -381,6 +439,10 @@ function CustomerRow({
     total_spent: number;
     currency: string;
   };
+  onContact: (customer: {
+    contact_name: string | null;
+    contact_email: string | null;
+  }) => void;
 }) {
   const displayName =
     customer.contact_name ||
@@ -436,7 +498,9 @@ function CustomerRow({
       </td>
 
       <td className="px-5 py-4 text-muted-foreground">
-        {formatDate(customer.last_order_date)}
+        {formatDate(
+          customer.last_order_date,
+        )}
       </td>
 
       <td className="px-5 py-4 text-muted-foreground">
@@ -445,13 +509,16 @@ function CustomerRow({
 
       <td className="px-5 py-4 text-right">
         {customer.contact_email ? (
-          <a
-            href={`mailto:${customer.contact_email}`}
+          <button
+            type="button"
+            onClick={() =>
+              onContact(customer)
+            }
             className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium hover:bg-muted"
           >
             <Mail className="h-3.5 w-3.5" />
-            E-mail
-          </a>
+            Contacter
+          </button>
         ) : (
           <span className="text-xs text-muted-foreground">
             —
@@ -498,3 +565,4 @@ function KpiCard({
     </div>
   );
 }
+```
