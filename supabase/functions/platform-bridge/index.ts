@@ -413,6 +413,61 @@ syncDetails.pull = {
           },
         )
 
+    // ------------------------------------------------------
+// FIN DE SYNCHRONISATION
+// ------------------------------------------------------
+//
+// On conserve un rapport détaillé de l'exécution afin que
+// l'interface BIB Intranet puisse afficher précisément
+// ce qui a été reçu et traité.
+//
+// Le compteur "items" reste compatible avec l'ancien
+// fonctionnement.
+//
+// Le champ "details" contient désormais le détail par
+// catégorie ainsi que le rapport spécifique aux favoris.
+// ------------------------------------------------------
+
+const finishedAt = new Date().toISOString()
+
+syncDetails.summary = {
+  items_count: count,
+  errors_count: errors.length,
+  duration_ms:
+    Date.now() - syncStartedAt,
+}
+
+
+// ------------------------------------------------------
+// Enregistrement du résultat de synchronisation
+// ------------------------------------------------------
+
+await admin
+  .from('platform_sync_runs')
+  .update({
+    status:
+      errors.length > 0
+        ? 'completed_with_errors'
+        : 'completed',
+
+    finished_at:
+      finishedAt,
+
+    items:
+      count,
+
+    error:
+      errors.length
+        ? errors.join('\n')
+        : null,
+
+    details:
+      syncDetails,
+  })
+  .eq(
+    'id',
+    runId,
+  )
 
       // ------------------------------------------------------
       // 1. MARCHANDS
