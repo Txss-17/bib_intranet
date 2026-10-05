@@ -348,6 +348,7 @@ const Orders = () => {
 
         <ExportButtons
           data={exportData}
+          columns={Object.keys(exportData[0] ?? {}).map((k) => ({ key: k, label: k })) as any}
           filename="bib-commandes"
           title="Commandes BIB"
         />

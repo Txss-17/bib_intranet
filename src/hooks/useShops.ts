@@ -10,6 +10,7 @@ export type ShopStatus =
   | 'draft'
   | 'application'
   | 'review'
+  | 'test'
   | 'active'
   | 'inactive'
   | 'suspended'
@@ -19,6 +20,7 @@ export const SHOP_STATUS_LABELS: Record<ShopStatus, string> = {
   draft: 'Brouillon',
   application: 'Candidature',
   review: 'En revue',
+  test: 'En test',
   active: 'Active',
   inactive: 'Inactive',
   suspended: 'Suspendue',
@@ -28,7 +30,8 @@ export const SHOP_STATUS_LABELS: Record<ShopStatus, string> = {
 export const SHOP_TRANSITIONS: Record<ShopStatus, ShopStatus[]> = {
   draft: ['application', 'closed'],
   application: ['review', 'closed'],
-  review: ['active', 'closed'],
+  review: ['test', 'active', 'closed'],
+  test: ['active', 'suspended', 'closed'],
   active: ['inactive', 'suspended', 'closed'],
   inactive: ['active', 'suspended', 'closed'],
   suspended: ['active', 'inactive', 'closed'],
@@ -61,6 +64,13 @@ export interface Shop {
   inactive_at: string | null;
   suspended_at: string | null;
   closed_at: string | null;
+
+  merchant_name?: string | null;
+  merchant_email?: string | null;
+  merchant_phone?: string | null;
+  test_started_at?: string | null;
+  test_ends_at?: string | null;
+  test_extensions?: number;
 
   suspension_reason: string | null;
   notes: string | null;
@@ -243,8 +253,9 @@ export const useShopActions = () => {
       shop: Shop;
       to: ShopStatus;
       reason?: string;
+      testDurationDays?: number;
     }) => {
-      const { shop, to, reason } = params;
+      const { shop, to, reason, testDurationDays } = params;
 
       if (shop.status === to) {
         throw new Error(
@@ -276,6 +287,12 @@ export const useShopActions = () => {
       const patch: Record<string, unknown> = {
         status: to,
       };
+
+      if (to === 'test') {
+        const days = testDurationDays && testDurationDays > 0 ? testDurationDays : 30;
+        patch.test_started_at = now;
+        patch.test_ends_at = new Date(Date.now() + days * 86_400_000).toISOString();
+      }
 
       if (to === 'active') {
         patch.activated_at = now;
@@ -324,7 +341,39 @@ export const useShopActions = () => {
     },
   });
 
+  const extendTest = useMutation({
+    mutationFn: async (params: { shop: Shop; days: number; reason?: string }) => {
+      const { shop, days, reason } = params;
+      if (shop.status !== 'test') throw new Error('Seule une boutique en test peut être prolongée.');
+      if (!days || days <= 0) throw new Error('Durée de prolongation invalide.');
+      if (!reason?.trim()) throw new Error('Une justification est obligatoire.');
+      const base = shop.test_ends_at ? new Date(shop.test_ends_at).getTime() : Date.now();
+      const { error } = await (supabase as any)
+        .from('shops')
+        .update({
+          test_ends_at: new Date(Math.max(base, Date.now()) + days * 86_400_000).toISOString(),
+          test_extensions: (shop.test_extensions ?? 0) + 1,
+        })
+        .eq('id', shop.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      invalidate();
+      qc.invalidateQueries({ queryKey: ['shops', 'events'] });
+      toast.success('Phase de test prolongée');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   return {
     changeStatus,
+    extendTest,
   };
+};
+
+/** Jours restants de la phase de test (null si non applicable). */
+export const testDaysLeft = (shop: Partial<Shop> & Record<string, any>): number | null => {
+  const end = shop?.test_end_date ?? shop?.test_ends_at ?? null;
+  if (!end) return null;
+  return Math.ceil((new Date(end).getTime() - Date.now()) / 86_400_000);
 };

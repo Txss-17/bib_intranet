@@ -47,7 +47,7 @@ export default function SecurityAccess() {
   const [query, setQuery] = useState('');
 
   const typedUsers = useMemo<SecurityAccessUser[]>(
-    () => users.filter(isSecurityAccessUser),
+    () => (users as unknown as SecurityAccessUser[]).filter(isSecurityAccessUser as any),
     [users],
   );
 

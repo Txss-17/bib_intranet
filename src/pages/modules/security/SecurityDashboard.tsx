@@ -54,7 +54,7 @@ export default function SecurityDashboard() {
     edgeLogs.length > 0
       ? Math.round(
           (edgeLogs.filter(
-            (log) => log.status_code >= 400,
+            (log) => Number(log.status_code) >= 400,
           ).length /
             edgeLogs.length) *
             100,
@@ -322,8 +322,8 @@ export default function SecurityDashboard() {
                     >
                       <div>
                         <p className="font-medium">
-                          {log.user_email ??
-                            'Utilisateur inconnu'}
+                          {String(log.user_email ??
+                            'Utilisateur inconnu')}
                         </p>
 
                         <p className="text-xs text-muted-foreground">
@@ -348,7 +348,7 @@ export default function SecurityDashboard() {
                             : 'default'
                         }
                       >
-                        {log.event_type}
+                        {String(log.event_type ?? '')}
                       </Badge>
                     </div>
                   ))}
@@ -382,7 +382,7 @@ export default function SecurityDashboard() {
                       </p>
 
                       <p className="text-xs text-muted-foreground">
-                        {alert.alert_type}
+                        {String(alert.alert_type ?? '')}
                       </p>
                     </div>
 

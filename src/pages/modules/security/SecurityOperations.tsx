@@ -105,7 +105,7 @@ export default function SecurityOperations() {
 
   const [search, setSearch] = useState("");
 
-  const alerts = data as SecurityAlert[];
+  const alerts = data as unknown as SecurityAlert[];
 
   const filteredAlerts = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();

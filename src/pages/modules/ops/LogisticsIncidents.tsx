@@ -111,7 +111,7 @@ const LogisticsIncidents = () => {
     useState<string>('all');
 
   const incidents =
-    rawIncidents as LogisticsIncident[];
+    rawIncidents as unknown as LogisticsIncident[];
 
   const filteredIncidents = useMemo(() => {
     const query = search.trim().toLowerCase();
