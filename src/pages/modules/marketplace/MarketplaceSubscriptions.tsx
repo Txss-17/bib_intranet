@@ -665,6 +665,15 @@ export default function MarketplaceSubscriptions() {
                       });
                     }}
                   />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+} 
 
 function SubscriptionRowItem({
   row,
