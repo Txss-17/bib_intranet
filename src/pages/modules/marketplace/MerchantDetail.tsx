@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
   Mail,
@@ -28,6 +28,8 @@ import { SHOP_STATUS_LABELS } from '@/hooks/useShops';
 export default function MerchantDetail() {
   const { id } = useParams();
 
+  const navigate = useNavigate();
+  
   const { data: merchant, isLoading } =
     useMarketplaceMerchant(id);
 
@@ -87,17 +89,32 @@ export default function MerchantDetail() {
             · {merchant.contact_email}
           </p>
         </div>
-
-        <Button asChild>
-          <a
-            href={
-              'mailto:' + merchant.contact_email
+          <Button
+            type="button"
+            onClick={() =>
+              navigate('/modules/gateway/compose', {
+                state: {
+                  to: merchant.contact_email,
+                  recipientName:
+                    merchant.contact_name ||
+                    merchant.company_name,
+                  subject: `Contact Marketplace — ${merchant.company_name}`,
+                  message: `Bonjour ${
+                    merchant.contact_name ||
+                    ''
+                  },
+          
+          Je vous contacte au nom du pôle Marketplace de B.I.B concernant votre activité et votre boutique.
+          
+          Bien cordialement,
+          `,
+                },
+              })
             }
           >
             <Mail className="mr-2 h-4 w-4" />
-            Préparer un contact
-          </a>
-        </Button>
+            Contacter le marchand
+          </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
