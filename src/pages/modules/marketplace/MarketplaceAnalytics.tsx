@@ -1083,3 +1083,31 @@ function calculateAggregateCompletion(
       totalShops,
   );
 }
+
+function KpiCard({
+  label,
+  value,
+  icon: Icon,
+  tone = "default",
+}: {
+  label: string;
+  value: number;
+  icon: typeof BarChart3;
+  tone?: "default" | "success" | "warning" | "danger";
+}) {
+  const toneClass = {
+    default: "text-muted-foreground",
+    success: "text-primary",
+    warning: "text-accent-foreground",
+    danger: "text-destructive",
+  }[tone];
+  return (
+    <div className="rounded-xl border bg-card p-5 shadow-sm">
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium">{label}</span>
+        <Icon className={`h-4 w-4 ${toneClass}`} />
+      </div>
+      <div className="mt-3 text-3xl font-semibold">{value}</div>
+    </div>
+  );
+}
