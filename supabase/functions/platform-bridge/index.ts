@@ -662,58 +662,6 @@ if (knownFavoriteShopsError) {
 }
 
 
-      // ------------------------------------------------------
-// 3 BIS. FAVORIS CLIENTS
-// ------------------------------------------------------
-//
-// BIB Platform reste la source de vérité.
-// L'Intranet reçoit un snapshot complet.
-//
-// IMPORTANT :
-// shopMap ne doit pas dépendre uniquement des boutiques
-// présentes dans le pull incrémental courant.
-//
-// Une boutique peut être inchangée sur BIB Platform,
-// donc absente de data.boutiques, tout en étant déjà
-// synchronisée dans l'Intranet.
-//
-// On recharge donc toutes les boutiques locales liées
-// à BIB Platform avant de résoudre les favoris.
-// ------------------------------------------------------
-
-const {
-  data: knownFavoriteShops,
-  error: knownFavoriteShopsError,
-} = await admin
-  .from('shops')
-  .select('id, platform_id')
-  .not(
-    'platform_id',
-    'is',
-    null,
-  )
-
-if (knownFavoriteShopsError) {
-  errors.push(
-    `favoris clients — index boutiques : ${knownFavoriteShopsError.message}`,
-  )
-} else {
-  for (
-    const shop
-    of knownFavoriteShops ?? []
-  ) {
-    if (
-      shop.platform_id
-    ) {
-      shopMap.set(
-        shop.platform_id,
-        shop.id,
-      )
-    }
-  }
-}
-
-
 // ------------------------------------------------------
 // Snapshot des favoris
 // ------------------------------------------------------
