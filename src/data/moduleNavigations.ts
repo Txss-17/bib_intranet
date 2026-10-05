@@ -978,12 +978,6 @@ export const transversalNavigations: Record<
         icon: 'Inbox',
       },
       {
-        id: 'compose',
-        label: 'Nouveau message',
-        path: '/modules/gateway/compose',
-        icon: 'PenLine',
-      },
-      {
         id: 'routing',
         label: 'Routage',
         path: '/modules/gateway/routing',
