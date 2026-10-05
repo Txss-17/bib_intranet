@@ -43,7 +43,7 @@ const RecommendationCard = ({ r }: { r: any }) => {
 
   const submitConvert = async () => {
     try {
-      await convert.mutateAsync({ recommendation: r, targetPole: pole });
+      await convert.mutateAsync({ recommendation: r, targetPole: pole as any });
       toast.success(`Ticket créé pour le pôle ${pole}`);
       setConvertOpen(false);
     } catch (e: any) { toast.error(e.message); }

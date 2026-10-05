@@ -131,6 +131,9 @@ import MarketplaceStoreDetail from "./pages/modules/marketplace/MarketplaceStore
 import MarketplaceStores from "./pages/modules/marketplace/MarketplaceStores";
 import MarketplaceOpportunities from "./pages/modules/marketplace/MarketplaceOpportunities";
 import MarketplaceAnalytics from "./pages/modules/marketplace/MarketplaceAnalytics";
+import MarketplaceProducts from "./pages/modules/marketplace/MarketplaceProducts";
+import MarketplaceCustomers from "./pages/modules/marketplace/MarketplaceCustomers";
+import MarketplaceSubscriptions from "./pages/modules/marketplace/MarketplaceSubscriptions";
 
 /* ============================================================
    6. SUPPORT & CUSTOMER SUCCESS
@@ -533,22 +536,22 @@ const App = () => (
 
 <Route
   path="/pole/marketplace/subscribers"
-  element={<MarketplaceSubscribers />}
+  element={<SubSectionPage />}
 />
 
 <Route
   path="/pole/marketplace/favorites"
-  element={<MarketplaceFavorites />}
+  element={<SubSectionPage />}
 />
 
 <Route
   path="/pole/marketplace/rewards"
-  element={<MarketlaceRewards />}
+  element={<SubSectionPage />}
 />
 
 <Route
   path="/pole/marketplace/recycling"
-  element={<MarketplaceRecycling />}
+  element={<SubSectionPage />}
 />
 
 <Route

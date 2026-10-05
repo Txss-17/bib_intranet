@@ -54,7 +54,7 @@ export default function SecurityDashboard() {
     edgeLogs.length > 0
       ? Math.round(
           (edgeLogs.filter(
-            (log) => log.status_code >= 400,
+            (log) => Number(log.status_code) >= 400,
           ).length /
             edgeLogs.length) *
             100,

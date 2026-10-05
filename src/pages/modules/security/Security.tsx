@@ -123,7 +123,7 @@ export default function Security() {
   } = useSecurityAlerts();
 
   const alerts =
-    data as SecurityAlert[];
+    data as unknown as SecurityAlert[];
 
   const [statusFilter, setStatusFilter] =
     useState('open');

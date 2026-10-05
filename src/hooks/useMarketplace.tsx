@@ -156,7 +156,7 @@ export function useMarketplaceMerchants(search = '') {
 
       if (error) throw error;
 
-      return (data ?? []) as Merchant[];
+      return (data ?? []) as unknown as Merchant[];
     },
   });
 }
@@ -174,7 +174,7 @@ export function useMarketplaceMerchant(merchantId?: string) {
 
       if (error) throw error;
 
-      return data as Merchant;
+      return data as unknown as Merchant;
     },
   });
 }

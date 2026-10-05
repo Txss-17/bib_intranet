@@ -150,7 +150,7 @@ export default function SecurityLogs() {
       const normalizedQuery =
         query.trim().toLowerCase();
 
-      return (authLogs as AuthLog[]).filter(
+      return (authLogs as unknown as AuthLog[]).filter(
         (log) => {
           if (
             eventFilter !== 'all' &&
@@ -524,7 +524,7 @@ export default function SecurityLogs() {
                   </TableHeader>
 
                   <TableBody>
-                    {(edgeLogs as EdgeFunctionLog[])
+                    {(edgeLogs as unknown as EdgeFunctionLog[])
                       .slice(0, 100)
                       .map((log) => (
                         <TableRow

@@ -458,7 +458,7 @@ export const useOrders = () => {
         ])
       );
 
-      return (ordersData ?? []).map((row): Order => {
+      return ((ordersData ?? []) as any[]).map((row): Order => {
         const shop = row.shop_id
           ? shopMap.get(row.shop_id)
           : undefined;

@@ -140,7 +140,7 @@ export default function SecurityVPN() {
   } = useVpnAccess();
 
   const records =
-    data as VpnAccessRecord[];
+    data as unknown as VpnAccessRecord[];
 
   const [open, setOpen] = useState(false);
 

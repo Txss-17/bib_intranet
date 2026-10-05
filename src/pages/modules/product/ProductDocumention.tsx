@@ -336,7 +336,7 @@ export default function ProductDocumentation() {
         },
       );
 
-      const anchor = document.createElement('a');
+      const anchor = window.document.createElement('a');
 
       anchor.href = URL.createObjectURL(blob);
 
