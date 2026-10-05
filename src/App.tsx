@@ -136,6 +136,7 @@ import MarketplaceCustomers from "./pages/modules/marketplace/MarketplaceCustome
 import MarketplaceSubscriptions from "./pages/modules/marketplace/MarketplaceSubscriptions";
 import MarketplaceFavorites from "./pages/modules/marketplace/MarketplaceFavorites";
 import MarketplaceOrders from "./pages/modules/marketplace/MarketplaceOrders";
+import MarketplaceSubscribers from "./pages/modules/marketplace/MarketplaceSubscribers";
 <<<<<<< HEAD
 =======
 import MarketplaceRewards from "./pages/modules/marketplace/MarketplaceRewards";
