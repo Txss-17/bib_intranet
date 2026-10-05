@@ -292,7 +292,10 @@ Deno.serve(async (req) => {
 
   const now =
     new Date().toISOString()
+  
+  const syncStartedAt = Date.now()
 
+  const syncDetails: Record<string, unknown> = {}
 
   const notifications:
     Record<string, unknown>[] = []
