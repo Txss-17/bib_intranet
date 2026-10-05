@@ -387,6 +387,12 @@ export function useMerchantCommunicationTemplates() {
         .order('label', { ascending: true });
 
       if (error) throw error;
+
+      return data ?? [];
+    },
+  });
+}
+
 export type MarketplaceCustomer = {
   id: string;
   contact_name: string | null;
