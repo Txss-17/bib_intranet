@@ -497,7 +497,7 @@ const App = () => (
 
                 <Route
                   path="/pole/marketplace"
-                  element={<MarketplaceDashboard />
+                  element={<MarketplaceDashboard />}
                 />
                 <Route
                   path="/pole/marketplace/merchants"
