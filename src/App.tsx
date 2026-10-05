@@ -135,6 +135,7 @@ import MarketplaceProducts from "./pages/modules/marketplace/MarketplaceProducts
 import MarketplaceCustomers from "./pages/modules/marketplace/MarketplaceCustomers";
 import MarketplaceSubscriptions from "./pages/modules/marketplace/MarketplaceSubscriptions";
 import MarketplaceFavorites from "./pages/modules/marketplace/MarketplaceFavorites";
+import MarketplaceOrders from "./pages/modules/marketplace/MarketplaceOrders";
 
 /* ============================================================
    6. SUPPORT & CUSTOMER SUCCESS
