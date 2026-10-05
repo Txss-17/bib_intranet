@@ -546,8 +546,3 @@ export function useMarketplaceCustomers(search = "") {
     },
   });
 }
-
-      return data ?? [];
-    },
-  });
-}
