@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.hub-field-missions]
 verify_jwt = false
+
+[gateway-inbound-email]
+verify_jwt = false
