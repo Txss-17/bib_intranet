@@ -610,6 +610,104 @@ Deno.serve(async (req) => {
 
       }
 
+      // ------------------------------------------------------
+      // 3 BIS. FAVORIS CLIENTS
+      // ------------------------------------------------------
+      //
+      // BIB Platform reste la source de vérité.
+      // L'Intranet reçoit un snapshot complet.
+      //
+      // On supprime d'abord le snapshot précédent afin que
+      // les favoris retirés côté Platform disparaissent aussi
+      // de l'Intranet.
+      // ------------------------------------------------------
+
+      const {
+        error: deleteFavoritesError,
+      } = await admin
+        .from('marketplace_customer_favorites')
+        .delete()
+        .eq('source', 'platform')
+
+      if (deleteFavoritesError) {
+        errors.push(
+          `favoris clients — nettoyage : ${deleteFavoritesError.message}`,
+        )
+      } else {
+        const favorites =
+          Array.isArray(data.customer_favorites)
+            ? data.customer_favorites
+            : []
+
+        const favoriteRows =
+          favorites.map(
+            (favorite: any) => ({
+              platform_user_id:
+                favorite.user_id,
+
+              favorite_type:
+                favorite.favorite_type,
+
+              platform_target_id:
+                favorite.target_id,
+
+              shop_id:
+                favorite.favorite_type === 'boutique'
+                  ? (
+                      shopMap.get(
+                        favorite.target_id,
+                      ) ?? null
+                    )
+                  : null,
+
+              created_at:
+                favorite.created_at ??
+                now,
+
+              platform_synced_at:
+                now,
+
+              source:
+                'platform',
+            }),
+          )
+
+        const chunkSize = 500
+
+        for (
+          let i = 0;
+          i < favoriteRows.length;
+          i += chunkSize
+        ) {
+          const chunk =
+            favoriteRows.slice(
+              i,
+              i + chunkSize,
+            )
+
+          if (!chunk.length) {
+            continue
+          }
+
+          const {
+            error,
+          } = await admin
+            .from(
+              'marketplace_customer_favorites',
+            )
+            .insert(chunk)
+
+          if (error) {
+            errors.push(
+              `favoris clients : ${error.message}`,
+            )
+
+            break
+          }
+
+          count += chunk.length
+        }
+      }
 
       // ------------------------------------------------------
       // 4. COMMANDES
