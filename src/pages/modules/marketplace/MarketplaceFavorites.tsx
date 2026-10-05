@@ -1,967 +1,279 @@
-import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { useQueries } from "@tanstack/react-query";
 import {
-  Building2,
-  ChevronDown,
-  Filter,
-  Heart,
-  Package,
+  useMemo,
+  useState,
+} from 'react';
+
+import {
+  useQueries,
+} from '@tanstack/react-query';
+
+import {
   Search,
-  UserRound,
-  X,
-} from "lucide-react";
+  Heart,
+  Store,
+  Package,
+  Users,
+  CalendarDays,
+  ExternalLink,
+  RefreshCw,
+} from 'lucide-react';
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
+
 import {
-  MarketplaceFavoriteType,
   useMarketplaceFavorites,
-  useMarketplaceFavoriteStats,
-} from "@/hooks/useMarketplaceFavorites";
+  type MarketplaceCustomerFavorite,
+  type MarketplaceFavoriteType,
+} from '@/hooks/useMarketplaceFavorites';
 
-type FavoriteView = {
+
+type UserAccount = {
   id: string;
-  type: MarketplaceFavoriteType;
-  targetId: string;
-  createdAt: string;
-
-  customerId: string;
-  customerName: string | null;
-  customerEmail: string | null;
-
-  targetName: string | null;
-  targetSku: string | null;
-
-  shopId: string | null;
-  shopName: string | null;
-
-  platform_boutique_id: string | null;
-  target_name: string | null;
-  target_sku: string | null;
+  platform_id: string | null;
+  contact_name: string | null;
+  contact_email: string | null;
 };
 
-type FilterType =
-  | "all"
-  | MarketplaceFavoriteType;
+type Shop = {
+  id: string;
+  platform_id: string | null;
+  name: string | null;
+  slug: string | null;
+};
 
-type ReferenceRecord = Record<
-  string,
-  unknown
->;
+type FavoriteRow = MarketplaceCustomerFavorite & {
+  customer?: UserAccount | null;
+  shop?: Shop | null;
+};
 
-function normalize(value: unknown) {
-  return String(value ?? "")
-    .trim()
-    .toLowerCase();
-}
 
-function formatDate(value: string) {
+function formatDate(
+  value: string | null | undefined,
+) {
+  if (!value) {
+    return '—';
+  }
+
   const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
-    return "Date inconnue";
+    return '—';
   }
 
-  return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
+  return new Intl.DateTimeFormat(
+    'fr-FR',
+    {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    },
+  ).format(date);
 }
 
-function shortenId(value: string) {
+
+function shortenId(
+  value: string | null | undefined,
+) {
   if (!value) {
-    return "—";
+    return '—';
   }
 
-  if (value.length <= 18) {
+  if (value.length <= 14) {
     return value;
   }
 
-  return `${value.slice(0, 8)}…${value.slice(-6)}`;
+  return `${value.slice(0, 8)}…${value.slice(-4)}`;
 }
 
-function getTypeLabel(
-  type: MarketplaceFavoriteType,
+
+function getCustomerLabel(
+  customer: UserAccount | null | undefined,
+  platformUserId: string,
 ) {
-  return type === "product"
-    ? "Produit"
-    : "Boutique";
+  if (!customer) {
+    return `Client Platform ${shortenId(platformUserId)}`;
+  }
+
+  if (customer.contact_name) {
+    return customer.contact_name;
+  }
+
+  if (customer.contact_email) {
+    return customer.contact_email;
+  }
+
+  return `Client Platform ${shortenId(platformUserId)}`;
 }
 
-function getTypeClasses(
-  type: MarketplaceFavoriteType,
+
+function getFavoriteTargetLabel(
+  favorite: MarketplaceCustomerFavorite,
 ) {
-  return type === "product"
-    ? "bg-blue-50 text-blue-700 border-blue-200"
-    : "bg-violet-50 text-violet-700 border-violet-200";
+  if (favorite.target_name) {
+    return favorite.target_name;
+  }
+
+  if (favorite.favorite_type === 'product') {
+    return `Produit ${shortenId(
+      favorite.platform_target_id,
+    )}`;
+  }
+
+  return `Boutique ${shortenId(
+    favorite.platform_target_id,
+  )}`;
 }
 
-export default function MarketplaceFavorites() {
-  const [search, setSearch] = useState("");
-  const [typeFilter, setTypeFilter] =
-    useState<FilterType>("all");
 
-  const {
-    data: favorites = [],
-    isLoading: favoritesLoading,
-    error: favoritesError,
-  } = useMarketplaceFavorites({
-    type:
-      typeFilter === "all"
-        ? "all"
-        : typeFilter,
-  });
+function getFavoriteTargetSecondaryLabel(
+  favorite: MarketplaceCustomerFavorite,
+) {
+  if (
+    favorite.favorite_type === 'product' &&
+    favorite.target_sku
+  ) {
+    return `SKU : ${favorite.target_sku}`;
+  }
 
-  const {
-    data: stats,
-    isLoading: statsLoading,
-  } = useMarketplaceFavoriteStats();
+  if (
+    favorite.favorite_type === 'product'
+  ) {
+    return `ID Platform : ${shortenId(
+      favorite.platform_target_id,
+    )}`;
+  }
 
-  const {
-    productsQuery,
-    shopsQuery,
-    usersQuery,
-  } = useMarketplaceFavoriteReferences(
-    favorites,
-  );
-
-  const isLoading =
-    favoritesLoading ||
-    productsQuery.isLoading ||
-    shopsQuery.isLoading ||
-    usersQuery.isLoading;
-
-  const referenceError =
-    productsQuery.error ??
-    shopsQuery.error ??
-    usersQuery.error;
-
-  const productMap = useMemo(() => {
-    return new Map(
-      (
-        (productsQuery.data ??
-          []) as ReferenceRecord[]
-      ).map((product) => [
-        String(product.platform_id),
-        product,
-      ]),
-    );
-  }, [productsQuery.data]);
-
-  const shopMap = useMemo(() => {
-    return new Map(
-      (
-        (shopsQuery.data ??
-          []) as ReferenceRecord[]
-      ).map((shop) => [
-        String(shop.platform_id),
-        shop,
-      ]),
-    );
-  }, [shopsQuery.data]);
-
-  const customerMap = useMemo(() => {
-    return new Map(
-      (
-        (usersQuery.data ??
-          []) as ReferenceRecord[]
-      ).map((user) => [
-        String(user.platform_id),
-        user,
-      ]),
-    );
-  }, [usersQuery.data]);
-
-  const rows = useMemo<FavoriteView[]>(() => {
-    return favorites.map((favorite) => {
-      const customer =
-        customerMap.get(
-          favorite.platform_user_id,
-        );
-
-      const customerName =
-        typeof customer?.contact_name ===
-        "string"
-          ? customer.contact_name
-          : null;
-
-      const customerEmail =
-        typeof customer?.contact_email ===
-        "string"
-          ? customer.contact_email
-          : null;
-
-      if (
-        favorite.favorite_type ===
-        "product"
-      ) {
-        const product =
-          productMap.get(
-            favorite.platform_target_id,
-          );
-
-        return {
-          id: favorite.id,
-          type: favorite.favorite_type,
-          targetId:
-            favorite.platform_target_id,
-          createdAt: favorite.created_at,
-
-          customerId:
-            favorite.platform_user_id,
-          customerName,
-          customerEmail,
-
-          targetName:
-            typeof product?.name === "string"
-              ? product.name
-              : null,
-
-          targetSku:
-            typeof product?.sku === "string"
-              ? product.sku
-              : null,
-
-          /*
-           * Le snapshot produit ne contient pas de
-           * shop_id confirmé dans le schéma actuel.
-           * On ne fabrique donc pas de relation produit
-           * → boutique.
-           */
-          shopId: null,
-          shopName: null,
-        };
-      }
-
-      const shop =
-        shopMap.get(
-          favorite.platform_target_id,
-        );
-
-      const shopName =
-        typeof shop?.name === "string"
-          ? shop.name
-          : null;
-
-      const shopId =
-        typeof shop?.id === "string"
-          ? shop.id
-          : favorite.shop_id;
-
-      return {
-        id: favorite.id,
-        type: favorite.favorite_type,
-        targetId:
-          favorite.platform_target_id,
-        createdAt: favorite.created_at,
-
-        customerId:
-          favorite.platform_user_id,
-        customerName,
-        customerEmail,
-
-        targetName: shopName,
-        targetSku: null,
-
-        shopId,
-        shopName,
-      };
-    });
-  }, [
-    favorites,
-    customerMap,
-    productMap,
-    shopMap,
-  ]);
-
-  const filteredRows = useMemo(() => {
-    const query = normalize(search);
-
-    if (!query) {
-      return rows;
-    }
-
-    return rows.filter((row) => {
-      return (
-        normalize(row.customerName).includes(
-          query,
-        ) ||
-        normalize(row.customerEmail).includes(
-          query,
-        ) ||
-        normalize(row.targetName).includes(
-          query,
-        ) ||
-        normalize(row.targetSku).includes(
-          query,
-        ) ||
-        normalize(row.shopName).includes(
-          query,
-        ) ||
-        normalize(row.customerId).includes(
-          query,
-        ) ||
-        normalize(row.targetId).includes(
-          query,
-        )
-      );
-    });
-  }, [rows, search]);
-
-  const uniqueCustomers = useMemo(() => {
-    return new Set(
-      favorites.map(
-        (favorite) =>
-          favorite.platform_user_id,
-      ),
-    ).size;
-  }, [favorites]);
-
-  const hasFilters =
-    Boolean(search) ||
-    typeFilter !== "all";
-
-  const clearFilters = () => {
-    setSearch("");
-    setTypeFilter("all");
-  };
-
-  const FAVORITE_FIELDS = `
-  id,
-  platform_user_id,
-  favorite_type,
-  platform_target_id,
-  platform_boutique_id,
-  target_name,
-  target_sku,
-  shop_id,
-  created_at,
-  platform_synced_at,
-  source
-  `;
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Heart className="h-4 w-4" />
-            <span>Marketplace</span>
-            <span>/</span>
-            <span>Favoris & suivi</span>
-          </div>
-
-          <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-            Favoris & suivi
-          </h1>
-
-          <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Vue opérationnelle des produits et
-            boutiques enregistrés en favoris sur
-            BIB Platform. La plateforme reste la
-            source de vérité ; cette interface est
-            une copie de suivi en lecture seule.
-          </p>
-        </div>
-      </div>
-
-      {/* Source of truth */}
-      <div className="rounded-xl border bg-card p-5 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background">
-            <Heart className="h-4 w-4 text-muted-foreground" />
-          </div>
-
-          <div>
-            <h2 className="font-semibold">
-              Données issues de BIB Platform
-            </h2>
-
-            <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Les favoris sont exportés depuis les
-              tables client de BIB Platform puis
-              synchronisés dans l'Intranet. Aucun
-              ajout, suppression ou modification de
-              favori n'est effectué depuis l'Intranet.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* KPIs */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard
-          label="Total favoris"
-          value={stats?.total ?? 0}
-          icon={Heart}
-          loading={statsLoading}
-        />
-
-        <KpiCard
-          label="Produits"
-          value={stats?.products ?? 0}
-          icon={Package}
-          loading={statsLoading}
-          tone="product"
-        />
-
-        <KpiCard
-          label="Boutiques"
-          value={stats?.boutiques ?? 0}
-          icon={Building2}
-          loading={statsLoading}
-          tone="shop"
-        />
-
-        <KpiCard
-          label="Clients concernés"
-          value={uniqueCustomers}
-          icon={UserRound}
-          loading={favoritesLoading}
-        />
-      </div>
-
-      {/* Main table */}
-      <section className="rounded-xl border bg-card shadow-sm">
-        <div className="border-b px-5 py-4">
-          <h2 className="font-semibold">
-            Suivi des favoris
-          </h2>
-
-          <p className="mt-1 text-xs text-muted-foreground">
-            Recherchez un client, produit, boutique
-            ou identifiant Platform.
-          </p>
-        </div>
-
-        {/* Filters */}
-        <div className="border-b bg-muted/20 p-4">
-          <div className="flex flex-col gap-3 xl:flex-row">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-
-              <input
-                value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
-                placeholder="Rechercher un client, produit, boutique ou identifiant..."
-                className="h-10 w-full rounded-lg border bg-background pl-9 pr-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-              />
-            </div>
-
-            <FilterSelect
-              value={typeFilter}
-              onChange={(value) =>
-                setTypeFilter(
-                  value as FilterType,
-                )
-              }
-              options={[
-                {
-                  value: "all",
-                  label: "Tous les favoris",
-                },
-                {
-                  value: "product",
-                  label: "Produits",
-                },
-                {
-                  value: "boutique",
-                  label: "Boutiques",
-                },
-              ]}
-            />
-
-            {hasFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border bg-background px-3 text-sm font-medium hover:bg-muted"
-              >
-                <X className="h-4 w-4" />
-                Réinitialiser
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Error */}
-        {favoritesError ||
-        referenceError ? (
-          <div className="p-5">
-            <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-              Impossible de charger les favoris
-              synchronisés.
-
-              <div className="mt-1 text-xs">
-                {favoritesError instanceof
-                  Error
-                  ? favoritesError.message
-                  : referenceError instanceof
-                      Error
-                    ? referenceError.message
-                    : "Erreur inconnue"}
-              </div>
-            </div>
-          </div>
-        ) : isLoading ? (
-          <div className="space-y-3 p-5">
-            {[1, 2, 3, 4, 5].map(
-              (item) => (
-                <div
-                  key={item}
-                  className="h-16 animate-pulse rounded-lg bg-muted"
-                />
-              ),
-            )}
-          </div>
-        ) : filteredRows.length === 0 ? (
-          <div className="flex min-h-[280px] flex-col items-center justify-center px-6 text-center">
-            <Heart className="h-9 w-9 text-muted-foreground" />
-
-            <h3 className="mt-4 font-medium">
-              Aucun favori à afficher
-            </h3>
-
-            <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-              Aucun favori correspondant aux
-              critères actuels n'est présent dans
-              le snapshot synchronisé depuis
-              BIB Platform.
-            </p>
-
-            {hasFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="mt-4 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted"
-              >
-                <X className="h-4 w-4" />
-                Réinitialiser les filtres
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1050px] text-sm">
-              <thead className="border-b bg-muted/30">
-                <tr>
-                  <th className="px-5 py-3 text-left font-medium text-muted-foreground">
-                    Client
-                  </th>
-
-                  <th className="px-5 py-3 text-left font-medium text-muted-foreground">
-                    Favori
-                  </th>
-
-                  <th className="px-5 py-3 text-left font-medium text-muted-foreground">
-                    Boutique
-                  </th>
-
-                  <th className="px-5 py-3 text-left font-medium text-muted-foreground">
-                    Identifiant Platform
-                  </th>
-
-                  <th className="px-5 py-3 text-left font-medium text-muted-foreground">
-                    Ajouté le
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody className="divide-y">
-                {filteredRows.map((row) => (
-                  <FavoriteRow
-                    key={row.id}
-                    row={row}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-
-        {!isLoading &&
-          !favoritesError &&
-          !referenceError &&
-          filteredRows.length > 0 && (
-            <div className="border-t bg-muted/10 px-5 py-3 text-xs text-muted-foreground">
-              {filteredRows.length} favori
-              {filteredRows.length > 1
-                ? "s"
-                : ""}{" "}
-              affiché
-              {filteredRows.length > 1
-                ? "s"
-                : ""}.
-            </div>
-          )}
-      </section>
-    </div>
-  );
+  return `ID Platform : ${shortenId(
+    favorite.platform_target_id,
+  )}`;
 }
 
-function FavoriteRow({
-  row,
-}: {
-  row: FavoriteView;
-}) {
-  return (
-    <tr className="transition hover:bg-muted/20">
-      {/* Client */}
-      <td className="px-5 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background">
-            <UserRound className="h-4 w-4 text-muted-foreground" />
-          </div>
 
-          <div className="min-w-0">
-            {row.customerName ? (
-              <div className="font-medium">
-                {row.customerName}
-              </div>
-            ) : (
-              <div className="font-mono text-xs">
-                {shortenId(row.customerId)}
-              </div>
-            )}
-
-            {row.customerEmail && (
-              <div className="truncate text-xs text-muted-foreground">
-                {row.customerEmail}
-              </div>
-            )}
-          </div>
-        </div>
-      </td>
-
-      {/* Favorite */}
-      <td className="px-5 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background">
-            {row.type === "product" ? (
-              <Package className="h-4 w-4 text-muted-foreground" />
-            ) : (
-              <Building2 className="h-4 w-4 text-muted-foreground" />
-            )}
-          </div>
-
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-medium">
-                {row.targetName ??
-                  "Cible non résolue"}
-              </span>
-
-              <span
-                className={`inline-flex rounded-full border px-2 py-0.5 text-[11px] font-medium ${getTypeClasses(
-                  row.type,
-                )}`}
-              >
-                {getTypeLabel(row.type)}
-              </span>
-            </div>
-
-            {row.targetSku && (
-              <div className="mt-0.5 font-mono text-xs text-muted-foreground">
-                SKU : {row.targetSku}
-              </div>
-            )}
-
-            {!row.targetName && (
-              <div className="mt-0.5 font-mono text-xs text-muted-foreground">
-                Platform :{" "}
-                {shortenId(
-                  row.targetId,
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </td>
-
-      {/* Boutique */}
-      <td className="px-5 py-4">
-        {row.shopId ? (
-          <Link
-            to={`/pole/marketplace/stores/${row.shopId}`}
-            className="font-medium hover:underline"
-          >
-            {row.shopName ??
-              "Boutique sans nom"}
-          </Link>
-        ) : (
-          <span className="text-muted-foreground">
-            Non rattachée
-          </span>
-        )}
-      </td>
-
-      {/* Platform ID */}
-      <td className="px-5 py-4">
-        <div className="font-mono text-xs text-muted-foreground">
-          {shortenId(row.targetId)}
-        </div>
-      </td>
-
-      {/* Date */}
-      <td className="px-5 py-4">
-        <span className="text-muted-foreground">
-          {formatDate(row.createdAt)}
-        </span>
-      </td>
-    </tr>
-  );
-}
-
-function KpiCard({
+function StatCard({
   label,
   value,
   icon: Icon,
-  loading,
-  tone = "default",
 }: {
   label: string;
   value: number;
   icon: typeof Heart;
-  loading: boolean;
-  tone?: "default" | "product" | "shop";
 }) {
-  const iconClass =
-    tone === "product"
-      ? "text-blue-600"
-      : tone === "shop"
-        ? "text-violet-600"
-        : "text-muted-foreground";
-
   return (
-    <div className="rounded-xl border bg-card p-4 shadow-sm">
+    <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">
-          {label}
-        </span>
+        <div>
+          <p className="text-sm font-medium text-slate-500">
+            {label}
+          </p>
 
-        <Icon
-          className={`h-4 w-4 ${iconClass}`}
-        />
-      </div>
+          <p className="mt-2 text-2xl font-semibold text-slate-900">
+            {value}
+          </p>
+        </div>
 
-      <div className="mt-2 text-2xl font-semibold">
-        {loading ? "—" : value}
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+          <Icon className="h-5 w-5 text-slate-600" />
+        </div>
       </div>
     </div>
   );
 }
 
-function FilterSelect({
-  value,
-  onChange,
-  options,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  options: Array<{
-    value: string;
-    label: string;
-  }>;
-}) {
-  return (
-    <div className="relative">
-      <Filter className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
-      <select
-        value={value}
-        onChange={(event) =>
-          onChange(event.target.value)
-        }
-        className="h-10 min-w-[200px] appearance-none rounded-lg border bg-background py-2 pl-9 pr-9 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-      >
-        {options.map((option) => (
-          <option
-            key={option.value}
-            value={option.value}
-          >
-            {option.label}
-          </option>
-        ))}
-      </select>
-
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-    </div>
-  );
-}
-
-/**
- * Charge les références nécessaires à l'affichage.
- *
- * Source de vérité :
- * - favoris : marketplace_customer_favorites
- * - produits : products.platform_id
- * - boutiques : shops.platform_id
- * - clients : user_accounts.platform_id
- *
- * Aucun JOIN ou mapping artificiel n'est créé ici.
- */
-function useMarketplaceFavoriteReferences(
-  favorites: Array<{
-    platform_user_id: string;
-    favorite_type: MarketplaceFavoriteType;
-    platform_target_id: string;
-  }>,
-) {
-  const productIds = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          favorites
-            .filter(
-              (favorite) =>
-                favorite.favorite_type ===
-                "product",
-            )
-            .map(
-              (favorite) =>
-                favorite.platform_target_id,
-            ),
-        ),
-      ),
-    [favorites],
-  );
-
-  const boutiqueIds = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          favorites
-            .filter(
-              (favorite) =>
-                favorite.favorite_type ===
-                "boutique",
-            )
-            .map(
-              (favorite) =>
-                favorite.platform_target_id,
-            ),
-        ),
-      ),
-    [favorites],
-  );
-
-  const userIds = useMemo(
-    () =>
-      Array.from(
-        new Set(
-          favorites.map(
-            (favorite) =>
-              favorite.platform_user_id,
-          ),
-        ),
-      ),
-    [favorites],
-  );
+export default function MarketplaceFavorites() {
+  const [
+    search,
+    setSearch,
+  ] = useState('');
 
   const [
-    productsQuery,
-    shopsQuery,
-    usersQuery,
-  ] = useQueries({
+    type,
+    setType,
+  ] = useState<
+    MarketplaceFavoriteType | 'all'
+  >('all');
+
+  const {
+    data: favorites = [],
+    isLoading: favoritesLoading,
+    isFetching: favoritesFetching,
+    error: favoritesError,
+    refetch: refetchFavorites,
+  } = useMarketplaceFavorites({
+    type,
+  });
+
+
+  /*
+   * Les favoris utilisent les identifiants Platform.
+   *
+   * On résout uniquement :
+   * - les clients via user_accounts.platform_id
+   * - les boutiques via shops.platform_id
+   *
+   * Aucun lookup de la table Intranet products n'est effectué.
+   *
+   * Les informations produit viennent directement du snapshot
+   * enrichi marketplace_customer_favorites :
+   * - target_name
+   * - target_sku
+   * - platform_target_id
+   * - platform_boutique_id
+   */
+  const customerPlatformIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          favorites
+            .map(
+              (favorite) =>
+                favorite.platform_user_id,
+            )
+            .filter(Boolean),
+        ),
+      ),
+    [favorites],
+  );
+
+  const boutiquePlatformIds = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          favorites
+            .map(
+              (favorite) =>
+                favorite.platform_boutique_id,
+            )
+            .filter(
+              (
+                value,
+              ): value is string =>
+                Boolean(value),
+            ),
+        ),
+      ),
+    [favorites],
+  );
+
+
+  const lookupQueries = useQueries({
     queries: [
       {
         queryKey: [
-          "marketplace",
-          "favorites",
-          "references",
-          "products",
-          productIds,
+          'marketplace',
+          'favorites',
+          'customers',
+          customerPlatformIds,
         ],
 
-        enabled: productIds.length > 0,
+        enabled:
+          customerPlatformIds.length > 0,
 
         queryFn: async () => {
           const {
             data,
             error,
           } = await (supabase as any)
-            .from("products")
-            .select(
-              `
-                id,
-                platform_id,
-                name,
-                sku,
-                category,
-                status
-              `,
-            )
-            .in(
-              "platform_id",
-              productIds,
-            );
-
-          if (error) {
-            throw error;
-          }
-
-          return data ?? [];
-        },
-      },
-
-      {
-        queryKey: [
-          "marketplace",
-          "favorites",
-          "references",
-          "shops",
-          boutiqueIds,
-        ],
-
-        enabled: boutiqueIds.length > 0,
-
-        queryFn: async () => {
-          const {
-            data,
-            error,
-          } = await (supabase as any)
-            .from("shops")
-            .select(
-              `
-                id,
-                platform_id,
-                name,
-                shop_code
-              `,
-            )
-            .in(
-              "platform_id",
-              boutiqueIds,
-            );
-
-          if (error) {
-            throw error;
-          }
-
-          return data ?? [];
-        },
-      },
-
-      {
-        queryKey: [
-          "marketplace",
-          "favorites",
-          "references",
-          "users",
-          userIds,
-        ],
-
-        enabled: userIds.length > 0,
-
-        queryFn: async () => {
-          const {
-            data,
-            error,
-          } = await (supabase as any)
-            .from("user_accounts")
+            .from('user_accounts')
             .select(
               `
                 id,
@@ -971,23 +283,662 @@ function useMarketplaceFavoriteReferences(
               `,
             )
             .in(
-              "platform_id",
-              userIds,
+              'platform_id',
+              customerPlatformIds,
             );
 
           if (error) {
             throw error;
           }
 
-          return data ?? [];
+          return (
+            data ?? []
+          ) as UserAccount[];
+        },
+      },
+
+      {
+        queryKey: [
+          'marketplace',
+          'favorites',
+          'shops',
+          boutiquePlatformIds,
+        ],
+
+        enabled:
+          boutiquePlatformIds.length > 0,
+
+        queryFn: async () => {
+          const {
+            data,
+            error,
+          } = await (supabase as any)
+            .from('shops')
+            .select(
+              `
+                id,
+                platform_id,
+                name,
+                slug
+              `,
+            )
+            .in(
+              'platform_id',
+              boutiquePlatformIds,
+            );
+
+          if (error) {
+            throw error;
+          }
+
+          return (
+            data ?? []
+          ) as Shop[];
         },
       },
     ],
   });
 
-  return {
-    productsQuery,
-    shopsQuery,
-    usersQuery,
-  };
+
+  const customersQuery =
+    lookupQueries[0];
+
+  const shopsQuery =
+    lookupQueries[1];
+
+
+  const customers =
+    (customersQuery?.data ??
+      []) as UserAccount[];
+
+  const shops =
+    (shopsQuery?.data ??
+      []) as Shop[];
+
+
+  const customerMap =
+    useMemo(() => {
+      const map = new Map<
+        string,
+        UserAccount
+      >();
+
+      for (const customer of customers) {
+        if (
+          customer.platform_id
+        ) {
+          map.set(
+            customer.platform_id,
+            customer,
+          );
+        }
+      }
+
+      return map;
+    }, [customers]);
+
+
+  const shopMap =
+    useMemo(() => {
+      const map = new Map<
+        string,
+        Shop
+      >();
+
+      for (const shop of shops) {
+        if (shop.platform_id) {
+          map.set(
+            shop.platform_id,
+            shop,
+          );
+        }
+      }
+
+      return map;
+    }, [shops]);
+
+
+  const enrichedFavorites =
+    useMemo<FavoriteRow[]>(() => {
+      return favorites.map(
+        (favorite) => ({
+          ...favorite,
+
+          customer:
+            customerMap.get(
+              favorite.platform_user_id,
+            ) ?? null,
+
+          shop:
+            favorite.platform_boutique_id
+              ? (
+                  shopMap.get(
+                    favorite.platform_boutique_id,
+                  ) ?? null
+                )
+              : favorite.shop_id
+                ? (
+                    shops.find(
+                      (shop) =>
+                        shop.id ===
+                        favorite.shop_id,
+                    ) ?? null
+                  )
+                : null,
+        }),
+      );
+    }, [
+      favorites,
+      customerMap,
+      shopMap,
+      shops,
+    ]);
+
+
+  const filteredFavorites =
+    useMemo(() => {
+      const normalizedSearch =
+        search
+          .trim()
+          .toLowerCase();
+
+      if (!normalizedSearch) {
+        return enrichedFavorites;
+      }
+
+      return enrichedFavorites.filter(
+        (favorite) => {
+          const customer =
+            getCustomerLabel(
+              favorite.customer,
+              favorite.platform_user_id,
+            );
+
+          const target =
+            getFavoriteTargetLabel(
+              favorite,
+            );
+
+          const secondary =
+            getFavoriteTargetSecondaryLabel(
+              favorite,
+            );
+
+          const boutique =
+            favorite.shop?.name ??
+            '';
+
+          const searchable = [
+            customer,
+            favorite.platform_user_id,
+            target,
+            secondary,
+            boutique,
+            favorite.platform_target_id,
+            favorite.platform_boutique_id ??
+              '',
+          ]
+            .join(' ')
+            .toLowerCase();
+
+          return searchable.includes(
+            normalizedSearch,
+          );
+        },
+      );
+    }, [
+      enrichedFavorites,
+      search,
+    ]);
+
+
+  const stats = useMemo(() => {
+    let products = 0;
+    let boutiques = 0;
+
+    for (const favorite of favorites) {
+      if (
+        favorite.favorite_type ===
+        'product'
+      ) {
+        products += 1;
+      }
+
+      if (
+        favorite.favorite_type ===
+        'boutique'
+      ) {
+        boutiques += 1;
+      }
+    }
+
+    const uniqueCustomers =
+      new Set(
+        favorites.map(
+          (favorite) =>
+            favorite.platform_user_id,
+        ),
+      ).size;
+
+    return {
+      total: favorites.length,
+      products,
+      boutiques,
+      uniqueCustomers,
+    };
+  }, [favorites]);
+
+
+  const isLoading =
+    favoritesLoading ||
+    customersQuery?.isLoading ||
+    shopsQuery?.isLoading;
+
+  const isRefreshing =
+    favoritesFetching ||
+    customersQuery?.isFetching ||
+    shopsQuery?.isFetching;
+
+
+  return (
+    <div className="space-y-6 p-6">
+      {/* Header */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <Heart className="h-6 w-6 text-slate-700" />
+
+            <h1 className="text-2xl font-semibold text-slate-900">
+              Favoris clients
+            </h1>
+          </div>
+
+          <p className="mt-1 text-sm text-slate-500">
+            Vue opérationnelle en lecture seule
+            des favoris enregistrés sur BIB Platform.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={() =>
+            void refetchFavorites()
+          }
+          disabled={isRefreshing}
+          className="inline-flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <RefreshCw
+            className={`h-4 w-4 ${
+              isRefreshing
+                ? 'animate-spin'
+                : ''
+            }`}
+          />
+
+          Actualiser
+        </button>
+      </div>
+
+
+      {/* Source / architecture notice */}
+      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+        <div className="flex items-start gap-3">
+          <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-slate-500" />
+
+          <div>
+            <p className="text-sm font-medium text-slate-700">
+              Source de vérité : BIB Platform
+            </p>
+
+            <p className="mt-1 text-xs leading-5 text-slate-500">
+              Cette page affiche un snapshot synchronisé
+              depuis BIB Platform. Les collaborateurs
+              de l'Intranet ne peuvent pas modifier les
+              favoris clients depuis cette interface.
+            </p>
+          </div>
+        </div>
+      </div>
+
+
+      {/* KPIs */}
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          label="Favoris"
+          value={stats.total}
+          icon={Heart}
+        />
+
+        <StatCard
+          label="Produits"
+          value={stats.products}
+          icon={Package}
+        />
+
+        <StatCard
+          label="Boutiques"
+          value={stats.boutiques}
+          icon={Store}
+        />
+
+        <StatCard
+          label="Clients uniques"
+          value={stats.uniqueCustomers}
+          icon={Users}
+        />
+      </div>
+
+
+      {/* Filters */}
+      <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+          <div className="relative flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+
+            <input
+              type="search"
+              value={search}
+              onChange={(event) =>
+                setSearch(
+                  event.target.value,
+                )
+              }
+              placeholder="Rechercher un client, produit, boutique ou identifiant..."
+              className="w-full rounded-lg border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+            />
+          </div>
+
+          <select
+            value={type}
+            onChange={(event) =>
+              setType(
+                event.target.value as
+                  | MarketplaceFavoriteType
+                  | 'all',
+              )
+            }
+            className="rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
+          >
+            <option value="all">
+              Tous les favoris
+            </option>
+
+            <option value="product">
+              Produits
+            </option>
+
+            <option value="boutique">
+              Boutiques
+            </option>
+          </select>
+        </div>
+      </div>
+
+
+      {/* Error */}
+      {favoritesError ? (
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4">
+          <p className="text-sm font-medium text-red-800">
+            Impossible de charger les favoris.
+          </p>
+
+          <p className="mt-1 text-xs text-red-700">
+            {favoritesError instanceof Error
+              ? favoritesError.message
+              : 'Une erreur inconnue est survenue.'}
+          </p>
+        </div>
+      ) : null}
+
+
+      {/* Table */}
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-slate-200">
+            <thead className="bg-slate-50">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Client
+                </th>
+
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Favori
+                </th>
+
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Boutique
+                </th>
+
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Identifiant Platform
+                </th>
+
+                <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Date
+                </th>
+              </tr>
+            </thead>
+
+            <tbody className="divide-y divide-slate-100 bg-white">
+              {isLoading ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-12 text-center text-sm text-slate-500"
+                  >
+                    Chargement des favoris...
+                  </td>
+                </tr>
+              ) : filteredFavorites.length ===
+                0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-12 text-center"
+                  >
+                    <Heart className="mx-auto h-8 w-8 text-slate-300" />
+
+                    <p className="mt-3 text-sm font-medium text-slate-700">
+                      Aucun favori trouvé
+                    </p>
+
+                    <p className="mt-1 text-xs text-slate-500">
+                      Aucun résultat ne correspond
+                      aux critères actuels.
+                    </p>
+                  </td>
+                </tr>
+              ) : (
+                filteredFavorites.map(
+                  (favorite) => {
+                    const customerLabel =
+                      getCustomerLabel(
+                        favorite.customer,
+                        favorite.platform_user_id,
+                      );
+
+                    const targetLabel =
+                      getFavoriteTargetLabel(
+                        favorite,
+                      );
+
+                    const targetSecondary =
+                      getFavoriteTargetSecondaryLabel(
+                        favorite,
+                      );
+
+                    const isProduct =
+                      favorite.favorite_type ===
+                      'product';
+
+                    const boutiqueName =
+                      favorite.shop?.name ??
+                      (
+                        isProduct
+                          ? 'Boutique non résolue'
+                          : targetLabel
+                      );
+
+                    return (
+                      <tr
+                        key={favorite.id}
+                        className="transition hover:bg-slate-50"
+                      >
+                        {/* Client */}
+                        <td className="px-4 py-4 align-top">
+                          <div>
+                            <p className="text-sm font-medium text-slate-900">
+                              {customerLabel}
+                            </p>
+
+                            {favorite.customer?.contact_email ? (
+                              <p className="mt-1 text-xs text-slate-500">
+                                {favorite.customer.contact_email}
+                              </p>
+                            ) : null}
+
+                            <p className="mt-1 font-mono text-[11px] text-slate-400">
+                              {shortenId(
+                                favorite.platform_user_id,
+                              )}
+                            </p>
+                          </div>
+                        </td>
+
+
+                        {/* Favorite target */}
+                        <td className="px-4 py-4 align-top">
+                          <div className="flex items-start gap-3">
+                            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100">
+                              {isProduct ? (
+                                <Package className="h-4 w-4 text-slate-600" />
+                              ) : (
+                                <Store className="h-4 w-4 text-slate-600" />
+                              )}
+                            </div>
+
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-slate-900">
+                                  {targetLabel}
+                                </p>
+
+                                <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-slate-500">
+                                  {isProduct
+                                    ? 'Produit'
+                                    : 'Boutique'}
+                                </span>
+                              </div>
+
+                              <p className="mt-1 text-xs text-slate-500">
+                                {targetSecondary}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+
+
+                        {/* Boutique */}
+                        <td className="px-4 py-4 align-top">
+                          <div>
+                            <p
+                              className={
+                                favorite.shop
+                                  ? 'text-sm font-medium text-slate-900'
+                                  : 'text-sm text-slate-500'
+                              }
+                            >
+                              {boutiqueName}
+                            </p>
+
+                            {favorite.platform_boutique_id ? (
+                              <p className="mt-1 font-mono text-[11px] text-slate-400">
+                                {shortenId(
+                                  favorite.platform_boutique_id,
+                                )}
+                              </p>
+                            ) : null}
+
+                            {!favorite.shop &&
+                            isProduct ? (
+                              <p className="mt-1 text-[11px] text-amber-600">
+                                Référence boutique Platform
+                                non résolue dans l'Intranet
+                              </p>
+                            ) : null}
+                          </div>
+                        </td>
+
+
+                        {/* Platform target ID */}
+                        <td className="px-4 py-4 align-top">
+                          <div className="flex items-center gap-2">
+                            <code className="rounded bg-slate-100 px-2 py-1 text-[11px] text-slate-600">
+                              {shortenId(
+                                favorite.platform_target_id,
+                              )}
+                            </code>
+                          </div>
+
+                          <p className="mt-1 text-[11px] uppercase tracking-wide text-slate-400">
+                            {favorite.favorite_type}
+                          </p>
+                        </td>
+
+
+                        {/* Date */}
+                        <td className="px-4 py-4 align-top">
+                          <div className="flex items-start gap-2">
+                            <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+
+                            <div>
+                              <p className="text-sm text-slate-700">
+                                {formatDate(
+                                  favorite.created_at,
+                                )}
+                              </p>
+
+                              <p className="mt-1 text-[11px] text-slate-400">
+                                Synchronisé le{' '}
+                                {formatDate(
+                                  favorite.platform_synced_at,
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  },
+                )
+              )}
+            </tbody>
+          </table>
+        </div>
+
+
+        {/* Footer */}
+        {!isLoading &&
+        filteredFavorites.length > 0 ? (
+          <div className="border-t border-slate-200 bg-slate-50 px-4 py-3">
+            <p className="text-xs text-slate-500">
+              {filteredFavorites.length}{' '}
+              favori
+              {filteredFavorites.length > 1
+                ? 's'
+                : ''}{' '}
+              affiché
+              {filteredFavorites.length > 1
+                ? 's'
+                : ''}
+              {search.trim()
+                ? ` sur ${favorites.length}`
+                : ''}
+            </p>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
 }
