@@ -610,189 +610,222 @@ Deno.serve(async (req) => {
 
       }
 
-// ------------------------------------------------------
-// 3 BIS. FAVORIS CLIENTS
-// ------------------------------------------------------
-//
-// BIB Platform reste la source de vérité.
-// L'Intranet reçoit un snapshot complet.
-//
-// IMPORTANT :
-// shopMap ne doit pas dépendre uniquement des boutiques
-// présentes dans le pull incrémental courant.
-//
-// Une boutique peut être inchangée sur BIB Platform,
-// donc absente de data.boutiques, tout en étant déjà
-// synchronisée dans l'Intranet.
-//
-// On recharge donc toutes les boutiques locales liées
-// à BIB Platform avant de résoudre les favoris.
-// ------------------------------------------------------
-
-const {
-  data: knownFavoriteShops,
-  error: knownFavoriteShopsError,
-} = await admin
-  .from('shops')
-  .select('id, platform_id')
-  .not(
-    'platform_id',
-    'is',
-    null,
-  )
-
-if (knownFavoriteShopsError) {
-  errors.push(
-    `favoris clients — index boutiques : ${knownFavoriteShopsError.message}`,
-  )
-} else {
-  for (
-    const shop
-    of knownFavoriteShops ?? []
-  ) {
-    if (
-      shop.platform_id
-    ) {
-      shopMap.set(
-        shop.platform_id,
-        shop.id,
-      )
-    }
-  }
-}
-
-
-// ------------------------------------------------------
-// Snapshot des favoris
-// ------------------------------------------------------
-//
-// Les favoris sont synchronisés en snapshot complet.
-//
-// Pourquoi ?
-// customer_product_favorites et
-// customer_boutique_favorites ne possèdent pas de
-// deleted_at ni de journal de changements permettant
-// de reconstruire proprement les suppressions avec
-// un simple paramètre "since".
-//
-// On supprime donc le snapshot Platform précédent,
-// puis on insère l'état actuel retourné par Platform.
-// ------------------------------------------------------
-
-const {
-  error: deleteFavoritesError,
-} = await admin
-  .from('marketplace_customer_favorites')
-  .delete()
-  .eq(
-    'source',
-    'platform',
-  )
-
-if (deleteFavoritesError) {
-  errors.push(
-    `favoris clients — nettoyage : ${deleteFavoritesError.message}`,
-  )
-} else {
-  const favorites =
-    Array.isArray(
-      data.customer_favorites,
-    )
-      ? data.customer_favorites
-      : []
-
-  const favoriteRows =
-    favorites.map(
-      (favorite: any) => {
-        const platformBoutiqueId =
-          favorite.platform_boutique_id ??
-          (
-            favorite.favorite_type ===
-            'boutique'
-              ? favorite.target_id
-              : null
-          )
-
-        return {
-          platform_user_id:
-            favorite.user_id,
-
-          favorite_type:
-            favorite.favorite_type,
-
-          platform_target_id:
-            favorite.target_id,
-
-          platform_boutique_id:
-            platformBoutiqueId,
-
-          target_name:
-            favorite.target_name ??
-            null,
-
-          target_sku:
-            favorite.target_sku ??
-            null,
-
-          shop_id:
-            platformBoutiqueId
-              ? (
-                  shopMap.get(
-                    platformBoutiqueId,
-                  ) ?? null
-                )
-              : null,
-
-          created_at:
-            favorite.created_at ??
-            now,
-
-          platform_synced_at:
-            now,
-
-          source:
-            'platform',
+      // ------------------------------------------------------
+      // 3 BIS. FAVORIS CLIENTS
+      // ------------------------------------------------------
+      //
+      // BIB Platform reste la source de vérité.
+      // L'Intranet reçoit un snapshot complet.
+      //
+      // IMPORTANT :
+      // shopMap ne doit pas dépendre uniquement des boutiques
+      // présentes dans le pull incrémental courant.
+      //
+      // Une boutique peut être inchangée sur BIB Platform,
+      // donc absente de data.boutiques, tout en étant déjà
+      // synchronisée dans l'Intranet.
+      //
+      // On recharge donc toutes les boutiques locales liées
+      // à BIB Platform avant de résoudre les favoris.
+      // ------------------------------------------------------
+      
+      const {
+        data: knownFavoriteShops,
+        error: knownFavoriteShopsError,
+      } = await admin
+        .from('shops')
+        .select('id, platform_id')
+        .not(
+          'platform_id',
+          'is',
+          null,
+        )
+      
+      if (knownFavoriteShopsError) {
+        errors.push(
+          `favoris clients — index boutiques : ${knownFavoriteShopsError.message}`,
+        )
+      } else {
+        for (
+          const shop
+          of knownFavoriteShops ?? []
+        ) {
+          if (
+            shop.platform_id
+          ) {
+            shopMap.set(
+              shop.platform_id,
+              shop.id,
+            )
+          }
         }
-      },
-    )
-
-  const chunkSize = 500
-
-  for (
-    let i = 0;
-    i < favoriteRows.length;
-    i += chunkSize
-  ) {
-    const chunk =
-      favoriteRows.slice(
-        i,
-        i + chunkSize,
-      )
-
-    if (!chunk.length) {
-      continue
-    }
-
-    const {
-      error,
-    } = await admin
-      .from(
-        'marketplace_customer_favorites',
-      )
-      .insert(chunk)
-
-    if (error) {
-      errors.push(
-        `favoris clients : ${error.message}`,
-      )
-
-      break
-    }
-
-    count += chunk.length
-  }
-}
-
+      }
+      
+      
+      // ------------------------------------------------------
+      // Snapshot des favoris
+      // ------------------------------------------------------
+      //
+      // Les favoris sont synchronisés en snapshot complet.
+      //
+      // Pourquoi ?
+      // customer_product_favorites et
+      // customer_boutique_favorites ne possèdent pas de
+      // deleted_at ni de journal de changements permettant
+      // de reconstruire proprement les suppressions avec
+      // un simple paramètre "since".
+      //
+      // On doit donc remplacer le snapshot Platform précédent
+      // par l'état actuel retourné par Platform.
+      //
+      // IMPORTANT :
+      // On valide d'abord customer_favorites.
+      // Une réponse Platform invalide ne doit JAMAIS entraîner
+      // la suppression du snapshot local existant.
+      // ------------------------------------------------------
+      
+      const favorites =
+        data.customer_favorites
+      
+      if (
+        !Array.isArray(
+          favorites,
+        )
+      ) {
+        throw new Error(
+          'Export B.I.B Platform invalide : customer_favorites absent ou non-tableau',
+        )
+      }
+      
+      
+      // ------------------------------------------------------
+      // Nettoyage du snapshot précédent
+      // ------------------------------------------------------
+      
+      const {
+        error: deleteFavoritesError,
+      } = await admin
+        .from(
+          'marketplace_customer_favorites',
+        )
+        .delete()
+        .eq(
+          'source',
+          'platform',
+        )
+      
+      if (deleteFavoritesError) {
+        errors.push(
+          `favoris clients — nettoyage : ${deleteFavoritesError.message}`,
+        )
+      } else {
+      
+        // ----------------------------------------------------
+        // Construction du nouveau snapshot
+        // ----------------------------------------------------
+      
+        const favoriteRows =
+          favorites.map(
+            (favorite: any) => {
+      
+              const platformBoutiqueId =
+                favorite.platform_boutique_id ??
+                (
+                  favorite.favorite_type ===
+                  'boutique'
+                    ? favorite.target_id
+                    : null
+                )
+      
+              return {
+                platform_user_id:
+                  favorite.user_id,
+      
+                favorite_type:
+                  favorite.favorite_type,
+      
+                platform_target_id:
+                  favorite.target_id,
+      
+                platform_boutique_id:
+                  platformBoutiqueId,
+      
+                target_name:
+                  favorite.target_name ??
+                  null,
+      
+                target_sku:
+                  favorite.target_sku ??
+                  null,
+      
+                shop_id:
+                  platformBoutiqueId
+                    ? (
+                        shopMap.get(
+                          platformBoutiqueId,
+                        ) ?? null
+                      )
+                    : null,
+      
+                created_at:
+                  favorite.created_at ??
+                  now,
+      
+                platform_synced_at:
+                  now,
+      
+                source:
+                  'platform',
+              }
+            },
+          )
+      
+      
+        // ----------------------------------------------------
+        // Insertion par lots
+        // ----------------------------------------------------
+      
+        const chunkSize = 500
+      
+        for (
+          let i = 0;
+          i < favoriteRows.length;
+          i += chunkSize
+        ) {
+      
+          const chunk =
+            favoriteRows.slice(
+              i,
+              i + chunkSize,
+            )
+      
+          if (!chunk.length) {
+            continue
+          }
+      
+          const {
+            error,
+          } = await admin
+            .from(
+              'marketplace_customer_favorites',
+            )
+            .insert(
+              chunk,
+            )
+      
+          if (error) {
+            errors.push(
+              `favoris clients : ${error.message}`,
+            )
+      
+            break
+          }
+      
+          count +=
+            chunk.length
+        }
+      }
+      
       // ------------------------------------------------------
       // 4. COMMANDES
       // ------------------------------------------------------
