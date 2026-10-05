@@ -675,4 +675,3 @@ export default function GatewayJournal() {
     </div>
   );
 }
-```
