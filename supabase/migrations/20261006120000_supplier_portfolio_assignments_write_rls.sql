@@ -61,3 +61,135 @@ WITH CHECK (
     ARRAY['supplier']
   )
 );
+
+-- ============================================================
+-- BIB — Écriture du registre transversal des portefeuilles
+-- fournisseur
+-- ============================================================
+
+DROP POLICY IF EXISTS
+  "access_business_portfolios_insert_supplier"
+ON public.access_business_portfolios;
+
+CREATE POLICY
+  "access_business_portfolios_insert_supplier"
+ON public.access_business_portfolios
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  public.is_leadership(auth.uid())
+  OR EXISTS (
+    SELECT 1
+    FROM public.access_portfolio_types apt
+    WHERE apt.id = portfolio_type_id
+      AND apt.portfolio_type_key = 'supplier'
+      AND public.has_any_pole(
+        auth.uid(),
+        ARRAY['supplier']
+      )
+  )
+);
+
+
+DROP POLICY IF EXISTS
+  "access_business_portfolios_update_supplier"
+ON public.access_business_portfolios;
+
+CREATE POLICY
+  "access_business_portfolios_update_supplier"
+ON public.access_business_portfolios
+FOR UPDATE
+TO authenticated
+USING (
+  public.is_leadership(auth.uid())
+  OR EXISTS (
+    SELECT 1
+    FROM public.access_portfolio_types apt
+    WHERE apt.id = access_business_portfolios.portfolio_type_id
+      AND apt.portfolio_type_key = 'supplier'
+      AND public.has_any_pole(
+        auth.uid(),
+        ARRAY['supplier']
+      )
+  )
+)
+WITH CHECK (
+  public.is_leadership(auth.uid())
+  OR EXISTS (
+    SELECT 1
+    FROM public.access_portfolio_types apt
+    WHERE apt.id = access_business_portfolios.portfolio_type_id
+      AND apt.portfolio_type_key = 'supplier'
+      AND public.has_any_pole(
+        auth.uid(),
+        ARRAY['supplier']
+      )
+  )
+);
+
+
+DROP POLICY IF EXISTS
+  "access_portfolio_assignments_insert_supplier"
+ON public.access_portfolio_assignments;
+
+CREATE POLICY
+  "access_portfolio_assignments_insert_supplier"
+ON public.access_portfolio_assignments
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  public.is_leadership(auth.uid())
+  OR EXISTS (
+    SELECT 1
+    FROM public.access_business_portfolios abp
+    INNER JOIN public.access_portfolio_types apt
+      ON apt.id = abp.portfolio_type_id
+    WHERE abp.id = portfolio_id
+      AND apt.portfolio_type_key = 'supplier'
+      AND public.has_any_pole(
+        auth.uid(),
+        ARRAY['supplier']
+      )
+  )
+);
+
+
+DROP POLICY IF EXISTS
+  "access_portfolio_assignments_update_supplier"
+ON public.access_portfolio_assignments;
+
+CREATE POLICY
+  "access_portfolio_assignments_update_supplier"
+ON public.access_portfolio_assignments
+FOR UPDATE
+TO authenticated
+USING (
+  public.is_leadership(auth.uid())
+  OR EXISTS (
+    SELECT 1
+    FROM public.access_business_portfolios abp
+    INNER JOIN public.access_portfolio_types apt
+      ON apt.id = abp.portfolio_type_id
+    WHERE abp.id = access_portfolio_assignments.portfolio_id
+      AND apt.portfolio_type_key = 'supplier'
+      AND public.has_any_pole(
+        auth.uid(),
+        ARRAY['supplier']
+      )
+  )
+)
+WITH CHECK (
+  public.is_leadership(auth.uid())
+  OR EXISTS (
+    SELECT 1
+    FROM public.access_business_portfolios abp
+    INNER JOIN public.access_portfolio_types apt
+      ON apt.id = abp.portfolio_type_id
+    WHERE abp.id = access_portfolio_assignments.portfolio_id
+      AND apt.portfolio_type_key = 'supplier'
+      AND public.has_any_pole(
+        auth.uid(),
+        ARRAY['supplier']
+      )
+  )
+);
