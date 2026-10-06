@@ -5,30 +5,41 @@
 --
 -- OBJECTIF
 --
--- 1. Direction / administrateurs :
---      accès global.
+-- Direction / administrateurs :
+--   accès global.
 --
--- 2. Responsable Marketplace :
---      administration des portefeuilles Marketplace.
+-- Responsable Marketplace :
+--   administration des portefeuilles Marketplace.
 --
--- 3. Collaborateurs Marketplace :
---      accès aux marchands rattachés à leurs portefeuilles.
+-- Collaborateur Marketplace :
+--   accès uniquement aux ressources des portefeuilles auxquels
+--   il est effectivement affecté.
 --
--- 4. Un portefeuille métier ne donne PAS de permission.
---      Il limite le périmètre sur lequel les permissions du rôle
---      peuvent s'exercer.
+-- Architecture :
 --
--- 5. merchant_portfolios.owner_id reste une information métier.
---      Il ne constitue PAS le périmètre RBAC.
+--   auth.users.id
+--        =
+--   profiles.id
+--        =
+--   access_portfolio_assignments.employee_id
 --
--- 6. L'identité collaborateur repose sur :
+--   access_portfolio_assignments
+--        ↓
+--   access_business_portfolios
+--        ↓
+--   access_portfolio_types
+--        ↓
+--   merchant_portfolios
 --
---      auth.users.id
---           =
---      profiles.id
---           =
---      access_portfolio_assignments.employee_id
+-- IMPORTANT :
 --
+-- merchant_portfolio_assignments
+--   = marchand → portefeuille
+--
+-- access_portfolio_assignments
+--   = collaborateur → portefeuille
+--
+-- Ces deux relations restent distinctes.
 -- ============================================================
 
 
@@ -44,50 +55,65 @@ RETURNS boolean
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
   SELECT
     public.is_leadership(p_user_id)
     OR public.has_role(
       p_user_id,
-      'admin'::app_role
+      'admin'::public.app_role
     )
     OR EXISTS (
       SELECT 1
       FROM public.access_portfolio_assignments apa
+
       INNER JOIN public.access_business_portfolios abp
         ON abp.id = apa.portfolio_id
+
+      INNER JOIN public.access_portfolio_types apt
+        ON apt.id = abp.portfolio_type_id
+
       WHERE apa.employee_id = p_user_id
+
         AND apa.assignment_status = 'active'
+
         AND (
           apa.starts_at IS NULL
           OR apa.starts_at <= now()
         )
+
         AND (
           apa.ends_at IS NULL
           OR apa.ends_at >= now()
         )
-        AND abp.pole = 'marketplace'
-        AND abp.source_type = 'merchant_portfolio'
+
+        AND apt.business_pole = 'marketplace'
+
+        AND apt.portfolio_type_key = 'marketplace_merchant'
+
         AND abp.source_id = p_portfolio_id
+
+        AND abp.status = 'active'
     );
 $$;
 
 
 -- ============================================================
--- 2. UTILISATEUR AUTORISÉ À ADMINISTRER LES PORTEFEUILLES
+-- 2. ADMINISTRATION DES PORTEFEUILLES MARKETPLACE
 -- ============================================================
 --
--- L'administration des portefeuilles ne doit pas être accordée
--- automatiquement à tous les collaborateurs Marketplace.
+-- Cette fonction est volontairement isolée.
 --
--- Direction / administrateurs :
---      accès global.
+-- Elle permet actuellement :
+--   - Direction
+--   - administrateurs
+--   - responsable / manager Marketplace
 --
--- Responsable / manager Marketplace :
---      administration métier.
+-- La logique métier du rôle sera progressivement centralisée
+-- dans le moteur RBAC.
 --
--- Les permissions RBAC fines restent complémentaires.
+-- Pour l'instant, on conserve la compatibilité avec le modèle
+-- de profils existant.
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.user_can_manage_marketplace_portfolios(
@@ -97,24 +123,29 @@ RETURNS boolean
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
-SET search_path = public
+SET search_path = ''
 AS $$
   SELECT
     public.is_leadership(p_user_id)
+
     OR public.has_role(
       p_user_id,
-      'admin'::app_role
+      'admin'::public.app_role
     )
+
     OR EXISTS (
       SELECT 1
       FROM public.profiles p
+
       WHERE p.id = p_user_id
+
         AND 'marketplace' = ANY(
           COALESCE(
             p.poles,
             ARRAY[]::text[]
           )
         )
+
         AND (
           p.position ILIKE '%responsable%'
           OR p.position ILIKE '%manager%'
@@ -124,9 +155,18 @@ AS $$
 $$;
 
 
+-- ============================================================
+-- 3. SÉCURISATION DES FONCTIONS
+-- ============================================================
+
 REVOKE ALL
 ON FUNCTION public.user_has_marketplace_portfolio(uuid)
 FROM PUBLIC;
+
+REVOKE ALL
+ON FUNCTION public.user_has_marketplace_portfolio(uuid)
+FROM anon;
+
 
 GRANT EXECUTE
 ON FUNCTION public.user_has_marketplace_portfolio(uuid)
@@ -137,30 +177,26 @@ REVOKE ALL
 ON FUNCTION public.user_can_manage_marketplace_portfolios(uuid)
 FROM PUBLIC;
 
+REVOKE ALL
+ON FUNCTION public.user_can_manage_marketplace_portfolios(uuid)
+FROM anon;
+
+
 GRANT EXECUTE
 ON FUNCTION public.user_can_manage_marketplace_portfolios(uuid)
 TO authenticated;
 
 
 -- ============================================================
--- 3. merchant_portfolios
+-- 4. merchant_portfolios
 -- ============================================================
 --
--- AVANT :
+-- Lecture :
+--   Direction / admin
+--   OU collaborateur affecté au portefeuille.
 --
---     tout collaborateur Marketplace
---             ↓
---     tous les portefeuilles
---
--- APRÈS :
---
---     collaborateur
---             ↓
---     access_portfolio_assignments
---             ↓
---     access_business_portfolios
---             ↓
---     merchant_portfolios
+-- Administration :
+--   Direction / admin / responsable Marketplace.
 --
 -- ============================================================
 
@@ -188,10 +224,12 @@ FOR SELECT
 TO authenticated
 USING (
   public.is_leadership(auth.uid())
+
   OR public.has_role(
     auth.uid(),
-    'admin'::app_role
+    'admin'::public.app_role
   )
+
   OR public.user_has_marketplace_portfolio(
     auth.uid(),
     id
@@ -217,21 +255,18 @@ WITH CHECK (
 
 
 -- ============================================================
--- 4. merchant_portfolio_assignments
+-- 5. merchant_portfolio_assignments
 -- ============================================================
 --
--- Une affectation signifie :
+-- Cette table représente :
 --
---     marchand → portefeuille
+--   marchand → portefeuille
 --
--- et NON :
+-- Un collaborateur ne peut consulter que les affectations
+-- des portefeuilles auxquels il est affecté.
 --
---     collaborateur → portefeuille
---
--- L'affectation collaborateur → portefeuille est portée par :
---
---     access_portfolio_assignments
---
+-- Seuls les responsables autorisés peuvent modifier ces
+-- affectations.
 -- ============================================================
 
 DROP POLICY IF EXISTS
@@ -258,10 +293,12 @@ FOR SELECT
 TO authenticated
 USING (
   public.is_leadership(auth.uid())
+
   OR public.has_role(
     auth.uid(),
-    'admin'::app_role
+    'admin'::public.app_role
   )
+
   OR public.user_has_marketplace_portfolio(
     auth.uid(),
     portfolio_id
@@ -287,16 +324,16 @@ WITH CHECK (
 
 
 -- ============================================================
--- 5. COMMUNICATIONS MARCHANDS
+-- 6. COMMUNICATIONS MARCHANDS
 -- ============================================================
 --
--- Une communication liée à un portefeuille doit être visible
--- uniquement par :
+-- Les communications rattachées à un portefeuille suivent
+-- le même périmètre que le portefeuille.
 --
---     - Direction
---     - administrateur
---     - collaborateur affecté au portefeuille
+-- Une communication sans portfolio_id n'est PAS accessible
+-- par un simple collaborateur Marketplace.
 --
+-- Direction / admin conservent l'accès global.
 -- ============================================================
 
 DROP POLICY IF EXISTS
@@ -323,12 +360,15 @@ FOR SELECT
 TO authenticated
 USING (
   public.is_leadership(auth.uid())
+
   OR public.has_role(
     auth.uid(),
-    'admin'::app_role
+    'admin'::public.app_role
   )
+
   OR (
     portfolio_id IS NOT NULL
+
     AND public.user_has_marketplace_portfolio(
       auth.uid(),
       portfolio_id
@@ -346,8 +386,10 @@ USING (
   public.user_can_manage_marketplace_portfolios(
     auth.uid()
   )
+
   OR (
     portfolio_id IS NOT NULL
+
     AND public.user_has_marketplace_portfolio(
       auth.uid(),
       portfolio_id
@@ -358,8 +400,10 @@ WITH CHECK (
   public.user_can_manage_marketplace_portfolios(
     auth.uid()
   )
+
   OR (
     portfolio_id IS NOT NULL
+
     AND public.user_has_marketplace_portfolio(
       auth.uid(),
       portfolio_id
@@ -369,17 +413,7 @@ WITH CHECK (
 
 
 -- ============================================================
--- 6. owner_id ≠ périmètre RBAC
--- ============================================================
---
--- owner_id peut identifier le responsable métier du portefeuille.
---
--- Il ne doit jamais être utilisé comme mécanisme d'autorisation.
---
--- Le périmètre collaborateur est déterminé par :
---
---     access_portfolio_assignments
---
+-- 7. DOCUMENTATION
 -- ============================================================
 
 COMMENT ON COLUMN public.merchant_portfolios.owner_id IS
@@ -388,7 +422,7 @@ COMMENT ON COLUMN public.merchant_portfolios.owner_id IS
 
 COMMENT ON FUNCTION public.user_has_marketplace_portfolio(uuid)
 IS
-'Vérifie si un collaborateur dispose d''une affectation active au portefeuille métier Marketplace demandé.';
+'Vérifie si un collaborateur possède une affectation active au portefeuille métier Marketplace demandé.';
 
 
 COMMENT ON FUNCTION public.user_can_manage_marketplace_portfolios(uuid)
