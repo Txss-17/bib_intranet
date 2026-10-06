@@ -309,13 +309,19 @@ const AUDIT_OWNERS = [
 ];
 
 const ADMIN_OWNERS = [
+  // Direction
   'ceo',
+
+  // Sécurité / administration technique
   'cto',
   'responsable_tech',
   'admin_systeme',
   'rssi',
+
+  // RH — administration des comptes et affectations
   'directeur_rh',
   'responsable_rh',
+  'gestionnaire_admin_rh',
 ];
 
 // ---------------------------------------------------------------------------
