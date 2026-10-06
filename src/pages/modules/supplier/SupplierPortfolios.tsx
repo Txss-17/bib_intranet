@@ -1,6 +1,20 @@
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
+  AlertTriangle,
+  ArrowRightLeft,
+  BarChart3,
+  Edit,
+  FolderOpen,
+  Loader2,
+  Plus,
+  Save,
+  Search,
+  Star,
+  Users,
+} from 'lucide-react';
+
+import {
   Card,
   CardContent,
   CardHeader,
@@ -19,6 +33,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -32,20 +47,21 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+
 import { useTableInteractions } from '@/hooks/useTableInteractions';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
-import {
-  FolderOpen,
-  Users,
-  Star,
-  AlertTriangle,
-  Search,
-  ArrowRightLeft,
-  BarChart3,
-  Loader2,
-} from 'lucide-react';
+
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+
 import { AssignmentSuggestion } from '@/components/supplier/AssignmentSuggestion';
 
 type SupplierPortfolio = {
@@ -88,6 +104,56 @@ type PortfolioSummary = SupplierPortfolio & {
   alertCount: number;
 };
 
+type SupplierProfile = {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  poles: unknown;
+  position: string | null;
+};
+
+type PortfolioFormState = {
+  category: string;
+  responsibleId: string;
+  backupId: string;
+};
+
+const EMPTY_FORM: PortfolioFormState = {
+  category: '',
+  responsibleId: '',
+  backupId: '',
+};
+
+function getProfileName(profile: SupplierProfile) {
+  const fullName = [
+    profile.first_name,
+    profile.last_name,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+  return (
+    fullName ||
+    profile.email ||
+    'Collaborateur sans nom'
+  );
+}
+
+function isSupplierCollaborator(
+  profile: SupplierProfile,
+) {
+  const poles = Array.isArray(profile.poles)
+    ? profile.poles
+    : [];
+
+  return (
+    poles.includes('supplier') ||
+    profile.position === 'supplier_manager'
+  );
+}
+
 function useSupplierPortfolios() {
   return useQuery({
     queryKey: ['supplier-portfolios'],
@@ -103,6 +169,41 @@ function useSupplierPortfolios() {
       }
 
       return (data ?? []) as SupplierPortfolio[];
+    },
+  });
+}
+
+function useSupplierCollaborators() {
+  return useQuery({
+    queryKey: ['supplier-portfolio-collaborators'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(
+          `
+            id,
+            first_name,
+            last_name,
+            email,
+            poles,
+            position
+          `,
+        )
+        .order('last_name')
+        .order('first_name');
+
+      if (error) {
+        throw error;
+      }
+
+      return ((data ?? []) as SupplierProfile[])
+        .filter(isSupplierCollaborator)
+        .sort((a, b) =>
+          getProfileName(a).localeCompare(
+            getProfileName(b),
+            'fr',
+          ),
+        );
     },
   });
 }
@@ -171,7 +272,7 @@ function useSupplierPortfolioData(
       }
 
       const portfolioById =
-        new Map(
+        new Map<string, SupplierPortfolio>(
           portfolios.map((portfolio) => [
             portfolio.id,
             portfolio,
@@ -206,12 +307,9 @@ function useSupplierPortfolioData(
           return;
         }
 
-        alertsBySupplier[
-          alert.supplier_id
-        ] =
-          (alertsBySupplier[
-            alert.supplier_id
-          ] ?? 0) + 1;
+        alertsBySupplier[alert.supplier_id] =
+          (alertsBySupplier[alert.supplier_id] ??
+            0) + 1;
       });
 
       return (
@@ -238,10 +336,9 @@ function useSupplierPortfolioData(
             supplier.quality_score ?? 0,
           status: supplier.status,
           portfolioId:
-            assignment?.portfolio_id ??
-            null,
+            assignment?.portfolio_id ?? null,
           portfolioName:
-            portfolio?.backup_name ||
+            portfolio?.category ||
             'Non affecté',
           portfolioCategory:
             portfolio?.category ||
@@ -268,7 +365,137 @@ function useSupplierPortfolioData(
   });
 }
 
+async function ensurePortfolioAccess(
+  portfolioId: string,
+  employeeId: string,
+  assignedBy: string | null,
+  reason: string,
+) {
+  if (!employeeId) {
+    return;
+  }
+
+  const { data: portfolioType, error: typeError } =
+    await supabase
+      .from('access_portfolio_types')
+      .select('id')
+      .eq('portfolio_type_key', 'supplier')
+      .eq('status', 'active')
+      .maybeSingle();
+
+  if (typeError) {
+    throw typeError;
+  }
+
+  if (!portfolioType) {
+    throw new Error(
+      'Le type de portefeuille fournisseur est introuvable.',
+    );
+  }
+
+  const {
+    data: businessPortfolio,
+    error: businessPortfolioError,
+  } = await supabase
+    .from('access_business_portfolios')
+    .select('id')
+    .eq(
+      'portfolio_type_id',
+      portfolioType.id,
+    )
+    .eq('source_id', portfolioId)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (businessPortfolioError) {
+    throw businessPortfolioError;
+  }
+
+  if (!businessPortfolio) {
+    throw new Error(
+      'Le portefeuille fournisseur transversal est introuvable.',
+    );
+  }
+
+  const {
+    data: existingAssignment,
+    error: existingAssignmentError,
+  } = await supabase
+    .from('access_portfolio_assignments')
+    .select(
+      `
+        id,
+        assignment_status
+      `,
+    )
+    .eq('employee_id', employeeId)
+    .eq(
+      'portfolio_id',
+      businessPortfolio.id,
+    )
+    .eq('assignment_status', 'active')
+    .maybeSingle();
+
+  if (existingAssignmentError) {
+    throw existingAssignmentError;
+  }
+
+  if (existingAssignment) {
+    return;
+  }
+
+  const { error: insertError } =
+    await supabase
+      .from('access_portfolio_assignments')
+      .insert({
+        employee_id: employeeId,
+        portfolio_id:
+          businessPortfolio.id,
+        assignment_status: 'active',
+        starts_at: new Date().toISOString(),
+        assigned_by: assignedBy,
+        reason,
+      });
+
+  if (insertError) {
+    throw insertError;
+  }
+}
+
+async function synchronizePortfolioAccess(
+  portfolio: SupplierPortfolio,
+  responsibleId: string,
+  backupId: string,
+  assignedBy: string | null,
+) {
+  const uniqueEmployees = Array.from(
+    new Set(
+      [
+        responsibleId,
+        backupId,
+      ].filter(Boolean),
+    ),
+  );
+
+  for (const employeeId of uniqueEmployees) {
+    const reason =
+      employeeId === responsibleId
+        ? 'Portfolio responsable'
+        : 'Portfolio backup';
+
+    await ensurePortfolioAccess(
+      portfolio.id,
+      employeeId,
+      assignedBy,
+      reason,
+    );
+  }
+}
+
 export default function SupplierPortfolios() {
+  const queryClient =
+    useQueryClient();
+
   const [activeTab, setActiveTab] =
     useState('portfolios');
 
@@ -287,17 +514,50 @@ export default function SupplierPortfolios() {
     setAssignmentOpen,
   ] = useState(false);
 
-  const [selectedSupplier, setSelectedSupplier] = useState<{
+  const [
+    selectedSupplier,
+    setSelectedSupplier,
+  ] = useState<{
     id: string;
     name: string;
     portfolioId: string;
     category: string;
   } | null>(null);
 
+  const [
+    portfolioDialogOpen,
+    setPortfolioDialogOpen,
+  ] = useState(false);
+
+  const [
+    editingPortfolio,
+    setEditingPortfolio,
+  ] = useState<SupplierPortfolio | null>(
+    null,
+  );
+
+  const [
+    portfolioForm,
+    setPortfolioForm,
+  ] = useState<PortfolioFormState>(
+    EMPTY_FORM,
+  );
+
+  const [
+    savingPortfolio,
+    setSavingPortfolio,
+  ] = useState(false);
+
   const {
     data: portfolios = [],
     isLoading: portfoliosLoading,
   } = useSupplierPortfolios();
+
+  const {
+    data: collaborators = [],
+    isLoading:
+      collaboratorsLoading,
+  } = useSupplierCollaborators();
 
   const {
     data: suppliers = [],
@@ -405,8 +665,7 @@ export default function SupplierPortfolios() {
       const alertCount =
         portfolioSuppliers.reduce(
           (total, supplier) =>
-            total +
-            supplier.alerts,
+            total + supplier.alerts,
           0,
         );
 
@@ -449,6 +708,351 @@ export default function SupplierPortfolios() {
       return grouped;
     }, [suppliers]);
 
+  const openCreateDialog = () => {
+    setEditingPortfolio(null);
+    setPortfolioForm(EMPTY_FORM);
+    setPortfolioDialogOpen(true);
+  };
+
+  const openEditDialog = (
+    portfolio: SupplierPortfolio,
+  ) => {
+    setEditingPortfolio(portfolio);
+
+    setPortfolioForm({
+      category:
+        portfolio.category || '',
+      responsibleId:
+        portfolio.responsible_id || '',
+      backupId:
+        portfolio.backup_id || '',
+    });
+
+    setPortfolioDialogOpen(true);
+  };
+
+  const handlePortfolioSave =
+    async () => {
+      const category =
+        portfolioForm.category.trim();
+
+      const responsibleId =
+        portfolioForm.responsibleId;
+
+      const backupId =
+        portfolioForm.backupId;
+
+      if (!category) {
+        toast.error(
+          'Catégorie obligatoire',
+          {
+            description:
+              'Indiquez la catégorie du portefeuille fournisseur.',
+          },
+        );
+        return;
+      }
+
+      if (!responsibleId) {
+        toast.error(
+          'Responsable obligatoire',
+          {
+            description:
+              'Chaque portefeuille fournisseur doit avoir un responsable.',
+          },
+        );
+        return;
+      }
+
+      if (
+        backupId &&
+        backupId === responsibleId
+      ) {
+        toast.error(
+          'Affectation invalide',
+          {
+            description:
+              'Le responsable et le backup doivent être deux collaborateurs distincts.',
+          },
+        );
+        return;
+      }
+
+      const responsible =
+        collaborators.find(
+          (profile) =>
+            profile.id ===
+            responsibleId,
+        );
+
+      const backup = backupId
+        ? collaborators.find(
+            (profile) =>
+              profile.id ===
+              backupId,
+          )
+        : null;
+
+      if (!responsible) {
+        toast.error(
+          'Responsable invalide',
+          {
+            description:
+              'Le responsable sélectionné ne possède pas un accès collaborateur fournisseur valide.',
+          },
+        );
+        return;
+      }
+
+      if (
+        backupId &&
+        !backup
+      ) {
+        toast.error(
+          'Backup invalide',
+          {
+            description:
+              'Le backup sélectionné ne possède pas un accès collaborateur fournisseur valide.',
+          },
+        );
+        return;
+      }
+
+      setSavingPortfolio(true);
+
+      try {
+        const {
+          data: authData,
+          error: authError,
+        } = await supabase.auth.getUser();
+
+        if (authError) {
+          throw authError;
+        }
+
+        const assignedBy =
+          authData.user?.id ?? null;
+
+        let savedPortfolio:
+          SupplierPortfolio;
+
+        if (editingPortfolio) {
+          const {
+            data,
+            error,
+          } = await supabase
+            .from('supplier_portfolios')
+            .update({
+              category,
+              responsible_id:
+                responsible.id,
+              responsible_name:
+                getProfileName(
+                  responsible,
+                ),
+              backup_id:
+                backup?.id ?? null,
+              backup_name:
+                backup
+                  ? getProfileName(
+                      backup,
+                    )
+                  : '',
+              updated_at:
+                new Date().toISOString(),
+            })
+            .eq(
+              'id',
+              editingPortfolio.id,
+            )
+            .select('*')
+            .single();
+
+          if (error) {
+            throw error;
+          }
+
+          savedPortfolio =
+            data as SupplierPortfolio;
+        } else {
+          const {
+            data,
+            error,
+          } = await supabase
+            .from('supplier_portfolios')
+            .insert({
+              category,
+              responsible_id:
+                responsible.id,
+              responsible_name:
+                getProfileName(
+                  responsible,
+                ),
+              backup_id:
+                backup?.id ?? null,
+              backup_name:
+                backup
+                  ? getProfileName(
+                      backup,
+                    )
+                  : '',
+            })
+            .select('*')
+            .single();
+
+          if (error) {
+            throw error;
+          }
+
+          savedPortfolio =
+            data as SupplierPortfolio;
+        }
+
+        const {
+          data: portfolioType,
+          error: portfolioTypeError,
+        } = await supabase
+          .from('access_portfolio_types')
+          .select('id')
+          .eq(
+            'portfolio_type_key',
+            'supplier',
+          )
+          .eq(
+            'status',
+            'active',
+          )
+          .maybeSingle();
+
+        if (portfolioTypeError) {
+          throw portfolioTypeError;
+        }
+
+        if (!portfolioType) {
+          throw new Error(
+            'Le type de portefeuille fournisseur est introuvable.',
+          );
+        }
+
+        const {
+          data: businessPortfolio,
+          error:
+            businessPortfolioError,
+        } = await supabase
+          .from(
+            'access_business_portfolios',
+          )
+          .upsert(
+            {
+              portfolio_type_id:
+                portfolioType.id,
+              source_id:
+                savedPortfolio.id,
+              label_snapshot:
+                category,
+              status: 'active',
+              updated_at:
+                new Date().toISOString(),
+            },
+            {
+              onConflict:
+                'portfolio_type_id,source_id',
+            },
+          )
+          .select('*')
+          .single();
+
+        if (
+          businessPortfolioError
+        ) {
+          throw businessPortfolioError;
+        }
+
+        if (!businessPortfolio) {
+          throw new Error(
+            'Impossible de synchroniser le portefeuille transversal.',
+          );
+        }
+
+        await synchronizePortfolioAccess(
+          savedPortfolio,
+          responsible.id,
+          backup?.id ?? '',
+          assignedBy,
+        );
+
+        await queryClient.invalidateQueries(
+          {
+            queryKey: [
+              'supplier-portfolios',
+            ],
+          },
+        );
+
+        await queryClient.invalidateQueries(
+          {
+            queryKey: [
+              'supplier-portfolio-data',
+            ],
+          },
+        );
+
+        await queryClient.invalidateQueries(
+          {
+            queryKey: [
+              'supplier-portfolio-collaborators',
+            ],
+          },
+        );
+
+        await queryClient.invalidateQueries(
+          {
+            queryKey: [
+              'assignment_candidates',
+            ],
+          },
+        );
+
+        toast.success(
+          editingPortfolio
+            ? 'Portefeuille mis à jour'
+            : 'Portefeuille créé',
+          {
+            description:
+              editingPortfolio
+                ? 'Le portefeuille fournisseur et ses accès ont été synchronisés.'
+                : 'Le portefeuille fournisseur et les accès du responsable/backup ont été créés.',
+          },
+        );
+
+        setPortfolioDialogOpen(
+          false,
+        );
+
+        setEditingPortfolio(null);
+        setPortfolioForm(
+          EMPTY_FORM,
+        );
+      } catch (error) {
+        console.error(
+          'Erreur portefeuille fournisseur:',
+          error,
+        );
+
+        toast.error(
+          'Enregistrement impossible',
+          {
+            description:
+              error instanceof Error
+                ? error.message
+                : 'Une erreur est survenue lors de l’enregistrement du portefeuille.',
+          },
+        );
+      } finally {
+        setSavingPortfolio(false);
+      }
+    };
+
   const handleReassign = (
     supplier: SupplierRow,
   ) => {
@@ -460,17 +1064,19 @@ export default function SupplierPortfolios() {
             'Le fournisseur doit être rattaché à un portefeuille avant de pouvoir être assigné.',
         },
       );
-  
+
       return;
     }
-  
+
     setSelectedSupplier({
       id: supplier.id,
       name: supplier.name,
-      portfolioId: supplier.portfolioId,
-      category: supplier.portfolioCategory,
+      portfolioId:
+        supplier.portfolioId,
+      category:
+        supplier.portfolioCategory,
     });
-  
+
     setAssignmentOpen(true);
   };
 
@@ -496,7 +1102,8 @@ export default function SupplierPortfolios() {
 
   const isLoading =
     portfoliosLoading ||
-    suppliersLoading;
+    suppliersLoading ||
+    collaboratorsLoading;
 
   if (isLoading) {
     return (
@@ -508,34 +1115,51 @@ export default function SupplierPortfolios() {
 
   return (
     <div className="space-y-6">
-      {/* HEADER */}
+      {/* ============================================================
+          HEADER
+          ============================================================ */}
 
       <div>
-        <div className="flex items-center gap-3">
-          <FolderOpen className="h-8 w-8 text-primary" />
-
+        <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">
-              Portefeuilles Fournisseurs
-            </h1>
+            <div className="flex items-center gap-3">
+              <FolderOpen className="h-8 w-8 text-primary" />
 
-            <p className="text-muted-foreground">
-              Gestion des portefeuilles de
-              fournisseurs du pôle Fournisseurs
-              & Produits.
+              <div>
+                <h1 className="text-3xl font-bold">
+                  Portefeuilles Fournisseurs
+                </h1>
+
+                <p className="text-muted-foreground">
+                  Gestion des portefeuilles de
+                  fournisseurs du pôle
+                  Fournisseurs & Produits.
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              Un portefeuille constitue
+              l'unité de pilotage. La
+              catégorie est une
+              caractéristique du portefeuille
+              et ne constitue pas un
+              portefeuille autonome.
             </p>
           </div>
-        </div>
 
-        <p className="mt-2 text-sm text-muted-foreground">
-          Un portefeuille constitue l'unité de
-          pilotage. La catégorie est une
-          caractéristique du portefeuille et ne
-          constitue pas un portefeuille autonome.
-        </p>
+          <Button
+            onClick={openCreateDialog}
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            Nouveau portefeuille
+          </Button>
+        </div>
       </div>
 
-      {/* KPIs */}
+      {/* ============================================================
+          KPIs
+          ============================================================ */}
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -595,6 +1219,10 @@ export default function SupplierPortfolios() {
         </Card>
       </div>
 
+      {/* ============================================================
+          TABS
+          ============================================================ */}
+
       <Tabs
         value={activeTab}
         onValueChange={setActiveTab}
@@ -646,9 +1274,21 @@ export default function SupplierPortfolios() {
                   </p>
 
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Aucun portefeuille n'est
-                    actuellement enregistré.
+                    Créez le premier
+                    portefeuille fournisseur
+                    pour commencer la
+                    répartition.
                   </p>
+
+                  <Button
+                    className="mt-4"
+                    onClick={
+                      openCreateDialog
+                    }
+                  >
+                    <Plus className="mr-2 h-4 w-4" />
+                    Créer un portefeuille
+                  </Button>
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -656,21 +1296,15 @@ export default function SupplierPortfolios() {
                     (portfolio) => (
                       <Card
                         key={portfolio.id}
-                        className="cursor-pointer transition-shadow hover:shadow-md"
-                        onClick={() => {
-                          setSelectedPortfolio(
-                            portfolio.id,
-                          );
-                          setActiveTab(
-                            'suppliers',
-                          );
-                        }}
+                        className="transition-shadow hover:shadow-md"
                       >
                         <CardHeader className="pb-3">
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <CardTitle className="text-lg">
-                                {portfolio.category}
+                                {
+                                  portfolio.category
+                                }
                               </CardTitle>
 
                               <CardDescription>
@@ -737,7 +1371,9 @@ export default function SupplierPortfolios() {
 
                           <div className="flex flex-wrap gap-2">
                             <Badge variant="secondary">
-                              {portfolio.category}
+                              {
+                                portfolio.category
+                              }
                             </Badge>
 
                             {portfolio.backup_name && (
@@ -748,6 +1384,38 @@ export default function SupplierPortfolios() {
                                 }
                               </Badge>
                             )}
+                          </div>
+
+                          <div className="flex gap-2 pt-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => {
+                                setSelectedPortfolio(
+                                  portfolio.id,
+                                );
+                                setActiveTab(
+                                  'suppliers',
+                                );
+                              }}
+                            >
+                              <Users className="mr-1 h-4 w-4" />
+                              Fournisseurs
+                            </Button>
+
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                openEditDialog(
+                                  portfolio,
+                                )
+                              }
+                            >
+                              <Edit className="mr-1 h-4 w-4" />
+                              Modifier
+                            </Button>
                           </div>
                         </CardContent>
                       </Card>
@@ -1002,7 +1670,9 @@ export default function SupplierPortfolios() {
                             variant="ghost"
                             size="sm"
                             onClick={() =>
-                              handleReassign(supplier)
+                              handleReassign(
+                                supplier,
+                              )
                             }
                           >
                             <ArrowRightLeft className="mr-1 h-4 w-4" />
@@ -1180,17 +1850,24 @@ export default function SupplierPortfolios() {
                         </div>
 
                         <Progress
-                          value={
-                            Math.min(
-                              loadPercentage,
-                              100,
-                            )
-                          }
+                          value={Math.min(
+                            loadPercentage,
+                            100,
+                          )}
                           className="h-2"
                         />
                       </div>
                     );
                   },
+                )}
+
+                {Object.keys(
+                  suppliersByResponsible,
+                ).length === 0 && (
+                  <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+                    Aucune affectation
+                    fournisseur disponible.
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -1204,7 +1881,8 @@ export default function SupplierPortfolios() {
 
               <CardDescription>
                 Le responsable est issu de
-                l'affectation réelle du fournisseur.
+                l'affectation réelle du
+                fournisseur.
               </CardDescription>
             </CardHeader>
 
@@ -1233,11 +1911,11 @@ export default function SupplierPortfolios() {
 
               <p>
                 <strong className="text-foreground">
-                  Fournisseur :
+                  Accès collaborateur :
                 </strong>{' '}
-                relié au portefeuille par
+                défini par
                 <code className="mx-1">
-                  portfolio_assignments.portfolio_id
+                  access_portfolio_assignments
                 </code>
                 .
               </p>
@@ -1246,14 +1924,295 @@ export default function SupplierPortfolios() {
         </TabsContent>
       </Tabs>
 
+      {/* ============================================================
+          DIALOG CRÉATION / MODIFICATION PORTEFEUILLE
+          ============================================================ */}
+
+      <Dialog
+        open={portfolioDialogOpen}
+        onOpenChange={(open) => {
+          if (
+            savingPortfolio
+          ) {
+            return;
+          }
+
+          setPortfolioDialogOpen(
+            open,
+          );
+
+          if (!open) {
+            setEditingPortfolio(
+              null,
+            );
+            setPortfolioForm(
+              EMPTY_FORM,
+            );
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[560px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingPortfolio
+                ? 'Modifier le portefeuille fournisseur'
+                : 'Nouveau portefeuille fournisseur'}
+            </DialogTitle>
+
+            <DialogDescription>
+              Le responsable et le backup
+              doivent être des
+              collaborateurs disposant du
+              pôle Fournisseurs.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 py-2">
+            {/* Catégorie */}
+
+            <div className="space-y-2">
+              <Label htmlFor="portfolio-category">
+                Catégorie
+              </Label>
+
+              <Input
+                id="portfolio-category"
+                value={
+                  portfolioForm.category
+                }
+                onChange={(event) =>
+                  setPortfolioForm(
+                    (current) => ({
+                      ...current,
+                      category:
+                        event.target.value,
+                    }),
+                  )
+                }
+                placeholder="Ex. Mode, Beauté, Maison..."
+                disabled={
+                  savingPortfolio
+                }
+              />
+
+              <p className="text-xs text-muted-foreground">
+                La catégorie décrit le
+                portefeuille ; elle ne
+                constitue pas un portefeuille
+                indépendant.
+              </p>
+            </div>
+
+            {/* Responsable */}
+
+            <div className="space-y-2">
+              <Label>
+                Responsable
+              </Label>
+
+              <Select
+                value={
+                  portfolioForm.responsibleId
+                }
+                onValueChange={(value) =>
+                  setPortfolioForm(
+                    (current) => ({
+                      ...current,
+                      responsibleId:
+                        value,
+                    }),
+                  )
+                }
+                disabled={
+                  savingPortfolio
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un responsable" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {collaborators.map(
+                    (profile) => (
+                      <SelectItem
+                        key={profile.id}
+                        value={profile.id}
+                      >
+                        {getProfileName(
+                          profile,
+                        )}
+                        {profile.position ===
+                          'supplier_manager' &&
+                          ' — Manager'}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Backup */}
+
+            <div className="space-y-2">
+              <Label>
+                Backup
+              </Label>
+
+              <Select
+                value={
+                  portfolioForm.backupId ||
+                  'none'
+                }
+                onValueChange={(value) =>
+                  setPortfolioForm(
+                    (current) => ({
+                      ...current,
+                      backupId:
+                        value ===
+                        'none'
+                          ? ''
+                          : value,
+                    }),
+                  )
+                }
+                disabled={
+                  savingPortfolio
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Sélectionner un backup" />
+                </SelectTrigger>
+
+                <SelectContent>
+                  <SelectItem value="none">
+                    Aucun backup
+                  </SelectItem>
+
+                  {collaborators
+                    .filter(
+                      (profile) =>
+                        profile.id !==
+                        portfolioForm.responsibleId,
+                    )
+                    .map(
+                      (profile) => (
+                        <SelectItem
+                          key={
+                            profile.id
+                          }
+                          value={
+                            profile.id
+                          }
+                        >
+                          {getProfileName(
+                            profile,
+                          )}
+                          {profile.position ===
+                            'supplier_manager' &&
+                            ' — Manager'}
+                        </SelectItem>
+                      ),
+                    )}
+                </SelectContent>
+              </Select>
+
+              <p className="text-xs text-muted-foreground">
+                Le backup reçoit également
+                l'accès au portefeuille
+                transversal, sans remplacer
+                le responsable.
+              </p>
+            </div>
+
+            {/* Résumé */}
+
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <p className="text-sm font-medium">
+                Synchronisation d'accès
+              </p>
+
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                À l'enregistrement, le
+                portefeuille fournisseur est
+                synchronisé avec
+                access_business_portfolios.
+                Le responsable et le backup
+                reçoivent un accès actif via
+                access_portfolio_assignments.
+                Les anciens accès ne sont pas
+                automatiquement révoqués.
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() =>
+                setPortfolioDialogOpen(
+                  false,
+                )
+              }
+              disabled={
+                savingPortfolio
+              }
+            >
+              Annuler
+            </Button>
+
+            <Button
+              onClick={
+                handlePortfolioSave
+              }
+              disabled={
+                savingPortfolio
+              }
+            >
+              {savingPortfolio ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Enregistrement...
+                </>
+              ) : (
+                <>
+                  {editingPortfolio ? (
+                    <Save className="mr-2 h-4 w-4" />
+                  ) : (
+                    <Plus className="mr-2 h-4 w-4" />
+                  )}
+
+                  {editingPortfolio
+                    ? 'Enregistrer les modifications'
+                    : 'Créer le portefeuille'}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ============================================================
+          ASSIGNATION FOURNISSEUR
+          ============================================================ */}
+
       {selectedSupplier && (
         <AssignmentSuggestion
           open={assignmentOpen}
-          onOpenChange={setAssignmentOpen}
-          supplierId={selectedSupplier.id}
-          supplierName={selectedSupplier.name}
-          portfolioId={selectedSupplier.portfolioId}
-          supplierCategory={selectedSupplier.category}
+          onOpenChange={
+            setAssignmentOpen
+          }
+          supplierId={
+            selectedSupplier.id
+          }
+          supplierName={
+            selectedSupplier.name
+          }
+          portfolioId={
+            selectedSupplier.portfolioId
+          }
+          supplierCategory={
+            selectedSupplier.category
+          }
         />
       )}
     </div>
