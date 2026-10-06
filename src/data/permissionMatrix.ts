@@ -437,6 +437,49 @@ export const RESTRICTED_PAGES: Record<
   'audit.sanctions': AUDIT_OWNERS,
 };
 
+  // -------------------------------------------------------------------------
+  // MARKETPLACE
+  // -------------------------------------------------------------------------
+
+  'marketplace.merchants': MARKETPLACE_OWNERS,
+
+  'marketplace.portfolio': [
+    'ceo',
+    'responsable_marketplace',
+    'gestionnaire_boutiques',
+    'gestionnaire_vendeurs',
+  ],
+
+  'marketplace.stores': [
+    'ceo',
+    'responsable_marketplace',
+    'gestionnaire_boutiques',
+    'gestionnaire_vendeurs',
+  ],
+
+  'marketplace.opportunities': [
+    'ceo',
+    'responsable_marketplace',
+    'gestionnaire_boutiques',
+    'gestionnaire_vendeurs',
+  ],
+
+  'marketplace.analytics': MARKETPLACE_OWNERS,
+
+  'marketplace.subscriptions': [
+    'ceo',
+    'responsable_marketplace',
+    'gestionnaire_boutiques',
+    'gestionnaire_vendeurs',
+  ],
+
+  'marketplace.products': [
+    'ceo',
+    'responsable_marketplace',
+    'gestionnaire_boutiques',
+    'gestionnaire_vendeurs',
+  ],
+
 // ---------------------------------------------------------------------------
 // ACTIONS PAR NIVEAU HIÉRARCHIQUE
 // ---------------------------------------------------------------------------
