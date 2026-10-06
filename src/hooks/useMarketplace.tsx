@@ -580,3 +580,41 @@ export function useMarketplaceCustomers(search = "") {
     },
   });
 }
+
+export type MarketplaceProduct = {
+  id: string;
+  name: string;
+  shop_sku: string | null;
+  category: string | null;
+  status: string | null;
+  is_active: boolean | null;
+  shop_id: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+};
+
+export function useMarketplaceProducts() {
+  return useQuery({
+    queryKey: ['marketplace', 'products'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('product_catalog')
+        .select(`
+          id,
+          name,
+          shop_sku,
+          category,
+          status,
+          is_active,
+          shop_id,
+          created_at,
+          updated_at
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      return (data ?? []) as MarketplaceProduct[];
+    },
+  });
+}
