@@ -493,74 +493,90 @@ const App = () => (
                   path="/pole/supplier/catalog-inbox"
                   element={<SupplierCatalogInbox />}
                 />
-
-                {/* ====================================================
-                  5. MARKETPLACE & CUSTOMER
-                  ==================================================== */}
-
+                
                 <Route
                   path="/pole/marketplace"
-                  element={<MarketplaceDashboard />}
+                  element={
+                    <ProtectedPage pageId="marketplace.overview">
+                      <MarketplaceDashboard />
+                    </ProtectedPage>
+                  }
                 />
+
+                {/* ====================================================
+                    5. Marketplace & Customers
+                    ==================================================== */}
+                
                 <Route
                   path="/pole/marketplace/merchants"
-                  element={<MerchantPortfolio />}
+                  element={
+                    <ProtectedPage pageId="marketplace.merchants">
+                      <MerchantPortfolio />
+                    </ProtectedPage>
+                  }
                 />
+                
                 <Route
                   path="/pole/marketplace/merchants/:id"
-                  element={<MerchantDetail />}
+                  element={
+                    <ProtectedPage pageId="marketplace.merchants">
+                      <MerchantDetail />
+                    </ProtectedPage>
+                  }
                 />
+                
                 <Route
                   path="/pole/marketplace/stores"
-                  element={<MarketplaceStores />}
-                />                
+                  element={
+                    <ProtectedPage pageId="marketplace.stores">
+                      <MarketplaceStores />
+                    </ProtectedPage>
+                  }
+                />
+                
                 <Route
                   path="/pole/marketplace/stores/:id"
-                  element={<MarketplaceStoreDetail />}
-                />                
+                  element={
+                    <ProtectedPage pageId="marketplace.stores">
+                      <MarketplaceStoreDetail />
+                    </ProtectedPage>
+                  }
+                />
+                
                 <Route
                   path="/pole/marketplace/products"
-                  element={<MarketplaceProducts />}
-                />                
-                <Route
-                  path="/pole/marketplace/customers"
-                  element={<MarketplaceCustomers />}
-                />                
-                <Route
-                  path="/pole/marketplace/orders"
-                  element={<MarketplaceOrders />}
-                />                
-                <Route
-                  path="/pole/marketplace/subscribers"
-                  element={<MarketplaceSubscribers />}
-                />                
-                <Route
-                  path="/pole/marketplace/favorites"
-                  element={<MarketplaceFavorites />}
-                />            
-                
-                {/* Fonctionnalités futures — masquées du MVP actuel */}
-                <Route
-                  path="/pole/marketplace/rewards"
-                  element={<Navigate to="/pole/marketplace" replace />}
+                  element={
+                    <ProtectedPage pageId="marketplace.products">
+                      <MarketplaceProducts />
+                    </ProtectedPage>
+                  }
                 />
                 
-                <Route
-                  path="/pole/marketplace/recycling"
-                  element={<Navigate to="/pole/marketplace" replace />}
-                />
                 <Route
                   path="/pole/marketplace/opportunities"
-                  element={<MarketplaceOpportunities />}
-                />         
+                  element={
+                    <ProtectedPage pageId="marketplace.opportunities">
+                      <MarketplaceOpportunities />
+                    </ProtectedPage>
+                  }
+                />
                 
                 <Route
                   path="/pole/marketplace/analytics"
-                  element={<MarketplaceAnalytics />}
+                  element={
+                    <ProtectedPage pageId="marketplace.analytics">
+                      <MarketplaceAnalytics />
+                    </ProtectedPage>
+                  }
                 />
+                
                 <Route
                   path="/pole/marketplace/subscriptions"
-                  element={<MarketplaceSubscriptions />}
+                  element={
+                    <ProtectedPage pageId="marketplace.subscriptions">
+                      <MarketplaceSubscriptions />
+                    </ProtectedPage>
+                  }
                 />
 
                 {/* ====================================================
