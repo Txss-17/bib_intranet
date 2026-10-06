@@ -7,21 +7,55 @@
 -- BIB Platform
 --   products.boutique_id
 --          ↓
--- Intranet shops.platform_id
+--   boutiques.id
 --          ↓
--- Intranet shops.id
+--   shops.platform_id
 --          ↓
--- Intranet products.shop_id
+--   shops.id
+--          ↓
+--   products.shop_id
 --
 -- IMPORTANT :
--- Ne pas utiliser products.platform_id = shops.platform_id.
--- platform_id identifie respectivement le produit et la boutique
--- côté plateforme ; ce ne sont pas les mêmes identifiants métier.
+-- ------------------------------------------------------------
+-- Ne PAS utiliser :
+--
+--   products.platform_id = shops.platform_id
+--
+-- car :
+--
+--   products.platform_id = identifiant du produit BIB Platform
+--   shops.platform_id    = identifiant de la boutique BIB Platform
+--
+-- Ce sont deux identifiants métier différents.
+--
+-- Le bridge résout donc :
+--
+--   Platform products.boutique_id
+--          ↓
+--   Intranet shops.platform_id
+--          ↓
+--   Intranet shops.id
+--
+-- puis renseigne :
+--
+--   Intranet products.shop_id
+--
+-- IMPORTANT :
+-- ------------------------------------------------------------
+-- Cette migration ne fait volontairement AUCUN backfill.
+--
+-- Le platform-bridge ne crée pas non plus de produit Intranet.
+-- Il ne fait que rattacher un produit Intranet déjà existant
+-- à sa boutique lorsqu'il retrouve products.platform_id.
+--
+-- La validation / conformité du produit reste dans le périmètre
+-- produit / fournisseur / audit et n'est pas déplacée vers
+-- Marketplace.
 -- ============================================================
 
 
 -- ============================================================
--- 1. AJOUT DE LA BOUTIQUE SUR LE PRODUIT
+-- 1. COLONNE DE LIAISON
 -- ============================================================
 
 ALTER TABLE public.products
@@ -29,7 +63,7 @@ ALTER TABLE public.products
 
 
 -- ============================================================
--- 2. CONTRAINTE DE RÉFÉRENCE
+-- 2. CLÉ ÉTRANGÈRE
 -- ============================================================
 
 DO $$
@@ -55,33 +89,40 @@ $$;
 -- ============================================================
 -- 3. INDEX
 -- ============================================================
+--
+-- MarketplaceProducts et les requêtes de rattachement
+-- rechercheront régulièrement les produits par boutique.
+-- ============================================================
 
 CREATE INDEX IF NOT EXISTS idx_products_shop_id
   ON public.products(shop_id);
 
 
 -- ============================================================
--- 4. DOCUMENTATION DU CHAMP
+-- 4. DOCUMENTATION DE LA COLONNE
 -- ============================================================
 
 COMMENT ON COLUMN public.products.shop_id IS
   'Boutique Intranet associée au produit. '
-  'La relation est résolue depuis products.boutique_id côté BIB Platform '
-  'vers shops.platform_id, puis vers shops.id.';
+  'La relation est résolue depuis products.boutique_id côté '
+  'BIB Platform vers shops.platform_id, puis vers shops.id. '
+  'La liaison est effectuée par platform-bridge.';
 
 
 -- ============================================================
--- 5. CONTRÔLE DE COHÉRENCE
+-- 5. AUCUN BACKFILL
 -- ============================================================
 --
--- Cette migration ne renseigne volontairement PAS shop_id
--- pour les produits existants.
+-- Ne pas ajouter ici de UPDATE du type :
 --
--- Le remplissage doit être effectué par platform-bridge à partir
--- de la véritable relation BIB Platform products.boutique_id.
+--   UPDATE products
+--   SET shop_id = ...
 --
--- Cela évite une association incorrecte entre :
---   products.platform_id
--- et
---   shops.platform_id.
+-- à partir de products.platform_id.
+--
+-- Le platform_id du produit et celui de la boutique ne désignent
+-- pas le même objet.
+--
+-- Le rattachement sera réalisé par platform-bridge après
+-- synchronisation des boutiques.
 -- ============================================================
