@@ -1,139 +1,420 @@
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { useMemo, useState } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import { useTableInteractions } from '@/hooks/useTableInteractions';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
-import { toast } from 'sonner';
-import { FolderOpen, Users, Star, AlertTriangle, Search, ArrowRightLeft, BarChart3, TrendingUp, Loader2, Plus } from 'lucide-react';
+import {
+  FolderOpen,
+  Users,
+  Star,
+  AlertTriangle,
+  Search,
+  ArrowRightLeft,
+  BarChart3,
+  TrendingUp,
+  Loader2,
+} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { AssignmentSuggestion } from '@/components/supplier/AssignmentSuggestion';
 
-function usePortfolios() {
+type SupplierPortfolio = {
+  id: string;
+  name?: string | null;
+  category?: string | null;
+  responsible_id?: string | null;
+  responsible_name?: string | null;
+  status?: string | null;
+  description?: string | null;
+};
+
+type SupplierRow = {
+  id: string;
+  name: string;
+  country: string;
+  category: string;
+  score: number;
+  status: string;
+  portfolioId: string | null;
+  portfolioName: string;
+  assignedTo: string;
+  lastAudit: string;
+  alerts: number;
+};
+
+type PortfolioSummary = SupplierPortfolio & {
+  supplierCount: number;
+  averageScore: number;
+  alertCount: number;
+};
+
+function useSupplierPortfolios() {
   return useQuery({
-    queryKey: ['supplier_portfolios'],
+    queryKey: ['supplier-portfolios'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('supplier_portfolios' as any)
         .select('*')
-        .order('category');
-      if (error) throw error;
-      return data as any[];
+        .order('name');
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as SupplierPortfolio[];
     },
   });
 }
 
-function usePortfolioSuppliers() {
+function useSupplierPortfolioData() {
   return useQuery({
-    queryKey: ['portfolio_suppliers'],
+    queryKey: ['supplier-portfolio-data'],
     queryFn: async () => {
-      const { data: suppliers, error } = await supabase
-        .from('suppliers')
-        .select('*')
-        .eq('status', 'validated')
-        .order('name');
-      if (error) throw error;
+      const [
+        suppliersResult,
+        assignmentsResult,
+        alertsResult,
+      ] = await Promise.all([
+        supabase
+          .from('suppliers')
+          .select('*')
+          .eq('status', 'validated')
+          .order('name'),
 
-      // Get assignments
-      const { data: assignments } = await supabase
-        .from('portfolio_assignments' as any)
-        .select('*');
+        supabase
+          .from('portfolio_assignments' as any)
+          .select('*'),
 
-      // Get quality alerts count per supplier
-      const { data: alerts } = await supabase
-        .from('quality_alerts')
-        .select('supplier_id, id')
-        .eq('status', 'open');
+        supabase
+          .from('quality_alerts')
+          .select('supplier_id, id')
+          .eq('status', 'open'),
+      ]);
+
+      if (suppliersResult.error) {
+        throw suppliersResult.error;
+      }
+
+      if (assignmentsResult.error) {
+        throw assignmentsResult.error;
+      }
+
+      if (alertsResult.error) {
+        throw alertsResult.error;
+      }
+
+      const assignments = assignmentsResult.data ?? [];
+      const alerts = alertsResult.data ?? [];
+
+      const assignmentBySupplier: Record<string, any> = {};
+
+      assignments.forEach((assignment: any) => {
+        if (assignment.supplier_id) {
+          assignmentBySupplier[assignment.supplier_id] = assignment;
+        }
+      });
 
       const alertsBySupplier: Record<string, number> = {};
-      (alerts || []).forEach(a => {
-        if (a.supplier_id) alertsBySupplier[a.supplier_id] = (alertsBySupplier[a.supplier_id] || 0) + 1;
+
+      alerts.forEach((alert: any) => {
+        if (!alert.supplier_id) {
+          return;
+        }
+
+        alertsBySupplier[alert.supplier_id] =
+          (alertsBySupplier[alert.supplier_id] ?? 0) + 1;
       });
 
-      const assignmentMap: Record<string, any> = {};
-      (assignments || []).forEach((a: any) => {
-        assignmentMap[a.supplier_id] = a;
-      });
+      return (suppliersResult.data ?? []).map(
+        (supplier: any): SupplierRow => {
+          const assignment =
+            assignmentBySupplier[supplier.id];
 
-      return (suppliers || []).map(s => ({
-        id: s.id,
-        name: s.name,
-        country: s.country || '🌍',
-        category: (s as any).category || 'Général',
-        score: s.quality_score || 0,
-        status: s.status,
-        assignedTo: assignmentMap[s.id]?.assigned_to_name || 'Non assigné',
-        lastAudit: s.last_audit_date ? new Date(s.last_audit_date).toLocaleDateString('fr-FR') : '—',
-        alerts: alertsBySupplier[s.id] || 0,
-      }));
+          return {
+            id: supplier.id,
+            name: supplier.name,
+            country: supplier.country || '🌍',
+            category: supplier.category || 'Général',
+            score: supplier.quality_score || 0,
+            status: supplier.status || 'validated',
+            portfolioId:
+              assignment?.portfolio_id ?? null,
+            portfolioName:
+              assignment?.portfolio_name ||
+              'Non affecté',
+            assignedTo:
+              assignment?.assigned_to_name ||
+              'Non assigné',
+            lastAudit: supplier.last_audit_date
+              ? new Date(
+                  supplier.last_audit_date,
+                ).toLocaleDateString('fr-FR')
+              : '—',
+            alerts:
+              alertsBySupplier[supplier.id] ?? 0,
+          };
+        },
+      );
     },
   });
 }
 
 export default function SupplierPortfolios() {
-  const [activeTab, setActiveTab] = useState('portfolios');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [assignmentOpen, setAssignmentOpen] = useState(false);
-  const [selectedSupplier, setSelectedSupplier] = useState<{ name: string; category: string } | null>(null);
+  const [activeTab, setActiveTab] =
+    useState('portfolios');
 
-  const { data: portfolios = [], isLoading: portfoliosLoading } = usePortfolios();
-  const { data: allSuppliers = [], isLoading: suppliersLoading } = usePortfolioSuppliers();
+  const [selectedPortfolio, setSelectedPortfolio] =
+    useState<string>('all');
 
-  const filteredSuppliers = selectedCategory === 'all'
-    ? allSuppliers
-    : allSuppliers.filter(s => s.category === selectedCategory);
+  const [selectedCategory, setSelectedCategory] =
+    useState<string>('all');
 
-  const suppliersTable = useTableInteractions({
-    data: filteredSuppliers,
-    searchFields: ['name', 'assignedTo', 'category'],
-  });
+  const [assignmentOpen, setAssignmentOpen] =
+    useState(false);
 
-  const categories = [...new Set(allSuppliers.map(s => s.category))];
-  const totalSuppliers = allSuppliers.length;
-  const avgScore = totalSuppliers > 0 ? Math.round(allSuppliers.reduce((s, p) => s + p.score, 0) / totalSuppliers) : 0;
-  const totalAlerts = allSuppliers.reduce((s, p) => s + p.alerts, 0);
+  const [selectedSupplier, setSelectedSupplier] =
+    useState<{
+      name: string;
+      category: string;
+    } | null>(null);
 
-  const handleReassign = (supplierName: string, category: string) => {
-    setSelectedSupplier({ name: supplierName, category });
+  const {
+    data: portfolios = [],
+    isLoading: portfoliosLoading,
+  } = useSupplierPortfolios();
+
+  const {
+    data: suppliers = [],
+    isLoading: suppliersLoading,
+  } = useSupplierPortfolioData();
+
+  const categories = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          suppliers.map(
+            (supplier) => supplier.category,
+          ),
+        ),
+      ).sort(),
+    [suppliers],
+  );
+
+  const filteredSuppliers = useMemo(() => {
+    return suppliers.filter((supplier) => {
+      const matchesPortfolio =
+        selectedPortfolio === 'all' ||
+        supplier.portfolioId ===
+          selectedPortfolio;
+
+      const matchesCategory =
+        selectedCategory === 'all' ||
+        supplier.category ===
+          selectedCategory;
+
+      return (
+        matchesPortfolio &&
+        matchesCategory
+      );
+    });
+  }, [
+    suppliers,
+    selectedPortfolio,
+    selectedCategory,
+  ]);
+
+  const suppliersTable =
+    useTableInteractions({
+      data: filteredSuppliers,
+      searchFields: [
+        'name',
+        'assignedTo',
+        'category',
+        'portfolioName',
+      ],
+    });
+
+  const totalSuppliers = suppliers.length;
+
+  const averageScore =
+    totalSuppliers > 0
+      ? Math.round(
+          suppliers.reduce(
+            (total, supplier) =>
+              total + supplier.score,
+            0,
+          ) / totalSuppliers,
+        )
+      : 0;
+
+  const totalAlerts = suppliers.reduce(
+    (total, supplier) =>
+      total + supplier.alerts,
+    0,
+  );
+
+  const activePortfolios =
+    portfolios.filter(
+      (portfolio) =>
+        portfolio.status !== 'inactive',
+    );
+
+  const portfolioSummaries: PortfolioSummary[] =
+    activePortfolios.map((portfolio) => {
+      const portfolioSuppliers =
+        suppliers.filter(
+          (supplier) =>
+            supplier.portfolioId ===
+            portfolio.id,
+        );
+
+      const averageScore =
+        portfolioSuppliers.length > 0
+          ? Math.round(
+              portfolioSuppliers.reduce(
+                (total, supplier) =>
+                  total + supplier.score,
+                0,
+              ) /
+                portfolioSuppliers.length,
+            )
+          : 0;
+
+      const alertCount =
+        portfolioSuppliers.reduce(
+          (total, supplier) =>
+            total + supplier.alerts,
+          0,
+        );
+
+      return {
+        ...portfolio,
+        supplierCount:
+          portfolioSuppliers.length,
+        averageScore,
+        alertCount,
+      };
+    });
+
+  const unassignedSuppliers =
+    suppliers.filter(
+      (supplier) =>
+        !supplier.portfolioId,
+    );
+
+  const suppliersByResponsible =
+    useMemo(() => {
+      const grouped: Record<
+        string,
+        SupplierRow[]
+      > = {};
+
+      suppliers.forEach((supplier) => {
+        const key =
+          supplier.assignedTo ||
+          'Non assigné';
+
+        if (!grouped[key]) {
+          grouped[key] = [];
+        }
+
+        grouped[key].push(supplier);
+      });
+
+      return grouped;
+    }, [suppliers]);
+
+  const handleReassign = (
+    supplierName: string,
+    category: string,
+  ) => {
+    setSelectedSupplier({
+      name: supplierName,
+      category,
+    });
+
     setAssignmentOpen(true);
   };
 
-  const getLoadColor = (count: number, max: number) => {
-    const pct = (count / max) * 100;
-    if (pct >= 90) return 'text-destructive';
-    if (pct >= 70) return 'text-yellow-500';
+  const getLoadColor = (
+    count: number,
+    max: number,
+  ) => {
+    const percentage =
+      max > 0
+        ? (count / max) * 100
+        : 0;
+
+    if (percentage >= 90) {
+      return 'text-destructive';
+    }
+
+    if (percentage >= 70) {
+      return 'text-yellow-500';
+    }
+
     return 'text-emerald-500';
   };
 
-  const isLoading = portfoliosLoading || suppliersLoading;
+  const isLoading =
+    portfoliosLoading ||
+    suppliersLoading;
 
   if (isLoading) {
-    return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
+    return (
+      <div className="flex justify-center py-16">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
   }
-
-  // Group suppliers by assignee for manager view
-  const suppliersByAssignee: Record<string, typeof allSuppliers> = {};
-  allSuppliers.forEach(s => {
-    const key = s.assignedTo || 'Non assigné';
-    if (!suppliersByAssignee[key]) suppliersByAssignee[key] = [];
-    suppliersByAssignee[key].push(s);
-  });
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <FolderOpen className="h-8 w-8 text-primary" />
-            Portefeuilles Fournisseurs
-          </h1>
-          <p className="text-muted-foreground">Organisation par catégorie — fournisseurs validés</p>
+      {/* Header */}
+      <div>
+        <div className="flex items-center gap-3">
+          <FolderOpen className="h-8 w-8 text-primary" />
+
+          <div>
+            <h1 className="text-3xl font-bold">
+              Portefeuilles Fournisseurs
+            </h1>
+
+            <p className="text-muted-foreground">
+              Portefeuilles de fournisseurs suivis
+              par le pôle Fournisseurs & Produits.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -141,189 +422,667 @@ export default function SupplierPortfolios() {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <Users className="h-5 w-5 text-primary" />
-              <Badge variant="outline" className="text-emerald-500"><TrendingUp className="h-3 w-3 mr-1" />actifs</Badge>
-            </div>
-            <p className="text-2xl font-bold mt-2">{totalSuppliers}</p>
-            <p className="text-xs text-muted-foreground">Fournisseurs validés</p>
+            <Users className="h-5 w-5 text-primary" />
+
+            <p className="mt-2 text-2xl font-bold">
+              {totalSuppliers}
+            </p>
+
+            <p className="text-xs text-muted-foreground">
+              Fournisseurs validés
+            </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <FolderOpen className="h-5 w-5 text-blue-500" />
-            </div>
-            <p className="text-2xl font-bold mt-2">{portfolios.length || categories.length}</p>
-            <p className="text-xs text-muted-foreground">Portefeuilles / catégories</p>
+            <FolderOpen className="h-5 w-5 text-primary" />
+
+            <p className="mt-2 text-2xl font-bold">
+              {activePortfolios.length}
+            </p>
+
+            <p className="text-xs text-muted-foreground">
+              Portefeuilles actifs
+            </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <Star className="h-5 w-5 text-yellow-500" />
-            </div>
-            <p className="text-2xl font-bold mt-2">{avgScore}%</p>
-            <p className="text-xs text-muted-foreground">Score qualité moyen</p>
+            <Star className="h-5 w-5 text-yellow-500" />
+
+            <p className="mt-2 text-2xl font-bold">
+              {averageScore}%
+            </p>
+
+            <p className="text-xs text-muted-foreground">
+              Score qualité moyen
+            </p>
           </CardContent>
         </Card>
+
         <Card>
           <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-            </div>
-            <p className="text-2xl font-bold mt-2">{totalAlerts}</p>
-            <p className="text-xs text-muted-foreground">Alertes actives</p>
+            <AlertTriangle className="h-5 w-5 text-destructive" />
+
+            <p className="mt-2 text-2xl font-bold">
+              {totalAlerts}
+            </p>
+
+            <p className="text-xs text-muted-foreground">
+              Alertes qualité actives
+            </p>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+      >
         <TabsList>
-          <TabsTrigger value="portfolios">Par catégorie</TabsTrigger>
-          <TabsTrigger value="suppliers">Fournisseurs</TabsTrigger>
-          <TabsTrigger value="manager">Vue Manager</TabsTrigger>
+          <TabsTrigger value="portfolios">
+            Portefeuilles
+          </TabsTrigger>
+
+          <TabsTrigger value="suppliers">
+            Fournisseurs
+          </TabsTrigger>
+
+          <TabsTrigger value="manager">
+            Vue responsable
+          </TabsTrigger>
         </TabsList>
 
-        {/* Tab 1: Portfolios by category */}
-        <TabsContent value="portfolios" className="mt-4 space-y-4">
-          {categories.length === 0 ? (
-            <p className="text-center py-8 text-muted-foreground">Aucun fournisseur validé</p>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {categories.map(cat => {
-                const catSuppliers = allSuppliers.filter(s => s.category === cat);
-                const catAvg = catSuppliers.length > 0 ? Math.round(catSuppliers.reduce((s, p) => s + p.score, 0) / catSuppliers.length) : 0;
-                const catAlerts = catSuppliers.reduce((s, p) => s + p.alerts, 0);
-                return (
-                  <Card key={cat} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-lg">{cat}</CardTitle>
-                      <CardDescription>{catSuppliers.length} fournisseurs</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div className="space-y-1">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Score qualité</span>
-                          <span className={catAvg >= 85 ? 'text-emerald-500 font-medium' : catAvg >= 70 ? 'text-yellow-500 font-medium' : 'text-destructive font-medium'}>
-                            {catAvg}%
-                          </span>
-                        </div>
-                        <Progress value={catAvg} className="h-2" />
-                      </div>
-                      <div className="flex gap-2">
-                        {catAlerts > 0 && (
-                          <Badge variant="destructive" className="text-xs">
-                            <AlertTriangle className="h-3 w-3 mr-1" />{catAlerts} alerte{catAlerts > 1 ? 's' : ''}
-                          </Badge>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+        {/* Portfolios */}
+        <TabsContent
+          value="portfolios"
+          className="mt-4 space-y-4"
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Portefeuilles fournisseurs
+              </CardTitle>
+
+              <CardDescription>
+                Les portefeuilles sont les unités
+                de pilotage. Les catégories sont
+                des attributs des fournisseurs et
+                ne constituent pas des portefeuilles.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent>
+              {portfolioSummaries.length === 0 ? (
+                <div className="rounded-lg border border-dashed p-8 text-center">
+                  <FolderOpen className="mx-auto h-8 w-8 text-muted-foreground" />
+
+                  <p className="mt-3 font-medium">
+                    Aucun portefeuille fournisseur
+                  </p>
+
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Les portefeuilles créés dans le
+                    pôle Fournisseurs apparaîtront ici.
+                  </p>
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {portfolioSummaries.map(
+                    (portfolio) => (
+                      <Card
+                        key={portfolio.id}
+                        className="cursor-pointer transition-shadow hover:shadow-md"
+                        onClick={() => {
+                          setSelectedPortfolio(
+                            portfolio.id,
+                          );
+                          setActiveTab(
+                            'suppliers',
+                          );
+                        }}
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <CardTitle className="text-lg">
+                                {portfolio.name ||
+                                  'Portefeuille fournisseur'}
+                              </CardTitle>
+
+                              <CardDescription>
+                                {portfolio.responsible_name ||
+                                  'Responsable non défini'}
+                              </CardDescription>
+                            </div>
+
+                            <Badge variant="outline">
+                              {portfolio.status ||
+                                'active'}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+
+                        <CardContent className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Fournisseurs
+                              </p>
+
+                              <p className="text-xl font-bold">
+                                {portfolio.supplierCount}
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs text-muted-foreground">
+                                Alertes
+                              </p>
+
+                              <p className="text-xl font-bold">
+                                {portfolio.alertCount}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">
+                                Score qualité
+                              </span>
+
+                              <span className="font-medium">
+                                {portfolio.averageScore}%
+                              </span>
+                            </div>
+
+                            <Progress
+                              value={
+                                portfolio.averageScore
+                              }
+                              className="h-2"
+                            />
+                          </div>
+
+                          {portfolio.category && (
+                            <Badge variant="secondary">
+                              Catégorie principale :{' '}
+                              {portfolio.category}
+                            </Badge>
+                          )}
+                        </CardContent>
+                      </Card>
+                    ),
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {unassignedSuppliers.length > 0 && (
+            <Card className="border-dashed">
+              <CardHeader>
+                <CardTitle>
+                  Fournisseurs non affectés
+                </CardTitle>
+
+                <CardDescription>
+                  Ces fournisseurs validés ne sont
+                  actuellement rattachés à aucun
+                  portefeuille.
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent>
+                <Badge variant="outline">
+                  {unassignedSuppliers.length}{' '}
+                  fournisseur
+                  {unassignedSuppliers.length > 1
+                    ? 's'
+                    : ''}{' '}
+                  non affecté
+                  {unassignedSuppliers.length > 1
+                    ? 's'
+                    : ''}
+                </Badge>
+              </CardContent>
+            </Card>
           )}
         </TabsContent>
 
-        {/* Tab 2: All suppliers */}
-        <TabsContent value="suppliers" className="mt-4 space-y-4">
-          <div className="flex gap-2">
+        {/* Suppliers */}
+        <TabsContent
+          value="suppliers"
+          className="mt-4 space-y-4"
+        >
+          <div className="flex flex-col gap-2 md:flex-row">
             <div className="relative flex-1">
               <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Rechercher un fournisseur..." value={suppliersTable.searchQuery} onChange={e => suppliersTable.setSearchQuery(e.target.value)} className="pl-8 h-9" />
+
+              <Input
+                placeholder="Rechercher un fournisseur, portefeuille ou responsable..."
+                value={
+                  suppliersTable.searchQuery
+                }
+                onChange={(event) =>
+                  suppliersTable.setSearchQuery(
+                    event.target.value,
+                  )
+                }
+                className="pl-8"
+              />
             </div>
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-[180px] h-9"><SelectValue placeholder="Catégorie" /></SelectTrigger>
+
+            <Select
+              value={selectedPortfolio}
+              onValueChange={
+                setSelectedPortfolio
+              }
+            >
+              <SelectTrigger className="w-full md:w-[220px]">
+                <SelectValue placeholder="Portefeuille" />
+              </SelectTrigger>
+
               <SelectContent>
-                <SelectItem value="all">Toutes catégories</SelectItem>
-                {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                <SelectItem value="all">
+                  Tous les portefeuilles
+                </SelectItem>
+
+                {activePortfolios.map(
+                  (portfolio) => (
+                    <SelectItem
+                      key={portfolio.id}
+                      value={portfolio.id}
+                    >
+                      {portfolio.name ||
+                        'Portefeuille fournisseur'}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={selectedCategory}
+              onValueChange={
+                setSelectedCategory
+              }
+            >
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Catégorie" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">
+                  Toutes catégories
+                </SelectItem>
+
+                {categories.map(
+                  (category) => (
+                    <SelectItem
+                      key={category}
+                      value={category}
+                    >
+                      {category}
+                    </SelectItem>
+                  ),
+                )}
               </SelectContent>
             </Select>
           </div>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <SortableTableHead column="name" currentSort={suppliersTable.sortColumn as string} direction={suppliersTable.sortDirection} onSort={c => suppliersTable.toggleSort(c as any)}>Fournisseur</SortableTableHead>
-                <TableHead>Catégorie</TableHead>
-                <SortableTableHead column="score" currentSort={suppliersTable.sortColumn as string} direction={suppliersTable.sortDirection} onSort={c => suppliersTable.toggleSort(c as any)}>Score</SortableTableHead>
-                <TableHead>Assigné à</TableHead>
-                <TableHead>Dernier audit</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {suppliersTable.processedData.map(s => (
-                <TableRow key={s.id}>
-                  <TableCell className="font-medium">{s.country} {s.name}</TableCell>
-                  <TableCell><Badge variant="outline">{s.category}</Badge></TableCell>
-                  <TableCell>
-                    <span className={s.score >= 85 ? 'text-emerald-500 font-medium' : s.score >= 70 ? 'text-yellow-500 font-medium' : 'text-destructive font-medium'}>
-                      {s.score}%
-                    </span>
-                  </TableCell>
-                  <TableCell>{s.assignedTo}</TableCell>
-                  <TableCell className="text-muted-foreground">{s.lastAudit}</TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm" onClick={() => handleReassign(s.name, s.category)}>
-                      <ArrowRightLeft className="h-4 w-4 mr-1" />Réassigner
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {suppliersTable.processedData.length === 0 && (
-                <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground">Aucun résultat</TableCell></TableRow>
-              )}
-            </TableBody>
-          </Table>
+
+          <Card>
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <SortableTableHead
+                      column="name"
+                      currentSort={
+                        suppliersTable.sortColumn as string
+                      }
+                      direction={
+                        suppliersTable.sortDirection
+                      }
+                      onSort={(column) =>
+                        suppliersTable.toggleSort(
+                          column as any,
+                        )
+                      }
+                    >
+                      Fournisseur
+                    </SortableTableHead>
+
+                    <TableHead>
+                      Portefeuille
+                    </TableHead>
+
+                    <TableHead>
+                      Catégorie
+                    </TableHead>
+
+                    <SortableTableHead
+                      column="score"
+                      currentSort={
+                        suppliersTable.sortColumn as string
+                      }
+                      direction={
+                        suppliersTable.sortDirection
+                      }
+                      onSort={(column) =>
+                        suppliersTable.toggleSort(
+                          column as any,
+                        )
+                      }
+                    >
+                      Score
+                    </SortableTableHead>
+
+                    <TableHead>
+                      Responsable
+                    </TableHead>
+
+                    <TableHead>
+                      Dernier audit
+                    </TableHead>
+
+                    <TableHead>
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {suppliersTable.processedData.map(
+                    (supplier) => (
+                      <TableRow
+                        key={supplier.id}
+                      >
+                        <TableCell className="font-medium">
+                          {supplier.country}{' '}
+                          {supplier.name}
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge
+                            variant={
+                              supplier.portfolioId
+                                ? 'secondary'
+                                : 'outline'
+                            }
+                          >
+                            {supplier.portfolioName}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge variant="outline">
+                            {supplier.category}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell>
+                          <span
+                            className={
+                              supplier.score >=
+                              85
+                                ? 'font-medium text-emerald-500'
+                                : supplier.score >=
+                                    70
+                                  ? 'font-medium text-yellow-500'
+                                  : 'font-medium text-destructive'
+                            }
+                          >
+                            {supplier.score}%
+                          </span>
+                        </TableCell>
+
+                        <TableCell>
+                          {supplier.assignedTo}
+                        </TableCell>
+
+                        <TableCell className="text-muted-foreground">
+                          {supplier.lastAudit}
+                        </TableCell>
+
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              handleReassign(
+                                supplier.name,
+                                supplier.category,
+                              )
+                            }
+                          >
+                            <ArrowRightLeft className="mr-1 h-4 w-4" />
+                            Réassigner
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ),
+                  )}
+
+                  {suppliersTable
+                    .processedData.length ===
+                    0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="py-8 text-center text-muted-foreground"
+                      >
+                        Aucun fournisseur
+                        correspondant aux filtres.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
         </TabsContent>
 
-        {/* Tab 3: Manager View */}
-        <TabsContent value="manager" className="mt-4 space-y-4">
+        {/* Manager */}
+        <TabsContent
+          value="manager"
+          className="mt-4 space-y-4"
+        >
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2"><BarChart3 className="h-5 w-5" /> Répartition de charge</CardTitle>
-              <CardDescription>Charge par responsable — basée sur les assignations réelles</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Répartition des portefeuilles
+              </CardTitle>
+
+              <CardDescription>
+                Charge opérationnelle par responsable,
+                calculée à partir des fournisseurs
+                effectivement affectés.
+              </CardDescription>
             </CardHeader>
+
             <CardContent>
               <div className="space-y-4">
-                {Object.entries(suppliersByAssignee).map(([name, suppliers]) => {
-                  const maxCapacity = 10;
-                  const loadPct = Math.round((suppliers.length / maxCapacity) * 100);
-                  const isOverloaded = loadPct >= 90;
-                  const avgScoreEmp = suppliers.length > 0 ? Math.round(suppliers.reduce((s, p) => s + p.score, 0) / suppliers.length) : 0;
-                  const alertCount = suppliers.reduce((s, p) => s + p.alerts, 0);
+                {Object.entries(
+                  suppliersByResponsible,
+                ).map(
+                  ([
+                    responsible,
+                    responsibleSuppliers,
+                  ]) => {
+                    const maxCapacity = 10;
 
-                  return (
-                    <div key={name} className="p-4 rounded-lg border space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-medium">{name}</p>
-                          <p className="text-sm text-muted-foreground">{suppliers.length} fournisseurs</p>
+                    const loadPercentage =
+                      Math.round(
+                        (responsibleSuppliers.length /
+                          maxCapacity) *
+                          100,
+                      );
+
+                    const averageResponsibleScore =
+                      responsibleSuppliers.length >
+                      0
+                        ? Math.round(
+                            responsibleSuppliers.reduce(
+                              (total, supplier) =>
+                                total +
+                                supplier.score,
+                              0,
+                            ) /
+                              responsibleSuppliers.length,
+                          )
+                        : 0;
+
+                    const alertCount =
+                      responsibleSuppliers.reduce(
+                        (total, supplier) =>
+                          total +
+                          supplier.alerts,
+                        0,
+                      );
+
+                    return (
+                      <div
+                        key={responsible}
+                        className="space-y-3 rounded-lg border p-4"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-medium">
+                              {responsible}
+                            </p>
+
+                            <p className="text-sm text-muted-foreground">
+                              {
+                                responsibleSuppliers.length
+                              }{' '}
+                              fournisseur
+                              {responsibleSuppliers.length >
+                              1
+                                ? 's'
+                                : ''}
+                            </p>
+                          </div>
+
+                          {loadPercentage >=
+                            90 && (
+                            <Badge variant="destructive">
+                              Surcharge
+                            </Badge>
+                          )}
                         </div>
-                        <div className="flex items-center gap-3">
-                          {isOverloaded && <Badge variant="destructive">Surcharge</Badge>}
+
+                        <div className="grid grid-cols-3 gap-4 text-sm">
+                          <div>
+                            <p className="text-muted-foreground">
+                              Charge
+                            </p>
+
+                            <p
+                              className={`font-bold ${getLoadColor(
+                                responsibleSuppliers.length,
+                                maxCapacity,
+                              )}`}
+                            >
+                              {
+                                responsibleSuppliers.length
+                              }
+                              /{maxCapacity}
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-muted-foreground">
+                              Score moyen
+                            </p>
+
+                            <p className="font-bold">
+                              {
+                                averageResponsibleScore
+                              }
+                              %
+                            </p>
+                          </div>
+
+                          <div>
+                            <p className="text-muted-foreground">
+                              Alertes
+                            </p>
+
+                            <p
+                              className={`font-bold ${
+                                alertCount > 0
+                                  ? 'text-destructive'
+                                  : 'text-emerald-500'
+                              }`}
+                            >
+                              {alertCount}
+                            </p>
+                          </div>
                         </div>
+
+                        <Progress
+                          value={
+                            loadPercentage
+                          }
+                          className="h-2"
+                        />
                       </div>
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <p className="text-muted-foreground">Charge</p>
-                          <p className={`font-bold ${getLoadColor(suppliers.length, maxCapacity)}`}>{suppliers.length}/{maxCapacity}</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Score moyen</p>
-                          <p className="font-bold">{avgScoreEmp}%</p>
-                        </div>
-                        <div>
-                          <p className="text-muted-foreground">Alertes</p>
-                          <p className={`font-bold ${alertCount > 0 ? 'text-destructive' : 'text-emerald-500'}`}>{alertCount}</p>
-                        </div>
-                      </div>
-                      <Progress value={loadPct} className="h-2" />
-                    </div>
-                  );
-                })}
+                    );
+                  },
+                )}
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>
+                Référentiel de gestion
+              </CardTitle>
+
+              <CardDescription>
+                Règle d’architecture du pôle.
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                <strong className="text-foreground">
+                  Portefeuille :
+                </strong>{' '}
+                unité de pilotage d’un ensemble de
+                fournisseurs.
+              </p>
+
+              <p>
+                <strong className="text-foreground">
+                  Catégorie :
+                </strong>{' '}
+                caractéristique d’un fournisseur,
+                utilisée pour filtrer et analyser.
+              </p>
+
+              <p>
+                <strong className="text-foreground">
+                  Responsable :
+                </strong>{' '}
+                collaborateur chargé du suivi du
+                portefeuille.
+              </p>
+
+              <p>
+                <strong className="text-foreground">
+                  Qualité :
+                </strong>{' '}
+                score et alertes restent attachés
+                aux fournisseurs, puis agrégés au
+                niveau du portefeuille.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -333,8 +1092,12 @@ export default function SupplierPortfolios() {
         <AssignmentSuggestion
           open={assignmentOpen}
           onOpenChange={setAssignmentOpen}
-          supplierName={selectedSupplier.name}
-          supplierCategory={selectedSupplier.category}
+          supplierName={
+            selectedSupplier.name
+          }
+          supplierCategory={
+            selectedSupplier.category
+          }
         />
       )}
     </div>
