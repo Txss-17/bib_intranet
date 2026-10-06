@@ -1252,15 +1252,11 @@ export default function SupplierPortfolios() {
       {selectedSupplier && (
         <AssignmentSuggestion
           open={assignmentOpen}
-          onOpenChange={
-            setAssignmentOpen
-          }
-          supplierName={
-            selectedSupplier.name
-          }
-          supplierCategory={
-            selectedSupplier.category
-          }
+          onOpenChange={setAssignmentOpen}
+          supplierId={selectedSupplier.id}
+          supplierName={selectedSupplier.name}
+          portfolioId={selectedSupplier.portfolioId}
+          supplierCategory={selectedSupplier.category}
         />
       )}
     </div>
