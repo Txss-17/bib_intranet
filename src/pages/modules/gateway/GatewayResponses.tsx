@@ -721,4 +721,3 @@ export default function GatewayResponses() {
     </div>
   );
 }
-```
