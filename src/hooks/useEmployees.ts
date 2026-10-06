@@ -1,67 +1,198 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+} from '@tanstack/react-query';
+
 import { supabase } from '@/integrations/supabase/client';
+
+export type CollaboratorType =
+  | 'internal'
+  | 'external'
+  | 'provider'
+  | 'consultant'
+  | 'apprentice'
+  | 'intern'
+  | 'other';
+
+export type HrStatus =
+  | 'active'
+  | 'onboarding'
+  | 'leave'
+  | 'suspended'
+  | 'leaving'
+  | 'archived';
 
 export interface Employee {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
-  pole: string;
-  position: string;
-  status: string;
-  start_date: string | null;
-  phone: string | null;
+  position: string | null;
+  poles: string[] | null;
+  seniority: string | null;
+  work_mode: string | null;
+  subsidiary: string | null;
+  manager_id: string | null;
+
+  collaborator_type: CollaboratorType;
+  hr_status: HrStatus;
+
   created_at: string | null;
   updated_at: string | null;
 }
 
 const from = (table: string) => (supabase as any).from(table);
 
-export const useEmployees = (search?: string) => {
+export interface EmployeeFilters {
+  search?: string;
+  collaboratorType?: CollaboratorType | 'all';
+  hrStatus?: HrStatus | 'all';
+  pole?: string | 'all';
+  position?: string | 'all';
+}
+
+export const useEmployees = (
+  filters: EmployeeFilters = {},
+) => {
   return useQuery({
-    queryKey: ['employees', search],
+    queryKey: ['rh-collaborators', filters],
+
     queryFn: async () => {
-      let query = from('employees').select('*').order('name');
-      if (search) {
-        query = query.or(`name.ilike.%${search}%,pole.ilike.%${search}%,position.ilike.%${search}%`);
+      let query = from('profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          email,
+          position,
+          poles,
+          seniority,
+          work_mode,
+          subsidiary,
+          manager_id,
+          collaborator_type,
+          hr_status,
+          created_at,
+          updated_at
+        `)
+        .order('first_name', {
+          ascending: true,
+        });
+
+      if (filters.collaboratorType && filters.collaboratorType !== 'all') {
+        query = query.eq(
+          'collaborator_type',
+          filters.collaboratorType,
+        );
       }
+
+      if (filters.hrStatus && filters.hrStatus !== 'all') {
+        query = query.eq(
+          'hr_status',
+          filters.hrStatus,
+        );
+      }
+
+      if (filters.position && filters.position !== 'all') {
+        query = query.eq(
+          'position',
+          filters.position,
+        );
+      }
+
       const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as Employee[];
+
+      if (error) {
+        throw error;
+      }
+
+      let result = (data || []) as Employee[];
+
+      if (filters.search?.trim()) {
+        const term = filters.search.trim().toLowerCase();
+
+        result = result.filter((employee) => {
+          const name = `${employee.first_name} ${employee.last_name}`
+            .toLowerCase();
+
+          const email = employee.email?.toLowerCase() ?? '';
+
+          const position =
+            employee.position?.toLowerCase() ?? '';
+
+          const poles =
+            Array.isArray(employee.poles)
+              ? employee.poles.join(' ').toLowerCase()
+              : '';
+
+          return (
+            name.includes(term) ||
+            email.includes(term) ||
+            position.includes(term) ||
+            poles.includes(term)
+          );
+        });
+      }
+
+      if (filters.pole && filters.pole !== 'all') {
+        result = result.filter((employee) =>
+          Array.isArray(employee.poles)
+            ? employee.poles.includes(filters.pole as string)
+            : false,
+        );
+      }
+
+      return result;
     },
   });
 };
 
-export const useCreateEmployee = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (employee: Omit<Employee, 'id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await from('employees').insert(employee).select().single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
-  });
-};
 
 export const useUpdateEmployee = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Employee> & { id: string }) => {
-      const { data, error } = await from('employees').update(updates).eq('id', id).select().single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
-  });
-};
+  const queryClient = useQueryClient();
 
-export const useDeleteEmployee = () => {
-  const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await from('employees').delete().eq('id', id);
-      if (error) throw error;
+    mutationFn: async ({
+      id,
+      ...updates
+    }: Partial<Employee> & { id: string }) => {
+      const { data, error } = await from('profiles')
+        .update(updates)
+        .eq('id', id)
+        .select(`
+          id,
+          first_name,
+          last_name,
+          email,
+          position,
+          poles,
+          seniority,
+          work_mode,
+          subsidiary,
+          manager_id,
+          collaborator_type,
+          hr_status,
+          created_at,
+          updated_at
+        `)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data as Employee;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['employees'] }),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ['rh-collaborators'],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ['employees'],
+      });
+    },
   });
 };
