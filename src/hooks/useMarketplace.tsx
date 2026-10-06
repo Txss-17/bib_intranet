@@ -583,12 +583,15 @@ export function useMarketplaceCustomers(search = "") {
 
 export type MarketplaceProduct = {
   id: string;
+  platform_id: string | null;
   name: string;
-  shop_sku: string | null;
+  sku: string | null;
   category: string | null;
   status: string | null;
-  is_active: boolean | null;
   shop_id: string | null;
+  unit_price: number | null;
+  currency: string | null;
+  platform_publish_status: string | null;
   created_at: string | null;
   updated_at: string | null;
 };
@@ -598,15 +601,18 @@ export function useMarketplaceProducts() {
     queryKey: ['marketplace', 'products'],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
-        .from('product_catalog')
+        .from('products')
         .select(`
           id,
+          platform_id,
           name,
-          shop_sku,
+          sku,
           category,
           status,
-          is_active,
           shop_id,
+          unit_price,
+          currency,
+          platform_publish_status,
           created_at,
           updated_at
         `)
