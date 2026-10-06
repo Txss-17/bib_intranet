@@ -1,35 +1,36 @@
 -- ============================================================
--- MARKETPLACE — LIAISON PRODUIT ↔ BOUTIQUE
+-- Marketplace — liaison produit ↔ boutique
 -- ============================================================
 --
--- BIB Platform reste la source de vérité commerciale.
+-- Architecture :
 --
--- Platform :
+-- BIB Platform
 --   products.boutique_id
+--          ↓
+-- Intranet shops.platform_id
+--          ↓
+-- Intranet shops.id
+--          ↓
+-- Intranet products.shop_id
 --
--- Intranet :
---   shops.platform_id = identifiant boutique Platform
---   products.shop_id  = identifiant interne shops.id
---
--- Marketplace peut ainsi afficher :
---   Produit → Boutique → Marchand
---
--- Marketplace ne valide PAS les produits.
--- La validation produit reste portée par les pôles compétents.
+-- IMPORTANT :
+-- Ne pas utiliser products.platform_id = shops.platform_id.
+-- platform_id identifie respectivement le produit et la boutique
+-- côté plateforme ; ce ne sont pas les mêmes identifiants métier.
 -- ============================================================
 
 
--- ------------------------------------------------------------
--- 1. Ajouter la boutique interne au produit
--- ------------------------------------------------------------
+-- ============================================================
+-- 1. AJOUT DE LA BOUTIQUE SUR LE PRODUIT
+-- ============================================================
 
 ALTER TABLE public.products
   ADD COLUMN IF NOT EXISTS shop_id UUID;
 
 
--- ------------------------------------------------------------
--- 2. Relation vers la boutique Intranet
--- ------------------------------------------------------------
+-- ============================================================
+-- 2. CONTRAINTE DE RÉFÉRENCE
+-- ============================================================
 
 DO $$
 BEGIN
@@ -37,60 +38,50 @@ BEGIN
     SELECT 1
     FROM pg_constraint
     WHERE conname = 'products_shop_id_fkey'
+      AND conrelid = 'public.products'::regclass
   ) THEN
+
     ALTER TABLE public.products
       ADD CONSTRAINT products_shop_id_fkey
       FOREIGN KEY (shop_id)
       REFERENCES public.shops(id)
       ON DELETE SET NULL;
+
   END IF;
 END
 $$;
 
 
--- ------------------------------------------------------------
--- 3. Index
--- ------------------------------------------------------------
+-- ============================================================
+-- 3. INDEX
+-- ============================================================
 
 CREATE INDEX IF NOT EXISTS idx_products_shop_id
   ON public.products(shop_id);
 
 
--- ------------------------------------------------------------
--- 4. Commentaire documentaire
--- ------------------------------------------------------------
+-- ============================================================
+-- 4. DOCUMENTATION DU CHAMP
+-- ============================================================
 
 COMMENT ON COLUMN public.products.shop_id IS
-  'Boutique Intranet associée au produit. Résolue depuis products.boutique_id côté BIB Platform via shops.platform_id.';
+  'Boutique Intranet associée au produit. '
+  'La relation est résolue depuis products.boutique_id côté BIB Platform '
+  'vers shops.platform_id, puis vers shops.id.';
 
 
--- ------------------------------------------------------------
--- 5. Synchronisation des produits déjà présents
--- ------------------------------------------------------------
+-- ============================================================
+-- 5. CONTRÔLE DE COHÉRENCE
+-- ============================================================
 --
--- Lorsque le produit possède déjà platform_id et que la boutique
--- correspondante existe dans shops, on peut reconstruire la
--- relation sans dépendre d''une nouvelle synchronisation.
+-- Cette migration ne renseigne volontairement PAS shop_id
+-- pour les produits existants.
 --
--- Aucun produit non identifiable n''est artificiellement rattaché.
--- ------------------------------------------------------------
-
-UPDATE public.products p
-SET shop_id = s.id
-FROM public.shops s
-WHERE p.shop_id IS NULL
-  AND p.platform_id IS NOT NULL
-  AND s.platform_id IS NOT NULL
-  AND p.platform_id = s.platform_id;
-
-
--- ------------------------------------------------------------
--- 6. RLS
--- ------------------------------------------------------------
+-- Le remplissage doit être effectué par platform-bridge à partir
+-- de la véritable relation BIB Platform products.boutique_id.
 --
--- Aucun nouveau droit d''écriture n''est accordé à Marketplace.
--- La politique SELECT existante sur products reste utilisée.
---
--- Marketplace ne reçoit donc aucune capacité de validation,
--- modification ou publication du produit.
--- ------------------------------------------------------------
+-- Cela évite une association incorrecte entre :
+--   products.platform_id
+-- et
+--   shops.platform_id.
+-- ============================================================
