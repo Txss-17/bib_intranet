@@ -1,14 +1,36 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+
+import {
+  Search,
+  Plus,
+  Mail,
+  Edit,
+  Loader2,
+  ShieldCheck,
+  UserCog,
+  SlidersHorizontal,
+  Briefcase,
+  Users,
+  UserCheck,
+  UserX,
+  Clock3,
+} from 'lucide-react';
+
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
+
 import { Button } from '@/components/ui/button';
+
 import { Input } from '@/components/ui/input';
+
 import {
   Table,
   TableBody,
@@ -17,26 +39,20 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+
 import {
   Avatar,
   AvatarFallback,
 } from '@/components/ui/avatar';
+
 import {
-  Search,
-  Plus,
-  Mail,
-  Edit,
-  Trash2,
-  Loader2,
-  UserPlus,
-  ShieldCheck,
-  UserCog,
-} from 'lucide-react';
-import {
-  Link,
-  useNavigate,
-} from 'react-router-dom';
-import { ExportButtons } from '@/components/ExportButtons';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
 import {
   Dialog,
   DialogContent,
@@ -45,152 +61,208 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+
 import { Label } from '@/components/ui/label';
+
+import { ExportButtons } from '@/components/ExportButtons';
+
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
+  Employee,
+  CollaboratorType,
+  HrStatus,
   useEmployees,
-  useCreateEmployee,
   useUpdateEmployee,
-  useDeleteEmployee,
 } from '@/hooks/useEmployees';
+
+
+const collaboratorTypeLabels: Record<
+  CollaboratorType,
+  string
+> = {
+  internal: 'Interne',
+  external: 'Externe',
+  provider: 'Prestataire',
+  consultant: 'Consultant',
+  apprentice: 'Alternant',
+  intern: 'Stagiaire',
+  other: 'Autre',
+};
+
+
+const statusLabels: Record<HrStatus, string> = {
+  active: 'Actif',
+  onboarding: 'En onboarding',
+  leave: 'En congé',
+  suspended: 'Suspendu',
+  leaving: 'Sortant',
+  archived: 'Archivé',
+};
+
+
+const statusVariant = (
+  status: HrStatus,
+) => {
+  switch (status) {
+    case 'active':
+      return 'default' as const;
+
+    case 'suspended':
+    case 'leaving':
+      return 'destructive' as const;
+
+    case 'archived':
+      return 'secondary' as const;
+
+    default:
+      return 'outline' as const;
+  }
+};
+
+
+const typeBadgeClass = (
+  type: CollaboratorType,
+) => {
+  switch (type) {
+    case 'internal':
+      return 'border-primary/30 text-primary';
+
+    case 'external':
+      return 'border-blue-500/30 text-blue-600';
+
+    case 'provider':
+      return 'border-orange-500/30 text-orange-600';
+
+    case 'consultant':
+      return 'border-purple-500/30 text-purple-600';
+
+    case 'apprentice':
+      return 'border-green-500/30 text-green-600';
+
+    case 'intern':
+      return 'border-yellow-500/30 text-yellow-600';
+
+    default:
+      return '';
+  }
+};
+
+
+const getInitials = (
+  employee: Employee,
+) => {
+  return `${employee.first_name?.[0] ?? ''}${employee.last_name?.[0] ?? ''}`
+    .toUpperCase();
+};
+
+
+const getFullName = (
+  employee: Employee,
+) => {
+  return `${employee.first_name ?? ''} ${employee.last_name ?? ''}`.trim();
+};
+
 
 export default function Employees() {
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingEmployee, setEditingEmployee] = useState<any>(null);
 
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    pole: '',
-    position: '',
-    status: 'active',
-    start_date: '',
-  });
+  const [typeFilter, setTypeFilter] =
+    useState<CollaboratorType | 'all'>('all');
+
+  const [statusFilter, setStatusFilter] =
+    useState<HrStatus | 'all'>('all');
+
+  const [poleFilter, setPoleFilter] =
+    useState<string>('all');
+
+  const [positionFilter, setPositionFilter] =
+    useState<string>('all');
+
+  const [editingEmployee, setEditingEmployee] =
+    useState<Employee | null>(null);
+
+  const filters = {
+    search: searchTerm || undefined,
+    collaboratorType: typeFilter,
+    hrStatus: statusFilter,
+    pole: poleFilter,
+    position: positionFilter,
+  };
 
   const {
     data: employees = [],
     isLoading,
-  } = useEmployees(searchTerm || undefined);
+    isError,
+    error,
+  } = useEmployees(filters);
 
-  const createEmployee = useCreateEmployee();
   const updateEmployee = useUpdateEmployee();
-  const deleteEmployee = useDeleteEmployee();
 
-  const handleOpenForm = (employee?: any) => {
-    if (employee) {
-      setEditingEmployee(employee);
 
-      setFormData({
-        name: employee.name ?? '',
-        email: employee.email ?? '',
-        pole: employee.pole ?? '',
-        position: employee.position ?? '',
-        status: employee.status ?? 'active',
-        start_date: employee.start_date ?? '',
-      });
-    } else {
-      setEditingEmployee(null);
+  const poles = useMemo(() => {
+    const values = new Set<string>();
 
-      setFormData({
-        name: '',
-        email: '',
-        pole: '',
-        position: '',
-        status: 'active',
-        start_date: '',
-      });
-    }
+    employees.forEach((employee) => {
+      if (Array.isArray(employee.poles)) {
+        employee.poles.forEach((pole) => {
+          if (pole) {
+            values.add(pole);
+          }
+        });
+      }
+    });
 
-    setIsFormOpen(true);
-  };
+    return Array.from(values).sort();
+  }, [employees]);
 
-  const handleSubmit = () => {
-    if (!formData.name.trim() || !formData.email.trim()) {
-      toast.error('Le nom et l’email sont obligatoires.');
-      return;
-    }
 
-    const data = {
-      ...formData,
-      start_date: formData.start_date || null,
-      phone: null,
-    };
+  const positions = useMemo(() => {
+    const values = new Set<string>();
 
-    if (editingEmployee) {
-      updateEmployee.mutate(
-        {
-          id: editingEmployee.id,
-          ...data,
-        },
-        {
-          onSuccess: () => {
-            toast.success('Collaborateur modifié');
-            setIsFormOpen(false);
-          },
-          onError: (error: any) => {
-            toast.error(
-              error?.message || 'Impossible de modifier le collaborateur.',
-            );
-          },
-        },
+    employees.forEach((employee) => {
+      if (employee.position) {
+        values.add(employee.position);
+      }
+    });
+
+    return Array.from(values).sort();
+  }, [employees]);
+
+
+  const total = employees.length;
+
+  const activeCount = employees.filter(
+    (employee) => employee.hr_status === 'active',
+  ).length;
+
+  const internalCount = employees.filter(
+    (employee) => employee.collaborator_type === 'internal',
+  ).length;
+
+  const externalCount = employees.filter(
+    (employee) =>
+      employee.collaborator_type !== 'internal',
+  ).length;
+
+
+  const handleContact = (
+    employee: Employee,
+  ) => {
+    if (!employee.email) {
+      toast.error(
+        'Aucune adresse email professionnelle disponible.',
       );
 
-      return;
-    }
-
-    createEmployee.mutate(data as any, {
-      onSuccess: () => {
-        toast.success('Collaborateur ajouté');
-        setIsFormOpen(false);
-      },
-      onError: (error: any) => {
-        toast.error(
-          error?.message || 'Impossible d’ajouter le collaborateur.',
-        );
-      },
-    });
-  };
-
-  const handleDelete = (id: string) => {
-    const confirmed = window.confirm(
-      'Voulez-vous réellement supprimer ce collaborateur ?',
-    );
-
-    if (!confirmed) return;
-
-    deleteEmployee.mutate(id, {
-      onSuccess: () => {
-        toast.success('Collaborateur supprimé');
-      },
-      onError: (error: any) => {
-        toast.error(
-          error?.message || 'Impossible de supprimer le collaborateur.',
-        );
-      },
-    });
-  };
-
-  const handleContact = (employee: any) => {
-    if (!employee.email) {
-      toast.error('Aucune adresse email disponible.');
       return;
     }
 
     navigate('/modules/gateway/compose', {
       state: {
         to: employee.email,
-        recipientName: employee.name,
-        subject: `Contact RH — ${employee.name}`,
-        message: `Bonjour ${employee.name},
+        recipientName: getFullName(employee),
+        subject: `Contact RH — ${getFullName(employee)}`,
+        message: `Bonjour ${employee.first_name},
 
 Je vous contacte au nom du pôle RH de B.I.B.
 
@@ -200,15 +272,41 @@ Bien cordialement,
     });
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .filter(Boolean)
-      .map((part) => part[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
+
+  const handleEdit = (
+    employee: Employee,
+  ) => {
+    setEditingEmployee(employee);
   };
+
+
+  const handleSave = async () => {
+    if (!editingEmployee) {
+      return;
+    }
+
+    try {
+      await updateEmployee.mutateAsync({
+        id: editingEmployee.id,
+        collaborator_type:
+          editingEmployee.collaborator_type,
+        hr_status:
+          editingEmployee.hr_status,
+      });
+
+      toast.success(
+        'Informations RH mises à jour.',
+      );
+
+      setEditingEmployee(null);
+    } catch (err: any) {
+      toast.error(
+        err?.message ||
+          'Impossible de mettre à jour le collaborateur.',
+      );
+    }
+  };
+
 
   if (isLoading) {
     return (
@@ -218,24 +316,52 @@ Bien cordialement,
     );
   }
 
+
+  if (isError) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="py-10 text-center">
+            <p className="font-medium text-destructive">
+              Impossible de charger le référentiel RH.
+            </p>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              {(error as any)?.message ||
+                'Une erreur est survenue lors de la lecture des collaborateurs.'}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+
   return (
     <div className="space-y-6">
-      {/* En-tête */}
+      {/* ======================================================
+          HEADER
+          ====================================================== */}
+
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
-          <h1 className="text-3xl font-bold">
-            Collaborateurs
-          </h1>
+          <div className="flex items-center gap-2">
+            <Users className="h-6 w-6 text-primary" />
 
-          <p className="text-muted-foreground">
-            Gestion des collaborateurs, de leurs comptes et de leurs affectations.
+            <h1 className="text-3xl font-bold">
+              Collaborateurs
+            </h1>
+          </div>
+
+          <p className="mt-1 text-muted-foreground">
+            Référentiel RH des personnes travaillant avec B.I.B.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <ExportButtons
             filename="collaborateurs"
-            title="Liste des collaborateurs"
+            title="Référentiel des collaborateurs"
             columns={[
               {
                 header: 'Nom',
@@ -244,6 +370,10 @@ Bien cordialement,
               {
                 header: 'Email',
                 accessor: 'email',
+              },
+              {
+                header: 'Type',
+                accessor: 'collaborator_type',
               },
               {
                 header: 'Pôle',
@@ -255,34 +385,121 @@ Bien cordialement,
               },
               {
                 header: 'Statut',
-                accessor: 'status',
-              },
-              {
-                header: "Date d'arrivée",
-                accessor: 'start_date',
+                accessor: 'hr_status',
               },
             ]}
-            data={employees}
+            data={employees.map((employee) => ({
+              name: getFullName(employee),
+              email: employee.email,
+              collaborator_type:
+                collaboratorTypeLabels[
+                  employee.collaborator_type
+                ],
+              pole: Array.isArray(employee.poles)
+                ? employee.poles.join(', ')
+                : '',
+              position:
+                employee.position || '',
+              hr_status:
+                statusLabels[
+                  employee.hr_status
+                ],
+            }))}
           />
 
-          <Button
-            variant="outline"
-            asChild
-          >
+          <Button asChild>
             <Link to="/pole/rh/onboarding">
-              <UserPlus className="mr-2 h-4 w-4" />
-              Ajouter un dossier
+              <Plus className="mr-2 h-4 w-4" />
+              Nouveau collaborateur
             </Link>
-          </Button>
-
-          <Button onClick={() => handleOpenForm()}>
-            <Plus className="mr-2 h-4 w-4" />
-            Ajouter un collaborateur
           </Button>
         </div>
       </div>
 
-      {/* Accès & permissions */}
+
+      {/* ======================================================
+          KPI
+          ====================================================== */}
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Total
+                </p>
+
+                <p className="mt-1 text-2xl font-semibold">
+                  {total}
+                </p>
+              </div>
+
+              <Users className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Internes
+                </p>
+
+                <p className="mt-1 text-2xl font-semibold">
+                  {internalCount}
+                </p>
+              </div>
+
+              <UserCheck className="h-5 w-5 text-primary" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Externes
+                </p>
+
+                <p className="mt-1 text-2xl font-semibold">
+                  {externalCount}
+                </p>
+              </div>
+
+              <UserX className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Actifs
+                </p>
+
+                <p className="mt-1 text-2xl font-semibold text-success">
+                  {activeCount}
+                </p>
+              </div>
+
+              <Clock3 className="h-5 w-5 text-success" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+
+      {/* ======================================================
+          ACCÈS
+          ====================================================== */}
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -295,48 +512,239 @@ Bien cordialement,
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="font-medium">
-                Administration des comptes et des rôles
+                Les accès ne sont pas définis dans cette fiche.
               </p>
 
-              <p className="text-sm text-muted-foreground">
-                Les rôles métier, leurs interfaces, leurs actions et leurs
-                périmètres seront administrés dans l’espace dédié.
-                RH pourra ensuite affecter ces rôles aux collaborateurs.
+              <p className="mt-1 text-sm text-muted-foreground">
+                RH gère l'identité et le rattachement du
+                collaborateur. Les rôles, permissions et
+                périmètres sont administrés dans leur module
+                dédié.
               </p>
             </div>
 
             <Button
               variant="outline"
-              onClick={() => navigate('/admin/roles-permissions')}
+              onClick={() =>
+                navigate('/admin/roles-permissions')
+              }
             >
               <UserCog className="mr-2 h-4 w-4" />
-              Accéder aux rôles & permissions
+              Rôles & permissions
             </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Recherche */}
-      <div className="flex items-center gap-4">
-        <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
-          <Input
-            placeholder="Rechercher un collaborateur..."
-            value={searchTerm}
-            onChange={(event) =>
-              setSearchTerm(event.target.value)
-            }
-            className="pl-10"
-          />
-        </div>
-      </div>
+      {/* ======================================================
+          FILTRES
+          ====================================================== */}
 
-      {/* Liste */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <SlidersHorizontal className="h-5 w-5" />
+            Filtres du référentiel
+          </CardTitle>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+
+            <Input
+              placeholder="Rechercher un nom, email, poste ou pôle..."
+              value={searchTerm}
+              onChange={(event) =>
+                setSearchTerm(event.target.value)
+              }
+              className="pl-10"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <Select
+              value={typeFilter}
+              onValueChange={(value) =>
+                setTypeFilter(
+                  value as CollaboratorType | 'all',
+                )
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Type de collaborateur" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">
+                  Tous les types
+                </SelectItem>
+
+                <SelectItem value="internal">
+                  Internes
+                </SelectItem>
+
+                <SelectItem value="external">
+                  Externes
+                </SelectItem>
+
+                <SelectItem value="provider">
+                  Prestataires
+                </SelectItem>
+
+                <SelectItem value="consultant">
+                  Consultants
+                </SelectItem>
+
+                <SelectItem value="apprentice">
+                  Alternants
+                </SelectItem>
+
+                <SelectItem value="intern">
+                  Stagiaires
+                </SelectItem>
+
+                <SelectItem value="other">
+                  Autres
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+
+            <Select
+              value={statusFilter}
+              onValueChange={(value) =>
+                setStatusFilter(
+                  value as HrStatus | 'all',
+                )
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Statut RH" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">
+                  Tous les statuts
+                </SelectItem>
+
+                <SelectItem value="active">
+                  Actifs
+                </SelectItem>
+
+                <SelectItem value="onboarding">
+                  En onboarding
+                </SelectItem>
+
+                <SelectItem value="leave">
+                  En congé
+                </SelectItem>
+
+                <SelectItem value="suspended">
+                  Suspendus
+                </SelectItem>
+
+                <SelectItem value="leaving">
+                  Sortants
+                </SelectItem>
+
+                <SelectItem value="archived">
+                  Archivés
+                </SelectItem>
+              </SelectContent>
+            </Select>
+
+
+            <Select
+              value={poleFilter}
+              onValueChange={setPoleFilter}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pôle" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">
+                  Tous les pôles
+                </SelectItem>
+
+                {poles.map((pole) => (
+                  <SelectItem
+                    key={pole}
+                    value={pole}
+                  >
+                    {pole}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+
+            <Select
+              value={positionFilter}
+              onValueChange={setPositionFilter}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Fonction" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">
+                  Toutes les fonctions
+                </SelectItem>
+
+                {positions.map((position) => (
+                  <SelectItem
+                    key={position}
+                    value={position}
+                  >
+                    {position}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="flex items-center justify-between border-t pt-3">
+            <p className="text-sm text-muted-foreground">
+              {employees.length} collaborateur
+              {employees.length > 1 ? 's' : ''} correspondant
+              {employees.length > 1 ? 's' : ''} aux filtres.
+            </p>
+
+            {(searchTerm ||
+              typeFilter !== 'all' ||
+              statusFilter !== 'all' ||
+              poleFilter !== 'all' ||
+              positionFilter !== 'all') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm('');
+                  setTypeFilter('all');
+                  setStatusFilter('all');
+                  setPoleFilter('all');
+                  setPositionFilter('all');
+                }}
+              >
+                Réinitialiser
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+
+      {/* ======================================================
+          TABLE
+          ====================================================== */}
+
       <Card>
         <CardHeader>
           <CardTitle>
-            Liste des collaborateurs ({employees.length})
+            Référentiel collaborateurs
           </CardTitle>
         </CardHeader>
 
@@ -350,19 +758,15 @@ Bien cordialement,
                   </TableHead>
 
                   <TableHead>
+                    Type
+                  </TableHead>
+
+                  <TableHead>
                     Pôle
                   </TableHead>
 
                   <TableHead>
-                    Poste
-                  </TableHead>
-
-                  <TableHead>
-                    Rôle
-                  </TableHead>
-
-                  <TableHead>
-                    Périmètre
+                    Fonction
                   </TableHead>
 
                   <TableHead>
@@ -370,7 +774,7 @@ Bien cordialement,
                   </TableHead>
 
                   <TableHead>
-                    Date d'arrivée
+                    Accès
                   </TableHead>
 
                   <TableHead className="text-right">
@@ -382,18 +786,17 @@ Bien cordialement,
               <TableBody>
                 {employees.map((employee) => (
                   <TableRow key={employee.id}>
-                    {/* Collaborateur */}
                     <TableCell>
                       <div className="flex items-center gap-3">
-                        <Avatar className="h-8 w-8">
+                        <Avatar className="h-9 w-9">
                           <AvatarFallback>
-                            {getInitials(employee.name)}
+                            {getInitials(employee)}
                           </AvatarFallback>
                         </Avatar>
 
                         <div>
                           <p className="font-medium">
-                            {employee.name}
+                            {getFullName(employee)}
                           </p>
 
                           <p className="text-sm text-muted-foreground">
@@ -403,72 +806,81 @@ Bien cordialement,
                       </div>
                     </TableCell>
 
-                    {/* Pôle */}
+
                     <TableCell>
-                      <Badge variant="outline">
-                        {employee.pole || 'Non affecté'}
+                      <Badge
+                        variant="outline"
+                        className={typeBadgeClass(
+                          employee.collaborator_type,
+                        )}
+                      >
+                        {
+                          collaboratorTypeLabels[
+                            employee.collaborator_type
+                          ]
+                        }
                       </Badge>
                     </TableCell>
 
-                    {/* Poste */}
+
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {Array.isArray(employee.poles) &&
+                        employee.poles.length > 0 ? (
+                          employee.poles.map((pole) => (
+                            <Badge
+                              key={pole}
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {pole}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-sm text-muted-foreground">
+                            Non affecté
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+
+
                     <TableCell>
                       {employee.position || '—'}
                     </TableCell>
 
-                    {/* Rôle */}
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <Badge variant="secondary">
-                          Non configuré
-                        </Badge>
-                      </div>
 
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        Rôle géré dans Accès & permissions
-                      </p>
-                    </TableCell>
-
-                    {/* Périmètre */}
-                    <TableCell>
-                      <span className="text-sm text-muted-foreground">
-                        Non configuré
-                      </span>
-                    </TableCell>
-
-                    {/* Statut */}
                     <TableCell>
                       <Badge
-                        variant={
-                          employee.status === 'active'
-                            ? 'default'
-                            : 'secondary'
-                        }
+                        variant={statusVariant(
+                          employee.hr_status,
+                        )}
                       >
-                        {employee.status === 'active'
-                          ? 'Actif'
-                          : 'En congé'}
+                        {
+                          statusLabels[
+                            employee.hr_status
+                          ]
+                        }
                       </Badge>
                     </TableCell>
 
-                    {/* Date */}
+
                     <TableCell>
-                      {employee.start_date
-                        ? new Date(
-                            employee.start_date,
-                          ).toLocaleDateString('fr-FR')
-                        : '—'}
+                      <span className="text-sm text-muted-foreground">
+                        Gérés séparément
+                      </span>
                     </TableCell>
 
-                    {/* Actions */}
+
                     <TableCell>
                       <div className="flex justify-end gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() =>
-                            handleOpenForm(employee)
+                            handleEdit(employee)
                           }
-                          title="Modifier"
+                          title="Modifier le statut RH"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -479,7 +891,7 @@ Bien cordialement,
                           onClick={() =>
                             handleContact(employee)
                           }
-                          title="Contacter via Gateway"
+                          title="Contacter"
                         >
                           <Mail className="h-4 w-4" />
                         </Button>
@@ -487,26 +899,39 @@ Bien cordialement,
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="text-destructive"
                           onClick={() =>
-                            handleDelete(employee.id)
+                            navigate(
+                              `/pole/rh/files?employee=${employee.id}`,
+                            )
                           }
-                          title="Supprimer"
+                          title="Dossier RH"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Briefcase className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
                   </TableRow>
                 ))}
 
+
                 {employees.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={8}
-                      className="py-8 text-center text-muted-foreground"
+                      colSpan={7}
+                      className="py-12 text-center"
                     >
-                      Aucun collaborateur trouvé.
+                      <div className="flex flex-col items-center gap-2">
+                        <Users className="h-8 w-8 text-muted-foreground" />
+
+                        <p className="font-medium">
+                          Aucun collaborateur trouvé
+                        </p>
+
+                        <p className="text-sm text-muted-foreground">
+                          Modifiez les filtres ou créez un
+                          nouveau collaborateur via Onboarding.
+                        </p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 )}
@@ -516,168 +941,112 @@ Bien cordialement,
         </CardContent>
       </Card>
 
-      {/* Formulaire collaborateur */}
+
+      {/* ======================================================
+          ÉDITION RH
+          ====================================================== */}
+
       <Dialog
-        open={isFormOpen}
-        onOpenChange={setIsFormOpen}
+        open={Boolean(editingEmployee)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingEmployee(null);
+          }
+        }}
       >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingEmployee
-                ? 'Modifier le collaborateur'
-                : 'Ajouter un collaborateur'}
+              Modifier le rattachement RH
             </DialogTitle>
 
             <DialogDescription>
-              {editingEmployee
-                ? 'Modifiez les informations administratives du collaborateur.'
-                : 'Renseignez les informations administratives du collaborateur.'}
+              Cette modification agit sur le référentiel RH
+              du collaborateur.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label>
-                Nom complet
-              </Label>
+          {editingEmployee && (
+            <div className="space-y-4 py-4">
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <p className="font-medium">
+                  {getFullName(editingEmployee)}
+                </p>
 
-              <Input
-                value={formData.name}
-                onChange={(event) =>
-                  setFormData({
-                    ...formData,
-                    name: event.target.value,
-                  })
-                }
-              />
-            </div>
+                <p className="text-sm text-muted-foreground">
+                  {editingEmployee.email}
+                </p>
+              </div>
 
-            <div className="grid gap-2">
-              <Label>
-                Email professionnel
-              </Label>
 
-              <Input
-                type="email"
-                value={formData.email}
-                onChange={(event) =>
-                  setFormData({
-                    ...formData,
-                    email: event.target.value,
-                  })
-                }
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
+              <div className="space-y-2">
                 <Label>
-                  Pôle
+                  Type de collaborateur
                 </Label>
 
                 <Select
-                  value={formData.pole}
+                  value={
+                    editingEmployee.collaborator_type
+                  }
                   onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      pole: value,
+                    setEditingEmployee({
+                      ...editingEmployee,
+                      collaborator_type:
+                        value as CollaboratorType,
                     })
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionner" />
+                    <SelectValue />
                   </SelectTrigger>
 
                   <SelectContent>
-                    <SelectItem value="Direction">
-                      Direction
+                    <SelectItem value="internal">
+                      Interne
                     </SelectItem>
 
-                    <SelectItem value="Finance">
-                      Finance
+                    <SelectItem value="external">
+                      Externe
                     </SelectItem>
 
-                    <SelectItem value="Ops">
-                      Ops
+                    <SelectItem value="provider">
+                      Prestataire
                     </SelectItem>
 
-                    <SelectItem value="Supplier">
-                      Supplier
+                    <SelectItem value="consultant">
+                      Consultant
                     </SelectItem>
 
-                    <SelectItem value="Marketplace">
-                      Marketplace
+                    <SelectItem value="apprentice">
+                      Alternant
                     </SelectItem>
 
-                    <SelectItem value="Support">
-                      Support
+                    <SelectItem value="intern">
+                      Stagiaire
                     </SelectItem>
 
-                    <SelectItem value="Marketing">
-                      Marketing
-                    </SelectItem>
-
-                    <SelectItem value="RH">
-                      RH
-                    </SelectItem>
-
-                    <SelectItem value="Audit">
-                      Audit
-                    </SelectItem>
-
-                    <SelectItem value="Compliance">
-                      Compliance
-                    </SelectItem>
-
-                    <SelectItem value="RSE">
-                      RSE
-                    </SelectItem>
-
-                    <SelectItem value="Product">
-                      Product
-                    </SelectItem>
-
-                    <SelectItem value="Data">
-                      Data
-                    </SelectItem>
-
-                    <SelectItem value="Security">
-                      Security
+                    <SelectItem value="other">
+                      Autre
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="grid gap-2">
-                <Label>
-                  Fonction
-                </Label>
 
-                <Input
-                  value={formData.position}
-                  onChange={(event) =>
-                    setFormData({
-                      ...formData,
-                      position: event.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
+              <div className="space-y-2">
                 <Label>
-                  Statut
+                  Statut RH
                 </Label>
 
                 <Select
-                  value={formData.status}
+                  value={
+                    editingEmployee.hr_status
+                  }
                   onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      status: value,
+                    setEditingEmployee({
+                      ...editingEmployee,
+                      hr_status:
+                        value as HrStatus,
                     })
                   }
                 >
@@ -690,81 +1059,50 @@ Bien cordialement,
                       Actif
                     </SelectItem>
 
+                    <SelectItem value="onboarding">
+                      En onboarding
+                    </SelectItem>
+
                     <SelectItem value="leave">
                       En congé
                     </SelectItem>
 
-                    <SelectItem value="inactive">
-                      Inactif
+                    <SelectItem value="suspended">
+                      Suspendu
+                    </SelectItem>
+
+                    <SelectItem value="leaving">
+                      Sortant
+                    </SelectItem>
+
+                    <SelectItem value="archived">
+                      Archivé
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-
-              <div className="grid gap-2">
-                <Label>
-                  Date d'arrivée
-                </Label>
-
-                <Input
-                  type="date"
-                  value={formData.start_date}
-                  onChange={(event) =>
-                    setFormData({
-                      ...formData,
-                      start_date: event.target.value,
-                    })
-                  }
-                />
-              </div>
             </div>
-
-            {/* Accès */}
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <div className="flex items-start gap-3">
-                <ShieldCheck className="mt-0.5 h-5 w-5 text-muted-foreground" />
-
-                <div>
-                  <p className="font-medium">
-                    Rôle et accès
-                  </p>
-
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Le rôle métier et son périmètre ne sont pas encore
-                    enregistrés sur ce formulaire. Ils seront gérés dans
-                    le système central « Rôles & permissions » puis
-                    affectés au compte par le pôle RH.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
 
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() =>
-                setIsFormOpen(false)
+                setEditingEmployee(null)
               }
             >
               Annuler
             </Button>
 
             <Button
-              onClick={handleSubmit}
-              disabled={
-                createEmployee.isPending ||
-                updateEmployee.isPending
-              }
+              onClick={handleSave}
+              disabled={updateEmployee.isPending}
             >
-              {(createEmployee.isPending ||
-                updateEmployee.isPending) && (
+              {updateEmployee.isPending && (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               )}
 
-              {editingEmployee
-                ? 'Modifier'
-                : 'Ajouter'}
+              Enregistrer
             </Button>
           </DialogFooter>
         </DialogContent>
