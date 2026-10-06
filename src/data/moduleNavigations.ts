@@ -325,86 +325,62 @@ export const moduleNavigations: Record<
     ],
   },
 
-    marketplace: {
-    id: 'marketplace',
-    label: 'Marketplace & Customer',
-    description:
-      'Marchands, portefeuilles, boutiques et développement commercial',
-    items: [
-      {
-        id: 'overview',
-        label: 'Vue d’ensemble',
-        path: '/pole/marketplace',
-        icon: 'LayoutDashboard',
-      },
-      {
-        id: 'merchants',
-        label: 'Marchands & portefeuilles',
-        path: '/pole/marketplace/merchants',
-        icon: 'UsersRound',
-      },
-      {
-        id: 'portfolio',
-        label: 'Portefeuille',
-        path: '/pole/marketplace/portfolio',
-        icon: 'Briefcase',
-      },
-      {
-        id: 'stores',
-        label: 'Boutiques',
-        path: '/pole/marketplace/stores',
-        icon: 'Store',
-      },
-      {
-        id: 'opportunities',
-        label: 'Opportunités & développement',
-        path: '/pole/marketplace/opportunities',
-        icon: 'TrendingUp',
-      },
-      {
-        id: 'analytics',
-        label: 'Performance portefeuille',
-        path: '/pole/marketplace/analytics',
-        icon: 'BarChart3',
-      },
-      {
-        id: 'subscriptions',
-        label: 'Abonnements & add-ons marchands',
-        path: '/pole/marketplace/subscriptions',
-        icon: 'CreditCard',
-      },
-      {
-        id: 'products',
-        label: 'Produits',
-        path: '/pole/marketplace/products',
-        icon: 'Package',
-      },
-      {
-        id: 'customers',
-        label: 'Clients',
-        path: '/pole/marketplace/customers',
-        icon: 'Users',
-      },
-      {
-        id: 'orders',
-        label: 'Commandes',
-        path: '/pole/marketplace/orders',
-        icon: 'ShoppingBag',
-      },
-      {
-        id: 'subscribers',
-        label: 'Abonnés BIB',
-        path: '/pole/marketplace/subscribers',
-        icon: 'BadgeCheck',
-      },
-      {
-        id: 'favorites',
-        label: 'Favoris & suivi',
-        path: '/pole/marketplace/favorites',
-        icon: 'Heart',
-      },
-    ],
-  },
+marketplace: {
+  id: 'marketplace',
+  label: 'Marketplace',
+  description:
+    'Marchands, portefeuilles, boutiques et développement commercial',
+  items: [
+    {
+      id: 'overview',
+      label: 'Vue d’ensemble',
+      path: '/pole/marketplace',
+      icon: 'LayoutDashboard',
+    },
+    {
+      id: 'merchants',
+      label: 'Marchands & portefeuilles',
+      path: '/pole/marketplace/merchants',
+      icon: 'UsersRound',
+    },
+    {
+      id: 'portfolio',
+      label: 'Portefeuille',
+      path: '/pole/marketplace/portfolio',
+      icon: 'Briefcase',
+    },
+    {
+      id: 'stores',
+      label: 'Boutiques',
+      path: '/pole/marketplace/stores',
+      icon: 'Store',
+    },
+    {
+      id: 'opportunities',
+      label: 'Opportunités & développement',
+      path: '/pole/marketplace/opportunities',
+      icon: 'TrendingUp',
+    },
+    {
+      id: 'analytics',
+      label: 'Performance portefeuille',
+      path: '/pole/marketplace/analytics',
+      icon: 'BarChart3',
+    },
+    {
+      id: 'subscriptions',
+      label: 'Abonnements & add-ons marchands',
+      path: '/pole/marketplace/subscriptions',
+      icon: 'CreditCard',
+    },
+    {
+      id: 'products',
+      label: 'Produits',
+      path: '/pole/marketplace/products',
+      icon: 'Package',
+    },
+  ],
+},
 
   support: {
     id: 'support',
