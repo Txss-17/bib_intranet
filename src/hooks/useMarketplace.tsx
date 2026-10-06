@@ -284,6 +284,40 @@ export function useMarketplacePortfolios() {
   });
 }
 
+export function useMarketplaceMerchantAssignments() {
+  return useQuery({
+    queryKey: ['marketplace', 'merchant-portfolio-assignments'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('merchant_portfolio_assignments')
+        .select(`
+          id,
+          merchant_id,
+          portfolio_id,
+          assigned_by,
+          assigned_at,
+          ended_at,
+          reason,
+          merchant_portfolios (
+            id,
+            name,
+            owner_id,
+            role_scope,
+            status,
+            notes,
+            created_at,
+            updated_at
+          )
+        `)
+        .is('ended_at', null);
+
+      if (error) throw error;
+
+      return data ?? [];
+    },
+  });
+}
+
 export function useAssignMerchantPortfolio() {
   const queryClient = useQueryClient();
 
