@@ -564,4 +564,3 @@ function KpiCard({
     </div>
   );
 }
-```
