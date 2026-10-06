@@ -344,6 +344,12 @@ export const moduleNavigations: Record<
         icon: 'UsersRound',
       },
       {
+        id: 'portfolio',
+        label: 'Portefeuille',
+        path: '/pole/marketplace/portfolio',
+        icon: 'Briefcase',
+      },
+      {
         id: 'stores',
         label: 'Boutiques',
         path: '/pole/marketplace/stores',
