@@ -496,80 +496,80 @@ export const moduleNavigations: Record<
     ],
   },
 
-  rh: {
-    id: 'rh',
-    label: 'Ressources Humaines',
-    description:
-      'Collaborateurs, recrutement et développement',
-    items: [
-      {
-        id: 'overview',
-        label: 'Vue d’ensemble',
-        path: '/pole/rh',
-        icon: 'LayoutDashboard',
-      },
-      {
-        id: 'employees',
-        label: 'Collaborateurs',
-        path: '/pole/rh/employees',
-        icon: 'Users',
-      },
-      {
-        id: 'recruitment',
-        label: 'Recrutement',
-        path: '/pole/rh/recruitment',
-        icon: 'UserPlus',
-      },
-      {
-        id: 'files',
-        label: 'Dossiers collaborateurs',
-        path: '/pole/rh/files',
-        icon: 'FolderOpen',
-      },
-      {
-        id: 'portfolio',
-        label: 'Portefeuilles',
-        path: '/pole/rh/portfolio',
-        icon: 'Briefcase',
-      },
-      {
-        id: 'onboarding',
-        label: 'Onboarding RH — intégration collaborateur',
-        path: '/pole/rh/onboarding',
-        icon: 'DoorOpen',
-      },
-      {
-        id: 'attendance',
-        label: 'Présences',
-        path: '/pole/rh/attendance',
-        icon: 'CalendarCheck',
-      },
-      {
-        id: 'leave',
-        label: 'Congés',
-        path: '/pole/rh/leave',
-        icon: 'CalendarDays',
-      },
-      {
-        id: 'training',
-        label: 'Formation',
-        path: '/pole/rh/training',
-        icon: 'GraduationCap',
-      },
-      {
-        id: 'trips',
-        label: 'Déplacements',
-        path: '/pole/rh/trips',
-        icon: 'Plane',
-      },
-      {
-        id: 'alerts',
-        label: 'Alertes RH',
-        path: '/pole/rh/alerts',
-        icon: 'AlertTriangle',
-      },
-    ],
-  },
+rh: {
+  id: 'rh',
+  label: 'Ressources Humaines',
+  description:
+    'Collaborateurs, recrutement et développement',
+  items: [
+    {
+      id: 'overview',
+      label: 'Vue d’ensemble',
+      path: '/pole/rh',
+      icon: 'LayoutDashboard',
+    },
+    {
+      id: 'employees',
+      label: 'Collaborateurs',
+      path: '/pole/rh/employees',
+      icon: 'Users',
+    },
+    {
+      id: 'recruitment',
+      label: 'Recrutement',
+      path: '/pole/rh/recruitment',
+      icon: 'UserPlus',
+    },
+    {
+      id: 'files',
+      label: 'Dossiers collaborateurs',
+      path: '/pole/rh/files',
+      icon: 'FolderOpen',
+    },
+    {
+      id: 'onboarding',
+      label: 'Onboarding RH — intégration collaborateur',
+      path: '/pole/rh/onboarding',
+      icon: 'DoorOpen',
+    },
+    {
+      id: 'attendance',
+      label: 'Présences',
+      path: '/pole/rh/attendance',
+      icon: 'CalendarCheck',
+    },
+    {
+      id: 'leave',
+      label: 'Congés',
+      path: '/pole/rh/leave',
+      icon: 'CalendarDays',
+    },
+    {
+      id: 'training',
+      label: 'Formation',
+      path: '/pole/rh/training',
+      icon: 'GraduationCap',
+    },
+    {
+      id: 'trips',
+      label: 'Déplacements',
+      path: '/pole/rh/trips',
+      icon: 'Plane',
+    },
+    {
+      id: 'alerts',
+      label: 'Alertes RH',
+      path: '/pole/rh/alerts',
+      icon: 'AlertTriangle',
+    },
+    {
+      id: 'portfolio',
+      label: 'Portefeuille',
+      path: '/pole/rh/portfolio',
+      icon: 'Briefcase',
+    },
+  ],
+},
 
   audit: {
     id: 'audit',
