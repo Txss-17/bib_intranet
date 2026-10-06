@@ -68,6 +68,12 @@ export const moduleNavigations: Record<
         icon: 'AlertTriangle',
       },
       {
+        id: 'access-permissions',
+        label: 'Accès & permissions',
+        path: '/pole/rh/access',
+        icon: 'ShieldCheck',
+      },
+      {
         id: 'arbitrage',
         label: 'Arbitrages',
         path: '/pole/direction/decision-arbitrage',
