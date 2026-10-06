@@ -698,9 +698,10 @@ const App = () => (
                   path="/pole/rh/employees"
                   element={<Employees />}
                 />
-                <Route path="/pole/rh" element={<RHDashboard />} />
-                <Route path="/pole/rh/employees" element={<Employees />} />
-                <Route path="/pole/rh/files" element={<EmployeeFiles />} />
+                <Route
+                  path="/pole/rh/organization"
+                  element={<Organization />}
+                />
 
                 {/* ====================================================
                     9. QUALITÉ & AUDIT
