@@ -286,11 +286,10 @@ export default function SupplierPortfolios() {
     setAssignmentOpen,
   ] = useState(false);
 
-  const [
-    selectedSupplier,
-    setSelectedSupplier,
-  ] = useState<{
+  const [selectedSupplier, setSelectedSupplier] = useState<{
+    id: string;
     name: string;
+    portfolioId: string;
     category: string;
   } | null>(null);
 
