@@ -440,6 +440,8 @@ export const RESTRICTED_PAGES: Record<
   // MARKETPLACE
   // -------------------------------------------------------------------------
 
+  'marketplace.overview': MARKETPLACE_OWNERS,
+  
   'marketplace.merchants': MARKETPLACE_OWNERS,
 
   'marketplace.portfolio': [
