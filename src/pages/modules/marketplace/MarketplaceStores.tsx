@@ -13,9 +13,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-
 import { Input } from '@/components/ui/input';
-
 import {
   Select,
   SelectContent,
@@ -23,23 +21,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
 import { Badge } from '@/components/ui/badge';
-
 import { Button } from '@/components/ui/button';
 
 import { useMarketplaceShops } from '@/hooks/useMarketplace';
-
 import { SHOP_STATUS_LABELS } from '@/hooks/useShops';
 
 export default function MarketplaceStores() {
-  const { data: shops = [], isLoading } =
-    useMarketplaceShops();
+  const {
+    data: shops = [],
+    isLoading,
+  } = useMarketplaceShops();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] =
     useState('all');
-
   const [categoryFilter, setCategoryFilter] =
     useState('all');
 
@@ -53,7 +49,9 @@ export default function MarketplaceStores() {
               Boolean(category),
           ),
       ),
-    ).sort();
+    ).sort((a, b) =>
+      a.localeCompare(b, 'fr-FR'),
+    );
   }, [shops]);
 
   const filteredShops = useMemo(() => {
@@ -61,15 +59,18 @@ export default function MarketplaceStores() {
       search.trim().toLowerCase();
 
     return shops.filter((shop) => {
+      const searchableValues = [
+        shop.name,
+        shop.shop_code,
+        shop.category,
+        shop.country,
+        shop.activity_type,
+        shop.activity_description,
+      ];
+
       const matchesSearch =
         !normalizedSearch ||
-        [
-          shop.name,
-          shop.shop_code,
-          shop.category,
-          shop.country,
-          shop.activity_type,
-        ]
+        searchableValues
           .filter(Boolean)
           .some((value) =>
             String(value)
@@ -98,31 +99,54 @@ export default function MarketplaceStores() {
     categoryFilter,
   ]);
 
-  const activeCount = shops.filter(
-    (shop) => shop.status === 'active',
-  ).length;
+  const statusCounts = useMemo(
+    () => ({
+      active: shops.filter(
+        (shop) => shop.status === 'active',
+      ).length,
 
-  const reviewCount = shops.filter(
-    (shop) => shop.status === 'review',
-  ).length;
+      review: shops.filter(
+        (shop) => shop.status === 'review',
+      ).length,
 
-  const suspendedCount = shops.filter(
-    (shop) => shop.status === 'suspended',
-  ).length;
+      inactive: shops.filter(
+        (shop) => shop.status === 'inactive',
+      ).length,
+
+      suspended: shops.filter(
+        (shop) => shop.status === 'suspended',
+      ).length,
+
+      draft: shops.filter(
+        (shop) => shop.status === 'draft',
+      ).length,
+
+      application: shops.filter(
+        (shop) => shop.status === 'application',
+      ).length,
+
+      closed: shops.filter(
+        (shop) => shop.status === 'closed',
+      ).length,
+    }),
+    [shops],
+  );
 
   return (
     <div className="space-y-6 p-6">
+      {/* En-tête */}
       <div>
         <h1 className="text-2xl font-semibold">
           Boutiques
         </h1>
 
         <p className="mt-1 text-sm text-muted-foreground">
-          Vue Marketplace de l’ensemble des boutiques
-          rattachées aux marchands BIB.
+          Référentiel Marketplace de l’ensemble des
+          boutiques rattachées aux marchands BIB.
         </p>
       </div>
 
+      {/* Indicateurs */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="pt-6">
@@ -145,11 +169,11 @@ export default function MarketplaceStores() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-2xl font-semibold">
-              {activeCount}
+              {statusCounts.active}
             </p>
 
             <p className="text-xs text-muted-foreground">
-              Boutiques actives
+              Actives
             </p>
           </CardContent>
         </Card>
@@ -157,7 +181,7 @@ export default function MarketplaceStores() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-2xl font-semibold">
-              {reviewCount}
+              {statusCounts.review}
             </p>
 
             <p className="text-xs text-muted-foreground">
@@ -169,7 +193,7 @@ export default function MarketplaceStores() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-2xl font-semibold">
-              {suspendedCount}
+              {statusCounts.suspended}
             </p>
 
             <p className="text-xs text-muted-foreground">
@@ -179,14 +203,23 @@ export default function MarketplaceStores() {
         </Card>
       </div>
 
+      {/* Référentiel */}
       <Card>
         <CardHeader>
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <CardTitle>
-              Référentiel boutiques Marketplace
-            </CardTitle>
+            <div>
+              <CardTitle>
+                Référentiel boutiques Marketplace
+              </CardTitle>
+
+              <p className="mt-1 text-sm text-muted-foreground">
+                Suivi des boutiques existantes et de leur
+                statut dans le cycle Marketplace.
+              </p>
+            </div>
 
             <div className="flex flex-col gap-2 sm:flex-row">
+              {/* Recherche */}
               <div className="relative min-w-[280px]">
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
 
@@ -200,12 +233,14 @@ export default function MarketplaceStores() {
                 />
               </div>
 
+              {/* Statut */}
               <Select
                 value={statusFilter}
                 onValueChange={setStatusFilter}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[190px]">
                   <Filter className="mr-2 h-4 w-4" />
+
                   <SelectValue placeholder="Statut" />
                 </SelectTrigger>
 
@@ -244,11 +279,12 @@ export default function MarketplaceStores() {
                 </SelectContent>
               </Select>
 
+              {/* Catégorie */}
               <Select
                 value={categoryFilter}
                 onValueChange={setCategoryFilter}
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[190px]">
                   <SelectValue placeholder="Catégorie" />
                 </SelectTrigger>
 
@@ -285,139 +321,186 @@ export default function MarketplaceStores() {
               </p>
 
               <p className="mt-1 text-sm text-muted-foreground">
-                Modifie les critères de recherche ou de
-                filtrage.
+                Modifiez les critères de recherche ou
+                de filtrage.
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b text-left">
-                    <th className="px-3 py-3 font-medium">
-                      Boutique
-                    </th>
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b text-left">
+                      <th className="px-3 py-3 font-medium">
+                        Boutique
+                      </th>
 
-                    <th className="px-3 py-3 font-medium">
-                      Catégorie
-                    </th>
+                      <th className="px-3 py-3 font-medium">
+                        Activité
+                      </th>
 
-                    <th className="px-3 py-3 font-medium">
-                      Pays
-                    </th>
+                      <th className="px-3 py-3 font-medium">
+                        Catégorie
+                      </th>
 
-                    <th className="px-3 py-3 font-medium">
-                      Statut
-                    </th>
+                      <th className="px-3 py-3 font-medium">
+                        Pays
+                      </th>
 
-                    <th className="px-3 py-3 font-medium">
-                      Abonnement
-                    </th>
+                      <th className="px-3 py-3 font-medium">
+                        Statut
+                      </th>
 
-                    <th className="px-3 py-3 text-right font-medium">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
+                      <th className="px-3 py-3 font-medium">
+                        Abonnement
+                      </th>
 
-                <tbody>
-                  {filteredShops.map((shop) => (
-                    <tr
-                      key={shop.id}
-                      className="border-b last:border-0 hover:bg-muted/40"
-                    >
-                      <td className="px-3 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-muted/30">
-                            <Store className="h-4 w-4 text-muted-foreground" />
+                      <th className="px-3 py-3 text-right font-medium">
+                        Action
+                      </th>
+                    </tr>
+                  </thead>
+
+                  <tbody>
+                    {filteredShops.map((shop) => (
+                      <tr
+                        key={shop.id}
+                        className="border-b last:border-0 hover:bg-muted/40"
+                      >
+                        {/* Boutique */}
+                        <td className="px-3 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="flex h-9 w-9 items-center justify-center rounded-lg border bg-muted/30">
+                              <Store className="h-4 w-4 text-muted-foreground" />
+                            </div>
+
+                            <div>
+                              <Link
+                                to={`/pole/marketplace/stores/${shop.id}`}
+                                className="font-medium hover:underline"
+                              >
+                                {shop.name}
+                              </Link>
+
+                              <p className="text-xs text-muted-foreground">
+                                {shop.shop_code}
+                              </p>
+                            </div>
                           </div>
+                        </td>
 
-                          <div>
-                            <Link
-                              to={
-                                '/pole/marketplace/stores/' +
-                                shop.id
-                              }
-                              className="font-medium hover:underline"
-                            >
-                              {shop.name}
-                            </Link>
+                        {/* Activité */}
+                        <td className="px-3 py-4">
+                          {shop.activity_type || '—'}
+                        </td>
 
-                            <p className="text-xs text-muted-foreground">
-                              {shop.shop_code}
-                            </p>
-                          </div>
-                        </div>
-                      </td>
+                        {/* Catégorie */}
+                        <td className="px-3 py-4">
+                          {shop.category || '—'}
+                        </td>
 
-                      <td className="px-3 py-4">
-                        {shop.category || '—'}
-                      </td>
+                        {/* Pays */}
+                        <td className="px-3 py-4">
+                          {shop.country || '—'}
+                        </td>
 
-                      <td className="px-3 py-4">
-                        {shop.country || '—'}
-                      </td>
-
-                      <td className="px-3 py-4">
-                        <Badge
-                          variant={
-                            shop.status === 'active'
-                              ? 'default'
-                              : 'outline'
-                          }
-                        >
-                          {
-                            SHOP_STATUS_LABELS[
-                              shop.status
-                            ]
-                          }
-                        </Badge>
-                      </td>
-
-                      <td className="px-3 py-4">
-                        {shop.subscription_plan ||
-                          '—'}
-                      </td>
-
-                      <td className="px-3 py-4 text-right">
-                        <Button
-                          asChild
-                          size="sm"
-                          variant="ghost"
-                        >
-                          <Link
-                            to={
-                              '/pole/marketplace/stores/' +
-                              shop.id
+                        {/* Statut */}
+                        <td className="px-3 py-4">
+                          <Badge
+                            variant={
+                              shop.status === 'active'
+                                ? 'default'
+                                : 'outline'
                             }
                           >
-                            Ouvrir
-                            <ArrowRight className="ml-2 h-4 w-4" />
-                          </Link>
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                            {SHOP_STATUS_LABELS[
+                              shop.status
+                            ] || shop.status}
+                          </Badge>
+                        </td>
 
-          {!isLoading &&
-            filteredShops.length > 0 && (
-              <div className="mt-4 text-xs text-muted-foreground">
-                {filteredShops.length} boutique
-                {filteredShops.length > 1
-                  ? 's'
-                  : ''}{' '}
-                affichée
-                {filteredShops.length > 1
-                  ? 's'
-                  : ''}
-                {' sur '}
-                {shops.length}.
+                        {/* Abonnement */}
+                        <td className="px-3 py-4">
+                          {shop.subscription_plan ||
+                            '—'}
+                        </td>
+
+                        {/* Action */}
+                        <td className="px-3 py-4 text-right">
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="ghost"
+                          >
+                            <Link
+                              to={`/pole/marketplace/stores/${shop.id}`}
+                            >
+                              Ouvrir
+                              <ArrowRight className="ml-2 h-4 w-4" />
+                            </Link>
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
+
+              <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                <span>
+                  {filteredShops.length} boutique
+                  {filteredShops.length > 1
+                    ? 's'
+                    : ''}{' '}
+                  affichée
+                  {filteredShops.length > 1
+                    ? 's'
+                    : ''}
+                </span>
+
+                <span>
+                  {shops.length} au total
+                </span>
+
+                {statusCounts.inactive > 0 && (
+                  <span>
+                    {statusCounts.inactive} inactive
+                    {statusCounts.inactive > 1
+                      ? 's'
+                      : ''}
+                  </span>
+                )}
+
+                {statusCounts.draft > 0 && (
+                  <span>
+                    {statusCounts.draft} brouillon
+                    {statusCounts.draft > 1
+                      ? 's'
+                      : ''}
+                  </span>
+                )}
+
+                {statusCounts.application > 0 && (
+                  <span>
+                    {statusCounts.application}{' '}
+                    candidature
+                    {statusCounts.application > 1
+                      ? 's'
+                      : ''}
+                  </span>
+                )}
+
+                {statusCounts.closed > 0 && (
+                  <span>
+                    {statusCounts.closed} clôturée
+                    {statusCounts.closed > 1
+                      ? 's'
+                      : ''}
+                  </span>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>
