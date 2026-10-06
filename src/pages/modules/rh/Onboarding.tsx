@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
+
 import {
   Dialog,
   DialogContent,
@@ -34,12 +35,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+
 import {
   SheetContent,
   SheetDescription,
   SheetHeader,
   SheetTitle,
 } from '@/components/ui/sheet';
+
 import {
   Select,
   SelectContent,
@@ -47,6 +50,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+
 import {
   Table,
   TableBody,
@@ -58,7 +62,10 @@ import {
 
 import { poles as allPoles } from '@/data/poles';
 import { useAuth } from '@/hooks/useAuth';
+
 import {
+  COLLABORATOR_TYPE_LABELS,
+  CollaboratorType,
   HR_STATUS,
   HR_STEPS,
   HrEmployeeRequest,
@@ -99,18 +106,35 @@ const SENIORITIES = [
   'executive',
 ];
 
+const COLLABORATOR_TYPES: CollaboratorType[] = [
+  'internal',
+  'external',
+  'provider',
+  'consultant',
+  'apprentice',
+  'intern',
+  'other',
+];
+
 const POSITION_LABELS: Record<string, string> = {
   supplier_manager: 'Responsable Fournisseurs & Produits',
-  customer_success_manager: 'Responsable Marketplace & Customer Success',
-  ops_logistics_manager: 'Responsable Opérations & Logistique',
+  customer_success_manager:
+    'Responsable Marketplace & Customer Success',
+  ops_logistics_manager:
+    'Responsable Opérations & Logistique',
   finance_manager: 'Responsable Finance',
-  audit_compliance_lead: 'Responsable Qualité, Audit & Conformité',
-  rse_impact_manager: 'Responsable RSE & Impact',
-  product_engineering_manager: 'Responsable Product & Engineering',
-  marketing_communication_manager: 'Responsable Marketing & Communication',
+  audit_compliance_lead:
+    'Responsable Qualité, Audit & Conformité',
+  rse_impact_manager:
+    'Responsable RSE & Impact',
+  product_engineering_manager:
+    'Responsable Product & Engineering',
+  marketing_communication_manager:
+    'Responsable Marketing & Communication',
   rh_manager: 'Responsable RH',
   data_bi_manager: 'Responsable Data & BI',
-  security_it_manager: 'Responsable Security & IT',
+  security_it_manager:
+    'Responsable Security & IT',
   ceo: 'Direction',
 };
 
@@ -143,8 +167,16 @@ const roleLabel = (role: string) =>
 const seniorityLabel = (seniority: string) =>
   SENIORITY_LABELS[seniority] ?? seniority;
 
+const collaboratorTypeLabel = (
+  type: CollaboratorType | null | undefined,
+) =>
+  type
+    ? COLLABORATOR_TYPE_LABELS[type] ?? type
+    : '—';
+
 function NewEmployeeDialog() {
   const [open, setOpen] = useState(false);
+
   const { create } = useHrOnboardingActions();
 
   const [form, setForm] = useState({
@@ -152,6 +184,7 @@ function NewEmployeeDialog() {
     last_name: '',
     personal_email: '',
     work_email: '',
+    collaborator_type: 'internal' as CollaboratorType,
     position: 'ops_logistics_manager',
     seniority: 'junior',
     requested_role: 'viewer',
@@ -162,6 +195,24 @@ function NewEmployeeDialog() {
 
   const [poles, setPoles] = useState<string[]>([]);
 
+  const resetForm = () => {
+    setForm({
+      first_name: '',
+      last_name: '',
+      personal_email: '',
+      work_email: '',
+      collaborator_type: 'internal',
+      position: 'ops_logistics_manager',
+      seniority: 'junior',
+      requested_role: 'viewer',
+      contract_type: 'CDI',
+      start_date: '',
+      notes: '',
+    });
+
+    setPoles([]);
+  };
+
   const submit = async () => {
     await create.mutateAsync({
       ...form,
@@ -170,17 +221,27 @@ function NewEmployeeDialog() {
     } as Partial<HrEmployeeRequest>);
 
     setOpen(false);
-    setPoles([]);
+    resetForm();
   };
 
   const valid =
     form.first_name.trim() &&
     form.last_name.trim() &&
-    (form.work_email.trim() || form.personal_email.trim()) &&
+    (form.work_email.trim() ||
+      form.personal_email.trim()) &&
     poles.length > 0;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        setOpen(nextOpen);
+
+        if (!nextOpen) {
+          resetForm();
+        }
+      }}
+    >
       <DialogTrigger asChild>
         <Button size="sm">
           <Plus className="mr-1.5 h-4 w-4" />
@@ -188,193 +249,300 @@ function NewEmployeeDialog() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Dossier collaborateur</DialogTitle>
+          <DialogTitle>
+            Créer un dossier collaborateur
+          </DialogTitle>
+
           <DialogDescription>
-            Créé par les RH, validé en interne, puis transmis au pôle
-            habilité pour la création du compte et des accès.
+            Les RH définissent l'identité, le type de
+            collaborateur, l'affectation et les besoins
+            d'accès. Le compte n'est créé qu'après validation
+            RH.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Prénom</Label>
-              <Input
-                value={form.first_name}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    first_name: event.target.value,
-                  })
-                }
-              />
-            </div>
+        <div className="space-y-5">
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Identité
+            </p>
 
-            <div>
-              <Label>Nom</Label>
-              <Input
-                value={form.last_name}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    last_name: event.target.value,
-                  })
-                }
-              />
-            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Prénom</Label>
 
-            <div>
-              <Label>Email personnel</Label>
-              <Input
-                type="email"
-                value={form.personal_email}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    personal_email: event.target.value,
-                  })
-                }
-              />
-            </div>
+                <Input
+                  value={form.first_name}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      first_name: event.target.value,
+                    })
+                  }
+                />
+              </div>
 
-            <div>
-              <Label>Email professionnel</Label>
-              <Input
-                type="email"
-                value={form.work_email}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    work_email: event.target.value,
-                  })
-                }
-                placeholder="prenom@brand-in-a-box.space"
-              />
-            </div>
+              <div>
+                <Label>Nom</Label>
 
-            <div>
-              <Label>Poste</Label>
-              <Select
-                value={form.position}
-                onValueChange={(value) =>
-                  setForm({
-                    ...form,
-                    position: value,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <Input
+                  value={form.last_name}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      last_name: event.target.value,
+                    })
+                  }
+                />
+              </div>
 
-                <SelectContent>
-                  {POSITIONS.map((position) => (
-                    <SelectItem key={position} value={position}>
-                      {positionLabel(position)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div>
+                <Label>Email personnel</Label>
 
-            <div>
-              <Label>Niveau</Label>
-              <Select
-                value={form.seniority}
-                onValueChange={(value) =>
-                  setForm({
-                    ...form,
-                    seniority: value,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
+                <Input
+                  type="email"
+                  value={form.personal_email}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      personal_email: event.target.value,
+                    })
+                  }
+                />
+              </div>
 
-                <SelectContent>
-                  {SENIORITIES.map((seniority) => (
-                    <SelectItem key={seniority} value={seniority}>
-                      {seniorityLabel(seniority)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+              <div>
+                <Label>Email professionnel</Label>
 
-            <div>
-              <Label>Rôle applicatif</Label>
-              <Select
-                value={form.requested_role}
-                onValueChange={(value) =>
-                  setForm({
-                    ...form,
-                    requested_role: value,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {ROLES.map((role) => (
-                    <SelectItem key={role} value={role}>
-                      {roleLabel(role)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label>Date d'entrée</Label>
-              <Input
-                type="date"
-                value={form.start_date}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    start_date: event.target.value,
-                  })
-                }
-              />
+                <Input
+                  type="email"
+                  value={form.work_email}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      work_email: event.target.value,
+                    })
+                  }
+                  placeholder="prenom@brand-in-a-box.space"
+                />
+              </div>
             </div>
           </div>
+
+          <Separator />
 
           <div>
-            <Label>Pôles d'affectation</Label>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Classification RH
+            </p>
 
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              {allPoles.map((pole) => (
-                <label
-                  key={pole.id}
-                  className="flex items-center gap-2 text-sm"
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Type de collaborateur</Label>
+
+                <Select
+                  value={form.collaborator_type}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      collaborator_type:
+                        value as CollaboratorType,
+                    })
+                  }
                 >
-                  <Checkbox
-                    checked={poles.includes(pole.id)}
-                    onCheckedChange={(checked) =>
-                      setPoles((previous) =>
-                        checked
-                          ? [...previous, pole.id]
-                          : previous.filter((id) => id !== pole.id),
-                      )
-                    }
-                  />
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
 
-                  {pole.shortName}
-                </label>
-              ))}
+                  <SelectContent>
+                    {COLLABORATOR_TYPES.map((type) => (
+                      <SelectItem
+                        key={type}
+                        value={type}
+                      >
+                        {COLLABORATOR_TYPE_LABELS[type]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Cette classification reste attachée au
+                  profil RH du collaborateur.
+                </p>
+              </div>
+
+              <div>
+                <Label>Type de contrat</Label>
+
+                <Input
+                  value={form.contract_type}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      contract_type:
+                        event.target.value,
+                    })
+                  }
+                  placeholder="CDI, CDD, prestation..."
+                />
+              </div>
+
+              <div>
+                <Label>Niveau</Label>
+
+                <Select
+                  value={form.seniority}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      seniority: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {SENIORITIES.map((seniority) => (
+                      <SelectItem
+                        key={seniority}
+                        value={seniority}
+                      >
+                        {seniorityLabel(seniority)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Date d'entrée</Label>
+
+                <Input
+                  type="date"
+                  value={form.start_date}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      start_date:
+                        event.target.value,
+                    })
+                  }
+                />
+              </div>
             </div>
           </div>
+
+          <Separator />
+
+          <div>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Affectation
+            </p>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>Poste / fonction</Label>
+
+                <Select
+                  value={form.position}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      position: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {POSITIONS.map((position) => (
+                      <SelectItem
+                        key={position}
+                        value={position}
+                      >
+                        {positionLabel(position)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Rôle applicatif demandé</Label>
+
+                <Select
+                  value={form.requested_role}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      requested_role: value,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {ROLES.map((role) => (
+                      <SelectItem
+                        key={role}
+                        value={role}
+                      >
+                        {roleLabel(role)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <Label>Pôles d'affectation</Label>
+
+              <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-border p-3">
+                {allPoles.map((pole) => (
+                  <label
+                    key={pole.id}
+                    className="flex items-center gap-2 text-sm"
+                  >
+                    <Checkbox
+                      checked={poles.includes(pole.id)}
+                      onCheckedChange={(checked) =>
+                        setPoles((previous) =>
+                          checked
+                            ? previous.includes(pole.id)
+                              ? previous
+                              : [...previous, pole.id]
+                            : previous.filter(
+                                (id) =>
+                                  id !== pole.id,
+                              ),
+                        )
+                      }
+                    />
+
+                    {pole.shortName}
+                  </label>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <Separator />
 
           <div>
             <Label>Notes RH</Label>
 
             <Textarea
-              rows={2}
+              rows={3}
               value={form.notes}
               onChange={(event) =>
                 setForm({
@@ -382,6 +550,7 @@ function NewEmployeeDialog() {
                   notes: event.target.value,
                 })
               }
+              placeholder="Informations utiles au traitement du dossier..."
             />
           </div>
         </div>
@@ -401,7 +570,8 @@ function NewEmployeeDialog() {
             {create.isPending && (
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
             )}
-            Soumettre
+
+            Soumettre le dossier
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -421,10 +591,17 @@ function RequestSheet({
   onClose: () => void;
 }) {
   const events = useHrRequestEvents(request.id);
-  const { setStatus, provisionAccount } = useHrOnboardingActions();
+
+  const {
+    setStatus,
+    provisionAccount,
+  } = useHrOnboardingActions();
+
   const [reason, setReason] = useState('');
 
-  const step = HR_STATUS[request.status].step;
+  const statusConfig = HR_STATUS[request.status];
+
+  const step = statusConfig.step;
 
   return (
     <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
@@ -432,27 +609,60 @@ function RequestSheet({
         <SheetTitle className="flex flex-wrap items-center gap-2">
           {request.reference}
 
-          <Badge variant={HR_STATUS[request.status].variant}>
-            {HR_STATUS[request.status].label}
+          <Badge variant={statusConfig.variant}>
+            {statusConfig.label}
           </Badge>
         </SheetTitle>
 
         <SheetDescription>
           {request.first_name} {request.last_name} ·{' '}
-          {positionLabel(request.position)}
+          {collaboratorTypeLabel(
+            request.collaborator_type,
+          )}{' '}
+          · {positionLabel(request.position)}
         </SheetDescription>
       </SheetHeader>
 
       <div className="mt-4 space-y-4">
         <div>
           <Progress
-            value={(step / (HR_STEPS.length - 1)) * 100}
+            value={
+              (step / (HR_STEPS.length - 1)) * 100
+            }
           />
 
           <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
             {HR_STEPS.map((stepLabel) => (
-              <span key={stepLabel}>{stepLabel}</span>
+              <span key={stepLabel}>
+                {stepLabel}
+              </span>
             ))}
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border p-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Classification RH
+          </p>
+
+          <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
+            <p>
+              <span className="text-muted-foreground">
+                Type :
+              </span>{' '}
+              <Badge variant="secondary">
+                {collaboratorTypeLabel(
+                  request.collaborator_type,
+                )}
+              </Badge>
+            </p>
+
+            <p>
+              <span className="text-muted-foreground">
+                Contrat :
+              </span>{' '}
+              {request.contract_type ?? '—'}
+            </p>
           </div>
         </div>
 
@@ -494,13 +704,6 @@ function RequestSheet({
 
           <p>
             <span className="text-muted-foreground">
-              Contrat :
-            </span>{' '}
-            {request.contract_type ?? '—'}
-          </p>
-
-          <p>
-            <span className="text-muted-foreground">
               Entrée :
             </span>{' '}
             {request.start_date ?? '—'}
@@ -510,7 +713,9 @@ function RequestSheet({
             <span className="text-muted-foreground">
               Pôles :
             </span>{' '}
-            {(request.poles ?? []).map(poleLabel).join(', ') || '—'}
+            {(request.poles ?? [])
+              .map(poleLabel)
+              .join(', ') || '—'}
           </p>
         </div>
 
@@ -538,30 +743,35 @@ function RequestSheet({
                 rows={2}
                 placeholder="Motif (obligatoire pour un refus)"
                 value={reason}
-                onChange={(event) => setReason(event.target.value)}
+                onChange={(event) =>
+                  setReason(event.target.value)
+                }
               />
 
               <div className="mt-2 flex flex-wrap gap-2">
-                {canValidate && request.status === 'submitted' && (
-                  <Button
-                    size="sm"
-                    onClick={() =>
-                      setStatus.mutate({
-                        request,
-                        status: 'hr_validated',
-                      })
-                    }
-                  >
-                    <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-                    Valider (RH)
-                  </Button>
-                )}
+                {canValidate &&
+                  request.status === 'submitted' && (
+                    <Button
+                      size="sm"
+                      onClick={() =>
+                        setStatus.mutate({
+                          request,
+                          status: 'hr_validated',
+                        })
+                      }
+                    >
+                      <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                      Valider (RH)
+                    </Button>
+                  )}
 
                 {canProvision &&
                   request.status === 'hr_validated' && (
                     <Button
                       size="sm"
-                      disabled={provisionAccount.isPending}
+                      disabled={
+                        provisionAccount.isPending
+                      }
                       onClick={() =>
                         provisionAccount.mutate(request)
                       }
@@ -607,11 +817,17 @@ function RequestSheet({
 
           <div className="mt-2 space-y-1.5">
             {(events.data ?? []).map((event) => (
-              <div key={event.id} className="text-xs">
+              <div
+                key={event.id}
+                className="text-xs"
+              >
                 <span className="text-muted-foreground">
                   {format(
                     new Date(event.created_at),
                     'dd/MM HH:mm',
+                    {
+                      locale: fr,
+                    },
                   )}{' '}
                   ·{' '}
                 </span>
@@ -675,14 +891,20 @@ export default function Onboarding() {
   const kpis = useMemo(
     () => ({
       total: requests.length,
+
       toValidate: requests.filter(
-        (request) => request.status === 'submitted',
+        (request) =>
+          request.status === 'submitted',
       ).length,
+
       toProvision: requests.filter(
-        (request) => request.status === 'hr_validated',
+        (request) =>
+          request.status === 'hr_validated',
       ).length,
+
       done: requests.filter(
-        (request) => request.status === 'completed',
+        (request) =>
+          request.status === 'completed',
       ).length,
     }),
     [requests],
@@ -697,8 +919,9 @@ export default function Onboarding() {
           </h1>
 
           <p className="text-sm text-muted-foreground">
-            Création du dossier, validation RH, création du compte,
-            attribution du rôle et des accès, puis traçabilité complète.
+            Création du dossier, classification RH,
+            validation, provisionnement du compte et
+            traçabilité complète.
           </p>
         </div>
 
@@ -707,8 +930,14 @@ export default function Onboarding() {
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
-          { label: 'Dossiers', value: kpis.total },
-          { label: 'À valider (RH)', value: kpis.toValidate },
+          {
+            label: 'Dossiers',
+            value: kpis.total,
+          },
+          {
+            label: 'À valider (RH)',
+            value: kpis.toValidate,
+          },
           {
             label: 'Comptes à créer',
             value: kpis.toProvision,
@@ -734,87 +963,158 @@ export default function Onboarding() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">
-            Dossiers en cours
+          <CardTitle>
+            Dossiers d'intégration
           </CardTitle>
 
           <CardDescription>
-            {HR_STEPS.join(' → ')}
+            Le dossier RH précède toujours la création
+            du profil applicatif.
           </CardDescription>
         </CardHeader>
 
         <CardContent>
           {isLoading ? (
-            <div className="flex justify-center py-10">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="h-5 w-5 animate-spin" />
             </div>
-          ) : requests.length === 0 ? (
-            <p className="py-10 text-center text-sm text-muted-foreground">
-              Aucun dossier collaborateur.
-            </p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Réf.</TableHead>
-                  <TableHead>Collaborateur</TableHead>
-                  <TableHead>Pôles</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead>Créé le</TableHead>
-                  <TableHead className="text-right">
-                    Action
-                  </TableHead>
-                </TableRow>
-              </TableHeader>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      Référence
+                    </TableHead>
 
-              <TableBody>
-                {requests.map((request) => (
-                  <TableRow key={request.id}>
-                    <TableCell className="font-mono text-xs">
-                      {request.reference}
-                    </TableCell>
+                    <TableHead>
+                      Collaborateur
+                    </TableHead>
 
-                    <TableCell>
-                      {request.first_name} {request.last_name}
-                    </TableCell>
+                    <TableHead>
+                      Type
+                    </TableHead>
 
-                    <TableCell className="text-xs">
-                      {(request.poles ?? [])
-                        .map(poleLabel)
-                        .join(', ') || '—'}
-                    </TableCell>
+                    <TableHead>
+                      Poste
+                    </TableHead>
 
-                    <TableCell>
-                      <Badge
-                        variant={
-                          HR_STATUS[request.status].variant
-                        }
-                      >
-                        {HR_STATUS[request.status].label}
-                      </Badge>
-                    </TableCell>
+                    <TableHead>
+                      Pôles
+                    </TableHead>
 
-                    <TableCell className="text-xs text-muted-foreground">
-                      {format(
-                        new Date(request.created_at),
-                        'dd MMM yyyy',
-                        { locale: fr },
-                      )}
-                    </TableCell>
+                    <TableHead>
+                      Statut
+                    </TableHead>
 
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setSelected(request)}
-                      >
-                        Ouvrir
-                      </Button>
-                    </TableCell>
+                    <TableHead>
+                      Créé le
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+
+                <TableBody>
+                  {requests.map((request) => (
+                    <TableRow
+                      key={request.id}
+                      className="cursor-pointer"
+                      onClick={() =>
+                        setSelected(request)
+                      }
+                    >
+                      <TableCell className="font-medium">
+                        {request.reference}
+                      </TableCell>
+
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">
+                            {request.first_name}{' '}
+                            {request.last_name}
+                          </p>
+
+                          <p className="text-xs text-muted-foreground">
+                            {request.work_email ??
+                              request.personal_email ??
+                              '—'}
+                          </p>
+                        </div>
+                      </TableCell>
+
+                      <TableCell>
+                        <Badge variant="secondary">
+                          {collaboratorTypeLabel(
+                            request.collaborator_type,
+                          )}
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell>
+                        {positionLabel(
+                          request.position,
+                        )}
+                      </TableCell>
+
+                      <TableCell>
+                        <div className="flex max-w-[220px] flex-wrap gap-1">
+                          {(request.poles ?? []).map(
+                            (pole) => (
+                              <Badge
+                                key={pole}
+                                variant="outline"
+                                className="text-[10px]"
+                              >
+                                {poleLabel(pole)}
+                              </Badge>
+                            ),
+                          )}
+                        </div>
+                      </TableCell>
+
+                      <TableCell>
+                        <Badge
+                          variant={
+                            HR_STATUS[
+                              request.status
+                            ].variant
+                          }
+                        >
+                          {
+                            HR_STATUS[
+                              request.status
+                            ].label
+                          }
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                        {format(
+                          new Date(
+                            request.created_at,
+                          ),
+                          'dd/MM/yyyy',
+                          {
+                            locale: fr,
+                          },
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                  {!requests.length && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={7}
+                        className="py-10 text-center text-sm text-muted-foreground"
+                      >
+                        Aucun dossier
+                        d'onboarding.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
