@@ -432,9 +432,9 @@ const App = () => (
                   element={<ProductLifecycle />}
                 />
                 <Route
-  path="/pole/ops/shops/:id"
-  element={<ShopDetail />}
-/>
+                  path="/pole/ops/shops/:id"
+                  element={<ShopDetail />}
+                />
                 <Route path="/pole/ops/partners" element={<Partners />} />
                 <Route path="/pole/ops/flows" element={<SyncFlows />} />
                 <Route path="/pole/ops/incidents" element={<LogisticsIncidents />} />
@@ -505,8 +505,17 @@ const App = () => (
                 />
 
                 {/* ====================================================
-                    5. Marketplace & Customers
+                    5. MARKETPLACE & CUSTOMER
                     ==================================================== */}
+                
+                <Route
+                  path="/pole/marketplace"
+                  element={
+                    <ProtectedPage pageId="marketplace.overview">
+                      <MarketplaceDashboard />
+                    </ProtectedPage>
+                  }
+                />
                 
                 <Route
                   path="/pole/marketplace/merchants"
@@ -551,6 +560,37 @@ const App = () => (
                       <MarketplaceProducts />
                     </ProtectedPage>
                   }
+                />
+                
+                <Route
+                  path="/pole/marketplace/customers"
+                  element={<MarketplaceCustomers />}
+                />
+                
+                <Route
+                  path="/pole/marketplace/orders"
+                  element={<MarketplaceOrders />}
+                />
+                
+                <Route
+                  path="/pole/marketplace/subscribers"
+                  element={<MarketplaceSubscribers />}
+                />
+                
+                <Route
+                  path="/pole/marketplace/favorites"
+                  element={<MarketplaceFavorites />}
+                />
+                
+                {/* Fonctionnalités futures — masquées du MVP actuel */}
+                <Route
+                  path="/pole/marketplace/rewards"
+                  element={<Navigate to="/pole/marketplace" replace />}
+                />
+                
+                <Route
+                  path="/pole/marketplace/recycling"
+                  element={<Navigate to="/pole/marketplace" replace />}
                 />
                 
                 <Route
