@@ -766,7 +766,7 @@ export const startPermissionSync = () => {
 // est explicitement restreinte.
 // ---------------------------------------------------------------------------
 
-const PUBLIC_PAGES = new Set<string>([
+export const PUBLIC_PAGES = new Set<string>([
   'app.dashboard',
   'app.feed',
   'app.documents',
