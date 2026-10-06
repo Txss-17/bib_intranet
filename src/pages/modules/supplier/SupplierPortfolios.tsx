@@ -1002,12 +1002,12 @@ export default function SupplierPortfolios() {
                             variant="ghost"
                             size="sm"
                             onClick={() =>
-                              handleReassign(
-                                supplier.name,
-                                supplier.portfolioCategory,
-                              )
+                              handleReassign(supplier)
                             }
                           >
+                            <ArrowRightLeft className="mr-1 h-4 w-4" />
+                            Réassigner
+                          </Button>
                             <ArrowRightLeft className="mr-1 h-4 w-4" />
                             Réassigner
                           </Button>
