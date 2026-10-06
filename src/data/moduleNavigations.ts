@@ -527,6 +527,12 @@ export const moduleNavigations: Record<
         icon: 'FolderOpen',
       },
       {
+        id: 'portfolio',
+        label: 'Portefeuilles',
+        path: '/pole/rh/portfolio',
+        icon: 'Briefcase',
+      },
+      {
         id: 'onboarding',
         label: 'Onboarding RH — intégration collaborateur',
         path: '/pole/rh/onboarding',
