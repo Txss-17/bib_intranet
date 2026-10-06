@@ -308,6 +308,16 @@ const AUDIT_OWNERS = [
   'conformite_juridique',
 ];
 
+const MARKETPLACE_OWNERS = [
+  'ceo',
+  'responsable_marketplace',
+  'gestionnaire_boutiques',
+  'gestionnaire_vendeurs',
+  'gestionnaire_commandes',
+  'gestionnaire_litiges',
+  'gestionnaire_avis',
+];
+
 const ADMIN_OWNERS = [
   // Direction
   'ceo',
