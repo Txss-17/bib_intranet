@@ -14,6 +14,7 @@ import { AuthGuard } from "./components/AuthGuard";
 import { useAuthLogger } from "./hooks/useAuthLogger";
 import { AuthProvider } from "./hooks/useAuth";
 import { SandboxProvider } from "@/hooks/useSandbox";
+import { ProtectedPage } from "./components/PermissionGate";
 
 /* ============================================================
    CORE / AUTH
