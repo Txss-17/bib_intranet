@@ -1,3 +1,4 @@
+
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { z } from 'npm:zod@3'
@@ -902,7 +903,145 @@ Deno.serve(
 
 
         // ====================================================
-        // 3 BIS. FAVORIS CLIENTS
+        // 3 BIS. PRODUITS — LIAISON PRODUIT / BOUTIQUE
+        // ====================================================
+        //
+        // BIB Platform reste la source de vérité pour :
+        //   product.boutique_id
+        //
+        // La boutique Platform est résolue par :
+        //
+        //   boutique.id
+        //       ↓
+        //   shops.platform_id
+        //       ↓
+        //   shops.id
+        //
+        // Le produit Intranet est retrouvé par :
+        //
+        //   products.platform_id
+        //
+        // IMPORTANT :
+        // - aucun produit Intranet n'est créé ici ;
+        // - aucun produit n'est validé ici ;
+        // - aucune donnée de conformité produit n'est modifiée ;
+        // - products.platform_id identifie le produit Platform ;
+        // - shops.platform_id identifie la boutique Platform.
+        //
+        // Les deux identifiants sont volontairement traités
+        // séparément.
+        // ====================================================
+
+        for (
+          const platformProduct
+          of data.products ??
+          []
+        ) {
+
+          if (
+            !platformProduct.id
+          ) {
+            continue
+          }
+
+
+          const shopId =
+            platformProduct.boutique_id
+              ? (
+                  shopMap.get(
+                    platformProduct.boutique_id,
+                  ) ??
+                  null
+                )
+              : null
+
+
+          const {
+            data:
+              existingProduct,
+            error:
+              existingProductError,
+          } =
+            await admin
+              .from(
+                'products',
+              )
+              .select(
+                'id',
+              )
+              .eq(
+                'platform_id',
+                platformProduct.id,
+              )
+              .maybeSingle()
+
+
+          if (
+            existingProductError
+          ) {
+
+            errors.push(
+              `produit ${platformProduct.id} — recherche Intranet : ${existingProductError.message}`,
+            )
+
+            continue
+
+          }
+
+
+          if (
+            !existingProduct
+          ) {
+
+            errors.push(
+              `produit ${platformProduct.id} — aucun produit Intranet correspondant par platform_id`,
+            )
+
+            continue
+
+          }
+
+
+          const {
+            error:
+              productLinkError,
+          } =
+            await admin
+              .from(
+                'products',
+              )
+              .update({
+                shop_id:
+                  shopId,
+
+                platform_synced_at:
+                  now,
+              })
+              .eq(
+                'id',
+                existingProduct.id,
+              )
+
+
+          if (
+            productLinkError
+          ) {
+
+            errors.push(
+              `produit ${platformProduct.id} — liaison boutique : ${productLinkError.message}`,
+            )
+
+          } else {
+
+            count++
+
+          }
+
+        }
+
+
+        // ====================================================
+        // 3 TER. FAVORIS CLIENTS
         // ====================================================
         //
         // BIB Platform reste la source de vérité.
@@ -2192,8 +2331,7 @@ Deno.serve(
           })
           .eq(
             'id',
-            run.id,
-          )
+            run.id)
 
 
       if (
@@ -2323,8 +2461,7 @@ Deno.serve(
           })
           .eq(
             'id',
-            run.id,
-          )
+            run.id)
 
 
       // ======================================================
