@@ -172,7 +172,7 @@ import Leave from "./pages/modules/rh/Leave";
 import Training from "./pages/modules/rh/Training";
 import BusinessTrips from "./pages/modules/rh/BusinessTrips";
 import Publications from "./pages/modules/rh/Publications";
-import RHPortfolio from './pages/modules/rh/RHPortfolio';
+import RHPortfolio from "./pages/modules/rh/RHPortfolio";
 import Organization from "./pages/modules/rh/Organization";
 
 /* ============================================================
