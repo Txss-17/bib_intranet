@@ -41,7 +41,6 @@ import {
   Search,
   ArrowRightLeft,
   BarChart3,
-  TrendingUp,
   Loader2,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,23 +49,33 @@ import { AssignmentSuggestion } from '@/components/supplier/AssignmentSuggestion
 
 type SupplierPortfolio = {
   id: string;
-  name?: string | null;
-  category?: string | null;
-  responsible_id?: string | null;
-  responsible_name?: string | null;
-  status?: string | null;
-  description?: string | null;
+  backup_id: string | null;
+  backup_name: string;
+  category: string;
+  created_at: string | null;
+  responsible_id: string | null;
+  responsible_name: string;
+  updated_at: string | null;
+};
+
+type PortfolioAssignment = {
+  id: string;
+  assigned_at: string | null;
+  assigned_to_id: string | null;
+  assigned_to_name: string;
+  portfolio_id: string | null;
+  supplier_id: string | null;
 };
 
 type SupplierRow = {
   id: string;
   name: string;
   country: string;
-  category: string;
   score: number;
   status: string;
   portfolioId: string | null;
   portfolioName: string;
+  portfolioCategory: string;
   assignedTo: string;
   lastAudit: string;
   alerts: number;
@@ -83,9 +92,10 @@ function useSupplierPortfolios() {
     queryKey: ['supplier-portfolios'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('supplier_portfolios' as any)
+        .from('supplier_portfolios')
         .select('*')
-        .order('name');
+        .order('category')
+        .order('responsible_name');
 
       if (error) {
         throw error;
@@ -96,9 +106,17 @@ function useSupplierPortfolios() {
   });
 }
 
-function useSupplierPortfolioData() {
+function useSupplierPortfolioData(
+  portfolios: SupplierPortfolio[],
+) {
   return useQuery({
-    queryKey: ['supplier-portfolio-data'],
+    queryKey: [
+      'supplier-portfolio-data',
+      portfolios.map((portfolio) => portfolio.id),
+    ],
+
+    enabled: portfolios.length > 0,
+
     queryFn: async () => {
       const [
         suppliersResult,
@@ -107,13 +125,31 @@ function useSupplierPortfolioData() {
       ] = await Promise.all([
         supabase
           .from('suppliers')
-          .select('*')
+          .select(
+            `
+              id,
+              name,
+              country,
+              quality_score,
+              status,
+              last_audit_date
+            `,
+          )
           .eq('status', 'validated')
           .order('name'),
 
         supabase
-          .from('portfolio_assignments' as any)
-          .select('*'),
+          .from('portfolio_assignments')
+          .select(
+            `
+              id,
+              assigned_at,
+              assigned_to_id,
+              assigned_to_name,
+              portfolio_id,
+              supplier_id
+            `,
+          ),
 
         supabase
           .from('quality_alerts')
@@ -133,58 +169,100 @@ function useSupplierPortfolioData() {
         throw alertsResult.error;
       }
 
-      const assignments = assignmentsResult.data ?? [];
-      const alerts = alertsResult.data ?? [];
+      const portfolioById =
+        new Map(
+          portfolios.map((portfolio) => [
+            portfolio.id,
+            portfolio,
+          ]),
+        );
 
-      const assignmentBySupplier: Record<string, any> = {};
+      const assignmentBySupplier =
+        new Map<string, PortfolioAssignment>();
 
-      assignments.forEach((assignment: any) => {
-        if (assignment.supplier_id) {
-          assignmentBySupplier[assignment.supplier_id] = assignment;
+      (
+        assignmentsResult.data ?? []
+      ).forEach((assignment) => {
+        if (!assignment.supplier_id) {
+          return;
         }
+
+        assignmentBySupplier.set(
+          assignment.supplier_id,
+          assignment as PortfolioAssignment,
+        );
       });
 
-      const alertsBySupplier: Record<string, number> = {};
+      const alertsBySupplier: Record<
+        string,
+        number
+      > = {};
 
-      alerts.forEach((alert: any) => {
+      (
+        alertsResult.data ?? []
+      ).forEach((alert) => {
         if (!alert.supplier_id) {
           return;
         }
 
-        alertsBySupplier[alert.supplier_id] =
-          (alertsBySupplier[alert.supplier_id] ?? 0) + 1;
+        alertsBySupplier[
+          alert.supplier_id
+        ] =
+          (alertsBySupplier[
+            alert.supplier_id
+          ] ?? 0) + 1;
       });
 
-      return (suppliersResult.data ?? []).map(
-        (supplier: any): SupplierRow => {
-          const assignment =
-            assignmentBySupplier[supplier.id];
+      return (
+        suppliersResult.data ?? []
+      ).map((supplier): SupplierRow => {
+        const assignment =
+          assignmentBySupplier.get(
+            supplier.id,
+          );
 
-          return {
-            id: supplier.id,
-            name: supplier.name,
-            country: supplier.country || '🌍',
-            category: supplier.category || 'Général',
-            score: supplier.quality_score || 0,
-            status: supplier.status || 'validated',
-            portfolioId:
-              assignment?.portfolio_id ?? null,
-            portfolioName:
-              assignment?.portfolio_name ||
-              'Non affecté',
-            assignedTo:
-              assignment?.assigned_to_name ||
-              'Non assigné',
-            lastAudit: supplier.last_audit_date
+        const portfolio =
+          assignment?.portfolio_id
+            ? portfolioById.get(
+                assignment.portfolio_id,
+              )
+            : undefined;
+
+        return {
+          id: supplier.id,
+          name: supplier.name,
+          country:
+            supplier.country || '🌍',
+          score:
+            supplier.quality_score ?? 0,
+          status: supplier.status,
+          portfolioId:
+            assignment?.portfolio_id ??
+            null,
+          portfolioName:
+            portfolio?.backup_name ||
+            'Non affecté',
+          portfolioCategory:
+            portfolio?.category ||
+            'Non catégorisé',
+          assignedTo:
+            assignment?.assigned_to_name ||
+            portfolio?.responsible_name ||
+            'Non assigné',
+          lastAudit:
+            supplier.last_audit_date
               ? new Date(
                   supplier.last_audit_date,
-                ).toLocaleDateString('fr-FR')
+                ).toLocaleDateString(
+                  'fr-FR',
+                )
               : '—',
-            alerts:
-              alertsBySupplier[supplier.id] ?? 0,
-          };
-        },
-      );
+          alerts:
+            alertsBySupplier[
+              supplier.id
+            ] ?? 0,
+        };
+      });
     },
   });
 }
@@ -193,20 +271,28 @@ export default function SupplierPortfolios() {
   const [activeTab, setActiveTab] =
     useState('portfolios');
 
-  const [selectedPortfolio, setSelectedPortfolio] =
-    useState<string>('all');
+  const [
+    selectedPortfolio,
+    setSelectedPortfolio,
+  ] = useState('all');
 
-  const [selectedCategory, setSelectedCategory] =
-    useState<string>('all');
+  const [
+    selectedCategory,
+    setSelectedCategory,
+  ] = useState('all');
 
-  const [assignmentOpen, setAssignmentOpen] =
-    useState(false);
+  const [
+    assignmentOpen,
+    setAssignmentOpen,
+  ] = useState(false);
 
-  const [selectedSupplier, setSelectedSupplier] =
-    useState<{
-      name: string;
-      category: string;
-    } | null>(null);
+  const [
+    selectedSupplier,
+    setSelectedSupplier,
+  ] = useState<{
+    name: string;
+    category: string;
+  } | null>(null);
 
   const {
     data: portfolios = [],
@@ -216,42 +302,50 @@ export default function SupplierPortfolios() {
   const {
     data: suppliers = [],
     isLoading: suppliersLoading,
-  } = useSupplierPortfolioData();
+  } = useSupplierPortfolioData(
+    portfolios,
+  );
 
   const categories = useMemo(
     () =>
       Array.from(
         new Set(
-          suppliers.map(
-            (supplier) => supplier.category,
+          portfolios.map(
+            (portfolio) =>
+              portfolio.category,
           ),
         ),
       ).sort(),
-    [suppliers],
+    [portfolios],
   );
 
-  const filteredSuppliers = useMemo(() => {
-    return suppliers.filter((supplier) => {
-      const matchesPortfolio =
-        selectedPortfolio === 'all' ||
-        supplier.portfolioId ===
-          selectedPortfolio;
+  const filteredSuppliers =
+    useMemo(() => {
+      return suppliers.filter(
+        (supplier) => {
+          const matchesPortfolio =
+            selectedPortfolio ===
+              'all' ||
+            supplier.portfolioId ===
+              selectedPortfolio;
 
-      const matchesCategory =
-        selectedCategory === 'all' ||
-        supplier.category ===
-          selectedCategory;
+          const matchesCategory =
+            selectedCategory ===
+              'all' ||
+            supplier.portfolioCategory ===
+              selectedCategory;
 
-      return (
-        matchesPortfolio &&
-        matchesCategory
+          return (
+            matchesPortfolio &&
+            matchesCategory
+          );
+        },
       );
-    });
-  }, [
-    suppliers,
-    selectedPortfolio,
-    selectedCategory,
-  ]);
+    }, [
+      suppliers,
+      selectedPortfolio,
+      selectedCategory,
+    ]);
 
   const suppliersTable =
     useTableInteractions({
@@ -259,12 +353,13 @@ export default function SupplierPortfolios() {
       searchFields: [
         'name',
         'assignedTo',
-        'category',
         'portfolioName',
+        'portfolioCategory',
       ],
     });
 
-  const totalSuppliers = suppliers.length;
+  const totalSuppliers =
+    suppliers.length;
 
   const averageScore =
     totalSuppliers > 0
@@ -277,20 +372,16 @@ export default function SupplierPortfolios() {
         )
       : 0;
 
-  const totalAlerts = suppliers.reduce(
-    (total, supplier) =>
-      total + supplier.alerts,
-    0,
-  );
-
-  const activePortfolios =
-    portfolios.filter(
-      (portfolio) =>
-        portfolio.status !== 'inactive',
+  const totalAlerts =
+    suppliers.reduce(
+      (total, supplier) =>
+        total + supplier.alerts,
+      0,
     );
 
-  const portfolioSummaries: PortfolioSummary[] =
-    activePortfolios.map((portfolio) => {
+  const portfolioSummaries:
+    PortfolioSummary[] =
+    portfolios.map((portfolio) => {
       const portfolioSuppliers =
         suppliers.filter(
           (supplier) =>
@@ -303,7 +394,8 @@ export default function SupplierPortfolios() {
           ? Math.round(
               portfolioSuppliers.reduce(
                 (total, supplier) =>
-                  total + supplier.score,
+                  total +
+                  supplier.score,
                 0,
               ) /
                 portfolioSuppliers.length,
@@ -313,7 +405,8 @@ export default function SupplierPortfolios() {
       const alertCount =
         portfolioSuppliers.reduce(
           (total, supplier) =>
-            total + supplier.alerts,
+            total +
+            supplier.alerts,
           0,
         );
 
@@ -340,15 +433,17 @@ export default function SupplierPortfolios() {
       > = {};
 
       suppliers.forEach((supplier) => {
-        const key =
+        const responsible =
           supplier.assignedTo ||
           'Non assigné';
 
-        if (!grouped[key]) {
-          grouped[key] = [];
+        if (!grouped[responsible]) {
+          grouped[responsible] = [];
         }
 
-        grouped[key].push(supplier);
+        grouped[responsible].push(
+          supplier,
+        );
       });
 
       return grouped;
@@ -400,7 +495,8 @@ export default function SupplierPortfolios() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
+      {/* HEADER */}
+
       <div>
         <div className="flex items-center gap-3">
           <FolderOpen className="h-8 w-8 text-primary" />
@@ -411,14 +507,23 @@ export default function SupplierPortfolios() {
             </h1>
 
             <p className="text-muted-foreground">
-              Portefeuilles de fournisseurs suivis
-              par le pôle Fournisseurs & Produits.
+              Gestion des portefeuilles de
+              fournisseurs du pôle Fournisseurs
+              & Produits.
             </p>
           </div>
         </div>
+
+        <p className="mt-2 text-sm text-muted-foreground">
+          Un portefeuille constitue l'unité de
+          pilotage. La catégorie est une
+          caractéristique du portefeuille et ne
+          constitue pas un portefeuille autonome.
+        </p>
       </div>
 
       {/* KPIs */}
+
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-4">
@@ -439,11 +544,11 @@ export default function SupplierPortfolios() {
             <FolderOpen className="h-5 w-5 text-primary" />
 
             <p className="mt-2 text-2xl font-bold">
-              {activePortfolios.length}
+              {portfolios.length}
             </p>
 
             <p className="text-xs text-muted-foreground">
-              Portefeuilles actifs
+              Portefeuilles fournisseurs
             </p>
           </CardContent>
         </Card>
@@ -495,7 +600,10 @@ export default function SupplierPortfolios() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Portfolios */}
+        {/* ============================================================
+            PORTEFEUILLES
+            ============================================================ */}
+
         <TabsContent
           value="portfolios"
           className="mt-4 space-y-4"
@@ -507,25 +615,26 @@ export default function SupplierPortfolios() {
               </CardTitle>
 
               <CardDescription>
-                Les portefeuilles sont les unités
-                de pilotage. Les catégories sont
-                des attributs des fournisseurs et
-                ne constituent pas des portefeuilles.
+                Chaque carte correspond à un
+                enregistrement réel de
+                supplier_portfolios.
               </CardDescription>
             </CardHeader>
 
             <CardContent>
-              {portfolioSummaries.length === 0 ? (
+              {portfolioSummaries.length ===
+              0 ? (
                 <div className="rounded-lg border border-dashed p-8 text-center">
                   <FolderOpen className="mx-auto h-8 w-8 text-muted-foreground" />
 
                   <p className="mt-3 font-medium">
-                    Aucun portefeuille fournisseur
+                    Aucun portefeuille
+                    fournisseur
                   </p>
 
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Les portefeuilles créés dans le
-                    pôle Fournisseurs apparaîtront ici.
+                    Aucun portefeuille n'est
+                    actuellement enregistré.
                   </p>
                 </div>
               ) : (
@@ -548,19 +657,18 @@ export default function SupplierPortfolios() {
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <CardTitle className="text-lg">
-                                {portfolio.name ||
-                                  'Portefeuille fournisseur'}
+                                {portfolio.category}
                               </CardTitle>
 
                               <CardDescription>
+                                Responsable :{' '}
                                 {portfolio.responsible_name ||
-                                  'Responsable non défini'}
+                                  'Non défini'}
                               </CardDescription>
                             </div>
 
                             <Badge variant="outline">
-                              {portfolio.status ||
-                                'active'}
+                              Portefeuille
                             </Badge>
                           </div>
                         </CardHeader>
@@ -573,7 +681,9 @@ export default function SupplierPortfolios() {
                               </p>
 
                               <p className="text-xl font-bold">
-                                {portfolio.supplierCount}
+                                {
+                                  portfolio.supplierCount
+                                }
                               </p>
                             </div>
 
@@ -583,7 +693,9 @@ export default function SupplierPortfolios() {
                               </p>
 
                               <p className="text-xl font-bold">
-                                {portfolio.alertCount}
+                                {
+                                  portfolio.alertCount
+                                }
                               </p>
                             </div>
                           </div>
@@ -595,7 +707,10 @@ export default function SupplierPortfolios() {
                               </span>
 
                               <span className="font-medium">
-                                {portfolio.averageScore}%
+                                {
+                                  portfolio.averageScore
+                                }
+                                %
                               </span>
                             </div>
 
@@ -607,12 +722,20 @@ export default function SupplierPortfolios() {
                             />
                           </div>
 
-                          {portfolio.category && (
+                          <div className="flex flex-wrap gap-2">
                             <Badge variant="secondary">
-                              Catégorie principale :{' '}
                               {portfolio.category}
                             </Badge>
-                          )}
+
+                            {portfolio.backup_name && (
+                              <Badge variant="outline">
+                                Backup :{' '}
+                                {
+                                  portfolio.backup_name
+                                }
+                              </Badge>
+                            )}
+                          </div>
                         </CardContent>
                       </Card>
                     ),
@@ -622,7 +745,8 @@ export default function SupplierPortfolios() {
             </CardContent>
           </Card>
 
-          {unassignedSuppliers.length > 0 && (
+          {unassignedSuppliers.length >
+            0 && (
             <Card className="border-dashed">
               <CardHeader>
                 <CardTitle>
@@ -630,9 +754,9 @@ export default function SupplierPortfolios() {
                 </CardTitle>
 
                 <CardDescription>
-                  Ces fournisseurs validés ne sont
-                  actuellement rattachés à aucun
-                  portefeuille.
+                  Fournisseurs validés sans
+                  association active dans
+                  portfolio_assignments.
                 </CardDescription>
               </CardHeader>
 
@@ -640,11 +764,13 @@ export default function SupplierPortfolios() {
                 <Badge variant="outline">
                   {unassignedSuppliers.length}{' '}
                   fournisseur
-                  {unassignedSuppliers.length > 1
+                  {unassignedSuppliers.length >
+                  1
                     ? 's'
                     : ''}{' '}
                   non affecté
-                  {unassignedSuppliers.length > 1
+                  {unassignedSuppliers.length >
+                  1
                     ? 's'
                     : ''}
                 </Badge>
@@ -653,7 +779,10 @@ export default function SupplierPortfolios() {
           )}
         </TabsContent>
 
-        {/* Suppliers */}
+        {/* ============================================================
+            FOURNISSEURS
+            ============================================================ */}
+
         <TabsContent
           value="suppliers"
           className="mt-4 space-y-4"
@@ -682,7 +811,7 @@ export default function SupplierPortfolios() {
                 setSelectedPortfolio
               }
             >
-              <SelectTrigger className="w-full md:w-[220px]">
+              <SelectTrigger className="w-full md:w-[230px]">
                 <SelectValue placeholder="Portefeuille" />
               </SelectTrigger>
 
@@ -691,14 +820,13 @@ export default function SupplierPortfolios() {
                   Tous les portefeuilles
                 </SelectItem>
 
-                {activePortfolios.map(
+                {portfolios.map(
                   (portfolio) => (
                     <SelectItem
                       key={portfolio.id}
                       value={portfolio.id}
                     >
-                      {portfolio.name ||
-                        'Portefeuille fournisseur'}
+                      {portfolio.category}
                     </SelectItem>
                   ),
                 )}
@@ -711,7 +839,7 @@ export default function SupplierPortfolios() {
                 setSelectedCategory
               }
             >
-              <SelectTrigger className="w-full md:w-[180px]">
+              <SelectTrigger className="w-full md:w-[190px]">
                 <SelectValue placeholder="Catégorie" />
               </SelectTrigger>
 
@@ -814,13 +942,17 @@ export default function SupplierPortfolios() {
                                 : 'outline'
                             }
                           >
-                            {supplier.portfolioName}
+                            {
+                              supplier.portfolioName
+                            }
                           </Badge>
                         </TableCell>
 
                         <TableCell>
                           <Badge variant="outline">
-                            {supplier.category}
+                            {
+                              supplier.portfolioCategory
+                            }
                           </Badge>
                         </TableCell>
 
@@ -841,11 +973,15 @@ export default function SupplierPortfolios() {
                         </TableCell>
 
                         <TableCell>
-                          {supplier.assignedTo}
+                          {
+                            supplier.assignedTo
+                          }
                         </TableCell>
 
                         <TableCell className="text-muted-foreground">
-                          {supplier.lastAudit}
+                          {
+                            supplier.lastAudit
+                          }
                         </TableCell>
 
                         <TableCell>
@@ -855,7 +991,7 @@ export default function SupplierPortfolios() {
                             onClick={() =>
                               handleReassign(
                                 supplier.name,
-                                supplier.category,
+                                supplier.portfolioCategory,
                               )
                             }
                           >
@@ -876,7 +1012,8 @@ export default function SupplierPortfolios() {
                         className="py-8 text-center text-muted-foreground"
                       >
                         Aucun fournisseur
-                        correspondant aux filtres.
+                        correspondant aux
+                        filtres.
                       </TableCell>
                     </TableRow>
                   )}
@@ -886,7 +1023,10 @@ export default function SupplierPortfolios() {
           </Card>
         </TabsContent>
 
-        {/* Manager */}
+        {/* ============================================================
+            VUE RESPONSABLE
+            ============================================================ */}
+
         <TabsContent
           value="manager"
           className="mt-4 space-y-4"
@@ -895,13 +1035,13 @@ export default function SupplierPortfolios() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <BarChart3 className="h-5 w-5" />
-                Répartition des portefeuilles
+                Répartition de charge
               </CardTitle>
 
               <CardDescription>
-                Charge opérationnelle par responsable,
-                calculée à partir des fournisseurs
-                effectivement affectés.
+                Charge calculée à partir des
+                assignations réelles de
+                portfolio_assignments.
               </CardDescription>
             </CardHeader>
 
@@ -923,12 +1063,15 @@ export default function SupplierPortfolios() {
                           100,
                       );
 
-                    const averageResponsibleScore =
+                    const averageScore =
                       responsibleSuppliers.length >
                       0
                         ? Math.round(
                             responsibleSuppliers.reduce(
-                              (total, supplier) =>
+                              (
+                                total,
+                                supplier,
+                              ) =>
                                 total +
                                 supplier.score,
                               0,
@@ -939,7 +1082,10 @@ export default function SupplierPortfolios() {
 
                     const alertCount =
                       responsibleSuppliers.reduce(
-                        (total, supplier) =>
+                        (
+                          total,
+                          supplier,
+                        ) =>
                           total +
                           supplier.alerts,
                         0,
@@ -1001,10 +1147,7 @@ export default function SupplierPortfolios() {
                             </p>
 
                             <p className="font-bold">
-                              {
-                                averageResponsibleScore
-                              }
-                              %
+                              {averageScore}%
                             </p>
                           </div>
 
@@ -1015,7 +1158,8 @@ export default function SupplierPortfolios() {
 
                             <p
                               className={`font-bold ${
-                                alertCount > 0
+                                alertCount >
+                                0
                                   ? 'text-destructive'
                                   : 'text-emerald-500'
                               }`}
@@ -1027,7 +1171,10 @@ export default function SupplierPortfolios() {
 
                         <Progress
                           value={
-                            loadPercentage
+                            Math.min(
+                              loadPercentage,
+                              100,
+                            )
                           }
                           className="h-2"
                         />
@@ -1039,14 +1186,15 @@ export default function SupplierPortfolios() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-dashed">
             <CardHeader>
               <CardTitle>
-                Référentiel de gestion
+                Règle de gestion
               </CardTitle>
 
               <CardDescription>
-                Règle d’architecture du pôle.
+                Le responsable est issu de
+                l'affectation réelle du fournisseur.
               </CardDescription>
             </CardHeader>
 
@@ -1055,33 +1203,33 @@ export default function SupplierPortfolios() {
                 <strong className="text-foreground">
                   Portefeuille :
                 </strong>{' '}
-                unité de pilotage d’un ensemble de
-                fournisseurs.
+                défini par
+                <code className="mx-1">
+                  supplier_portfolios
+                </code>
+                .
               </p>
 
               <p>
                 <strong className="text-foreground">
-                  Catégorie :
+                  Affectation :
                 </strong>{' '}
-                caractéristique d’un fournisseur,
-                utilisée pour filtrer et analyser.
+                définie par
+                <code className="mx-1">
+                  portfolio_assignments
+                </code>
+                .
               </p>
 
               <p>
                 <strong className="text-foreground">
-                  Responsable :
+                  Fournisseur :
                 </strong>{' '}
-                collaborateur chargé du suivi du
-                portefeuille.
-              </p>
-
-              <p>
-                <strong className="text-foreground">
-                  Qualité :
-                </strong>{' '}
-                score et alertes restent attachés
-                aux fournisseurs, puis agrégés au
-                niveau du portefeuille.
+                relié au portefeuille par
+                <code className="mx-1">
+                  portfolio_assignments.portfolio_id
+                </code>
+                .
               </p>
             </CardContent>
           </Card>
@@ -1091,7 +1239,9 @@ export default function SupplierPortfolios() {
       {selectedSupplier && (
         <AssignmentSuggestion
           open={assignmentOpen}
-          onOpenChange={setAssignmentOpen}
+          onOpenChange={
+            setAssignmentOpen
+          }
           supplierName={
             selectedSupplier.name
           }
