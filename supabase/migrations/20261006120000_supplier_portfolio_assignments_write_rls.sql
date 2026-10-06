@@ -193,3 +193,54 @@ WITH CHECK (
       )
   )
 );
+
+-- ============================================================
+-- SUPPLIER PORTFOLIOS — WRITE RLS
+-- ============================================================
+-- Allows the Supplier pole (and leadership) to create/update
+-- supplier portfolios used by the Supplier Portfolios module.
+-- Read access remains governed by supplier_portfolios_read_business.
+-- No DELETE policy is introduced because the UI does not delete
+-- portfolios; portfolio history must remain auditable.
+-- ============================================================
+
+DROP POLICY IF EXISTS
+  "supplier_portfolios_insert_business"
+ON public.supplier_portfolios;
+
+CREATE POLICY
+  "supplier_portfolios_insert_business"
+ON public.supplier_portfolios
+FOR INSERT
+TO authenticated
+WITH CHECK (
+  public.is_leadership(auth.uid())
+  OR public.has_any_pole(
+    auth.uid(),
+    ARRAY['supplier']
+  )
+);
+
+DROP POLICY IF EXISTS
+  "supplier_portfolios_update_business"
+ON public.supplier_portfolios;
+
+CREATE POLICY
+  "supplier_portfolios_update_business"
+ON public.supplier_portfolios
+FOR UPDATE
+TO authenticated
+USING (
+  public.is_leadership(auth.uid())
+  OR public.has_any_pole(
+    auth.uid(),
+    ARRAY['supplier']
+  )
+)
+WITH CHECK (
+  public.is_leadership(auth.uid())
+  OR public.has_any_pole(
+    auth.uid(),
+    ARRAY['supplier']
+  )
+);
