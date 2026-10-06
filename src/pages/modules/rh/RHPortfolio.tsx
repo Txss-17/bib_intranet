@@ -2,11 +2,11 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
   Briefcase,
-  Globe2,
   Loader2,
   ShieldCheck,
   UserCog,
   Users,
+  Layers3,
 } from 'lucide-react';
 
 import {
@@ -85,14 +85,17 @@ type PortfolioAssignment = {
   reason: string | null;
 };
 
-type PortfolioRow = {
+type PortfolioAssignmentRow = {
   assignment: PortfolioAssignment;
   profile: Profile | undefined;
   portfolio: BusinessPortfolio | undefined;
   portfolioType: PortfolioType | undefined;
+  role: AccessRole | undefined;
 };
 
-function getProfileName(profile: Profile | undefined) {
+function getProfileName(
+  profile: Profile | undefined,
+) {
   if (!profile) {
     return 'Collaborateur inconnu';
   }
@@ -105,10 +108,22 @@ function getProfileName(profile: Profile | undefined) {
     .join(' ')
     .trim();
 
-  return fullName || profile.email || 'Collaborateur';
+  return (
+    fullName ||
+    profile.email ||
+    'Collaborateur'
+  );
 }
 
-function getProfilePole(profile: Profile | undefined) {
+function isActiveStatus(
+  status: string | null | undefined,
+) {
+  return status === 'active';
+}
+
+function getPoleLabel(
+  profile: Profile | undefined,
+) {
   if (!profile?.poles?.length) {
     return '—';
   }
@@ -118,7 +133,7 @@ function getProfilePole(profile: Profile | undefined) {
 
 export default function RHPortfolio() {
   const { data, isLoading } = useQuery({
-    queryKey: ['rh-access-portfolio'],
+    queryKey: ['rh-portfolio-administration'],
 
     queryFn: async () => {
       const [
@@ -255,22 +270,29 @@ export default function RHPortfolio() {
       }
 
       return {
-        profiles: (profilesResult.data ?? []) as Profile[],
+        profiles:
+          (profilesResult.data ??
+            []) as Profile[],
 
         assignments:
-          (assignmentsResult.data ?? []) as AccessAssignment[],
+          (assignmentsResult.data ??
+            []) as AccessAssignment[],
 
         roles:
-          (rolesResult.data ?? []) as AccessRole[],
+          (rolesResult.data ??
+            []) as AccessRole[],
 
         scopes:
-          (scopesResult.data ?? []) as AccessScope[],
+          (scopesResult.data ??
+            []) as AccessScope[],
 
         portfolioTypes:
-          (portfolioTypesResult.data ?? []) as PortfolioType[],
+          (portfolioTypesResult.data ??
+            []) as PortfolioType[],
 
         portfolios:
-          (portfoliosResult.data ?? []) as BusinessPortfolio[],
+          (portfoliosResult.data ??
+            []) as BusinessPortfolio[],
 
         portfolioAssignments:
           (portfolioAssignmentsResult.data ??
@@ -280,11 +302,14 @@ export default function RHPortfolio() {
   });
 
   const profiles = data?.profiles ?? [];
-  const assignments = data?.assignments ?? [];
+  const assignments =
+    data?.assignments ?? [];
   const roles = data?.roles ?? [];
   const scopes = data?.scopes ?? [];
-  const portfolioTypes = data?.portfolioTypes ?? [];
-  const portfolios = data?.portfolios ?? [];
+  const portfolioTypes =
+    data?.portfolioTypes ?? [];
+  const portfolios =
+    data?.portfolios ?? [];
   const portfolioAssignments =
     data?.portfolioAssignments ?? [];
 
@@ -335,66 +360,162 @@ export default function RHPortfolio() {
   const portfolioTypeById = useMemo(
     () =>
       new Map(
-        portfolioTypes.map((portfolioType) => [
-          portfolioType.id,
-          portfolioType,
-        ]),
+        portfolioTypes.map(
+          (portfolioType) => [
+            portfolioType.id,
+            portfolioType,
+          ],
+        ),
       ),
     [portfolioTypes],
   );
 
-  const activeAssignments = assignments.filter(
-    (assignment) =>
-      assignment.status === 'active',
-  );
+  /*
+   * RH ne possède pas ici un nouveau type de
+   * portefeuille métier.
+   *
+   * Cette page administre :
+   * - les collaborateurs ;
+   * - leurs rôles ;
+   * - leurs scopes ;
+   * - les affectations de portefeuille qui
+   *   découlent de ces droits.
+   *
+   * Les portefeuilles restent propriétaires
+   * de leur pôle métier source.
+   */
+
+  const activeAssignments =
+    assignments.filter((assignment) =>
+      isActiveStatus(assignment.status),
+    );
 
   const activePortfolioAssignments =
     portfolioAssignments.filter(
       (assignment) =>
-        assignment.assignment_status === 'active',
+        isActiveStatus(
+          assignment.assignment_status,
+        ),
     );
 
-  const coveredEmployees = new Set(
-    activeAssignments.map(
-      (assignment) =>
-        assignment.employee_id,
-    ),
+  const activeProfiles = profiles.filter(
+    (profile) => {
+      const hasActiveAssignment =
+        activeAssignments.some(
+          (assignment) =>
+            assignment.employee_id ===
+            profile.id,
+        );
+
+      return hasActiveAssignment;
+    },
   );
 
-  const coveredPortfolioEmployees =
-    new Set(
-      activePortfolioAssignments.map(
-        (assignment) =>
-          assignment.employee_id,
+  const rhProfiles = profiles.filter(
+    (profile) =>
+      profile.poles?.some(
+        (pole) =>
+          pole.toLowerCase() === 'rh',
       ),
-    );
-
-  const rhProfiles = profiles.filter((profile) =>
-    profile.poles?.some(
-      (pole) =>
-        pole.toLowerCase() === 'rh',
-    ),
   );
 
-  const portfolioRows: PortfolioRow[] =
-    activePortfolioAssignments
+  /*
+   * On ne compte comme portefeuille RH que
+   * les affectations effectivement reliées à
+   * un rôle RH.
+   *
+   * Une affectation Marketplace ou Fournisseur
+   * n'est donc pas transformée artificiellement
+   * en portefeuille RH.
+   */
+  const rhRoleIds = useMemo(
+    () =>
+      new Set(
+        roles
+          .filter(
+            (role) =>
+              role.business_pole
+                ?.toLowerCase() === 'rh' ||
+              role.department
+                ?.toLowerCase() === 'rh',
+          )
+          .map((role) => role.id),
+      ),
+    [roles],
+  );
+
+  const rhAccessAssignmentIds =
+    useMemo(
+      () =>
+        new Set(
+          activeAssignments
+            .filter((assignment) =>
+              rhRoleIds.has(
+                assignment.role_id,
+              ),
+            )
+            .map(
+              (assignment) =>
+                assignment.id,
+            ),
+        ),
+      [
+        activeAssignments,
+        rhRoleIds,
+      ],
+    );
+
+  const rhPortfolioAssignments =
+    activePortfolioAssignments.filter(
+      (assignment) =>
+        assignment.access_assignment_id &&
+        rhAccessAssignmentIds.has(
+          assignment.access_assignment_id,
+        ),
+    );
+
+  const portfolioRows: PortfolioAssignmentRow[] =
+    rhPortfolioAssignments
       .map((assignment) => {
         const portfolio =
           portfolioById.get(
             assignment.portfolio_id,
           );
 
-        return {
-          assignment,
-          profile: profileById.get(
+        const profile =
+          profileById.get(
             assignment.employee_id,
-          ),
-          portfolio,
-          portfolioType: portfolio
+          );
+
+        const portfolioType =
+          portfolio
             ? portfolioTypeById.get(
                 portfolio.portfolio_type_id,
               )
-            : undefined,
+            : undefined;
+
+        const accessAssignment =
+          assignment.access_assignment_id
+            ? assignments.find(
+                (candidate) =>
+                  candidate.id ===
+                  assignment.access_assignment_id,
+              )
+            : undefined;
+
+        const role =
+          accessAssignment
+            ? roleById.get(
+                accessAssignment.role_id,
+              )
+            : undefined;
+
+        return {
+          assignment,
+          profile,
+          portfolio,
+          portfolioType,
+          role,
         };
       })
       .filter(
@@ -403,28 +524,30 @@ export default function RHPortfolio() {
           Boolean(row.portfolio),
       );
 
-  const activePortfolioCount =
+  const activeRolesCount =
     new Set(
-      activePortfolioAssignments.map(
+      activeAssignments.map(
         (assignment) =>
-          assignment.portfolio_id,
+          assignment.role_id,
       ),
     ).size;
 
-  const activePortfolioTypes =
+  const activeScopesCount =
     new Set(
-      activePortfolioAssignments
-        .map((assignment) => {
-          const portfolio =
-            portfolioById.get(
-              assignment.portfolio_id,
-            );
-
-          return portfolio
-            ? portfolio.portfolio_type_id
-            : null;
-        })
+      activeAssignments
+        .map(
+          (assignment) =>
+            assignment.scope_id,
+        )
         .filter(Boolean),
+    ).size;
+
+  const assignedRhCollaborators =
+    new Set(
+      portfolioRows.map(
+        (row) =>
+          row.assignment.employee_id,
+      ),
     ).size;
 
   if (isLoading) {
@@ -437,35 +560,32 @@ export default function RHPortfolio() {
 
   return (
     <div className="space-y-6">
-      {/* ============================================================
-          HEADER
-          ============================================================ */}
+      {/* HEADER */}
 
       <div>
         <div className="flex items-center gap-3">
           <Briefcase className="h-8 w-8 text-primary" />
 
-          <h1 className="text-3xl font-bold">
-            Portefeuille RH
-          </h1>
+          <div>
+            <h1 className="text-3xl font-bold">
+              Portefeuille RH
+            </h1>
+
+            <p className="mt-1 text-muted-foreground">
+              Administration des collaborateurs,
+              rôles, périmètres et affectations RH.
+            </p>
+          </div>
         </div>
 
-        <p className="mt-2 text-muted-foreground">
-          Administration des périmètres et des
-          affectations de portefeuille des
-          collaborateurs.
-        </p>
-
-        <p className="mt-1 text-sm text-muted-foreground">
-          Le rôle définit ce qu’un collaborateur peut
-          faire. Le portefeuille définit sur quelles
-          ressources métier il peut le faire.
+        <p className="mt-2 max-w-4xl text-sm text-muted-foreground">
+          Le pôle RH administre les personnes et
+          leurs droits. Les portefeuilles métier
+          restent rattachés à leur pôle propriétaire.
         </p>
       </div>
 
-      {/* ============================================================
-          KPIs
-          ============================================================ */}
+      {/* KPIs */}
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -487,47 +607,151 @@ export default function RHPortfolio() {
             <UserCog className="h-5 w-5 text-primary" />
 
             <p className="mt-2 text-2xl font-bold">
-              {coveredEmployees.size}
+              {activeProfiles.length}
             </p>
 
             <p className="text-xs text-muted-foreground">
-              Collaborateurs avec rôle actif
+              Collaborateurs avec accès actif
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-4">
-            <Briefcase className="h-5 w-5 text-primary" />
+            <ShieldCheck className="h-5 w-5 text-primary" />
 
             <p className="mt-2 text-2xl font-bold">
-              {activePortfolioCount}
+              {activeRolesCount}
             </p>
 
             <p className="text-xs text-muted-foreground">
-              Portefeuilles actifs attribués
+              Rôles actifs utilisés
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="p-4">
-            <Globe2 className="h-5 w-5 text-primary" />
+            <Layers3 className="h-5 w-5 text-primary" />
 
             <p className="mt-2 text-2xl font-bold">
-              {activePortfolioTypes}
+              {activeScopesCount}
             </p>
 
             <p className="text-xs text-muted-foreground">
-              Types de portefeuille utilisés
+              Périmètres d'accès actifs
             </p>
           </CardContent>
         </Card>
       </div>
 
-      {/* ============================================================
-          AFFECTATIONS RBAC
-          ============================================================ */}
+      {/* COLLABORATEURS RH */}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Collaborateurs du pôle RH
+          </CardTitle>
+
+          <CardDescription>
+            Collaborateurs identifiés dans le
+            périmètre RH et leurs responsabilités
+            d'accès.
+          </CardDescription>
+        </CardHeader>
+
+        <CardContent>
+          {rhProfiles.length === 0 ? (
+            <div className="rounded-lg border border-dashed p-8 text-center">
+              <Users className="mx-auto h-8 w-8 text-muted-foreground" />
+
+              <p className="mt-3 font-medium">
+                Aucun collaborateur RH identifié
+              </p>
+
+              <p className="mt-1 text-sm text-muted-foreground">
+                Les profils dont le pôle contient
+                « RH » apparaîtront ici.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {rhProfiles.map((profile) => {
+                const profileAssignments =
+                  activeAssignments.filter(
+                    (assignment) =>
+                      assignment.employee_id ===
+                      profile.id,
+                  );
+
+                return (
+                  <div
+                    key={profile.id}
+                    className="rounded-lg border p-4"
+                  >
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div>
+                        <p className="font-medium">
+                          {getProfileName(
+                            profile,
+                          )}
+                        </p>
+
+                        <p className="text-sm text-muted-foreground">
+                          {profile.email ??
+                            '—'}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="secondary">
+                          {profile.position ||
+                            'Fonction non définie'}
+                        </Badge>
+
+                        <Badge variant="outline">
+                          {profile.seniority ||
+                            'Ancienneté non définie'}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-3">
+                      <span>
+                        Pôle :{' '}
+                        {getPoleLabel(
+                          profile,
+                        )}
+                      </span>
+
+                      <span>
+                        Rôles actifs :{' '}
+                        {
+                          profileAssignments.length
+                        }
+                      </span>
+
+                      <span>
+                        Portefeuilles RH attribués :{' '}
+                        {
+                          portfolioRows.filter(
+                            (row) =>
+                              row.assignment
+                                .employee_id ===
+                              profile.id,
+                          ).length
+                        }
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* AFFECTATIONS RBAC */}
 
       <Card>
         <CardHeader>
@@ -536,8 +760,8 @@ export default function RHPortfolio() {
           </CardTitle>
 
           <CardDescription>
-            Rôles et périmètres d’accès administrés
-            pour les collaborateurs.
+            Vue RH des rôles et périmètres
+            d'autorisation actifs.
           </CardDescription>
         </CardHeader>
 
@@ -547,12 +771,7 @@ export default function RHPortfolio() {
               <ShieldCheck className="mx-auto h-8 w-8 text-muted-foreground" />
 
               <p className="mt-3 font-medium">
-                Aucune affectation RBAC active
-              </p>
-
-              <p className="mt-1 text-sm text-muted-foreground">
-                Les rôles et périmètres apparaîtront
-                ici lorsqu’ils seront enregistrés.
+                Aucune affectation active
               </p>
             </div>
           ) : (
@@ -590,8 +809,8 @@ export default function RHPortfolio() {
                           </p>
 
                           <p className="text-sm text-muted-foreground">
-                            {profile?.email ??
-                              '—'}
+                            {profile?.position ||
+                              'Fonction non définie'}
                           </p>
                         </div>
 
@@ -607,31 +826,31 @@ export default function RHPortfolio() {
                               'Global'}
                           </Badge>
 
-                          <Badge>
-                            {assignment.status ??
-                              'active'}
-                          </Badge>
+                          {role?.business_pole && (
+                            <Badge variant="outline">
+                              {role.business_pole}
+                            </Badge>
+                          )}
                         </div>
                       </div>
 
                       <div className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-3">
                         <span>
-                          Pôle :{' '}
-                          {getProfilePole(
-                            profile,
-                          )}
-                        </span>
-
-                        <span>
-                          Fonction :{' '}
-                          {profile?.position ||
+                          Clé du rôle :{' '}
+                          {role?.role_key ??
                             '—'}
                         </span>
 
                         <span>
-                          Rôle :{' '}
-                          {role?.role_key ??
-                            assignment.role_id}
+                          Type de scope :{' '}
+                          {scope?.scope_type ??
+                            '—'}
+                        </span>
+
+                        <span>
+                          Valeur :{' '}
+                          {assignment.scope_value ??
+                            '—'}
                         </span>
                       </div>
                     </div>
@@ -643,19 +862,17 @@ export default function RHPortfolio() {
         </CardContent>
       </Card>
 
-      {/* ============================================================
-          PORTEFEUILLES MÉTIER
-          ============================================================ */}
+      {/* AFFECTATIONS DE PORTEFEUILLES RH */}
 
       <Card>
         <CardHeader>
           <CardTitle>
-            Portefeuilles métier
+            Affectations de portefeuilles
           </CardTitle>
 
           <CardDescription>
-            Affectation des collaborateurs aux
-            portefeuilles métier transversaux.
+            Uniquement les portefeuilles reliés à une
+            affectation RBAC relevant du périmètre RH.
           </CardDescription>
         </CardHeader>
 
@@ -665,13 +882,14 @@ export default function RHPortfolio() {
               <Briefcase className="mx-auto h-8 w-8 text-muted-foreground" />
 
               <p className="mt-3 font-medium">
-                Aucun portefeuille attribué
+                Aucun portefeuille RH attribué
               </p>
 
               <p className="mt-1 text-sm text-muted-foreground">
-                Les affectations de portefeuille
-                apparaîtront ici lorsqu’elles seront
-                enregistrées.
+                Cela ne signifie pas que les
+                portefeuilles Marketplace ou Fournisseurs
+                n'existent pas. Ils restent gérés dans
+                leurs pôles propriétaires.
               </p>
             </div>
           ) : (
@@ -682,6 +900,7 @@ export default function RHPortfolio() {
                   profile,
                   portfolio,
                   portfolioType,
+                  role,
                 }) => (
                   <div
                     key={assignment.id}
@@ -703,27 +922,26 @@ export default function RHPortfolio() {
 
                       <div className="flex flex-wrap gap-2">
                         <Badge variant="secondary">
-                          {portfolioType?.label ??
+                          {portfolio?.label_snapshot ??
                             'Portefeuille'}
                         </Badge>
 
                         <Badge variant="outline">
-                          {portfolio?.label_snapshot ??
-                            'Sans nom'}
+                          {portfolioType?.label ??
+                            'Type non défini'}
                         </Badge>
 
                         <Badge>
-                          {assignment.assignment_status ??
-                            'active'}
+                          {role?.label ??
+                            'Rôle non défini'}
                         </Badge>
                       </div>
                     </div>
 
                     <div className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-3">
                       <span>
-                        Pôle :{' '}
-                        {portfolioType
-                          ?.business_pole ||
+                        Pôle propriétaire :{' '}
+                        {portfolioType?.business_pole ||
                           '—'}
                       </span>
 
@@ -735,17 +953,17 @@ export default function RHPortfolio() {
                       </span>
 
                       <span>
-                        Fonction :{' '}
-                        {profile?.position ||
-                          '—'}
+                        Statut :{' '}
+                        {assignment.assignment_status ||
+                          'active'}
                       </span>
                     </div>
 
                     {assignment.reason && (
                       <div className="mt-3 rounded-md bg-muted/40 p-3 text-sm text-muted-foreground">
-                        <span className="font-medium text-foreground">
+                        <strong className="text-foreground">
                           Motif :
-                        </span>{' '}
+                        </strong>{' '}
                         {assignment.reason}
                       </div>
                     )}
@@ -757,73 +975,62 @@ export default function RHPortfolio() {
         </CardContent>
       </Card>
 
-      {/* ============================================================
-          MODÈLE TRANSVERSAL
-          ============================================================ */}
+      {/* RÈGLE D'ARCHITECTURE */}
 
       <Card className="border-dashed">
         <CardHeader>
           <CardTitle>
-            Modèle transversal
+            Règle d'architecture des portefeuilles
           </CardTitle>
 
           <CardDescription>
-            Un même moteur technique, des portefeuilles
-            métier propres à chaque pôle.
+            Séparation entre propriété métier et
+            administration RH.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-3 text-sm text-muted-foreground">
           <div>
-            <span className="font-medium text-foreground">
-              RH
-            </span>{' '}
-            — administration des collaborateurs,
-            rôles, périmètres et affectations.
+            <strong className="text-foreground">
+              Marketplace :
+            </strong>{' '}
+            possède et administre ses portefeuilles
+            marchands.
           </div>
 
           <div>
-            <span className="font-medium text-foreground">
-              Fournisseurs
-            </span>{' '}
-            — portefeuilles regroupant les fournisseurs
-            suivis par les collaborateurs.
+            <strong className="text-foreground">
+              Fournisseurs :
+            </strong>{' '}
+            possède et administre ses portefeuilles
+            fournisseurs.
           </div>
 
           <div>
-            <span className="font-medium text-foreground">
-              Marketplace
-            </span>{' '}
-            — portefeuilles regroupant les marchands
-            et leurs boutiques.
+            <strong className="text-foreground">
+              RH :
+            </strong>{' '}
+            administre les collaborateurs, rôles,
+            périmètres et affectations.
           </div>
 
           <div>
-            <span className="font-medium text-foreground">
-              Autres pôles
-            </span>{' '}
-            — même moteur lorsque l’activité nécessite
-            l’attribution d’un ensemble de ressources.
+            <strong className="text-foreground">
+              RBAC :
+            </strong>{' '}
+            constitue la couche transversale permettant
+            de relier un collaborateur à un périmètre
+            métier sans transférer la propriété de ce
+            portefeuille au pôle RH.
           </div>
 
           <div className="rounded-lg bg-muted/40 p-3">
             <strong className="text-foreground">
               Principe :
             </strong>{' '}
-            le rôle définit les actions autorisées ;
-            le portefeuille limite ces actions aux
-            ressources attribuées.
-          </div>
-
-          <div className="rounded-lg border p-3">
-            <strong className="text-foreground">
-              Identité :
-            </strong>{' '}
-            les collaborateurs sont identifiés par{' '}
-            <code>profiles.id</code>, aligné sur{' '}
-            <code>auth.users.id</code>. L’ancien modèle{' '}
-            <code>employees</code> n’est plus utilisé
-            par cette interface.
+            le rôle détermine ce que le collaborateur
+            peut faire ; le scope et le portefeuille
+            déterminent où il peut le faire.
           </div>
         </CardContent>
       </Card>
