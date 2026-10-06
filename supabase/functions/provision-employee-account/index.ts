@@ -356,9 +356,17 @@ Deno.serve(async (req) => {
         first_name: request.first_name,
         last_name: request.last_name,
         email,
+    
         position: request.position,
+    
         poles: request.poles,
+    
         seniority: request.seniority,
+    
+        collaborator_type:
+          request.collaborator_type ?? 'internal',
+    
+        hr_status: 'active',
       })
       .eq("id", userId);
 
