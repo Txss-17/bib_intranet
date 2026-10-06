@@ -449,14 +449,27 @@ export default function SupplierPortfolios() {
     }, [suppliers]);
 
   const handleReassign = (
-    supplierName: string,
-    category: string,
+    supplier: SupplierRow,
   ) => {
+    if (!supplier.portfolioId) {
+      toast.error(
+        'Aucun portefeuille fournisseur',
+        {
+          description:
+            'Le fournisseur doit être rattaché à un portefeuille avant de pouvoir être assigné.',
+        },
+      );
+  
+      return;
+    }
+  
     setSelectedSupplier({
-      name: supplierName,
-      category,
+      id: supplier.id,
+      name: supplier.name,
+      portfolioId: supplier.portfolioId,
+      category: supplier.portfolioCategory,
     });
-
+  
     setAssignmentOpen(true);
   };
 
