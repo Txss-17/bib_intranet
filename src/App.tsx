@@ -173,6 +173,7 @@ import Training from "./pages/modules/rh/Training";
 import BusinessTrips from "./pages/modules/rh/BusinessTrips";
 import Publications from "./pages/modules/rh/Publications";
 import RHPortfolio from './pages/modules/rh/RHPortfolio';
+import Organization from "./pages/modules/rh/Organization";
 
 /* ============================================================
    9. QUALITÉ & AUDIT
@@ -697,6 +698,9 @@ const App = () => (
                   path="/pole/rh/employees"
                   element={<Employees />}
                 />
+                <Route path="/pole/rh" element={<RHDashboard />} />
+                <Route path="/pole/rh/employees" element={<Employees />} />
+                <Route path="/pole/rh/files" element={<EmployeeFiles />} />
 
                 {/* ====================================================
                     9. QUALITÉ & AUDIT
