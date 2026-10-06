@@ -12,6 +12,7 @@ import {
 
 import {
   useMarketplaceMerchants,
+  useMarketplaceProducts,
   useMarketplaceShops,
 } from "@/hooks/useMarketplace";
 
@@ -37,10 +38,13 @@ function getStatusLabel(status: ProductStatus) {
   switch (status) {
     case "active":
       return "Actif";
+
     case "inactive":
       return "Inactif";
+
     case "draft":
       return "Brouillon";
+
     default:
       return "Non renseigné";
   }
@@ -50,46 +54,49 @@ function getStatusClasses(status: ProductStatus) {
   switch (status) {
     case "active":
       return "bg-emerald-50 text-emerald-700 border-emerald-200";
+
     case "inactive":
       return "bg-slate-50 text-slate-600 border-slate-200";
+
     case "draft":
       return "bg-amber-50 text-amber-700 border-amber-200";
+
     default:
       return "bg-muted text-muted-foreground border-border";
   }
 }
 
-function resolveProductStatus(product: any): ProductStatus {
-  const status = normalize(
-    product.status ??
-      product.product_status ??
-      product.lifecycle_status,
-  );
+function resolveProductStatus(product: {
+  status?: string | null;
+}) {
+  const status = normalize(product.status);
 
   if (
     status === "active" ||
     status === "published" ||
-    status === "available"
+    status === "available" ||
+    status === "validated"
   ) {
-    return "active";
+    return "active" as ProductStatus;
   }
 
   if (
     status === "inactive" ||
     status === "archived" ||
-    status === "disabled"
+    status === "disabled" ||
+    status === "rejected"
   ) {
-    return "inactive";
+    return "inactive" as ProductStatus;
   }
 
   if (
     status === "draft" ||
     status === "pending"
   ) {
-    return "draft";
+    return "draft" as ProductStatus;
   }
 
-  return "unknown";
+  return "unknown" as ProductStatus;
 }
 
 export default function MarketplaceProducts() {
@@ -103,14 +110,32 @@ export default function MarketplaceProducts() {
     isLoading: shopsLoading,
   } = useMarketplaceShops();
 
+  const {
+    data: products = [],
+    isLoading: productsLoading,
+  } = useMarketplaceProducts();
+
   const [search, setSearch] = useState("");
+
   const [statusFilter, setStatusFilter] =
     useState<"all" | ProductStatus>("all");
+
   const [categoryFilter, setCategoryFilter] =
     useState("all");
 
   const isLoading =
-    merchantsLoading || shopsLoading;
+    merchantsLoading ||
+    shopsLoading ||
+    productsLoading;
+
+  const shopMap = useMemo(() => {
+    return new Map(
+      shops.map((shop) => [
+        shop.id,
+        shop,
+      ]),
+    );
+  }, [shops]);
 
   const merchantMap = useMemo(() => {
     return new Map(
@@ -122,77 +147,91 @@ export default function MarketplaceProducts() {
   }, [merchants]);
 
   /*
-   * Important:
+   * Marketplace ne fabrique pas sa propre relation produit/boutique.
    *
-   * The current Marketplace hooks do not necessarily expose a unified
-   * product catalogue yet. We therefore build the page around the
-   * product information that may already be attached to marketplace
-   * shop records, without inventing a second product schema here.
+   * La relation canonique est :
    *
-   * When the canonical product/catalog hook is connected, this mapping
-   * should be replaced by that hook rather than duplicating product data.
+   *   products.shop_id
+   *          ↓
+   *   shops.id
+   *          ↓
+   *   shops.merchant_id
+   *          ↓
+   *   user_accounts.id
+   *
+   * Le platform-bridge renseigne products.shop_id à partir
+   * de la relation BIB Platform products.boutique_id.
    */
-  const products = useMemo<ProductView[]>(() => {
-    const result: ProductView[] = [];
+  const productViews = useMemo<ProductView[]>(() => {
+    return products.map((product) => {
+      const shop = product.shop_id
+        ? shopMap.get(product.shop_id)
+        : undefined;
 
-    shops.forEach((shop: any) => {
-      const shopProducts =
-        Array.isArray(shop.products)
-          ? shop.products
-          : [];
+      const merchant = shop?.merchant_id
+        ? merchantMap.get(shop.merchant_id)
+        : undefined;
 
-      shopProducts.forEach((product: any) => {
-        const merchant = shop.merchant_id
-          ? merchantMap.get(shop.merchant_id)
-          : undefined;
+      return {
+        id: product.id,
 
-        result.push({
-          id:
-            String(product.id ?? "") ||
-            `${shop.id}-${product.name ?? "product"}`,
-          name:
-            product.name ||
-            product.product_name ||
-            "Produit sans nom",
-          sku:
-            product.sku ||
-            product.product_sku ||
-            null,
-          status: resolveProductStatus(product),
-          category:
-            product.category ||
-            shop.category ||
-            "Non catégorisée",
-          shopId: shop.id,
-          shopName: shop.name || null,
-          merchantId: shop.merchant_id || null,
-          merchantName:
-            merchant?.company_name ||
-            merchant?.contact_name ||
-            null,
-        });
-      });
+        name:
+          product.name ||
+          "Produit sans nom",
+
+        sku:
+          product.sku ||
+          null,
+
+        status:
+          resolveProductStatus(product),
+
+        category:
+          product.category ||
+          shop?.category ||
+          "Non catégorisée",
+
+        shopId:
+          shop?.id ||
+          product.shop_id ||
+          null,
+
+        shopName:
+          shop?.name ||
+          null,
+
+        merchantId:
+          shop?.merchant_id ||
+          null,
+
+        merchantName:
+          merchant?.company_name ||
+          merchant?.contact_name ||
+          null,
+      };
     });
-
-    return result;
-  }, [shops, merchantMap]);
+  }, [
+    products,
+    shopMap,
+    merchantMap,
+  ]);
 
   const categories = useMemo(() => {
     return Array.from(
       new Set(
-        products
+        productViews
           .map((product) => product.category)
           .filter(Boolean),
       ),
     ).sort((a, b) =>
       a.localeCompare(b, "fr"),
     );
-  }, [products]);
+  }, [productViews]);
 
   const filteredProducts = useMemo(() => {
     const query = normalize(search);
 
-    return products.filter((product) => {
+    return productViews.filter((product) => {
       const matchesSearch =
         !query ||
         normalize(product.name).includes(query) ||
@@ -216,7 +255,7 @@ export default function MarketplaceProducts() {
       );
     });
   }, [
-    products,
+    productViews,
     search,
     statusFilter,
     categoryFilter,
@@ -224,23 +263,30 @@ export default function MarketplaceProducts() {
 
   const stats = useMemo(() => {
     return {
-      total: products.length,
-      active: products.filter(
-        (product) => product.status === "active",
+      total: productViews.length,
+
+      active: productViews.filter(
+        (product) =>
+          product.status === "active",
       ).length,
-      inactive: products.filter(
-        (product) => product.status === "inactive",
+
+      inactive: productViews.filter(
+        (product) =>
+          product.status === "inactive",
       ).length,
-      draft: products.filter(
-        (product) => product.status === "draft",
+
+      draft: productViews.filter(
+        (product) =>
+          product.status === "draft",
       ).length,
+
       shops: new Set(
-        products
+        productViews
           .map((product) => product.shopId)
           .filter(Boolean),
       ).size,
     };
-  }, [products]);
+  }, [productViews]);
 
   const clearFilters = () => {
     setSearch("");
@@ -260,8 +306,11 @@ export default function MarketplaceProducts() {
         <div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Package className="h-4 w-4" />
+
             <span>Marketplace</span>
+
             <span>/</span>
+
             <span>Produits</span>
           </div>
 
@@ -270,9 +319,11 @@ export default function MarketplaceProducts() {
           </h1>
 
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Vue Marketplace du catalogue produit : découverte, rattachement
-            aux boutiques et lecture commerciale. Le stock, la préparation,
-            les mouvements et la logistique restent pilotés par Ops.
+            Vue Marketplace du catalogue produit :
+            rattachement aux boutiques, lecture commerciale
+            et suivi de l’exposition des produits.
+            Le stock, la préparation, les mouvements
+            et la logistique restent pilotés par Ops.
           </p>
         </div>
 
@@ -281,6 +332,7 @@ export default function MarketplaceProducts() {
           className="inline-flex items-center justify-center gap-2 rounded-lg border bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
         >
           <Store className="h-4 w-4" />
+
           Voir les boutiques
         </Link>
       </div>
@@ -320,7 +372,7 @@ export default function MarketplaceProducts() {
         />
       </div>
 
-      {/* Catalogue scope */}
+      {/* Scope */}
       <div className="rounded-xl border bg-card p-5 shadow-sm">
         <div className="flex items-start gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background">
@@ -333,10 +385,11 @@ export default function MarketplaceProducts() {
             </h2>
 
             <p className="mt-1 text-sm leading-6 text-muted-foreground">
-              Marketplace utilise cette vue pour comprendre quels produits
-              sont exposés par quels marchands et quelles boutiques. Les
-              décisions de stock et d'exécution opérationnelle ne sont pas
-              prises depuis cette page.
+              Marketplace utilise cette vue pour comprendre
+              quels produits sont rattachés à quelles boutiques
+              et à quels marchands. Les décisions de stock,
+              de préparation et d'exécution opérationnelle
+              ne sont pas prises depuis cette page.
             </p>
           </div>
         </div>
@@ -350,8 +403,8 @@ export default function MarketplaceProducts() {
           </h2>
 
           <p className="mt-1 text-xs text-muted-foreground">
-            Recherchez et segmentez les produits disponibles dans le
-            périmètre Marketplace.
+            Recherchez et segmentez les produits
+            du périmètre Marketplace.
           </p>
         </div>
 
@@ -405,10 +458,13 @@ export default function MarketplaceProducts() {
                   value: "all",
                   label: "Toutes les catégories",
                 },
-                ...categories.map((category) => ({
-                  value: category,
-                  label: category,
-                })),
+
+                ...categories.map(
+                  (category) => ({
+                    value: category,
+                    label: category,
+                  }),
+                ),
               ]}
             />
 
@@ -419,6 +475,7 @@ export default function MarketplaceProducts() {
                 className="inline-flex h-10 items-center justify-center gap-2 rounded-lg border bg-background px-3 text-sm font-medium hover:bg-muted"
               >
                 <X className="h-4 w-4" />
+
                 Réinitialiser
               </button>
             )}
@@ -428,25 +485,27 @@ export default function MarketplaceProducts() {
         {/* Table */}
         {isLoading ? (
           <div className="space-y-3 p-5">
-            {[1, 2, 3, 4, 5].map((item) => (
-              <div
-                key={item}
-                className="h-16 animate-pulse rounded-lg bg-muted"
-              />
-            ))}
+            {[1, 2, 3, 4, 5].map(
+              (item) => (
+                <div
+                  key={item}
+                  className="h-16 animate-pulse rounded-lg bg-muted"
+                />
+              ),
+            )}
           </div>
         ) : filteredProducts.length === 0 ? (
           <div className="flex min-h-[280px] flex-col items-center justify-center px-6 text-center">
             <Package className="h-9 w-9 text-muted-foreground" />
 
             <h3 className="mt-4 font-medium">
-              Aucun produit disponible dans cette vue
+              Aucun produit disponible
             </h3>
 
             <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-              Soit aucun produit n'est actuellement rattaché aux boutiques
-              exposées par le hook Marketplace, soit les filtres ne
-              correspondent à aucun résultat.
+              Aucun produit ne correspond aux critères
+              actuels ou aucun produit Intranet n'est
+              encore rattaché à une boutique.
             </p>
 
             {hasFilters && (
@@ -456,6 +515,7 @@ export default function MarketplaceProducts() {
                 className="mt-4 inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-muted"
               >
                 <X className="h-4 w-4" />
+
                 Réinitialiser les filtres
               </button>
             )}
@@ -496,12 +556,14 @@ export default function MarketplaceProducts() {
               </thead>
 
               <tbody className="divide-y">
-                {filteredProducts.map((product) => (
-                  <ProductRow
-                    key={product.id}
-                    product={product}
-                  />
-                ))}
+                {filteredProducts.map(
+                  (product) => (
+                    <ProductRow
+                      key={product.id}
+                      product={product}
+                    />
+                  ),
+                )}
               </tbody>
             </table>
           </div>
@@ -542,7 +604,8 @@ function ProductRow({
             to={`/pole/marketplace/stores/${product.shopId}`}
             className="font-medium hover:underline"
           >
-            {product.shopName}
+            {product.shopName ||
+              "Boutique"}
           </Link>
         ) : (
           <span className="text-muted-foreground">
@@ -557,7 +620,8 @@ function ProductRow({
             to={`/pole/marketplace/merchants/${product.merchantId}`}
             className="font-medium hover:underline"
           >
-            {product.merchantName}
+            {product.merchantName ||
+              "Marchand"}
           </Link>
         ) : (
           <span className="text-muted-foreground">
@@ -578,7 +642,9 @@ function ProductRow({
             product.status,
           )}`}
         >
-          {getStatusLabel(product.status)}
+          {getStatusLabel(
+            product.status,
+          )}
         </span>
       </td>
 
@@ -660,14 +726,16 @@ function FilterSelect({
         }
         className="h-10 min-w-[200px] appearance-none rounded-lg border bg-background py-2 pl-9 pr-9 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
       >
-        {options.map((option) => (
-          <option
-            key={option.value}
-            value={option.value}
-          >
-            {option.label}
-          </option>
-        ))}
+        {options.map(
+          (option) => (
+            <option
+              key={option.value}
+              value={option.value}
+            >
+              {option.label}
+            </option>
+          ),
+        )}
       </select>
 
       <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
