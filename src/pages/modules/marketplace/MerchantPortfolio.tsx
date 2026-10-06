@@ -84,9 +84,18 @@ type BusinessPortfolio = {
 };
 
 export default function MerchantPortfolio() {
+  const location = useLocation();
+
+  const isPortfolioView =
+    location.pathname ===
+    '/pole/marketplace/portfolio';
+
   const [search, setSearch] = useState('');
+
   const [portfolioFilter, setPortfolioFilter] =
-    useState<PortfolioFilter>('all');
+    useState<PortfolioFilter>(
+      isPortfolioView ? 'mine' : 'all',
+    );
 
   const {
     data: merchants = [],
