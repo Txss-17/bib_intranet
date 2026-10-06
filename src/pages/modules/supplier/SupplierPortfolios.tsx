@@ -1008,9 +1008,6 @@ export default function SupplierPortfolios() {
                             <ArrowRightLeft className="mr-1 h-4 w-4" />
                             Réassigner
                           </Button>
-                            <ArrowRightLeft className="mr-1 h-4 w-4" />
-                            Réassigner
-                          </Button>
                         </TableCell>
                       </TableRow>
                     ),
