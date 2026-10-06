@@ -544,6 +544,12 @@ rh: {
       path: '/pole/rh/portfolio',
       icon: 'Briefcase',
     },
+    {
+      id: 'organization',
+      label: 'Organisation',
+      path: '/pole/rh/organization',
+      icon: 'Network',
+    },
   ],
 },
 
