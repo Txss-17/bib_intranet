@@ -435,7 +435,6 @@ export const RESTRICTED_PAGES: Record<
   'audit.corrective-actions': AUDIT_OWNERS,
 
   'audit.sanctions': AUDIT_OWNERS,
-};
 
   // -------------------------------------------------------------------------
   // MARKETPLACE
@@ -479,6 +478,7 @@ export const RESTRICTED_PAGES: Record<
     'gestionnaire_boutiques',
     'gestionnaire_vendeurs',
   ],
+};
 
 // ---------------------------------------------------------------------------
 // ACTIONS PAR NIVEAU HIÉRARCHIQUE
