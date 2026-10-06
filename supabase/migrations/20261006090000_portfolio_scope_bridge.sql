@@ -1,52 +1,20 @@
 -- ============================================================
 -- BIB INTRANET
 -- PONT TRANSVERSAL : PORTEFEUILLES MÉTIER ↔ RBAC
--- ============================================================
+-- VERSION CORRIGÉE
 --
--- PRINCIPES
---
--- 1. Les portefeuilles métier restent propres à chaque pôle.
---
---    Fournisseurs :
---      supplier_portfolios
---      portfolio_assignments
---
---    Marketplace :
---      merchant_portfolios
---      merchant_portfolio_assignments
---
--- 2. Le RBAC reste transversal :
---
---      collaborateur
---          ↓
---        rôle
---          ↓
---      permissions
---          ↓
---       périmètre
---          ↓
---     ressources accessibles
---
--- 3. Un portefeuille métier ne donne PAS de permission.
---    Il définit uniquement le périmètre de ressources.
---
--- 4. Un collaborateur peut avoir plusieurs affectations.
---
--- 5. On ne remplace PAS les tables métier existantes.
---    Cette migration crée uniquement leur représentation
---    comme périmètre RBAC lorsqu'elle est nécessaire.
---
+-- Principe :
+-- - les portefeuilles métier sont centralisés dans le moteur
+--   transversal ;
+-- - les affectations de collaborateurs restent séparées ;
+-- - aucune conversion implicite profiles.id → employees.id ;
+-- - les affectations Marketplace seront créées explicitement
+--   via le système RBAC/RH.
 -- ============================================================
 
 
 -- ============================================================
 -- 1. TYPES DE PORTEFEUILLES MÉTIER
--- ============================================================
---
--- Cette table constitue le catalogue technique des types de
--- portefeuille utilisables par le moteur transversal.
---
--- Les données métier restent dans leurs propres tables.
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS public.access_portfolio_types (
@@ -88,27 +56,12 @@ CREATE INDEX IF NOT EXISTS idx_access_portfolio_types_status
 
 
 -- ============================================================
--- 2. PORTEFEUILLES MÉTIER RÉFÉRENCÉS PAR LE RBAC
--- ============================================================
+-- 2. PORTEFEUILLES MÉTIER TRANSVERSAUX
 --
--- Cette table ne contient PAS les données détaillées du
--- portefeuille.
+-- Cette table ne remplace pas les tables métier existantes.
 --
--- Elle contient uniquement une référence vers le portefeuille
--- métier réel.
---
--- Exemple :
---
---   portfolio_type_key = supplier
---   source_table       = supplier_portfolios
---   source_id          = UUID du portefeuille fournisseur
---
--- ou :
---
---   portfolio_type_key = marketplace_merchant
---   source_table       = merchant_portfolios
---   source_id          = UUID du portefeuille Marketplace
---
+-- Elle constitue le registre transversal permettant au RBAC
+-- de référencer un portefeuille fournisseur, Marketplace, etc.
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS public.access_business_portfolios (
@@ -153,21 +106,12 @@ CREATE INDEX IF NOT EXISTS idx_access_business_portfolios_status
 
 
 -- ============================================================
--- 3. AFFECTATION COLLABORATEUR → PORTEFEUILLE MÉTIER
--- ============================================================
+-- 3. AFFECTATIONS DES COLLABORATEURS AUX PORTEFEUILLES
 --
--- Cette table complète access_assignments.
+-- IMPORTANT :
+-- employee_id référence exclusivement employees.id.
 --
--- access_assignments répond à :
---
---   "Quel rôle possède ce collaborateur ?"
---
--- Cette table répond à :
---
---   "Sur quel portefeuille métier ce rôle peut-il agir ?"
---
--- Les deux dimensions restent donc séparées.
---
+-- Aucune supposition n'est faite concernant profiles.id.
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS public.access_portfolio_assignments (
@@ -231,7 +175,9 @@ CREATE INDEX IF NOT EXISTS idx_access_portfolio_assignments_status
   ON public.access_portfolio_assignments(assignment_status);
 
 
--- Une même affectation active ne doit pas être dupliquée.
+-- Une même combinaison collaborateur + portefeuille +
+-- affectation RBAC ne peut être active qu'une seule fois.
+
 CREATE UNIQUE INDEX IF NOT EXISTS
   uq_access_portfolio_assignment_active
 ON public.access_portfolio_assignments(
@@ -243,13 +189,7 @@ WHERE assignment_status = 'active';
 
 
 -- ============================================================
--- 4. CATALOGUE DES TYPES
--- ============================================================
---
--- Fournisseurs
--- Marketplace
---
--- D'autres pôles pourront être ajoutés sans modifier le modèle.
+-- 4. REGISTRE DES TYPES DE PORTEFEUILLES
 -- ============================================================
 
 INSERT INTO public.access_portfolio_types (
@@ -258,28 +198,28 @@ INSERT INTO public.access_portfolio_types (
   business_pole,
   source_table,
   source_id_column,
-  description
+  description,
+  status
 )
 VALUES
-
 (
   'supplier',
-  'Portefeuille fournisseurs',
+  'Portefeuilles fournisseurs',
   'supplier',
   'supplier_portfolios',
   'id',
-  'Portefeuille métier regroupant les fournisseurs attribués à un collaborateur du pôle Fournisseurs.'
+  'Portefeuilles métier regroupant les fournisseurs attribués aux collaborateurs du pôle Fournisseurs.',
+  'active'
 ),
-
 (
   'marketplace_merchant',
-  'Portefeuille marchands',
+  'Portefeuilles marchands',
   'marketplace',
   'merchant_portfolios',
   'id',
-  'Portefeuille métier regroupant les marchands et leurs boutiques attribués à un collaborateur Marketplace.'
+  'Portefeuilles métier regroupant les marchands et leurs boutiques attribués aux collaborateurs Marketplace.',
+  'active'
 )
-
 ON CONFLICT (portfolio_type_key)
 DO UPDATE SET
   label = EXCLUDED.label,
@@ -287,18 +227,13 @@ DO UPDATE SET
   source_table = EXCLUDED.source_table,
   source_id_column = EXCLUDED.source_id_column,
   description = EXCLUDED.description,
+  status = EXCLUDED.status,
   updated_at = now();
 
 
 -- ============================================================
 -- 5. SYNCHRONISATION DES PORTEFEUILLES FOURNISSEURS
 -- ============================================================
---
--- On crée une référence RBAC pour les portefeuilles déjà
--- présents dans supplier_portfolios.
---
--- Aucun enregistrement métier n'est modifié.
--- ============================================================
 
 INSERT INTO public.access_business_portfolios (
   portfolio_type_id,
@@ -308,33 +243,36 @@ INSERT INTO public.access_business_portfolios (
 )
 SELECT
   apt.id,
+
   sp.id,
+
   COALESCE(
     NULLIF(sp.category, ''),
     NULLIF(sp.responsible_name, ''),
     'Portefeuille fournisseur'
   ),
+
   'active'
+
 FROM public.access_portfolio_types apt
+
 JOIN public.supplier_portfolios sp
   ON apt.portfolio_type_key = 'supplier'
+
 ON CONFLICT (
   portfolio_type_id,
   source_id
 )
+
 DO UPDATE SET
   label_snapshot = EXCLUDED.label_snapshot,
-  status = 'active',
+  status = EXCLUDED.status,
   updated_at = now();
 
 
 -- ============================================================
 -- 6. SYNCHRONISATION DES PORTEFEUILLES MARKETPLACE
 -- ============================================================
---
--- Même principe :
--- merchant_portfolios reste la source métier.
--- ============================================================
 
 INSERT INTO public.access_business_portfolios (
   portfolio_type_id,
@@ -344,19 +282,27 @@ INSERT INTO public.access_business_portfolios (
 )
 SELECT
   apt.id,
+
   mp.id,
+
   mp.name,
+
   CASE
-    WHEN mp.status = 'active' THEN 'active'
+    WHEN mp.status = 'active'
+      THEN 'active'
     ELSE 'inactive'
   END
+
 FROM public.access_portfolio_types apt
+
 JOIN public.merchant_portfolios mp
   ON apt.portfolio_type_key = 'marketplace_merchant'
+
 ON CONFLICT (
   portfolio_type_id,
   source_id
 )
+
 DO UPDATE SET
   label_snapshot = EXCLUDED.label_snapshot,
   status = EXCLUDED.status,
@@ -365,17 +311,11 @@ DO UPDATE SET
 
 -- ============================================================
 -- 7. SYNCHRONISATION DES AFFECTATIONS FOURNISSEURS
--- ============================================================
 --
--- Le système historique :
+-- Ici assigned_to_id est déjà l'identifiant utilisé par
+-- portfolio_assignments pour le collaborateur.
 --
---   portfolio_assignments
---
--- devient une source métier d'affectation.
---
--- On ne le supprime pas.
---
--- On crée simplement la liaison avec le moteur transversal.
+-- Aucune conversion profiles → employees n'est effectuée.
 -- ============================================================
 
 INSERT INTO public.access_portfolio_assignments (
@@ -385,12 +325,21 @@ INSERT INTO public.access_portfolio_assignments (
   starts_at,
   reason
 )
+
 SELECT
   pa.assigned_to_id,
+
   abp.id,
+
   'active',
-  COALESCE(pa.assigned_at, now()),
+
+  COALESCE(
+    pa.assigned_at,
+    now()
+  ),
+
   'Synchronisation depuis portfolio_assignments'
+
 FROM public.portfolio_assignments pa
 
 JOIN public.access_portfolio_types apt
@@ -398,92 +347,86 @@ JOIN public.access_portfolio_types apt
 
 JOIN public.access_business_portfolios abp
   ON abp.portfolio_type_id = apt.id
-  AND abp.source_id = pa.portfolio_id
+ AND abp.source_id = pa.portfolio_id
 
 WHERE pa.assigned_to_id IS NOT NULL
+
   AND pa.portfolio_id IS NOT NULL
 
 ON CONFLICT DO NOTHING;
 
 
 -- ============================================================
--- 8. SYNCHRONISATION DES AFFECTATIONS MARKETPLACE
+-- 8. PAS DE SYNCHRONISATION AUTOMATIQUE MARKETPLACE
 -- ============================================================
 --
--- Le système Marketplace conserve :
+-- merchant_portfolio_assignments représente actuellement :
 --
---   merchant_portfolio_assignments
+--      marchand → portefeuille
 --
--- comme source métier.
+-- et non :
 --
--- Le moteur transversal récupère une référence.
+--      collaborateur → portefeuille.
+--
+-- De plus :
+--
+--      merchant_portfolios.owner_id
+--
+-- référence profiles.id.
+--
+-- Le moteur RBAC attend :
+--
+--      access_portfolio_assignments.employee_id
+--      → employees.id
+--
+-- Nous ne faisons donc aucune conversion implicite.
+--
+-- L'affectation d'un collaborateur Marketplace sera créée
+-- explicitement lorsque l'identité RH/RBAC sera résolue.
+--
 -- ============================================================
-
-INSERT INTO public.access_portfolio_assignments (
-  employee_id,
-  portfolio_id,
-  assignment_status,
-  starts_at,
-  reason
-)
-SELECT
-  mp.owner_id,
-  abp.id,
-  'active',
-  COALESCE(mpa.assigned_at, now()),
-  'Synchronisation depuis merchant_portfolio_assignments'
-FROM public.merchant_portfolio_assignments mpa
-
-JOIN public.access_portfolio_types apt
-  ON apt.portfolio_type_key = 'marketplace_merchant'
-
-JOIN public.access_business_portfolios abp
-  ON abp.portfolio_type_id = apt.id
-  AND abp.source_id = mpa.portfolio_id
-
-JOIN public.merchant_portfolios mp
-  ON mp.id = mpa.portfolio_id
-
-WHERE mp.owner_id IS NOT NULL
-  AND mpa.ended_at IS NULL
-
-ON CONFLICT DO NOTHING;
 
 
 -- ============================================================
--- 9. MISE À JOUR AUTOMATIQUE
+-- 9. TRIGGERS updated_at
 -- ============================================================
 
-DROP TRIGGER IF EXISTS
-  trg_access_portfolio_types_updated
+DROP TRIGGER IF EXISTS trg_access_portfolio_types_updated
 ON public.access_portfolio_types;
 
-CREATE TRIGGER
-  trg_access_portfolio_types_updated
-BEFORE UPDATE ON public.access_portfolio_types
+CREATE TRIGGER trg_access_portfolio_types_updated
+
+BEFORE UPDATE
+ON public.access_portfolio_types
+
 FOR EACH ROW
+
 EXECUTE FUNCTION public.update_updated_at();
 
 
-DROP TRIGGER IF EXISTS
-  trg_access_business_portfolios_updated
+DROP TRIGGER IF EXISTS trg_access_business_portfolios_updated
 ON public.access_business_portfolios;
 
-CREATE TRIGGER
-  trg_access_business_portfolios_updated
-BEFORE UPDATE ON public.access_business_portfolios
+CREATE TRIGGER trg_access_business_portfolios_updated
+
+BEFORE UPDATE
+ON public.access_business_portfolios
+
 FOR EACH ROW
+
 EXECUTE FUNCTION public.update_updated_at();
 
 
-DROP TRIGGER IF EXISTS
-  trg_access_portfolio_assignments_updated
+DROP TRIGGER IF EXISTS trg_access_portfolio_assignments_updated
 ON public.access_portfolio_assignments;
 
-CREATE TRIGGER
-  trg_access_portfolio_assignments_updated
-BEFORE UPDATE ON public.access_portfolio_assignments
+CREATE TRIGGER trg_access_portfolio_assignments_updated
+
+BEFORE UPDATE
+ON public.access_portfolio_assignments
+
 FOR EACH ROW
+
 EXECUTE FUNCTION public.update_updated_at();
 
 
@@ -505,48 +448,53 @@ ALTER TABLE public.access_portfolio_assignments
 -- 11. LECTURE DES TYPES
 -- ============================================================
 
-DROP POLICY IF EXISTS
-  access_portfolio_types_select
+DROP POLICY IF EXISTS access_portfolio_types_select
 ON public.access_portfolio_types;
 
-CREATE POLICY
-  access_portfolio_types_select
+CREATE POLICY access_portfolio_types_select
+
 ON public.access_portfolio_types
+
 FOR SELECT
+
 TO authenticated
+
 USING (
   auth.uid() IS NOT NULL
 );
 
 
 -- ============================================================
--- 12. LECTURE DES PORTEFEUILLES
--- ============================================================
---
--- La lecture reste compatible avec le pôle concerné.
--- Les restrictions fines par rôle/périmètre seront appliquées
--- dans les étapes RBAC suivantes.
+-- 12. LECTURE DES PORTEFEUILLES MÉTIER
 -- ============================================================
 
-DROP POLICY IF EXISTS
-  access_business_portfolios_select
+DROP POLICY IF EXISTS access_business_portfolios_select
 ON public.access_business_portfolios;
 
-CREATE POLICY
-  access_business_portfolios_select
+CREATE POLICY access_business_portfolios_select
+
 ON public.access_business_portfolios
+
 FOR SELECT
+
 TO authenticated
+
 USING (
   public.is_leadership(auth.uid())
+
   OR public.has_role(
     auth.uid(),
     'admin'::app_role
   )
+
   OR EXISTS (
     SELECT 1
+
     FROM public.access_portfolio_types apt
-    WHERE apt.id = access_business_portfolios.portfolio_type_id
+
+    WHERE apt.id =
+      access_business_portfolios.portfolio_type_id
+
       AND public.has_any_pole(
         auth.uid(),
         ARRAY[apt.business_pole]
@@ -556,35 +504,39 @@ USING (
 
 
 -- ============================================================
--- 13. LECTURE DES AFFECTATIONS
+-- 13. LECTURE DES AFFECTATIONS DE PORTEFEUILLES
 -- ============================================================
 
-DROP POLICY IF EXISTS
-  access_portfolio_assignments_select
+DROP POLICY IF EXISTS access_portfolio_assignments_select
 ON public.access_portfolio_assignments;
 
-CREATE POLICY
-  access_portfolio_assignments_select
+CREATE POLICY access_portfolio_assignments_select
+
 ON public.access_portfolio_assignments
+
 FOR SELECT
+
 TO authenticated
+
 USING (
   public.is_leadership(auth.uid())
+
   OR public.has_role(
     auth.uid(),
     'admin'::app_role
   )
-  OR employee_id IN (
-    SELECT e.id
-    FROM public.employees e
-    WHERE e.user_id = auth.uid()
-  )
+
   OR EXISTS (
     SELECT 1
+
     FROM public.access_business_portfolios abp
+
     JOIN public.access_portfolio_types apt
       ON apt.id = abp.portfolio_type_id
-    WHERE abp.id = access_portfolio_assignments.portfolio_id
+
+    WHERE abp.id =
+      access_portfolio_assignments.portfolio_id
+
       AND public.has_any_pole(
         auth.uid(),
         ARRAY[apt.business_pole]
@@ -608,8 +560,3 @@ TO service_role;
 GRANT ALL
 ON public.access_portfolio_assignments
 TO service_role;
-
-
--- ============================================================
--- FIN
--- ============================================================
