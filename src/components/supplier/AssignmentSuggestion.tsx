@@ -340,9 +340,9 @@ export function AssignmentSuggestion({
         const {
           data: existingAssignments,
           error: existingError,
-        } = await supabase
+        } = await (supabase as any)
           .from(
-            'portfolio_assignments' as any,
+            'portfolio_assignments',
           )
           .select(
             'id, supplier_id, portfolio_id, assigned_to_id, assigned_to_name',
@@ -366,9 +366,9 @@ export function AssignmentSuggestion({
         if (existing) {
           const {
             error: updateError,
-          } = await supabase
+          } = await (supabase as any)
             .from(
-              'portfolio_assignments' as any,
+              'portfolio_assignments',
             )
             .update({
               assigned_to_id:
@@ -392,9 +392,9 @@ export function AssignmentSuggestion({
 
         const {
           error: insertError,
-        } = await supabase
+        } = await (supabase as any)
           .from(
-            'portfolio_assignments' as any,
+            'portfolio_assignments',
           )
           .insert({
             supplier_id:

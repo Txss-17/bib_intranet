@@ -154,10 +154,10 @@ export default function GatewayCompose() {
     (location.state as GatewayComposeState | null) ?? null;
 
   const isReply =
-    state?.mode === 'reply';
+    (state as GatewayReplyPrefill | null)?.mode === 'reply';
 
   const replyMessage =
-    isReply ? state.message : null;
+    isReply ? (state as GatewayReplyPrefill).message : null;
 
   const normalPrefill =
     !isReply ? (state as GatewayComposePrefill | null) : null;
