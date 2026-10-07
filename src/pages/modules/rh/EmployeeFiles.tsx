@@ -1215,3 +1215,412 @@ export default function EmployeeFiles() {
                   source:
                     documentSourceLabels[
                       document.source
+                    ],
+                  date:
+                    formatDate(
+                      document.document_date,
+                    ),
+                  expires_at:
+                    formatDate(
+                      document.expires_at,
+                    ),
+                }),
+              )}
+            />
+          </div>
+        </>
+      )}
+
+
+      {/* ======================================================
+          DOCUMENT DETAILS
+          ====================================================== */}
+
+      <Dialog
+        open={Boolean(selectedDocument)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedDocument(null);
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              Détails du document
+            </DialogTitle>
+
+            <DialogDescription>
+              Métadonnées enregistrées dans le dossier RH.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedDocument && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-muted-foreground">
+                  Nom
+                </p>
+
+                <p className="font-medium">
+                  {selectedDocument.name}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Type
+                  </p>
+
+                  <p className="mt-1 text-sm">
+                    {
+                      documentTypeLabels[
+                        selectedDocument
+                          .document_type
+                      ]
+                    }
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Source
+                  </p>
+
+                  <p className="mt-1 text-sm">
+                    {
+                      documentSourceLabels[
+                        selectedDocument.source
+                      ]
+                    }
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Date du document
+                  </p>
+
+                  <p className="mt-1 text-sm">
+                    {formatDate(
+                      selectedDocument.document_date,
+                    )}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Échéance
+                  </p>
+
+                  <p
+                    className={`mt-1 text-sm ${
+                      isExpired(
+                        selectedDocument.expires_at,
+                      )
+                        ? 'text-destructive'
+                        : ''
+                    }`}
+                  >
+                    {formatDate(
+                      selectedDocument.expires_at,
+                    )}
+                  </p>
+                </div>
+              </div>
+
+              {selectedDocument.description && (
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    Description
+                  </p>
+
+                  <p className="mt-1 rounded-md bg-muted/50 p-3 text-sm">
+                    {
+                      selectedDocument.description
+                    }
+                  </p>
+                </div>
+              )}
+
+              <div className="flex flex-wrap justify-between gap-2 pt-2">
+                {selectedDocument.document_url && (
+                  <Button asChild>
+                    <a
+                      href={
+                        selectedDocument.document_url
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Ouvrir le document
+                    </a>
+                  </Button>
+                )}
+
+                <Button
+                  variant="destructive"
+                  onClick={() =>
+                    deleteDocument(
+                      selectedDocument,
+                    )
+                  }
+                >
+                  Supprimer la référence
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+
+      {/* ======================================================
+          ADD DOCUMENT
+          ====================================================== */}
+
+      <Dialog
+        open={documentDialogOpen}
+        onOpenChange={setDocumentDialogOpen}
+      >
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>
+              Ajouter un document RH
+            </DialogTitle>
+
+            <DialogDescription>
+              Document rattaché à{' '}
+              {selectedEmployee
+                ? fullName(selectedEmployee)
+                : 'ce collaborateur'}.
+              <br />
+              Pour les documents BIB, privilégiez leur
+              emplacement dans Google Drive BIB plutôt qu'un
+              téléchargement local.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+
+            <div>
+              <Label>
+                Nom du document
+              </Label>
+
+              <Input
+                className="mt-1"
+                placeholder="Ex. Contrat de travail — CDI"
+                value={form.name}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    name: event.target.value,
+                  })
+                }
+              />
+            </div>
+
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>
+                  Type
+                </Label>
+
+                <Select
+                  value={form.document_type}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      document_type:
+                        value as DocumentType,
+                    })
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {(
+                      Object.entries(
+                        documentTypeLabels,
+                      ) as [
+                        DocumentType,
+                        string,
+                      ][]
+                    ).map(
+                      ([value, label]) => (
+                        <SelectItem
+                          key={value}
+                          value={value}
+                        >
+                          {label}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+
+
+              <div>
+                <Label>
+                  Source
+                </Label>
+
+                <Select
+                  value={form.source}
+                  onValueChange={(value) =>
+                    setForm({
+                      ...form,
+                      source:
+                        value as DocumentSource,
+                    })
+                  }
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {(
+                      Object.entries(
+                        documentSourceLabels,
+                      ) as [
+                        DocumentSource,
+                        string,
+                      ][]
+                    ).map(
+                      ([value, label]) => (
+                        <SelectItem
+                          key={value}
+                          value={value}
+                        >
+                          {label}
+                        </SelectItem>
+                      ),
+                    )}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+
+            <div>
+              <Label>
+                Référence du document
+              </Label>
+
+              <Input
+                className="mt-1"
+                type="url"
+                placeholder="Lien Google Drive BIB ou référence documentaire"
+                value={form.document_url}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    document_url:
+                      event.target.value,
+                  })
+                }
+              />
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                Le fichier lui-même n'est pas stocké dans
+                cette table. Cette valeur référence son
+                emplacement documentaire.
+              </p>
+            </div>
+
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label>
+                  Date du document
+                </Label>
+
+                <Input
+                  className="mt-1"
+                  type="date"
+                  value={form.document_date}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      document_date:
+                        event.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <div>
+                <Label>
+                  Date d'échéance
+                </Label>
+
+                <Input
+                  className="mt-1"
+                  type="date"
+                  value={form.expires_at}
+                  onChange={(event) =>
+                    setForm({
+                      ...form,
+                      expires_at:
+                        event.target.value,
+                    })
+                  }
+                />
+              </div>
+            </div>
+
+
+            <div>
+              <Label>
+                Description
+              </Label>
+
+              <Textarea
+                className="mt-1"
+                rows={3}
+                placeholder="Informations complémentaires..."
+                value={form.description}
+                onChange={(event) =>
+                  setForm({
+                    ...form,
+                    description:
+                      event.target.value,
+                  })
+                }
+              />
+            </div>
+
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() =>
+                setDocumentDialogOpen(false)
+              }
+            >
+              Annuler
+            </Button>
+
+            <Button
+              onClick={saveDocument}
+              disabled={!form.name.trim()}
+            >
+              <FileCheck className="mr-2 h-4 w-4" />
+              Enregistrer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+    </div>
+  );
+}
