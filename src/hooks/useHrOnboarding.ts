@@ -1,12 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-
-
-// ============================================================
-// TYPES
-// ============================================================
 
 export type CollaboratorType =
   | 'internal'
@@ -25,7 +25,6 @@ export type HrRequestStatus =
   | 'completed'
   | 'rejected';
 
-
 export const COLLABORATOR_TYPE_LABELS: Record<
   CollaboratorType,
   string
@@ -38,7 +37,6 @@ export const COLLABORATOR_TYPE_LABELS: Record<
   intern: 'Stagiaire',
   other: 'Autre',
 };
-
 
 export const HR_STATUS: Record<
   HrRequestStatus,
@@ -57,38 +55,32 @@ export const HR_STATUS: Record<
     variant: 'secondary',
     step: 0,
   },
-
   submitted: {
     label: 'Soumis RH',
     variant: 'outline',
     step: 1,
   },
-
   hr_validated: {
-    label: 'Validé RH — prêt pour provisionnement',
+    label: 'Validé RH',
     variant: 'outline',
     step: 2,
   },
-
   account_created: {
-    label: 'Compte et accès créés',
-    variant: 'default',
+    label: 'Compte créé',
+    variant: 'outline',
     step: 3,
   },
-
   completed: {
     label: 'Intégration terminée',
     variant: 'default',
     step: 4,
   },
-
   rejected: {
     label: 'Refusé',
     variant: 'destructive',
     step: 0,
   },
 };
-
 
 export const HR_STEPS = [
   'Dossier',
@@ -98,83 +90,72 @@ export const HR_STEPS = [
   'Terminé',
 ];
 
-
-// ============================================================
-// REQUEST
-// ============================================================
-
 export interface HrEmployeeRequest {
   id: string;
-
   reference: string;
 
   first_name: string;
-
   last_name: string;
 
   personal_email: string | null;
-
   work_email: string | null;
 
   collaborator_type: CollaboratorType;
 
   position: string | null;
-
   poles: string[];
 
   seniority: string;
-
   requested_role: string;
 
   contract_type: string | null;
-
   start_date: string | null;
+
+  manager_id: string | null;
 
   status: HrRequestStatus;
 
   rejection_reason: string | null;
-
   notes: string | null;
-
-  manager_id?: string | null;
 
   created_user_id: string | null;
 
   created_at: string;
-
   updated_at: string;
 }
 
-
 export interface HrRequestEvent {
   id: string;
-
   actor_name: string | null;
-
   action: string;
-
   from_status: string | null;
-
   to_status: string | null;
-
   note: string | null;
-
   created_at: string;
 }
 
+export interface HrReferent {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  position: string | null;
+  poles: string[] | null;
+  hr_status: string | null;
+}
 
-// ============================================================
-// DATABASE
-// ============================================================
+export interface HrAccessRole {
+  id: string;
+  role_key: string;
+  label: string;
+  business_pole: string | null;
+  department: string | null;
+  status: string;
+}
 
 const db = supabase as unknown as {
   from: (table: string) => any;
 };
-
-
-// ============================================================
-// REQUESTS
-// ============================================================
 
 export const useHrEmployeeRequests = () =>
   useQuery({
@@ -197,9 +178,96 @@ export const useHrEmployeeRequests = () =>
   });
 
 
-// ============================================================
-// EVENTS
-// ============================================================
+/**
+ * Référents RH.
+ *
+ * On ne charge volontairement PAS tous les profiles.
+ *
+ * Un référent doit être :
+ * - actif ou en onboarding ;
+ * - rattaché au pôle RH ;
+ * - responsable RH.
+ */
+export const useHrReferents = () =>
+  useQuery({
+    queryKey: ['rh-onboarding-referents'],
+
+    queryFn: async (): Promise<HrReferent[]> => {
+      const { data, error } = await db
+        .from('profiles')
+        .select(`
+          id,
+          first_name,
+          last_name,
+          email,
+          position,
+          poles,
+          hr_status
+        `)
+        .eq('position', 'rh_manager')
+        .in('hr_status', ['active', 'onboarding'])
+        .contains('poles', ['rh'])
+        .order('first_name', {
+          ascending: true,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as HrReferent[];
+    },
+  });
+
+
+/**
+ * Catalogue RBAC réel.
+ *
+ * Le formulaire ne propose plus les anciens rôles
+ * viewer/operator/etc. comme s'ils constituaient le catalogue
+ * métier.
+ */
+export const useHrAccessRoles = (
+  poles: string[] = [],
+) =>
+  useQuery({
+    queryKey: [
+      'rh-onboarding-access-roles',
+      poles,
+    ],
+
+    queryFn: async (): Promise<HrAccessRole[]> => {
+      const { data, error } = await db
+        .from('access_roles')
+        .select(`
+          id,
+          role_key,
+          label,
+          business_pole,
+          department,
+          status
+        `)
+        .eq('status', 'active')
+        .order('label', {
+          ascending: true,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      const selectedPoles = new Set(poles);
+
+      return ((data ?? []) as HrAccessRole[]).filter(
+        (role) =>
+          !role.business_pole ||
+          selectedPoles.has(role.business_pole),
+      );
+    },
+
+    enabled: true,
+  });
+
 
 export const useHrRequestEvents = (
   requestId?: string,
@@ -230,10 +298,6 @@ export const useHrRequestEvents = (
   });
 
 
-// ============================================================
-// ACTIONS
-// ============================================================
-
 export const useHrOnboardingActions = () => {
   const queryClient = useQueryClient();
 
@@ -242,19 +306,23 @@ export const useHrOnboardingActions = () => {
     profile,
   } = useAuth();
 
-
   const actorName = profile
     ? `${profile.first_name} ${profile.last_name}`.trim()
     : 'Utilisateur';
-
 
   const invalidate = (
     requestId?: string,
   ) => {
     queryClient.invalidateQueries({
-      queryKey: [
-        'hr_employee_requests',
-      ],
+      queryKey: ['hr_employee_requests'],
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ['rh-collaborators'],
+    });
+
+    queryClient.invalidateQueries({
+      queryKey: ['employees'],
     });
 
     if (requestId) {
@@ -267,10 +335,6 @@ export const useHrOnboardingActions = () => {
     }
   };
 
-
-  // ==========================================================
-  // EVENT LOGGING
-  // ==========================================================
 
   const logEvent = async (
     requestId: string,
@@ -285,21 +349,12 @@ export const useHrOnboardingActions = () => {
       .from('hr_employee_request_events')
       .insert({
         request_id: requestId,
-
         actor_id: user?.id ?? null,
-
         actor_name: actorName,
-
         action,
-
-        from_status:
-          extra?.from ?? null,
-
-        to_status:
-          extra?.to ?? null,
-
-        note:
-          extra?.note ?? null,
+        from_status: extra?.from ?? null,
+        to_status: extra?.to ?? null,
+        note: extra?.note ?? null,
       });
 
     if (error) {
@@ -308,16 +363,60 @@ export const useHrOnboardingActions = () => {
   };
 
 
-  // ==========================================================
-  // CREATE REQUEST
-  // ==========================================================
-
   const create = useMutation({
     mutationFn: async (
       payload: Partial<HrEmployeeRequest>,
     ): Promise<HrEmployeeRequest> => {
+      if (!payload.first_name?.trim()) {
+        throw new Error('Le prénom est obligatoire.');
+      }
+
+      if (!payload.last_name?.trim()) {
+        throw new Error('Le nom est obligatoire.');
+      }
+
+      if (
+        !payload.work_email?.trim() &&
+        !payload.personal_email?.trim()
+      ) {
+        throw new Error(
+          'Un email professionnel ou personnel est obligatoire.',
+        );
+      }
+
+      if (
+        !Array.isArray(payload.poles) ||
+        payload.poles.length === 0
+      ) {
+        throw new Error(
+          'Au moins un pôle doit être sélectionné.',
+        );
+      }
+
+      if (!payload.position) {
+        throw new Error('La fonction est obligatoire.');
+      }
+
+      if (!payload.requested_role) {
+        throw new Error(
+          'Le rôle d’accès est obligatoire.',
+        );
+      }
+
       const normalizedPayload = {
         ...payload,
+
+        first_name:
+          payload.first_name.trim(),
+
+        last_name:
+          payload.last_name.trim(),
+
+        personal_email:
+          payload.personal_email?.trim() || null,
+
+        work_email:
+          payload.work_email?.trim() || null,
 
         collaborator_type:
           payload.collaborator_type ??
@@ -326,12 +425,14 @@ export const useHrOnboardingActions = () => {
         start_date:
           payload.start_date || null,
 
+        manager_id:
+          payload.manager_id || null,
+
         status: 'submitted',
 
         created_by:
           user?.id ?? null,
       };
-
 
       const {
         data,
@@ -342,11 +443,9 @@ export const useHrOnboardingActions = () => {
         .select('*')
         .single();
 
-
       if (error) {
         throw error;
       }
-
 
       await logEvent(
         data.id,
@@ -356,46 +455,34 @@ export const useHrOnboardingActions = () => {
           note: `Type : ${
             COLLABORATOR_TYPE_LABELS[
               data.collaborator_type as CollaboratorType
-            ] ??
-            data.collaborator_type
+            ] ?? data.collaborator_type
           }`,
         },
       );
 
-
       return data as HrEmployeeRequest;
     },
-
 
     onSuccess: (request) => {
       invalidate(request.id);
 
       toast({
         title: 'Dossier créé',
-
         description:
           `${request.reference} · ` +
           `${request.first_name} ${request.last_name}`,
       });
     },
 
-
     onError: (error: Error) => {
       toast({
         title: 'Création impossible',
-
-        description:
-          error.message,
-
+        description: error.message,
         variant: 'destructive',
       });
     },
   });
 
-
-  // ==========================================================
-  // STATUS
-  // ==========================================================
 
   const setStatus = useMutation({
     mutationFn: async ({
@@ -404,15 +491,43 @@ export const useHrOnboardingActions = () => {
       reason,
     }: {
       request: HrEmployeeRequest;
-
       status: HrRequestStatus;
-
       reason?: string;
     }) => {
+      const allowedTransitions: Record<
+        HrRequestStatus,
+        HrRequestStatus[]
+      > = {
+        draft: ['submitted', 'rejected'],
+        submitted: ['hr_validated', 'rejected'],
+        hr_validated: ['rejected'],
+        account_created: ['completed', 'rejected'],
+        completed: [],
+        rejected: ['submitted'],
+      };
+
+      if (
+        !allowedTransitions[
+          request.status
+        ]?.includes(status)
+      ) {
+        throw new Error(
+          `Transition interdite : ${request.status} → ${status}`,
+        );
+      }
+
+      if (
+        status === 'rejected' &&
+        !reason?.trim()
+      ) {
+        throw new Error(
+          'Un motif est obligatoire pour un refus.',
+        );
+      }
+
       const patch: Record<string, unknown> = {
         status,
       };
-
 
       if (status === 'hr_validated') {
         patch.hr_validated_by =
@@ -422,12 +537,10 @@ export const useHrOnboardingActions = () => {
           new Date().toISOString();
       }
 
-
       if (status === 'rejected') {
         patch.rejection_reason =
-          reason ?? null;
+          reason?.trim() ?? null;
       }
-
 
       const {
         error,
@@ -436,35 +549,25 @@ export const useHrOnboardingActions = () => {
         .update(patch)
         .eq('id', request.id);
 
-
       if (error) {
         throw error;
       }
 
-
       await logEvent(
         request.id,
-
-        `Statut : ${
-          HR_STATUS[status].label
-        }`,
-
+        `Statut : ${HR_STATUS[status].label}`,
         {
           from: request.status,
-
           to: status,
-
           note: reason,
         },
       );
-
 
       return {
         request,
         status,
       };
     },
-
 
     onSuccess: ({
       request,
@@ -479,23 +582,15 @@ export const useHrOnboardingActions = () => {
       });
     },
 
-
     onError: (error: Error) => {
       toast({
         title: 'Mise à jour impossible',
-
-        description:
-          error.message,
-
+        description: error.message,
         variant: 'destructive',
       });
     },
   });
 
-
-  // ==========================================================
-  // PROVISION ACCOUNT
-  // ==========================================================
 
   const provisionAccount = useMutation({
     mutationFn: async (
@@ -508,82 +603,49 @@ export const useHrOnboardingActions = () => {
         'provision-employee-account',
         {
           body: {
-            requestId:
-              request.id,
+            requestId: request.id,
           },
         },
       );
-
 
       if (error) {
         throw error;
       }
 
-
       if (
-        (data as {
-          error?: string;
-        })?.error
+        (data as { error?: string })?.error
       ) {
         throw new Error(
-          (data as {
-            error: string;
-          }).error,
+          (data as { error: string }).error,
         );
       }
 
-
-      /*
-       * La fonction serveur est responsable de :
-       *
-       * - créer le compte Auth ;
-       * - créer/synchroniser profiles ;
-       * - renseigner collaborator_type ;
-       * - renseigner hr_status ;
-       * - attribuer les pôles ;
-       * - attribuer le rôle ;
-       * - finaliser le dossier RH.
-       */
-
-
       return data as {
         email: string;
-
-        userId?: string;
-
-        accountAlreadyExisted?: boolean;
-
-        temporaryPassword?: string;
+        userId: string;
+        accountAlreadyExisted: boolean;
+        invitationSent: boolean;
+        accessAssignmentId: string | null;
       };
     },
-
 
     onSuccess: (data) => {
       invalidate();
 
       toast({
-        title:
-          'Compte collaborateur créé',
-
+        title: 'Provisionnement terminé',
         description:
-          `${data.email}` +
-          (
-            data.temporaryPassword
-              ? ` · mot de passe temporaire : ${data.temporaryPassword}`
-              : ''
-          ),
+          data.invitationSent
+            ? `${data.email} — invitation envoyée.`
+            : `${data.email} — compte existant synchronisé.`,
       });
     },
-
 
     onError: (error: Error) => {
       toast({
         title:
-          'Création du compte impossible',
-
-        description:
-          error.message,
-
+          'Provisionnement impossible',
+        description: error.message,
         variant: 'destructive',
       });
     },
@@ -592,10 +654,7 @@ export const useHrOnboardingActions = () => {
 
   return {
     create,
-
     setStatus,
-
     provisionAccount,
   };
 };
-    
