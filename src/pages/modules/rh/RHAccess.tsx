@@ -9,7 +9,6 @@ import {
   Loader2,
   Save,
   Lock,
-  CheckCircle2,
   AlertTriangle,
   XCircle,
 } from 'lucide-react';
@@ -25,7 +24,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 import {
   Select,
@@ -55,9 +53,13 @@ import {
 
 import { toast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
+
+/* ============================================================
+   TYPES
+============================================================ */
 
 type AccessRole = {
   id: string;
@@ -112,13 +114,19 @@ type PortfolioAssignment = {
   id: string;
   employee_id: string;
   portfolio_id: string;
+  access_assignment_id: string | null;
   assignment_status: string;
   starts_at: string;
   ends_at: string | null;
+  assigned_by: string | null;
   reason: string | null;
   portfolio?: BusinessPortfolio | null;
 };
 
+
+/* ============================================================
+   HELPERS
+============================================================ */
 
 const STATUS_LABELS: Record<string, string> = {
   active: 'Actif',
@@ -127,7 +135,6 @@ const STATUS_LABELS: Record<string, string> = {
   revoked: 'Révoqué',
   expired: 'Expiré',
 };
-
 
 const STATUS_VARIANT = (
   status: string,
@@ -148,21 +155,34 @@ const STATUS_VARIANT = (
   }
 };
 
-
 const getEmployeeName = (employee: any) =>
   `${employee.first_name ?? ''} ${employee.last_name ?? ''}`.trim() ||
   employee.email;
 
 
+/* ============================================================
+   COMPONENT
+============================================================ */
+
 const RHAccess = () => {
   const queryClient = useQueryClient();
 
+  const { user } = useAuth();
+
+  /*
+   * IMPORTANT :
+   * On récupère tous les collaborateurs RH concernés par la
+   * gouvernance des accès afin que le filtre de statut fonctionne.
+   */
   const {
     data: employees = [],
     isLoading: employeesLoading,
-  } = useEmployees({
-    hrStatus: 'active',
-  });
+  } = useEmployees({});
+
+
+  /* ==========================================================
+     UI STATE
+  ========================================================== */
 
   const [search, setSearch] = useState('');
   const [poleFilter, setPoleFilter] = useState('all');
@@ -189,11 +209,9 @@ const RHAccess = () => {
   const [saving, setSaving] = useState(false);
 
 
-  /*
-   * ============================================================
-   * CATALOGUE DES RÔLES
-   * ============================================================
-   */
+  /* ==========================================================
+     CATALOGUE DES RÔLES
+  ========================================================== */
 
   const {
     data: roles = [],
@@ -213,6 +231,7 @@ const RHAccess = () => {
           owner_type,
           status
         `)
+        .eq('status', 'active')
         .order('label');
 
       if (error) {
@@ -224,14 +243,13 @@ const RHAccess = () => {
   });
 
 
-  /*
-   * ============================================================
-   * CATALOGUE DES SCOPES
-   * ============================================================
-   */
+  /* ==========================================================
+     CATALOGUE DES SCOPES
+  ========================================================== */
 
   const {
     data: scopes = [],
+    isLoading: scopesLoading,
   } = useQuery({
     queryKey: ['rh-access-scopes'],
     queryFn: async () => {
@@ -255,11 +273,9 @@ const RHAccess = () => {
   });
 
 
-  /*
-   * ============================================================
-   * AFFECTATIONS RBAC
-   * ============================================================
-   */
+  /* ==========================================================
+     AFFECTATIONS RBAC
+  ========================================================== */
 
   const {
     data: assignments = [],
@@ -309,11 +325,9 @@ const RHAccess = () => {
   });
 
 
-  /*
-   * ============================================================
-   * TYPES DE PORTEFEUILLES
-   * ============================================================
-   */
+  /* ==========================================================
+     TYPES DE PORTEFEUILLES
+  ========================================================== */
 
   const {
     data: portfolioTypes = [],
@@ -341,11 +355,9 @@ const RHAccess = () => {
   });
 
 
-  /*
-   * ============================================================
-   * PORTEFEUILLES MÉTIER
-   * ============================================================
-   */
+  /* ==========================================================
+     PORTEFEUILLES MÉTIER
+  ========================================================== */
 
   const {
     data: businessPortfolios = [],
@@ -381,11 +393,9 @@ const RHAccess = () => {
   });
 
 
-  /*
-   * ============================================================
-   * AFFECTATIONS DE PORTEFEUILLES
-   * ============================================================
-   */
+  /* ==========================================================
+     AFFECTATIONS DE PORTEFEUILLES
+  ========================================================== */
 
   const {
     data: portfolioAssignments = [],
@@ -399,9 +409,11 @@ const RHAccess = () => {
           id,
           employee_id,
           portfolio_id,
+          access_assignment_id,
           assignment_status,
           starts_at,
           ends_at,
+          assigned_by,
           reason,
           portfolio:access_business_portfolios(
             id,
@@ -431,11 +443,9 @@ const RHAccess = () => {
   });
 
 
-  /*
-   * ============================================================
-   * FILTRES COLLABORATEURS
-   * ============================================================
-   */
+  /* ==========================================================
+     FILTRES
+  ========================================================== */
 
   const filteredEmployees = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -463,6 +473,8 @@ const RHAccess = () => {
         getEmployeeName(employee),
         employee.email,
         employee.position,
+        employee.collaborator_type,
+        employee.hr_status,
         ...(employee.poles ?? []),
       ]
         .filter(Boolean)
@@ -478,11 +490,9 @@ const RHAccess = () => {
   ]);
 
 
-  /*
-   * ============================================================
-   * EMPLOYÉ SÉLECTIONNÉ
-   * ============================================================
-   */
+  /* ==========================================================
+     EMPLOYÉ SÉLECTIONNÉ
+  ========================================================== */
 
   const selectedEmployee = useMemo(
     () =>
@@ -494,16 +504,14 @@ const RHAccess = () => {
   );
 
 
-  const selectedEmployeeAssignments =
-    useMemo(
-      () =>
-        assignments.filter(
-          (assignment) =>
-            assignment.employee_id ===
-            selectedEmployeeId,
-        ),
-      [assignments, selectedEmployeeId],
-    );
+  const selectedEmployeeAssignments = useMemo(
+    () =>
+      assignments.filter(
+        (assignment) =>
+          assignment.employee_id === selectedEmployeeId,
+      ),
+    [assignments, selectedEmployeeId],
+  );
 
 
   const selectedEmployeePortfolioAssignments =
@@ -511,8 +519,7 @@ const RHAccess = () => {
       () =>
         portfolioAssignments.filter(
           (assignment) =>
-            assignment.employee_id ===
-            selectedEmployeeId,
+            assignment.employee_id === selectedEmployeeId,
         ),
       [
         portfolioAssignments,
@@ -521,11 +528,9 @@ const RHAccess = () => {
     );
 
 
-  /*
-   * ============================================================
-   * KPI
-   * ============================================================
-   */
+  /* ==========================================================
+     KPI
+  ========================================================== */
 
   const activeRoleAssignments =
     assignments.filter(
@@ -533,31 +538,28 @@ const RHAccess = () => {
         assignment.status === 'active',
     ).length;
 
+
   const activePortfolioAssignments =
     portfolioAssignments.filter(
       (assignment) =>
-        assignment.assignment_status ===
-        'active',
+        assignment.assignment_status === 'active',
     ).length;
+
 
   const collaboratorsWithoutRole =
     employees.filter(
       (employee: any) =>
         !assignments.some(
           (assignment) =>
-            assignment.employee_id ===
-              employee.id &&
-            assignment.status ===
-              'active',
+            assignment.employee_id === employee.id &&
+            assignment.status === 'active',
         ),
     ).length;
 
 
-  /*
-   * ============================================================
-   * OUVERTURE DU DIALOGUE RÔLE
-   * ============================================================
-   */
+  /* ==========================================================
+     OUVERTURE DIALOGUE RÔLE
+  ========================================================== */
 
   const openRoleDialog = (
     employeeId: string,
@@ -565,10 +567,8 @@ const RHAccess = () => {
     const current =
       assignments.find(
         (assignment) =>
-          assignment.employee_id ===
-            employeeId &&
-          assignment.status ===
-            'active',
+          assignment.employee_id === employeeId &&
+          assignment.status === 'active',
       );
 
     setSelectedEmployeeId(employeeId);
@@ -585,17 +585,26 @@ const RHAccess = () => {
   };
 
 
-  /*
-   * ============================================================
-   * ENREGISTREMENT DU RÔLE
-   * ============================================================
-   */
+  /* ==========================================================
+     ENREGISTREMENT RÔLE
+  ========================================================== */
 
   const handleSaveRole = async () => {
     if (
       !selectedEmployee ||
       !selectedRoleId
     ) {
+      return;
+    }
+
+    if (!user?.id) {
+      toast({
+        title: 'Session introuvable',
+        description:
+          'Impossible d’identifier le collaborateur RH qui effectue cette modification.',
+        variant: 'destructive',
+      });
+
       return;
     }
 
@@ -607,9 +616,9 @@ const RHAccess = () => {
           (assignment) =>
             assignment.employee_id ===
               selectedEmployee.id &&
-            assignment.status ===
-              'active',
+            assignment.status === 'active',
         );
+
 
       const payload = {
         employee_id:
@@ -634,6 +643,7 @@ const RHAccess = () => {
         ends_at: null,
       };
 
+
       if (existing) {
         const { error } =
           await supabase
@@ -657,8 +667,13 @@ const RHAccess = () => {
             )
             .insert({
               ...payload,
-              assigned_by:
-                selectedEmployee.id,
+
+              /*
+               * IMPORTANT :
+               * assigned_by = personne qui effectue
+               * l'affectation, pas le collaborateur ciblé.
+               */
+              assigned_by: user.id,
             });
 
         if (error) {
@@ -666,20 +681,22 @@ const RHAccess = () => {
         }
       }
 
+
       await queryClient.invalidateQueries({
         queryKey: [
           'rh-access-assignments',
         ],
       });
 
+
       toast({
-        title:
-          'Accès mis à jour',
+        title: 'Accès mis à jour',
         description:
           `Le rôle de ${getEmployeeName(
             selectedEmployee,
           )} a été enregistré.`,
       });
+
 
       setRoleDialogOpen(false);
     } catch (error: any) {
@@ -697,11 +714,9 @@ const RHAccess = () => {
   };
 
 
-  /*
-   * ============================================================
-   * OUVERTURE PORTFOLIO
-   * ============================================================
-   */
+  /* ==========================================================
+     OUVERTURE PORTEFEUILLE
+  ========================================================== */
 
   const openPortfolioDialog = (
     employeeId: string,
@@ -712,127 +727,139 @@ const RHAccess = () => {
   };
 
 
-  /*
-   * ============================================================
-   * ENREGISTREMENT PORTFOLIO
-   * ============================================================
-   */
+  /* ==========================================================
+     ENREGISTREMENT PORTEFEUILLE
+  ========================================================== */
 
-  const handleSavePortfolio =
-    async () => {
-      if (
-        !selectedEmployee ||
-        !selectedPortfolioId
-      ) {
-        return;
-      }
+  const handleSavePortfolio = async () => {
+    if (
+      !selectedEmployee ||
+      !selectedPortfolioId
+    ) {
+      return;
+    }
 
-      const alreadyAssigned =
-        portfolioAssignments.some(
+    if (!user?.id) {
+      toast({
+        title: 'Session introuvable',
+        description:
+          'Impossible d’identifier le collaborateur RH qui effectue cette modification.',
+        variant: 'destructive',
+      });
+
+      return;
+    }
+
+
+    const alreadyAssigned =
+      portfolioAssignments.some(
+        (assignment) =>
+          assignment.employee_id ===
+            selectedEmployee.id &&
+          assignment.portfolio_id ===
+            selectedPortfolioId &&
+          assignment.assignment_status ===
+            'active',
+      );
+
+
+    if (alreadyAssigned) {
+      toast({
+        title:
+          'Affectation déjà existante',
+        description:
+          'Ce collaborateur possède déjà un accès actif à ce portefeuille.',
+        variant: 'destructive',
+      });
+
+      return;
+    }
+
+
+    setSaving(true);
+
+    try {
+      const roleAssignment =
+        assignments.find(
           (assignment) =>
             assignment.employee_id ===
               selectedEmployee.id &&
-            assignment.portfolio_id ===
-              selectedPortfolioId &&
-            assignment.assignment_status ===
-              'active',
+            assignment.status === 'active',
         );
 
-      if (alreadyAssigned) {
-        toast({
-          title:
-            'Affectation déjà existante',
-          description:
-            'Ce collaborateur possède déjà un accès actif à ce portefeuille.',
-          variant:
-            'destructive',
-        });
 
-        return;
+      const { error } =
+        await supabase
+          .from(
+            'access_portfolio_assignments' as any,
+          )
+          .insert({
+            employee_id:
+              selectedEmployee.id,
+
+            portfolio_id:
+              selectedPortfolioId,
+
+            access_assignment_id:
+              roleAssignment?.id ?? null,
+
+            assignment_status:
+              'active',
+
+            starts_at:
+              new Date().toISOString(),
+
+            /*
+             * IMPORTANT :
+             * assigned_by = utilisateur RH connecté.
+             */
+            assigned_by: user.id,
+
+            reason:
+              'Affectation RH',
+          });
+
+
+      if (error) {
+        throw error;
       }
 
-      setSaving(true);
 
-      try {
-        const roleAssignment =
-          assignments.find(
-            (assignment) =>
-              assignment.employee_id ===
-                selectedEmployee.id &&
-              assignment.status ===
-                'active',
-          );
-
-        const { error } =
-          await supabase
-            .from(
-              'access_portfolio_assignments' as any,
-            )
-            .insert({
-              employee_id:
-                selectedEmployee.id,
-
-              portfolio_id:
-                selectedPortfolioId,
-
-              access_assignment_id:
-                roleAssignment?.id ??
-                null,
-
-              assignment_status:
-                'active',
-
-              starts_at:
-                new Date().toISOString(),
-
-              assigned_by:
-                selectedEmployee.id,
-
-              reason:
-                'Affectation RH',
-            });
-
-        if (error) {
-          throw error;
-        }
-
-        await queryClient.invalidateQueries({
-          queryKey: [
-            'rh-access-portfolio-assignments',
-          ],
-        });
-
-        toast({
-          title:
-            'Périmètre ajouté',
-          description:
-            `Le portefeuille a été affecté à ${getEmployeeName(
-              selectedEmployee,
-            )}.`,
-        });
-
-        setPortfolioDialogOpen(false);
-      } catch (error: any) {
-        toast({
-          title:
-            'Impossible d’enregistrer',
-          description:
-            error?.message ??
-            'Une erreur est survenue.',
-          variant:
-            'destructive',
-        });
-      } finally {
-        setSaving(false);
-      }
-    };
+      await queryClient.invalidateQueries({
+        queryKey: [
+          'rh-access-portfolio-assignments',
+        ],
+      });
 
 
-  /*
-   * ============================================================
-   * RÉVOCATION RÔLE
-   * ============================================================
-   */
+      toast({
+        title: 'Périmètre ajouté',
+        description:
+          `Le portefeuille a été affecté à ${getEmployeeName(
+            selectedEmployee,
+          )}.`,
+      });
+
+
+      setPortfolioDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title:
+          'Impossible d’enregistrer',
+        description:
+          error?.message ??
+          'Une erreur est survenue.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+
+  /* ==========================================================
+     RÉVOCATION RÔLE
+  ========================================================== */
 
   const revokeRole = async (
     assignment: AccessAssignment,
@@ -857,17 +884,20 @@ const RHAccess = () => {
         throw error;
       }
 
+
       await queryClient.invalidateQueries({
         queryKey: [
           'rh-access-assignments',
         ],
       });
 
+
       toast({
-        title:
-          'Accès révoqué',
+        title: 'Accès révoqué',
         description:
-          `Le rôle ${assignment.role?.label ?? ''} a été révoqué.`,
+          `Le rôle ${
+            assignment.role?.label ?? ''
+          } a été révoqué.`,
       });
     } catch (error: any) {
       toast({
@@ -882,65 +912,120 @@ const RHAccess = () => {
   };
 
 
-  /*
-   * ============================================================
-   * RÉVOCATION PORTEFEUILLE
-   * ============================================================
-   */
+  /* ==========================================================
+     RÉVOCATION PORTEFEUILLE
+  ========================================================== */
 
-  const revokePortfolio =
-    async (
-      assignment: PortfolioAssignment,
-    ) => {
-      try {
-        const { error } =
-          await supabase
-            .from(
-              'access_portfolio_assignments' as any,
-            )
-            .update({
-              assignment_status:
-                'revoked',
+  const revokePortfolio = async (
+    assignment: PortfolioAssignment,
+  ) => {
+    try {
+      const { error } =
+        await supabase
+          .from(
+            'access_portfolio_assignments' as any,
+          )
+          .update({
+            assignment_status:
+              'revoked',
 
-              ends_at:
-                new Date().toISOString(),
-            })
-            .eq(
-              'id',
-              assignment.id,
-            );
+            ends_at:
+              new Date().toISOString(),
+          })
+          .eq(
+            'id',
+            assignment.id,
+          );
 
-        if (error) {
-          throw error;
-        }
-
-        await queryClient.invalidateQueries({
-          queryKey: [
-            'rh-access-portfolio-assignments',
-          ],
-        });
-
-        toast({
-          title:
-            'Périmètre révoqué',
-          description:
-            'L’accès au portefeuille a été révoqué.',
-        });
-      } catch (error: any) {
-        toast({
-          title:
-            'Impossible de révoquer',
-          description:
-            error?.message ??
-            'Une erreur est survenue.',
-          variant:
-            'destructive',
-        });
+      if (error) {
+        throw error;
       }
-    };
 
-  const { user } = useAuth();
 
+      await queryClient.invalidateQueries({
+        queryKey: [
+          'rh-access-portfolio-assignments',
+        ],
+      });
+
+
+      toast({
+        title:
+          'Périmètre révoqué',
+        description:
+          'L’accès au portefeuille a été révoqué.',
+      });
+    } catch (error: any) {
+      toast({
+        title:
+          'Impossible de révoquer',
+        description:
+          error?.message ??
+          'Une erreur est survenue.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+
+  /* ==========================================================
+     POLES DISPONIBLES
+  ========================================================== */
+
+  const poleOptions = useMemo(() => {
+    const values = new Set<string>();
+
+    employees.forEach((employee: any) => {
+      (employee.poles ?? []).forEach(
+        (pole: string) => values.add(pole),
+      );
+    });
+
+    return Array.from(values).sort();
+  }, [employees]);
+
+
+  /* ==========================================================
+     PORTEFEUILLES FILTRÉS
+  ========================================================== */
+
+  const availablePortfolios =
+    useMemo(() => {
+      if (!selectedEmployee) {
+        return [];
+      }
+
+      const employeePoles =
+        Array.isArray(
+          selectedEmployee.poles,
+        )
+          ? selectedEmployee.poles
+          : [];
+
+      return businessPortfolios.filter(
+        (portfolio) => {
+          const portfolioPole =
+            portfolio.portfolio_type
+              ?.business_pole;
+
+          if (!portfolioPole) {
+            return false;
+          }
+
+          return employeePoles.includes(
+            portfolioPole as any,
+          );
+        },
+      );
+    }, [
+      businessPortfolios,
+      selectedEmployee,
+    ]);
+
+
+  /* ==========================================================
+     RENDER
+  ========================================================== */
 
   return (
     <div className="mx-auto max-w-7xl space-y-6 animate-fade-in">
@@ -957,10 +1042,9 @@ const RHAccess = () => {
           </h1>
 
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Gestion RH des affectations d'accès des collaborateurs :
-            rôle métier, périmètre et portefeuille autorisé.
-            La matrice technique des permissions reste administrée
-            par Security & IT.
+            Gestion RH des affectations d’accès des
+            collaborateurs : rôle métier, périmètre et
+            portefeuille autorisé.
           </p>
         </div>
 
@@ -986,7 +1070,11 @@ const RHAccess = () => {
               <Users className="h-5 w-5 text-muted-foreground" />
 
               <span className="text-2xl font-semibold">
-                {employees.length}
+                {employees.filter(
+                  (employee: any) =>
+                    employee.hr_status ===
+                    'active',
+                ).length}
               </span>
             </div>
 
@@ -1085,37 +1173,16 @@ const RHAccess = () => {
                   Tous les pôles
                 </SelectItem>
 
-                <SelectItem value="direction">
-                  Direction
-                </SelectItem>
-
-                <SelectItem value="rh">
-                  RH
-                </SelectItem>
-
-                <SelectItem value="supplier">
-                  Fournisseurs
-                </SelectItem>
-
-                <SelectItem value="marketplace">
-                  Marketplace
-                </SelectItem>
-
-                <SelectItem value="finance">
-                  Finance
-                </SelectItem>
-
-                <SelectItem value="ops">
-                  Opérations
-                </SelectItem>
-
-                <SelectItem value="security">
-                  Security & IT
-                </SelectItem>
-
-                <SelectItem value="product">
-                  Produit & Engineering
-                </SelectItem>
+                {poleOptions.map(
+                  (pole) => (
+                    <SelectItem
+                      key={pole}
+                      value={pole}
+                    >
+                      {pole}
+                    </SelectItem>
+                  ),
+                )}
               </SelectContent>
             </Select>
 
@@ -1140,6 +1207,22 @@ const RHAccess = () => {
                 <SelectItem value="onboarding">
                   Onboarding
                 </SelectItem>
+
+                <SelectItem value="leave">
+                  En congé
+                </SelectItem>
+
+                <SelectItem value="suspended">
+                  Suspendus
+                </SelectItem>
+
+                <SelectItem value="leaving">
+                  Départ
+                </SelectItem>
+
+                <SelectItem value="archived">
+                  Archivés
+                </SelectItem>
               </SelectContent>
             </Select>
 
@@ -1149,7 +1232,7 @@ const RHAccess = () => {
 
 
       {/* ======================================================
-          COLLABORATEURS
+          TABLE COLLABORATEURS
       ====================================================== */}
 
       <Card>
@@ -1160,15 +1243,29 @@ const RHAccess = () => {
 
           <CardDescription>
             Sélectionnez un collaborateur pour gérer son rôle
-            d'accès et ses périmètres métier.
+            d’accès et ses périmètres métier.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="overflow-x-auto">
 
-          {employeesLoading ? (
+          {employeesLoading ||
+          assignmentsLoading ||
+          portfolioAssignmentsLoading ? (
             <div className="flex justify-center py-10">
               <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          ) : filteredEmployees.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <Users className="mb-3 h-8 w-8 text-muted-foreground" />
+
+              <p className="font-medium">
+                Aucun collaborateur trouvé
+              </p>
+
+              <p className="mt-1 text-sm text-muted-foreground">
+                Modifiez les critères de recherche ou de filtrage.
+              </p>
             </div>
           ) : (
             <Table>
@@ -1188,7 +1285,7 @@ const RHAccess = () => {
                   </TableHead>
 
                   <TableHead>
-                    Rôle d'accès
+                    Rôle d’accès
                   </TableHead>
 
                   <TableHead>
@@ -1210,7 +1307,6 @@ const RHAccess = () => {
 
                 {filteredEmployees.map(
                   (employee: any) => {
-
                     const roleAssignment =
                       assignments.find(
                         (assignment) =>
@@ -1220,6 +1316,7 @@ const RHAccess = () => {
                             'active',
                       );
 
+
                     const employeePortfolios =
                       portfolioAssignments.filter(
                         (assignment) =>
@@ -1228,6 +1325,7 @@ const RHAccess = () => {
                           assignment.assignment_status ===
                             'active',
                       );
+
 
                     return (
                       <TableRow
@@ -1250,7 +1348,7 @@ const RHAccess = () => {
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {(employee.poles ?? [])
-                              .slice(0, 3)
+                              .slice(0, 2)
                               .map(
                                 (pole: string) => (
                                   <Badge
@@ -1261,46 +1359,65 @@ const RHAccess = () => {
                                   </Badge>
                                 ),
                               )}
+
+                            {(employee.poles ?? [])
+                              .length > 2 && (
+                              <Badge variant="secondary">
+                                +{employee.poles.length - 2}
+                              </Badge>
+                            )}
                           </div>
                         </TableCell>
 
 
-                        <TableCell className="text-sm">
-                          {employee.position ??
-                            'Non défini'}
+                        <TableCell>
+                          <span className="text-sm">
+                            {employee.position ??
+                              '—'}
+                          </span>
                         </TableCell>
 
 
                         <TableCell>
                           {roleAssignment ? (
-                            <div>
+                            <div className="space-y-1">
                               <Badge>
                                 {roleAssignment.role
                                   ?.label ??
                                   'Rôle'}
                               </Badge>
 
-                              {roleAssignment.scope ? (
-                                <p className="mt-1 text-[11px] text-muted-foreground">
-                                  {roleAssignment.scope.label}
-                                </p>
-                              ) : null}
+                              {roleAssignment.scope && (
+                                <div className="text-xs text-muted-foreground">
+                                  {
+                                    roleAssignment.scope
+                                      .label
+                                  }
+                                </div>
+                              )}
                             </div>
                           ) : (
-                            <Badge variant="outline">
-                              Non affecté
-                            </Badge>
+                            <span className="text-sm text-muted-foreground">
+                              Aucun rôle
+                            </span>
                           )}
                         </TableCell>
 
 
                         <TableCell>
-                          {employeePortfolios.length ? (
+                          {employeePortfolios.length ===
+                          0 ? (
+                            <span className="text-sm text-muted-foreground">
+                              Aucun
+                            </span>
+                          ) : (
                             <div className="flex flex-wrap gap-1">
                               {employeePortfolios
                                 .slice(0, 2)
                                 .map(
-                                  (assignment) => (
+                                  (
+                                    assignment,
+                                  ) => (
                                     <Badge
                                       key={
                                         assignment.id
@@ -1316,39 +1433,30 @@ const RHAccess = () => {
                                 )}
 
                               {employeePortfolios.length >
-                              2 ? (
+                                2 && (
                                 <Badge variant="outline">
                                   +
                                   {employeePortfolios.length -
                                     2}
                                 </Badge>
-                              ) : null}
+                              )}
                             </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">
-                              Aucun
-                            </span>
                           )}
                         </TableCell>
 
 
                         <TableCell>
-                          {roleAssignment ? (
-                            <Badge
-                              variant={STATUS_VARIANT(
-                                roleAssignment.status,
-                              )}
-                            >
-                              {STATUS_LABELS[
-                                roleAssignment.status
-                              ] ??
-                                roleAssignment.status}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">
-                              À configurer
-                            </Badge>
-                          )}
+                          <Badge
+                            variant={
+                              employee.hr_status ===
+                              'active'
+                                ? 'default'
+                                : 'outline'
+                            }
+                          >
+                            {employee.hr_status ??
+                              '—'}
+                          </Badge>
                         </TableCell>
 
 
@@ -1356,30 +1464,30 @@ const RHAccess = () => {
                           <div className="flex justify-end gap-2">
 
                             <Button
-                              variant="outline"
                               size="sm"
+                              variant="outline"
                               onClick={() =>
                                 openRoleDialog(
                                   employee.id,
                                 )
                               }
                             >
-                              <UserCog className="mr-1.5 h-4 w-4" />
+                              <UserCog className="mr-2 h-4 w-4" />
                               Rôle
                             </Button>
 
 
                             <Button
-                              variant="outline"
                               size="sm"
+                              variant="outline"
                               onClick={() =>
                                 openPortfolioDialog(
                                   employee.id,
                                 )
                               }
                             >
-                              <Briefcase className="mr-1.5 h-4 w-4" />
-                              Périmètre
+                              <Briefcase className="mr-2 h-4 w-4" />
+                              Portefeuille
                             </Button>
 
                           </div>
@@ -1390,21 +1498,7 @@ const RHAccess = () => {
                   },
                 )}
 
-
-                {!filteredEmployees.length ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="py-10 text-center text-sm text-muted-foreground"
-                    >
-                      Aucun collaborateur correspondant
-                      aux filtres.
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-
               </TableBody>
-
             </Table>
           )}
 
@@ -1413,189 +1507,36 @@ const RHAccess = () => {
 
 
       {/* ======================================================
-          DÉTAIL COLLABORATEUR
-      ====================================================== */}
-
-      {selectedEmployee ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5" />
-
-              Accès de{' '}
-              {getEmployeeName(
-                selectedEmployee,
-              )}
-            </CardTitle>
-
-            <CardDescription>
-              Vue consolidée du rôle et des périmètres actuellement
-              attribués.
-            </CardDescription>
-          </CardHeader>
-
-          <CardContent>
-
-            <div className="grid gap-4 md:grid-cols-2">
-
-              <div className="rounded-lg border p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Rôles
-                </p>
-
-                <div className="mt-3 space-y-2">
-                  {selectedEmployeeAssignments.length ? (
-                    selectedEmployeeAssignments.map(
-                      (assignment) => (
-                        <div
-                          key={assignment.id}
-                          className="flex items-center justify-between gap-3 rounded-md bg-muted/30 p-3"
-                        >
-                          <div>
-                            <p className="text-sm font-medium">
-                              {assignment.role
-                                ?.label ??
-                                'Rôle'}
-                            </p>
-
-                            <p className="text-xs text-muted-foreground">
-                              {assignment.role
-                                ?.role_key ??
-                                ''}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant={STATUS_VARIANT(
-                                assignment.status,
-                              )}
-                            >
-                              {STATUS_LABELS[
-                                assignment.status
-                              ] ??
-                                assignment.status}
-                            </Badge>
-
-                            {assignment.status ===
-                            'active' ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() =>
-                                  revokeRole(
-                                    assignment,
-                                  )
-                                }
-                              >
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            ) : null}
-                          </div>
-                        </div>
-                      ),
-                    )
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Aucun rôle attribué.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-
-              <div className="rounded-lg border p-4">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Portefeuilles
-                </p>
-
-                <div className="mt-3 space-y-2">
-                  {selectedEmployeePortfolioAssignments.length ? (
-                    selectedEmployeePortfolioAssignments.map(
-                      (assignment) => (
-                        <div
-                          key={assignment.id}
-                          className="flex items-center justify-between gap-3 rounded-md bg-muted/30 p-3"
-                        >
-                          <div>
-                            <p className="text-sm font-medium">
-                              {assignment
-                                .portfolio
-                                ?.label_snapshot ??
-                                'Portefeuille'}
-                            </p>
-
-                            <p className="text-xs text-muted-foreground">
-                              {assignment
-                                .portfolio
-                                ?.portfolio_type
-                                ?.label ??
-                                ''}
-                            </p>
-                          </div>
-
-                          {assignment.assignment_status ===
-                          'active' ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                revokePortfolio(
-                                  assignment,
-                                )
-                              }
-                            >
-                              <XCircle className="h-4 w-4" />
-                            </Button>
-                          ) : null}
-                        </div>
-                      ),
-                    )
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Aucun portefeuille attribué.
-                    </p>
-                  )}
-                </div>
-              </div>
-
-            </div>
-
-          </CardContent>
-        </Card>
-      ) : null}
-
-
-      {/* ======================================================
-          DIALOG RÔLE
+          DIALOGUE RÔLE
       ====================================================== */}
 
       <Dialog
         open={roleDialogOpen}
         onOpenChange={setRoleDialogOpen}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
+
           <DialogHeader>
             <DialogTitle>
-              Affecter un rôle d'accès
+              Affecter un rôle d’accès
             </DialogTitle>
 
             <DialogDescription>
               {selectedEmployee
-                ? `Configuration de ${getEmployeeName(
+                ? `Gestion du rôle d’accès de ${getEmployeeName(
                     selectedEmployee,
                   )}.`
-                : ''}
+                : 'Sélection du rôle d’accès.'}
             </DialogDescription>
           </DialogHeader>
 
 
-          <div className="space-y-5">
+          <div className="space-y-5 py-4">
 
             <div className="space-y-2">
-              <Label>
-                Rôle métier d'accès
-              </Label>
+              <label className="text-sm font-medium">
+                Rôle métier d’accès
+              </label>
 
               <Select
                 value={selectedRoleId}
@@ -1608,29 +1549,34 @@ const RHAccess = () => {
                 </SelectTrigger>
 
                 <SelectContent>
-                  {roles
-                    .filter(
-                      (role) =>
-                        role.status ===
-                        'active',
-                    )
-                    .map((role) => (
+                  {rolesLoading ? (
+                    <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Chargement…
+                    </div>
+                  ) : roles.length === 0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      Aucun rôle actif
+                    </div>
+                  ) : (
+                    roles.map((role) => (
                       <SelectItem
                         key={role.id}
                         value={role.id}
                       >
                         {role.label}
                       </SelectItem>
-                    ))}
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
 
             <div className="space-y-2">
-              <Label>
-                Périmètre RBAC
-              </Label>
+              <label className="text-sm font-medium">
+                Périmètre du rôle
+              </label>
 
               <Select
                 value={selectedScopeId}
@@ -1639,7 +1585,7 @@ const RHAccess = () => {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Périmètre" />
+                  <SelectValue placeholder="Sélectionner un périmètre" />
                 </SelectTrigger>
 
                 <SelectContent>
@@ -1659,9 +1605,9 @@ const RHAccess = () => {
               </Select>
 
               <p className="text-xs text-muted-foreground">
-                Le périmètre RBAC décrit le niveau d'accès
-                technique. Les portefeuilles métier sont gérés
-                séparément ci-dessous.
+                Le périmètre définit la portée fonctionnelle
+                du rôle. Les portefeuilles métier sont gérés
+                séparément.
               </p>
             </div>
 
@@ -1669,21 +1615,52 @@ const RHAccess = () => {
 
 
           <DialogFooter>
+
+            {selectedEmployeeAssignments.some(
+              (assignment) =>
+                assignment.status === 'active',
+            ) && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => {
+                  const current =
+                    selectedEmployeeAssignments.find(
+                      (assignment) =>
+                        assignment.status ===
+                        'active',
+                    );
+
+                  if (current) {
+                    void revokeRole(current);
+                    setRoleDialogOpen(false);
+                  }
+                }}
+              >
+                <XCircle className="mr-2 h-4 w-4" />
+                Révoquer
+              </Button>
+            )}
+
             <Button
+              type="button"
               variant="outline"
               onClick={() =>
                 setRoleDialogOpen(false)
               }
-              disabled={saving}
             >
               Annuler
             </Button>
 
             <Button
-              onClick={handleSaveRole}
+              type="button"
+              onClick={() =>
+                void handleSaveRole()
+              }
               disabled={
                 saving ||
-                !selectedRoleId
+                !selectedRoleId ||
+                !user?.id
               }
             >
               {saving ? (
@@ -1694,13 +1671,15 @@ const RHAccess = () => {
 
               Enregistrer
             </Button>
+
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 
 
       {/* ======================================================
-          DIALOG PORTEFEUILLE
+          DIALOGUE PORTEFEUILLE
       ====================================================== */}
 
       <Dialog
@@ -1709,33 +1688,51 @@ const RHAccess = () => {
           setPortfolioDialogOpen
         }
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-lg">
+
           <DialogHeader>
             <DialogTitle>
-              Affecter un périmètre métier
+              Affecter un portefeuille
             </DialogTitle>
 
             <DialogDescription>
               {selectedEmployee
-                ? `Ajouter un portefeuille autorisé à ${getEmployeeName(
+                ? `Choisissez le portefeuille métier autorisé pour ${getEmployeeName(
                     selectedEmployee,
                   )}.`
-                : ''}
+                : 'Sélection du portefeuille.'}
             </DialogDescription>
           </DialogHeader>
 
 
-          <div className="space-y-4">
+          <div className="space-y-5 py-4">
+
+            <div className="rounded-lg border bg-muted/30 p-4">
+              <div className="flex items-start gap-3">
+                <Briefcase className="mt-0.5 h-5 w-5 text-muted-foreground" />
+
+                <div>
+                  <p className="font-medium">
+                    Portefeuille métier
+                  </p>
+
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Le portefeuille ne crée pas un nouveau
+                    rôle. Il limite les ressources métier
+                    auxquelles le collaborateur peut accéder.
+                  </p>
+                </div>
+              </div>
+            </div>
+
 
             <div className="space-y-2">
-              <Label>
+              <label className="text-sm font-medium">
                 Portefeuille
-              </Label>
+              </label>
 
               <Select
-                value={
-                  selectedPortfolioId
-                }
+                value={selectedPortfolioId}
                 onValueChange={
                   setSelectedPortfolioId
                 }
@@ -1745,62 +1742,114 @@ const RHAccess = () => {
                 </SelectTrigger>
 
                 <SelectContent>
-                  {businessPortfolios.map(
-                    (portfolio) => (
-                      <SelectItem
-                        key={portfolio.id}
-                        value={portfolio.id}
-                      >
-                        {portfolio.label_snapshot ??
-                          'Portefeuille'}{' '}
-                        —{' '}
-                        {portfolio
-                          .portfolio_type
-                          ?.label ??
-                          ''}
-                      </SelectItem>
-                    ),
+                  {portfoliosLoading ? (
+                    <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Chargement…
+                    </div>
+                  ) : availablePortfolios.length ===
+                    0 ? (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      Aucun portefeuille disponible
+                      pour ce collaborateur.
+                    </div>
+                  ) : (
+                    availablePortfolios.map(
+                      (portfolio) => (
+                        <SelectItem
+                          key={portfolio.id}
+                          value={portfolio.id}
+                        >
+                          {portfolio.label_snapshot ??
+                            'Portefeuille'}
+                          {' — '}
+                          {portfolio
+                            .portfolio_type
+                            ?.label ??
+                            'Métier'}
+                        </SelectItem>
+                      ),
+                    )
                   )}
                 </SelectContent>
               </Select>
             </div>
 
 
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <p className="text-sm font-medium">
-                Règle de séparation
-              </p>
+            {selectedEmployeePortfolioAssignments.length >
+              0 && (
+              <div className="space-y-2">
+                <p className="text-sm font-medium">
+                  Portefeuilles déjà affectés
+                </p>
 
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Cette affectation donne accès aux ressources
-                du portefeuille. Elle ne transfère pas la
-                propriété du portefeuille au collaborateur.
-              </p>
-            </div>
+                <div className="space-y-2">
+                  {selectedEmployeePortfolioAssignments.map(
+                    (assignment) => (
+                      <div
+                        key={assignment.id}
+                        className="flex items-center justify-between rounded-md border p-3"
+                      >
+                        <div>
+                          <p className="text-sm font-medium">
+                            {assignment
+                              .portfolio
+                              ?.label_snapshot ??
+                              'Portefeuille'}
+                          </p>
+
+                          <p className="text-xs text-muted-foreground">
+                            {assignment
+                              .portfolio
+                              ?.portfolio_type
+                              ?.label ??
+                              'Portefeuille métier'}
+                          </p>
+                        </div>
+
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => {
+                            void revokePortfolio(
+                              assignment,
+                            );
+                          }}
+                        >
+                          <XCircle className="mr-2 h-4 w-4" />
+                          Révoquer
+                        </Button>
+                      </div>
+                    ),
+                  )}
+                </div>
+              </div>
+            )}
 
           </div>
 
 
           <DialogFooter>
+
             <Button
+              type="button"
               variant="outline"
               onClick={() =>
-                setPortfolioDialogOpen(
-                  false,
-                )
+                setPortfolioDialogOpen(false)
               }
-              disabled={saving}
             >
               Annuler
             </Button>
 
             <Button
-              onClick={
-                handleSavePortfolio
+              type="button"
+              onClick={() =>
+                void handleSavePortfolio()
               }
               disabled={
                 saving ||
-                !selectedPortfolioId
+                !selectedPortfolioId ||
+                !user?.id
               }
             >
               {saving ? (
@@ -1811,71 +1860,11 @@ const RHAccess = () => {
 
               Affecter
             </Button>
+
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
-
-
-      {/* ======================================================
-          ÉTAT TECHNIQUE
-      ====================================================== */}
-
-      <Card className="border-dashed">
-        <CardHeader>
-          <CardTitle className="text-base">
-            Gouvernance des permissions
-          </CardTitle>
-
-          <CardDescription>
-            RH et Security & IT ont des responsabilités distinctes.
-          </CardDescription>
-        </CardHeader>
-
-        <CardContent className="grid gap-3 md:grid-cols-3">
-
-          <div className="rounded-lg border p-4">
-            <Users className="h-5 w-5 text-muted-foreground" />
-
-            <p className="mt-2 font-medium">
-              RH
-            </p>
-
-            <p className="mt-1 text-xs text-muted-foreground">
-              Identité, statut, rôle attribué et périmètre
-              métier du collaborateur.
-            </p>
-          </div>
-
-
-          <div className="rounded-lg border p-4">
-            <ShieldCheck className="h-5 w-5 text-muted-foreground" />
-
-            <p className="mt-2 font-medium">
-              Security & IT
-            </p>
-
-            <p className="mt-1 text-xs text-muted-foreground">
-              Catalogue RBAC, permissions, interfaces, actions
-              et sécurité technique.
-            </p>
-          </div>
-
-
-          <div className="rounded-lg border p-4">
-            <Briefcase className="h-5 w-5 text-muted-foreground" />
-
-            <p className="mt-2 font-medium">
-              Pôles métier
-            </p>
-
-            <p className="mt-1 text-xs text-muted-foreground">
-              Données et portefeuilles métier. Le collaborateur
-              reçoit un accès sans devenir propriétaire de ces données.
-            </p>
-          </div>
-
-        </CardContent>
-      </Card>
 
     </div>
   );
