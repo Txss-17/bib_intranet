@@ -1,70 +1,47 @@
 -- ============================================================
 -- BIB INTRANET
--- RH — GOUVERNANCE DES AFFECTATIONS DE PORTEFEUILLES
+-- GOUVERNANCE RH DES AFFECTATIONS DE PORTEFEUILLES
 -- ============================================================
 --
 -- Objectif :
 --
---   Sécuriser au niveau PostgreSQL l'affectation d'un
---   collaborateur à un portefeuille métier.
---
--- Architecture :
---
---   RH
---    ↓
---   profiles
---    ↓
---   access_portfolio_assignments
---    ↓
---   access_business_portfolios
---    ↓
---   access_portfolio_types
+--   RH peut affecter un collaborateur à un portefeuille,
+--   mais uniquement si le collaborateur est autorisé
+--   à recevoir ce type de portefeuille.
 --
 -- Règles :
 --
---   1. Collaborateur cible :
---        hr_status = active
---        OU
---        hr_status = onboarding
+--   1. Collaborateur :
+--      hr_status = active ou onboarding
 --
---   2. Supplier :
---        pôle supplier
---        +
---        position supplier_manager
+--   2. Portefeuille fournisseur :
+--      pôle supplier
+--      ET position supplier_manager
 --
---   3. Marketplace :
---        pôle marketplace
+--   3. Portefeuille Marketplace :
+--      pôle marketplace
 --
---   4. Direction / admin :
---        accès global
+--   4. Aucun DELETE :
+--      la révocation passe par assignment_status = revoked
 --
---   5. Aucun DELETE :
---        révocation par changement de statut.
+--   5. Une révocation reste possible même si le collaborateur
+--      est ensuite en congé, suspendu, en départ ou archivé.
 --
--- IMPORTANT :
--- Les policies PostgreSQL étant cumulatives (OR entre policies
--- permissives), les anciennes policies trop larges doivent être
--- supprimées avant de recréer les policies gouvernées.
+--   6. Les pôles métier restent propriétaires de leurs
+--      portefeuilles métier.
+--
 -- ============================================================
 
 
 -- ============================================================
--- 1. FONCTION CENTRALE DE VALIDATION
--- ============================================================
---
--- Cette fonction valide le COLLABORATEUR CIBLE et le TYPE
--- DE PORTEFEUILLE.
---
--- Elle ne détermine pas qui a le droit d'effectuer l'opération.
--- Cette responsabilité reste dans les policies.
---
+-- 1. FONCTION DE VALIDATION D'UNE NOUVELLE AFFECTATION
 -- ============================================================
 
 CREATE OR REPLACE FUNCTION public.rh_can_assign_employee_portfolio(
-  p_employee_id uuid,
-  p_portfolio_id uuid
+  p_employee_id UUID,
+  p_portfolio_id UUID
 )
-RETURNS boolean
+RETURNS BOOLEAN
 LANGUAGE sql
 STABLE
 SECURITY DEFINER
@@ -72,6 +49,7 @@ SET search_path = ''
 AS $$
   SELECT EXISTS (
     SELECT 1
+
     FROM public.profiles p
 
     INNER JOIN public.access_business_portfolios abp
@@ -82,29 +60,23 @@ AS $$
 
     WHERE p.id = p_employee_id
 
-      -- ------------------------------------------------------
-      -- Le collaborateur doit être exploitable par RH.
-      -- ------------------------------------------------------
+      -- Collaborateur autorisé à recevoir une nouvelle affectation
       AND p.hr_status IN (
         'active',
         'onboarding'
       )
 
-      -- ------------------------------------------------------
-      -- Le portefeuille doit être actif.
-      -- ------------------------------------------------------
+      -- Portefeuille actif
       AND abp.status = 'active'
 
+      -- Type de portefeuille actif
       AND apt.status = 'active'
 
-      -- ------------------------------------------------------
-      -- SUPPLIER
-      --
-      -- Le portefeuille fournisseur n'est attribuable qu'à un
-      -- collaborateur appartenant au pôle supplier ET occupant
-      -- le poste supplier_manager.
-      -- ------------------------------------------------------
       AND (
+        -- ======================================================
+        -- FOURNISSEURS
+        -- ======================================================
+
         (
           apt.portfolio_type_key = 'supplier'
 
@@ -120,16 +92,10 @@ AS $$
 
         OR
 
-        -- ----------------------------------------------------
+        -- ======================================================
         -- MARKETPLACE
-        --
-        -- Aucun marketplace_manager n'est inventé ici :
-        -- ce poste n'existe pas actuellement dans le catalogue
-        -- des positions BIB.
-        --
-        -- Pour le MVP, l'appartenance au pôle Marketplace
-        -- constitue le périmètre métier.
-        -- ----------------------------------------------------
+        -- ======================================================
+
         (
           apt.portfolio_type_key = 'marketplace_merchant'
 
@@ -140,121 +106,176 @@ AS $$
             )
           )
         )
-
-        OR
-
-        -- ----------------------------------------------------
-        -- Futurs types de portefeuille transversaux.
-        --
-        -- Aucun autre type n'est autorisé implicitement.
-        -- ----------------------------------------------------
-        false
       )
   );
 $$;
 
 
 -- ============================================================
--- 2. SÉCURISATION DE LA FONCTION
+-- 2. SÉCURITÉ DE LA FONCTION
 -- ============================================================
 
 REVOKE ALL
-ON FUNCTION public.rh_can_assign_employee_portfolio(uuid, uuid)
+ON FUNCTION public.rh_can_assign_employee_portfolio(
+  UUID,
+  UUID
+)
 FROM PUBLIC;
 
-REVOKE ALL
-ON FUNCTION public.rh_can_assign_employee_portfolio(uuid, uuid)
-FROM anon;
-
 GRANT EXECUTE
-ON FUNCTION public.rh_can_assign_employee_portfolio(uuid, uuid)
+ON FUNCTION public.rh_can_assign_employee_portfolio(
+  UUID,
+  UUID
+)
 TO authenticated;
 
 
 -- ============================================================
--- 3. SUPPRESSION DES POLICIES TROP LARGES
+-- 3. TRIGGER DE PROTECTION DES MODIFICATIONS
 -- ============================================================
 --
--- Les policies précédentes pouvaient autoriser :
+-- Important :
 --
---   RH actif/onboarding → n'importe quel portefeuille
+-- Une révocation doit rester possible même si le collaborateur
+-- n'est plus active/onboarding.
 --
--- ou :
+-- On ne peut donc PAS mettre simplement
+-- rh_can_assign_employee_portfolio()
+-- dans le WITH CHECK de toutes les UPDATE.
 --
---   utilisateur du pôle supplier → n'importe quel collaborateur
+-- Le trigger vérifie uniquement le couple
+-- employee_id + portfolio_id lorsqu'il est modifié.
 --
--- Elles sont supprimées afin que la validation métier
--- ci-dessus devienne obligatoire.
+-- Une simple modification :
+--
+--   assignment_status = revoked
+--   ends_at = ...
+--
+-- reste donc toujours possible.
 -- ============================================================
 
+CREATE OR REPLACE FUNCTION public.validate_access_portfolio_assignment_update()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = ''
+AS $$
+BEGIN
 
--- ------------------------------------------------------------
--- access_portfolio_assignments
--- ------------------------------------------------------------
+  -- Si le collaborateur ou le portefeuille change,
+  -- le nouveau couple doit être juridiquement/métierement valide.
+  IF
+    NEW.employee_id IS DISTINCT FROM OLD.employee_id
+    OR
+    NEW.portfolio_id IS DISTINCT FROM OLD.portfolio_id
+  THEN
+
+    IF NOT public.rh_can_assign_employee_portfolio(
+      NEW.employee_id,
+      NEW.portfolio_id
+    )
+    THEN
+      RAISE EXCEPTION
+        'Affectation portefeuille non autorisée pour ce collaborateur';
+    END IF;
+
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+
+DROP TRIGGER IF EXISTS
+  trg_validate_access_portfolio_assignment_update
+ON public.access_portfolio_assignments;
+
+
+CREATE TRIGGER
+  trg_validate_access_portfolio_assignment_update
+
+BEFORE UPDATE
+ON public.access_portfolio_assignments
+
+FOR EACH ROW
+
+EXECUTE FUNCTION
+  public.validate_access_portfolio_assignment_update();
+
+
+-- ============================================================
+-- 4. SUPPRESSION DES POLICIES RH TROP LARGES
+-- ============================================================
 
 DROP POLICY IF EXISTS
   "access_portfolio_assignments_insert_rh"
 ON public.access_portfolio_assignments;
 
+
 DROP POLICY IF EXISTS
   "access_portfolio_assignments_update_rh"
 ON public.access_portfolio_assignments;
 
+
+-- ============================================================
+-- 5. SUPPRESSION DES POLICIES FOURNISSEURS TROP LARGES
+-- ============================================================
+
 DROP POLICY IF EXISTS
   "access_portfolio_assignments_insert_supplier"
 ON public.access_portfolio_assignments;
+
 
 DROP POLICY IF EXISTS
   "access_portfolio_assignments_update_supplier"
 ON public.access_portfolio_assignments;
 
 
--- ------------------------------------------------------------
--- access_business_portfolios
--- ------------------------------------------------------------
-
-DROP POLICY IF EXISTS
-  "access_business_portfolios_insert_supplier"
-ON public.access_business_portfolios;
-
-DROP POLICY IF EXISTS
-  "access_business_portfolios_update_supplier"
-ON public.access_business_portfolios;
-
-
 -- ============================================================
--- 4. NOUVELLE POLICY RH — INSERT
+-- 6. NOUVELLE POLICY INSERT
 -- ============================================================
 --
--- RH peut créer une affectation uniquement si :
+-- RH / Direction / Admin peuvent créer une affectation,
+-- mais la cible doit passer par la fonction de gouvernance.
 --
---   - RH possède les droits d'administration des accès
---   - OU Direction
---   - ET la combinaison collaborateur + portefeuille est valide.
+-- Le pôle Fournisseurs peut également créer une affectation
+-- fournisseur, avec exactement les mêmes règles métier.
 --
 -- ============================================================
 
 CREATE POLICY
-  "access_portfolio_assignments_insert_rh_governed"
+  "access_portfolio_assignments_insert_governed"
+
 ON public.access_portfolio_assignments
+
 FOR INSERT
+
 TO authenticated
+
 WITH CHECK (
+
   (
     public.is_leadership(auth.uid())
-
-    OR public.has_role(
+    OR
+    public.has_role(
       auth.uid(),
-      'admin'::public.app_role
+      'admin'::app_role
     )
-
-    OR public.has_any_pole(
+    OR
+    public.has_any_pole(
       auth.uid(),
       ARRAY['rh']
     )
+    OR
+    public.has_any_pole(
+      auth.uid(),
+      ARRAY['supplier']
+    )
   )
 
-  AND public.rh_can_assign_employee_portfolio(
+  AND
+
+  public.rh_can_assign_employee_portfolio(
     employee_id,
     portfolio_id
   )
@@ -262,182 +283,94 @@ WITH CHECK (
 
 
 -- ============================================================
--- 5. NOUVELLE POLICY RH — UPDATE
+-- 7. NOUVELLE POLICY UPDATE
 -- ============================================================
 --
--- L'UPDATE sert notamment à :
+-- RH / Direction / Admin / Fournisseurs peuvent modifier
+-- une affectation existante.
 --
---   - révoquer ;
---   - suspendre ;
---   - modifier les dates ;
---   - modifier le motif.
+-- Le trigger ci-dessus empêche de détourner l'affectation
+-- vers un autre collaborateur ou un autre portefeuille
+-- non autorisé.
 --
--- Aucun DELETE n'est nécessaire.
---
--- La combinaison cible + portefeuille reste contrôlée.
+-- La révocation reste donc possible même après changement
+-- de statut RH.
 --
 -- ============================================================
 
 CREATE POLICY
-  "access_portfolio_assignments_update_rh_governed"
+  "access_portfolio_assignments_update_governed"
+
 ON public.access_portfolio_assignments
+
 FOR UPDATE
+
 TO authenticated
+
 USING (
+
   public.is_leadership(auth.uid())
 
-  OR public.has_role(
+  OR
+  public.has_role(
     auth.uid(),
-    'admin'::public.app_role
+    'admin'::app_role
   )
 
-  OR public.has_any_pole(
+  OR
+  public.has_any_pole(
     auth.uid(),
     ARRAY['rh']
   )
-)
-WITH CHECK (
-  (
-    public.is_leadership(auth.uid())
 
-    OR public.has_role(
-      auth.uid(),
-      'admin'::public.app_role
-    )
-
-    OR public.has_any_pole(
-      auth.uid(),
-      ARRAY['rh']
-    )
-  )
-
-  AND public.rh_can_assign_employee_portfolio(
-    employee_id,
-    portfolio_id
-  )
-);
-
-
--- ============================================================
--- 6. ACCESS_BUSINESS_PORTFOLIOS — INSERT
--- ============================================================
---
--- La création du registre transversal reste possible pour :
---
---   - Direction
---   - admin
---   - pôle Supplier pour les portefeuilles Supplier
---
--- Mais jamais pour créer arbitrairement un autre type de
--- portefeuille depuis le périmètre Supplier.
--- ============================================================
-
-CREATE POLICY
-  "access_business_portfolios_insert_supplier_governed"
-ON public.access_business_portfolios
-FOR INSERT
-TO authenticated
-WITH CHECK (
-  public.is_leadership(auth.uid())
-
-  OR (
-    public.has_any_pole(
-      auth.uid(),
-      ARRAY['supplier']
-    )
-
-    AND EXISTS (
-      SELECT 1
-      FROM public.access_portfolio_types apt
-      WHERE apt.id = portfolio_type_id
-        AND apt.portfolio_type_key = 'supplier'
-        AND apt.status = 'active'
-    )
-  )
-);
-
-
--- ============================================================
--- 7. ACCESS_BUSINESS_PORTFOLIOS — UPDATE
--- ============================================================
-
-CREATE POLICY
-  "access_business_portfolios_update_supplier_governed"
-ON public.access_business_portfolios
-FOR UPDATE
-TO authenticated
-USING (
-  public.is_leadership(auth.uid())
-
-  OR (
-    public.has_any_pole(
-      auth.uid(),
-      ARRAY['supplier']
-    )
-
-    AND EXISTS (
-      SELECT 1
-      FROM public.access_portfolio_types apt
-      WHERE apt.id = access_business_portfolios.portfolio_type_id
-        AND apt.portfolio_type_key = 'supplier'
-        AND apt.status = 'active'
-    )
+  OR
+  public.has_any_pole(
+    auth.uid(),
+    ARRAY['supplier']
   )
 )
+
 WITH CHECK (
+
   public.is_leadership(auth.uid())
 
-  OR (
-    public.has_any_pole(
-      auth.uid(),
-      ARRAY['supplier']
-    )
+  OR
+  public.has_role(
+    auth.uid(),
+    'admin'::app_role
+  )
 
-    AND EXISTS (
-      SELECT 1
-      FROM public.access_portfolio_types apt
-      WHERE apt.id = access_business_portfolios.portfolio_type_id
-        AND apt.portfolio_type_key = 'supplier'
-        AND apt.status = 'active'
-    )
+  OR
+  public.has_any_pole(
+    auth.uid(),
+    ARRAY['rh']
+  )
+
+  OR
+  public.has_any_pole(
+    auth.uid(),
+    ARRAY['supplier']
   )
 );
 
 
 -- ============================================================
--- 8. PAS DE DELETE
--- ============================================================
---
--- Intentionnel.
---
--- Un portefeuille ou une affectation ne doit pas disparaître
--- de l'historique métier.
---
--- Pour une affectation :
---
---   active
---      ↓
---   revoked
---
--- avec ends_at.
---
--- ============================================================
-
-
--- ============================================================
--- 9. DOCUMENTATION
+-- 8. DOCUMENTATION
 -- ============================================================
 
 COMMENT ON FUNCTION
-  public.rh_can_assign_employee_portfolio(uuid, uuid)
+  public.rh_can_assign_employee_portfolio(
+    UUID,
+    UUID
+  )
 IS
-'Valide qu''un collaborateur RH actif/onboarding peut recevoir le portefeuille métier demandé. Supplier exige le pôle supplier + position supplier_manager. Marketplace exige le pôle marketplace.';
+'Vérifie qu''un collaborateur actif ou en onboarding peut recevoir le portefeuille métier demandé selon son pôle et son poste. Fournisseurs : supplier + supplier_manager. Marketplace : pôle marketplace.';
 
 
-COMMENT ON TABLE
-  public.access_portfolio_assignments
+COMMENT ON FUNCTION
+  public.validate_access_portfolio_assignment_update()
 IS
-'Affectations collaborateur → portefeuille métier. Les affectations sont révocables mais non supprimables afin de conserver l''historique RH/RBAC.';
+'Empêche de déplacer une affectation existante vers un collaborateur ou portefeuille non autorisé, tout en permettant la révocation historique.';
 
 
 -- ============================================================
