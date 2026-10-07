@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useMemo, useState } from 'react';
 import {
   Card,
@@ -191,11 +190,11 @@ const RolesPermissionsInner = () => {
 
     return employees.filter((employee) =>
       [
-        employee.name,
+        `${employee.first_name ?? ""} ${employee.last_name ?? ""}`.trim(),
         employee.email,
-        employee.pole,
+        employee.poles?.join(", "),
         employee.position,
-        employee.status,
+        employee.hr_status,
       ]
         .filter(Boolean)
         .some((value) =>
@@ -208,8 +207,8 @@ const RolesPermissionsInner = () => {
     () =>
       employees.filter(
         (employee) =>
-          employee.status?.toLowerCase() === 'active' ||
-          employee.status?.toLowerCase() === 'actif',
+          employee.hr_status?.toLowerCase() === 'active' ||
+          employee.hr_status?.toLowerCase() === 'actif',
       ),
     [employees],
   );
@@ -218,8 +217,8 @@ const RolesPermissionsInner = () => {
     () =>
       employees.filter(
         (employee) =>
-          employee.status?.toLowerCase() !== 'active' &&
-          employee.status?.toLowerCase() !== 'actif',
+          employee.hr_status?.toLowerCase() !== 'active' &&
+          employee.hr_status?.toLowerCase() !== 'actif',
       ),
     [employees],
   );
@@ -536,7 +535,7 @@ const RolesPermissionsInner = () => {
                       <TableRow key={employee.id}>
                         <TableCell>
                           <div className="font-medium text-sm">
-                            {employee.name}
+                            {`${employee.first_name ?? ""} ${employee.last_name ?? ""}`.trim()}
                           </div>
 
                           <div className="text-xs text-muted-foreground">
@@ -545,7 +544,7 @@ const RolesPermissionsInner = () => {
                         </TableCell>
 
                         <TableCell className="text-xs capitalize">
-                          {employee.pole || 'Non défini'}
+                          {employee.poles?.join(", ") || 'Non défini'}
                         </TableCell>
 
                         <TableCell className="text-xs">
@@ -555,15 +554,15 @@ const RolesPermissionsInner = () => {
                         <TableCell>
                           <Badge
                             variant={
-                              employee.status?.toLowerCase() ===
+                              employee.hr_status?.toLowerCase() ===
                                 'active' ||
-                              employee.status?.toLowerCase() ===
+                              employee.hr_status?.toLowerCase() ===
                                 'actif'
                                 ? 'default'
                                 : 'secondary'
                             }
                           >
-                            {employee.status || 'Non défini'}
+                            {employee.hr_status || 'Non défini'}
                           </Badge>
                         </TableCell>
 
@@ -1145,7 +1144,7 @@ const RolesPermissionsInner = () => {
                     <TableRow key={employee.id}>
                       <TableCell>
                         <div className="font-medium text-sm">
-                          {employee.name}
+                          {`${employee.first_name ?? ""} ${employee.last_name ?? ""}`.trim()}
                         </div>
 
                         <div className="text-xs text-muted-foreground">
@@ -1154,7 +1153,7 @@ const RolesPermissionsInner = () => {
                       </TableCell>
 
                       <TableCell className="text-xs capitalize">
-                        {employee.pole || 'Non défini'}
+                        {employee.poles?.join(", ") || 'Non défini'}
                       </TableCell>
 
                       <TableCell className="text-xs">

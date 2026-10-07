@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import {
@@ -377,7 +376,7 @@ async function ensurePortfolioAccess(
   }
 
   const { data: portfolioType, error: typeError } =
-    await supabase
+    await (supabase as any)
       .from('access_portfolio_types')
       .select('id')
       .eq('portfolio_type_key', 'supplier')
@@ -397,7 +396,7 @@ async function ensurePortfolioAccess(
   const {
     data: businessPortfolio,
     error: businessPortfolioError,
-  } = await supabase
+  } = await (supabase as any)
     .from('access_business_portfolios')
     .select('id')
     .eq(
@@ -421,7 +420,7 @@ async function ensurePortfolioAccess(
   const {
     data: existingAssignment,
     error: existingAssignmentError,
-  } = await supabase
+  } = await (supabase as any)
     .from('access_portfolio_assignments')
     .select(
       `
@@ -446,7 +445,7 @@ async function ensurePortfolioAccess(
   }
 
   const { error: insertError } =
-    await supabase
+    await (supabase as any)
       .from('access_portfolio_assignments')
       .insert({
         employee_id: employeeId,
@@ -912,7 +911,7 @@ export default function SupplierPortfolios() {
         const {
           data: portfolioType,
           error: portfolioTypeError,
-        } = await supabase
+        } = await (supabase as any)
           .from('access_portfolio_types')
           .select('id')
           .eq(
@@ -939,7 +938,7 @@ export default function SupplierPortfolios() {
           data: businessPortfolio,
           error:
             businessPortfolioError,
-        } = await supabase
+        } = await (supabase as any)
           .from(
             'access_business_portfolios',
           )
