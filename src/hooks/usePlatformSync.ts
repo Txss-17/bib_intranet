@@ -78,7 +78,7 @@ export const usePlatformStatus = () =>
       });
 
       return {
-        configured: Boolean(data?.configured),
+        configured: Boolean((data as any)?.configured),
       };
     },
     retry: false,

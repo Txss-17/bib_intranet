@@ -173,7 +173,7 @@ import Training from "./pages/modules/rh/Training";
 import BusinessTrips from "./pages/modules/rh/BusinessTrips";
 import Publications from "./pages/modules/rh/Publications";
 import RHPortfolio from "./pages/modules/rh/RHPortfolio";
-import Organization from "./pages/modules/rh/Organization";
+import Organization from "./pages/modules/rh/Oraganization";
 
 /* ============================================================
    9. QUALITÉ & AUDIT

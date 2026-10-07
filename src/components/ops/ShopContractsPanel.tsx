@@ -47,7 +47,7 @@ export function ShopContractsPanel({ shop }: { shop: Shop }) {
       <div className="flex items-center justify-between rounded-md border p-2 text-sm">
         <span className="text-muted-foreground">{platformId ? 'Liée à B.I.B Platform' : 'Non liée à B.I.B Platform'}</span>
         {platformId && (
-          <Button size="sm" variant="ghost" disabled={pushShopStatus.isPending} onClick={() => pushShopStatus.mutate(shop.id)}>
+          <Button size="sm" variant="ghost" disabled={pushShopStatus.isPending} onClick={() => pushShopStatus.mutate({ shopId: shop.id, status: shop.status })}>
             <Upload className="mr-1 h-4 w-4" />Transmettre le statut
           </Button>
         )}

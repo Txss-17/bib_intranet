@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import {
   Card,
