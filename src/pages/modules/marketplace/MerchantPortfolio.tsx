@@ -174,7 +174,7 @@ export default function MerchantPortfolio() {
       const {
         data,
         error,
-      } = await supabase
+      } = await (supabase as any)
         .from('access_portfolio_assignments' as any)
         .select(
           `
@@ -239,7 +239,7 @@ export default function MerchantPortfolio() {
       const {
         data,
         error,
-      } = await supabase
+      } = await (supabase as any)
         .from(
           'access_business_portfolios' as any,
         )
