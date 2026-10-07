@@ -56,6 +56,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 
 type AccessRole = {
@@ -937,6 +938,8 @@ const RHAccess = () => {
         });
       }
     };
+
+  const { user } = useAuth();
 
 
   return (
