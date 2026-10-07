@@ -128,36 +128,90 @@ type PortfolioAssignment = {
    HELPERS
 ============================================================ */
 
-const STATUS_LABELS: Record<string, string> = {
-  active: 'Actif',
-  pending: 'En attente',
-  suspended: 'Suspendu',
-  revoked: 'Révoqué',
-  expired: 'Expiré',
-};
-
-const STATUS_VARIANT = (
-  status: string,
-): 'default' | 'secondary' | 'destructive' | 'outline' => {
-  switch (status) {
-    case 'active':
-      return 'default';
-
-    case 'pending':
-      return 'secondary';
-
-    case 'revoked':
-    case 'expired':
-      return 'destructive';
-
-    default:
-      return 'outline';
-  }
-};
-
 const getEmployeeName = (employee: any) =>
   `${employee.first_name ?? ''} ${employee.last_name ?? ''}`.trim() ||
   employee.email;
+
+const canReceiveNewAccess = (employee: any) =>
+  employee?.hr_status === 'active' ||
+  employee?.hr_status === 'onboarding';
+
+const employeeHasPole = (
+  employee: any,
+  pole: string,
+) =>
+  Array.isArray(employee?.poles) &&
+  employee.poles.includes(pole);
+
+const roleMatchesEmployee = (
+  role: AccessRole,
+  employee: any,
+) => {
+  /*
+   * Un rôle sans business_pole est considéré comme transversal.
+   */
+  if (!role.business_pole) {
+    return true;
+  }
+
+  return employeeHasPole(
+    employee,
+    role.business_pole,
+  );
+};
+
+const portfolioMatchesEmployee = (
+  portfolio: BusinessPortfolio,
+  employee: any,
+) => {
+  const type = portfolio.portfolio_type;
+
+  if (!type) {
+    return false;
+  }
+
+  /*
+   * FOURNISSEURS
+   *
+   * Un portefeuille fournisseur ne peut être affecté
+   * qu'à un collaborateur :
+   * - du pôle fournisseurs
+   * - ayant le poste supplier_manager
+   */
+  if (
+    type.portfolio_type_key === 'supplier'
+  ) {
+    return (
+      employeeHasPole(employee, 'supplier') &&
+      employee.position === 'supplier_manager'
+    );
+  }
+
+  /*
+   * MARKETPLACE
+   *
+   * Le portefeuille marchand appartient au pôle Marketplace.
+   * Aucun poste "marketplace_manager" n'est supposé ici.
+   */
+  if (
+    type.portfolio_type_key ===
+    'marketplace_merchant'
+  ) {
+    return employeeHasPole(
+      employee,
+      'marketplace',
+    );
+  }
+
+  /*
+   * Par défaut, on exige que le pôle métier du portefeuille
+   * soit présent dans les pôles du collaborateur.
+   */
+  return employeeHasPole(
+    employee,
+    type.business_pole,
+  );
+};
 
 
 /* ============================================================
@@ -166,19 +220,12 @@ const getEmployeeName = (employee: any) =>
 
 const RHAccess = () => {
   const queryClient = useQueryClient();
-
   const { user } = useAuth();
 
-  /*
-   * IMPORTANT :
-   * On récupère tous les collaborateurs RH concernés par la
-   * gouvernance des accès afin que le filtre de statut fonctionne.
-   */
   const {
     data: employees = [],
     isLoading: employeesLoading,
   } = useEmployees({});
-
 
   /* ==========================================================
      UI STATE
@@ -210,7 +257,7 @@ const RHAccess = () => {
 
 
   /* ==========================================================
-     CATALOGUE DES RÔLES
+     RÔLES
   ========================================================== */
 
   const {
@@ -244,7 +291,7 @@ const RHAccess = () => {
 
 
   /* ==========================================================
-     CATALOGUE DES SCOPES
+     SCOPES
   ========================================================== */
 
   const {
@@ -326,36 +373,6 @@ const RHAccess = () => {
 
 
   /* ==========================================================
-     TYPES DE PORTEFEUILLES
-  ========================================================== */
-
-  const {
-    data: portfolioTypes = [],
-  } = useQuery({
-    queryKey: ['rh-access-portfolio-types'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('access_portfolio_types' as any)
-        .select(`
-          id,
-          portfolio_type_key,
-          label,
-          business_pole,
-          status
-        `)
-        .eq('status', 'active')
-        .order('label');
-
-      if (error) {
-        throw error;
-      }
-
-      return (data ?? []) as PortfolioType[];
-    },
-  });
-
-
-  /* ==========================================================
      PORTEFEUILLES MÉTIER
   ========================================================== */
 
@@ -394,7 +411,7 @@ const RHAccess = () => {
 
 
   /* ==========================================================
-     AFFECTATIONS DE PORTEFEUILLES
+     AFFECTATIONS PORTEFEUILLES
   ========================================================== */
 
   const {
@@ -444,7 +461,7 @@ const RHAccess = () => {
 
 
   /* ==========================================================
-     FILTRES
+     FILTRES COLLABORATEURS
   ========================================================== */
 
   const filteredEmployees = useMemo(() => {
@@ -453,7 +470,9 @@ const RHAccess = () => {
     return employees.filter((employee: any) => {
       if (
         poleFilter !== 'all' &&
-        !(employee.poles ?? []).includes(poleFilter)
+        !(employee.poles ?? []).includes(
+          poleFilter,
+        )
       ) {
         return false;
       }
@@ -491,7 +510,7 @@ const RHAccess = () => {
 
 
   /* ==========================================================
-     EMPLOYÉ SÉLECTIONNÉ
+     COLLABORATEUR SÉLECTIONNÉ
   ========================================================== */
 
   const selectedEmployee = useMemo(
@@ -503,23 +522,24 @@ const RHAccess = () => {
     [employees, selectedEmployeeId],
   );
 
-
-  const selectedEmployeeAssignments = useMemo(
-    () =>
-      assignments.filter(
-        (assignment) =>
-          assignment.employee_id === selectedEmployeeId,
-      ),
-    [assignments, selectedEmployeeId],
-  );
-
+  const selectedEmployeeAssignments =
+    useMemo(
+      () =>
+        assignments.filter(
+          (assignment) =>
+            assignment.employee_id ===
+            selectedEmployeeId,
+        ),
+      [assignments, selectedEmployeeId],
+    );
 
   const selectedEmployeePortfolioAssignments =
     useMemo(
       () =>
         portfolioAssignments.filter(
           (assignment) =>
-            assignment.employee_id === selectedEmployeeId,
+            assignment.employee_id ===
+            selectedEmployeeId,
         ),
       [
         portfolioAssignments,
@@ -538,23 +558,92 @@ const RHAccess = () => {
         assignment.status === 'active',
     ).length;
 
-
   const activePortfolioAssignments =
     portfolioAssignments.filter(
       (assignment) =>
-        assignment.assignment_status === 'active',
+        assignment.assignment_status ===
+        'active',
     ).length;
-
 
   const collaboratorsWithoutRole =
     employees.filter(
       (employee: any) =>
         !assignments.some(
           (assignment) =>
-            assignment.employee_id === employee.id &&
+            assignment.employee_id ===
+              employee.id &&
             assignment.status === 'active',
         ),
     ).length;
+
+
+  /* ==========================================================
+     RÔLES DISPONIBLES POUR LE COLLABORATEUR
+  ========================================================== */
+
+  const availableRoles = useMemo(() => {
+    if (!selectedEmployee) {
+      return [];
+    }
+
+    return roles.filter((role) =>
+      roleMatchesEmployee(
+        role,
+        selectedEmployee,
+      ),
+    );
+  }, [roles, selectedEmployee]);
+
+
+  /* ==========================================================
+     PORTEFEUILLES DISPONIBLES
+  ========================================================== */
+
+  const availablePortfolios = useMemo(() => {
+    if (!selectedEmployee) {
+      return [];
+    }
+
+    /*
+     * Aucun nouveau portefeuille pour un collaborateur
+     * en congé, suspendu, départ ou archivé.
+     */
+    if (
+      !canReceiveNewAccess(
+        selectedEmployee,
+      )
+    ) {
+      return [];
+    }
+
+    return businessPortfolios.filter(
+      (portfolio) =>
+        portfolioMatchesEmployee(
+          portfolio,
+          selectedEmployee,
+        ),
+    );
+  }, [
+    businessPortfolios,
+    selectedEmployee,
+  ]);
+
+
+  /* ==========================================================
+     POLES DISPONIBLES
+  ========================================================== */
+
+  const poleOptions = useMemo(() => {
+    const values = new Set<string>();
+
+    employees.forEach((employee: any) => {
+      (employee.poles ?? []).forEach(
+        (pole: string) => values.add(pole),
+      );
+    });
+
+    return Array.from(values).sort();
+  }, [employees]);
 
 
   /* ==========================================================
@@ -564,10 +653,20 @@ const RHAccess = () => {
   const openRoleDialog = (
     employeeId: string,
   ) => {
+    const employee = employees.find(
+      (item: any) =>
+        item.id === employeeId,
+    );
+
+    if (!employee) {
+      return;
+    }
+
     const current =
       assignments.find(
         (assignment) =>
-          assignment.employee_id === employeeId &&
+          assignment.employee_id ===
+            employeeId &&
           assignment.status === 'active',
       );
 
@@ -597,9 +696,55 @@ const RHAccess = () => {
       return;
     }
 
+    /*
+     * La révocation reste possible pour les autres statuts,
+     * mais une nouvelle affectation ou modification active
+     * est réservée à active/onboarding.
+     */
+    if (
+      !canReceiveNewAccess(
+        selectedEmployee,
+      )
+    ) {
+      toast({
+        title:
+          'Affectation impossible',
+        description:
+          'Un rôle ne peut être attribué qu’à un collaborateur actif ou en onboarding.',
+        variant: 'destructive',
+      });
+
+      return;
+    }
+
+    const selectedRole =
+      roles.find(
+        (role) =>
+          role.id === selectedRoleId,
+      );
+
+    if (
+      !selectedRole ||
+      !roleMatchesEmployee(
+        selectedRole,
+        selectedEmployee,
+      )
+    ) {
+      toast({
+        title:
+          'Rôle non autorisé',
+        description:
+          'Ce rôle ne correspond pas au périmètre métier du collaborateur.',
+        variant: 'destructive',
+      });
+
+      return;
+    }
+
     if (!user?.id) {
       toast({
-        title: 'Session introuvable',
+        title:
+          'Session introuvable',
         description:
           'Impossible d’identifier le collaborateur RH qui effectue cette modification.',
         variant: 'destructive',
@@ -616,9 +761,9 @@ const RHAccess = () => {
           (assignment) =>
             assignment.employee_id ===
               selectedEmployee.id &&
-            assignment.status === 'active',
+            assignment.status ===
+              'active',
         );
-
 
       const payload = {
         employee_id:
@@ -643,7 +788,6 @@ const RHAccess = () => {
         ends_at: null,
       };
 
-
       if (existing) {
         const { error } =
           await supabase
@@ -667,12 +811,6 @@ const RHAccess = () => {
             )
             .insert({
               ...payload,
-
-              /*
-               * IMPORTANT :
-               * assigned_by = personne qui effectue
-               * l'affectation, pas le collaborateur ciblé.
-               */
               assigned_by: user.id,
             });
 
@@ -681,22 +819,20 @@ const RHAccess = () => {
         }
       }
 
-
       await queryClient.invalidateQueries({
         queryKey: [
           'rh-access-assignments',
         ],
       });
 
-
       toast({
-        title: 'Accès mis à jour',
+        title:
+          'Accès mis à jour',
         description:
           `Le rôle de ${getEmployeeName(
             selectedEmployee,
           )} a été enregistré.`,
       });
-
 
       setRoleDialogOpen(false);
     } catch (error: any) {
@@ -721,8 +857,21 @@ const RHAccess = () => {
   const openPortfolioDialog = (
     employeeId: string,
   ) => {
-    setSelectedEmployeeId(employeeId);
+    const employee = employees.find(
+      (item: any) =>
+        item.id === employeeId,
+    );
+
+    if (!employee) {
+      return;
+    }
+
+    setSelectedEmployeeId(
+      employeeId,
+    );
+
     setSelectedPortfolioId('');
+
     setPortfolioDialogOpen(true);
   };
 
@@ -739,9 +888,51 @@ const RHAccess = () => {
       return;
     }
 
+    if (
+      !canReceiveNewAccess(
+        selectedEmployee,
+      )
+    ) {
+      toast({
+        title:
+          'Affectation impossible',
+        description:
+          'Un portefeuille ne peut être attribué qu’à un collaborateur actif ou en onboarding.',
+        variant: 'destructive',
+      });
+
+      return;
+    }
+
+    const selectedPortfolio =
+      businessPortfolios.find(
+        (portfolio) =>
+          portfolio.id ===
+          selectedPortfolioId,
+      );
+
+    if (
+      !selectedPortfolio ||
+      !portfolioMatchesEmployee(
+        selectedPortfolio,
+        selectedEmployee,
+      )
+    ) {
+      toast({
+        title:
+          'Portefeuille non autorisé',
+        description:
+          'Ce portefeuille ne correspond pas au périmètre métier du collaborateur.',
+        variant: 'destructive',
+      });
+
+      return;
+    }
+
     if (!user?.id) {
       toast({
-        title: 'Session introuvable',
+        title:
+          'Session introuvable',
         description:
           'Impossible d’identifier le collaborateur RH qui effectue cette modification.',
         variant: 'destructive',
@@ -749,7 +940,6 @@ const RHAccess = () => {
 
       return;
     }
-
 
     const alreadyAssigned =
       portfolioAssignments.some(
@@ -761,7 +951,6 @@ const RHAccess = () => {
           assignment.assignment_status ===
             'active',
       );
-
 
     if (alreadyAssigned) {
       toast({
@@ -775,7 +964,6 @@ const RHAccess = () => {
       return;
     }
 
-
     setSaving(true);
 
     try {
@@ -784,9 +972,9 @@ const RHAccess = () => {
           (assignment) =>
             assignment.employee_id ===
               selectedEmployee.id &&
-            assignment.status === 'active',
+            assignment.status ===
+              'active',
         );
-
 
       const { error } =
         await supabase
@@ -801,7 +989,8 @@ const RHAccess = () => {
               selectedPortfolioId,
 
             access_assignment_id:
-              roleAssignment?.id ?? null,
+              roleAssignment?.id ??
+              null,
 
             assignment_status:
               'active',
@@ -809,21 +998,15 @@ const RHAccess = () => {
             starts_at:
               new Date().toISOString(),
 
-            /*
-             * IMPORTANT :
-             * assigned_by = utilisateur RH connecté.
-             */
             assigned_by: user.id,
 
             reason:
               'Affectation RH',
           });
 
-
       if (error) {
         throw error;
       }
-
 
       await queryClient.invalidateQueries({
         queryKey: [
@@ -831,17 +1014,18 @@ const RHAccess = () => {
         ],
       });
 
-
       toast({
-        title: 'Périmètre ajouté',
+        title:
+          'Périmètre ajouté',
         description:
           `Le portefeuille a été affecté à ${getEmployeeName(
             selectedEmployee,
           )}.`,
       });
 
-
-      setPortfolioDialogOpen(false);
+      setPortfolioDialogOpen(
+        false,
+      );
     } catch (error: any) {
       toast({
         title:
@@ -884,19 +1068,19 @@ const RHAccess = () => {
         throw error;
       }
 
-
       await queryClient.invalidateQueries({
         queryKey: [
           'rh-access-assignments',
         ],
       });
 
-
       toast({
-        title: 'Accès révoqué',
+        title:
+          'Accès révoqué',
         description:
           `Le rôle ${
-            assignment.role?.label ?? ''
+            assignment.role?.label ??
+            ''
           } a été révoqué.`,
       });
     } catch (error: any) {
@@ -941,13 +1125,11 @@ const RHAccess = () => {
         throw error;
       }
 
-
       await queryClient.invalidateQueries({
         queryKey: [
           'rh-access-portfolio-assignments',
         ],
       });
-
 
       toast({
         title:
@@ -966,61 +1148,6 @@ const RHAccess = () => {
       });
     }
   };
-
-
-  /* ==========================================================
-     POLES DISPONIBLES
-  ========================================================== */
-
-  const poleOptions = useMemo(() => {
-    const values = new Set<string>();
-
-    employees.forEach((employee: any) => {
-      (employee.poles ?? []).forEach(
-        (pole: string) => values.add(pole),
-      );
-    });
-
-    return Array.from(values).sort();
-  }, [employees]);
-
-
-  /* ==========================================================
-     PORTEFEUILLES FILTRÉS
-  ========================================================== */
-
-  const availablePortfolios =
-    useMemo(() => {
-      if (!selectedEmployee) {
-        return [];
-      }
-
-      const employeePoles =
-        Array.isArray(
-          selectedEmployee.poles,
-        )
-          ? selectedEmployee.poles
-          : [];
-
-      return businessPortfolios.filter(
-        (portfolio) => {
-          const portfolioPole =
-            portfolio.portfolio_type
-              ?.business_pole;
-
-          if (!portfolioPole) {
-            return false;
-          }
-
-          return employeePoles.includes(
-            portfolioPole as any,
-          );
-        },
-      );
-    }, [
-      businessPortfolios,
-      selectedEmployee,
-    ]);
 
 
   /* ==========================================================
@@ -1152,7 +1279,9 @@ const RHAccess = () => {
               <Input
                 value={search}
                 onChange={(event) =>
-                  setSearch(event.target.value)
+                  setSearch(
+                    event.target.value,
+                  )
                 }
                 placeholder="Rechercher un collaborateur…"
                 className="pl-9"
@@ -1316,7 +1445,6 @@ const RHAccess = () => {
                             'active',
                       );
 
-
                     const employeePortfolios =
                       portfolioAssignments.filter(
                         (assignment) =>
@@ -1326,6 +1454,10 @@ const RHAccess = () => {
                             'active',
                       );
 
+                    const canAssign =
+                      canReceiveNewAccess(
+                        employee,
+                      );
 
                     return (
                       <TableRow
@@ -1350,7 +1482,9 @@ const RHAccess = () => {
                             {(employee.poles ?? [])
                               .slice(0, 2)
                               .map(
-                                (pole: string) => (
+                                (
+                                  pole: string,
+                                ) => (
                                   <Badge
                                     key={pole}
                                     variant="outline"
@@ -1363,7 +1497,9 @@ const RHAccess = () => {
                             {(employee.poles ?? [])
                               .length > 2 && (
                               <Badge variant="secondary">
-                                +{employee.poles.length - 2}
+                                +
+                                {employee.poles.length -
+                                  2}
                               </Badge>
                             )}
                           </div>
@@ -1451,7 +1587,10 @@ const RHAccess = () => {
                               employee.hr_status ===
                               'active'
                                 ? 'default'
-                                : 'outline'
+                                : employee.hr_status ===
+                                    'onboarding'
+                                  ? 'secondary'
+                                  : 'outline'
                             }
                           >
                             {employee.hr_status ??
@@ -1491,6 +1630,12 @@ const RHAccess = () => {
                             </Button>
 
                           </div>
+
+                          {!canAssign && (
+                            <p className="mt-1 text-right text-[11px] text-muted-foreground">
+                              Affectations désactivées
+                            </p>
+                          )}
                         </TableCell>
 
                       </TableRow>
@@ -1531,6 +1676,24 @@ const RHAccess = () => {
           </DialogHeader>
 
 
+          {selectedEmployee &&
+            !canReceiveNewAccess(
+              selectedEmployee,
+            ) && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm">
+                <p className="font-medium">
+                  Affectation désactivée
+                </p>
+
+                <p className="mt-1 text-muted-foreground">
+                  Le collaborateur n’est ni actif ni en onboarding.
+                  Une nouvelle affectation ne peut donc pas être créée.
+                  Une affectation existante peut toutefois être révoquée.
+                </p>
+              </div>
+            )}
+
+
           <div className="space-y-5 py-4">
 
             <div className="space-y-2">
@@ -1543,6 +1706,12 @@ const RHAccess = () => {
                 onValueChange={
                   setSelectedRoleId
                 }
+                disabled={
+                  !selectedEmployee ||
+                  !canReceiveNewAccess(
+                    selectedEmployee,
+                  )
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un rôle" />
@@ -1554,22 +1723,30 @@ const RHAccess = () => {
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Chargement…
                     </div>
-                  ) : roles.length === 0 ? (
+                  ) : availableRoles.length ===
+                    0 ? (
                     <div className="px-3 py-2 text-sm text-muted-foreground">
-                      Aucun rôle actif
+                      Aucun rôle compatible avec ce collaborateur
                     </div>
                   ) : (
-                    roles.map((role) => (
-                      <SelectItem
-                        key={role.id}
-                        value={role.id}
-                      >
-                        {role.label}
-                      </SelectItem>
-                    ))
+                    availableRoles.map(
+                      (role) => (
+                        <SelectItem
+                          key={role.id}
+                          value={role.id}
+                        >
+                          {role.label}
+                        </SelectItem>
+                      ),
+                    )
                   )}
                 </SelectContent>
               </Select>
+
+              <p className="text-xs text-muted-foreground">
+                Seuls les rôles compatibles avec les pôles du
+                collaborateur sont proposés.
+              </p>
             </div>
 
 
@@ -1583,6 +1760,12 @@ const RHAccess = () => {
                 onValueChange={
                   setSelectedScopeId
                 }
+                disabled={
+                  !selectedEmployee ||
+                  !canReceiveNewAccess(
+                    selectedEmployee,
+                  )
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un périmètre" />
@@ -1593,21 +1776,22 @@ const RHAccess = () => {
                     Aucun périmètre spécifique
                   </SelectItem>
 
-                  {scopes.map((scope) => (
-                    <SelectItem
-                      key={scope.id}
-                      value={scope.id}
-                    >
-                      {scope.label}
-                    </SelectItem>
-                  ))}
+                  {scopes.map(
+                    (scope) => (
+                      <SelectItem
+                        key={scope.id}
+                        value={scope.id}
+                      >
+                        {scope.label}
+                      </SelectItem>
+                    ),
+                  )}
                 </SelectContent>
               </Select>
 
               <p className="text-xs text-muted-foreground">
-                Le périmètre définit la portée fonctionnelle
-                du rôle. Les portefeuilles métier sont gérés
-                séparément.
+                Le périmètre définit la portée fonctionnelle du rôle.
+                Les portefeuilles métier sont gérés séparément.
               </p>
             </div>
 
@@ -1618,7 +1802,8 @@ const RHAccess = () => {
 
             {selectedEmployeeAssignments.some(
               (assignment) =>
-                assignment.status === 'active',
+                assignment.status ===
+                'active',
             ) && (
               <Button
                 type="button"
@@ -1632,8 +1817,13 @@ const RHAccess = () => {
                     );
 
                   if (current) {
-                    void revokeRole(current);
-                    setRoleDialogOpen(false);
+                    void revokeRole(
+                      current,
+                    );
+
+                    setRoleDialogOpen(
+                      false,
+                    );
                   }
                 }}
               >
@@ -1660,7 +1850,11 @@ const RHAccess = () => {
               disabled={
                 saving ||
                 !selectedRoleId ||
-                !user?.id
+                !user?.id ||
+                !selectedEmployee ||
+                !canReceiveNewAccess(
+                  selectedEmployee,
+                )
               }
             >
               {saving ? (
@@ -1705,6 +1899,23 @@ const RHAccess = () => {
           </DialogHeader>
 
 
+          {selectedEmployee &&
+            !canReceiveNewAccess(
+              selectedEmployee,
+            ) && (
+              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm">
+                <p className="font-medium">
+                  Affectation désactivée
+                </p>
+
+                <p className="mt-1 text-muted-foreground">
+                  Un portefeuille ne peut être attribué qu’à un
+                  collaborateur actif ou en onboarding.
+                </p>
+              </div>
+            )}
+
+
           <div className="space-y-5 py-4">
 
             <div className="rounded-lg border bg-muted/30 p-4">
@@ -1717,9 +1928,9 @@ const RHAccess = () => {
                   </p>
 
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Le portefeuille ne crée pas un nouveau
-                    rôle. Il limite les ressources métier
-                    auxquelles le collaborateur peut accéder.
+                    Le portefeuille ne crée pas un nouveau rôle.
+                    Il limite les ressources métier auxquelles le
+                    collaborateur peut accéder.
                   </p>
                 </div>
               </div>
@@ -1736,6 +1947,12 @@ const RHAccess = () => {
                 onValueChange={
                   setSelectedPortfolioId
                 }
+                disabled={
+                  !selectedEmployee ||
+                  !canReceiveNewAccess(
+                    selectedEmployee,
+                  )
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un portefeuille" />
@@ -1750,8 +1967,7 @@ const RHAccess = () => {
                   ) : availablePortfolios.length ===
                     0 ? (
                     <div className="px-3 py-2 text-sm text-muted-foreground">
-                      Aucun portefeuille disponible
-                      pour ce collaborateur.
+                      Aucun portefeuille autorisé pour ce collaborateur.
                     </div>
                   ) : (
                     availablePortfolios.map(
@@ -1773,6 +1989,11 @@ const RHAccess = () => {
                   )}
                 </SelectContent>
               </Select>
+
+              <p className="text-xs text-muted-foreground">
+                Les portefeuilles sont filtrés selon le pôle,
+                le poste et le type de portefeuille.
+              </p>
             </div>
 
 
@@ -1835,7 +2056,9 @@ const RHAccess = () => {
               type="button"
               variant="outline"
               onClick={() =>
-                setPortfolioDialogOpen(false)
+                setPortfolioDialogOpen(
+                  false,
+                )
               }
             >
               Annuler
@@ -1849,7 +2072,11 @@ const RHAccess = () => {
               disabled={
                 saving ||
                 !selectedPortfolioId ||
-                !user?.id
+                !user?.id ||
+                !selectedEmployee ||
+                !canReceiveNewAccess(
+                  selectedEmployee,
+                )
               }
             >
               {saving ? (
