@@ -174,6 +174,7 @@ import BusinessTrips from "./pages/modules/rh/BusinessTrips";
 import Publications from "./pages/modules/rh/Publications";
 import RHPortfolio from "./pages/modules/rh/RHPortfolio";
 import Organization from "./pages/modules/rh/Oraganization";
+import RHAccess from "./pages/modules/rh/RHAccess";
 
 /* ============================================================
    9. QUALITÉ & AUDIT
@@ -701,6 +702,10 @@ const App = () => (
                 <Route
                   path="/pole/rh/organization"
                   element={<Organization />}
+                />
+                <Route
+                  path="/pole/rh/access"
+                  element={<RHAccess />}
                 />
 
                 {/* ====================================================
