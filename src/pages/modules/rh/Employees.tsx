@@ -1,36 +1,32 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Search,
-  FileText,
-  Calendar,
-  ExternalLink,
-  Plus,
-  Loader2,
-  FolderOpen,
-  ShieldCheck,
-  Briefcase,
-  Award,
-  FileCheck,
-  FileLock,
-  GraduationCap,
-  ClipboardCheck,
-  AlertTriangle,
-  User,
   Users,
-  Clock,
   RefreshCw,
+  Pencil,
+  FolderOpen,
+  UserRound,
+  Mail,
+  Building2,
+  Briefcase,
+  ShieldCheck,
+  X,
 } from 'lucide-react';
+
 import { toast } from 'sonner';
 
-import { supabase } from '@/integrations/supabase/client';
-
 import {
-  type Employee,
   type CollaboratorType,
+  type Employee,
   type HrStatus,
   useEmployees,
+  useUpdateEmployee,
 } from '@/hooks/useEmployees';
+
+import { poles } from '@/data/poles';
+
+import { ExportButtons } from '@/components/ExportButtons';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -56,7 +52,10 @@ import {
 
 import { Label } from '@/components/ui/label';
 
-import { Textarea } from '@/components/ui/textarea';
+import {
+  Avatar,
+  AvatarFallback,
+} from '@/components/ui/avatar';
 
 import {
   Table,
@@ -67,73 +66,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import {
-  Avatar,
-  AvatarFallback,
-} from '@/components/ui/avatar';
-
-import { ExportButtons } from '@/components/ExportButtons';
-
-
-// ============================================================
-// TYPES
-// ============================================================
-
-type DocumentType =
-  | 'contract'
-  | 'identity'
-  | 'diploma'
-  | 'administrative'
-  | 'medical'
-  | 'training'
-  | 'evaluation'
-  | 'disciplinary'
-  | 'other';
-
-type DocumentSource =
-  | 'drive'
-  | 'upload'
-  | 'external'
-  | 'other';
-
-interface EmployeeDocument {
-  id: string;
-  employee_id: string;
-  name: string;
-  document_type: DocumentType;
-  source: DocumentSource;
-  document_url: string | null;
-  description: string | null;
-  document_date: string | null;
-  expires_at: string | null;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
 
 // ============================================================
 // LABELS
 // ============================================================
-
-const documentTypeLabels: Record<DocumentType, string> = {
-  contract: 'Contrat',
-  identity: "Pièce d'identité",
-  diploma: 'Diplôme',
-  administrative: 'Administratif',
-  medical: 'Médical',
-  training: 'Formation',
-  evaluation: 'Évaluation',
-  disciplinary: 'Disciplinaire',
-  other: 'Autre',
-};
-
-const documentSourceLabels: Record<DocumentSource, string> = {
-  drive: 'Google Drive BIB',
-  upload: 'Import BIB',
-  external: 'Source externe',
-  other: 'Autre',
-};
 
 const collaboratorTypeLabels: Record<CollaboratorType, string> = {
   internal: 'Interne',
@@ -154,47 +90,17 @@ const statusLabels: Record<HrStatus, string> = {
   archived: 'Archivé',
 };
 
-
-// ============================================================
-// DOCUMENT ICON
-// ============================================================
-
-function DocumentIcon({
-  type,
-}: {
-  type: DocumentType;
-}) {
-  const iconClass = 'h-4 w-4';
-
-  switch (type) {
-    case 'contract':
-      return <Briefcase className={iconClass} />;
-
-    case 'identity':
-      return <ShieldCheck className={iconClass} />;
-
-    case 'diploma':
-      return <Award className={iconClass} />;
-
-    case 'medical':
-      return <FileLock className={iconClass} />;
-
-    case 'training':
-      return <GraduationCap className={iconClass} />;
-
-    case 'evaluation':
-      return <ClipboardCheck className={iconClass} />;
-
-    case 'disciplinary':
-      return <AlertTriangle className={iconClass} />;
-
-    case 'administrative':
-      return <FileCheck className={iconClass} />;
-
-    default:
-      return <FileText className={iconClass} />;
-  }
-}
+const statusVariant: Record<
+  HrStatus,
+  'default' | 'secondary' | 'outline' | 'destructive'
+> = {
+  active: 'default',
+  onboarding: 'outline',
+  leave: 'secondary',
+  suspended: 'destructive',
+  leaving: 'outline',
+  archived: 'secondary',
+};
 
 
 // ============================================================
@@ -210,6 +116,10 @@ function initials(employee: Employee) {
     .toUpperCase();
 }
 
+function poleName(id: string) {
+  return poles.find((pole) => pole.id === id)?.name ?? id;
+}
+
 function formatDate(value: string | null) {
   if (!value) {
     return '—';
@@ -218,330 +128,173 @@ function formatDate(value: string | null) {
   return new Date(value).toLocaleDateString('fr-FR');
 }
 
-function isExpired(value: string | null) {
-  if (!value) {
-    return false;
-  }
-
-  return new Date(value).getTime() < Date.now();
-}
-
 
 // ============================================================
 // PAGE
 // ============================================================
 
-export default function EmployeeFiles() {
-  const [searchParams, setSearchParams] = useSearchParams();
-
-  const selectedEmployeeId =
-    searchParams.get('employee') || '';
-
+export default function Employees() {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] =
     useState<CollaboratorType | 'all'>('all');
   const [statusFilter, setStatusFilter] =
     useState<HrStatus | 'all'>('all');
-  const [documentFilter, setDocumentFilter] =
-    useState<DocumentType | 'all'>('all');
+  const [poleFilter, setPoleFilter] =
+    useState<string>('all');
 
-  const [documents, setDocuments] = useState<EmployeeDocument[]>([]);
-  const [isLoadingDocuments, setIsLoadingDocuments] =
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<Employee | null>(null);
+
+  const [editDialogOpen, setEditDialogOpen] =
     useState(false);
 
-  const [documentDialogOpen, setDocumentDialogOpen] =
-    useState(false);
-
-  const [selectedDocument, setSelectedDocument] =
-    useState<EmployeeDocument | null>(null);
-
-  const [form, setForm] = useState({
-    name: '',
-    document_type: 'contract' as DocumentType,
-    source: 'drive' as DocumentSource,
-    document_url: '',
-    description: '',
-    document_date: '',
-    expires_at: '',
+  const [editForm, setEditForm] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    position: '',
+    seniority: '',
+    work_mode: '',
+    subsidiary: '',
+    collaborator_type: 'internal' as CollaboratorType,
+    hr_status: 'active' as HrStatus,
   });
 
   const {
     data: employees = [],
-    isLoading: isLoadingEmployees,
+    isLoading,
+    isFetching,
+    refetch,
   } = useEmployees({
     search: searchQuery || undefined,
     collaboratorType: typeFilter,
     hrStatus: statusFilter,
+    pole: poleFilter,
   });
 
-  const selectedEmployee = useMemo(
-    () =>
-      employees.find(
-        (employee) =>
-          employee.id === selectedEmployeeId,
-      ) ?? null,
-    [employees, selectedEmployeeId],
-  );
-
+  const updateEmployee = useUpdateEmployee();
 
   // ==========================================================
-  // LOAD DOCUMENTS
+  // POLES
   // ==========================================================
 
-  const loadDocuments = async () => {
-    if (!selectedEmployeeId) {
-      setDocuments([]);
-      return;
-    }
-
-    setIsLoadingDocuments(true);
-
-    try {
-      const { data, error } = await (supabase as any)
-        .from('rh_employee_documents')
-        .select(`
-          id,
-          employee_id,
-          name,
-          document_type,
-          source,
-          document_url,
-          description,
-          document_date,
-          expires_at,
-          created_by,
-          created_at,
-          updated_at
-        `)
-        .eq('employee_id', selectedEmployeeId)
-        .order('created_at', {
-          ascending: false,
-        });
-
-      if (error) {
-        throw error;
-      }
-
-      setDocuments(
-        (data ?? []) as EmployeeDocument[],
-      );
-    } catch (error: any) {
-      toast.error(
-        error?.message ||
-          'Impossible de charger le dossier documentaire.',
-      );
-
-      setDocuments([]);
-    } finally {
-      setIsLoadingDocuments(false);
-    }
-  };
-
-
-  useEffect(() => {
-    void loadDocuments();
-  }, [selectedEmployeeId]);
-
-
-  // ==========================================================
-  // EMPLOYEE FILTER
-  // ==========================================================
-
-  const visibleEmployees = employees;
-
-  // ==========================================================
-  // DOCUMENT FILTER
-  // ==========================================================
-
-  const visibleDocuments = useMemo(() => {
-    if (documentFilter === 'all') {
-      return documents;
-    }
-
-    return documents.filter(
-      (document) =>
-        document.document_type === documentFilter,
-    );
-  }, [documents, documentFilter]);
-
+  const poleOptions = poles;
 
   // ==========================================================
   // KPI
   // ==========================================================
 
-  const expiredDocuments = documents.filter(
-    (document) =>
-      isExpired(document.expires_at),
-  ).length;
-
-  const documentsWithExpiry = documents.filter(
-    (document) =>
-      Boolean(document.expires_at),
-  ).length;
-
+  const stats = useMemo(() => {
+    return {
+      total: employees.length,
+      active: employees.filter(
+        (employee) => employee.hr_status === 'active',
+      ).length,
+      onboarding: employees.filter(
+        (employee) => employee.hr_status === 'onboarding',
+      ).length,
+      external: employees.filter(
+        (employee) =>
+          employee.collaborator_type !== 'internal',
+      ).length,
+    };
+  }, [employees]);
 
   // ==========================================================
-  // SELECT EMPLOYEE
+  // EDIT
   // ==========================================================
 
-  const selectEmployee = (employee: Employee) => {
-    setSearchParams({
-      employee: employee.id,
+  const openEdit = (employee: Employee) => {
+    setSelectedEmployee(employee);
+
+    setEditForm({
+      first_name: employee.first_name ?? '',
+      last_name: employee.last_name ?? '',
+      email: employee.email ?? '',
+      position: employee.position ?? '',
+      seniority: employee.seniority ?? '',
+      work_mode: employee.work_mode ?? '',
+      subsidiary: employee.subsidiary ?? '',
+      collaborator_type:
+        employee.collaborator_type ?? 'internal',
+      hr_status:
+        employee.hr_status ?? 'active',
     });
 
-    setDocumentFilter('all');
+    setEditDialogOpen(true);
   };
 
-
-  const clearSelection = () => {
-    setSearchParams({});
-    setDocuments([]);
-    setSelectedDocument(null);
-  };
-
-
-  // ==========================================================
-  // NEW DOCUMENT
-  // ==========================================================
-
-  const openNewDocument = () => {
-    if (!selectedEmployee) {
-      toast.error(
-        'Sélectionnez d’abord un collaborateur.',
-      );
-
-      return;
-    }
-
-    setForm({
-      name: '',
-      document_type: 'contract',
-      source: 'drive',
-      document_url: '',
-      description: '',
-      document_date: '',
-      expires_at: '',
-    });
-
-    setDocumentDialogOpen(true);
-  };
-
-
-  // ==========================================================
-  // SAVE DOCUMENT
-  // ==========================================================
-
-  const saveDocument = async () => {
+  const saveEmployee = async () => {
     if (!selectedEmployee) {
       return;
     }
 
-    if (!form.name.trim()) {
+    if (
+      !editForm.first_name.trim() ||
+      !editForm.last_name.trim() ||
+      !editForm.email.trim()
+    ) {
       toast.error(
-        'Le nom du document est obligatoire.',
+        'Le prénom, le nom et l’adresse e-mail sont obligatoires.',
       );
 
       return;
     }
 
     try {
-      const {
-        data: {
-          user,
-        },
-      } = await supabase.auth.getUser();
+      await updateEmployee.mutateAsync({
+        id: selectedEmployee.id,
+        first_name: editForm.first_name.trim(),
+        last_name: editForm.last_name.trim(),
+        email: editForm.email.trim(),
+        position: editForm.position.trim() || null,
+        seniority: editForm.seniority.trim() || null,
+        work_mode: editForm.work_mode.trim() || null,
+        subsidiary: editForm.subsidiary.trim() || null,
+        collaborator_type: editForm.collaborator_type,
+        hr_status: editForm.hr_status,
+      });
 
-      const { error } = await (supabase as any)
-        .from('rh_employee_documents')
-        .insert({
-          employee_id: selectedEmployee.id,
-          name: form.name.trim(),
-          document_type: form.document_type,
-          source: form.source,
-          document_url:
-            form.document_url.trim() || null,
-          description:
-            form.description.trim() || null,
-          document_date:
-            form.document_date || null,
-          expires_at:
-            form.expires_at || null,
-          created_by: user?.id ?? null,
-        });
+      toast.success('Collaborateur mis à jour.');
 
-      if (error) {
-        throw error;
-      }
-
-      toast.success(
-        'Document ajouté au dossier RH.',
-      );
-
-      setDocumentDialogOpen(false);
-
-      await loadDocuments();
+      setEditDialogOpen(false);
+      setSelectedEmployee(null);
     } catch (error: any) {
       toast.error(
         error?.message ||
-          'Impossible d’ajouter le document.',
+          'Impossible de mettre à jour le collaborateur.',
       );
     }
   };
 
-
   // ==========================================================
-  // DELETE DOCUMENT
+  // RESET FILTERS
   // ==========================================================
 
-  const deleteDocument = async (
-    document: EmployeeDocument,
-  ) => {
-    const confirmed = window.confirm(
-      `Supprimer le document « ${document.name} » du dossier RH ?`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    try {
-      const { error } = await (supabase as any)
-        .from('rh_employee_documents')
-        .delete()
-        .eq('id', document.id);
-
-      if (error) {
-        throw error;
-      }
-
-      toast.success(
-        'Document retiré du registre RH.',
-      );
-
-      setSelectedDocument(null);
-
-      await loadDocuments();
-    } catch (error: any) {
-      toast.error(
-        error?.message ||
-          'Impossible de supprimer le document.',
-      );
-    }
+  const resetFilters = () => {
+    setSearchQuery('');
+    setTypeFilter('all');
+    setStatusFilter('all');
+    setPoleFilter('all');
   };
 
+  const hasFilters =
+    Boolean(searchQuery) ||
+    typeFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    poleFilter !== 'all';
 
   // ==========================================================
   // LOADING
   // ==========================================================
 
-  if (isLoadingEmployees) {
+  if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <RefreshCw className="h-7 w-7 animate-spin text-primary" />
       </div>
     );
   }
-
 
   // ==========================================================
   // RENDER
@@ -557,45 +310,97 @@ export default function EmployeeFiles() {
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <FolderOpen className="h-6 w-6 text-primary" />
+            <Users className="h-6 w-6 text-primary" />
 
             <h1 className="text-3xl font-bold">
-              Dossiers collaborateurs
+              Collaborateurs
             </h1>
           </div>
 
           <p className="mt-1 text-muted-foreground">
-            Gestion documentaire RH rattachée au référentiel
-            officiel des collaborateurs.
+            Référentiel RH officiel des collaborateurs BIB.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            onClick={loadDocuments}
-            disabled={!selectedEmployeeId || isLoadingDocuments}
+            onClick={() => void refetch()}
+            disabled={isFetching}
           >
             <RefreshCw
               className={`mr-2 h-4 w-4 ${
-                isLoadingDocuments
-                  ? 'animate-spin'
-                  : ''
+                isFetching ? 'animate-spin' : ''
               }`}
             />
 
             Actualiser
           </Button>
 
-          <Button
-            onClick={openNewDocument}
-            disabled={!selectedEmployee}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-
-            Ajouter un document
+          <Button asChild>
+            <Link to="/pole/rh/onboarding">
+              <UserRound className="mr-2 h-4 w-4" />
+              Ajouter un collaborateur
+            </Link>
           </Button>
         </div>
+      </div>
+
+
+      {/* ======================================================
+          KPI
+          ====================================================== */}
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Collaborateurs
+            </p>
+
+            <p className="mt-1 text-2xl font-semibold">
+              {stats.total}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Actifs
+            </p>
+
+            <p className="mt-1 text-2xl font-semibold text-success">
+              {stats.active}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Onboarding
+            </p>
+
+            <p className="mt-1 text-2xl font-semibold text-warning">
+              {stats.onboarding}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Hors interne
+            </p>
+
+            <p className="mt-1 text-2xl font-semibold">
+              {stats.external}
+            </p>
+          </CardContent>
+        </Card>
+
       </div>
 
 
@@ -606,28 +411,51 @@ export default function EmployeeFiles() {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Users className="h-5 w-5" />
-
-            Sélection du collaborateur
+            <Search className="h-5 w-5" />
+            Recherche et filtres
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="space-y-4">
+        <CardContent>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
 
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <div className="relative lg:col-span-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
-            <Input
-              className="pl-10"
-              placeholder="Rechercher un collaborateur..."
-              value={searchQuery}
-              onChange={(event) =>
-                setSearchQuery(event.target.value)
-              }
-            />
-          </div>
+              <Input
+                className="pl-10"
+                placeholder="Nom, e-mail, poste..."
+                value={searchQuery}
+                onChange={(event) =>
+                  setSearchQuery(event.target.value)
+                }
+              />
+            </div>
 
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <Select
+              value={poleFilter}
+              onValueChange={setPoleFilter}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pôle" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">
+                  Tous les pôles
+                </SelectItem>
+
+                {poleOptions.map((pole) => (
+                  <SelectItem
+                    key={pole.id}
+                    value={pole.id}
+                  >
+                    {pole.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
             <Select
               value={typeFilter}
               onValueChange={(value) =>
@@ -663,7 +491,6 @@ export default function EmployeeFiles() {
               </SelectContent>
             </Select>
 
-
             <Select
               value={statusFilter}
               onValueChange={(value) =>
@@ -698,904 +525,539 @@ export default function EmployeeFiles() {
                 ))}
               </SelectContent>
             </Select>
+
           </div>
 
-          <div className="max-h-64 overflow-y-auto rounded-lg border">
-            {visibleEmployees.length === 0 ? (
-              <div className="py-10 text-center text-sm text-muted-foreground">
-                Aucun collaborateur correspondant aux filtres.
-              </div>
-            ) : (
-              <div className="divide-y">
-                {visibleEmployees.map((employee) => {
-                  const selected =
-                    employee.id ===
-                    selectedEmployeeId;
-
-                  return (
-                    <button
-                      key={employee.id}
-                      type="button"
-                      onClick={() =>
-                        selectEmployee(employee)
-                      }
-                      className={`flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-muted/50 ${
-                        selected
-                          ? 'bg-primary/5'
-                          : ''
-                      }`}
-                    >
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback>
-                          {initials(employee)}
-                        </AvatarFallback>
-                      </Avatar>
-
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">
-                          {fullName(employee)}
-                        </p>
-
-                        <p className="truncate text-xs text-muted-foreground">
-                          {employee.position || 'Poste non renseigné'}
-                          {' · '}
-                          {Array.isArray(employee.poles)
-                            ? employee.poles.join(', ')
-                            : 'Pôle non renseigné'}
-                        </p>
-                      </div>
-
-                      <Badge variant="outline">
-                        {
-                          collaboratorTypeLabels[
-                            employee.collaborator_type
-                          ]
-                        }
-                      </Badge>
-
-                      <Badge
-                        variant={
-                          employee.hr_status ===
-                          'active'
-                            ? 'default'
-                            : 'secondary'
-                        }
-                      >
-                        {
-                          statusLabels[
-                            employee.hr_status
-                          ]
-                        }
-                      </Badge>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          {hasFilters && (
+            <div className="mt-3 flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={resetFilters}
+              >
+                <X className="mr-1.5 h-4 w-4" />
+                Réinitialiser les filtres
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
 
       {/* ======================================================
-          EMPTY STATE
+          TABLE
           ====================================================== */}
 
-      {!selectedEmployee && (
-        <Card>
-          <CardContent className="py-16 text-center">
-            <FolderOpen className="mx-auto h-12 w-12 text-muted-foreground/50" />
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <CardTitle>
+                Référentiel collaborateurs
+              </CardTitle>
 
-            <h2 className="mt-4 text-lg font-semibold">
-              Aucun dossier sélectionné
-            </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {employees.length}{' '}
+                {employees.length > 1
+                  ? 'collaborateurs'
+                  : 'collaborateur'}
+                {' '}correspondant aux filtres.
+              </p>
+            </div>
 
-            <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
-              Sélectionnez un collaborateur dans le référentiel
-              ci-dessus pour accéder à son dossier RH documentaire.
-            </p>
-          </CardContent>
-        </Card>
-      )}
-
-
-      {/* ======================================================
-          SELECTED EMPLOYEE
-          ====================================================== */}
-
-      {selectedEmployee && (
-        <>
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarFallback className="text-lg">
-                      {initials(selectedEmployee)}
-                    </AvatarFallback>
-                  </Avatar>
-
-                  <div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-xl font-semibold">
-                        {fullName(selectedEmployee)}
-                      </h2>
-
-                      <Badge>
-                        {
-                          statusLabels[
-                            selectedEmployee.hr_status
-                          ]
-                        }
-                      </Badge>
-
-                      <Badge variant="outline">
-                        {
-                          collaboratorTypeLabels[
-                            selectedEmployee
-                              .collaborator_type
-                          ]
-                        }
-                      </Badge>
-                    </div>
-
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {selectedEmployee.position ||
-                        'Poste non renseigné'}
-                    </p>
-
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {selectedEmployee.email}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={clearSelection}
-                  >
-                    Changer de collaborateur
-                  </Button>
-
-                  <Button
-                    onClick={openNewDocument}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Ajouter un document
-                  </Button>
-                </div>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
-                <div className="rounded-lg bg-muted/50 p-3">
-                  <p className="text-xs text-muted-foreground">
-                    Pôle(s)
-                  </p>
-
-                  <p className="mt-1 text-sm font-medium">
-                    {Array.isArray(selectedEmployee.poles)
-                      ? selectedEmployee.poles.join(', ')
-                      : '—'}
-                  </p>
-                </div>
-
-                <div className="rounded-lg bg-muted/50 p-3">
-                  <p className="text-xs text-muted-foreground">
-                    Niveau
-                  </p>
-
-                  <p className="mt-1 text-sm font-medium">
-                    {selectedEmployee.seniority || '—'}
-                  </p>
-                </div>
-
-                <div className="rounded-lg bg-muted/50 p-3">
-                  <p className="text-xs text-muted-foreground">
-                    Mode
-                  </p>
-
-                  <p className="mt-1 text-sm font-medium">
-                    {selectedEmployee.work_mode || '—'}
-                  </p>
-                </div>
-
-                <div className="rounded-lg bg-muted/50 p-3">
-                  <p className="text-xs text-muted-foreground">
-                    Documents
-                  </p>
-
-                  <p className="mt-1 text-sm font-medium">
-                    {documents.length}
-                  </p>
-                </div>
-
-                <div className="rounded-lg bg-muted/50 p-3">
-                  <p className="text-xs text-muted-foreground">
-                    Expirations
-                  </p>
-
-                  <p
-                    className={`mt-1 text-sm font-medium ${
-                      expiredDocuments > 0
-                        ? 'text-destructive'
-                        : ''
-                    }`}
-                  >
-                    {expiredDocuments}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-
-          {/* ==================================================
-              DOCUMENTS
-              ================================================== */}
-
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div>
-                  <CardTitle>
-                    Documents RH
-                  </CardTitle>
-
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Registre documentaire du collaborateur.
-                    Les documents BIB sont référencés depuis leur
-                    environnement documentaire professionnel.
-                  </p>
-                </div>
-
-                <Select
-                  value={documentFilter}
-                  onValueChange={(value) =>
-                    setDocumentFilter(
-                      value as DocumentType | 'all',
-                    )
-                  }
-                >
-                  <SelectTrigger className="w-[220px]">
-                    <SelectValue />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    <SelectItem value="all">
-                      Tous les documents
-                    </SelectItem>
-
-                    {(
-                      Object.entries(
-                        documentTypeLabels,
-                      ) as [
-                        DocumentType,
-                        string,
-                      ][]
-                    ).map(([value, label]) => (
-                      <SelectItem
-                        key={value}
-                        value={value}
-                      >
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-
-            <CardContent>
-              {isLoadingDocuments ? (
-                <div className="flex justify-center py-12">
-                  <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
-                </div>
-              ) : visibleDocuments.length === 0 ? (
-                <div className="rounded-lg border border-dashed py-12 text-center">
-                  <FileText className="mx-auto h-10 w-10 text-muted-foreground/50" />
-
-                  <p className="mt-3 font-medium">
-                    Aucun document enregistré
-                  </p>
-
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Ajoutez une référence documentaire pour ce
-                    collaborateur.
-                  </p>
-
-                  <Button
-                    className="mt-4"
-                    onClick={openNewDocument}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Ajouter un document
-                  </Button>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>
-                          Document
-                        </TableHead>
-
-                        <TableHead>
-                          Type
-                        </TableHead>
-
-                        <TableHead>
-                          Source
-                        </TableHead>
-
-                        <TableHead>
-                          Date
-                        </TableHead>
-
-                        <TableHead>
-                          Échéance
-                        </TableHead>
-
-                        <TableHead className="text-right">
-                          Action
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-
-                    <TableBody>
-                      {visibleDocuments.map(
-                        (document) => {
-                          const expired =
-                            isExpired(
-                              document.expires_at,
-                            );
-
-                          return (
-                            <TableRow
-                              key={document.id}
-                            >
-                              <TableCell>
-                                <div className="flex items-center gap-3">
-                                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                                    <DocumentIcon
-                                      type={
-                                        document.document_type
-                                      }
-                                    />
-                                  </div>
-
-                                  <div>
-                                    <p className="font-medium">
-                                      {document.name}
-                                    </p>
-
-                                    {document.description && (
-                                      <p className="max-w-xs truncate text-xs text-muted-foreground">
-                                        {
-                                          document.description
-                                        }
-                                      </p>
-                                    )}
-                                  </div>
-                                </div>
-                              </TableCell>
-
-                              <TableCell>
-                                <Badge variant="outline">
-                                  {
-                                    documentTypeLabels[
-                                      document
-                                        .document_type
-                                    ]
-                                  }
-                                </Badge>
-                              </TableCell>
-
-                              <TableCell>
-                                <span className="text-sm">
-                                  {
-                                    documentSourceLabels[
-                                      document.source
-                                    ]
-                                  }
-                                </span>
-                              </TableCell>
-
-                              <TableCell className="text-sm text-muted-foreground">
-                                {formatDate(
-                                  document.document_date,
-                                )}
-                              </TableCell>
-
-                              <TableCell>
-                                {document.expires_at ? (
-                                  <span
-                                    className={`flex items-center gap-1 text-sm ${
-                                      expired
-                                        ? 'text-destructive'
-                                        : 'text-muted-foreground'
-                                    }`}
-                                  >
-                                    <Clock className="h-3.5 w-3.5" />
-
-                                    {formatDate(
-                                      document.expires_at,
-                                    )}
-                                  </span>
-                                ) : (
-                                  '—'
-                                )}
-                              </TableCell>
-
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  {document.document_url && (
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      asChild
-                                    >
-                                      <a
-                                        href={
-                                          document.document_url
-                                        }
-                                        target="_blank"
-                                        rel="noreferrer"
-                                      >
-                                        <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
-                                        Ouvrir
-                                      </a>
-                                    </Button>
-                                  )}
-
-                                  <Button
-                                    size="sm"
-                                    variant="ghost"
-                                    onClick={() =>
-                                      setSelectedDocument(
-                                        document,
-                                      )
-                                    }
-                                  >
-                                    Détails
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        },
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-
-          {/* ==================================================
-              EXPORT
-              ================================================== */}
-
-          <div className="flex justify-end">
             <ExportButtons
-              filename={`dossier-rh-${selectedEmployee.last_name.toLowerCase()}`}
-              title={`Dossier RH — ${fullName(selectedEmployee)}`}
+              filename="collaborateurs-rh"
+              title="Collaborateurs RH"
+              poleName="Ressources Humaines"
               columns={[
                 {
-                  header: 'Document',
+                  header: 'Nom',
                   accessor: 'name',
+                },
+                {
+                  header: 'E-mail',
+                  accessor: 'email',
                 },
                 {
                   header: 'Type',
                   accessor: 'type',
                 },
                 {
-                  header: 'Source',
-                  accessor: 'source',
+                  header: 'Statut',
+                  accessor: 'status',
                 },
                 {
-                  header: 'Date',
-                  accessor: 'date',
+                  header: 'Pôles',
+                  accessor: 'poles',
                 },
                 {
-                  header: 'Échéance',
-                  accessor: 'expires_at',
+                  header: 'Poste',
+                  accessor: 'position',
+                },
+                {
+                  header: 'Ancienneté',
+                  accessor: 'seniority',
+                },
+                {
+                  header: 'Mode de travail',
+                  accessor: 'work_mode',
                 },
               ]}
-              data={documents.map(
-                (document) => ({
-                  name: document.name,
-                  type:
-                    documentTypeLabels[
-                      document.document_type
-                    ],
-                  source:
-                    documentSourceLabels[
-                      document.source
-                    ],
-                  date:
-                    formatDate(
-                      document.document_date,
-                    ),
-                  expires_at:
-                    formatDate(
-                      document.expires_at,
-                    ),
-                }),
-              )}
+              data={employees.map((employee) => ({
+                name: fullName(employee),
+                email: employee.email,
+                type:
+                  collaboratorTypeLabels[
+                    employee.collaborator_type
+                  ],
+                status:
+                  statusLabels[
+                    employee.hr_status
+                  ],
+                poles: Array.isArray(employee.poles)
+                  ? employee.poles
+                      .map(poleName)
+                      .join(', ')
+                  : '',
+                position:
+                  employee.position ?? '',
+                seniority:
+                  employee.seniority ?? '',
+                work_mode:
+                  employee.work_mode ?? '',
+              }))}
             />
           </div>
-        </>
-      )}
+        </CardHeader>
 
+        <CardContent className="p-0">
 
-      {/* ======================================================
-          DOCUMENT DETAILS
-          ====================================================== */}
+          {employees.length === 0 ? (
+            <div className="py-16 text-center">
+              <Users className="mx-auto h-10 w-10 text-muted-foreground/50" />
 
-      <Dialog
-        open={Boolean(selectedDocument)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedDocument(null);
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              Détails du document
-            </DialogTitle>
+              <p className="mt-4 font-medium">
+                Aucun collaborateur trouvé
+              </p>
 
-            <DialogDescription>
-              Métadonnées enregistrées dans le dossier RH.
-            </DialogDescription>
-          </DialogHeader>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Modifiez les critères de recherche ou de filtre.
+              </p>
 
-          {selectedDocument && (
-            <div className="space-y-4">
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  Nom
-                </p>
-
-                <p className="font-medium">
-                  {selectedDocument.name}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    Type
-                  </p>
-
-                  <p className="mt-1 text-sm">
-                    {
-                      documentTypeLabels[
-                        selectedDocument
-                          .document_type
-                      ]
-                    }
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    Source
-                  </p>
-
-                  <p className="mt-1 text-sm">
-                    {
-                      documentSourceLabels[
-                        selectedDocument.source
-                      ]
-                    }
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    Date du document
-                  </p>
-
-                  <p className="mt-1 text-sm">
-                    {formatDate(
-                      selectedDocument.document_date,
-                    )}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    Échéance
-                  </p>
-
-                  <p
-                    className={`mt-1 text-sm ${
-                      isExpired(
-                        selectedDocument.expires_at,
-                      )
-                        ? 'text-destructive'
-                        : ''
-                    }`}
-                  >
-                    {formatDate(
-                      selectedDocument.expires_at,
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {selectedDocument.description && (
-                <div>
-                  <p className="text-xs text-muted-foreground">
-                    Description
-                  </p>
-
-                  <p className="mt-1 rounded-md bg-muted/50 p-3 text-sm">
-                    {
-                      selectedDocument.description
-                    }
-                  </p>
-                </div>
-              )}
-
-              <div className="flex flex-wrap justify-between gap-2 pt-2">
-                {selectedDocument.document_url && (
-                  <Button asChild>
-                    <a
-                      href={
-                        selectedDocument.document_url
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Ouvrir le document
-                    </a>
-                  </Button>
-                )}
-
+              {hasFilters && (
                 <Button
-                  variant="destructive"
-                  onClick={() =>
-                    deleteDocument(
-                      selectedDocument,
-                    )
-                  }
+                  className="mt-4"
+                  variant="outline"
+                  onClick={resetFilters}
                 >
-                  Supprimer la référence
+                  Réinitialiser les filtres
                 </Button>
-              </div>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>
+                      Collaborateur
+                    </TableHead>
+
+                    <TableHead>
+                      Type
+                    </TableHead>
+
+                    <TableHead>
+                      Pôle(s)
+                    </TableHead>
+
+                    <TableHead>
+                      Poste
+                    </TableHead>
+
+                    <TableHead>
+                      Statut
+                    </TableHead>
+
+                    <TableHead>
+                      Dernière mise à jour
+                    </TableHead>
+
+                    <TableHead className="text-right">
+                      Actions
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody>
+                  {employees.map((employee) => (
+                    <TableRow key={employee.id}>
+
+                      {/* Collaborateur */}
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+
+                          <Avatar className="h-9 w-9">
+                            <AvatarFallback className="bg-primary/10 text-primary">
+                              {initials(employee)}
+                            </AvatarFallback>
+                          </Avatar>
+
+                          <div className="min-w-0">
+                            <p className="font-medium">
+                              {fullName(employee)}
+                            </p>
+
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                              <Mail className="h-3 w-3" />
+
+                              <span className="truncate">
+                                {employee.email}
+                              </span>
+                            </div>
+                          </div>
+
+                        </div>
+                      </TableCell>
+
+
+                      {/* Type */}
+                      <TableCell>
+                        <Badge variant="outline">
+                          {
+                            collaboratorTypeLabels[
+                              employee.collaborator_type
+                            ]
+                          }
+                        </Badge>
+                      </TableCell>
+
+
+                      {/* Pôles */}
+                      <TableCell>
+                        <div className="flex max-w-xs flex-wrap gap-1">
+                          {Array.isArray(employee.poles) &&
+                          employee.poles.length > 0 ? (
+                            employee.poles.map((pole) => (
+                              <Badge
+                                key={pole}
+                                variant="secondary"
+                                className="text-xs"
+                              >
+                                {poleName(pole)}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-sm text-muted-foreground">
+                              Non renseigné
+                            </span>
+                          )}
+                        </div>
+                      </TableCell>
+
+
+                      {/* Poste */}
+                      <TableCell>
+                        <div className="flex items-center gap-1.5">
+                          <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+
+                          <span className="text-sm">
+                            {employee.position ||
+                              'Non renseigné'}
+                          </span>
+                        </div>
+                      </TableCell>
+
+
+                      {/* Statut */}
+                      <TableCell>
+                        <Badge
+                          variant={
+                            statusVariant[
+                              employee.hr_status
+                            ]
+                          }
+                        >
+                          {
+                            statusLabels[
+                              employee.hr_status
+                            ]
+                          }
+                        </Badge>
+                      </TableCell>
+
+
+                      {/* Updated */}
+                      <TableCell>
+                        <span className="text-sm text-muted-foreground">
+                          {formatDate(
+                            employee.updated_at,
+                          )}
+                        </span>
+                      </TableCell>
+
+
+                      {/* Actions */}
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+
+                          <Button
+                            asChild
+                            size="sm"
+                            variant="outline"
+                          >
+                            <Link
+                              to={`/pole/rh/files?employee=${employee.id}`}
+                            >
+                              <FolderOpen className="mr-1.5 h-3.5 w-3.5" />
+                              Dossier
+                            </Link>
+                          </Button>
+
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() =>
+                              openEdit(employee)
+                            }
+                          >
+                            <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                            Modifier
+                          </Button>
+
+                        </div>
+                      </TableCell>
+
+                    </TableRow>
+                  ))}
+                </TableBody>
+
+              </Table>
             </div>
           )}
-        </DialogContent>
-      </Dialog>
+
+        </CardContent>
+      </Card>
 
 
       {/* ======================================================
-          ADD DOCUMENT
+          EDIT DIALOG
           ====================================================== */}
 
       <Dialog
-        open={documentDialogOpen}
-        onOpenChange={setDocumentDialogOpen}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
       >
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-2xl">
+
           <DialogHeader>
             <DialogTitle>
-              Ajouter un document RH
+              Modifier le collaborateur
             </DialogTitle>
 
             <DialogDescription>
-              Document rattaché à{' '}
-              {selectedEmployee
-                ? fullName(selectedEmployee)
-                : 'ce collaborateur'}.
-              <br />
-              Pour les documents BIB, privilégiez leur
-              emplacement dans Google Drive BIB plutôt qu'un
-              téléchargement local.
+              Mise à jour du référentiel RH officiel.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 
             <div>
-              <Label>
-                Nom du document
-              </Label>
+              <Label>Prénom</Label>
 
               <Input
                 className="mt-1"
-                placeholder="Ex. Contrat de travail — CDI"
-                value={form.name}
+                value={editForm.first_name}
                 onChange={(event) =>
-                  setForm({
-                    ...form,
-                    name: event.target.value,
-                  })
-                }
-              />
-            </div>
-
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>
-                  Type
-                </Label>
-
-                <Select
-                  value={form.document_type}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      document_type:
-                        value as DocumentType,
-                    })
-                  }
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {(
-                      Object.entries(
-                        documentTypeLabels,
-                      ) as [
-                        DocumentType,
-                        string,
-                      ][]
-                    ).map(
-                      ([value, label]) => (
-                        <SelectItem
-                          key={value}
-                          value={value}
-                        >
-                          {label}
-                        </SelectItem>
-                      ),
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-
-
-              <div>
-                <Label>
-                  Source
-                </Label>
-
-                <Select
-                  value={form.source}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      source:
-                        value as DocumentSource,
-                    })
-                  }
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {(
-                      Object.entries(
-                        documentSourceLabels,
-                      ) as [
-                        DocumentSource,
-                        string,
-                      ][]
-                    ).map(
-                      ([value, label]) => (
-                        <SelectItem
-                          key={value}
-                          value={value}
-                        >
-                          {label}
-                        </SelectItem>
-                      ),
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-
-            <div>
-              <Label>
-                Référence du document
-              </Label>
-
-              <Input
-                className="mt-1"
-                type="url"
-                placeholder="Lien Google Drive BIB ou référence documentaire"
-                value={form.document_url}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    document_url:
+                  setEditForm({
+                    ...editForm,
+                    first_name:
                       event.target.value,
                   })
                 }
               />
-
-              <p className="mt-1 text-xs text-muted-foreground">
-                Le fichier lui-même n'est pas stocké dans
-                cette table. Cette valeur référence son
-                emplacement documentaire.
-              </p>
             </div>
-
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <Label>
-                  Date du document
-                </Label>
-
-                <Input
-                  className="mt-1"
-                  type="date"
-                  value={form.document_date}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      document_date:
-                        event.target.value,
-                    })
-                  }
-                />
-              </div>
-
-              <div>
-                <Label>
-                  Date d'échéance
-                </Label>
-
-                <Input
-                  className="mt-1"
-                  type="date"
-                  value={form.expires_at}
-                  onChange={(event) =>
-                    setForm({
-                      ...form,
-                      expires_at:
-                        event.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-
 
             <div>
-              <Label>
-                Description
-              </Label>
+              <Label>Nom</Label>
 
-              <Textarea
+              <Input
                 className="mt-1"
-                rows={3}
-                placeholder="Informations complémentaires..."
-                value={form.description}
+                value={editForm.last_name}
                 onChange={(event) =>
-                  setForm({
-                    ...form,
-                    description:
+                  setEditForm({
+                    ...editForm,
+                    last_name:
                       event.target.value,
                   })
                 }
               />
+            </div>
+
+            <div className="md:col-span-2">
+              <Label>E-mail</Label>
+
+              <Input
+                className="mt-1"
+                type="email"
+                value={editForm.email}
+                onChange={(event) =>
+                  setEditForm({
+                    ...editForm,
+                    email:
+                      event.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <Label>Poste</Label>
+
+              <Input
+                className="mt-1"
+                placeholder="Poste actuel"
+                value={editForm.position}
+                onChange={(event) =>
+                  setEditForm({
+                    ...editForm,
+                    position:
+                      event.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <Label>Ancienneté</Label>
+
+              <Input
+                className="mt-1"
+                placeholder="Ex. 2 ans"
+                value={editForm.seniority}
+                onChange={(event) =>
+                  setEditForm({
+                    ...editForm,
+                    seniority:
+                      event.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <Label>Mode de travail</Label>
+
+              <Input
+                className="mt-1"
+                placeholder="Ex. Hybride"
+                value={editForm.work_mode}
+                onChange={(event) =>
+                  setEditForm({
+                    ...editForm,
+                    work_mode:
+                      event.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <Label>Filiale / entité</Label>
+
+              <Input
+                className="mt-1"
+                placeholder="Ex. BIB"
+                value={editForm.subsidiary}
+                onChange={(event) =>
+                  setEditForm({
+                    ...editForm,
+                    subsidiary:
+                      event.target.value,
+                  })
+                }
+              />
+            </div>
+
+            <div>
+              <Label>Type de collaborateur</Label>
+
+              <Select
+                value={
+                  editForm.collaborator_type
+                }
+                onValueChange={(value) =>
+                  setEditForm({
+                    ...editForm,
+                    collaborator_type:
+                      value as CollaboratorType,
+                  })
+                }
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {(
+                    Object.entries(
+                      collaboratorTypeLabels,
+                    ) as [
+                      CollaboratorType,
+                      string,
+                    ][]
+                  ).map(
+                    ([value, label]) => (
+                      <SelectItem
+                        key={value}
+                        value={value}
+                      >
+                        {label}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>Statut RH</Label>
+
+              <Select
+                value={editForm.hr_status}
+                onValueChange={(value) =>
+                  setEditForm({
+                    ...editForm,
+                    hr_status:
+                      value as HrStatus,
+                  })
+                }
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {(
+                    Object.entries(
+                      statusLabels,
+                    ) as [
+                      HrStatus,
+                      string,
+                    ][]
+                  ).map(
+                    ([value, label]) => (
+                      <SelectItem
+                        key={value}
+                        value={value}
+                      >
+                        {label}
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
             </div>
 
           </div>
@@ -1604,20 +1066,26 @@ export default function EmployeeFiles() {
             <Button
               variant="ghost"
               onClick={() =>
-                setDocumentDialogOpen(false)
+                setEditDialogOpen(false)
               }
             >
               Annuler
             </Button>
 
             <Button
-              onClick={saveDocument}
-              disabled={!form.name.trim()}
+              onClick={saveEmployee}
+              disabled={
+                updateEmployee.isPending
+              }
             >
-              <FileCheck className="mr-2 h-4 w-4" />
+              {updateEmployee.isPending && (
+                <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              )}
+
               Enregistrer
             </Button>
           </DialogFooter>
+
         </DialogContent>
       </Dialog>
 
