@@ -550,6 +550,12 @@ rh: {
       path: '/pole/rh/organization',
       icon: 'Network',
     },
+    {
+      id: 'access',
+      label: 'Accès & permissions',
+      path: '/pole/rh/access',
+      icon: 'ShieldCheck',
+    },
   ],
 },
 
