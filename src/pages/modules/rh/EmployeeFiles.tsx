@@ -32,7 +32,13 @@ import {
   useEmployees,
 } from '@/hooks/useEmployees';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -213,13 +219,15 @@ function DocumentIcon({
 function fullName(employee: Employee) {
   return (
     `${employee.first_name ?? ''} ${employee.last_name ?? ''}`
-  ).trim();
+  ).trim() || employee.email;
 }
 
 function initials(employee: Employee) {
-  return (
+  const value =
     `${employee.first_name?.[0] ?? ''}${employee.last_name?.[0] ?? ''}`
-  ).toUpperCase();
+      .toUpperCase();
+
+  return value || 'CO';
 }
 
 function formatDate(value: string | null) {
@@ -249,9 +257,9 @@ export default function EmployeeFiles() {
   const selectedEmployeeId =
     searchParams.get('employee') || '';
 
-  // ----------------------------------------------------------
+  // ==========================================================
   // EMPLOYEE FILTERS
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -264,16 +272,18 @@ export default function EmployeeFiles() {
   const [statusFilter, setStatusFilter] =
     useState<HrStatus | 'all'>('all');
 
-  // ----------------------------------------------------------
-  // DOCUMENT FILTERS
-  // ----------------------------------------------------------
+
+  // ==========================================================
+  // DOCUMENT FILTER
+  // ==========================================================
 
   const [documentFilter, setDocumentFilter] =
     useState<DocumentType | 'all'>('all');
 
-  // ----------------------------------------------------------
+
+  // ==========================================================
   // DOCUMENT STATE
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const [documents, setDocuments] =
     useState<EmployeeDocument[]>([]);
@@ -284,11 +294,11 @@ export default function EmployeeFiles() {
   const [documentsError, setDocumentsError] =
     useState<string | null>(null);
 
-  const [documentDialogOpen, setDocumentDialogOpen] =
-    useState(false);
-
   const [selectedDocument, setSelectedDocument] =
     useState<EmployeeDocument | null>(null);
+
+  const [documentDialogOpen, setDocumentDialogOpen] =
+    useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -300,13 +310,16 @@ export default function EmployeeFiles() {
     expires_at: '',
   });
 
-  // ----------------------------------------------------------
+
+  // ==========================================================
   // EMPLOYEES
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const {
     data: employees = [],
     isLoading: isLoadingEmployees,
+    isError: isEmployeesError,
+    error: employeesError,
     refetch: refetchEmployees,
   } = useEmployees({
     search: searchQuery || undefined,
@@ -315,23 +328,68 @@ export default function EmployeeFiles() {
     hrStatus: statusFilter,
   });
 
+
+  // ==========================================================
+  // SELECTED EMPLOYEE
+  //
+  // Important:
+  // the employee MUST come from useEmployees().
+  //
+  // Since useEmployees() excludes test_account=true,
+  // a test account can never become a valid selected employee
+  // from this page.
+  // ==========================================================
+
   const selectedEmployee = useMemo(
     () =>
       employees.find(
         (employee) =>
-          employee.id === selectedEmployeeId,
+          employee.id === selectedEmployeeId &&
+          employee.test_account === false,
       ) ?? null,
     [employees, selectedEmployeeId],
   );
 
-  // ----------------------------------------------------------
+
+  // ==========================================================
+  // INVALID SELECTION PROTECTION
+  // ==========================================================
+
+  useEffect(() => {
+    if (
+      selectedEmployeeId &&
+      !isLoadingEmployees &&
+      !selectedEmployee
+    ) {
+      setSearchParams({});
+      setDocuments([]);
+      setSelectedDocument(null);
+    }
+  }, [
+    selectedEmployeeId,
+    selectedEmployee,
+    isLoadingEmployees,
+    setSearchParams,
+  ]);
+
+
+  // ==========================================================
   // LOAD DOCUMENTS
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const loadDocuments = async () => {
-    if (!selectedEmployeeId) {
+    /*
+     * Never query the document table unless the selected employee
+     * belongs to the real RH directory.
+     */
+    if (
+      !selectedEmployeeId ||
+      !selectedEmployee ||
+      selectedEmployee.test_account
+    ) {
       setDocuments([]);
       setDocumentsError(null);
+      setIsLoadingDocuments(false);
       return;
     }
 
@@ -355,7 +413,10 @@ export default function EmployeeFiles() {
           created_at,
           updated_at
         `)
-        .eq('employee_id', selectedEmployeeId)
+        .eq(
+          'employee_id',
+          selectedEmployee.id,
+        )
         .order('created_at', {
           ascending: false,
         });
@@ -381,13 +442,17 @@ export default function EmployeeFiles() {
     }
   };
 
+
   useEffect(() => {
     void loadDocuments();
-  }, [selectedEmployeeId]);
+  }, [
+    selectedEmployee?.id,
+  ]);
 
-  // ----------------------------------------------------------
+
+  // ==========================================================
   // DOCUMENT FILTER
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const visibleDocuments = useMemo(() => {
     if (documentFilter === 'all') {
@@ -398,11 +463,15 @@ export default function EmployeeFiles() {
       (document) =>
         document.document_type === documentFilter,
     );
-  }, [documents, documentFilter]);
+  }, [
+    documents,
+    documentFilter,
+  ]);
 
-  // ----------------------------------------------------------
+
+  // ==========================================================
   // KPIs
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const expiredDocuments = documents.filter(
     (document) =>
@@ -414,11 +483,20 @@ export default function EmployeeFiles() {
       Boolean(document.expires_at),
   ).length;
 
-  // ----------------------------------------------------------
+
+  // ==========================================================
   // EMPLOYEE SELECTION
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const selectEmployee = (employee: Employee) => {
+    if (employee.test_account) {
+      toast.error(
+        'Les comptes de test ne sont pas accessibles depuis les dossiers RH.',
+      );
+
+      return;
+    }
+
     setSearchParams({
       employee: employee.id,
     });
@@ -427,6 +505,7 @@ export default function EmployeeFiles() {
     setSelectedDocument(null);
   };
 
+
   const clearSelection = () => {
     setSearchParams({});
     setDocuments([]);
@@ -434,29 +513,38 @@ export default function EmployeeFiles() {
     setDocumentFilter('all');
   };
 
-  // ----------------------------------------------------------
+
+  // ==========================================================
   // REFRESH
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const refreshAll = async () => {
-    await Promise.all([
-      refetchEmployees(),
-      selectedEmployeeId
-        ? loadDocuments()
-        : Promise.resolve(),
-    ]);
+    await refetchEmployees();
+
+    if (selectedEmployee) {
+      await loadDocuments();
+    }
 
     toast.success('Données RH actualisées.');
   };
 
-  // ----------------------------------------------------------
+
+  // ==========================================================
   // NEW DOCUMENT
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const openNewDocument = () => {
     if (!selectedEmployee) {
       toast.error(
         'Sélectionnez d’abord un collaborateur.',
+      );
+
+      return;
+    }
+
+    if (selectedEmployee.test_account) {
+      toast.error(
+        'Les comptes de test ne peuvent pas recevoir de documents RH.',
       );
 
       return;
@@ -475,12 +563,20 @@ export default function EmployeeFiles() {
     setDocumentDialogOpen(true);
   };
 
-  // ----------------------------------------------------------
+
+  // ==========================================================
   // SAVE DOCUMENT
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const saveDocument = async () => {
-    if (!selectedEmployee) {
+    if (
+      !selectedEmployee ||
+      selectedEmployee.test_account
+    ) {
+      toast.error(
+        'Aucun collaborateur RH valide n’est sélectionné.',
+      );
+
       return;
     }
 
@@ -499,6 +595,12 @@ export default function EmployeeFiles() {
         },
       } = await supabase.auth.getUser();
 
+      if (!user) {
+        throw new Error(
+          'Session utilisateur introuvable.',
+        );
+      }
+
       const { error } = await (supabase as any)
         .from('rh_employee_documents')
         .insert({
@@ -514,7 +616,7 @@ export default function EmployeeFiles() {
             form.document_date || null,
           expires_at:
             form.expires_at || null,
-          created_by: user?.id ?? null,
+          created_by: user.id,
         });
 
       if (error) {
@@ -536,13 +638,25 @@ export default function EmployeeFiles() {
     }
   };
 
-  // ----------------------------------------------------------
+
+  // ==========================================================
   // DELETE DOCUMENT
-  // ----------------------------------------------------------
+  // ==========================================================
 
   const deleteDocument = async (
     document: EmployeeDocument,
   ) => {
+    if (
+      !selectedEmployee ||
+      selectedEmployee.test_account
+    ) {
+      toast.error(
+        'Ce dossier RH n’est pas accessible.',
+      );
+
+      return;
+    }
+
     const confirmed = window.confirm(
       `Supprimer la référence « ${document.name} » du dossier RH ?`,
     );
@@ -555,7 +669,11 @@ export default function EmployeeFiles() {
       const { error } = await (supabase as any)
         .from('rh_employee_documents')
         .delete()
-        .eq('id', document.id);
+        .eq('id', document.id)
+        .eq(
+          'employee_id',
+          selectedEmployee.id,
+        );
 
       if (error) {
         throw error;
@@ -576,9 +694,10 @@ export default function EmployeeFiles() {
     }
   };
 
-  // ----------------------------------------------------------
-  // LOADING
-  // ----------------------------------------------------------
+
+  // ==========================================================
+  // LOADING EMPLOYEES
+  // ==========================================================
 
   if (isLoadingEmployees) {
     return (
@@ -587,6 +706,49 @@ export default function EmployeeFiles() {
       </div>
     );
   }
+
+
+  // ==========================================================
+  // EMPLOYEE ERROR
+  // ==========================================================
+
+  if (isEmployeesError) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <Card>
+          <CardHeader>
+            <CardTitle>
+              Dossiers collaborateurs
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-5">
+              <p className="font-medium text-destructive">
+                Impossible de charger le référentiel collaborateurs.
+              </p>
+
+              <p className="mt-2 text-sm text-muted-foreground">
+                {employeesError instanceof Error
+                  ? employeesError.message
+                  : 'Une erreur est survenue lors du chargement des collaborateurs.'}
+              </p>
+
+              <Button
+                className="mt-4"
+                variant="outline"
+                onClick={() => void refetchEmployees()}
+              >
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Réessayer
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
 
   // ==========================================================
   // RENDER
@@ -610,15 +772,15 @@ export default function EmployeeFiles() {
           </div>
 
           <p className="mt-1 text-muted-foreground">
-            Gestion documentaire RH rattachée au
-            référentiel officiel des collaborateurs.
+            Gestion documentaire RH rattachée au référentiel
+            officiel des collaborateurs.
           </p>
         </div>
 
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            onClick={refreshAll}
+            onClick={() => void refreshAll()}
             disabled={
               isLoadingEmployees ||
               isLoadingDocuments
@@ -709,7 +871,6 @@ export default function EmployeeFiles() {
           {/* PRECISE FILTERS */}
 
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-
             <Select
               value={typeFilter}
               onValueChange={(value) =>
@@ -780,98 +941,94 @@ export default function EmployeeFiles() {
                 ))}
               </SelectContent>
             </Select>
-
           </div>
 
 
           {/* EMPLOYEE LIST */}
 
           <div className="max-h-72 overflow-y-auto rounded-lg border">
-
             {employees.length === 0 ? (
               <div className="py-10 text-center text-sm text-muted-foreground">
-                Aucun collaborateur correspondant
-                aux filtres.
+                Aucun collaborateur correspondant aux filtres.
               </div>
             ) : (
               <div className="divide-y">
-                {employees.map((employee) => {
-                  const selected =
-                    employee.id ===
-                    selectedEmployeeId;
+                {employees.map((employee) => (
+                  <button
+                    key={employee.id}
+                    type="button"
+                    className={`flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-muted/50 ${
+                      employee.id === selectedEmployeeId
+                        ? 'bg-muted'
+                        : ''
+                    }`}
+                    onClick={() =>
+                      selectEmployee(employee)
+                    }
+                  >
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback>
+                        {initials(employee)}
+                      </AvatarFallback>
+                    </Avatar>
 
-                  return (
-                    <button
-                      key={employee.id}
-                      type="button"
-                      onClick={() =>
-                        selectEmployee(employee)
-                      }
-                      className={`flex w-full items-center gap-3 p-3 text-left transition-colors hover:bg-muted/50 ${
-                        selected
-                          ? 'bg-primary/5'
-                          : ''
-                      }`}
-                    >
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback>
-                          {initials(employee)}
-                        </AvatarFallback>
-                      </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">
+                        {fullName(employee)}
+                      </p>
 
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium">
-                          {fullName(employee)}
-                        </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {employee.position ||
+                          employee.email}
+                      </p>
+                    </div>
 
-                        <p className="truncate text-xs text-muted-foreground">
-                          {employee.position ||
-                            'Poste non renseigné'}
-                          {' · '}
-                          {Array.isArray(
-                            employee.poles,
-                          )
-                            ? employee.poles.join(
-                                ', ',
-                              )
-                            : 'Pôle non renseigné'}
-                        </p>
-                      </div>
+                    <div className="hidden items-center gap-2 sm:flex">
+                      <Badge variant="outline">
+                        {
+                          collaboratorTypeLabels[
+                            employee.collaborator_type
+                          ]
+                        }
+                      </Badge>
 
-                      <div className="hidden gap-2 sm:flex">
-                        <Badge variant="outline">
-                          {
-                            collaboratorTypeLabels[
-                              employee.collaborator_type
-                            ]
-                          }
-                        </Badge>
-
-                        <Badge
-                          variant={
-                            employee.hr_status ===
-                            'active'
-                              ? 'default'
-                              : 'secondary'
-                          }
-                        >
-                          {
-                            statusLabels[
-                              employee.hr_status
-                            ]
-                          }
-                        </Badge>
-                      </div>
-                    </button>
-                  );
-                })}
+                      <Badge variant="secondary">
+                        {
+                          statusLabels[
+                            employee.hr_status
+                          ]
+                        }
+                      </Badge>
+                    </div>
+                  </button>
+                ))}
               </div>
             )}
-
           </div>
-
         </CardContent>
       </Card>
+
+
+      {/* ======================================================
+          NO SELECTION
+          ====================================================== */}
+
+      {!selectedEmployee && (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <FolderOpen className="h-12 w-12 text-muted-foreground" />
+
+            <h2 className="mt-4 text-lg font-semibold">
+              Aucun dossier sélectionné
+            </h2>
+
+            <p className="mt-2 max-w-md text-sm text-muted-foreground">
+              Sélectionnez un collaborateur dans le référentiel
+              ci-dessus pour consulter son dossier documentaire RH.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
 
       {/* ======================================================
@@ -881,121 +1038,106 @@ export default function EmployeeFiles() {
       {selectedEmployee && (
         <>
           <Card>
-            <CardContent className="flex flex-col gap-4 p-5 md:flex-row md:items-center md:justify-between">
+            <CardHeader>
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div className="flex items-center gap-3">
+                  <Avatar className="h-12 w-12">
+                    <AvatarFallback>
+                      {initials(selectedEmployee)}
+                    </AvatarFallback>
+                  </Avatar>
 
-              <div className="flex items-center gap-4">
-                <Avatar className="h-12 w-12">
-                  <AvatarFallback>
-                    {initials(selectedEmployee)}
-                  </AvatarFallback>
-                </Avatar>
-
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <h2 className="text-xl font-semibold">
+                  <div>
+                    <CardTitle>
                       {fullName(selectedEmployee)}
-                    </h2>
+                    </CardTitle>
 
-                    <Badge variant="outline">
-                      {
-                        collaboratorTypeLabels[
-                          selectedEmployee
-                            .collaborator_type
-                        ]
-                      }
-                    </Badge>
-
-                    <Badge>
-                      {
-                        statusLabels[
-                          selectedEmployee
-                            .hr_status
-                        ]
-                      }
-                    </Badge>
+                    <p className="text-sm text-muted-foreground">
+                      {selectedEmployee.position ||
+                        'Poste non renseigné'}
+                    </p>
                   </div>
+                </div>
 
-                  <p className="text-sm text-muted-foreground">
-                    {selectedEmployee.email}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline">
+                    {
+                      collaboratorTypeLabels[
+                        selectedEmployee.collaborator_type
+                      ]
+                    }
+                  </Badge>
+
+                  <Badge>
+                    {
+                      statusLabels[
+                        selectedEmployee.hr_status
+                      ]
+                    }
+                  </Badge>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearSelection}
+                  >
+                    <X className="mr-2 h-4 w-4" />
+                    Fermer
+                  </Button>
+                </div>
+              </div>
+            </CardHeader>
+
+            <CardContent>
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                <div className="rounded-lg border p-4">
+                  <p className="text-xs text-muted-foreground">
+                    Documents
                   </p>
 
-                  <p className="text-sm text-muted-foreground">
-                    {selectedEmployee.position ||
-                      'Poste non renseigné'}
-                    {' · '}
-                    {Array.isArray(
-                      selectedEmployee.poles,
-                    )
-                      ? selectedEmployee.poles.join(
-                          ', ',
-                        )
-                      : 'Pôle non renseigné'}
+                  <p className="mt-1 text-2xl font-bold">
+                    {documents.length}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-xs text-muted-foreground">
+                    Avec échéance
+                  </p>
+
+                  <p className="mt-1 text-2xl font-bold">
+                    {documentsWithExpiry}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-xs text-muted-foreground">
+                    Expirés
+                  </p>
+
+                  <p
+                    className={`mt-1 text-2xl font-bold ${
+                      expiredDocuments > 0
+                        ? 'text-destructive'
+                        : ''
+                    }`}
+                  >
+                    {expiredDocuments}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border p-4">
+                  <p className="text-xs text-muted-foreground">
+                    Source principale
+                  </p>
+
+                  <p className="mt-1 text-sm font-medium">
+                    Google Drive BIB
                   </p>
                 </div>
               </div>
-
-              <Button
-                variant="ghost"
-                onClick={clearSelection}
-              >
-                <X className="mr-2 h-4 w-4" />
-
-                Fermer le dossier
-              </Button>
-
             </CardContent>
           </Card>
-
-
-          {/* ==================================================
-              DOCUMENT KPIs
-              ================================================== */}
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-
-            <Card>
-              <CardContent className="p-5">
-                <p className="text-sm text-muted-foreground">
-                  Documents
-                </p>
-
-                <p className="mt-1 text-2xl font-bold">
-                  {documents.length}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-5">
-                <p className="text-sm text-muted-foreground">
-                  Documents avec échéance
-                </p>
-
-                <p className="mt-1 text-2xl font-bold">
-                  {documentsWithExpiry}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-5">
-                <p className="text-sm text-muted-foreground">
-                  Échéances dépassées
-                </p>
-
-                <p
-                  className={`mt-1 text-2xl font-bold ${
-                    expiredDocuments > 0
-                      ? 'text-destructive'
-                      : ''
-                  }`}
-                >
-                  {expiredDocuments}
-                </p>
-              </CardContent>
-            </Card>
-
-          </div>
 
 
           {/* ==================================================
@@ -1005,10 +1147,15 @@ export default function EmployeeFiles() {
           <Card>
             <CardHeader>
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle>
+                    Documents RH
+                  </CardTitle>
 
-                <CardTitle>
-                  Documents du dossier
-                </CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Métadonnées et références documentaires du collaborateur.
+                  </p>
+                </div>
 
                 <Select
                   value={documentFilter}
@@ -1018,8 +1165,8 @@ export default function EmployeeFiles() {
                     )
                   }
                 >
-                  <SelectTrigger className="w-full md:w-56">
-                    <SelectValue placeholder="Filtrer les documents" />
+                  <SelectTrigger className="w-full md:w-52">
+                    <SelectValue placeholder="Type de document" />
                   </SelectTrigger>
 
                   <SelectContent>
@@ -1034,228 +1181,246 @@ export default function EmployeeFiles() {
                         DocumentType,
                         string,
                       ][]
-                    ).map(
-                      ([value, label]) => (
-                        <SelectItem
-                          key={value}
-                          value={value}
-                        >
-                          {label}
-                        </SelectItem>
-                      ),
-                    )}
+                    ).map(([value, label]) => (
+                      <SelectItem
+                        key={value}
+                        value={value}
+                      >
+                        {label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-
               </div>
             </CardHeader>
 
             <CardContent>
 
-              {isLoadingDocuments ? (
+              {isLoadingDocuments && (
                 <div className="flex h-40 items-center justify-center">
                   <Loader2 className="h-7 w-7 animate-spin text-primary" />
                 </div>
-              ) : documentsError ? (
-                <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-5 text-sm">
-                  <p className="font-medium text-destructive">
-                    Impossible de charger le dossier.
-                  </p>
+              )}
 
-                  <p className="mt-1 text-muted-foreground">
-                    {documentsError}
-                  </p>
 
-                  <Button
-                    className="mt-3"
-                    variant="outline"
-                    onClick={loadDocuments}
-                  >
-                    Réessayer
-                  </Button>
-                </div>
-              ) : visibleDocuments.length === 0 ? (
-                <div className="rounded-lg border border-dashed p-10 text-center">
-                  <FileText className="mx-auto h-10 w-10 text-muted-foreground" />
+              {!isLoadingDocuments &&
+                documentsError && (
+                  <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-5">
+                    <p className="font-medium text-destructive">
+                      Impossible de charger le dossier documentaire.
+                    </p>
 
-                  <p className="mt-3 font-medium">
-                    Aucun document
-                  </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {documentsError}
+                    </p>
 
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Aucun document ne correspond
-                    aux critères actuels.
-                  </p>
+                    <Button
+                      className="mt-4"
+                      variant="outline"
+                      onClick={() =>
+                        void loadDocuments()
+                      }
+                    >
+                      <RefreshCw className="mr-2 h-4 w-4" />
+                      Réessayer
+                    </Button>
+                  </div>
+                )}
 
-                  <Button
-                    className="mt-4"
-                    onClick={openNewDocument}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
 
-                    Ajouter un document
-                  </Button>
-                </div>
-              ) : (
-                <div className="overflow-x-auto rounded-lg border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>
-                          Document
-                        </TableHead>
+              {!isLoadingDocuments &&
+                !documentsError &&
+                documents.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-14 text-center">
+                    <FileText className="h-10 w-10 text-muted-foreground" />
 
-                        <TableHead>
-                          Type
-                        </TableHead>
+                    <p className="mt-4 font-medium">
+                      Aucun document enregistré
+                    </p>
 
-                        <TableHead>
-                          Source
-                        </TableHead>
+                    <p className="mt-1 max-w-md text-sm text-muted-foreground">
+                      Aucun document RH n'est encore rattaché
+                      à ce collaborateur.
+                    </p>
 
-                        <TableHead>
-                          Date
-                        </TableHead>
+                    <Button
+                      className="mt-4"
+                      onClick={openNewDocument}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      Ajouter un document
+                    </Button>
+                  </div>
+                )}
 
-                        <TableHead>
-                          Échéance
-                        </TableHead>
 
-                        <TableHead className="text-right">
-                          Actions
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
+              {!isLoadingDocuments &&
+                !documentsError &&
+                documents.length > 0 &&
+                visibleDocuments.length === 0 && (
+                  <div className="py-12 text-center text-sm text-muted-foreground">
+                    Aucun document ne correspond au filtre sélectionné.
+                  </div>
+                )}
 
-                    <TableBody>
-                      {visibleDocuments.map(
-                        (document) => {
-                          const expired =
-                            isExpired(
-                              document.expires_at,
-                            );
 
-                          return (
-                            <TableRow
-                              key={document.id}
-                            >
-                              <TableCell>
-                                <button
-                                  type="button"
-                                  className="flex items-center gap-3 text-left"
-                                  onClick={() =>
-                                    setSelectedDocument(
-                                      document,
-                                    )
-                                  }
-                                >
-                                  <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted">
-                                    <DocumentIcon
-                                      type={
-                                        document.document_type
-                                      }
-                                    />
-                                  </div>
+              {!isLoadingDocuments &&
+                !documentsError &&
+                visibleDocuments.length > 0 && (
+                  <div className="overflow-x-auto rounded-lg border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>
+                            Document
+                          </TableHead>
 
-                                  <div>
-                                    <p className="font-medium hover:underline">
-                                      {document.name}
-                                    </p>
+                          <TableHead>
+                            Type
+                          </TableHead>
 
-                                    {document.description && (
-                                      <p className="max-w-xs truncate text-xs text-muted-foreground">
-                                        {
-                                          document.description
-                                        }
-                                      </p>
-                                    )}
-                                  </div>
-                                </button>
-                              </TableCell>
+                          <TableHead>
+                            Source
+                          </TableHead>
 
-                              <TableCell>
-                                {
-                                  documentTypeLabels[
-                                    document
-                                      .document_type
-                                  ]
-                                }
-                              </TableCell>
+                          <TableHead>
+                            Date
+                          </TableHead>
 
-                              <TableCell>
-                                {
-                                  documentSourceLabels[
-                                    document.source
-                                  ]
-                                }
-                              </TableCell>
+                          <TableHead>
+                            Échéance
+                          </TableHead>
 
-                              <TableCell>
-                                {formatDate(
-                                  document.document_date,
-                                )}
-                              </TableCell>
+                          <TableHead className="text-right">
+                            Actions
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
 
-                              <TableCell>
-                                <span
-                                  className={
-                                    expired
-                                      ? 'font-medium text-destructive'
-                                      : ''
-                                  }
-                                >
-                                  {formatDate(
-                                    document.expires_at,
-                                  )}
-                                </span>
-                              </TableCell>
+                      <TableBody>
+                        {visibleDocuments.map(
+                          (document) => {
+                            const expired =
+                              isExpired(
+                                document.expires_at,
+                              );
 
-                              <TableCell>
-                                <div className="flex justify-end gap-2">
-
-                                  {document.document_url && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      asChild
-                                    >
-                                      <a
-                                        href={
-                                          document.document_url
-                                        }
-                                        target="_blank"
-                                        rel="noreferrer"
-                                      >
-                                        <ExternalLink className="mr-2 h-4 w-4" />
-
-                                        Ouvrir
-                                      </a>
-                                    </Button>
-                                  )}
-
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
+                            return (
+                              <TableRow
+                                key={document.id}
+                              >
+                                <TableCell>
+                                  <button
+                                    type="button"
+                                    className="flex items-center gap-3 text-left"
                                     onClick={() =>
                                       setSelectedDocument(
                                         document,
                                       )
                                     }
                                   >
-                                    Détails
-                                  </Button>
+                                    <div className="flex h-9 w-9 items-center justify-center rounded-md bg-muted">
+                                      <DocumentIcon
+                                        type={
+                                          document.document_type
+                                        }
+                                      />
+                                    </div>
 
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        },
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
+                                    <div>
+                                      <p className="font-medium hover:underline">
+                                        {document.name}
+                                      </p>
 
+                                      {document.description && (
+                                        <p className="max-w-xs truncate text-xs text-muted-foreground">
+                                          {
+                                            document.description
+                                          }
+                                        </p>
+                                      )}
+                                    </div>
+                                  </button>
+                                </TableCell>
+
+                                <TableCell>
+                                  {
+                                    documentTypeLabels[
+                                      document.document_type
+                                    ]
+                                  }
+                                </TableCell>
+
+                                <TableCell>
+                                  {
+                                    documentSourceLabels[
+                                      document.source
+                                    ]
+                                  }
+                                </TableCell>
+
+                                <TableCell>
+                                  {formatDate(
+                                    document.document_date,
+                                  )}
+                                </TableCell>
+
+                                <TableCell>
+                                  <span
+                                    className={
+                                      expired
+                                        ? 'font-medium text-destructive'
+                                        : ''
+                                    }
+                                  >
+                                    {formatDate(
+                                      document.expires_at,
+                                    )}
+                                  </span>
+                                </TableCell>
+
+                                <TableCell>
+                                  <div className="flex justify-end gap-2">
+                                    {document.document_url && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        asChild
+                                      >
+                                        <a
+                                          href={
+                                            document.document_url
+                                          }
+                                          target="_blank"
+                                          rel="noreferrer"
+                                        >
+                                          <ExternalLink className="mr-2 h-4 w-4" />
+                                          Ouvrir
+                                        </a>
+                                      </Button>
+                                    )}
+
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() =>
+                                        setSelectedDocument(
+                                          document,
+                                        )
+                                      }
+                                    >
+                                      Détails
+                                    </Button>
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          },
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
             </CardContent>
           </Card>
 
@@ -1334,8 +1499,8 @@ export default function EmployeeFiles() {
             </DialogTitle>
 
             <DialogDescription>
-              Métadonnées enregistrées dans le
-              registre documentaire RH.
+              Métadonnées enregistrées dans le registre
+              documentaire RH.
             </DialogDescription>
           </DialogHeader>
 
@@ -1354,7 +1519,6 @@ export default function EmployeeFiles() {
 
 
               <div className="grid grid-cols-2 gap-4">
-
                 <div>
                   <p className="text-xs text-muted-foreground">
                     Type
@@ -1363,8 +1527,7 @@ export default function EmployeeFiles() {
                   <p className="mt-1 text-sm">
                     {
                       documentTypeLabels[
-                        selectedDocument
-                          .document_type
+                        selectedDocument.document_type
                       ]
                     }
                   </p>
@@ -1415,7 +1578,6 @@ export default function EmployeeFiles() {
                     )}
                   </p>
                 </div>
-
               </div>
 
 
@@ -1426,16 +1588,13 @@ export default function EmployeeFiles() {
                   </p>
 
                   <p className="mt-1 rounded-md bg-muted/50 p-3 text-sm">
-                    {
-                      selectedDocument.description
-                    }
+                    {selectedDocument.description}
                   </p>
                 </div>
               )}
 
 
               <div className="flex flex-wrap justify-between gap-2 pt-2">
-
                 {selectedDocument.document_url && (
                   <Button asChild>
                     <a
@@ -1446,7 +1605,6 @@ export default function EmployeeFiles() {
                       rel="noreferrer"
                     >
                       <ExternalLink className="mr-2 h-4 w-4" />
-
                       Ouvrir le document
                     </a>
                   </Button>
@@ -1455,18 +1613,15 @@ export default function EmployeeFiles() {
                 <Button
                   variant="destructive"
                   onClick={() =>
-                    deleteDocument(
+                    void deleteDocument(
                       selectedDocument,
                     )
                   }
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-
                   Supprimer la référence
                 </Button>
-
               </div>
-
             </div>
           )}
         </DialogContent>
@@ -1484,7 +1639,6 @@ export default function EmployeeFiles() {
         }
       >
         <DialogContent className="max-w-xl">
-
           <DialogHeader>
             <DialogTitle>
               Ajouter un document RH
@@ -1530,7 +1684,6 @@ export default function EmployeeFiles() {
             {/* TYPE / SOURCE */}
 
             <div className="grid grid-cols-2 gap-3">
-
               <div>
                 <Label>
                   Type
@@ -1613,7 +1766,6 @@ export default function EmployeeFiles() {
                   </SelectContent>
                 </Select>
               </div>
-
             </div>
 
 
@@ -1649,7 +1801,6 @@ export default function EmployeeFiles() {
             {/* DATES */}
 
             <div className="grid grid-cols-2 gap-3">
-
               <div>
                 <Label>
                   Date du document
@@ -1669,7 +1820,6 @@ export default function EmployeeFiles() {
                 />
               </div>
 
-
               <div>
                 <Label>
                   Date d’échéance
@@ -1688,7 +1838,6 @@ export default function EmployeeFiles() {
                   }
                 />
               </div>
-
             </div>
 
 
@@ -1713,12 +1862,10 @@ export default function EmployeeFiles() {
                 }
               />
             </div>
-
           </div>
 
 
           <DialogFooter>
-
             <Button
               variant="ghost"
               onClick={() =>
@@ -1729,16 +1876,15 @@ export default function EmployeeFiles() {
             </Button>
 
             <Button
-              onClick={saveDocument}
+              onClick={() =>
+                void saveDocument()
+              }
               disabled={!form.name.trim()}
             >
               <FileCheck className="mr-2 h-4 w-4" />
-
               Enregistrer
             </Button>
-
           </DialogFooter>
-
         </DialogContent>
       </Dialog>
 
