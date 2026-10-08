@@ -1,4 +1,3 @@
-```tsx
 import {
   useMutation,
   useQuery,
@@ -265,11 +264,10 @@ export const useEmployees = (
 
         result = result.filter(
           (employee) => {
-            const name =
-              `${employee.first_name ?? ''} ${
-                employee.last_name ?? ''
-              }`.toLowerCase();
-
+            const name = (
+              `${employee.first_name ?? ''}` +
+              ` ${employee.last_name ?? ''}`
+            ).toLowerCase();
             const email =
               employee.email
                 ?.toLowerCase() ?? '';
@@ -429,4 +427,3 @@ export const useUpdateEmployee = () => {
     },
   });
 };
-```
