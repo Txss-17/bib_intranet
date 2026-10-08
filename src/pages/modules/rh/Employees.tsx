@@ -459,13 +459,39 @@ export default function Employees() {
             </Select>
 
             <Select
-              value={typeFilter}
-              onValueChange={(value) =>
-                setTypeFilter(
-                  value as CollaboratorType | 'all',
-                )
-              }
-            >
+            value={directoryTypeFilter}
+            onValueChange={(value) =>
+              setDirectoryTypeFilter(
+                value as
+                  | 'all'
+                  | 'internal'
+                  | 'external'
+                  | 'other',
+              )
+            }
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Type de collaborateur" />
+            </SelectTrigger>
+
+            <SelectContent>
+              <SelectItem value="all">
+                Tous les types
+              </SelectItem>
+
+              <SelectItem value="internal">
+                Interne
+              </SelectItem>
+
+              <SelectItem value="external">
+                Externe
+              </SelectItem>
+
+              <SelectItem value="other">
+                Autres
+              </SelectItem>
+            </SelectContent>
+          </Select>
               <SelectTrigger>
                 <SelectValue placeholder="Type de collaborateur" />
               </SelectTrigger>
