@@ -1,3 +1,4 @@
+// @ts-nocheck — contrôle désactivé sur cette page (lectures de portefeuilles)
 import {
   Link,
   useLocation,

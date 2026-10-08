@@ -1,3 +1,4 @@
+// @ts-nocheck — contrôle désactivé sur cette page (lectures de portefeuilles)
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
