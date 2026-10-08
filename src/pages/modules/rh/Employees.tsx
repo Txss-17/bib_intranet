@@ -14,11 +14,11 @@ import {
 import { toast } from 'sonner';
 
 import {
-  type CollaboratorType,
   type Employee,
+  type CollaboratorType,
+  type CollaboratorDirectoryType,
   type HrStatus,
   useEmployees,
-  useUpdateEmployee,
 } from '@/hooks/useEmployees';
 
 import { poles } from '@/data/poles';
