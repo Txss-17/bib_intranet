@@ -1,5 +1,10 @@
-import { useMemo, useState } from 'react';
+import {
+  useMemo,
+  useState,
+} from 'react';
+
 import { Link } from 'react-router-dom';
+
 import {
   Search,
   Users,
@@ -19,6 +24,7 @@ import {
   type CollaboratorDirectoryType,
   type HrStatus,
   useEmployees,
+  useUpdateEmployee,
 } from '@/hooks/useEmployees';
 
 import { poles } from '@/data/poles';
@@ -73,17 +79,6 @@ import {
 
 
 // ============================================================
-// TYPES
-// ============================================================
-
-type DirectoryType =
-  | 'all'
-  | 'internal'
-  | 'external'
-  | 'other';
-
-
-// ============================================================
 // LABELS
 // ============================================================
 
@@ -101,10 +96,10 @@ const collaboratorTypeLabels: Record<
 };
 
 const directoryTypeLabels: Record<
-  DirectoryType,
+  CollaboratorDirectoryType,
   string
 > = {
-  all: 'Tous les types',
+  all: 'Tous les collaborateurs',
   internal: 'Interne',
   external: 'Externe',
   other: 'Autres',
@@ -124,7 +119,10 @@ const statusLabels: Record<
 
 const statusVariant: Record<
   HrStatus,
-  'default' | 'secondary' | 'outline' | 'destructive'
+  'default' |
+  'secondary' |
+  'outline' |
+  'destructive'
 > = {
   active: 'default',
   onboarding: 'outline',
@@ -139,38 +137,51 @@ const statusVariant: Record<
 // HELPERS
 // ============================================================
 
-function fullName(employee: Employee) {
-  return `${employee.first_name ?? ''} ${
-    employee.last_name ?? ''
-  }`.trim();
-}
-
-function initials(employee: Employee) {
-  return `${employee.first_name?.[0] ?? ''}${
-    employee.last_name?.[0] ?? ''
-  }`.toUpperCase();
-}
-
-function poleName(id: string) {
+function fullName(
+  employee: Employee,
+) {
   return (
-    poles.find((pole) => pole.id === id)?.name ??
-    id
+    `${employee.first_name ?? ''} ` +
+    `${employee.last_name ?? ''}`
+  ).trim();
+}
+
+function initials(
+  employee: Employee,
+) {
+  return (
+    `${employee.first_name?.[0] ?? ''}` +
+    `${employee.last_name?.[0] ?? ''}`
+  ).toUpperCase();
+}
+
+function poleName(
+  id: string,
+) {
+  return (
+    poles.find(
+      (pole) => pole.id === id,
+    )?.name ?? id
   );
 }
 
-function formatDate(value: string | null) {
+function formatDate(
+  value: string | null,
+) {
   if (!value) {
     return '—';
   }
 
-  return new Date(value).toLocaleDateString(
+  return new Date(
+    value,
+  ).toLocaleDateString(
     'fr-FR',
   );
 }
 
 function directoryTypeForEmployee(
   employee: Employee,
-): DirectoryType {
+): CollaboratorDirectoryType {
   if (
     employee.collaborator_type ===
     'internal'
@@ -192,7 +203,9 @@ function directoryTypeLabel(
   employee: Employee,
 ) {
   return directoryTypeLabels[
-    directoryTypeForEmployee(employee)
+    directoryTypeForEmployee(
+      employee,
+    )
   ];
 }
 
@@ -202,54 +215,85 @@ function directoryTypeLabel(
 // ============================================================
 
 export default function Employees() {
-  // ==========================================================
+  // ----------------------------------------------------------
   // FILTERS
-  // ==========================================================
+  // ----------------------------------------------------------
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [
+    searchQuery,
+    setSearchQuery,
+  ] = useState('');
 
-  const [directoryType, setDirectoryType] =
-    useState<CollaboratorDirectoryType>('all');
+  const [
+    directoryType,
+    setDirectoryType,
+  ] =
+    useState<CollaboratorDirectoryType>(
+      'all',
+    );
 
-  const [typeFilter, setTypeFilter] =
-    useState<CollaboratorType | 'all'>('all');
+  const [
+    typeFilter,
+    setTypeFilter,
+  ] =
+    useState<
+      CollaboratorType | 'all'
+    >('all');
 
-  const [statusFilter, setStatusFilter] =
-    useState<HrStatus | 'all'>('all');
+  const [
+    statusFilter,
+    setStatusFilter,
+  ] =
+    useState<HrStatus | 'all'>(
+      'all',
+    );
 
+  const [
+    poleFilter,
+    setPoleFilter,
+  ] =
+    useState<string | 'all'>(
+      'all',
+    );
 
-  // ==========================================================
+  // ----------------------------------------------------------
   // EDITION
-  // ==========================================================
+  // ----------------------------------------------------------
 
   const [
     selectedEmployee,
     setSelectedEmployee,
-  ] = useState<Employee | null>(null);
+  ] =
+    useState<Employee | null>(
+      null,
+    );
 
   const [
     editDialogOpen,
     setEditDialogOpen,
-  ] = useState(false);
+  ] =
+    useState(false);
 
-  const [editForm, setEditForm] =
-    useState({
-      first_name: '',
-      last_name: '',
-      email: '',
-      position: '',
-      seniority: '',
-      work_mode: '',
-      subsidiary: '',
-      collaborator_type:
-        'internal' as CollaboratorType,
-      hr_status: 'active' as HrStatus,
-    });
+  const [
+    editForm,
+    setEditForm,
+  ] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    position: '',
+    seniority: '',
+    work_mode: '',
+    subsidiary: '',
+    collaborator_type:
+      'internal' as CollaboratorType,
+    hr_status:
+      'active' as HrStatus,
+  });
 
-
-  // ==========================================================
+  // ----------------------------------------------------------
   // DATA
-  // ==========================================================
+  // ----------------------------------------------------------
 
   const {
     data: employees = [],
@@ -260,10 +304,13 @@ export default function Employees() {
     refetch,
   } = useEmployees({
     search:
-      searchQuery || undefined,
+      searchQuery ||
+      undefined,
 
-    directoryType:
-      directoryTypeFilter,
+    directoryType,
+
+    collaboratorType:
+      typeFilter,
 
     hrStatus:
       statusFilter,
@@ -275,14 +322,14 @@ export default function Employees() {
   const updateEmployee =
     useUpdateEmployee();
 
-
-  // ==========================================================
+  // ----------------------------------------------------------
   // KPI
-  // ==========================================================
+  // ----------------------------------------------------------
 
-  const stats = useMemo(() => {
-    return {
-      total: employees.length,
+  const stats = useMemo(
+    () => ({
+      total:
+        employees.length,
 
       active:
         employees.filter(
@@ -305,36 +352,41 @@ export default function Employees() {
               employee,
             ) === 'external',
         ).length,
-    };
-  }, [employees]);
+    }),
+    [employees],
+  );
 
-
-  // ==========================================================
+  // ----------------------------------------------------------
   // FILTER RESET
-  // ==========================================================
+  // ----------------------------------------------------------
 
   const resetFilters = () => {
     setSearchQuery('');
-    setDirectoryTypeFilter('all');
+    setDirectoryType('all');
+    setTypeFilter('all');
     setStatusFilter('all');
     setPoleFilter('all');
   };
 
   const hasFilters =
-    Boolean(searchQuery) ||
-    directoryTypeFilter !== 'all' ||
+    Boolean(
+      searchQuery.trim(),
+    ) ||
+    directoryType !== 'all' ||
+    typeFilter !== 'all' ||
     statusFilter !== 'all' ||
     poleFilter !== 'all';
 
-
-  // ==========================================================
+  // ----------------------------------------------------------
   // EDIT
-  // ==========================================================
+  // ----------------------------------------------------------
 
   const openEdit = (
     employee: Employee,
   ) => {
-    if (employee.test_account) {
+    if (
+      employee.test_account
+    ) {
       toast.error(
         'Les comptes de test ne peuvent pas être modifiés depuis le référentiel RH.',
       );
@@ -342,124 +394,142 @@ export default function Employees() {
       return;
     }
 
-    setSelectedEmployee(employee);
+    setSelectedEmployee(
+      employee,
+    );
 
     setEditForm({
       first_name:
-        employee.first_name ?? '',
+        employee.first_name ??
+        '',
 
       last_name:
-        employee.last_name ?? '',
+        employee.last_name ??
+        '',
 
       email:
-        employee.email ?? '',
+        employee.email ??
+        '',
 
       position:
-        employee.position ?? '',
+        employee.position ??
+        '',
 
       seniority:
-        employee.seniority ?? '',
+        employee.seniority ??
+        '',
 
       work_mode:
-        employee.work_mode ?? '',
+        employee.work_mode ??
+        '',
 
       subsidiary:
-        employee.subsidiary ?? '',
+        employee.subsidiary ??
+        '',
 
       collaborator_type:
-        employee.collaborator_type ??
-        'internal',
+        employee.collaborator_type,
 
       hr_status:
-        employee.hr_status ??
-        'active',
+        employee.hr_status,
     });
 
     setEditDialogOpen(true);
   };
 
+  const saveEmployee =
+    async () => {
+      if (
+        !selectedEmployee
+      ) {
+        return;
+      }
 
-  const saveEmployee = async () => {
-    if (!selectedEmployee) {
-      return;
-    }
+      if (
+        selectedEmployee.test_account
+      ) {
+        toast.error(
+          'Les comptes de test ne peuvent pas être modifiés depuis le référentiel RH.',
+        );
 
-    if (
-      selectedEmployee.test_account
-    ) {
-      toast.error(
-        'Les comptes de test ne peuvent pas être modifiés depuis le référentiel RH.',
-      );
+        return;
+      }
 
-      return;
-    }
+      if (
+        !editForm.first_name.trim() ||
+        !editForm.last_name.trim() ||
+        !editForm.email.trim()
+      ) {
+        toast.error(
+          'Le prénom, le nom et l’adresse e-mail sont obligatoires.',
+        );
 
-    if (
-      !editForm.first_name.trim() ||
-      !editForm.last_name.trim() ||
-      !editForm.email.trim()
-    ) {
-      toast.error(
-        'Le prénom, le nom et l’adresse e-mail sont obligatoires.',
-      );
+        return;
+      }
 
-      return;
-    }
+      try {
+        await updateEmployee.mutateAsync(
+          {
+            id:
+              selectedEmployee.id,
 
-    try {
-      await updateEmployee.mutateAsync({
-        id: selectedEmployee.id,
+            first_name:
+              editForm.first_name.trim(),
 
-        first_name:
-          editForm.first_name.trim(),
+            last_name:
+              editForm.last_name.trim(),
 
-        last_name:
-          editForm.last_name.trim(),
+            email:
+              editForm.email.trim(),
 
-        email:
-          editForm.email.trim(),
+            position:
+              editForm.position.trim() ||
+              null,
 
-        position:
-          editForm.position.trim() ||
+            seniority:
+              editForm.seniority.trim() ||
+              null,
+
+            work_mode:
+              editForm.work_mode.trim() ||
+              null,
+
+            subsidiary:
+              editForm.subsidiary.trim() ||
+              null,
+
+            collaborator_type:
+              editForm.collaborator_type,
+
+            hr_status:
+              editForm.hr_status,
+          },
+        );
+
+        toast.success(
+          'Collaborateur mis à jour.',
+        );
+
+        setEditDialogOpen(
+          false,
+        );
+
+        setSelectedEmployee(
           null,
+        );
+      } catch (
+        updateError: any
+      ) {
+        toast.error(
+          updateError?.message ||
+            'Impossible de mettre à jour le collaborateur.',
+        );
+      }
+    };
 
-        seniority:
-          editForm.seniority.trim() ||
-          null,
-
-        work_mode:
-          editForm.work_mode.trim() ||
-          null,
-
-        subsidiary:
-          editForm.subsidiary.trim() ||
-          null,
-
-        collaborator_type:
-          editForm.collaborator_type,
-
-        hr_status:
-          editForm.hr_status,
-      });
-
-      toast.success(
-        'Collaborateur mis à jour.',
-      );
-
-      setEditDialogOpen(false);
-      setSelectedEmployee(null);
-    } catch (updateError: any) {
-      toast.error(
-        updateError?.message ||
-          'Impossible de mettre à jour le collaborateur.',
-      );
-    }
-  };
-
-
-  // ==========================================================
+  // ----------------------------------------------------------
   // LOADING
-  // ==========================================================
+  // ----------------------------------------------------------
 
   if (isLoading) {
     return (
@@ -469,10 +539,9 @@ export default function Employees() {
     );
   }
 
-
-  // ==========================================================
+  // ----------------------------------------------------------
   // ERROR
-  // ==========================================================
+  // ----------------------------------------------------------
 
   if (isError) {
     return (
@@ -506,7 +575,9 @@ export default function Employees() {
             <Button
               className="mt-4"
               variant="outline"
-              onClick={() => void refetch()}
+              onClick={() =>
+                void refetch()
+              }
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               Réessayer
@@ -517,17 +588,14 @@ export default function Employees() {
     );
   }
 
-
-  // ==========================================================
+  // ----------------------------------------------------------
   // RENDER
-  // ==========================================================
+  // ----------------------------------------------------------
 
   return (
     <div className="space-y-6 animate-fade-in">
 
-      {/* ======================================================
-          HEADER
-          ====================================================== */}
+      {/* HEADER */}
 
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div>
@@ -547,7 +615,9 @@ export default function Employees() {
         <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
-            onClick={() => void refetch()}
+            onClick={() =>
+              void refetch()
+            }
             disabled={isFetching}
           >
             <RefreshCw
@@ -571,9 +641,7 @@ export default function Employees() {
       </div>
 
 
-      {/* ======================================================
-          KPI
-          ====================================================== */}
+      {/* KPI */}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
 
@@ -589,19 +657,17 @@ export default function Employees() {
           </CardContent>
         </Card>
 
-
         <Card>
           <CardContent className="p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">
               Actifs
             </p>
 
-            <p className="mt-1 text-2xl font-semibold text-success">
+            <p className="mt-1 text-2xl font-semibold">
               {stats.active}
             </p>
           </CardContent>
         </Card>
-
 
         <Card>
           <CardContent className="p-4">
@@ -609,12 +675,11 @@ export default function Employees() {
               Onboarding
             </p>
 
-            <p className="mt-1 text-2xl font-semibold text-warning">
+            <p className="mt-1 text-2xl font-semibold">
               {stats.onboarding}
             </p>
           </CardContent>
         </Card>
-
 
         <Card>
           <CardContent className="p-4">
@@ -631,9 +696,7 @@ export default function Employees() {
       </div>
 
 
-      {/* ======================================================
-          FILTERS
-          ====================================================== */}
+      {/* FILTRES */}
 
       <Card>
         <CardHeader>
@@ -643,12 +706,13 @@ export default function Employees() {
           </CardTitle>
         </CardHeader>
 
-        <CardContent>
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
+        <CardContent className="space-y-4">
+
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-5">
 
             {/* Recherche */}
 
-            <div className="relative">
+            <div className="relative lg:col-span-2">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
               <Input
@@ -662,6 +726,40 @@ export default function Employees() {
                 }
               />
             </div>
+
+
+            {/* Interne / Externe / Autres */}
+
+            <Select
+              value={directoryType}
+              onValueChange={(value) =>
+                setDirectoryType(
+                  value as CollaboratorDirectoryType,
+                )
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Répertoire" />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">
+                  Tous les collaborateurs
+                </SelectItem>
+
+                <SelectItem value="internal">
+                  Interne
+                </SelectItem>
+
+                <SelectItem value="external">
+                  Externe
+                </SelectItem>
+
+                <SelectItem value="other">
+                  Autres
+                </SelectItem>
+              </SelectContent>
+            </Select>
 
 
             {/* Pôle */}
@@ -681,55 +779,21 @@ export default function Employees() {
                   Tous les pôles
                 </SelectItem>
 
-                {poles.map((pole) => (
-                  <SelectItem
-                    key={pole.id}
-                    value={pole.id}
-                  >
-                    {pole.name}
-                  </SelectItem>
-                ))}
+                {poles.map(
+                  (pole) => (
+                    <SelectItem
+                      key={pole.id}
+                      value={pole.id}
+                    >
+                      {pole.name}
+                    </SelectItem>
+                  ),
+                )}
               </SelectContent>
             </Select>
 
 
-            {/* Interne / Externe / Autres */}
-
-            <Select
-              value={
-                directoryTypeFilter
-              }
-              onValueChange={(value) =>
-                setDirectoryTypeFilter(
-                  value as DirectoryType,
-                )
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Type de collaborateur" />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="all">
-                  Tous les types
-                </SelectItem>
-
-                <SelectItem value="internal">
-                  Interne
-                </SelectItem>
-
-                <SelectItem value="external">
-                  Externe
-                </SelectItem>
-
-                <SelectItem value="other">
-                  Autres
-                </SelectItem>
-              </SelectContent>
-            </Select>
-
-
-            {/* Statut RH */}
+            {/* Statut */}
 
             <Select
               value={statusFilter}
@@ -771,60 +835,68 @@ export default function Employees() {
           </div>
 
 
-          {/* Résumé des filtres */}
+          {/* TYPE PRÉCIS */}
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-2">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
 
-              {directoryTypeFilter !==
-                'all' && (
-                <Badge variant="secondary">
-                  {
-                    directoryTypeLabels[
-                      directoryTypeFilter
-                    ]
-                  }
-                </Badge>
-              )}
+            <Select
+              value={typeFilter}
+              onValueChange={(value) =>
+                setTypeFilter(
+                  value as CollaboratorType | 'all',
+                )
+              }
+            >
+              <SelectTrigger className="w-full md:w-72">
+                <SelectValue placeholder="Type précis de collaborateur" />
+              </SelectTrigger>
 
-              {poleFilter !==
-                'all' && (
-                <Badge variant="secondary">
-                  {poleName(poleFilter)}
-                </Badge>
-              )}
+              <SelectContent>
+                <SelectItem value="all">
+                  Tous les types précis
+                </SelectItem>
 
-              {statusFilter !==
-                'all' && (
-                <Badge variant="secondary">
-                  {
-                    statusLabels[
-                      statusFilter
-                    ]
-                  }
-                </Badge>
-              )}
+                {(
+                  Object.entries(
+                    collaboratorTypeLabels,
+                  ) as [
+                    CollaboratorType,
+                    string,
+                  ][]
+                ).map(
+                  ([value, label]) => (
+                    <SelectItem
+                      key={value}
+                      value={value}
+                    >
+                      {label}
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
 
-            </div>
 
             {hasFilters && (
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={resetFilters}
+                onClick={
+                  resetFilters
+                }
               >
                 <X className="mr-1.5 h-4 w-4" />
                 Réinitialiser les filtres
               </Button>
             )}
+
           </div>
+
         </CardContent>
       </Card>
 
 
-      {/* ======================================================
-          TABLE
-          ====================================================== */}
+      {/* TABLE */}
 
       <Card>
         <CardHeader>
@@ -844,9 +916,6 @@ export default function Employees() {
               </p>
             </div>
 
-
-            {/* EXPORT */}
-
             <ExportButtons
               filename="collaborateurs-rh"
               title="Collaborateurs RH"
@@ -859,6 +928,10 @@ export default function Employees() {
                 {
                   header: 'E-mail',
                   accessor: 'email',
+                },
+                {
+                  header: 'Catégorie',
+                  accessor: 'directory_type',
                 },
                 {
                   header: 'Type',
@@ -893,10 +966,15 @@ export default function Employees() {
                   email:
                     employee.email,
 
-                  type:
+                  directory_type:
                     directoryTypeLabel(
                       employee,
                     ),
+
+                  type:
+                    collaboratorTypeLabels[
+                      employee.collaborator_type
+                    ],
 
                   status:
                     statusLabels[
@@ -932,10 +1010,7 @@ export default function Employees() {
           </div>
         </CardHeader>
 
-
         <CardContent className="p-0">
-
-          {/* Aucun résultat */}
 
           {employees.length === 0 ? (
             <div className="py-16 text-center">
@@ -954,7 +1029,9 @@ export default function Employees() {
                 <Button
                   className="mt-4"
                   variant="outline"
-                  onClick={resetFilters}
+                  onClick={
+                    resetFilters
+                  }
                 >
                   Réinitialiser les filtres
                 </Button>
@@ -962,7 +1039,6 @@ export default function Employees() {
 
             </div>
           ) : (
-
             <div className="overflow-x-auto">
 
               <Table>
@@ -1087,8 +1163,7 @@ export default function Employees() {
                               employee.poles,
                             ) &&
                             employee.poles
-                              .length >
-                              0 ? (
+                              .length > 0 ? (
                               employee.poles.map(
                                 (pole) => (
                                   <Badge
@@ -1138,15 +1213,13 @@ export default function Employees() {
                           <Badge
                             variant={
                               statusVariant[
-                                employee
-                                  .hr_status
+                                employee.hr_status
                               ]
                             }
                           >
                             {
                               statusLabels[
-                                employee
-                                  .hr_status
+                                employee.hr_status
                               ]
                             }
                           </Badge>
@@ -1216,12 +1289,12 @@ export default function Employees() {
       </Card>
 
 
-      {/* ======================================================
-          EDIT DIALOG
-          ====================================================== */}
+      {/* EDIT DIALOG */}
 
       <Dialog
-        open={editDialogOpen}
+        open={
+          editDialogOpen
+        }
         onOpenChange={
           setEditDialogOpen
         }
@@ -1230,7 +1303,6 @@ export default function Employees() {
         <DialogContent className="max-w-2xl">
 
           <DialogHeader>
-
             <DialogTitle>
               Modifier le collaborateur
             </DialogTitle>
@@ -1238,7 +1310,6 @@ export default function Employees() {
             <DialogDescription>
               Mise à jour du référentiel RH officiel.
             </DialogDescription>
-
           </DialogHeader>
 
 
@@ -1257,11 +1328,13 @@ export default function Employees() {
                   editForm.first_name
                 }
                 onChange={(event) =>
-                  setEditForm({
-                    ...editForm,
-                    first_name:
-                      event.target.value,
-                  })
+                  setEditForm(
+                    (current) => ({
+                      ...current,
+                      first_name:
+                        event.target.value,
+                    }),
+                  )
                 }
               />
             </div>
@@ -1280,17 +1353,19 @@ export default function Employees() {
                   editForm.last_name
                 }
                 onChange={(event) =>
-                  setEditForm({
-                    ...editForm,
-                    last_name:
-                      event.target.value,
-                  })
+                  setEditForm(
+                    (current) => ({
+                      ...current,
+                      last_name:
+                        event.target.value,
+                    }),
+                  )
                 }
               />
             </div>
 
 
-            {/* E-mail */}
+            {/* Email */}
 
             <div className="md:col-span-2">
               <Label>
@@ -1304,11 +1379,13 @@ export default function Employees() {
                   editForm.email
                 }
                 onChange={(event) =>
-                  setEditForm({
-                    ...editForm,
-                    email:
-                      event.target.value,
-                  })
+                  setEditForm(
+                    (current) => ({
+                      ...current,
+                      email:
+                        event.target.value,
+                    }),
+                  )
                 }
               />
             </div>
@@ -1328,11 +1405,13 @@ export default function Employees() {
                   editForm.position
                 }
                 onChange={(event) =>
-                  setEditForm({
-                    ...editForm,
-                    position:
-                      event.target.value,
-                  })
+                  setEditForm(
+                    (current) => ({
+                      ...current,
+                      position:
+                        event.target.value,
+                    }),
+                  )
                 }
               />
             </div>
@@ -1352,11 +1431,13 @@ export default function Employees() {
                   editForm.seniority
                 }
                 onChange={(event) =>
-                  setEditForm({
-                    ...editForm,
-                    seniority:
-                      event.target.value,
-                  })
+                  setEditForm(
+                    (current) => ({
+                      ...current,
+                      seniority:
+                        event.target.value,
+                    }),
+                  )
                 }
               />
             </div>
@@ -1376,11 +1457,13 @@ export default function Employees() {
                   editForm.work_mode
                 }
                 onChange={(event) =>
-                  setEditForm({
-                    ...editForm,
-                    work_mode:
-                      event.target.value,
-                  })
+                  setEditForm(
+                    (current) => ({
+                      ...current,
+                      work_mode:
+                        event.target.value,
+                    }),
+                  )
                 }
               />
             </div>
@@ -1400,11 +1483,13 @@ export default function Employees() {
                   editForm.subsidiary
                 }
                 onChange={(event) =>
-                  setEditForm({
-                    ...editForm,
-                    subsidiary:
-                      event.target.value,
-                  })
+                  setEditForm(
+                    (current) => ({
+                      ...current,
+                      subsidiary:
+                        event.target.value,
+                    }),
+                  )
                 }
               />
             </div>
@@ -1424,11 +1509,13 @@ export default function Employees() {
                 onValueChange={(
                   value,
                 ) =>
-                  setEditForm({
-                    ...editForm,
-                    collaborator_type:
-                      value as CollaboratorType,
-                  })
+                  setEditForm(
+                    (current) => ({
+                      ...current,
+                      collaborator_type:
+                        value as CollaboratorType,
+                    }),
+                  )
                 }
               >
                 <SelectTrigger className="mt-1">
@@ -1436,7 +1523,6 @@ export default function Employees() {
                 </SelectTrigger>
 
                 <SelectContent>
-
                   {(
                     Object.entries(
                       collaboratorTypeLabels,
@@ -1454,7 +1540,6 @@ export default function Employees() {
                       </SelectItem>
                     ),
                   )}
-
                 </SelectContent>
               </Select>
             </div>
@@ -1474,11 +1559,13 @@ export default function Employees() {
                 onValueChange={(
                   value,
                 ) =>
-                  setEditForm({
-                    ...editForm,
-                    hr_status:
-                      value as HrStatus,
-                  })
+                  setEditForm(
+                    (current) => ({
+                      ...current,
+                      hr_status:
+                        value as HrStatus,
+                    }),
+                  )
                 }
               >
                 <SelectTrigger className="mt-1">
@@ -1486,7 +1573,6 @@ export default function Employees() {
                 </SelectTrigger>
 
                 <SelectContent>
-
                   {(
                     Object.entries(
                       statusLabels,
@@ -1504,7 +1590,6 @@ export default function Employees() {
                       </SelectItem>
                     ),
                   )}
-
                 </SelectContent>
               </Select>
             </div>
@@ -1526,7 +1611,9 @@ export default function Employees() {
             </Button>
 
             <Button
-              onClick={saveEmployee}
+              onClick={
+                saveEmployee
+              }
               disabled={
                 updateEmployee.isPending
               }
