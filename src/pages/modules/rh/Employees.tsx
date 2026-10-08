@@ -7,10 +7,7 @@ import {
   Pencil,
   FolderOpen,
   UserRound,
-  Mail,
-  Building2,
   Briefcase,
-  ShieldCheck,
   X,
 } from 'lucide-react';
 
@@ -28,9 +25,17 @@ import { poles } from '@/data/poles';
 
 import { ExportButtons } from '@/components/ExportButtons';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
 import { Badge } from '@/components/ui/badge';
+
 import { Button } from '@/components/ui/button';
+
 import { Input } from '@/components/ui/input';
 
 import {
@@ -68,10 +73,24 @@ import {
 
 
 // ============================================================
+// TYPES
+// ============================================================
+
+type DirectoryType =
+  | 'all'
+  | 'internal'
+  | 'external'
+  | 'other';
+
+
+// ============================================================
 // LABELS
 // ============================================================
 
-const collaboratorTypeLabels: Record<CollaboratorType, string> = {
+const collaboratorTypeLabels: Record<
+  CollaboratorType,
+  string
+> = {
   internal: 'Interne',
   external: 'Externe',
   provider: 'Prestataire',
@@ -81,7 +100,20 @@ const collaboratorTypeLabels: Record<CollaboratorType, string> = {
   other: 'Autre',
 };
 
-const statusLabels: Record<HrStatus, string> = {
+const directoryTypeLabels: Record<
+  DirectoryType,
+  string
+> = {
+  all: 'Tous les types',
+  internal: 'Interne',
+  external: 'Externe',
+  other: 'Autres',
+};
+
+const statusLabels: Record<
+  HrStatus,
+  string
+> = {
   active: 'Actif',
   onboarding: 'En onboarding',
   leave: 'En congé',
@@ -108,16 +140,22 @@ const statusVariant: Record<
 // ============================================================
 
 function fullName(employee: Employee) {
-  return `${employee.first_name ?? ''} ${employee.last_name ?? ''}`.trim();
+  return `${employee.first_name ?? ''} ${
+    employee.last_name ?? ''
+  }`.trim();
 }
 
 function initials(employee: Employee) {
-  return `${employee.first_name?.[0] ?? ''}${employee.last_name?.[0] ?? ''}`
-    .toUpperCase();
+  return `${employee.first_name?.[0] ?? ''}${
+    employee.last_name?.[0] ?? ''
+  }`.toUpperCase();
 }
 
 function poleName(id: string) {
-  return poles.find((pole) => pole.id === id)?.name ?? id;
+  return (
+    poles.find((pole) => pole.id === id)?.name ??
+    id
+  );
 }
 
 function formatDate(value: string | null) {
@@ -125,7 +163,37 @@ function formatDate(value: string | null) {
     return '—';
   }
 
-  return new Date(value).toLocaleDateString('fr-FR');
+  return new Date(value).toLocaleDateString(
+    'fr-FR',
+  );
+}
+
+function directoryTypeForEmployee(
+  employee: Employee,
+): DirectoryType {
+  if (
+    employee.collaborator_type ===
+    'internal'
+  ) {
+    return 'internal';
+  }
+
+  if (
+    employee.collaborator_type ===
+    'other'
+  ) {
+    return 'other';
+  }
+
+  return 'external';
+}
+
+function directoryTypeLabel(
+  employee: Employee,
+) {
+  return directoryTypeLabels[
+    directoryTypeForEmployee(employee)
+  ];
 }
 
 
@@ -134,53 +202,82 @@ function formatDate(value: string | null) {
 // ============================================================
 
 export default function Employees() {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [directoryTypeFilter, setDirectoryTypeFilter] =
-    useState<
-      'all' | 'internal' | 'external' | 'other'
-    >('all');    useState<CollaboratorType | 'all'>('all');
+  // ==========================================================
+  // FILTERS
+  // ==========================================================
+
+  const [searchQuery, setSearchQuery] =
+    useState('');
+
+  const [
+    directoryTypeFilter,
+    setDirectoryTypeFilter,
+  ] = useState<DirectoryType>('all');
+
   const [statusFilter, setStatusFilter] =
     useState<HrStatus | 'all'>('all');
+
   const [poleFilter, setPoleFilter] =
     useState<string>('all');
 
-  const [selectedEmployee, setSelectedEmployee] =
-    useState<Employee | null>(null);
 
-  const [editDialogOpen, setEditDialogOpen] =
-    useState(false);
+  // ==========================================================
+  // EDITION
+  // ==========================================================
 
-  const [editForm, setEditForm] = useState({
-    first_name: '',
-    last_name: '',
-    email: '',
-    position: '',
-    seniority: '',
-    work_mode: '',
-    subsidiary: '',
-    collaborator_type: 'internal' as CollaboratorType,
-    hr_status: 'active' as HrStatus,
-  });
+  const [
+    selectedEmployee,
+    setSelectedEmployee,
+  ] = useState<Employee | null>(null);
+
+  const [
+    editDialogOpen,
+    setEditDialogOpen,
+  ] = useState(false);
+
+  const [editForm, setEditForm] =
+    useState({
+      first_name: '',
+      last_name: '',
+      email: '',
+      position: '',
+      seniority: '',
+      work_mode: '',
+      subsidiary: '',
+      collaborator_type:
+        'internal' as CollaboratorType,
+      hr_status: 'active' as HrStatus,
+    });
+
+
+  // ==========================================================
+  // DATA
+  // ==========================================================
 
   const {
     data: employees = [],
     isLoading,
     isFetching,
+    isError,
+    error,
     refetch,
   } = useEmployees({
-    search: searchQuery || undefined,
-    directoryType: directoryTypeFilter,
-    hrStatus: statusFilter,
-    pole: poleFilter,
+    search:
+      searchQuery || undefined,
+
+    directoryType:
+      directoryTypeFilter,
+
+    hrStatus:
+      statusFilter,
+
+    pole:
+      poleFilter,
   });
 
-  const updateEmployee = useUpdateEmployee();
+  const updateEmployee =
+    useUpdateEmployee();
 
-  // ==========================================================
-  // POLES
-  // ==========================================================
-
-  const poleOptions = poles;
 
   // ==========================================================
   // KPI
@@ -189,45 +286,114 @@ export default function Employees() {
   const stats = useMemo(() => {
     return {
       total: employees.length,
-      active: employees.filter(
-        (employee) => employee.hr_status === 'active',
-      ).length,
-      onboarding: employees.filter(
-        (employee) => employee.hr_status === 'onboarding',
-      ).length,
-      external: employees.filter(
-        (employee) =>
-          employee.collaborator_type !== 'internal',
-      ).length,
+
+      active:
+        employees.filter(
+          (employee) =>
+            employee.hr_status ===
+            'active',
+        ).length,
+
+      onboarding:
+        employees.filter(
+          (employee) =>
+            employee.hr_status ===
+            'onboarding',
+        ).length,
+
+      external:
+        employees.filter(
+          (employee) =>
+            directoryTypeForEmployee(
+              employee,
+            ) === 'external',
+        ).length,
     };
   }, [employees]);
+
+
+  // ==========================================================
+  // FILTER RESET
+  // ==========================================================
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setDirectoryTypeFilter('all');
+    setStatusFilter('all');
+    setPoleFilter('all');
+  };
+
+  const hasFilters =
+    Boolean(searchQuery) ||
+    directoryTypeFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    poleFilter !== 'all';
+
 
   // ==========================================================
   // EDIT
   // ==========================================================
 
-  const openEdit = (employee: Employee) => {
+  const openEdit = (
+    employee: Employee,
+  ) => {
+    if (employee.test_account) {
+      toast.error(
+        'Les comptes de test ne peuvent pas être modifiés depuis le référentiel RH.',
+      );
+
+      return;
+    }
+
     setSelectedEmployee(employee);
 
     setEditForm({
-      first_name: employee.first_name ?? '',
-      last_name: employee.last_name ?? '',
-      email: employee.email ?? '',
-      position: employee.position ?? '',
-      seniority: employee.seniority ?? '',
-      work_mode: employee.work_mode ?? '',
-      subsidiary: employee.subsidiary ?? '',
+      first_name:
+        employee.first_name ?? '',
+
+      last_name:
+        employee.last_name ?? '',
+
+      email:
+        employee.email ?? '',
+
+      position:
+        employee.position ?? '',
+
+      seniority:
+        employee.seniority ?? '',
+
+      work_mode:
+        employee.work_mode ?? '',
+
+      subsidiary:
+        employee.subsidiary ?? '',
+
       collaborator_type:
-        employee.collaborator_type ?? 'internal',
+        employee.collaborator_type ??
+        'internal',
+
       hr_status:
-        employee.hr_status ?? 'active',
+        employee.hr_status ??
+        'active',
     });
 
     setEditDialogOpen(true);
   };
 
+
   const saveEmployee = async () => {
     if (!selectedEmployee) {
+      return;
+    }
+
+    if (
+      selectedEmployee.test_account
+    ) {
+      toast.error(
+        'Les comptes de test ne peuvent pas être modifiés depuis le référentiel RH.',
+      );
+
       return;
     }
 
@@ -246,45 +412,53 @@ export default function Employees() {
     try {
       await updateEmployee.mutateAsync({
         id: selectedEmployee.id,
-        first_name: editForm.first_name.trim(),
-        last_name: editForm.last_name.trim(),
-        email: editForm.email.trim(),
-        position: editForm.position.trim() || null,
-        seniority: editForm.seniority.trim() || null,
-        work_mode: editForm.work_mode.trim() || null,
-        subsidiary: editForm.subsidiary.trim() || null,
-        collaborator_type: editForm.collaborator_type,
-        hr_status: editForm.hr_status,
+
+        first_name:
+          editForm.first_name.trim(),
+
+        last_name:
+          editForm.last_name.trim(),
+
+        email:
+          editForm.email.trim(),
+
+        position:
+          editForm.position.trim() ||
+          null,
+
+        seniority:
+          editForm.seniority.trim() ||
+          null,
+
+        work_mode:
+          editForm.work_mode.trim() ||
+          null,
+
+        subsidiary:
+          editForm.subsidiary.trim() ||
+          null,
+
+        collaborator_type:
+          editForm.collaborator_type,
+
+        hr_status:
+          editForm.hr_status,
       });
 
-      toast.success('Collaborateur mis à jour.');
+      toast.success(
+        'Collaborateur mis à jour.',
+      );
 
       setEditDialogOpen(false);
       setSelectedEmployee(null);
-    } catch (error: any) {
+    } catch (updateError: any) {
       toast.error(
-        error?.message ||
+        updateError?.message ||
           'Impossible de mettre à jour le collaborateur.',
       );
     }
   };
 
-  // ==========================================================
-  // RESET FILTERS
-  // ==========================================================
-
-  const resetFilters = () => {
-    setSearchQuery('');
-    setTypeFilter('all');
-    setStatusFilter('all');
-    setPoleFilter('all');
-  };
-
-  const hasFilters =
-    Boolean(searchQuery) ||
-    typeFilter !== 'all' ||
-    statusFilter !== 'all' ||
-    poleFilter !== 'all';
 
   // ==========================================================
   // LOADING
@@ -297,6 +471,55 @@ export default function Employees() {
       </div>
     );
   }
+
+
+  // ==========================================================
+  // ERROR
+  // ==========================================================
+
+  if (isError) {
+    return (
+      <div className="space-y-6 animate-fade-in">
+        <div>
+          <div className="flex items-center gap-2">
+            <Users className="h-6 w-6 text-primary" />
+
+            <h1 className="text-3xl font-bold">
+              Collaborateurs
+            </h1>
+          </div>
+
+          <p className="mt-1 text-muted-foreground">
+            Référentiel RH officiel des collaborateurs BIB.
+          </p>
+        </div>
+
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="font-medium">
+              Impossible de charger les collaborateurs.
+            </p>
+
+            <p className="mt-2 text-sm text-muted-foreground">
+              {error instanceof Error
+                ? error.message
+                : 'Une erreur est survenue lors du chargement du référentiel RH.'}
+            </p>
+
+            <Button
+              className="mt-4"
+              variant="outline"
+              onClick={() => void refetch()}
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Réessayer
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
 
   // ==========================================================
   // RENDER
@@ -332,7 +555,9 @@ export default function Employees() {
           >
             <RefreshCw
               className={`mr-2 h-4 w-4 ${
-                isFetching ? 'animate-spin' : ''
+                isFetching
+                  ? 'animate-spin'
+                  : ''
               }`}
             />
 
@@ -367,6 +592,7 @@ export default function Employees() {
           </CardContent>
         </Card>
 
+
         <Card>
           <CardContent className="p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">
@@ -378,6 +604,7 @@ export default function Employees() {
             </p>
           </CardContent>
         </Card>
+
 
         <Card>
           <CardContent className="p-4">
@@ -391,10 +618,11 @@ export default function Employees() {
           </CardContent>
         </Card>
 
+
         <Card>
           <CardContent className="p-4">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">
-              Hors interne
+              Externes
             </p>
 
             <p className="mt-1 text-2xl font-semibold">
@@ -421,7 +649,9 @@ export default function Employees() {
         <CardContent>
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
 
-            <div className="relative lg:col-span-1">
+            {/* Recherche */}
+
+            <div className="relative">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
 
               <Input
@@ -429,14 +659,21 @@ export default function Employees() {
                 placeholder="Nom, e-mail, poste..."
                 value={searchQuery}
                 onChange={(event) =>
-                  setSearchQuery(event.target.value)
+                  setSearchQuery(
+                    event.target.value,
+                  )
                 }
               />
             </div>
 
+
+            {/* Pôle */}
+
             <Select
               value={poleFilter}
-              onValueChange={setPoleFilter}
+              onValueChange={
+                setPoleFilter
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Pôle" />
@@ -447,7 +684,7 @@ export default function Employees() {
                   Tous les pôles
                 </SelectItem>
 
-                {poleOptions.map((pole) => (
+                {poles.map((pole) => (
                   <SelectItem
                     key={pole.id}
                     value={pole.id}
@@ -458,40 +695,19 @@ export default function Employees() {
               </SelectContent>
             </Select>
 
+
+            {/* Interne / Externe / Autres */}
+
             <Select
-            value={directoryTypeFilter}
-            onValueChange={(value) =>
-              setDirectoryTypeFilter(
-                value as
-                  | 'all'
-                  | 'internal'
-                  | 'external'
-                  | 'other',
-              )
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Type de collaborateur" />
-            </SelectTrigger>
-
-            <SelectContent>
-              <SelectItem value="all">
-                Tous les types
-              </SelectItem>
-
-              <SelectItem value="internal">
-                Interne
-              </SelectItem>
-
-              <SelectItem value="external">
-                Externe
-              </SelectItem>
-
-              <SelectItem value="other">
-                Autres
-              </SelectItem>
-            </SelectContent>
-          </Select>
+              value={
+                directoryTypeFilter
+              }
+              onValueChange={(value) =>
+                setDirectoryTypeFilter(
+                  value as DirectoryType,
+                )
+              }
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Type de collaborateur" />
               </SelectTrigger>
@@ -501,23 +717,22 @@ export default function Employees() {
                   Tous les types
                 </SelectItem>
 
-                {(
-                  Object.entries(
-                    collaboratorTypeLabels,
-                  ) as [
-                    CollaboratorType,
-                    string,
-                  ][]
-                ).map(([value, label]) => (
-                  <SelectItem
-                    key={value}
-                    value={value}
-                  >
-                    {label}
-                  </SelectItem>
-                ))}
+                <SelectItem value="internal">
+                  Interne
+                </SelectItem>
+
+                <SelectItem value="external">
+                  Externe
+                </SelectItem>
+
+                <SelectItem value="other">
+                  Autres
+                </SelectItem>
               </SelectContent>
             </Select>
+
+
+            {/* Statut RH */}
 
             <Select
               value={statusFilter}
@@ -543,21 +758,59 @@ export default function Employees() {
                     HrStatus,
                     string,
                   ][]
-                ).map(([value, label]) => (
-                  <SelectItem
-                    key={value}
-                    value={value}
-                  >
-                    {label}
-                  </SelectItem>
-                ))}
+                ).map(
+                  ([value, label]) => (
+                    <SelectItem
+                      key={value}
+                      value={value}
+                    >
+                      {label}
+                    </SelectItem>
+                  ),
+                )}
               </SelectContent>
             </Select>
 
           </div>
 
-          {hasFilters && (
-            <div className="mt-3 flex justify-end">
+
+          {/* Résumé des filtres */}
+
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap gap-2">
+
+              {directoryTypeFilter !==
+                'all' && (
+                <Badge variant="secondary">
+                  {
+                    directoryTypeLabels[
+                      directoryTypeFilter
+                    ]
+                  }
+                </Badge>
+              )}
+
+              {poleFilter !==
+                'all' && (
+                <Badge variant="secondary">
+                  {poleName(poleFilter)}
+                </Badge>
+              )}
+
+              {statusFilter !==
+                'all' && (
+                <Badge variant="secondary">
+                  {
+                    statusLabels[
+                      statusFilter
+                    ]
+                  }
+                </Badge>
+              )}
+
+            </div>
+
+            {hasFilters && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -566,8 +819,8 @@ export default function Employees() {
                 <X className="mr-1.5 h-4 w-4" />
                 Réinitialiser les filtres
               </Button>
-            </div>
-          )}
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -578,7 +831,8 @@ export default function Employees() {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+
             <div>
               <CardTitle>
                 Référentiel collaborateurs
@@ -588,10 +842,13 @@ export default function Employees() {
                 {employees.length}{' '}
                 {employees.length > 1
                   ? 'collaborateurs'
-                  : 'collaborateur'}
-                {' '}correspondant aux filtres.
+                  : 'collaborateur'}{' '}
+                correspondant aux filtres.
               </p>
             </div>
+
+
+            {/* EXPORT */}
 
             <ExportButtons
               filename="collaborateurs-rh"
@@ -631,37 +888,61 @@ export default function Employees() {
                   accessor: 'work_mode',
                 },
               ]}
-              data={employees.map((employee) => ({
-                name: fullName(employee),
-                email: employee.email,
-                type:
-                  collaboratorTypeLabels[
-                    employee.collaborator_type
-                  ],
-                status:
-                  statusLabels[
-                    employee.hr_status
-                  ],
-                poles: Array.isArray(employee.poles)
-                  ? employee.poles
-                      .map(poleName)
-                      .join(', ')
-                  : '',
-                position:
-                  employee.position ?? '',
-                seniority:
-                  employee.seniority ?? '',
-                work_mode:
-                  employee.work_mode ?? '',
-              }))}
+              data={employees.map(
+                (employee) => ({
+                  name:
+                    fullName(employee),
+
+                  email:
+                    employee.email,
+
+                  type:
+                    directoryTypeLabel(
+                      employee,
+                    ),
+
+                  status:
+                    statusLabels[
+                      employee.hr_status
+                    ],
+
+                  poles:
+                    Array.isArray(
+                      employee.poles,
+                    )
+                      ? employee.poles
+                          .map(
+                            poleName,
+                          )
+                          .join(', ')
+                      : '',
+
+                  position:
+                    employee.position ??
+                    '',
+
+                  seniority:
+                    employee.seniority ??
+                    '',
+
+                  work_mode:
+                    employee.work_mode ??
+                    '',
+                }),
+              )}
             />
+
           </div>
         </CardHeader>
 
+
         <CardContent className="p-0">
+
+          {/* Aucun résultat */}
 
           {employees.length === 0 ? (
             <div className="py-16 text-center">
+
               <Users className="mx-auto h-10 w-10 text-muted-foreground/50" />
 
               <p className="mt-4 font-medium">
@@ -681,13 +962,17 @@ export default function Employees() {
                   Réinitialiser les filtres
                 </Button>
               )}
+
             </div>
           ) : (
+
             <div className="overflow-x-auto">
+
               <Table>
 
                 <TableHeader>
                   <TableRow>
+
                     <TableHead>
                       Collaborateur
                     </TableHead>
@@ -709,159 +994,224 @@ export default function Employees() {
                     </TableHead>
 
                     <TableHead>
-                      Dernière mise à jour
+                      Mise à jour
                     </TableHead>
 
                     <TableHead className="text-right">
                       Actions
                     </TableHead>
+
                   </TableRow>
                 </TableHeader>
 
+
                 <TableBody>
-                  {employees.map((employee) => (
-                    <TableRow key={employee.id}>
 
-                      {/* Collaborateur */}
-                      <TableCell>
-                        <div className="flex items-center gap-3">
+                  {employees.map(
+                    (employee) => (
+                      <TableRow
+                        key={
+                          employee.id
+                        }
+                      >
 
-                          <Avatar className="h-9 w-9">
-                            <AvatarFallback className="bg-primary/10 text-primary">
-                              {initials(employee)}
-                            </AvatarFallback>
-                          </Avatar>
+                        {/* Collaborateur */}
 
-                          <div className="min-w-0">
-                            <p className="font-medium">
-                              {fullName(employee)}
-                            </p>
+                        <TableCell>
+                          <div className="flex items-center gap-3">
 
-                            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                              <Mail className="h-3 w-3" />
+                            <Avatar className="h-9 w-9">
+                              <AvatarFallback className="bg-primary/10 text-primary">
+                                {initials(
+                                  employee,
+                                )}
+                              </AvatarFallback>
+                            </Avatar>
 
-                              <span className="truncate">
-                                {employee.email}
-                              </span>
+                            <div className="min-w-0">
+
+                              <p className="font-medium">
+                                {fullName(
+                                  employee,
+                                ) ||
+                                  'Sans nom'}
+                              </p>
+
+                              <p className="truncate text-sm text-muted-foreground">
+                                {
+                                  employee.email
+                                }
+                              </p>
+
                             </div>
+
                           </div>
-
-                        </div>
-                      </TableCell>
+                        </TableCell>
 
 
-                      {/* Type */}
-                      <TableCell>
-                        <Badge variant="outline">
-                          {
-                            collaboratorTypeLabels[
-                              employee.collaborator_type
-                            ]
-                          }
-                        </Badge>
-                      </TableCell>
+                        {/* Type */}
+
+                        <TableCell>
+                          <div className="space-y-1">
+
+                            <Badge variant="outline">
+                              {
+                                directoryTypeLabel(
+                                  employee,
+                                )
+                              }
+                            </Badge>
+
+                            {directoryTypeForEmployee(
+                              employee,
+                            ) ===
+                              'external' &&
+                              employee.collaborator_type !==
+                                'external' && (
+                                <p className="text-xs text-muted-foreground">
+                                  {
+                                    collaboratorTypeLabels[
+                                      employee.collaborator_type
+                                    ]
+                                  }
+                                </p>
+                              )}
+
+                          </div>
+                        </TableCell>
 
 
-                      {/* Pôles */}
-                      <TableCell>
-                        <div className="flex max-w-xs flex-wrap gap-1">
-                          {Array.isArray(employee.poles) &&
-                          employee.poles.length > 0 ? (
-                            employee.poles.map((pole) => (
-                              <Badge
-                                key={pole}
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                {poleName(pole)}
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-sm text-muted-foreground">
-                              Non renseigné
+                        {/* Pôles */}
+
+                        <TableCell>
+                          <div className="flex max-w-xs flex-wrap gap-1">
+
+                            {Array.isArray(
+                              employee.poles,
+                            ) &&
+                            employee.poles
+                              .length >
+                              0 ? (
+                              employee.poles.map(
+                                (pole) => (
+                                  <Badge
+                                    key={
+                                      pole
+                                    }
+                                    variant="secondary"
+                                    className="text-xs"
+                                  >
+                                    {poleName(
+                                      pole,
+                                    )}
+                                  </Badge>
+                                ),
+                              )
+                            ) : (
+                              <span className="text-sm text-muted-foreground">
+                                Non renseigné
+                              </span>
+                            )}
+
+                          </div>
+                        </TableCell>
+
+
+                        {/* Poste */}
+
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+
+                            <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+
+                            <span className="text-sm">
+                              {
+                                employee.position ||
+                                'Non renseigné'
+                              }
                             </span>
-                          )}
-                        </div>
-                      </TableCell>
+
+                          </div>
+                        </TableCell>
 
 
-                      {/* Poste */}
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <Briefcase className="h-3.5 w-3.5 text-muted-foreground" />
+                        {/* Statut */}
 
-                          <span className="text-sm">
-                            {employee.position ||
-                              'Non renseigné'}
-                          </span>
-                        </div>
-                      </TableCell>
-
-
-                      {/* Statut */}
-                      <TableCell>
-                        <Badge
-                          variant={
-                            statusVariant[
-                              employee.hr_status
-                            ]
-                          }
-                        >
-                          {
-                            statusLabels[
-                              employee.hr_status
-                            ]
-                          }
-                        </Badge>
-                      </TableCell>
-
-
-                      {/* Updated */}
-                      <TableCell>
-                        <span className="text-sm text-muted-foreground">
-                          {formatDate(
-                            employee.updated_at,
-                          )}
-                        </span>
-                      </TableCell>
-
-
-                      {/* Actions */}
-                      <TableCell>
-                        <div className="flex justify-end gap-1">
-
-                          <Button
-                            asChild
-                            size="sm"
-                            variant="outline"
-                          >
-                            <Link
-                              to={`/pole/rh/files?employee=${employee.id}`}
-                            >
-                              <FolderOpen className="mr-1.5 h-3.5 w-3.5" />
-                              Dossier
-                            </Link>
-                          </Button>
-
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() =>
-                              openEdit(employee)
+                        <TableCell>
+                          <Badge
+                            variant={
+                              statusVariant[
+                                employee
+                                  .hr_status
+                              ]
                             }
                           >
-                            <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                            Modifier
-                          </Button>
+                            {
+                              statusLabels[
+                                employee
+                                  .hr_status
+                              ]
+                            }
+                          </Badge>
+                        </TableCell>
 
-                        </div>
-                      </TableCell>
 
-                    </TableRow>
-                  ))}
+                        {/* Mise à jour */}
+
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {formatDate(
+                              employee.updated_at,
+                            )}
+                          </span>
+                        </TableCell>
+
+
+                        {/* Actions */}
+
+                        <TableCell>
+                          <div className="flex justify-end gap-1">
+
+                            <Button
+                              asChild
+                              size="sm"
+                              variant="outline"
+                            >
+                              <Link
+                                to={`/pole/rh/files?employee=${employee.id}`}
+                              >
+                                <FolderOpen className="mr-1.5 h-3.5 w-3.5" />
+
+                                Dossier
+                              </Link>
+                            </Button>
+
+
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() =>
+                                openEdit(
+                                  employee,
+                                )
+                              }
+                            >
+                              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+
+                              Modifier
+                            </Button>
+
+                          </div>
+                        </TableCell>
+
+                      </TableRow>
+                    ),
+                  )}
+
                 </TableBody>
 
               </Table>
+
             </div>
           )}
 
@@ -875,11 +1225,15 @@ export default function Employees() {
 
       <Dialog
         open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
+        onOpenChange={
+          setEditDialogOpen
+        }
       >
+
         <DialogContent className="max-w-2xl">
 
           <DialogHeader>
+
             <DialogTitle>
               Modifier le collaborateur
             </DialogTitle>
@@ -887,16 +1241,24 @@ export default function Employees() {
             <DialogDescription>
               Mise à jour du référentiel RH officiel.
             </DialogDescription>
+
           </DialogHeader>
+
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 
+            {/* Prénom */}
+
             <div>
-              <Label>Prénom</Label>
+              <Label>
+                Prénom
+              </Label>
 
               <Input
                 className="mt-1"
-                value={editForm.first_name}
+                value={
+                  editForm.first_name
+                }
                 onChange={(event) =>
                   setEditForm({
                     ...editForm,
@@ -907,12 +1269,19 @@ export default function Employees() {
               />
             </div>
 
+
+            {/* Nom */}
+
             <div>
-              <Label>Nom</Label>
+              <Label>
+                Nom
+              </Label>
 
               <Input
                 className="mt-1"
-                value={editForm.last_name}
+                value={
+                  editForm.last_name
+                }
                 onChange={(event) =>
                   setEditForm({
                     ...editForm,
@@ -923,13 +1292,20 @@ export default function Employees() {
               />
             </div>
 
+
+            {/* E-mail */}
+
             <div className="md:col-span-2">
-              <Label>E-mail</Label>
+              <Label>
+                E-mail
+              </Label>
 
               <Input
                 className="mt-1"
                 type="email"
-                value={editForm.email}
+                value={
+                  editForm.email
+                }
                 onChange={(event) =>
                   setEditForm({
                     ...editForm,
@@ -940,13 +1316,20 @@ export default function Employees() {
               />
             </div>
 
+
+            {/* Poste */}
+
             <div>
-              <Label>Poste</Label>
+              <Label>
+                Poste
+              </Label>
 
               <Input
                 className="mt-1"
                 placeholder="Poste actuel"
-                value={editForm.position}
+                value={
+                  editForm.position
+                }
                 onChange={(event) =>
                   setEditForm({
                     ...editForm,
@@ -957,13 +1340,20 @@ export default function Employees() {
               />
             </div>
 
+
+            {/* Ancienneté */}
+
             <div>
-              <Label>Ancienneté</Label>
+              <Label>
+                Ancienneté
+              </Label>
 
               <Input
                 className="mt-1"
                 placeholder="Ex. 2 ans"
-                value={editForm.seniority}
+                value={
+                  editForm.seniority
+                }
                 onChange={(event) =>
                   setEditForm({
                     ...editForm,
@@ -974,13 +1364,20 @@ export default function Employees() {
               />
             </div>
 
+
+            {/* Mode de travail */}
+
             <div>
-              <Label>Mode de travail</Label>
+              <Label>
+                Mode de travail
+              </Label>
 
               <Input
                 className="mt-1"
                 placeholder="Ex. Hybride"
-                value={editForm.work_mode}
+                value={
+                  editForm.work_mode
+                }
                 onChange={(event) =>
                   setEditForm({
                     ...editForm,
@@ -991,13 +1388,20 @@ export default function Employees() {
               />
             </div>
 
+
+            {/* Filiale */}
+
             <div>
-              <Label>Filiale / entité</Label>
+              <Label>
+                Filiale / entité
+              </Label>
 
               <Input
                 className="mt-1"
                 placeholder="Ex. BIB"
-                value={editForm.subsidiary}
+                value={
+                  editForm.subsidiary
+                }
                 onChange={(event) =>
                   setEditForm({
                     ...editForm,
@@ -1008,14 +1412,21 @@ export default function Employees() {
               />
             </div>
 
+
+            {/* Type */}
+
             <div>
-              <Label>Type de collaborateur</Label>
+              <Label>
+                Type de collaborateur
+              </Label>
 
               <Select
                 value={
                   editForm.collaborator_type
                 }
-                onValueChange={(value) =>
+                onValueChange={(
+                  value,
+                ) =>
                   setEditForm({
                     ...editForm,
                     collaborator_type:
@@ -1028,6 +1439,7 @@ export default function Employees() {
                 </SelectTrigger>
 
                 <SelectContent>
+
                   {(
                     Object.entries(
                       collaboratorTypeLabels,
@@ -1045,16 +1457,26 @@ export default function Employees() {
                       </SelectItem>
                     ),
                   )}
+
                 </SelectContent>
               </Select>
             </div>
 
+
+            {/* Statut */}
+
             <div>
-              <Label>Statut RH</Label>
+              <Label>
+                Statut RH
+              </Label>
 
               <Select
-                value={editForm.hr_status}
-                onValueChange={(value) =>
+                value={
+                  editForm.hr_status
+                }
+                onValueChange={(
+                  value,
+                ) =>
                   setEditForm({
                     ...editForm,
                     hr_status:
@@ -1067,6 +1489,7 @@ export default function Employees() {
                 </SelectTrigger>
 
                 <SelectContent>
+
                   {(
                     Object.entries(
                       statusLabels,
@@ -1084,17 +1507,22 @@ export default function Employees() {
                       </SelectItem>
                     ),
                   )}
+
                 </SelectContent>
               </Select>
             </div>
 
           </div>
 
+
           <DialogFooter>
+
             <Button
               variant="ghost"
               onClick={() =>
-                setEditDialogOpen(false)
+                setEditDialogOpen(
+                  false,
+                )
               }
             >
               Annuler
@@ -1112,9 +1540,11 @@ export default function Employees() {
 
               Enregistrer
             </Button>
+
           </DialogFooter>
 
         </DialogContent>
+
       </Dialog>
 
     </div>
