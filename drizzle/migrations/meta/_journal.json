@@ -92,6 +92,20 @@
       "when": 1791181345592,
       "tag": "0012_restrict_direction_tables_read",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791431495733,
+      "tag": "0013_create_access_and_merchant_portfolios",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1791431551204,
+      "tag": "0014_add_access_roles_description_owner_type",
+      "breakpoints": true
     }
   ]
 }

@@ -14,6 +14,251 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_assignments: {
+        Row: {
+          created_at: string
+          employee_id: string
+          ends_at: string | null
+          id: string
+          role_id: string | null
+          scope_id: string | null
+          scope_value: string | null
+          starts_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          ends_at?: string | null
+          id?: string
+          role_id?: string | null
+          scope_id?: string | null
+          scope_value?: string | null
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          ends_at?: string | null
+          id?: string
+          role_id?: string | null
+          scope_id?: string | null
+          scope_value?: string | null
+          starts_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_assignments_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "access_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_assignments_scope_id_fkey"
+            columns: ["scope_id"]
+            isOneToOne: false
+            referencedRelation: "access_scopes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      access_business_portfolios: {
+        Row: {
+          created_at: string
+          id: string
+          label_snapshot: string | null
+          portfolio_type_id: string
+          source_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label_snapshot?: string | null
+          portfolio_type_id: string
+          source_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label_snapshot?: string | null
+          portfolio_type_id?: string
+          source_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_business_portfolios_portfolio_type_id_fkey"
+            columns: ["portfolio_type_id"]
+            isOneToOne: false
+            referencedRelation: "access_portfolio_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      access_portfolio_assignments: {
+        Row: {
+          access_assignment_id: string | null
+          assigned_by: string | null
+          assignment_status: string
+          created_at: string
+          employee_id: string
+          ends_at: string | null
+          id: string
+          portfolio_id: string
+          reason: string | null
+          starts_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          access_assignment_id?: string | null
+          assigned_by?: string | null
+          assignment_status?: string
+          created_at?: string
+          employee_id: string
+          ends_at?: string | null
+          id?: string
+          portfolio_id: string
+          reason?: string | null
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          access_assignment_id?: string | null
+          assigned_by?: string | null
+          assignment_status?: string
+          created_at?: string
+          employee_id?: string
+          ends_at?: string | null
+          id?: string
+          portfolio_id?: string
+          reason?: string | null
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_portfolio_assignments_access_assignment_id_fkey"
+            columns: ["access_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "access_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_portfolio_assignments_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "access_business_portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      access_portfolio_types: {
+        Row: {
+          business_pole: string | null
+          created_at: string
+          id: string
+          label: string
+          portfolio_type_key: string
+          source_table: string | null
+          status: string
+        }
+        Insert: {
+          business_pole?: string | null
+          created_at?: string
+          id?: string
+          label: string
+          portfolio_type_key: string
+          source_table?: string | null
+          status?: string
+        }
+        Update: {
+          business_pole?: string | null
+          created_at?: string
+          id?: string
+          label?: string
+          portfolio_type_key?: string
+          source_table?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      access_roles: {
+        Row: {
+          business_pole: string | null
+          created_at: string
+          department: string | null
+          description: string | null
+          id: string
+          label: string
+          owner_type: string | null
+          role_key: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          business_pole?: string | null
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          id?: string
+          label: string
+          owner_type?: string | null
+          role_key: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          business_pole?: string | null
+          created_at?: string
+          department?: string | null
+          description?: string | null
+          id?: string
+          label?: string
+          owner_type?: string | null
+          role_key?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      access_scopes: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          scope_key: string
+          scope_type: string | null
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          scope_key: string
+          scope_type?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          scope_key?: string
+          scope_type?: string | null
+        }
+        Relationships: []
+      }
       anomalies: {
         Row: {
           ai_decision: string | null
@@ -2438,6 +2683,77 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      merchant_portfolio_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          ended_at: string | null
+          id: string
+          merchant_id: string
+          portfolio_id: string
+          reason: string | null
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          ended_at?: string | null
+          id?: string
+          merchant_id: string
+          portfolio_id: string
+          reason?: string | null
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          ended_at?: string | null
+          id?: string
+          merchant_id?: string
+          portfolio_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_portfolio_assignments_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_portfolios: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          owner_id: string | null
+          role_scope: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          owner_id?: string | null
+          role_scope?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          owner_id?: string | null
+          role_scope?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       message_routing_log: {
         Row: {
