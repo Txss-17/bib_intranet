@@ -53,12 +53,6 @@ export interface Employee {
   collaborator_type: CollaboratorType;
   hr_status: HrStatus;
 
-  /**
-   * Compte technique de test.
-   *
-   * Les comptes de test sont exclus
-   * des référentiels RH opérationnels.
-   */
   test_account: boolean;
 
   created_at: string | null;
@@ -86,6 +80,23 @@ export interface EmployeeFilters {
 
 
 // ============================================================
+// CONSTANTES
+// ============================================================
+
+export const EMPLOYEES_QUERY_KEY =
+  'rh-collaborators';
+
+/**
+ * Nombre maximal de collaborateurs récupérés
+ * par le référentiel RH.
+ *
+ * Cela évite de charger inutilement tout public.profiles
+ * à chaque ouverture de la page.
+ */
+const EMPLOYEES_PAGE_SIZE = 200;
+
+
+// ============================================================
 // SUPABASE
 // ============================================================
 
@@ -94,16 +105,17 @@ const from = (table: string) =>
 
 
 // ============================================================
-// CONSTANTES
+// TYPES EXTERNES
 // ============================================================
 
-const EXTERNAL_COLLABORATOR_TYPES: CollaboratorType[] = [
-  'external',
-  'provider',
-  'consultant',
-  'apprentice',
-  'intern',
-];
+const EXTERNAL_COLLABORATOR_TYPES:
+  CollaboratorType[] = [
+    'external',
+    'provider',
+    'consultant',
+    'apprentice',
+    'intern',
+  ];
 
 
 // ============================================================
@@ -117,6 +129,7 @@ function isExternalCollaborator(
     type,
   );
 }
+
 
 function matchesDirectoryType(
   employee: Employee,
@@ -145,14 +158,6 @@ function matchesDirectoryType(
       return true;
   }
 }
-
-
-// ============================================================
-// QUERY KEY
-// ============================================================
-
-export const EMPLOYEES_QUERY_KEY =
-  'rh-collaborators';
 
 
 // ============================================================
@@ -188,28 +193,13 @@ export const useEmployees = (
           updated_at
         `)
 
-        /**
-         * Règle fondamentale RH :
-         * aucun compte de test dans les
-         * référentiels opérationnels.
-         */
+        // ------------------------------------------------------
+        // RÈGLE RH : EXCLURE LES COMPTES DE TEST
+        // ------------------------------------------------------
+
         .eq(
           'test_account',
           false,
-        )
-
-        .order(
-          'first_name',
-          {
-            ascending: true,
-          },
-        )
-
-        .order(
-          'last_name',
-          {
-            ascending: true,
-          },
         );
 
       // --------------------------------------------------------
@@ -218,8 +208,7 @@ export const useEmployees = (
 
       if (
         filters.collaboratorType &&
-        filters.collaboratorType !==
-          'all'
+        filters.collaboratorType !== 'all'
       ) {
         query = query.eq(
           'collaborator_type',
@@ -255,6 +244,76 @@ export const useEmployees = (
         );
       }
 
+      // --------------------------------------------------------
+      // PÔLE
+      //
+      // Les pôles sont stockés sous forme de tableau.
+      // On utilise contains côté Supabase.
+      // --------------------------------------------------------
+
+      if (
+        filters.pole &&
+        filters.pole !== 'all'
+      ) {
+        query = query.contains(
+          'poles',
+          [filters.pole],
+        );
+      }
+
+      // --------------------------------------------------------
+      // RECHERCHE
+      //
+      // Recherche directement côté PostgreSQL.
+      // Cela évite de télécharger tout le référentiel
+      // lorsque l'utilisateur cherche une personne précise.
+      // --------------------------------------------------------
+
+      const search =
+        filters.search?.trim();
+
+      if (search) {
+        const escapedSearch =
+          search
+            .replace(/\\/g, '\\\\')
+            .replace(/%/g, '\\%')
+            .replace(/_/g, '\\_');
+
+        query = query.or(
+          [
+            `first_name.ilike.%${escapedSearch}%`,
+            `last_name.ilike.%${escapedSearch}%`,
+            `email.ilike.%${escapedSearch}%`,
+            `position.ilike.%${escapedSearch}%`,
+          ].join(','),
+        );
+      }
+
+      // --------------------------------------------------------
+      // TRI + LIMITE
+      // --------------------------------------------------------
+
+      query = query
+        .order(
+          'first_name',
+          {
+            ascending: true,
+          },
+        )
+        .order(
+          'last_name',
+          {
+            ascending: true,
+          },
+        )
+        .limit(
+          EMPLOYEES_PAGE_SIZE,
+        );
+
+      // --------------------------------------------------------
+      // EXÉCUTION
+      // --------------------------------------------------------
+
       const {
         data,
         error,
@@ -269,13 +328,16 @@ export const useEmployees = (
 
       // --------------------------------------------------------
       // CATÉGORIE RH
+      //
       // Interne / Externe / Autres
+      //
+      // Le type "directoryType" est une vue métier
+      // construite à partir du collaborator_type.
       // --------------------------------------------------------
 
       if (
         filters.directoryType &&
-        filters.directoryType !==
-          'all'
+        filters.directoryType !== 'all'
       ) {
         result = result.filter(
           (employee) =>
@@ -286,77 +348,27 @@ export const useEmployees = (
         );
       }
 
-      // --------------------------------------------------------
-      // RECHERCHE
-      // --------------------------------------------------------
-
-      if (
-        filters.search?.trim()
-      ) {
-        const term =
-          filters.search
-            .trim()
-            .toLowerCase();
-
-        result = result.filter(
-          (employee) => {
-            const name = (
-              `${employee.first_name ?? ''}` +
-              ` ${employee.last_name ?? ''}`
-            )
-              .trim()
-              .toLowerCase();
-
-            const email =
-              employee.email
-                ?.toLowerCase() ?? '';
-
-            const position =
-              employee.position
-                ?.toLowerCase() ?? '';
-
-            const poles =
-              Array.isArray(
-                employee.poles,
-              )
-                ? employee.poles
-                    .join(' ')
-                    .toLowerCase()
-                : '';
-
-            return (
-              name.includes(term) ||
-              email.includes(term) ||
-              position.includes(term) ||
-              poles.includes(term)
-            );
-          },
-        );
-      }
-
-      // --------------------------------------------------------
-      // PÔLE
-      // --------------------------------------------------------
-
-      if (
-        filters.pole &&
-        filters.pole !== 'all'
-      ) {
-        result = result.filter(
-          (employee) =>
-            Array.isArray(
-              employee.poles,
-            ) &&
-            employee.poles.includes(
-              filters.pole!,
-            ),
-        );
-      }
-
       return result;
     },
 
+    /**
+     * Les données RH restent fraîches pendant 30 secondes.
+     * Cela évite de refaire une requête Supabase
+     * à chaque petit rendu du composant.
+     */
     staleTime: 30_000,
+
+    /**
+     * Une erreur de réseau ne provoque pas
+     * plusieurs requêtes longues successives.
+     */
+    retry: 1,
+
+    /**
+     * Le référentiel n'est pas considéré comme
+     * "chargé" tant que la première requête n'est pas terminée.
+     */
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -376,8 +388,9 @@ export const useUpdateEmployee = () => {
     }: Partial<Employee> & {
       id: string;
     }) => {
+
       // ------------------------------------------------------
-      // Vérification du compte
+      // VÉRIFICATION DU COMPTE
       // ------------------------------------------------------
 
       const {
@@ -449,6 +462,10 @@ export const useUpdateEmployee = () => {
       return data as Employee;
     },
 
+    // --------------------------------------------------------
+    // INVALIDATION
+    // --------------------------------------------------------
+
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [
@@ -457,8 +474,8 @@ export const useUpdateEmployee = () => {
       });
 
       /**
-       * Compatibilité avec d'anciens écrans
-       * utilisant encore la clé employees.
+       * Compatibilité avec les anciens écrans
+       * qui utilisent encore la clé "employees".
        */
       queryClient.invalidateQueries({
         queryKey: [
