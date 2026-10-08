@@ -3583,9 +3583,11 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          collaborator_type: string
           created_at: string | null
           email: string
           first_name: string
+          hr_status: string
           id: string
           last_name: string
           manager_id: string | null
@@ -3598,9 +3600,11 @@ export type Database = {
         }
         Insert: {
           avatar_url?: string | null
+          collaborator_type?: string
           created_at?: string | null
           email: string
           first_name: string
+          hr_status?: string
           id: string
           last_name: string
           manager_id?: string | null
@@ -3613,9 +3617,11 @@ export type Database = {
         }
         Update: {
           avatar_url?: string | null
+          collaborator_type?: string
           created_at?: string | null
           email?: string
           first_name?: string
+          hr_status?: string
           id?: string
           last_name?: string
           manager_id?: string | null
@@ -5520,6 +5526,20 @@ export type Database = {
       }
       detect_replenishment_needs: { Args: never; Returns: number }
       email_queue_dispatch: { Args: never; Returns: undefined }
+      employee_access_directory: {
+        Args: never
+        Returns: {
+          email: string
+          first_name: string
+          hr_status: string
+          id: string
+          last_name: string
+          last_sign_in_at: string
+          poles: string[]
+          position: string
+          roles: string[]
+        }[]
+      }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
         Returns: number
