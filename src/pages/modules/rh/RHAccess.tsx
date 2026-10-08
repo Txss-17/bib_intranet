@@ -792,7 +792,7 @@ const RHAccess = () => {
         const { error } =
           await supabase
             .from(
-              'access_assignments' as any,
+              'access_assignments',
             )
             .update(payload)
             .eq(
@@ -807,7 +807,7 @@ const RHAccess = () => {
         const { error } =
           await supabase
             .from(
-              'access_assignments' as any,
+              'access_assignments',
             )
             .insert({
               ...payload,
@@ -979,7 +979,7 @@ const RHAccess = () => {
       const { error } =
         await supabase
           .from(
-            'access_portfolio_assignments' as any,
+            'access_portfolio_assignments',
           )
           .insert({
             employee_id:
@@ -1052,7 +1052,7 @@ const RHAccess = () => {
       const { error } =
         await supabase
           .from(
-            'access_assignments' as any,
+            'access_assignments',
           )
           .update({
             status: 'revoked',
@@ -1107,7 +1107,7 @@ const RHAccess = () => {
       const { error } =
         await supabase
           .from(
-            'access_portfolio_assignments' as any,
+            'access_portfolio_assignments',
           )
           .update({
             assignment_status:
