@@ -169,7 +169,7 @@ export default function Employees() {
     refetch,
   } = useEmployees({
     search: searchQuery || undefined,
-    collaboratorType: typeFilter,
+    directoryType: directoryTypeFilter,
     hrStatus: statusFilter,
     pole: poleFilter,
   });
