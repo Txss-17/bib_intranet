@@ -206,19 +206,16 @@ export default function Employees() {
   // FILTERS
   // ==========================================================
 
-  const [searchQuery, setSearchQuery] =
-    useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const [
-    directoryTypeFilter,
-    setDirectoryTypeFilter,
-  ] = useState<DirectoryType>('all');
+  const [directoryType, setDirectoryType] =
+    useState<CollaboratorDirectoryType>('all');
+
+  const [typeFilter, setTypeFilter] =
+    useState<CollaboratorType | 'all'>('all');
 
   const [statusFilter, setStatusFilter] =
     useState<HrStatus | 'all'>('all');
-
-  const [poleFilter, setPoleFilter] =
-    useState<string>('all');
 
 
   // ==========================================================
