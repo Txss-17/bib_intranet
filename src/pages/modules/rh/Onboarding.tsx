@@ -8,6 +8,7 @@ import {
   XCircle,
   History,
   UserPlus,
+  AlertCircle,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -37,6 +38,7 @@ import {
 } from '@/components/ui/dialog';
 
 import {
+  Sheet,
   SheetContent,
   SheetDescription,
   SheetHeader,
@@ -68,9 +70,12 @@ import {
   CollaboratorType,
   HR_STATUS,
   HR_STEPS,
+  HrAccessRole,
   HrEmployeeRequest,
+  useHrAccessRoles,
   useHrEmployeeRequests,
   useHrOnboardingActions,
+  useHrReferents,
   useHrRequestEvents,
 } from '@/hooks/useHrOnboarding';
 
@@ -87,36 +92,26 @@ const POSITIONS = [
   'data_bi_manager',
   'security_it_manager',
   'ceo',
-];
+] as const;
 
-const ROLES = [
-  'viewer',
-  'operator',
-  'analyst',
-  'manager',
-  'executive',
-  'admin',
-];
+type Position = (typeof POSITIONS)[number];
 
-const SENIORITIES = [
-  'junior',
-  'mid',
-  'senior',
-  'lead',
-  'executive',
-];
+const POSITION_TO_POLE: Record<Position, string> = {
+  supplier_manager: 'supplier',
+  customer_success_manager: 'marketplace',
+  ops_logistics_manager: 'ops',
+  finance_manager: 'finance',
+  audit_compliance_lead: 'audit',
+  rse_impact_manager: 'rse',
+  product_engineering_manager: 'product',
+  marketing_communication_manager: 'marketing',
+  rh_manager: 'rh',
+  data_bi_manager: 'data',
+  security_it_manager: 'security',
+  ceo: 'direction',
+};
 
-const COLLABORATOR_TYPES: CollaboratorType[] = [
-  'internal',
-  'external',
-  'provider',
-  'consultant',
-  'apprentice',
-  'intern',
-  'other',
-];
-
-const POSITION_LABELS: Record<string, string> = {
+const POSITION_LABELS: Record<Position, string> = {
   supplier_manager: 'Responsable Fournisseurs & Produits',
   customer_success_manager:
     'Responsable Marketplace & Customer Success',
@@ -132,20 +127,20 @@ const POSITION_LABELS: Record<string, string> = {
   marketing_communication_manager:
     'Responsable Marketing & Communication',
   rh_manager: 'Responsable RH',
-  data_bi_manager: 'Responsable Data & BI',
+  data_bi_manager:
+    'Responsable Data & BI',
   security_it_manager:
     'Responsable Security & IT',
   ceo: 'Direction',
 };
 
-const ROLE_LABELS: Record<string, string> = {
-  viewer: 'Consultation',
-  operator: 'Opérateur',
-  analyst: 'Analyste',
-  manager: 'Manager',
-  executive: 'Direction',
-  admin: 'Administrateur',
-};
+const SENIORITIES = [
+  'junior',
+  'mid',
+  'senior',
+  'lead',
+  'executive',
+];
 
 const SENIORITY_LABELS: Record<string, string> = {
   junior: 'Junior',
@@ -155,14 +150,23 @@ const SENIORITY_LABELS: Record<string, string> = {
   executive: 'Direction',
 };
 
+const COLLABORATOR_TYPES: CollaboratorType[] = [
+  'internal',
+  'external',
+  'provider',
+  'consultant',
+  'apprentice',
+  'intern',
+  'other',
+];
+
 const poleLabel = (id: string) =>
   allPoles.find((pole) => pole.id === id)?.shortName ?? id;
 
 const positionLabel = (position: string | null) =>
-  position ? POSITION_LABELS[position] ?? position : '—';
-
-const roleLabel = (role: string) =>
-  ROLE_LABELS[role] ?? role;
+  position && position in POSITION_LABELS
+    ? POSITION_LABELS[position as Position]
+    : position ?? '—';
 
 const seniorityLabel = (seniority: string) =>
   SENIORITY_LABELS[seniority] ?? seniority;
@@ -174,10 +178,26 @@ const collaboratorTypeLabel = (
     ? COLLABORATOR_TYPE_LABELS[type] ?? type
     : '—';
 
+const employeeName = (
+  firstName: string | null | undefined,
+  lastName: string | null | undefined,
+  fallback = '—',
+) =>
+  [firstName, lastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim() || fallback;
+
 function NewEmployeeDialog() {
   const [open, setOpen] = useState(false);
 
   const { create } = useHrOnboardingActions();
+
+  const {
+    data: referents = [],
+    isLoading: referentsLoading,
+    isError: referentsError,
+  } = useHrReferents();
 
   const [form, setForm] = useState({
     first_name: '',
@@ -185,15 +205,37 @@ function NewEmployeeDialog() {
     personal_email: '',
     work_email: '',
     collaborator_type: 'internal' as CollaboratorType,
-    position: 'ops_logistics_manager',
+    position: 'ops_logistics_manager' as Position,
     seniority: 'junior',
-    requested_role: 'viewer',
+    requested_role: '',
     contract_type: 'CDI',
     start_date: '',
     notes: '',
+    manager_id: '',
   });
 
-  const [poles, setPoles] = useState<string[]>([]);
+  const [poles, setPoles] = useState<string[]>([
+    'ops',
+  ]);
+
+  const requiredPole =
+    POSITION_TO_POLE[form.position];
+
+  const {
+    data: accessRoles = [],
+    isLoading: rolesLoading,
+    isError: rolesError,
+  } = useHrAccessRoles(poles);
+
+  const compatibleRoles = useMemo(
+    () =>
+      accessRoles.filter(
+        (role) =>
+          !role.business_pole ||
+          poles.includes(role.business_pole),
+      ),
+    [accessRoles, poles],
+  );
 
   const resetForm = () => {
     setForm({
@@ -204,32 +246,88 @@ function NewEmployeeDialog() {
       collaborator_type: 'internal',
       position: 'ops_logistics_manager',
       seniority: 'junior',
-      requested_role: 'viewer',
+      requested_role: '',
       contract_type: 'CDI',
       start_date: '',
       notes: '',
+      manager_id: '',
     });
 
-    setPoles([]);
+    setPoles(['ops']);
+  };
+
+  const changePosition = (position: Position) => {
+    const required = POSITION_TO_POLE[position];
+
+    setForm((previous) => ({
+      ...previous,
+      position,
+      requested_role: '',
+    }));
+
+    setPoles((previous) =>
+      previous.includes(required)
+        ? previous
+        : [required],
+    );
+  };
+
+  const togglePole = (poleId: string) => {
+    if (poleId === requiredPole) {
+      return;
+    }
+
+    setPoles((previous) =>
+      previous.includes(poleId)
+        ? previous.filter((id) => id !== poleId)
+        : [...previous, poleId],
+    );
+
+    setForm((previous) => ({
+      ...previous,
+      requested_role: '',
+    }));
   };
 
   const submit = async () => {
     await create.mutateAsync({
-      ...form,
-      start_date: form.start_date || null,
+      first_name: form.first_name.trim(),
+      last_name: form.last_name.trim(),
+      personal_email:
+        form.personal_email.trim() || null,
+      work_email:
+        form.work_email.trim() || null,
+      collaborator_type:
+        form.collaborator_type,
+      position: form.position,
       poles,
-    } as Partial<HrEmployeeRequest>);
+      seniority: form.seniority,
+      requested_role: form.requested_role,
+      contract_type:
+        form.contract_type.trim() || null,
+      start_date:
+        form.start_date || null,
+      manager_id:
+        form.manager_id || null,
+      notes:
+        form.notes.trim() || null,
+    });
 
     setOpen(false);
     resetForm();
   };
 
   const valid =
-    form.first_name.trim() &&
-    form.last_name.trim() &&
-    (form.work_email.trim() ||
-      form.personal_email.trim()) &&
-    poles.length > 0;
+    form.first_name.trim().length > 0 &&
+    form.last_name.trim().length > 0 &&
+    Boolean(
+      form.work_email.trim() ||
+        form.personal_email.trim(),
+    ) &&
+    poles.length > 0 &&
+    poles.includes(requiredPole) &&
+    Boolean(form.requested_role) &&
+    Boolean(form.manager_id);
 
   return (
     <Dialog
@@ -249,107 +347,111 @@ function NewEmployeeDialog() {
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             Créer un dossier collaborateur
           </DialogTitle>
 
           <DialogDescription>
-            Les RH définissent l'identité, le type de
-            collaborateur, l'affectation et les besoins
-            d'accès. Le compte n'est créé qu'après validation
+            Les RH définissent l'identité, la classification,
+            l'affectation, le référent et le besoin d'accès.
+            Le compte applicatif n'est créé qu'après validation
             RH.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-5">
-          <div>
+        <div className="space-y-6">
+          {/* IDENTITÉ */}
+          <section>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Identité
             </p>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
                 <Label>Prénom</Label>
-
                 <Input
                   value={form.first_name}
                   onChange={(event) =>
-                    setForm({
-                      ...form,
-                      first_name: event.target.value,
-                    })
+                    setForm((previous) => ({
+                      ...previous,
+                      first_name:
+                        event.target.value,
+                    }))
                   }
                 />
               </div>
 
               <div>
                 <Label>Nom</Label>
-
                 <Input
                   value={form.last_name}
                   onChange={(event) =>
-                    setForm({
-                      ...form,
-                      last_name: event.target.value,
-                    })
+                    setForm((previous) => ({
+                      ...previous,
+                      last_name:
+                        event.target.value,
+                    }))
                   }
                 />
               </div>
 
               <div>
                 <Label>Email personnel</Label>
-
                 <Input
                   type="email"
                   value={form.personal_email}
                   onChange={(event) =>
-                    setForm({
-                      ...form,
-                      personal_email: event.target.value,
-                    })
+                    setForm((previous) => ({
+                      ...previous,
+                      personal_email:
+                        event.target.value,
+                    }))
                   }
                 />
               </div>
 
               <div>
                 <Label>Email professionnel</Label>
-
                 <Input
                   type="email"
                   value={form.work_email}
                   onChange={(event) =>
-                    setForm({
-                      ...form,
-                      work_email: event.target.value,
-                    })
+                    setForm((previous) => ({
+                      ...previous,
+                      work_email:
+                        event.target.value,
+                    }))
                   }
                   placeholder="prenom@brand-in-a-box.space"
                 />
               </div>
             </div>
-          </div>
+          </section>
 
           <Separator />
 
-          <div>
+          {/* CLASSIFICATION */}
+          <section>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Classification RH
             </p>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
-                <Label>Type de collaborateur</Label>
+                <Label>
+                  Type de collaborateur
+                </Label>
 
                 <Select
                   value={form.collaborator_type}
                   onValueChange={(value) =>
-                    setForm({
-                      ...form,
+                    setForm((previous) => ({
+                      ...previous,
                       collaborator_type:
                         value as CollaboratorType,
-                    })
+                    }))
                   }
                 >
                   <SelectTrigger>
@@ -357,21 +459,22 @@ function NewEmployeeDialog() {
                   </SelectTrigger>
 
                   <SelectContent>
-                    {COLLABORATOR_TYPES.map((type) => (
-                      <SelectItem
-                        key={type}
-                        value={type}
-                      >
-                        {COLLABORATOR_TYPE_LABELS[type]}
-                      </SelectItem>
-                    ))}
+                    {COLLABORATOR_TYPES.map(
+                      (type) => (
+                        <SelectItem
+                          key={type}
+                          value={type}
+                        >
+                          {
+                            COLLABORATOR_TYPE_LABELS[
+                              type
+                            ]
+                          }
+                        </SelectItem>
+                      ),
+                    )}
                   </SelectContent>
                 </Select>
-
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Cette classification reste attachée au
-                  profil RH du collaborateur.
-                </p>
               </div>
 
               <div>
@@ -380,11 +483,11 @@ function NewEmployeeDialog() {
                 <Input
                   value={form.contract_type}
                   onChange={(event) =>
-                    setForm({
-                      ...form,
+                    setForm((previous) => ({
+                      ...previous,
                       contract_type:
                         event.target.value,
-                    })
+                    }))
                   }
                   placeholder="CDI, CDD, prestation..."
                 />
@@ -396,10 +499,10 @@ function NewEmployeeDialog() {
                 <Select
                   value={form.seniority}
                   onValueChange={(value) =>
-                    setForm({
-                      ...form,
+                    setForm((previous) => ({
+                      ...previous,
                       seniority: value,
-                    })
+                    }))
                   }
                 >
                   <SelectTrigger>
@@ -407,14 +510,18 @@ function NewEmployeeDialog() {
                   </SelectTrigger>
 
                   <SelectContent>
-                    {SENIORITIES.map((seniority) => (
-                      <SelectItem
-                        key={seniority}
-                        value={seniority}
-                      >
-                        {seniorityLabel(seniority)}
-                      </SelectItem>
-                    ))}
+                    {SENIORITIES.map(
+                      (seniority) => (
+                        <SelectItem
+                          key={seniority}
+                          value={seniority}
+                        >
+                          {seniorityLabel(
+                            seniority,
+                          )}
+                        </SelectItem>
+                      ),
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -426,35 +533,37 @@ function NewEmployeeDialog() {
                   type="date"
                   value={form.start_date}
                   onChange={(event) =>
-                    setForm({
-                      ...form,
+                    setForm((previous) => ({
+                      ...previous,
                       start_date:
                         event.target.value,
-                    })
+                    }))
                   }
                 />
               </div>
             </div>
-          </div>
+          </section>
 
           <Separator />
 
-          <div>
+          {/* AFFECTATION */}
+          <section>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Affectation
             </p>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
-                <Label>Poste / fonction</Label>
+                <Label>
+                  Poste / fonction
+                </Label>
 
                 <Select
                   value={form.position}
                   onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      position: value,
-                    })
+                    changePosition(
+                      value as Position,
+                    )
                   }
                 >
                   <SelectTrigger>
@@ -462,97 +571,251 @@ function NewEmployeeDialog() {
                   </SelectTrigger>
 
                   <SelectContent>
-                    {POSITIONS.map((position) => (
-                      <SelectItem
-                        key={position}
-                        value={position}
-                      >
-                        {positionLabel(position)}
-                      </SelectItem>
-                    ))}
+                    {POSITIONS.map(
+                      (position) => (
+                        <SelectItem
+                          key={position}
+                          value={position}
+                        >
+                          {
+                            POSITION_LABELS[
+                              position
+                            ]
+                          }
+                        </SelectItem>
+                      ),
+                    )}
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label>Rôle applicatif demandé</Label>
+                <Label>
+                  Pôle principal
+                </Label>
 
-                <Select
-                  value={form.requested_role}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      requested_role: value,
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
+                <div className="flex h-10 items-center rounded-md border bg-muted/30 px-3 text-sm">
+                  <Badge variant="secondary">
+                    {poleLabel(requiredPole)}
+                  </Badge>
 
-                  <SelectContent>
-                    {ROLES.map((role) => (
-                      <SelectItem
-                        key={role}
-                        value={role}
-                      >
-                        {roleLabel(role)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <span className="ml-2 text-xs text-muted-foreground">
+                    requis par le poste
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="mt-4">
-              <Label>Pôles d'affectation</Label>
+              <Label>
+                Pôles d'affectation
+              </Label>
 
-              <div className="mt-2 grid grid-cols-2 gap-2 rounded-lg border border-border p-3">
-                {allPoles.map((pole) => (
-                  <label
-                    key={pole.id}
-                    className="flex items-center gap-2 text-sm"
-                  >
-                    <Checkbox
-                      checked={poles.includes(pole.id)}
-                      onCheckedChange={(checked) =>
-                        setPoles((previous) =>
-                          checked
-                            ? previous.includes(pole.id)
-                              ? previous
-                              : [...previous, pole.id]
-                            : previous.filter(
-                                (id) =>
-                                  id !== pole.id,
-                              ),
-                        )
-                      }
-                    />
+              <div className="mt-2 grid grid-cols-1 gap-2 rounded-lg border border-border p-3 sm:grid-cols-2">
+                {allPoles.map((pole) => {
+                  const required =
+                    pole.id === requiredPole;
 
-                    {pole.shortName}
-                  </label>
-                ))}
+                  return (
+                    <label
+                      key={pole.id}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <Checkbox
+                        checked={poles.includes(
+                          pole.id,
+                        )}
+                        disabled={required}
+                        onCheckedChange={() =>
+                          togglePole(pole.id)
+                        }
+                      />
+
+                      <span>
+                        {pole.shortName}
+                      </span>
+
+                      {required && (
+                        <Badge
+                          variant="outline"
+                          className="ml-auto text-[10px]"
+                        >
+                          Requis
+                        </Badge>
+                      )}
+                    </label>
+                  );
+                })}
               </div>
+
+              <p className="mt-2 text-xs text-muted-foreground">
+                Le pôle correspondant au poste est
+                obligatoire. D'autres pôles peuvent être
+                ajoutés si le collaborateur intervient
+                réellement sur plusieurs périmètres.
+              </p>
             </div>
-          </div>
+          </section>
 
           <Separator />
 
-          <div>
+          {/* RÉFÉRENT RH */}
+          <section>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Référent RH
+            </p>
+
+            {referentsError ? (
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 p-3 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  Impossible de charger les référents
+                  RH.
+                </span>
+              </div>
+            ) : (
+              <Select
+                value={form.manager_id}
+                onValueChange={(value) =>
+                  setForm((previous) => ({
+                    ...previous,
+                    manager_id: value,
+                  }))
+                }
+                disabled={referentsLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      referentsLoading
+                        ? 'Chargement des référents...'
+                        : 'Sélectionner un référent RH'
+                    }
+                  />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {referents.map((referent) => (
+                    <SelectItem
+                      key={referent.id}
+                      value={referent.id}
+                    >
+                      {employeeName(
+                        referent.first_name,
+                        referent.last_name,
+                      )}{' '}
+                      — {referent.email}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+
+            {!referentsLoading &&
+              !referentsError &&
+              referents.length === 0 && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Aucun responsable RH actif ou en
+                  onboarding n'est actuellement
+                  disponible comme référent.
+                </p>
+              )}
+          </section>
+
+          <Separator />
+
+          {/* ACCÈS */}
+          <section>
+            <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Accès applicatif
+            </p>
+
+            {rolesError ? (
+              <div className="flex items-start gap-2 rounded-md border border-destructive/40 p-3 text-sm text-destructive">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>
+                  Impossible de charger le catalogue
+                  des rôles d'accès.
+                </span>
+              </div>
+            ) : (
+              <Select
+                value={form.requested_role}
+                onValueChange={(value) =>
+                  setForm((previous) => ({
+                    ...previous,
+                    requested_role: value,
+                  }))
+                }
+                disabled={
+                  rolesLoading ||
+                  compatibleRoles.length === 0
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      rolesLoading
+                        ? 'Chargement des accès...'
+                        : 'Sélectionner un rôle d'accès'
+                    }
+                  />
+                </SelectTrigger>
+
+                <SelectContent>
+                  {compatibleRoles.map(
+                    (role) => (
+                      <SelectItem
+                        key={role.id}
+                        value={role.role_key}
+                      >
+                        <RoleOption
+                          role={role}
+                        />
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            )}
+
+            {!rolesLoading &&
+              !rolesError &&
+              compatibleRoles.length === 0 && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Aucun rôle actif compatible avec les
+                  pôles sélectionnés.
+                </p>
+              )}
+
+            <p className="mt-2 text-xs text-muted-foreground">
+              Le rôle provient du catalogue RBAC
+              <code className="mx-1">
+                access_roles
+              </code>
+              et non de l'ancien système
+              viewer/operator/manager.
+            </p>
+          </section>
+
+          <Separator />
+
+          {/* NOTES */}
+          <section>
             <Label>Notes RH</Label>
 
             <Textarea
               rows={3}
               value={form.notes}
               onChange={(event) =>
-                setForm({
-                  ...form,
+                setForm((previous) => ({
+                  ...previous,
                   notes: event.target.value,
-                })
+                }))
               }
               placeholder="Informations utiles au traitement du dossier..."
             />
-          </div>
+          </section>
         </div>
 
         <DialogFooter>
@@ -565,7 +828,12 @@ function NewEmployeeDialog() {
 
           <Button
             onClick={submit}
-            disabled={!valid || create.isPending}
+            disabled={
+              !valid ||
+              create.isPending ||
+              referentsLoading ||
+              rolesLoading
+            }
           >
             {create.isPending && (
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
@@ -576,6 +844,24 @@ function NewEmployeeDialog() {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function RoleOption({
+  role,
+}: {
+  role: HrAccessRole;
+}) {
+  return (
+    <span>
+      {role.label}
+
+      {role.business_pole && (
+        <span className="ml-2 text-xs text-muted-foreground">
+          · {poleLabel(role.business_pole)}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -590,7 +876,9 @@ function RequestSheet({
   canProvision: boolean;
   onClose: () => void;
 }) {
-  const events = useHrRequestEvents(request.id);
+  const events = useHrRequestEvents(
+    request.id,
+  );
 
   const {
     setStatus,
@@ -599,62 +887,116 @@ function RequestSheet({
 
   const [reason, setReason] = useState('');
 
-  const statusConfig = HR_STATUS[request.status];
+  const statusConfig =
+    HR_STATUS[request.status];
 
   const step = statusConfig.step;
 
+  const referentQuery = useHrReferents();
+
+  const referent = referentQuery.data?.find(
+    (item) =>
+      item.id === request.manager_id,
+  );
+
   return (
-    <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
-      <SheetHeader>
-        <SheetTitle className="flex flex-wrap items-center gap-2">
-          {request.reference}
+    <Sheet open onOpenChange={onClose}>
+      <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
+        <SheetHeader>
+          <SheetTitle className="flex flex-wrap items-center gap-2">
+            {request.reference}
 
-          <Badge variant={statusConfig.variant}>
-            {statusConfig.label}
-          </Badge>
-        </SheetTitle>
+            <Badge
+              variant={statusConfig.variant}
+            >
+              {statusConfig.label}
+            </Badge>
+          </SheetTitle>
 
-        <SheetDescription>
-          {request.first_name} {request.last_name} ·{' '}
-          {collaboratorTypeLabel(
-            request.collaborator_type,
-          )}{' '}
-          · {positionLabel(request.position)}
-        </SheetDescription>
-      </SheetHeader>
+          <SheetDescription>
+            {request.first_name}{' '}
+            {request.last_name} ·{' '}
+            {collaboratorTypeLabel(
+              request.collaborator_type,
+            )}{' '}
+            · {positionLabel(request.position)}
+          </SheetDescription>
+        </SheetHeader>
 
-      <div className="mt-4 space-y-4">
-        <div>
-          <Progress
-            value={
-              (step / (HR_STEPS.length - 1)) * 100
-            }
-          />
+        <div className="mt-4 space-y-5">
+          {/* PROGRESSION */}
+          <div>
+            <Progress
+              value={
+                (step /
+                  (HR_STEPS.length - 1)) *
+                100
+              }
+            />
 
-          <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
-            {HR_STEPS.map((stepLabel) => (
-              <span key={stepLabel}>
-                {stepLabel}
-              </span>
-            ))}
+            <div className="mt-1 flex justify-between gap-1 text-[10px] text-muted-foreground">
+              {HR_STEPS.map(
+                (stepLabel) => (
+                  <span
+                    key={stepLabel}
+                    className="text-center"
+                  >
+                    {stepLabel}
+                  </span>
+                ),
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="rounded-lg border border-border p-3">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Classification RH
-          </p>
+          {/* IDENTITÉ */}
+          <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
+            <p>
+              <span className="text-muted-foreground">
+                Nom :
+              </span>{' '}
+              {request.first_name}{' '}
+              {request.last_name}
+            </p>
 
-          <div className="mt-2 grid grid-cols-2 gap-2 text-sm">
             <p>
               <span className="text-muted-foreground">
                 Type :
               </span>{' '}
-              <Badge variant="secondary">
-                {collaboratorTypeLabel(
-                  request.collaborator_type,
-                )}
-              </Badge>
+              {collaboratorTypeLabel(
+                request.collaborator_type,
+              )}
+            </p>
+
+            <p>
+              <span className="text-muted-foreground">
+                Email pro :
+              </span>{' '}
+              {request.work_email ?? '—'}
+            </p>
+
+            <p>
+              <span className="text-muted-foreground">
+                Email perso :
+              </span>{' '}
+              {request.personal_email ?? '—'}
+            </p>
+
+            <p>
+              <span className="text-muted-foreground">
+                Poste :
+              </span>{' '}
+              {positionLabel(
+                request.position,
+              )}
+            </p>
+
+            <p>
+              <span className="text-muted-foreground">
+                Niveau :
+              </span>{' '}
+              {seniorityLabel(
+                request.seniority,
+              )}
             </p>
 
             <p>
@@ -663,206 +1005,254 @@ function RequestSheet({
               </span>{' '}
               {request.contract_type ?? '—'}
             </p>
+
+            <p>
+              <span className="text-muted-foreground">
+                Entrée :
+              </span>{' '}
+              {request.start_date ?? '—'}
+            </p>
           </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-2 text-sm">
-          <p>
-            <span className="text-muted-foreground">
-              Email pro :
-            </span>{' '}
-            {request.work_email ?? '—'}
-          </p>
+          <Separator />
 
-          <p>
-            <span className="text-muted-foreground">
-              Email perso :
-            </span>{' '}
-            {request.personal_email ?? '—'}
-          </p>
+          {/* AFFECTATION */}
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Affectation
+            </p>
 
-          <p>
-            <span className="text-muted-foreground">
-              Poste :
-            </span>{' '}
-            {positionLabel(request.position)}
-          </p>
-
-          <p>
-            <span className="text-muted-foreground">
-              Rôle :
-            </span>{' '}
-            {roleLabel(request.requested_role)}
-          </p>
-
-          <p>
-            <span className="text-muted-foreground">
-              Niveau :
-            </span>{' '}
-            {seniorityLabel(request.seniority)}
-          </p>
-
-          <p>
-            <span className="text-muted-foreground">
-              Entrée :
-            </span>{' '}
-            {request.start_date ?? '—'}
-          </p>
-
-          <p className="col-span-2">
-            <span className="text-muted-foreground">
-              Pôles :
-            </span>{' '}
-            {(request.poles ?? [])
-              .map(poleLabel)
-              .join(', ') || '—'}
-          </p>
-        </div>
-
-        {request.notes && (
-          <p className="rounded-md border border-border p-3 text-xs text-muted-foreground">
-            {request.notes}
-          </p>
-        )}
-
-        {request.rejection_reason && (
-          <p className="rounded-md border border-destructive/40 p-3 text-xs text-destructive">
-            Refus : {request.rejection_reason}
-          </p>
-        )}
-
-        {(canValidate || canProvision) &&
-          request.status !== 'completed' && (
-            <div className="rounded-lg border border-border p-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Actions
-              </p>
-
-              <Textarea
-                className="mt-2"
-                rows={2}
-                placeholder="Motif (obligatoire pour un refus)"
-                value={reason}
-                onChange={(event) =>
-                  setReason(event.target.value)
-                }
-              />
-
-              <div className="mt-2 flex flex-wrap gap-2">
-                {canValidate &&
-                  request.status === 'submitted' && (
-                    <Button
-                      size="sm"
-                      onClick={() =>
-                        setStatus.mutate({
-                          request,
-                          status: 'hr_validated',
-                        })
-                      }
-                    >
-                      <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-                      Valider (RH)
-                    </Button>
-                  )}
-
-                {canProvision &&
-                  request.status === 'hr_validated' && (
-                    <Button
-                      size="sm"
-                      disabled={
-                        provisionAccount.isPending
-                      }
-                      onClick={() =>
-                        provisionAccount.mutate(request)
-                      }
-                    >
-                      {provisionAccount.isPending ? (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <UserPlus className="mr-1.5 h-3.5 w-3.5" />
-                      )}
-
-                      Créer compte & accès
-                    </Button>
-                  )}
-
-                {(canValidate || canProvision) && (
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    disabled={!reason.trim()}
-                    onClick={() =>
-                      setStatus.mutate({
-                        request,
-                        status: 'rejected',
-                        reason,
-                      })
-                    }
+            <div className="mt-2 flex flex-wrap gap-1">
+              {(request.poles ?? []).map(
+                (pole) => (
+                  <Badge
+                    key={pole}
+                    variant="secondary"
                   >
-                    <XCircle className="mr-1.5 h-3.5 w-3.5" />
-                    Refuser
-                  </Button>
-                )}
-              </div>
+                    {poleLabel(pole)}
+                  </Badge>
+                ),
+              )}
             </div>
-          )}
+          </div>
 
-        <Separator />
+          {/* RÉFÉRENT */}
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Référent RH
+            </p>
 
-        <div>
-          <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            <History className="h-3.5 w-3.5" />
-            Historique
-          </p>
+            <p className="mt-2 text-sm">
+              {referent
+                ? employeeName(
+                    referent.first_name,
+                    referent.last_name,
+                  )
+                : request.manager_id
+                  ? 'Référent non retrouvé'
+                  : 'Aucun référent'}
+            </p>
 
-          <div className="mt-2 space-y-1.5">
-            {(events.data ?? []).map((event) => (
-              <div
-                key={event.id}
-                className="text-xs"
-              >
-                <span className="text-muted-foreground">
-                  {format(
-                    new Date(event.created_at),
-                    'dd/MM HH:mm',
-                    {
-                      locale: fr,
-                    },
-                  )}{' '}
-                  ·{' '}
-                </span>
-
-                <span className="font-medium">
-                  {event.actor_name}
-                </span>{' '}
-                — {event.action}
-
-                {event.note && (
-                  <span className="text-muted-foreground">
-                    {' '}
-                    ({event.note})
-                  </span>
-                )}
-              </div>
-            ))}
-
-            {!events.data?.length && (
-              <p className="text-sm text-muted-foreground">
-                Aucun événement.
+            {referent && (
+              <p className="text-xs text-muted-foreground">
+                {referent.email}
               </p>
             )}
           </div>
-        </div>
 
-        <Button
-          variant="ghost"
-          className="w-full"
-          onClick={onClose}
-        >
-          Fermer
-        </Button>
-      </div>
-    </SheetContent>
+          {/* ACCÈS */}
+          <div className="rounded-lg border border-border p-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Accès demandé
+            </p>
+
+            <p className="mt-2 text-sm font-medium">
+              {request.requested_role}
+            </p>
+
+            <p className="mt-1 text-xs text-muted-foreground">
+              L'accès effectif est provisionné après
+              validation RH via le catalogue RBAC.
+            </p>
+          </div>
+
+          {request.notes && (
+            <p className="rounded-md border border-border p-3 text-xs text-muted-foreground">
+              {request.notes}
+            </p>
+          )}
+
+          {request.rejection_reason && (
+            <p className="rounded-md border border-destructive/40 p-3 text-xs text-destructive">
+              Refus : {request.rejection_reason}
+            </p>
+          )}
+
+          {/* ACTIONS */}
+          {(canValidate ||
+            canProvision) &&
+            request.status !==
+              'completed' && (
+              <div className="rounded-lg border border-border p-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Actions
+                </p>
+
+                <Textarea
+                  className="mt-2"
+                  rows={2}
+                  placeholder="Motif obligatoire pour un refus"
+                  value={reason}
+                  onChange={(event) =>
+                    setReason(
+                      event.target.value,
+                    )
+                  }
+                />
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {canValidate &&
+                    request.status ===
+                      'submitted' && (
+                      <Button
+                        size="sm"
+                        disabled={
+                          setStatus.isPending
+                        }
+                        onClick={() =>
+                          setStatus.mutate({
+                            request,
+                            status:
+                              'hr_validated',
+                          })
+                        }
+                      >
+                        {setStatus.isPending ? (
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
+                        )}
+
+                        Valider RH
+                      </Button>
+                    )}
+
+                  {canProvision &&
+                    request.status ===
+                      'hr_validated' && (
+                      <Button
+                        size="sm"
+                        disabled={
+                          provisionAccount.isPending
+                        }
+                        onClick={() =>
+                          provisionAccount.mutate(
+                            request,
+                          )
+                        }
+                      >
+                        {provisionAccount.isPending ? (
+                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                        ) : (
+                          <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+                        )}
+
+                        Créer compte & accès
+                      </Button>
+                    )}
+
+                  {(canValidate ||
+                    canProvision) && (
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      disabled={
+                        !reason.trim() ||
+                        setStatus.isPending
+                      }
+                      onClick={() =>
+                        setStatus.mutate({
+                          request,
+                          status:
+                            'rejected',
+                          reason,
+                        })
+                      }
+                    >
+                      <XCircle className="mr-1.5 h-3.5 w-3.5" />
+                      Refuser
+                    </Button>
+                  )}
+                </div>
+              </div>
+            )}
+
+          <Separator />
+
+          {/* HISTORIQUE */}
+          <div>
+            <p className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <History className="h-3.5 w-3.5" />
+              Historique
+            </p>
+
+            <div className="mt-2 space-y-2">
+              {(events.data ?? []).map(
+                (event) => (
+                  <div
+                    key={event.id}
+                    className="text-xs"
+                  >
+                    <span className="text-muted-foreground">
+                      {format(
+                        new Date(
+                          event.created_at,
+                        ),
+                        'dd/MM HH:mm',
+                        {
+                          locale: fr,
+                        },
+                      )}{' '}
+                      ·{' '}
+                    </span>
+
+                    <span className="font-medium">
+                      {event.actor_name ??
+                        'Utilisateur'}
+                    </span>
+
+                    {' — '}
+
+                    {event.action}
+
+                    {event.note && (
+                      <span className="text-muted-foreground">
+                        {' '}
+                        ({event.note})
+                      </span>
+                    )}
+                  </div>
+                ),
+              )}
+
+              {!events.data?.length && (
+                <p className="text-sm text-muted-foreground">
+                  Aucun événement.
+                </p>
+              )}
+            </div>
+          </div>
+
+          <Button
+            variant="ghost"
+            className="w-full"
+            onClick={onClose}
+          >
+            Fermer
+          </Button>
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
 
@@ -883,10 +1273,13 @@ export default function Onboarding() {
   const {
     data: requests = [],
     isLoading,
+    isError,
   } = useHrEmployeeRequests();
 
   const [selected, setSelected] =
-    useState<HrEmployeeRequest | null>(null);
+    useState<HrEmployeeRequest | null>(
+      null,
+    );
 
   const kpis = useMemo(
     () => ({
@@ -899,7 +1292,8 @@ export default function Onboarding() {
 
       toProvision: requests.filter(
         (request) =>
-          request.status === 'hr_validated',
+          request.status ===
+          'hr_validated',
       ).length,
 
       done: requests.filter(
@@ -915,52 +1309,69 @@ export default function Onboarding() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">
-            Onboarding RH — intégration collaborateur
+            Onboarding RH
           </h1>
 
           <p className="text-sm text-muted-foreground">
-            Création du dossier, classification RH,
-            validation, provisionnement du compte et
-            traçabilité complète.
+            Dossier collaborateur, affectation,
+            référent RH, validation et provisionnement
+            des accès.
           </p>
         </div>
 
-        {canValidate && <NewEmployeeDialog />}
+        {canValidate && (
+          <NewEmployeeDialog />
+        )}
       </div>
 
+      {/* KPI */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        {[
-          {
-            label: 'Dossiers',
-            value: kpis.total,
-          },
-          {
-            label: 'À valider (RH)',
-            value: kpis.toValidate,
-          },
-          {
-            label: 'Comptes à créer',
-            value: kpis.toProvision,
-          },
-          {
-            label: 'Intégrations terminées',
-            value: kpis.done,
-          },
-        ].map((kpi) => (
-          <Card key={kpi.label}>
-            <CardContent className="pt-6">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                {kpi.label}
-              </p>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Dossiers
+            </p>
+            <p className="mt-1 text-2xl font-semibold">
+              {kpis.total}
+            </p>
+          </CardContent>
+        </Card>
 
-              <p className="mt-1 text-2xl font-semibold">
-                {kpi.value}
-              </p>
-            </CardContent>
-          </Card>
-        ))}
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              À valider
+            </p>
+            <p className="mt-1 text-2xl font-semibold">
+              {kpis.toValidate}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Comptes à créer
+            </p>
+            <p className="mt-1 text-2xl font-semibold">
+              {kpis.toProvision}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Terminés
+            </p>
+            <p className="mt-1 text-2xl font-semibold">
+              {kpis.done}
+            </p>
+          </CardContent>
+        </Card>
       </div>
 
+      {/* TABLE */}
       <Card>
         <CardHeader>
           <CardTitle>
@@ -969,7 +1380,7 @@ export default function Onboarding() {
 
           <CardDescription>
             Le dossier RH précède toujours la création
-            du profil applicatif.
+            du profil applicatif et des accès.
           </CardDescription>
         </CardHeader>
 
@@ -977,6 +1388,12 @@ export default function Onboarding() {
           {isLoading ? (
             <div className="flex items-center justify-center py-10">
               <Loader2 className="h-5 w-5 animate-spin" />
+            </div>
+          ) : isError ? (
+            <div className="flex items-center gap-2 rounded-md border border-destructive/40 p-4 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4" />
+              Impossible de charger les dossiers
+              d'onboarding.
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -992,15 +1409,19 @@ export default function Onboarding() {
                     </TableHead>
 
                     <TableHead>
-                      Type
-                    </TableHead>
-
-                    <TableHead>
                       Poste
                     </TableHead>
 
                     <TableHead>
                       Pôles
+                    </TableHead>
+
+                    <TableHead>
+                      Référent RH
+                    </TableHead>
+
+                    <TableHead>
+                      Accès
                     </TableHead>
 
                     <TableHead>
@@ -1014,97 +1435,114 @@ export default function Onboarding() {
                 </TableHeader>
 
                 <TableBody>
-                  {requests.map((request) => (
-                    <TableRow
-                      key={request.id}
-                      className="cursor-pointer"
-                      onClick={() =>
-                        setSelected(request)
-                      }
-                    >
-                      <TableCell className="font-medium">
-                        {request.reference}
-                      </TableCell>
+                  {requests.map(
+                    (request) => (
+                      <TableRow
+                        key={request.id}
+                        className="cursor-pointer"
+                        onClick={() =>
+                          setSelected(request)
+                        }
+                      >
+                        <TableCell className="font-medium">
+                          {request.reference}
+                        </TableCell>
 
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">
-                            {request.first_name}{' '}
-                            {request.last_name}
-                          </p>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">
+                              {
+                                request.first_name
+                              }{' '}
+                              {
+                                request.last_name
+                              }
+                            </p>
 
-                          <p className="text-xs text-muted-foreground">
-                            {request.work_email ??
-                              request.personal_email ??
-                              '—'}
-                          </p>
-                        </div>
-                      </TableCell>
+                            <p className="text-xs text-muted-foreground">
+                              {request.work_email ??
+                                request.personal_email ??
+                                '—'}
+                            </p>
+                          </div>
+                        </TableCell>
 
-                      <TableCell>
-                        <Badge variant="secondary">
-                          {collaboratorTypeLabel(
-                            request.collaborator_type,
+                        <TableCell>
+                          {positionLabel(
+                            request.position,
                           )}
-                        </Badge>
-                      </TableCell>
+                        </TableCell>
 
-                      <TableCell>
-                        {positionLabel(
-                          request.position,
-                        )}
-                      </TableCell>
+                        <TableCell>
+                          <div className="flex max-w-[180px] flex-wrap gap-1">
+                            {(
+                              request.poles ??
+                              []
+                            ).map(
+                              (pole) => (
+                                <Badge
+                                  key={pole}
+                                  variant="outline"
+                                  className="text-[10px]"
+                                >
+                                  {poleLabel(
+                                    pole,
+                                  )}
+                                </Badge>
+                              ),
+                            )}
+                          </div>
+                        </TableCell>
 
-                      <TableCell>
-                        <div className="flex max-w-[220px] flex-wrap gap-1">
-                          {(request.poles ?? []).map(
-                            (pole) => (
-                              <Badge
-                                key={pole}
-                                variant="outline"
-                                className="text-[10px]"
-                              >
-                                {poleLabel(pole)}
-                              </Badge>
+                        <TableCell>
+                          {request.manager_id
+                            ? 'Référent RH'
+                            : '—'}
+                        </TableCell>
+
+                        <TableCell>
+                          <span className="text-xs">
+                            {
+                              request.requested_role
+                            }
+                          </span>
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge
+                            variant={
+                              HR_STATUS[
+                                request.status
+                              ].variant
+                            }
+                          >
+                            {
+                              HR_STATUS[
+                                request.status
+                              ].label
+                            }
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
+                          {format(
+                            new Date(
+                              request.created_at,
                             ),
+                            'dd/MM/yyyy',
+                            {
+                              locale: fr,
+                            },
                           )}
-                        </div>
-                      </TableCell>
-
-                      <TableCell>
-                        <Badge
-                          variant={
-                            HR_STATUS[
-                              request.status
-                            ].variant
-                          }
-                        >
-                          {
-                            HR_STATUS[
-                              request.status
-                            ].label
-                          }
-                        </Badge>
-                      </TableCell>
-
-                      <TableCell className="whitespace-nowrap text-xs text-muted-foreground">
-                        {format(
-                          new Date(
-                            request.created_at,
-                          ),
-                          'dd/MM/yyyy',
-                          {
-                            locale: fr,
-                          },
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                        </TableCell>
+                      </TableRow>
+                    ),
+                  )}
 
                   {!requests.length && (
                     <TableRow>
                       <TableCell
-                        colSpan={7}
+                        colSpan={8}
                         className="py-10 text-center text-sm text-muted-foreground"
                       >
                         Aucun dossier
@@ -1124,7 +1562,9 @@ export default function Onboarding() {
           request={selected}
           canValidate={canValidate}
           canProvision={canProvision}
-          onClose={() => setSelected(null)}
+          onClose={() =>
+            setSelected(null)
+          }
         />
       )}
     </div>
