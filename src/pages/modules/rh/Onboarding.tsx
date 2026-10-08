@@ -757,7 +757,7 @@ function NewEmployeeDialog() {
                     placeholder={
                       rolesLoading
                         ? 'Chargement des accès...'
-                        : 'Sélectionner un rôle d'accès'
+                        : 'Sélectionner un rôle d’accès'
                     }
                   />
                 </SelectTrigger>
