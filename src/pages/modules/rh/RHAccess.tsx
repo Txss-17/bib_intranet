@@ -267,7 +267,7 @@ const RHAccess = () => {
     queryKey: ['rh-access-roles'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('access_roles' as any)
+        .from('access_roles')
         .select(`
           id,
           role_key,
@@ -301,7 +301,7 @@ const RHAccess = () => {
     queryKey: ['rh-access-scopes'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('access_scopes' as any)
+        .from('access_scopes')
         .select(`
           id,
           scope_key,
@@ -331,7 +331,7 @@ const RHAccess = () => {
     queryKey: ['rh-access-assignments'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('access_assignments' as any)
+        .from('access_assignments')
         .select(`
           id,
           employee_id,
@@ -383,7 +383,7 @@ const RHAccess = () => {
     queryKey: ['rh-access-business-portfolios'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('access_business_portfolios' as any)
+        .from('access_business_portfolios')
         .select(`
           id,
           portfolio_type_id,
@@ -421,7 +421,7 @@ const RHAccess = () => {
     queryKey: ['rh-access-portfolio-assignments'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('access_portfolio_assignments' as any)
+        .from('access_portfolio_assignments')
         .select(`
           id,
           employee_id,

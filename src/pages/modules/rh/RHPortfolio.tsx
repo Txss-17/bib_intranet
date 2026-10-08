@@ -161,7 +161,7 @@ export default function RHPortfolio() {
           .order('last_name'),
 
         (supabase as any)
-          .from('access_assignments' as any)
+          .from('access_assignments')
           .select(
             `
               id,
@@ -176,7 +176,7 @@ export default function RHPortfolio() {
           ),
 
         (supabase as any)
-          .from('access_roles' as any)
+          .from('access_roles')
           .select(
             `
               id,
@@ -189,7 +189,7 @@ export default function RHPortfolio() {
           ),
 
         (supabase as any)
-          .from('access_scopes' as any)
+          .from('access_scopes')
           .select(
             `
               id,
@@ -201,7 +201,7 @@ export default function RHPortfolio() {
           ),
 
         (supabase as any)
-          .from('access_portfolio_types' as any)
+          .from('access_portfolio_types')
           .select(
             `
               id,
@@ -214,7 +214,7 @@ export default function RHPortfolio() {
           ),
 
         (supabase as any)
-          .from('access_business_portfolios' as any)
+          .from('access_business_portfolios')
           .select(
             `
               id,
@@ -226,7 +226,7 @@ export default function RHPortfolio() {
           ),
 
         (supabase as any)
-          .from('access_portfolio_assignments' as any)
+          .from('access_portfolio_assignments')
           .select(
             `
               id,
