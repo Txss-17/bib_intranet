@@ -77,22 +77,26 @@ Deno.serve(async (req) => {
         created++;
       }
 
-      const { error: profileErr } = await admin.from("profiles").upsert({
-        id: userId,
-        email: spec.email,
-        first_name: spec.label,
-        last_name: "(test)",
-        position: spec.position,
-        poles: spec.poles,
-        seniority: spec.seniority,
-      }, { onConflict: "id" });
-      if (profileErr) errors.push(`${spec.email} profil: ${profileErr.message}`);
-
-      await admin.from("user_roles").upsert(
-        { user_id: userId, role: "viewer" },
-        { onConflict: "user_id,role", ignoreDuplicates: true },
-      );
-    }
+      const { error: profileErr } = await admin
+        .from("profiles")
+        .upsert(
+          {
+            id: userId,
+            email: spec.email,
+            first_name: spec.label,
+            last_name: "(test)",
+            position: spec.position,
+            poles: spec.poles,
+            seniority: spec.seniority,
+      
+            // Les comptes générés par cet outil sont
+            // exclusivement des comptes techniques de test.
+            test_account: true,
+          },
+          {
+            onConflict: "id",
+          },
+        );
 
     return new Response(JSON.stringify({ created, updated, errors }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
