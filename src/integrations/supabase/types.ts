@@ -198,8 +198,10 @@ export type Database = {
           business_pole: string | null
           created_at: string
           department: string | null
+          description: string | null
           id: string
           label: string
+          owner_type: string | null
           role_key: string
           status: string
           updated_at: string
@@ -208,8 +210,10 @@ export type Database = {
           business_pole?: string | null
           created_at?: string
           department?: string | null
+          description?: string | null
           id?: string
           label: string
+          owner_type?: string | null
           role_key: string
           status?: string
           updated_at?: string
@@ -218,8 +222,10 @@ export type Database = {
           business_pole?: string | null
           created_at?: string
           department?: string | null
+          description?: string | null
           id?: string
           label?: string
+          owner_type?: string | null
           role_key?: string
           status?: string
           updated_at?: string
