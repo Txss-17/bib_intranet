@@ -135,8 +135,10 @@ function formatDate(value: string | null) {
 
 export default function Employees() {
   const [searchQuery, setSearchQuery] = useState('');
-  const [typeFilter, setTypeFilter] =
-    useState<CollaboratorType | 'all'>('all');
+  const [directoryTypeFilter, setDirectoryTypeFilter] =
+    useState<
+      'all' | 'internal' | 'external' | 'other'
+    >('all');    useState<CollaboratorType | 'all'>('all');
   const [statusFilter, setStatusFilter] =
     useState<HrStatus | 'all'>('all');
   const [poleFilter, setPoleFilter] =
