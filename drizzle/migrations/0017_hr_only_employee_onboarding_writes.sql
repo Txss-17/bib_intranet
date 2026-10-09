@@ -1,0 +1,2 @@
+ALTER POLICY hr_requests_insert ON public.hr_employee_requests TO authenticated WITH CHECK (created_by = auth.uid() AND public.has_pole(auth.uid(), 'rh'));
+ALTER POLICY hr_requests_update ON public.hr_employee_requests TO authenticated USING (public.has_pole(auth.uid(), 'rh')) WITH CHECK (public.has_pole(auth.uid(), 'rh'));
