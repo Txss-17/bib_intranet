@@ -220,7 +220,7 @@ function NewEmployeeDialog() {
       personal_email: '',
       work_email: '',
       collaborator_type: 'internal',
-      position: '',
+      position: 'Choisir un pole',
       seniority: 'junior',
       requested_role: '',
       contract_type: 'CDI',
