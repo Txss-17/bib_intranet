@@ -281,11 +281,12 @@ function NewEmployeeDialog() {
     form.last_name.trim().length > 0 &&
     Boolean(
       form.work_email.trim() ||
-        form.personal_email.trim(),
+      form.personal_email.trim()
     ) &&
+    Boolean(primaryPole) &&
     Boolean(form.position) &&
     poles.length > 0 &&
-    poles.includes(requiredPole) &&
+    poles.includes(primaryPole) &&
     Boolean(form.requested_role) &&
     Boolean(form.manager_id);
 
