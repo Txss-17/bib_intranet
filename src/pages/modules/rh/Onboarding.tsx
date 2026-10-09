@@ -229,8 +229,8 @@ function NewEmployeeDialog() {
       manager_id: '',
     });
 
-    setPrimaryPole('Choisir un pôle');
-    setPoles(['Choisir un pôle']);
+    setPrimaryPole('');
+    setPoles(['']);
   };
 
   const togglePole = (poleId: string) => {
