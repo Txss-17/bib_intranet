@@ -192,7 +192,7 @@ function NewEmployeeDialog() {
   });
 
   const [poles, setPoles] = useState<string[]>([
-    'ops',
+    '',
   ]);
 
   const requiredPole = primaryPole;
@@ -229,10 +229,8 @@ function NewEmployeeDialog() {
       manager_id: '',
     });
 
-    setPrimaryPole('ops');
-    setPoles(['ops']);
-
-    setPoles(['ops']);
+    setPrimaryPole('');
+    setPoles(['']);
   };
 
   const togglePole = (poleId: string) => {
@@ -566,7 +564,7 @@ function NewEmployeeDialog() {
                       requested_role: '',
                     }))
                   }
-                  disabled={positionsLoading || positionsError || positionCatalog.length === 0}
+                  disabled={!primaryPole || positionsLoading || positionsError || positionCatalog.length === 0}
                 >
                   <SelectTrigger>
                     <SelectValue
