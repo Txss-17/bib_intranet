@@ -31,6 +31,7 @@ import {
 
 import type { FeedItem, PoleId } from '@/types';
 import { poles } from '@/data/poles';
+import { ConnectedEmployeesBlock } from '@/components/dashboard/ConnectedEmployeesBlock';
 
 const TARGET_POLES: readonly PoleId[] = [
   'direction',
