@@ -142,6 +142,7 @@ export interface HrReferent {
   position: string | null;
   poles: string[] | null;
   hr_status: string | null;
+  test_account: boolean;
 }
 
 export interface HrAccessRole {
@@ -222,6 +223,7 @@ export const useHrPositionCatalog = (poleId?: string) =>
  * - rattaché au pôle RH ;
  * - responsable RH.
  */
+
 export const useHrReferents = () =>
   useQuery({
     queryKey: ['rh-onboarding-referents'],
@@ -236,8 +238,10 @@ export const useHrReferents = () =>
           email,
           position,
           poles,
-          hr_status
+          hr_status,
+          test_account
         `)
+        .eq('test_account', false)
         .eq('position', 'rh_manager')
         .in('hr_status', ['active', 'onboarding'])
         .contains('poles', ['rh'])
