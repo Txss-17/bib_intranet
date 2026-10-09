@@ -459,33 +459,27 @@ function NewEmployeeDialog() {
 
               <div>
                 <Label>Niveau</Label>
-
                 <Select
-                  value={form.seniority}
+                  value={form.contract_type}
                   onValueChange={(value) =>
                     setForm((previous) => ({
                       ...previous,
-                      seniority: value,
+                      contract_type: value,
                     }))
                   }
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Choisir un contrat" />
                   </SelectTrigger>
 
                   <SelectContent>
-                    {SENIORITIES.map(
-                      (seniority) => (
-                        <SelectItem
-                          key={seniority}
-                          value={seniority}
-                        >
-                          {seniorityLabel(
-                            seniority,
-                          )}
-                        </SelectItem>
-                      ),
-                    )}
+                    <SelectItem value="CDI">CDI</SelectItem>
+                    <SelectItem value="CDD">CDD</SelectItem>
+                    <SelectItem value="Alternance">Alternance</SelectItem>
+                    <SelectItem value="Stage">Stage</SelectItem>
+                    <SelectItem value="Prestation">Prestation</SelectItem>
+                    <SelectItem value="Bénévolat">Bénévolat / volontariat</SelectItem>
+                    <SelectItem value="Autre">Autre</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
