@@ -287,6 +287,7 @@ function NewEmployeeDialog() {
       form.work_email.trim() ||
         form.personal_email.trim(),
     ) &&
+    Boolean(form.position) &&
     poles.length > 0 &&
     poles.includes(requiredPole) &&
     Boolean(form.requested_role) &&
