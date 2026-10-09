@@ -78,6 +78,7 @@ import {
   useHrReferents,
   useHrRequestEvents,
   useHrPositionCatalog,
+  useCreateHrPosition,
 } from '@/hooks/useHrOnboarding';
 
 const POSITION_LABELS: Record<string, string> = {
@@ -289,6 +290,40 @@ function NewEmployeeDialog() {
     poles.includes(primaryPole) &&
     Boolean(form.requested_role) &&
     (form.position === 'ceo' || Boolean(form.manager_id));
+
+  const [positionDialogOpen, setPositionDialogOpen] = useState(false);
+  const [newPositionLabel, setNewPositionLabel] = useState('');
+  const [newPositionDescription, setNewPositionDescription] = useState('');
+
+  const createPosition = useCreateHrPosition();
+
+  const handleCreatePosition = async () => {
+    const label = newPositionLabel.trim();
+
+    if (!label || !primaryPole) {
+      return;
+    }
+
+    try {
+      const position = await createPosition.mutateAsync({
+        label,
+        pole_id: primaryPole,
+        description: newPositionDescription.trim(),
+      });
+
+      setForm((previous) => ({
+        ...previous,
+        position: position.position_key,
+        requested_role: '',
+      }));
+
+      setNewPositionLabel('');
+      setNewPositionDescription('');
+      setPositionDialogOpen(false);
+    } catch {
+      // L'erreur est déjà affichée par la mutation.
+    }
+  };
 
   return (
     <Dialog
@@ -551,41 +586,61 @@ function NewEmployeeDialog() {
                 </Select>
               </div>
 
+
               <div>
                 <Label>Poste / fonction</Label>
 
-                <Select
-                  value={form.position}
-                  onValueChange={(value) =>
-                    setForm((previous) => ({
-                      ...previous,
-                      position: value,
-                      requested_role: '',
-                    }))
-                  }
-                  disabled={!primaryPole || positionsLoading || positionsError || positionCatalog.length === 0}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        positionsLoading
-                          ? 'Chargement des postes…'
-                          : 'Choisir un poste'
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <div className="min-w-[220px] flex-1">
+                    <Select
+                      value={form.position}
+                      onValueChange={(value) =>
+                        setForm((previous) => ({
+                          ...previous,
+                          position: value,
+                          requested_role: '',
+                        }))
                       }
-                    />
-                  </SelectTrigger>
+                      disabled={
+                        !primaryPole ||
+                        positionsLoading ||
+                        positionsError
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue
+                          placeholder={
+                            positionsLoading
+                              ? 'Chargement des postes…'
+                              : 'Choisir un poste'
+                          }
+                        />
+                      </SelectTrigger>
 
-                  <SelectContent>
-                    {positionCatalog.map((position) => (
-                      <SelectItem
-                        key={position.id}
-                        value={position.position_key}
-                      >
-                        {position.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                      <SelectContent>
+                        {positionCatalog.map((position) => (
+                          <SelectItem
+                            key={position.id}
+                            value={position.position_key}
+                          >
+                            {position.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    disabled={!primaryPole}
+                    onClick={() => setPositionDialogOpen(true)}
+                  >
+                    <Plus className="mr-1.5 h-4 w-4" />
+                    Créer un poste / une fonction
+                  </Button>
+                </div>
 
                 {positionsError && (
                   <p className="mt-1 text-xs text-destructive">
@@ -593,13 +648,77 @@ function NewEmployeeDialog() {
                   </p>
                 )}
 
-                {!positionsLoading &&
-                  !positionsError &&
-                  positionCatalog.length === 0 && (
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Aucun poste actif pour ce pôle. Le catalogue RH doit être complété.
-                    </p>
-                  )}
+                <Dialog
+                  open={positionDialogOpen}
+                  onOpenChange={setPositionDialogOpen}
+                >
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>
+                        Créer un poste ou une fonction
+                      </DialogTitle>
+
+                      <DialogDescription>
+                        Le nouveau poste sera rattaché au pôle{' '}
+                        {allPoles.find((pole) => pole.id === primaryPole)?.shortName
+                          ?? primaryPole}
+                        . Il sera disponible dans le catalogue RH.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Intitulé du poste</Label>
+                        <Input
+                          value={newPositionLabel}
+                          onChange={(event) =>
+                            setNewPositionLabel(event.target.value)
+                          }
+                          placeholder="Ex. Responsable Partenariats"
+                        />
+                      </div>
+
+                      <div>
+                        <Label>Description (facultatif)</Label>
+                        <Textarea
+                          value={newPositionDescription}
+                          onChange={(event) =>
+                            setNewPositionDescription(event.target.value)
+                          }
+                          placeholder="Missions et périmètre du poste"
+                          rows={3}
+                        />
+                      </div>
+                    </div>
+
+                    <DialogFooter>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setPositionDialogOpen(false)}
+                      >
+                        Annuler
+                      </Button>
+
+                      <Button
+                        type="button"
+                        disabled={
+                          !newPositionLabel.trim() ||
+                          !primaryPole ||
+                          createPosition.isPending
+                        }
+                        onClick={handleCreatePosition}
+                      >
+                        {createPosition.isPending ? (
+                          <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Plus className="mr-1.5 h-4 w-4" />
+                        )}
+                        Créer le poste
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
               </div>
             </div>
           </section>

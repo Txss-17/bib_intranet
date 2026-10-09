@@ -188,6 +188,83 @@ export interface HrPositionCatalogItem {
   active: boolean;
 }
 
+
+export const useCreateHrPosition = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: {
+      label: string;
+      pole_id: string;
+      description?: string;
+    }): Promise<HrPositionCatalogItem> => {
+      const label = payload.label.trim();
+      const poleId = payload.pole_id.trim();
+
+      if (!label) {
+        throw new Error("L'intitulé du poste est obligatoire.");
+      }
+
+      if (!poleId) {
+        throw new Error("Le pôle de rattachement est obligatoire.");
+      }
+
+      const positionKey = label
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+
+      if (!positionKey) {
+        throw new Error("Identifiant du poste invalide.");
+      }
+
+      const { data, error } = await db
+        .from('rh_position_catalog')
+        .insert({
+          position_key: positionKey,
+          label,
+          pole_id: poleId,
+          description: payload.description?.trim() || null,
+          active: true,
+        })
+        .select('id, position_key, label, pole_id, description, active')
+        .single();
+
+      if (error) {
+        if (error.code === '23505') {
+          throw new Error(
+            "Cet identifiant existe déjà. Choisissez un intitulé différent."
+          );
+        }
+
+        throw error;
+      }
+
+      return data as HrPositionCatalogItem;
+    },
+
+    onSuccess: async (position) => {
+      await queryClient.invalidateQueries({
+        queryKey: ['rh-position-catalog'],
+      });
+
+      toast({
+        title: 'Poste créé',
+        description: position.label,
+      });
+    },
+
+    onError: (error: Error) => {
+      toast({
+        title: 'Création impossible',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+  });
+};
 export const useHrPositionCatalog = (poleId?: string) =>
   useQuery({
     queryKey: ['rh-position-catalog', poleId ?? 'all'],
