@@ -1261,14 +1261,9 @@ export default function Onboarding() {
 
   const userPoles = profile?.poles ?? [];
 
-  const canValidate =
-    userPoles.includes('rh') ||
-    userPoles.includes('direction');
+  const canValidate = userPoles.includes('rh');
 
-  const canProvision =
-    userPoles.includes('direction') ||
-    userPoles.includes('product') ||
-    userPoles.includes('security');
+  const canProvision = userPoles.includes('rh');
 
   const {
     data: requests = [],

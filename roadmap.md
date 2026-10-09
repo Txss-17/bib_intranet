@@ -1,0 +1,2 @@
+- [ ] Restrict collaborator creation and account invitations to HR, and disable public signup.
+- [ ] Update the CEO name and verify persisted changes and application status.
