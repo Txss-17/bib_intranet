@@ -178,6 +178,40 @@ export const useHrEmployeeRequests = () =>
   });
 
 
+export interface HrPositionCatalogItem {
+  id: string;
+  position_key: string;
+  label: string;
+  pole_id: string;
+  description: string | null;
+  active: boolean;
+}
+
+export const useHrPositionCatalog = (poleId?: string) =>
+  useQuery({
+    queryKey: ['rh-position-catalog', poleId ?? 'all'],
+
+    queryFn: async (): Promise<HrPositionCatalogItem[]> => {
+      let query = db
+        .from('rh_position_catalog')
+        .select('id, position_key, label, pole_id, description, active')
+        .eq('active', true)
+        .order('label', { ascending: true });
+
+      if (poleId) {
+        query = query.eq('pole_id', poleId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []) as HrPositionCatalogItem[];
+    },
+  });
+
 /**
  * Référents RH.
  *
