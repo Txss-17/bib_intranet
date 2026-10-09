@@ -49,25 +49,6 @@ const isDuplicateEmailError = (
 };
 
 
-const POSITION_POLE: Record<
-  string,
-  string
-> = {
-  supplier_manager: 'supplier',
-  customer_success_manager: 'marketplace',
-  ops_logistics_manager: 'ops',
-  finance_manager: 'finance',
-  audit_compliance_lead: 'audit',
-  rse_impact_manager: 'rse',
-  product_engineering_manager: 'product',
-  marketing_communication_manager: 'marketing',
-  rh_manager: 'rh',
-  data_bi_manager: 'data',
-  security_it_manager: 'security',
-  ceo: 'direction',
-};
-
-
 Deno.serve(
   async (req) => {
     if (req.method === 'OPTIONS') {
@@ -391,24 +372,58 @@ Deno.serve(
 
 
       /*
-       * Compatibilité poste / pôle.
+       * Compatibilité poste / pôle via le catalogue RH.
+       * Contrôle serveur indépendant du formulaire.
        */
-      const requiredPole =
-        POSITION_POLE[
-          request.position
-        ];
+      const {
+        data: positionCatalogEntry,
+        error: positionCatalogError,
+      } = await admin
+        .from('rh_position_catalog')
+        .select('position_key, label, pole_id, active')
+        .eq('position_key', request.position)
+        .maybeSingle();
 
+      if (positionCatalogError) {
+        return json(
+          {
+            error:
+              `Impossible de vérifier le catalogue des postes : ${positionCatalogError.message}`,
+          },
+          500,
+        );
+      }
+
+      if (!positionCatalogEntry) {
+        return json(
+          {
+            error:
+              `Le poste "${request.position}" n'existe pas dans le catalogue RH.`,
+          },
+          400,
+        );
+      }
+
+      if (positionCatalogEntry.active !== true) {
+        return json(
+          {
+            error:
+              `Le poste "${positionCatalogEntry.label}" est désactivé.`,
+          },
+          400,
+        );
+      }
+
+      const requiredPole = positionCatalogEntry.pole_id;
 
       if (
-        requiredPole &&
-        !request.poles.includes(
-          requiredPole,
-        )
+        !Array.isArray(request.poles) ||
+        !request.poles.includes(requiredPole)
       ) {
         return json(
           {
             error:
-              `Le poste ${request.position} exige le pôle ${requiredPole}.`,
+              `Le poste "${positionCatalogEntry.label}" exige le pôle "${requiredPole}".`,
           },
           400,
         );
@@ -427,16 +442,15 @@ Deno.serve(
         } =
           await admin
             .from('profiles')
-            .select(
-              `
-                id,
-                first_name,
-                last_name,
-                position,
-                poles,
-                hr_status
-              `,
-            )
+            .select(`
+              id,
+              first_name,
+              last_name,
+              position,
+              poles,
+              hr_status,
+              test_account
+            `)
             .eq(
               'id',
               request.manager_id,
@@ -457,37 +471,25 @@ Deno.serve(
         }
 
 
-        const managerIsValid =
-          Boolean(
-            manager &&
-            ['active', 'onboarding']
-              .includes(
-                manager.hr_status ??
-                  'active',
-              ) &&
-            manager.position ===
-              'rh_manager' &&
-            Array.isArray(
-              manager.poles,
-            ) &&
-            manager.poles.includes(
-              'rh',
-            ),
-          );
-
-
-        if (
-          !managerIsValid
-        ) {
+        const managerIsValid = Boolean(
+          manager &&
+          manager.test_account === false &&
+          ['active', 'onboarding'].includes(
+            manager.hr_status ?? 'active',
+          ) &&
+          manager.position === 'rh_manager' &&
+          Array.isArray(manager.poles) &&
+          manager.poles.includes('rh')
+        );
+        
+        if (!managerIsValid) {
           return json(
             {
-              error:
-                'Le référent RH sélectionné n’est plus éligible.',
+              error: 'Le référent RH sélectionné n’est plus éligible.',
             },
             400,
           );
         }
-      }
 
 
       /*
