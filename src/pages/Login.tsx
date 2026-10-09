@@ -33,9 +33,15 @@ const Login = () => {
   const [forgotMode, setForgotMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
 
+
   const isAllowedEmail = (value: string) => {
-    const e = value.toLowerCase().trim();
-    return e.endsWith('@brand-in-a-box.space') || e === 'tgliyeta@gmail.com';
+    const email = value.toLowerCase().trim();
+  
+    return (
+      email.endsWith('@brand-in-a-box.space') ||
+      email === 'tgliyeta@gmail.com' ||
+      email === 'gliyetat@gmail.com'
+    );
   };
 
   const handleLogin = async (e: React.FormEvent) => {
