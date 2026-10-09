@@ -80,7 +80,7 @@ import {
   useHrPositionCatalog,
 } from '@/hooks/useHrOnboarding';
 
-const POSITION_LABELS: Record<Position, string> = {
+const POSITION_LABELS: Record<string, string> = {
   supplier_manager: 'Responsable Fournisseurs & Produits',
   customer_success_manager:
     'Responsable Marketplace & Customer Success',
@@ -134,7 +134,7 @@ const poleLabel = (id: string) =>
 
 const positionLabel = (position: string | null) =>
   position && position in POSITION_LABELS
-    ? POSITION_LABELS[position as Position]
+    ? POSITION_LABELS[position]
     : position ?? '—';
 
 const seniorityLabel = (seniority: string) =>
@@ -444,21 +444,6 @@ function NewEmployeeDialog() {
               <div>
                 <Label>Type de contrat</Label>
 
-                <Input
-                  value={form.contract_type}
-                  onChange={(event) =>
-                    setForm((previous) => ({
-                      ...previous,
-                      contract_type:
-                        event.target.value,
-                    }))
-                  }
-                  placeholder="CDI, CDD, prestation..."
-                />
-              </div>
-
-              <div>
-                <Label>Niveau</Label>
                 <Select
                   value={form.contract_type}
                   onValueChange={(value) =>
@@ -480,6 +465,35 @@ function NewEmployeeDialog() {
                     <SelectItem value="Prestation">Prestation</SelectItem>
                     <SelectItem value="Bénévolat">Bénévolat / volontariat</SelectItem>
                     <SelectItem value="Autre">Autre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Niveau</Label>
+
+                <Select
+                  value={form.seniority}
+                  onValueChange={(value) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      seniority: value,
+                    }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Choisir un niveau" />
+                  </SelectTrigger>
+
+                  <SelectContent>
+                    {SENIORITIES.map((seniority) => (
+                      <SelectItem
+                        key={seniority}
+                        value={seniority}
+                      >
+                        {SENIORITY_LABELS[seniority]}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
