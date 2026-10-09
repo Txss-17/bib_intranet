@@ -288,7 +288,7 @@ function NewEmployeeDialog() {
     poles.length > 0 &&
     poles.includes(primaryPole) &&
     Boolean(form.requested_role) &&
-    Boolean(form.manager_id);
+    (form.position === 'ceo' || Boolean(form.manager_id));
 
   return (
     <Dialog

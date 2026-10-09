@@ -624,7 +624,7 @@ Deno.serve(
 
 
         /*
-         * Compte déjà existant.
+         * 'Compte existant rattaché au dossier RH ; accès RBAC conservés'.
          */
         const {
           data: users,
@@ -809,7 +809,7 @@ Deno.serve(
 
       /*
        * Étape intermédiaire :
-       * le compte existe maintenant.
+       * Compte existant maintenant ;
        */
       const {
         error:
@@ -900,7 +900,6 @@ Deno.serve(
         );
       }
 
-
       if (
         (roleScopes ?? [])
           .length > 1
@@ -912,6 +911,14 @@ Deno.serve(
           },
           409,
         );
+      }
+
+      if (!accountAlreadyExisted) {
+        // Bloc existant :
+        // Détermination du scope
+        // Vérification des affectations
+        // Création éventuelle de l'affectation RBAC
+        // Historique RBAC
       }
 
 
