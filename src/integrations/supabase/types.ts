@@ -3595,6 +3595,7 @@ export type Database = {
           position: Database["public"]["Enums"]["employee_position"] | null
           seniority: string | null
           subsidiary: string | null
+          test_account: boolean
           updated_at: string | null
           work_mode: string | null
         }
@@ -3612,6 +3613,7 @@ export type Database = {
           position?: Database["public"]["Enums"]["employee_position"] | null
           seniority?: string | null
           subsidiary?: string | null
+          test_account?: boolean
           updated_at?: string | null
           work_mode?: string | null
         }
@@ -3629,6 +3631,7 @@ export type Database = {
           position?: Database["public"]["Enums"]["employee_position"] | null
           seniority?: string | null
           subsidiary?: string | null
+          test_account?: boolean
           updated_at?: string | null
           work_mode?: string | null
         }
@@ -5520,6 +5523,7 @@ export type Database = {
       calculate_demand_forecast: { Args: never; Returns: number }
       can_access_anomalies: { Args: { _uid: string }; Returns: boolean }
       can_access_finance: { Args: { _uid: string }; Returns: boolean }
+      can_access_rh_profiles: { Args: { _uid: string }; Returns: boolean }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

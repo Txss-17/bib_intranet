@@ -31,6 +31,7 @@ import {
 
 import type { FeedItem, PoleId } from '@/types';
 import { poles } from '@/data/poles';
+import { ConnectedEmployeesBlock } from '@/components/dashboard/ConnectedEmployeesBlock';
 
 const TARGET_POLES: readonly PoleId[] = [
   'direction',
@@ -374,6 +375,8 @@ export default function Dashboard() {
           </span>
         </div>
       </div>
+
+      <ConnectedEmployeesBlock />
 
       <section>
         <div className="mb-4 flex items-center gap-2">
