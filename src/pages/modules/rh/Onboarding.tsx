@@ -230,7 +230,7 @@ function NewEmployeeDialog() {
     });
 
     setPrimaryPole('Choisir un pôle');
-    setPoles(['']);
+    setPoles(['Choisir un pôle']);
   };
 
   const togglePole = (poleId: string) => {
