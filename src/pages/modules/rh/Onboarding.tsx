@@ -220,7 +220,7 @@ function NewEmployeeDialog() {
       personal_email: '',
       work_email: '',
       collaborator_type: 'internal',
-      position: 'Choisir un pole',
+      position: '',
       seniority: 'junior',
       requested_role: '',
       contract_type: 'CDI',
@@ -229,7 +229,7 @@ function NewEmployeeDialog() {
       manager_id: '',
     });
 
-    setPrimaryPole('');
+    setPrimaryPole('Choisir un pôle');
     setPoles(['']);
   };
 
