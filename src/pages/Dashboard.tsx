@@ -376,6 +376,8 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <ConnectedEmployeesBlock />
+
       <section>
         <div className="mb-4 flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
