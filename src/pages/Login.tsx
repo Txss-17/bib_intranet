@@ -34,6 +34,8 @@ const Login = () => {
   const [resetSent, setResetSent] = useState(false);
 
 
+
+
   const isAllowedEmail = (value: string) => {
     const email = value.toLowerCase().trim();
   
@@ -43,7 +45,7 @@ const Login = () => {
       email === 'gliyetat@gmail.com'
     );
   };
-
+  
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
