@@ -77,39 +77,8 @@ import {
   useHrOnboardingActions,
   useHrReferents,
   useHrRequestEvents,
+  useHrPositionCatalog,
 } from '@/hooks/useHrOnboarding';
-
-const POSITIONS = [
-  'supplier_manager',
-  'customer_success_manager',
-  'ops_logistics_manager',
-  'finance_manager',
-  'audit_compliance_lead',
-  'rse_impact_manager',
-  'product_engineering_manager',
-  'marketing_communication_manager',
-  'rh_manager',
-  'data_bi_manager',
-  'security_it_manager',
-  'ceo',
-] as const;
-
-type Position = (typeof POSITIONS)[number];
-
-const POSITION_TO_POLE: Record<Position, string> = {
-  supplier_manager: 'supplier',
-  customer_success_manager: 'marketplace',
-  ops_logistics_manager: 'ops',
-  finance_manager: 'finance',
-  audit_compliance_lead: 'audit',
-  rse_impact_manager: 'rse',
-  product_engineering_manager: 'product',
-  marketing_communication_manager: 'marketing',
-  rh_manager: 'rh',
-  data_bi_manager: 'data',
-  security_it_manager: 'security',
-  ceo: 'direction',
-};
 
 const POSITION_LABELS: Record<Position, string> = {
   supplier_manager: 'Responsable Fournisseurs & Produits',
@@ -199,13 +168,21 @@ function NewEmployeeDialog() {
     isError: referentsError,
   } = useHrReferents();
 
+  const [primaryPole, setPrimaryPole] = useState('ops');
+
+  const {
+    data: positionCatalog = [],
+    isLoading: positionsLoading,
+    isError: positionsError,
+  } = useHrPositionCatalog(primaryPole);
+
   const [form, setForm] = useState({
     first_name: '',
     last_name: '',
     personal_email: '',
     work_email: '',
     collaborator_type: 'internal' as CollaboratorType,
-    position: 'ops_logistics_manager' as Position,
+    position: '',
     seniority: 'junior',
     requested_role: '',
     contract_type: 'CDI',
@@ -218,8 +195,7 @@ function NewEmployeeDialog() {
     'ops',
   ]);
 
-  const requiredPole =
-    POSITION_TO_POLE[form.position];
+  const requiredPole = primaryPole;
 
   const {
     data: accessRoles = [],
@@ -244,7 +220,7 @@ function NewEmployeeDialog() {
       personal_email: '',
       work_email: '',
       collaborator_type: 'internal',
-      position: 'ops_logistics_manager',
+      position: '',
       seniority: 'junior',
       requested_role: '',
       contract_type: 'CDI',
@@ -253,23 +229,10 @@ function NewEmployeeDialog() {
       manager_id: '',
     });
 
+    setPrimaryPole('ops');
     setPoles(['ops']);
-  };
 
-  const changePosition = (position: Position) => {
-    const required = POSITION_TO_POLE[position];
-
-    setForm((previous) => ({
-      ...previous,
-      position,
-      requested_role: '',
-    }));
-
-    setPoles((previous) =>
-      previous.includes(required)
-        ? previous
-        : [required],
-    );
+    setPoles(['ops']);
   };
 
   const togglePole = (poleId: string) => {
@@ -546,114 +509,92 @@ function NewEmployeeDialog() {
 
           <Separator />
 
+
           {/* AFFECTATION */}
           <section>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Affectation
             </p>
-
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
-                <Label>
-                  Poste / fonction
-                </Label>
+                <Label>Pôle principal</Label>
 
                 <Select
-                  value={form.position}
-                  onValueChange={(value) =>
-                    changePosition(
-                      value as Position,
-                    )
-                  }
+                  value={primaryPole}
+                  onValueChange={(value) => {
+                    setPrimaryPole(value);
+                    setPoles([value]);
+                    setForm((previous) => ({
+                      ...previous,
+                      position: '',
+                      requested_role: '',
+                    }));
+                  }}
                 >
                   <SelectTrigger>
-                    <SelectValue />
+                    <SelectValue placeholder="Choisir un pôle" />
                   </SelectTrigger>
 
                   <SelectContent>
-                    {POSITIONS.map(
-                      (position) => (
-                        <SelectItem
-                          key={position}
-                          value={position}
-                        >
-                          {
-                            POSITION_LABELS[
-                              position
-                            ]
-                          }
-                        </SelectItem>
-                      ),
-                    )}
+                    {allPoles.map((pole) => (
+                      <SelectItem key={pole.id} value={pole.id}>
+                        {pole.shortName}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div>
-                <Label>
-                  Pôle principal
-                </Label>
+                <Label>Poste / fonction</Label>
 
-                <div className="flex h-10 items-center rounded-md border bg-muted/30 px-3 text-sm">
-                  <Badge variant="secondary">
-                    {poleLabel(requiredPole)}
-                  </Badge>
+                <Select
+                  value={form.position}
+                  onValueChange={(value) =>
+                    setForm((previous) => ({
+                      ...previous,
+                      position: value,
+                      requested_role: '',
+                    }))
+                  }
+                  disabled={positionsLoading || positionsError || positionCatalog.length === 0}
+                >
+                  <SelectTrigger>
+                    <SelectValue
+                      placeholder={
+                        positionsLoading
+                          ? 'Chargement des postes…'
+                          : 'Choisir un poste'
+                      }
+                    />
+                  </SelectTrigger>
 
-                  <span className="ml-2 text-xs text-muted-foreground">
-                    requis par le poste
-                  </span>
-                </div>
+                  <SelectContent>
+                    {positionCatalog.map((position) => (
+                      <SelectItem
+                        key={position.id}
+                        value={position.position_key}
+                      >
+                        {position.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {positionsError && (
+                  <p className="mt-1 text-xs text-destructive">
+                    Impossible de charger le catalogue des postes.
+                  </p>
+                )}
+
+                {!positionsLoading &&
+                  !positionsError &&
+                  positionCatalog.length === 0 && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Aucun poste actif pour ce pôle. Le catalogue RH doit être complété.
+                    </p>
+                  )}
               </div>
-            </div>
-
-            <div className="mt-4">
-              <Label>
-                Pôles d'affectation
-              </Label>
-
-              <div className="mt-2 grid grid-cols-1 gap-2 rounded-lg border border-border p-3 sm:grid-cols-2">
-                {allPoles.map((pole) => {
-                  const required =
-                    pole.id === requiredPole;
-
-                  return (
-                    <label
-                      key={pole.id}
-                      className="flex items-center gap-2 text-sm"
-                    >
-                      <Checkbox
-                        checked={poles.includes(
-                          pole.id,
-                        )}
-                        disabled={required}
-                        onCheckedChange={() =>
-                          togglePole(pole.id)
-                        }
-                      />
-
-                      <span>
-                        {pole.shortName}
-                      </span>
-
-                      {required && (
-                        <Badge
-                          variant="outline"
-                          className="ml-auto text-[10px]"
-                        >
-                          Requis
-                        </Badge>
-                      )}
-                    </label>
-                  );
-                })}
-              </div>
-
-              <p className="mt-2 text-xs text-muted-foreground">
-                Le pôle correspondant au poste est
-                obligatoire. D'autres pôles peuvent être
-                ajoutés si le collaborateur intervient
-                réellement sur plusieurs périmètres.
-              </p>
             </div>
           </section>
 
