@@ -191,9 +191,7 @@ function NewEmployeeDialog() {
     manager_id: '',
   });
 
-  const [poles, setPoles] = useState<string[]>([
-    '',
-  ]);
+  const [poles, setPoles] = useState<string[]>([]);
 
   const requiredPole = primaryPole;
 
