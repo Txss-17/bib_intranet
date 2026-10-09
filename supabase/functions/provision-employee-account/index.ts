@@ -220,41 +220,11 @@ Deno.serve(
           : [];
 
 
-      const privilegedRole =
-        (
-          rolesResult.data ??
-          []
-        ).some(
-          (
-            row: {
-              role: string;
-            },
-          ) =>
-            row.role === 'admin' ||
-            row.role === 'executive',
-        );
-
-
-      const privilegedPole =
-        callerPoles.includes(
-          'direction',
-        ) ||
-        callerPoles.includes(
-          'product',
-        ) ||
-        callerPoles.includes(
-          'security',
-        );
-
-
-      if (
-        !privilegedRole &&
-        !privilegedPole
-      ) {
+       if (!callerPoles.includes('rh')) {
         return json(
           {
             error:
-              'Provisionnement réservé à la Direction, Product & Engineering et Security & IT.',
+               'Création de comptes et envoi des invitations réservés aux RH.',
           },
           403,
         );
