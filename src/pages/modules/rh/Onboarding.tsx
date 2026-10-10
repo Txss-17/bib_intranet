@@ -261,6 +261,7 @@ function NewEmployeeDialog() {
         form.collaborator_type,
       position: form.position,
       poles,
+      primary_pole: primaryPole,
       seniority: form.seniority,
       requested_role: form.requested_role,
       contract_type:
