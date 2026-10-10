@@ -134,6 +134,13 @@
       "when": 1791607384273,
       "tag": "0018_hr_requests_onboarding_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791608077339,
+      "tag": "0019_rh_recruitment_leave_attendance_training",
+      "breakpoints": true
     }
   ]
 }
