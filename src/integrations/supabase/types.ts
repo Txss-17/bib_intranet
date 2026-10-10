@@ -259,6 +259,45 @@ export type Database = {
         }
         Relationships: []
       }
+      access_role_scopes: {
+        Row: {
+          id: string
+          role_id: string
+          scope_id: string
+          scope_value: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          role_id: string
+          scope_id: string
+          scope_value?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          role_id?: string
+          scope_id?: string
+          scope_value?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_role_scopes_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "access_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_role_scopes_scope_id_fkey"
+            columns: ["scope_id"]
+            isOneToOne: false
+            referencedRelation: "access_scopes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       anomalies: {
         Row: {
           ai_decision: string | null

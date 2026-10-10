@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Card,
   CardContent,
@@ -123,6 +124,31 @@ const AccessSectionCard = ({
     <CardContent>{children}</CardContent>
   </Card>
 );
+
+type AccessScopeRow = {
+  id: string;
+  scope_key: string;
+  label: string;
+  scope_type: string | null;
+  description: string | null;
+  created_at: string;
+};
+
+type AccessRoleRow = {
+  id: string;
+  role_key: string;
+  label: string;
+  business_pole: string | null;
+  status: string;
+};
+
+type AccessRoleScopeRow = {
+  id: string;
+  role_id: string;
+  scope_id: string;
+  scope_value: string | null;
+  created_at: string;
+};
 
 const RolesPermissionsInner = () => {
   const { profile } = useAuth();
@@ -315,6 +341,205 @@ const RolesPermissionsInner = () => {
     });
   };
 
+  const [accessScopes, setAccessScopes] = useState<AccessScopeRow[]>([]);
+  const [accessRoles, setAccessRoles] = useState<AccessRoleRow[]>([]);
+  const [roleScopeRows, setRoleScopeRows] = useState<AccessRoleScopeRow[]>([]);
+  const [scopesLoading, setScopesLoading] = useState(true);
+  const [scopeSaving, setScopeSaving] = useState(false);
+
+  const [editingScopeId, setEditingScopeId] = useState<string | null>(null);
+  const [scopeKeyInput, setScopeKeyInput] = useState('');
+  const [scopeLabelInput, setScopeLabelInput] = useState('');
+  const [scopeTypeInput, setScopeTypeInput] = useState('pole');
+  const [scopeDescriptionInput, setScopeDescriptionInput] = useState('');
+
+  const [selectedScopeId, setSelectedScopeId] = useState('');
+  const [selectedScopeRoleId, setSelectedScopeRoleId] = useState('');
+  const [scopeValueInput, setScopeValueInput] = useState('');
+  const loadAccessCatalog = useCallback(async () => {
+    setScopesLoading(true);
+
+    try {
+      const [scopeResult, roleResult, relationResult] = await Promise.all([
+        supabase
+          .from('access_scopes')
+          .select('*')
+          .order('label'),
+
+        supabase
+          .from('access_roles')
+          .select('*')
+          .order('label'),
+
+        supabase
+          .from('access_role_scopes')
+          .select('*')
+          .order('created_at'),
+      ]);
+
+      const firstError =
+        scopeResult.error ||
+        roleResult.error ||
+        relationResult.error;
+
+      if (firstError) {
+        throw firstError;
+      }
+
+      setAccessScopes((scopeResult.data ?? []) as AccessScopeRow[]);
+      setAccessRoles((roleResult.data ?? []) as AccessRoleRow[]);
+      setRoleScopeRows((relationResult.data ?? []) as AccessRoleScopeRow[]);
+    } catch (error) {
+      console.error('Erreur de chargement du catalogue RBAC', error);
+
+      toast({
+        title: 'Chargement impossible',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Impossible de charger les périmètres depuis Supabase.',
+        variant: 'destructive',
+      });
+    } finally {
+      setScopesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadAccessCatalog();
+  }, [loadAccessCatalog]);
+
+  const resetScopeForm = () => {
+  setEditingScopeId(null);
+  setScopeKeyInput('');
+  setScopeLabelInput('');
+  setScopeTypeInput('pole');
+  setScopeDescriptionInput('');
+};
+const editScope = (scope: AccessScopeRow) => {
+  setEditingScopeId(scope.id);
+  setScopeKeyInput(scope.scope_key);
+  setScopeLabelInput(scope.label);
+  setScopeTypeInput(scope.scope_type || 'pole');
+  setScopeDescriptionInput(scope.description || '');
+  setActiveTab('scopes');
+};
+
+const saveAccessScope = async () => {
+  const scopeKey = scopeKeyInput
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  const label = scopeLabelInput.trim();
+
+  if (!scopeKey || !label) {
+    toast({
+      title: 'Champs obligatoires',
+      description: 'Renseigne la clé et le libellé du périmètre.',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  setScopeSaving(true);
+
+  try {
+    const payload = {
+      scope_key: scopeKey,
+      label,
+      scope_type: scopeTypeInput || null,
+      description: scopeDescriptionInput.trim() || null,
+    };
+
+    const result = editingScopeId
+      ? await supabase
+          .from('access_scopes')
+          .update(payload)
+          .eq('id', editingScopeId)
+      : await supabase
+          .from('access_scopes')
+          .insert(payload);
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    toast({
+      title: editingScopeId
+        ? 'Périmètre modifié'
+        : 'Périmètre créé',
+      description: `${label} a été enregistré dans Supabase.`,
+    });
+
+    resetScopeForm();
+    await loadAccessCatalog();
+  } catch (error) {
+    console.error('Erreur de sauvegarde du périmètre', error);
+
+    toast({
+      title: 'Enregistrement impossible',
+      description:
+        error instanceof Error
+          ? error.message
+          : 'Une erreur est survenue lors de la sauvegarde.',
+      variant: 'destructive',
+    });
+  } finally {
+    setScopeSaving(false);
+  }
+};
+
+const assignScopeToRole = async () => {
+  if (!selectedScopeId || !selectedScopeRoleId) {
+    toast({
+      title: 'Sélection incomplète',
+      description: 'Choisis un périmètre et un rôle.',
+      variant: 'destructive',
+    });
+    return;
+  }
+
+  const scopeValue = scopeValueInput.trim() || null;
+
+  const removeScopeAssignment = async (assignmentId: string) => {
+    setScopeSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from('access_role_scopes')
+        .delete()
+        .eq('id', assignmentId);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Association supprimée',
+        description: 'Le lien entre le rôle et le périmètre a été supprimé.',
+      });
+
+      await loadAccessCatalog();
+    } catch (error) {
+      console.error('Erreur de suppression de l’association', error);
+
+      toast({
+        title: 'Suppression impossible',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Une erreur est survenue lors de la suppression.',
+        variant: 'destructive',
+      });
+    } finally {
+      setScopeSaving(false);
+    }
+  };
+
   return (
     <div className="mx-auto max-w-7xl space-y-6 animate-fade-in">
       {/* HEADER */}
@@ -445,148 +670,289 @@ const RolesPermissionsInner = () => {
         {/* ============================================================
             COMPTES
         ============================================================ */}
-        <TabsContent value="accounts" className="mt-4 space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <AccessSectionCard
-              icon={Users}
-              title="Comptes collaborateurs"
-              description="Comptes actuellement présents dans le référentiel RH."
-              count={`${employees.length}`}
-            >
-              <p className="text-xs text-muted-foreground">
-                La création, l'activation, la désactivation et
-                l'évolution des comptes relèvent de RH.
-              </p>
-            </AccessSectionCard>
+        <TabsContent value="scopes" className="mt-4 space-y-4">
+          <AccessSectionCard
+            icon={SlidersHorizontal}
+            title="Catalogue des périmètres"
+            description="Crée et modifie les périmètres enregistrés dans Supabase. Leur association à un rôle configure le catalogue RBAC, mais ne remplace pas les règles RLS appliquées aux données."
+            count={`${accessScopes.length} périmètre(s)`}
+          >
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="space-y-4 rounded-lg border border-border p-4">
+                <div>
+                  <h3 className="text-sm font-semibold">
+                    {editingScopeId ? 'Modifier un périmètre' : 'Créer un périmètre'}
+                  </h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    La clé sert d’identifiant technique stable.
+                  </p>
+                </div>
 
-            <AccessSectionCard
-              icon={UserRoundCheck}
-              title="Comptes actifs"
-              description="Collaborateurs actuellement actifs."
-              count={`${activeEmployees.length}`}
-            >
-              <p className="text-xs text-muted-foreground">
-                Un compte actif pourra recevoir une affectation
-                de rôle et de périmètre.
-              </p>
-            </AccessSectionCard>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Clé du périmètre</label>
+                  <Input
+                    value={scopeKeyInput}
+                    onChange={(event) => setScopeKeyInput(event.target.value)}
+                    placeholder="ex. pole_rh"
+                    disabled={!!editingScopeId}
+                  />
+                  {editingScopeId ? (
+                    <p className="text-xs text-muted-foreground">
+                      La clé technique ne peut pas être modifiée ici.
+                    </p>
+                  ) : null}
+                </div>
 
-            <AccessSectionCard
-              icon={AlertTriangle}
-              title="Comptes à contrôler"
-              description="Comptes non actifs ou dont le statut nécessite une vérification."
-              count={`${inactiveEmployees.length}`}
-            >
-              <p className="text-xs text-muted-foreground">
-                La révocation effective des accès sera reliée au
-                cycle de vie du compte lors de la mise en place
-                du backend RBAC.
-              </p>
-            </AccessSectionCard>
-          </div>
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Libellé</label>
+                  <Input
+                    value={scopeLabelInput}
+                    onChange={(event) => setScopeLabelInput(event.target.value)}
+                    placeholder="ex. Pôle RH"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Type de périmètre</label>
+                  <Select
+                    value={scopeTypeInput}
+                    onValueChange={setScopeTypeInput}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir un type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="global">Global</SelectItem>
+                      <SelectItem value="organisation">Organisation</SelectItem>
+                      <SelectItem value="pole">Pôle</SelectItem>
+                      <SelectItem value="portfolio">Portefeuille</SelectItem>
+                      <SelectItem value="region">Région</SelectItem>
+                      <SelectItem value="record">Enregistrements</SelectItem>
+                      <SelectItem value="custom">Personnalisé</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Description</label>
+                  <Input
+                    value={scopeDescriptionInput}
+                    onChange={(event) => setScopeDescriptionInput(event.target.value)}
+                    placeholder="Finalité et limites de ce périmètre"
+                  />
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={saveAccessScope} disabled={scopeSaving}>
+                    <Save className="mr-2 h-4 w-4" />
+                    {scopeSaving
+                      ? 'Enregistrement…'
+                      : editingScopeId
+                        ? 'Enregistrer les modifications'
+                        : 'Créer le périmètre'}
+                  </Button>
+
+                  {editingScopeId ? (
+                    <Button
+                      variant="outline"
+                      onClick={resetScopeForm}
+                      disabled={scopeSaving}
+                    >
+                      Annuler
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+
+              <div className="space-y-4 rounded-lg border border-border p-4">
+                <div>
+                  <h3 className="text-sm font-semibold">Associer un périmètre à un rôle</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    La valeur est facultative. Utilise-la lorsqu’un périmètre doit être
+                    limité à une valeur précise, par exemple un portefeuille identifié.
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Périmètre</label>
+                  <Select
+                    value={selectedScopeId}
+                    onValueChange={setSelectedScopeId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir un périmètre" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {accessScopes.map((scope) => (
+                        <SelectItem key={scope.id} value={scope.id}>
+                          {scope.label} ({scope.scope_key})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">Rôle</label>
+                  <Select
+                    value={selectedScopeRoleId}
+                    onValueChange={setSelectedScopeRoleId}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choisir un rôle" />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {accessRoles
+                        .filter((item) => item.status === 'active')
+                        .map((item) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.label} — {item.business_pole || 'Pôle non défini'}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-xs font-medium">
+                    Valeur du périmètre (facultatif)
+                  </label>
+                  <Input
+                    value={scopeValueInput}
+                    onChange={(event) => setScopeValueInput(event.target.value)}
+                    placeholder="ex. rh, portefeuille_123 ou FR"
+                  />
+                </div>
+
+                <Button
+                  onClick={assignScopeToRole}
+                  disabled={
+                    scopeSaving ||
+                    !selectedScopeId ||
+                    !selectedScopeRoleId
+                  }
+                >
+                  Associer au rôle
+                </Button>
+              </div>
+            </div>
+          </AccessSectionCard>
 
           <Card>
-            <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
-              <div>
-                <CardTitle className="text-base">
-                  Référentiel des comptes
-                </CardTitle>
-
-                <p className="mt-1 text-xs text-muted-foreground">
-                  RH administre les comptes. Le rôle métier reste
-                  une affectation distincte du poste RH.
-                </p>
-              </div>
-
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-
-                <Input
-                  value={accountSearch}
-                  onChange={(event) =>
-                    setAccountSearch(event.target.value)
-                  }
-                  placeholder="Rechercher un collaborateur…"
-                  className="w-64 pl-8"
-                />
-              </div>
+            <CardHeader>
+              <CardTitle className="text-base">Périmètres enregistrés</CardTitle>
             </CardHeader>
 
             <CardContent className="overflow-x-auto">
-              {employeesLoading ? (
+              {scopesLoading ? (
                 <p className="py-8 text-center text-sm text-muted-foreground">
-                  Chargement des comptes…
+                  Chargement du catalogue Supabase…
                 </p>
               ) : (
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Collaborateur</TableHead>
-                      <TableHead>Pôle</TableHead>
-                      <TableHead>Poste</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead>Rôle d'accès</TableHead>
-                      <TableHead>Périmètre</TableHead>
+                      <TableHead>Clé</TableHead>
+                      <TableHead>Libellé</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Rôles associés</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
 
                   <TableBody>
-                    {filteredEmployees.map((employee) => (
-                      <TableRow key={employee.id}>
-                        <TableCell>
-                          <div className="font-medium text-sm">
-                            {`${employee.first_name ?? ""} ${employee.last_name ?? ""}`.trim()}
-                          </div>
+                    {accessScopes.map((scope) => {
+                      const associations = roleScopeRows.filter(
+                        (item) => item.scope_id === scope.id,
+                      );
 
-                          <div className="text-xs text-muted-foreground">
-                            {employee.email}
-                          </div>
-                        </TableCell>
+                      return (
+                        <TableRow key={scope.id}>
+                          <TableCell className="font-mono text-xs">
+                            {scope.scope_key}
+                          </TableCell>
 
-                        <TableCell className="text-xs capitalize">
-                          {employee.poles?.join(", ") || 'Non défini'}
-                        </TableCell>
+                          <TableCell className="text-sm font-medium">
+                            {scope.label}
+                          </TableCell>
 
-                        <TableCell className="text-xs">
-                          {employee.position || 'Non défini'}
-                        </TableCell>
+                          <TableCell>
+                            <Badge variant="outline">
+                              {scope.scope_type || 'Non défini'}
+                            </Badge>
+                          </TableCell>
 
-                        <TableCell>
-                          <Badge
-                            variant={
-                              employee.hr_status?.toLowerCase() ===
-                                'active' ||
-                              employee.hr_status?.toLowerCase() ===
-                                'actif'
-                                ? 'default'
-                                : 'secondary'
-                            }
-                          >
-                            {employee.hr_status || 'Non défini'}
-                          </Badge>
-                        </TableCell>
+                          <TableCell className="max-w-56 text-xs text-muted-foreground">
+                            {scope.description || '—'}
+                          </TableCell>
 
-                        <TableCell>
-                          <Badge variant="outline">
-                            Non affecté
-                          </Badge>
-                        </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {associations.length ? (
+                                associations.map((association) => {
+                                  const role = accessRoles.find(
+                                    (item) => item.id === association.role_id,
+                                  );
 
-                        <TableCell>
-                          <span className="text-xs text-muted-foreground">
-                            Non configuré
-                          </span>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                                  return (
+                                    <Badge
+                                      key={association.id}
+                                      variant="secondary"
+                                    >
+                                      {role?.label || 'Rôle inconnu'}
+                                      {association.scope_value
+                                        ? ` : ${association.scope_value}`
+                                        : ''}
+                                    </Badge>
+                                  );
+                                })
+                              ) : (
+                                <span className="text-xs text-muted-foreground">
+                                  Aucun rôle associé
+                                </span>
+                              )}
+                            </div>
+                          </TableCell>
 
-                    {!filteredEmployees.length ? (
+                          <TableCell>
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => editScope(scope)}
+                                disabled={scopeSaving}
+                              >
+                                Modifier
+                              </Button>
+
+                              {associations.map((association) => (
+                                <Button
+                                  key={association.id}
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    removeScopeAssignment(association.id)
+                                  }
+                                  disabled={scopeSaving}
+                                  title="Retirer cette association"
+                                >
+                                  Retirer le rôle
+                                </Button>
+                              ))}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+
+                    {!accessScopes.length ? (
                       <TableRow>
                         <TableCell
                           colSpan={6}
                           className="py-8 text-center text-sm text-muted-foreground"
                         >
-                          Aucun compte trouvé.
+                          Aucun périmètre trouvé dans Supabase.
                         </TableCell>
                       </TableRow>
                     ) : null}
