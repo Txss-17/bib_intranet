@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HrRecordsPage, HrRecordsConfig } from '@/components/rh/HrRecordsPage';
 
