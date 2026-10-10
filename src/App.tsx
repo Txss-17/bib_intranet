@@ -175,6 +175,7 @@ import Publications from "./pages/modules/rh/Publications";
 import RHPortfolio from "./pages/modules/rh/RHPortfolio";
 import Organization from "./pages/modules/rh/Oraganization";
 import RHAccess from "./pages/modules/rh/RHAccess";
+import Recruitment from "./pages/modules/rh/Recruitment";
 
 /* ============================================================
    9. QUALITÉ & AUDIT
@@ -706,6 +707,10 @@ const App = () => (
                 <Route
                   path="/pole/rh/access"
                   element={<RHAccess />}
+                />
+                <Route
+                  path="/pole/rh/recruitment"
+                  element={<Recruitment />}
                 />
 
                 {/* ====================================================
