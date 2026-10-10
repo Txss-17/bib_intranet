@@ -107,6 +107,8 @@ export interface HrEmployeeRequest {
 
   seniority: string;
   requested_role: string;
+  primary_pole?: string | null;
+  position_key?: string | null;
 
   contract_type: string | null;
   start_date: string | null;
