@@ -2184,91 +2184,13 @@ export type Database = {
       }
       hr_employee_requests: {
         Row: {
-          account_created_at: string | null
-          account_created_by: string | null
-          collaborator_type: string
-          contract_type: string | null
-          created_at: string
-          created_by: string | null
-          created_user_id: string | null
-          first_name: string
-          hr_validated_at: string | null
-          hr_validated_by: string | null
-          id: string
-          last_name: string
-          manager_id: string | null
-          notes: string | null
-          personal_email: string | null
-          poles: string[]
-          position: Database["public"]["Enums"]["employee_position"] | null
-          position_key: string | null
-          primary_pole: string | null
-          reference: string
-          rejection_reason: string | null
-          requested_role: Database["public"]["Enums"]["app_role"]
-          seniority: string
-          start_date: string | null
-          status: string
-          updated_at: string
-          work_email: string | null
+          requested_role: string
         }
         Insert: {
-          account_created_at?: string | null
-          account_created_by?: string | null
-          collaborator_type?: string
-          contract_type?: string | null
-          created_at?: string
-          created_by?: string | null
-          created_user_id?: string | null
-          first_name: string
-          hr_validated_at?: string | null
-          hr_validated_by?: string | null
-          id?: string
-          last_name: string
-          manager_id?: string | null
-          notes?: string | null
-          personal_email?: string | null
-          poles?: string[]
-          position?: Database["public"]["Enums"]["employee_position"] | null
-          position_key?: string | null
-          primary_pole?: string | null
-          reference?: string
-          rejection_reason?: string | null
-          requested_role?: Database["public"]["Enums"]["app_role"]
-          seniority?: string
-          start_date?: string | null
-          status?: string
-          updated_at?: string
-          work_email?: string | null
+          requested_role?: string
         }
         Update: {
-          account_created_at?: string | null
-          account_created_by?: string | null
-          collaborator_type?: string
-          contract_type?: string | null
-          created_at?: string
-          created_by?: string | null
-          created_user_id?: string | null
-          first_name?: string
-          hr_validated_at?: string | null
-          hr_validated_by?: string | null
-          id?: string
-          last_name?: string
-          manager_id?: string | null
-          notes?: string | null
-          personal_email?: string | null
-          poles?: string[]
-          position?: Database["public"]["Enums"]["employee_position"] | null
-          position_key?: string | null
-          primary_pole?: string | null
-          reference?: string
-          rejection_reason?: string | null
-          requested_role?: Database["public"]["Enums"]["app_role"]
-          seniority?: string
-          start_date?: string | null
-          status?: string
-          updated_at?: string
-          work_email?: string | null
+          requested_role?: string
         }
         Relationships: []
       }
