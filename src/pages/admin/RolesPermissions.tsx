@@ -69,13 +69,13 @@ import {
   RESTRICTED_PAGES,
   appendMatrixHistory,
   getDataScope,
-  isRbacEnforced,
   loadMatrixHistory,
-  loadMatrixOverrides,
   pageRegistry,
   resolvePagePermissions,
-  saveMatrixOverrides,
-  setRbacEnforced,
+  isTestRbacEnforced,
+  loadTestMatrixOverrides,
+  saveTestMatrixOverrides,
+  setTestRbacEnforced,
 } from '@/data/permissionMatrix';
 
 type AccessTab =
@@ -165,10 +165,10 @@ const RolesPermissionsInner = () => {
   const [scopeFilter, setScopeFilter] = useState<string>('all');
 
   const [draft, setDraft] =
-    useState<MatrixOverrides>(loadMatrixOverrides());
+    useState<MatrixOverrides>(loadTestMatrixOverrides());
 
   const [enforced, setEnforced] =
-    useState(isRbacEnforced());
+    useState(isTestRbacEnforced());
 
   const [history, setHistory] =
     useState(loadMatrixHistory());
@@ -275,7 +275,7 @@ const RolesPermissionsInner = () => {
   };
 
   const handleSave = async () => {
-    const before = loadMatrixOverrides();
+    const before = loadTestMatrixOverrides();
 
     const entries =
       [] as Parameters<typeof appendMatrixHistory>[0];
@@ -303,7 +303,7 @@ const RolesPermissionsInner = () => {
       },
     );
 
-    saveMatrixOverrides(draft);
+    saveTestMatrixOverrides(draft);
 
     if (entries.length) {
       appendMatrixHistory(entries);
@@ -333,7 +333,7 @@ const RolesPermissionsInner = () => {
     delete next[roleId];
 
     setDraft(next);
-    saveMatrixOverrides(next);
+    saveTestMatrixOverrides(next);
 
     toast({
       title: 'Rôle réinitialisé',
@@ -609,7 +609,7 @@ const saveAccessScope = async () => {
               checked={enforced}
               onCheckedChange={(value) => {
                 setEnforced(value);
-                setRbacEnforced(value);
+                setTestRbacEnforced(value);
 
                 toast({
                   title: value

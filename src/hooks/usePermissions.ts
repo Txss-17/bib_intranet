@@ -5,9 +5,18 @@ import { useViewAs } from '@/hooks/useViewAs';
 import { jobRoles, JobRole } from '@/data/jobRoles';
 import { Seniority } from '@/data/permissionRules';
 import {
-  ActionSet, DataScope, MATRIX_EVENT, PermissionAction, getDataScope,
-  getPageByPath, isRbacEnforced, loadMatrixOverrides, pageRegistry,
-  resolvePagePermissions, NO_ACCESS, startPermissionSync,
+  ActionSet,
+  DataScope,
+  MATRIX_EVENT,
+  PermissionAction,
+  getDataScope,
+  getPageByPath,
+  isTestRbacEnforced,
+  loadTestMatrixOverrides,
+  pageRegistry,
+  resolvePagePermissions,
+  NO_ACCESS,
+  startPermissionSync,
 } from '@/data/permissionMatrix';
 
 /** Rôle métier effectif : rôle simulé (« Visualiser comme ») sinon déduit du profil. */
@@ -65,14 +74,38 @@ export const usePermissions = (): UsePermissionsReturn => {
   const role = simulatedRole ?? inferRole(profile?.position, profile?.poles);
   const poles = simulatedRole ? simulatedRole.poles : (profile?.poles ?? role?.poles ?? []);
   const seniority = (simulatedRole?.seniority ?? (profile?.seniority as Seniority) ?? role?.seniority ?? 'junior');
-  const enforced = isRbacEnforced();
+  const isTestAccount = profile?.test_account === true;
+
+  // Le mode construction ne peut pas désactiver le RBAC des comptes réels.
+  const enforced = isTestAccount
+    ? isTestRbacEnforced()
+    : true;
+
   // En simulation, l'admin doit voir exactement ce que voit le rôle simulé.
   const isSuperAdmin = isAdmin && !simulatedRole;
 
   const ctx = useMemo(() => ({
-    role, poles, seniority, isSuperAdmin, overrides: loadMatrixOverrides(),
+    role,
+    poles,
+    seniority,
+    isSuperAdmin,
+
+    // Les surcharges de test ne sont appliquées qu'aux comptes de test.
+    overrides:
+      profile?.test_account === true
+        ? loadTestMatrixOverrides()
+        : {},
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [role?.id, poles.join(','), seniority, isSuperAdmin, tick, enforced]);
+  }), [
+    role?.id,
+    poles.join(','),
+    seniority,
+    isSuperAdmin,
+    tick,
+    enforced,
+    profile?.test_account,
+  ]);
 
   const permissions = useCallback(
     (pageId: string): ActionSet => (pageId ? resolvePagePermissions(pageId, ctx) : { ...NO_ACCESS }),

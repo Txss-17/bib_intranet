@@ -658,6 +658,10 @@ const HISTORY_KEY =
 const ENFORCE_KEY =
   'bib.rbac_enforced.v1';
 
+const TEST_MATRIX_KEY = 'bib.permission_matrix.test.v1';
+
+const TEST_ENFORCE_KEY = 'bib.rbac_enforced.test.v1';
+
 export const MATRIX_EVENT =
   'permission-matrix-changed';
 
@@ -703,6 +707,48 @@ export const saveMatrixOverrides = (
     new Event(MATRIX_EVENT),
   );
   void pushPermissionSetting('matrix_overrides', matrix);
+};
+
+/** Matrice exclusivement réservée aux comptes de test. */
+export const loadTestMatrixOverrides = (): MatrixOverrides => {
+  try {
+    return JSON.parse(
+      localStorage.getItem(TEST_MATRIX_KEY) || '{}',
+    );
+  } catch {
+    return {};
+  }
+};
+
+/** Enregistre les permissions de test sans modifier la matrice globale. */
+export const saveTestMatrixOverrides = (
+  matrix: MatrixOverrides,
+) => {
+  localStorage.setItem(TEST_MATRIX_KEY, JSON.stringify(matrix));
+  window.dispatchEvent(new Event(MATRIX_EVENT));
+  void pushPermissionSetting('test_matrix_overrides', matrix);
+};
+
+export const isTestRbacEnforced = (): boolean => {
+  try {
+    return localStorage.getItem(TEST_ENFORCE_KEY) !== 'off';
+  } catch {
+    return true;
+  }
+};
+
+export const setTestRbacEnforced = (enabled: boolean) => {
+  try {
+    localStorage.setItem(
+      TEST_ENFORCE_KEY,
+      enabled ? 'on' : 'off',
+    );
+  } catch {
+    // localStorage indisponible
+  }
+
+  window.dispatchEvent(new Event(MATRIX_EVENT));
+  void pushPermissionSetting('test_rbac_enforced', enabled);
 };
 
 export const loadMatrixHistory =
@@ -792,6 +838,15 @@ const applyRemoteSetting = (key: string, value: unknown) => {
     if (key === 'matrix_overrides') localStorage.setItem(MATRIX_KEY, JSON.stringify(value ?? {}));
     if (key === 'sensitive_rules') applyRemoteOverrides(value as any);
     if (key === 'rbac_enforced') localStorage.setItem(ENFORCE_KEY, value === false ? 'off' : 'on');
+    if (key === 'test_matrix_overrides') {
+      localStorage.setItem(TEST_MATRIX_KEY, JSON.stringify(value ?? {}));
+    }
+    if (key === 'test_rbac_enforced') {
+      localStorage.setItem(
+        TEST_ENFORCE_KEY,
+        value === false ? 'off' : 'on',
+      );
+    }
   } catch {
     // localStorage indisponible
   }
