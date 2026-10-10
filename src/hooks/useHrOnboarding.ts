@@ -107,6 +107,8 @@ export interface HrEmployeeRequest {
 
   seniority: string;
   requested_role: string;
+  primary_pole?: string | null;
+  position_key?: string | null;
 
   contract_type: string | null;
   start_date: string | null;
@@ -518,8 +520,21 @@ export const useHrOnboardingActions = () => {
         );
       }
 
+      // position (enum historique) vs position_key (référentiel rh_position_catalog)
+      const ENUM_POSITIONS = [
+        'supplier_manager','user_success_manager','ops_logistics_manager','finance_manager',
+        'audit_compliance_lead','rse_packaging_manager','tech_platform_manager','ceo',
+        'marketing_manager','rh_manager','risk_manager','rd_manager',
+      ];
+      const positionKey = String(payload.position);
+      const anyPayload = payload as any;
+
       const normalizedPayload = {
         ...payload,
+
+        position: ENUM_POSITIONS.includes(positionKey) ? positionKey : null,
+        position_key: positionKey,
+        primary_pole: anyPayload.primary_pole ?? payload.poles[0] ?? null,
 
         first_name:
           payload.first_name.trim(),

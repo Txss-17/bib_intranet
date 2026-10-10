@@ -2094,6 +2094,7 @@ export type Database = {
         Row: {
           account_created_at: string | null
           account_created_by: string | null
+          collaborator_type: string
           contract_type: string | null
           created_at: string
           created_by: string | null
@@ -2108,6 +2109,8 @@ export type Database = {
           personal_email: string | null
           poles: string[]
           position: Database["public"]["Enums"]["employee_position"] | null
+          position_key: string | null
+          primary_pole: string | null
           reference: string
           rejection_reason: string | null
           requested_role: Database["public"]["Enums"]["app_role"]
@@ -2120,6 +2123,7 @@ export type Database = {
         Insert: {
           account_created_at?: string | null
           account_created_by?: string | null
+          collaborator_type?: string
           contract_type?: string | null
           created_at?: string
           created_by?: string | null
@@ -2134,6 +2138,8 @@ export type Database = {
           personal_email?: string | null
           poles?: string[]
           position?: Database["public"]["Enums"]["employee_position"] | null
+          position_key?: string | null
+          primary_pole?: string | null
           reference?: string
           rejection_reason?: string | null
           requested_role?: Database["public"]["Enums"]["app_role"]
@@ -2146,6 +2152,7 @@ export type Database = {
         Update: {
           account_created_at?: string | null
           account_created_by?: string | null
+          collaborator_type?: string
           contract_type?: string | null
           created_at?: string
           created_by?: string | null
@@ -2160,6 +2167,8 @@ export type Database = {
           personal_email?: string | null
           poles?: string[]
           position?: Database["public"]["Enums"]["employee_position"] | null
+          position_key?: string | null
+          primary_pole?: string | null
           reference?: string
           rejection_reason?: string | null
           requested_role?: Database["public"]["Enums"]["app_role"]
@@ -4123,6 +4132,50 @@ export type Database = {
             columns: ["target_partner_id"]
             isOneToOne: false
             referencedRelation: "logistics_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rh_position_catalog: {
+        Row: {
+          active: boolean
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          label: string
+          pole_id: string
+          position_key: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          label: string
+          pole_id: string
+          position_key: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          label?: string
+          pole_id?: string
+          position_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rh_position_catalog_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
