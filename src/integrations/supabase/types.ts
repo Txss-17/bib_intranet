@@ -2046,6 +2046,98 @@ export type Database = {
           },
         ]
       }
+      hr_attendance_records: {
+        Row: {
+          check_in: string | null
+          check_out: string | null
+          created_at: string
+          created_by: string | null
+          employee_id: string
+          id: string
+          notes: string | null
+          status: string
+          updated_at: string
+          work_date: string
+        }
+        Insert: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          work_date?: string
+        }
+        Update: {
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          created_by?: string | null
+          employee_id?: string
+          id?: string
+          notes?: string | null
+          status?: string
+          updated_at?: string
+          work_date?: string
+        }
+        Relationships: []
+      }
+      hr_candidates: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string | null
+          full_name: string
+          id: string
+          need_id: string | null
+          next_step: string | null
+          owner_id: string | null
+          position_key: string | null
+          source: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          full_name: string
+          id?: string
+          need_id?: string | null
+          next_step?: string | null
+          owner_id?: string | null
+          position_key?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          full_name?: string
+          id?: string
+          need_id?: string | null
+          next_step?: string | null
+          owner_id?: string | null
+          position_key?: string | null
+          source?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_candidates_need_id_fkey"
+            columns: ["need_id"]
+            isOneToOne: false
+            referencedRelation: "hr_recruitment_needs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hr_employee_request_events: {
         Row: {
           action: string
@@ -2177,6 +2269,171 @@ export type Database = {
           status?: string
           updated_at?: string
           work_email?: string | null
+        }
+        Relationships: []
+      }
+      hr_leave_requests: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          decided_at: string | null
+          decided_by: string | null
+          employee_id: string
+          end_date: string
+          id: string
+          leave_type: string
+          reason: string | null
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          employee_id?: string
+          end_date: string
+          id?: string
+          leave_type?: string
+          reason?: string | null
+          start_date: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          decided_at?: string | null
+          decided_by?: string | null
+          employee_id?: string
+          end_date?: string
+          id?: string
+          leave_type?: string
+          reason?: string | null
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hr_record_events: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          new_value: Json | null
+          old_value: Json | null
+          performed_by: string | null
+          record_id: string
+          table_name: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          performed_by?: string | null
+          record_id: string
+          table_name: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          old_value?: Json | null
+          performed_by?: string | null
+          record_id?: string
+          table_name?: string
+        }
+        Relationships: []
+      }
+      hr_recruitment_needs: {
+        Row: {
+          contract_type: string | null
+          created_at: string
+          created_by: string | null
+          desired_date: string | null
+          id: string
+          notes: string | null
+          pole_id: string | null
+          position_key: string
+          priority: string
+          recruiter_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          contract_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          desired_date?: string | null
+          id?: string
+          notes?: string | null
+          pole_id?: string | null
+          position_key: string
+          priority?: string
+          recruiter_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          contract_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          desired_date?: string | null
+          id?: string
+          notes?: string | null
+          pole_id?: string | null
+          position_key?: string
+          priority?: string
+          recruiter_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      hr_trainings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          due_date: string | null
+          employee_id: string | null
+          id: string
+          notes: string | null
+          provider: string | null
+          start_date: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          provider?: string | null
+          start_date?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          due_date?: string | null
+          employee_id?: string | null
+          id?: string
+          notes?: string | null
+          provider?: string | null
+          start_date?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
