@@ -493,18 +493,6 @@ const saveAccessScope = async () => {
   }
 };
 
-const assignScopeToRole = async () => {
-  if (!selectedScopeId || !selectedScopeRoleId) {
-    toast({
-      title: 'Sélection incomplète',
-      description: 'Choisis un périmètre et un rôle.',
-      variant: 'destructive',
-    });
-    return;
-  }
-
-  const scopeValue = scopeValueInput.trim() || null;
-
   const removeScopeAssignment = async (assignmentId: string) => {
     setScopeSaving(true);
 
@@ -533,6 +521,57 @@ const assignScopeToRole = async () => {
           error instanceof Error
             ? error.message
             : 'Une erreur est survenue lors de la suppression.',
+        variant: 'destructive',
+      });
+    } finally {
+      setScopeSaving(false);
+    }
+  };
+
+  const assignScopeToRole = async () => {
+    if (!selectedScopeId || !selectedScopeRoleId) {
+      toast({
+        title: 'Sélection incomplète',
+        description: 'Choisis un périmètre et un rôle.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    const scopeValue = scopeValueInput.trim() || null;
+    setScopeSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from('access_role_scopes')
+        .insert({
+          role_id: selectedScopeRoleId,
+          scope_id: selectedScopeId,
+          scope_value: scopeValue,
+        });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: 'Association enregistrée',
+        description: 'Le périmètre a bien été associé au rôle.',
+      });
+
+      setSelectedScopeId('');
+      setSelectedScopeRoleId('');
+      setScopeValueInput('');
+      await loadAccessCatalog();
+    } catch (error) {
+      console.error('Erreur d’association du périmètre', error);
+
+      toast({
+        title: 'Association impossible',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Une erreur est survenue lors de l’association.',
         variant: 'destructive',
       });
     } finally {
