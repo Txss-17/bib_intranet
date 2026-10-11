@@ -254,9 +254,9 @@ function NewEmployeeDialog() {
       first_name: form.first_name.trim(),
       last_name: form.last_name.trim(),
       personal_email:
-        form.personal_email.trim() ||,
+        form.personal_email.trim() || null,
       work_email:
-        form.work_email.trim() ||,
+        form.work_email.trim() || null,
       collaborator_type:
         form.collaborator_type,
       position: form.position,
@@ -274,7 +274,7 @@ function NewEmployeeDialog() {
         form.notes.trim() || null,
     });
 
-    setOpen(true);
+    setOpen(false);
     resetForm();
   };
 
