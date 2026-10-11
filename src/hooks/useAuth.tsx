@@ -15,6 +15,7 @@ interface ProfileData {
   subsidiary: string | null;
   manager_id: string | null;
   app_origin: string | null;
+  test_account: boolean;
 }
 
 interface AuthContextType {
@@ -40,12 +41,16 @@ export const useAuth = () => useContext(AuthContext);
 const fetchProfile = async (userId: string): Promise<ProfileData | null> => {
   const { data } = await supabase
     .from('profiles')
-    .select('id, first_name, last_name, position, avatar_url, email, poles, seniority, work_mode, subsidiary, manager_id')
+    .select('id, first_name, last_name, position, avatar_url, email, poles, seniority, work_mode, subsidiary, manager_id, test_account')
     .eq('id', userId)
     .single();
   if (!data) return null;
   // app_origin may not exist in types yet but exists in DB after migration
-  return { ...data, app_origin: (data as any).app_origin ?? 'connect' };
+  return {
+    ...data,
+    app_origin: (data as any).app_origin ?? 'connect',
+    test_account: (data as any).test_account === true,
+  };
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
