@@ -1343,6 +1343,11 @@ export default function Onboarding() {
       null,
     );
 
+  // Le panneau suit la version actualisée du dossier après mutation.
+  const selectedRequest = selected
+    ? requests.find((request) => request.id === selected.id) ?? selected
+    : null;
+
   const kpis = useMemo(
     () => ({
       total: requests.length,
@@ -1619,9 +1624,9 @@ export default function Onboarding() {
         </CardContent>
       </Card>
 
-      {selected && (
+      {selectedRequest && (
         <RequestSheet
-          request={selected}
+          request={selectedRequest}
           canValidate={canValidate}
           canProvision={canProvision}
           onClose={() =>

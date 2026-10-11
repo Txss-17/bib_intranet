@@ -673,14 +673,23 @@ export const useHrOnboardingActions = () => {
       }
 
       const {
+        data: updatedRequest,
         error,
       } = await db
         .from('hr_employee_requests')
         .update(patch)
-        .eq('id', request.id);
+        .eq('id', request.id)
+        .select('id, status')
+        .maybeSingle();
 
       if (error) {
         throw error;
+      }
+
+      if (!updatedRequest) {
+        throw new Error(
+          "Aucun dossier n'a été modifié. Vérifiez le statut du dossier et vos droits RH."
+        );
       }
 
       await logEvent(
