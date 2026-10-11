@@ -193,6 +193,45 @@ export type Database = {
         }
         Relationships: []
       }
+      access_role_scopes: {
+        Row: {
+          created_at: string
+          id: string
+          role_id: string
+          scope_id: string
+          scope_value: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role_id: string
+          scope_id: string
+          scope_value?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role_id?: string
+          scope_id?: string
+          scope_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_role_scopes_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "access_roles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_role_scopes_scope_id_fkey"
+            columns: ["scope_id"]
+            isOneToOne: false
+            referencedRelation: "access_scopes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       access_roles: {
         Row: {
           business_pole: string | null
@@ -258,45 +297,6 @@ export type Database = {
           scope_type?: string | null
         }
         Relationships: []
-      }
-      access_role_scopes: {
-        Row: {
-          id: string
-          role_id: string
-          scope_id: string
-          scope_value: string | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          role_id: string
-          scope_id: string
-          scope_value?: string | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          role_id?: string
-          scope_id?: string
-          scope_value?: string | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "access_role_scopes_role_id_fkey"
-            columns: ["role_id"]
-            isOneToOne: false
-            referencedRelation: "access_roles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "access_role_scopes_scope_id_fkey"
-            columns: ["scope_id"]
-            isOneToOne: false
-            referencedRelation: "access_scopes"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       anomalies: {
         Row: {
@@ -2223,13 +2223,91 @@ export type Database = {
       }
       hr_employee_requests: {
         Row: {
+          account_created_at: string | null
+          account_created_by: string | null
+          collaborator_type: string
+          contract_type: string | null
+          created_at: string
+          created_by: string | null
+          created_user_id: string | null
+          first_name: string
+          hr_validated_at: string | null
+          hr_validated_by: string | null
+          id: string
+          last_name: string
+          manager_id: string | null
+          notes: string | null
+          personal_email: string | null
+          poles: string[]
+          position: Database["public"]["Enums"]["employee_position"] | null
+          position_key: string | null
+          primary_pole: string | null
+          reference: string
+          rejection_reason: string | null
           requested_role: string
+          seniority: string
+          start_date: string | null
+          status: string
+          updated_at: string
+          work_email: string | null
         }
         Insert: {
-          requested_role?: string
+          account_created_at?: string | null
+          account_created_by?: string | null
+          collaborator_type?: string
+          contract_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_user_id?: string | null
+          first_name: string
+          hr_validated_at?: string | null
+          hr_validated_by?: string | null
+          id?: string
+          last_name: string
+          manager_id?: string | null
+          notes?: string | null
+          personal_email?: string | null
+          poles?: string[]
+          position?: Database["public"]["Enums"]["employee_position"] | null
+          position_key?: string | null
+          primary_pole?: string | null
+          reference?: string
+          rejection_reason?: string | null
+          requested_role: string
+          seniority?: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          work_email?: string | null
         }
         Update: {
+          account_created_at?: string | null
+          account_created_by?: string | null
+          collaborator_type?: string
+          contract_type?: string | null
+          created_at?: string
+          created_by?: string | null
+          created_user_id?: string | null
+          first_name?: string
+          hr_validated_at?: string | null
+          hr_validated_by?: string | null
+          id?: string
+          last_name?: string
+          manager_id?: string | null
+          notes?: string | null
+          personal_email?: string | null
+          poles?: string[]
+          position?: Database["public"]["Enums"]["employee_position"] | null
+          position_key?: string | null
+          primary_pole?: string | null
+          reference?: string
+          rejection_reason?: string | null
           requested_role?: string
+          seniority?: string
+          start_date?: string | null
+          status?: string
+          updated_at?: string
+          work_email?: string | null
         }
         Relationships: []
       }
@@ -5857,6 +5935,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      rh_can_assign_employee_portfolio: {
+        Args: { p_employee_id: string; p_portfolio_id: string }
+        Returns: boolean
       }
       run_reconciliation: { Args: never; Returns: number }
       send_anomaly_reminders: { Args: never; Returns: number }
