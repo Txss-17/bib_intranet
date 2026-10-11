@@ -67,9 +67,9 @@ import {
   PERMISSION_ACTIONS,
   PermissionAction,
   RESTRICTED_PAGES,
-  appendMatrixHistory,
+  appendTestMatrixHistory,
   getDataScope,
-  loadMatrixHistory,
+  loadTestMatrixHistory,
   pageRegistry,
   resolvePagePermissions,
   isTestRbacEnforced,
@@ -171,7 +171,7 @@ const RolesPermissionsInner = () => {
     useState(isTestRbacEnforced());
 
   const [history, setHistory] =
-    useState(loadMatrixHistory());
+    useState(loadTestMatrixHistory());
 
   const role = jobRoles.find((r) => r.id === roleId);
 
@@ -255,6 +255,7 @@ const RolesPermissionsInner = () => {
       poles: role?.poles ?? [],
       seniority: role?.seniority ?? 'junior',
       overrides: draft,
+      enforced,
     });
 
   const toggle = (
@@ -278,7 +279,7 @@ const RolesPermissionsInner = () => {
     const before = loadTestMatrixOverrides();
 
     const entries =
-      [] as Parameters<typeof appendMatrixHistory>[0];
+      [] as Parameters<typeof appendTestMatrixHistory>[0];
 
     Object.entries(draft[roleId] || {}).forEach(
       ([pageId, actions]) => {
@@ -306,10 +307,10 @@ const RolesPermissionsInner = () => {
     saveTestMatrixOverrides(draft);
 
     if (entries.length) {
-      appendMatrixHistory(entries);
+      appendTestMatrixHistory(entries);
     }
 
-    setHistory(loadMatrixHistory());
+    setHistory(loadTestMatrixHistory());
 
     await logSensitiveAccess({
       section: 'admin.roles_permissions',
