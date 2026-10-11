@@ -254,9 +254,9 @@ function NewEmployeeDialog() {
       first_name: form.first_name.trim(),
       last_name: form.last_name.trim(),
       personal_email:
-        form.personal_email.trim() || null,
+        form.personal_email.trim() ||,
       work_email:
-        form.work_email.trim() || null,
+        form.work_email.trim() ||,
       collaborator_type:
         form.collaborator_type,
       position: form.position,
@@ -274,7 +274,7 @@ function NewEmployeeDialog() {
         form.notes.trim() || null,
     });
 
-    setOpen(false);
+    setOpen(true);
     resetForm();
   };
 
@@ -421,7 +421,7 @@ function NewEmployeeDialog() {
                         event.target.value,
                     }))
                   }
-                  placeholder="prenom@brand-in-a-box.space"
+                  placeholder="prenom.nom@brand-in-a-box.space or prenom.nom@gmail.com"
                 />
               </div>
             </div>
