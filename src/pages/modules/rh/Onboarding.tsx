@@ -192,7 +192,7 @@ function NewEmployeeDialog() {
     manager_id: '',
   });
 
-  const [poles, setPoles] = useState<string[]>([]);
+  const [poles, setPoles] = useState<string[]>(['ops']);
 
   const requiredPole = primaryPole;
 
@@ -229,7 +229,7 @@ function NewEmployeeDialog() {
     });
 
     setPrimaryPole('');
-    setPoles(['']);
+    setPoles([]);
   };
 
   const togglePole = (poleId: string) => {
