@@ -662,6 +662,9 @@ const TEST_MATRIX_KEY = 'bib.permission_matrix.test.v1';
 
 const TEST_ENFORCE_KEY = 'bib.rbac_enforced.test.v1';
 
+const TEST_HISTORY_KEY =
+  'bib.permission_matrix.history.test.v1';
+
 export const MATRIX_EVENT =
   'permission-matrix-changed';
 
@@ -782,6 +785,21 @@ export const appendMatrixHistory = (
   );
 };
 
+/** Historique isolé de la matrice expérimentale (comptes de test). */
+export const loadTestMatrixHistory = (): MatrixHistoryEntry[] => {
+  try {
+    return JSON.parse(localStorage.getItem(TEST_HISTORY_KEY) || '[]');
+  } catch {
+    return [];
+  }
+};
+
+export const appendTestMatrixHistory = (entries: MatrixHistoryEntry[]) => {
+  const next = [...entries, ...loadTestMatrixHistory()].slice(0, 500);
+  localStorage.setItem(TEST_HISTORY_KEY, JSON.stringify(next));
+  window.dispatchEvent(new Event(MATRIX_EVENT));
+};
+
 // ---------------------------------------------------------------------------
 // ÉTAT DU RBAC
 // ---------------------------------------------------------------------------
@@ -792,17 +810,12 @@ export const appendMatrixHistory = (
  * "off" = mode construction / développement.
  * "on"  = mode RBAC normal.
  */
-export const isRbacEnforced = (): boolean => {
-  try {
-    return (
-      localStorage.getItem(
-        ENFORCE_KEY,
-      ) !== 'off'
-    );
-  } catch {
-    return true;
-  }
-};
+/**
+ * LEGACY : l'ancien mode construction global (ENFORCE_KEY / rbac_enforced)
+ * ne doit plus jamais ouvrir l'accès aux comptes réels. Le RBAC réel est
+ * toujours appliqué ; le mode expérimental passe par isTestRbacEnforced().
+ */
+export const isRbacEnforced = (): boolean => true;
 
 export const setRbacEnforced = (
   enabled: boolean,
@@ -833,7 +846,12 @@ const pushPermissionSetting = async (key: string, value: unknown) => {
   if (error) console.error('[permissions] synchronisation refusée', error.message);
 };
 
+let syncIsTest = false;
+const TEST_SETTING_KEYS = new Set(['test_matrix_overrides', 'test_rbac_enforced']);
+
 const applyRemoteSetting = (key: string, value: unknown) => {
+  // Les comptes réels ignorent complètement les réglages expérimentaux.
+  if (TEST_SETTING_KEYS.has(key) && !syncIsTest) return;
   try {
     if (key === 'matrix_overrides') localStorage.setItem(MATRIX_KEY, JSON.stringify(value ?? {}));
     if (key === 'sensitive_rules') applyRemoteOverrides(value as any);
@@ -856,13 +874,24 @@ const applyRemoteSetting = (key: string, value: unknown) => {
 let syncStarted = false;
 
 /** Charge les permissions enregistrées en base et écoute leurs modifications en temps réel. */
-export const startPermissionSync = () => {
-  if (syncStarted) return;
-  syncStarted = true;
+export const startPermissionSync = (isTestAccount = false) => {
   const db = supabase as any;
+  const switchedToTest = isTestAccount && !syncIsTest;
+  syncIsTest = isTestAccount;
+  if (!isTestAccount) {
+    // Purge locale : un compte réel ne conserve aucun réglage test actif.
+    try {
+      localStorage.removeItem(TEST_MATRIX_KEY);
+      localStorage.removeItem(TEST_ENFORCE_KEY);
+    } catch { /* indisponible */ }
+  }
+  if (syncStarted && !switchedToTest) return;
+  const firstStart = !syncStarted;
+  syncStarted = true;
   db.from('permission_settings').select('key, value').then(({ data }: any) => {
     (data || []).forEach((r: any) => applyRemoteSetting(r.key, r.value));
   });
+  if (!firstStart) return;
   db.channel('permission-settings-sync')
     .on('postgres_changes', { event: '*', schema: 'public', table: 'permission_settings' },
       (payload: any) => payload.new?.key && applyRemoteSetting(payload.new.key, payload.new.value))
@@ -910,9 +939,13 @@ export interface ResolveContext {
   isSuperAdmin?: boolean;
 
   /**
-   * Surcharges de la matrice.
+   * Surcharges de la matrice (matrice test uniquement pour les comptes de test).
+   * Absent = aucune surcharge (jamais la matrice globale legacy).
    */
   overrides?: MatrixOverrides;
+
+  /** RBAC appliqué ? Absent = true. Seuls les comptes de test peuvent valoir false. */
+  enforced?: boolean;
 }
 
 // ---------------------------------------------------------------------------
@@ -925,9 +958,7 @@ export const resolvePagePermissions = (
 ): ActionSet => {
   const page = getPage(pageId);
 
-  const overrides =
-    ctx.overrides ??
-    loadMatrixOverrides();
+  const overrides = ctx.overrides ?? {};
 
   const roleOverrides =
     ctx.role
@@ -949,7 +980,7 @@ export const resolvePagePermissions = (
   // -------------------------------------------------------------------------
 
   if (
-    !isRbacEnforced() ||
+    ctx.enforced === false ||
     ctx.isSuperAdmin
   ) {
     return apply({

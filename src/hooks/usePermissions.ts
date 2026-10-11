@@ -56,7 +56,7 @@ export const usePermissions = (): UsePermissionsReturn => {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    if (profile) startPermissionSync();
+    if (profile) startPermissionSync(profile.test_account === true);
   }, [profile]);
 
   useEffect(() => {
@@ -89,6 +89,7 @@ export const usePermissions = (): UsePermissionsReturn => {
     poles,
     seniority,
     isSuperAdmin,
+    enforced,
 
     // Les surcharges de test ne sont appliquées qu'aux comptes de test.
     overrides:

@@ -479,7 +479,8 @@ export const getRule = (
 
 export const isBuildModeOpenRules = (): boolean => {
   try {
-    return localStorage.getItem('bib.rbac_enforced.v1') === 'off';
+    // LEGACY : l'ancien mode construction global n'ouvre plus aucun accès.
+    return false;
   } catch {
     return false;
   }
