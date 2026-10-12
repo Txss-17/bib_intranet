@@ -37,6 +37,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
+import { poles as availablePoles } from '@/data/poles';
+import { syncAccessCatalog } from '@/lib/accessCatalogSync';
 
 type AccessRole = {
   id: string;
@@ -100,9 +102,11 @@ const RolesPermissions = () => {
   const [selectedRoleId, setSelectedRoleId] = useState('');
   const [search, setSearch] = useState('');
   const [moduleFilter, setModuleFilter] = useState('all');
+  const [poleFilter, setPoleFilter] = useState('all');
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [syncingCatalog, setSyncingCatalog] = useState(false);
 
   const [draft, setDraft] = useState<
     Record<string, boolean>
@@ -248,6 +252,32 @@ const RolesPermissions = () => {
     ).sort();
   }, [interfaces]);
 
+  const poleOptions = useMemo(() => {
+    const catalogPoles = new Set(
+      interfaces
+        .map((item) => item.pole)
+        .filter((pole): pole is string => Boolean(pole)),
+    );
+    const knownPoles = availablePoles.map(
+      (pole) => ({
+        id: pole.id,
+        label: pole.name,
+      }),
+    );
+    const knownPoleIds = new Set<string>(
+      knownPoles.map((pole) => pole.id),
+    );
+    const otherPoles = Array.from(catalogPoles)
+      .filter((pole) => !knownPoleIds.has(pole))
+      .sort()
+      .map((pole) => ({
+        id: pole,
+        label: pole === 'transversal' ? 'Transversal' : pole,
+      }));
+
+    return [...knownPoles, ...otherPoles];
+  }, [interfaces]);
+
   const visibleInterfaces = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -259,6 +289,13 @@ const RolesPermissions = () => {
       if (
         moduleFilter !== 'all' &&
         item.module !== moduleFilter
+      ) {
+        return false;
+      }
+
+      if (
+        poleFilter !== 'all' &&
+        item.pole !== poleFilter
       ) {
         return false;
       }
@@ -279,7 +316,7 @@ const RolesPermissions = () => {
           String(value).toLowerCase().includes(query),
         );
     });
-  }, [interfaces, moduleFilter, search]);
+  }, [interfaces, moduleFilter, poleFilter, search]);
 
   const rolePermissions = useMemo(() => {
     const result = new Map<string, boolean>();
@@ -418,6 +455,34 @@ const RolesPermissions = () => {
     }
   };
 
+  const synchronizeCatalog = async () => {
+    setSyncingCatalog(true);
+
+    try {
+      await syncAccessCatalog();
+      await loadCatalog();
+
+      toast({
+        title: 'Catalogue synchronisé',
+        description:
+          'Les pôles, interfaces, rôles et actions sont à jour.',
+      });
+    } catch (error) {
+      console.error('RBAC catalog synchronization error', error);
+
+      toast({
+        title: 'Synchronisation impossible',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Impossible de synchroniser le catalogue des permissions.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSyncingCatalog(false);
+    }
+  };
+
   const resetDraft = () => {
     const nextDraft: Record<string, boolean> = {};
 
@@ -502,6 +567,19 @@ const RolesPermissions = () => {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
+            onClick={() => void synchronizeCatalog()}
+            disabled={loading || saving || syncingCatalog}
+          >
+            {syncingCatalog ? (
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+            ) : (
+              <Activity className="mr-2 h-4 w-4" />
+            )}
+            Synchroniser le catalogue
+          </Button>
+
+          <Button
+            variant="outline"
             onClick={() => void loadCatalog()}
             disabled={loading || saving}
           >
@@ -528,7 +606,7 @@ const RolesPermissions = () => {
       </div>
 
       <Card>
-        <CardContent className="grid gap-4 pt-6 md:grid-cols-3">
+        <CardContent className="grid gap-4 pt-6 md:grid-cols-4">
           <div>
             <p className="text-xs text-muted-foreground">
               Rôle
@@ -603,6 +681,36 @@ const RolesPermissions = () => {
                     value={module}
                   >
                     {module}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <p className="text-xs text-muted-foreground">
+              Pôle
+            </p>
+
+            <Select
+              value={poleFilter}
+              onValueChange={setPoleFilter}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue />
+              </SelectTrigger>
+
+              <SelectContent>
+                <SelectItem value="all">
+                  Tous les pôles
+                </SelectItem>
+
+                {poleOptions.map((pole) => (
+                  <SelectItem
+                    key={pole.id}
+                    value={pole.id}
+                  >
+                    {pole.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -743,8 +851,12 @@ const RolesPermissions = () => {
                   <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
               ) : visibleInterfaces.length === 0 ? (
-                <div className="py-12 text-center text-sm text-muted-foreground">
-                  Aucune interface ne correspond aux filtres.
+                <div className="flex flex-col items-center gap-3 py-12 text-center">
+                  <p className="text-sm text-muted-foreground">
+                    {interfaces.length === 0
+                      ? 'Le catalogue des interfaces est vide.'
+                      : 'Aucune interface ne correspond aux filtres.'}
+                  </p>
                 </div>
               ) : (
                 <div className="overflow-x-auto rounded-lg border">

@@ -98,8 +98,10 @@ export default function SupplierPerformance() {
     isError,
   } = useProductSupplierData();
 
-  const rows: SupplierPerformanceRow[] =
-    data?.rows ?? [];
+  const rows = useMemo<SupplierPerformanceRow[]>(
+    () => data?.rows ?? [],
+    [data?.rows],
+  );
 
   const isMock = data?.isMock ?? false;
 

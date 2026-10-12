@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Package, Clock, CheckCircle, XCircle, Eye, Filter, Search, AlertTriangle, ChevronLeft, ChevronRight, Plus, Loader2 } from 'lucide-react';
@@ -14,37 +14,20 @@ import { ExportButtons } from '@/components/ExportButtons';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database } from '@/integrations/supabase/types';
 import { useToast } from '@/hooks/use-toast';
 import FileUploadZone from '@/components/FileUploadZone';
 
 const MARGIN_RATE = 0.20;
 const ITEMS_PER_PAGE = 10;
 
-interface Product {
-  id: string;
-  name: string;
-  sku: string | null;
-  supplier_id: string;
+type Product = Omit<
+  Database['public']['Tables']['products']['Row'],
+  'gallery'
+> & {
   supplier_name: string;
-  category: string | null;
-  unit_price: number | null;
-  selling_price: number | null;
-  margin: number | null;
-  moq: number | null;
-  description: string | null;
-  origin: string | null;
-  weight: string | null;
-  dimensions: string | null;
-  barcode: string | null;
-  shelf_life: string | null;
-  ingredients: string | null;
-  image_url: string | null;
   gallery: string[];
-  product_sheet_url: string | null;
-  status: string;
-  packaging_status: string | null;
-  created_at: string;
-}
+};
 
 export default function PendingProducts() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -71,27 +54,35 @@ export default function PendingProducts() {
   const computedSellingPrice = newProduct.unit_price ? (parseFloat(newProduct.unit_price) * (1 + MARGIN_RATE)).toFixed(2) : '';
   const computedMargin = MARGIN_RATE * 100;
 
-  const fetchProducts = async () => {
-    const { data, error } = await (supabase as any)
+  const fetchProducts = useCallback(async () => {
+    const { data, error } = await supabase
       .from('products')
       .select('*, suppliers(name)')
       .in('status', ['pending', 'review'])
       .order('created_at', { ascending: false });
 
-    if (error) { console.error(error); setLoading(false); return; }
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      setLoading(false);
+      return;
+    }
 
-    setProducts((data || []).map((p: any) => ({
+    setProducts((data || []).map((p) => ({
       ...p,
       supplier_name: p.suppliers?.name || 'Inconnu',
       gallery: p.gallery || [],
     })));
     setLoading(false);
-  };
+  }, [toast]);
 
-  const fetchSuppliers = async () => {
-    const { data } = await (supabase as any).from('suppliers').select('id, name').eq('status', 'active').order('name');
+  const fetchSuppliers = useCallback(async () => {
+    const { data, error } = await supabase.from('suppliers').select('id, name').eq('status', 'active').order('name');
+    if (error) {
+      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      return;
+    }
     setSuppliers(data || []);
-  };
+  }, [toast]);
 
   useEffect(() => {
     fetchProducts();
@@ -102,7 +93,7 @@ export default function PendingProducts() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => fetchProducts())
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [fetchProducts, fetchSuppliers]);
 
   const handleAddProduct = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,7 +108,7 @@ export default function PendingProducts() {
     const imageFiles = newFiles.filter(f => f.type.startsWith('image/'));
     const docFiles = newFiles.filter(f => !f.type.startsWith('image/'));
 
-    const { error } = await (supabase as any).from('products').insert({
+    const { error } = await supabase.from('products').insert({
       name: newProduct.name,
       supplier_id: newProduct.supplier_id,
       category: newProduct.category || null,
@@ -151,7 +142,7 @@ export default function PendingProducts() {
 
   const handleValidate = async () => {
     if (!selectedProduct) return;
-    const { error } = await (supabase as any).from('products').update({ status: 'validated', validated_at: new Date().toISOString() }).eq('id', selectedProduct.id);
+    const { error } = await supabase.from('products').update({ status: 'validated', validated_at: new Date().toISOString() }).eq('id', selectedProduct.id);
     if (error) toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     else toast({ title: 'Produit validé', description: selectedProduct.name });
     setActionDialog(null);
@@ -159,7 +150,7 @@ export default function PendingProducts() {
 
   const handleReject = async () => {
     if (!selectedProduct) return;
-    const { error } = await (supabase as any).from('products').update({ status: 'rejected', rejection_reason: rejectionReason }).eq('id', selectedProduct.id);
+    const { error } = await supabase.from('products').update({ status: 'rejected', rejection_reason: rejectionReason }).eq('id', selectedProduct.id);
     if (error) toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
     else toast({ title: 'Produit refusé', description: selectedProduct.name });
     setActionDialog(null);

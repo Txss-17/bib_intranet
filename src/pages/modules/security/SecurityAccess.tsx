@@ -18,58 +18,34 @@ import { useSecurityAccess } from '@/hooks/useSecurityData';
 
 type Position = keyof typeof positionAccess;
 
-interface SecurityAccessUser {
-  id: string;
-  first_name: string | null;
-  last_name: string | null;
-  email: string;
-  position: Position | null;
-}
-
-function isSecurityAccessUser(value: unknown): value is SecurityAccessUser {
-  if (!value || typeof value !== 'object') {
-    return false;
-  }
-
-  const user = value as Record<string, unknown>;
-
-  return (
-    typeof user.id === 'string' &&
-    (typeof user.first_name === 'string' || user.first_name === null) &&
-    (typeof user.last_name === 'string' || user.last_name === null) &&
-    typeof user.email === 'string' &&
-    (typeof user.position === 'string' || user.position === null)
-  );
-}
+const isKnownPosition = (
+  position: string,
+): position is Position =>
+  Object.prototype.hasOwnProperty.call(positionAccess, position);
 
 export default function SecurityAccess() {
   const { data: users = [], isLoading } = useSecurityAccess();
   const [query, setQuery] = useState('');
 
-  const typedUsers = useMemo<SecurityAccessUser[]>(
-    () => (users as unknown as SecurityAccessUser[]).filter(isSecurityAccessUser as any),
-    [users],
-  );
-
   const filteredUsers = useMemo(() => {
     const search = query.trim().toLowerCase();
 
     if (!search) {
-      return typedUsers;
+      return users;
     }
 
-    return typedUsers.filter((user) =>
+    return users.filter((user) =>
       [
         user.first_name ?? '',
         user.last_name ?? '',
-        user.email,
+        user.email ?? '',
         user.position ?? '',
       ]
         .join(' ')
         .toLowerCase()
         .includes(search),
     );
-  }, [typedUsers, query]);
+  }, [users, query]);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -98,9 +74,9 @@ export default function SecurityAccess() {
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
           <div>
             <CardTitle>
-              {typedUsers.length} utilisateur
-              {typedUsers.length > 1 ? 's' : ''} interne
-              {typedUsers.length > 1 ? 's' : ''}
+              {users.length} utilisateur
+              {users.length > 1 ? 's' : ''} interne
+              {users.length > 1 ? 's' : ''}
             </CardTitle>
 
             <p className="mt-1 text-sm text-muted-foreground">
@@ -154,7 +130,7 @@ export default function SecurityAccess() {
 
                 <TableBody>
                   {filteredUsers.map((user) => {
-                    const access = user.position
+                    const access = user.position && isKnownPosition(user.position)
                       ? positionAccess[user.position]
                       : null;
 
@@ -169,7 +145,7 @@ export default function SecurityAccess() {
                             </p>
 
                             <p className="text-xs text-muted-foreground">
-                              {user.email}
+                              {user.email || 'Adresse e-mail non renseignée'}
                             </p>
                           </div>
                         </TableCell>

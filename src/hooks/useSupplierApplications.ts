@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Database, Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
@@ -15,12 +16,12 @@ export interface SupplierApplication {
   lead_time_days: number | null;
   moq: number | null;
   audit_accepted: boolean;
-  certifications: any;
-  documents: any;
-  raw_payload: any;
+  certifications: Json;
+  documents: Json;
+  raw_payload: Json;
   score: number;
-  priority: 'high' | 'standard' | 'low';
-  status: 'new' | 'assigned' | 'in_review' | 'approved' | 'rejected' | 'on_hold';
+  priority: string;
+  status: string;
   blocking_criteria: string[];
   assigned_to_id: string | null;
   assigned_to_name: string | null;
@@ -33,11 +34,19 @@ export interface SupplierApplication {
   updated_at: string;
 }
 
+export type SupplierApplicationStatus =
+  | 'new'
+  | 'assigned'
+  | 'in_review'
+  | 'approved'
+  | 'rejected'
+  | 'on_hold';
+
 export function useSupplierApplications() {
   return useQuery({
     queryKey: ['supplier_applications'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('supplier_applications')
         .select('*')
         .order('created_at', { ascending: false });
@@ -52,18 +61,19 @@ export function useSupplierApplication(id: string | undefined) {
     queryKey: ['supplier_application', id],
     enabled: !!id,
     queryFn: async () => {
-      const { data: app, error } = await (supabase as any)
+      const { data: app, error } = await supabase
         .from('supplier_applications')
         .select('*')
         .eq('id', id)
         .single();
       if (error) throw error;
-      const { data: events } = await (supabase as any)
+      const { data: events, error: eventsError } = await supabase
         .from('supplier_application_events')
         .select('*')
         .eq('application_id', id)
         .order('created_at', { ascending: false });
-      return { app: app as SupplierApplication, events: (events || []) as any[] };
+      if (eventsError) throw eventsError;
+      return { app, events };
     },
   });
 }
@@ -72,16 +82,16 @@ export function useUpdateApplicationStatus() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async ({ id, status, notes, fromStatus }: { id: string; status: SupplierApplication['status']; notes?: string; fromStatus?: string }) => {
-      const update: any = { status };
+    mutationFn: async ({ id, status, notes, fromStatus }: { id: string; status: SupplierApplicationStatus; notes?: string; fromStatus?: string }) => {
+      const update: Database['public']['Tables']['supplier_applications']['Update'] = { status };
       if (status === 'approved' || status === 'rejected') {
         update.decision_at = new Date().toISOString();
         update.decision_by = user?.id;
         update.decision_notes = notes ?? null;
       }
-      const { error } = await (supabase as any).from('supplier_applications').update(update).eq('id', id);
+      const { error } = await supabase.from('supplier_applications').update(update).eq('id', id);
       if (error) throw error;
-      await (supabase as any).from('supplier_application_events').insert({
+      const { error: eventError } = await supabase.from('supplier_application_events').insert({
         application_id: id,
         event_type: status === 'approved' || status === 'rejected' ? 'decided' : 'status_changed',
         from_status: fromStatus,
@@ -89,13 +99,14 @@ export function useUpdateApplicationStatus() {
         notes: notes ?? null,
         performed_by: user?.id,
       });
+      if (eventError) throw eventError;
     },
     onSuccess: (_d, v) => {
       toast.success('Statut mis à jour');
       qc.invalidateQueries({ queryKey: ['supplier_applications'] });
       qc.invalidateQueries({ queryKey: ['supplier_application', v.id] });
     },
-    onError: (e: any) => toast.error('Erreur', { description: e.message }),
+    onError: (e: Error) => toast.error('Erreur', { description: e.message }),
   });
 }
 
@@ -104,12 +115,12 @@ export function useReassignApplication() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async ({ id, assigneeId, assigneeName }: { id: string; assigneeId: string; assigneeName: string }) => {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('supplier_applications')
         .update({ assigned_to_id: assigneeId, assigned_to_name: assigneeName, assigned_at: new Date().toISOString(), status: 'assigned' })
         .eq('id', id);
       if (error) throw error;
-      await (supabase as any).from('supplier_application_events').insert({
+      const { error: eventError } = await supabase.from('supplier_application_events').insert({
         application_id: id,
         event_type: 'assigned',
         to_status: 'assigned',
@@ -117,13 +128,14 @@ export function useReassignApplication() {
         performed_by: user?.id,
         metadata: { assigned_to_id: assigneeId },
       });
+      if (eventError) throw eventError;
     },
     onSuccess: (_d, v) => {
       toast.success('Candidature réassignée');
       qc.invalidateQueries({ queryKey: ['supplier_applications'] });
       qc.invalidateQueries({ queryKey: ['supplier_application', v.id] });
     },
-    onError: (e: any) => toast.error('Erreur', { description: e.message }),
+    onError: (e: Error) => toast.error('Erreur', { description: e.message }),
   });
 }
 
@@ -131,11 +143,12 @@ export function useSupplierManagers() {
   return useQuery({
     queryKey: ['supplier_managers'],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, position')
         .or('position.eq.supplier_manager,position.eq.ceo');
-      return (data || []).map((p: any) => ({
+      if (error) throw error;
+      return (data || []).map((p) => ({
         id: p.id,
         name: `${p.first_name} ${p.last_name}`.trim(),
         position: p.position,

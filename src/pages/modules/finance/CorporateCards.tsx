@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { CreditCard, Plus, Receipt, Loader2, Shield, Lock, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import {
 import { useUserRole } from '@/hooks/useUserRole';
 import { useAuth } from '@/hooks/useAuth';
 
-const APPROVAL_META: Record<string, { label: string; className: string; icon: any }> = {
+const APPROVAL_META: Record<string, { label: string; className: string; icon: LucideIcon }> = {
   pending: { label: 'En attente', className: 'bg-yellow-500/15 text-yellow-700 dark:text-yellow-400 border-yellow-500/30', icon: Clock },
   approved: { label: 'Approuvée', className: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/30', icon: CheckCircle2 },
   rejected: { label: 'Refusée', className: 'bg-destructive/15 text-destructive border-destructive/30', icon: XCircle },

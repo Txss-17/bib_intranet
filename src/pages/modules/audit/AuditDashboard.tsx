@@ -35,7 +35,7 @@ function useAuditStats() {
 
 function useNonConformities() {
   return useQuery({
-    queryKey: ['audit_non_conformities'],
+    queryKey: ['quality_alerts'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quality_alerts')

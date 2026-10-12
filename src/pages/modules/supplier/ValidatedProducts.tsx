@@ -15,6 +15,24 @@ type ProductStatus =
   | 'rejected'
   | 'inactive';
 
+interface ValidatedProduct {
+  id?: string | null;
+  name?: string | null;
+  sku?: string | null;
+  slug?: string | null;
+  status?: string | null;
+  validation_status?: string | null;
+  product_status?: string | null;
+  shop_name?: string | null;
+  shop?: { name?: string | null } | null;
+  price?: number | string | null;
+  sale_price?: number | string | null;
+  updated_at?: string | null;
+  created_at?: string | null;
+}
+
+const EMPTY_PRODUCTS: ValidatedProduct[] = [];
+
 const statusConfig: Record<
   ProductStatus,
   {
@@ -101,7 +119,7 @@ function formatDate(value: unknown) {
 }
 
 export default function ValidatedProducts() {
-  const [products, setProducts] = useState<any[]>([]);
+  const products = EMPTY_PRODUCTS;
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] =
     useState<'all' | ProductStatus>('all');

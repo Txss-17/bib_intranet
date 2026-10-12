@@ -1551,15 +1551,13 @@ export default function SupplierPortfolios() {
                   <TableRow>
                     <SortableTableHead
                       column="name"
-                      currentSort={
-                        suppliersTable.sortColumn as string
-                      }
+                      currentSort={suppliersTable.sortColumn}
                       direction={
                         suppliersTable.sortDirection
                       }
                       onSort={(column) =>
                         suppliersTable.toggleSort(
-                          column as any,
+                          column as keyof SupplierRow,
                         )
                       }
                     >
@@ -1576,15 +1574,13 @@ export default function SupplierPortfolios() {
 
                     <SortableTableHead
                       column="score"
-                      currentSort={
-                        suppliersTable.sortColumn as string
-                      }
+                      currentSort={suppliersTable.sortColumn}
                       direction={
                         suppliersTable.sortDirection
                       }
                       onSort={(column) =>
                         suppliersTable.toggleSort(
-                          column as any,
+                          column as keyof SupplierRow,
                         )
                       }
                     >

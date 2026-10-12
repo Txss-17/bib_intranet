@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesInsert } from '@/integrations/supabase/types';
 
 const sb = supabase as any;
 
@@ -60,7 +61,7 @@ export const useBoardReports = () =>
   useQuery({
     queryKey: ['direction_board_reports'],
     queryFn: async () => {
-      const { data, error } = await sb
+      const { data, error } = await supabase
         .from('direction_board_reports')
         .select('*')
         .order('created_at', { ascending: false });
@@ -72,9 +73,13 @@ export const useBoardReports = () =>
 export const useCreateBoardReport = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (payload: any) => {
+    mutationFn: async (
+      payload: Omit<TablesInsert<'direction_board_reports'>, 'created_by'>,
+    ) => {
       const { data: u } = await supabase.auth.getUser();
-      const { error } = await sb.from('direction_board_reports').insert({ ...payload, created_by: u.user?.id });
+      const { error } = await supabase
+        .from('direction_board_reports')
+        .insert({ ...payload, created_by: u.user?.id ?? null });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['direction_board_reports'] }),

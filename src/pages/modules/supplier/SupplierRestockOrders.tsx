@@ -31,6 +31,19 @@ function statusColor(s: string) {
     : 'bg-muted text-muted-foreground';
 }
 
+interface NewOrderForm {
+  supplier_id: string;
+  catalog_id: string;
+  product_name: string;
+  quantity: number | string;
+  destination_type: 'warehouse' | 'logistics_partner';
+  destination_id: string;
+  destination_name: string;
+  priority: 'high' | 'standard' | 'low';
+  customization_notes: string;
+  due_date: string;
+}
+
 function NewOrderDialog() {
   const [open, setOpen] = useState(false);
   const { data: suppliers = [] } = useSuppliersList();
@@ -38,19 +51,19 @@ function NewOrderDialog() {
   const { data: products = [] } = useCatalogProducts();
   const create = useCreateRestockOrder();
 
-  const [form, setForm] = useState<any>({
+  const [form, setForm] = useState<NewOrderForm>({
     supplier_id: '', catalog_id: '', product_name: '', quantity: 1,
     destination_type: 'logistics_partner', destination_id: '', destination_name: '',
     priority: 'standard', customization_notes: '', due_date: '',
   });
 
   const onProductChange = (id: string) => {
-    const p = products.find((x: any) => x.id === id);
-    setForm((f: any) => ({ ...f, catalog_id: id, product_name: p?.name ?? '', quantity: p?.moq ?? 1 }));
+    const p = products.find((product) => product.id === id);
+    setForm((current) => ({ ...current, catalog_id: id, product_name: p?.name ?? '', quantity: p?.moq ?? 1 }));
   };
   const onDestChange = (id: string) => {
     const d = dests?.logistics_partners.find(x => x.id === id);
-    setForm((f: any) => ({ ...f, destination_id: id, destination_name: d?.name ?? '' }));
+    setForm((current) => ({ ...current, destination_id: id, destination_name: d?.name ?? '' }));
   };
 
   const submit = async () => {
@@ -66,7 +79,7 @@ function NewOrderDialog() {
       priority: form.priority,
       customization_notes: form.customization_notes || null,
       due_date: form.due_date || null,
-    } as any);
+    });
     setOpen(false);
   };
 
@@ -83,7 +96,7 @@ function NewOrderDialog() {
             <Select value={form.supplier_id} onValueChange={(v) => setForm({ ...form, supplier_id: v })}>
               <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
               <SelectContent>
-                {suppliers.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                {suppliers.map((supplier) => <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -92,8 +105,8 @@ function NewOrderDialog() {
             <Select value={form.catalog_id} onValueChange={onProductChange}>
               <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
               <SelectContent>
-                {products.map((p: any) => (
-                  <SelectItem key={p.id} value={p.id}>{p.name} {p.shop_sku ? `(${p.shop_sku})` : ''}</SelectItem>
+                {products.map((product) => (
+                  <SelectItem key={product.id} value={product.id}>{product.name} {product.shop_sku ? `(${product.shop_sku})` : ''}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -105,7 +118,11 @@ function NewOrderDialog() {
             </div>
             <div>
               <Label>Priorité</Label>
-              <Select value={form.priority} onValueChange={(v) => setForm({ ...form, priority: v })}>
+              <Select value={form.priority} onValueChange={(value) => {
+                if (value === 'high' || value === 'standard' || value === 'low') {
+                  setForm({ ...form, priority: value });
+                }
+              }}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="high">🔥 Haute</SelectItem>

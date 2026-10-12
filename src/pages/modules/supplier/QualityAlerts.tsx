@@ -14,7 +14,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { LucideIcon } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 function useQualityAlerts() {
   return useQuery({
@@ -30,14 +33,14 @@ function useQualityAlerts() {
   });
 }
 
-const severityConfig: Record<string, { label: string; color: string; icon: any }> = {
+const severityConfig: Record<string, { label: string; color: string; icon: LucideIcon }> = {
   critical: { label: 'Critique', color: 'bg-destructive text-destructive-foreground', icon: AlertCircle },
   high: { label: 'Élevée', color: 'bg-orange-500 text-white', icon: AlertTriangle },
   medium: { label: 'Moyenne', color: 'bg-warning text-warning-foreground', icon: AlertTriangle },
   low: { label: 'Faible', color: 'bg-muted text-muted-foreground', icon: AlertCircle },
 };
 
-const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
+const statusConfig: Record<string, { label: string; color: string; icon: LucideIcon }> = {
   open: { label: 'Ouvert', color: 'text-destructive border-destructive', icon: AlertCircle },
   investigating: { label: 'En cours', color: 'text-warning border-warning', icon: Clock },
   resolved: { label: 'Résolu', color: 'text-success border-success', icon: CheckCircle },
@@ -49,11 +52,42 @@ export default function QualityAlerts() {
   const [severityFilter, setSeverityFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isNewAlertOpen, setIsNewAlertOpen] = useState(false);
+  const [title, setTitle] = useState('');
+  const [severity, setSeverity] = useState('medium');
+  const [description, setDescription] = useState('');
   const { data: alerts = [], isLoading } = useQualityAlerts();
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  const createAlert = useMutation({
+    mutationFn: async () => {
+      const trimmedTitle = title.trim();
+      const trimmedDescription = description.trim();
+      if (!trimmedTitle || !trimmedDescription) {
+        throw new Error('Le titre et la description sont obligatoires.');
+      }
+      const { error } = await supabase.from('quality_alerts').insert({
+        title: trimmedTitle,
+        description: trimmedDescription,
+        severity,
+        status: 'open',
+        reported_by: user?.id ?? null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['quality_alerts'] });
+      setTitle('');
+      setSeverity('medium');
+      setDescription('');
+      setIsNewAlertOpen(false);
+      toast.success('Alerte qualité créée');
+    },
+    onError: (error: Error) => toast.error('Impossible de créer l’alerte', { description: error.message }),
+  });
 
   const filteredAlerts = alerts.filter((alert) => {
-    const supplierName = (alert.suppliers as any)?.name || '';
-    const productName = (alert.products as any)?.name || '';
+    const supplierName = alert.suppliers?.name || '';
+    const productName = alert.products?.name || '';
     const matchesSearch = alert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       supplierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       productName.toLowerCase().includes(searchQuery.toLowerCase());
@@ -84,18 +118,20 @@ export default function QualityAlerts() {
               <DialogDescription>Signalez un incident ou une non-conformité fournisseur/produit.</DialogDescription>
             </DialogHeader>
             <div className="space-y-4 py-4">
-              <div className="space-y-2"><Label htmlFor="title">Titre</Label><Input id="title" placeholder="Titre de l'alerte..." /></div>
+            <div className="space-y-2"><Label htmlFor="alert-title">Titre</Label><Input id="alert-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Titre de l'alerte..." /></div>
               <div className="space-y-2">
                 <Label htmlFor="severity">Sévérité</Label>
-                <Select><SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+              <Select value={severity} onValueChange={setSeverity}><SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                   <SelectContent>{Object.entries(severityConfig).map(([key, { label }]) => (<SelectItem key={key} value={key}>{label}</SelectItem>))}</SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2"><Label htmlFor="description">Description</Label><Textarea id="description" placeholder="Décrivez le problème en détail..." rows={4} /></div>
+            <div className="space-y-2"><Label htmlFor="alert-description">Description</Label><Textarea id="alert-description" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Décrivez le problème en détail..." rows={4} /></div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsNewAlertOpen(false)}>Annuler</Button>
-              <Button onClick={() => setIsNewAlertOpen(false)}>Créer l'alerte</Button>
+            <Button onClick={() => createAlert.mutate()} disabled={createAlert.isPending}>
+              {createAlert.isPending ? 'Création…' : 'Créer l’alerte'}
+            </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -137,8 +173,8 @@ export default function QualityAlerts() {
           const severity = severityConfig[alert.severity] || severityConfig.medium;
           const status = statusConfig[alert.status] || statusConfig.open;
           const StatusIcon = status.icon;
-          const supplierName = (alert.suppliers as any)?.name || '';
-          const productName = (alert.products as any)?.name || '';
+          const supplierName = alert.suppliers?.name || '';
+          const productName = alert.products?.name || '';
 
           return (
             <div key={alert.id} className="enterprise-card p-4 hover:bg-secondary/30 transition-colors">

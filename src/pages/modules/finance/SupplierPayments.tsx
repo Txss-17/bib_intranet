@@ -30,7 +30,7 @@ const SupplierPayments = () => {
   const updatePayment = useUpdateSupplierPayment();
 
   const filteredPayments = payments?.filter(payment => {
-    const supplier = (payment.suppliers as any)?.name || '';
+    const supplier = payment.suppliers?.name || '';
     const matchesSearch = supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          payment.invoice_number.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesSearch;
@@ -97,7 +97,7 @@ const SupplierPayments = () => {
           ]}
           data={filteredPayments.map(p => ({
             ...p,
-            supplierName: (p.suppliers as any)?.name || 'N/A',
+            supplierName: p.suppliers?.name || 'N/A',
           }))}
         />
       </div>
@@ -235,7 +235,7 @@ const SupplierPayments = () => {
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-muted-foreground" />
                       <span className="font-medium">
-                        {(payment.suppliers as any)?.name || 'N/A'}
+                        {payment.suppliers?.name || 'N/A'}
                       </span>
                     </div>
                   </TableCell>

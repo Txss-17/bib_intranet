@@ -17,6 +17,17 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAtRiskUsers } from "@/hooks/useLifecycle";
 import { useGuaranteeFund, useGuaranteeFundStats } from "@/hooks/useFinance";
 
+const getCompanyName = (account: unknown): string => {
+  if (!account || typeof account !== 'object' || !('company_name' in account)) {
+    return '-';
+  }
+
+  const { company_name: companyName } = account;
+  return typeof companyName === 'string' && companyName
+    ? companyName
+    : '-';
+};
+
 const GuaranteeFund = () => {
   const { data: movements, isLoading } = useGuaranteeFund();
   const { data: stats } = useGuaranteeFundStats();
@@ -267,7 +278,7 @@ const GuaranteeFund = () => {
                   </TableCell>
                   <TableCell className="font-medium">{movement.reason}</TableCell>
                   <TableCell className="text-muted-foreground">
-                    {(movement.user_account as any)?.company_name || '-'}
+                    {getCompanyName(movement.user_account)}
                   </TableCell>
                   <TableCell className={`text-right font-semibold ${
                     movement.type === 'deposit' ? 'text-green-500' : 

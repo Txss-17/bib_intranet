@@ -45,7 +45,7 @@ export default function Certifications() {
   const { data: certifications = [], isLoading } = useCertifications();
 
   const filteredCertifications = certifications.filter((cert) => {
-    const supplierName = (cert.suppliers as any)?.name || '';
+    const supplierName = cert.suppliers?.name || '';
     const matchesSearch = cert.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       supplierName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (cert.issuer || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -155,7 +155,7 @@ export default function Certifications() {
         {filteredCertifications.map((cert) => {
           const typeInfo = certificationTypes[cert.type] || certificationTypes.other;
           const expiryInfo = getExpiryInfo(cert.expiry_date);
-          const supplierName = (cert.suppliers as any)?.name || 'N/A';
+          const supplierName = cert.suppliers?.name || 'N/A';
 
           return (
             <div key={cert.id} className="enterprise-card p-4">

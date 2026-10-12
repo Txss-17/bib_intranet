@@ -40,6 +40,7 @@ export type Database = {
       }
       access_assignments: {
         Row: {
+          assigned_by: string | null
           created_at: string
           employee_id: string
           ends_at: string | null
@@ -52,6 +53,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_by?: string | null
           created_at?: string
           employee_id: string
           ends_at?: string | null
@@ -64,6 +66,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_by?: string | null
           created_at?: string
           employee_id?: string
           ends_at?: string | null
@@ -5223,6 +5226,245 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      supplier_application_events: {
+        Row: {
+          application_id: string
+          created_at: string
+          event_type: string
+          from_status: string | null
+          id: string
+          metadata: Json
+          notes: string | null
+          performed_by: string | null
+          performed_by_name: string | null
+          to_status: string | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          event_type: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          performed_by?: string | null
+          performed_by_name?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          performed_by?: string | null
+          performed_by_name?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_application_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_applications: {
+        Row: {
+          assigned_at: string | null
+          assigned_to_id: string | null
+          assigned_to_name: string | null
+          audit_accepted: boolean
+          blocking_criteria: string[]
+          category: string | null
+          certifications: Json
+          company_name: string
+          contact_email: string
+          contact_name: string | null
+          contact_phone: string | null
+          country: string | null
+          created_at: string
+          decision_at: string | null
+          decision_by: string | null
+          decision_notes: string | null
+          documents: Json
+          id: string
+          lead_time_days: number | null
+          moq: number | null
+          priority: string
+          public_token: string
+          raw_payload: Json
+          score: number
+          source: string
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_to_id?: string | null
+          assigned_to_name?: string | null
+          audit_accepted?: boolean
+          blocking_criteria?: string[]
+          category?: string | null
+          certifications?: Json
+          company_name: string
+          contact_email: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          decision_at?: string | null
+          decision_by?: string | null
+          decision_notes?: string | null
+          documents?: Json
+          id?: string
+          lead_time_days?: number | null
+          moq?: number | null
+          priority?: string
+          public_token?: string
+          raw_payload?: Json
+          score?: number
+          source?: string
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_to_id?: string | null
+          assigned_to_name?: string | null
+          audit_accepted?: boolean
+          blocking_criteria?: string[]
+          category?: string | null
+          certifications?: Json
+          company_name?: string
+          contact_email?: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          decision_at?: string | null
+          decision_by?: string | null
+          decision_notes?: string | null
+          documents?: Json
+          id?: string
+          lead_time_days?: number | null
+          moq?: number | null
+          priority?: string
+          public_token?: string
+          raw_payload?: Json
+          score?: number
+          source?: string
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      supplier_portal_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          read_at: string | null
+          reference_id: string | null
+          reference_table: string | null
+          supplier_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          reference_id?: string | null
+          reference_table?: string | null
+          supplier_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          reference_id?: string | null
+          reference_table?: string | null
+          supplier_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
+      supplier_restock_orders: {
+        Row: {
+          acknowledged_at: string | null
+          catalog_id: string | null
+          created_at: string
+          created_by: string | null
+          customization_notes: string | null
+          destination_id: string | null
+          destination_name: string
+          destination_type: string
+          due_date: string | null
+          id: string
+          priority: string
+          product_name: string
+          quantity: number
+          received_at: string | null
+          sent_at: string | null
+          status: string
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          catalog_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customization_notes?: string | null
+          destination_id?: string | null
+          destination_name: string
+          destination_type: string
+          due_date?: string | null
+          id?: string
+          priority?: string
+          product_name: string
+          quantity: number
+          received_at?: string | null
+          sent_at?: string | null
+          status?: string
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          catalog_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customization_notes?: string | null
+          destination_id?: string | null
+          destination_name?: string
+          destination_type?: string
+          due_date?: string | null
+          id?: string
+          priority?: string
+          product_name?: string
+          quantity?: number
+          received_at?: string | null
+          sent_at?: string | null
+          status?: string
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       supplier_audits: {
         Row: {

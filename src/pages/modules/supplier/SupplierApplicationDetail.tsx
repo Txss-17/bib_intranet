@@ -16,11 +16,20 @@ import {
 } from '@/hooks/useSupplierApplications';
 import { useUserRole } from '@/hooks/useUserRole';
 import { ArrowLeft, CheckCircle2, XCircle, Clock, UserPlus } from 'lucide-react';
+import type { Json } from '@/integrations/supabase/types';
 
 const statusLabels: Record<string, string> = {
   new: 'Nouvelle', assigned: 'Assignée', in_review: 'En revue',
   approved: 'Approuvée', rejected: 'Refusée', on_hold: 'En attente',
 };
+
+function isJsonArray(value: Json): value is Json[] {
+  return Array.isArray(value);
+}
+
+function isJsonObject(value: Json): value is { [key: string]: Json | undefined } {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 export default function SupplierApplicationDetail() {
   const { id } = useParams<{ id: string }>();
@@ -45,7 +54,7 @@ export default function SupplierApplicationDetail() {
 
   const doReassign = () => {
     if (!id || !assignee) return;
-    const m = managers.find((x: any) => x.id === assignee);
+    const m = managers.find((manager) => manager.id === assignee);
     if (!m) return;
     reassign.mutate({ id, assigneeId: m.id, assigneeName: m.name });
   };
@@ -107,23 +116,38 @@ export default function SupplierApplicationDetail() {
             <TabsContent value="documents">
               <Card>
                 <CardContent className="pt-6">
-                  {Array.isArray(app.documents) && app.documents.length > 0 ? (
+                  {isJsonArray(app.documents) && app.documents.length > 0 ? (
                     <ul className="space-y-2 text-sm">
-                      {app.documents.map((d: any, i: number) => (
-                        <li key={i}>
-                          {typeof d === 'string'
-                            ? <a className="text-primary underline" href={d} target="_blank" rel="noreferrer">{d}</a>
-                            : <a className="text-primary underline" href={d.url} target="_blank" rel="noreferrer">{d.name ?? d.url}</a>}
-                        </li>
-                      ))}
+                      {app.documents.map((document, index) => {
+                        const url = typeof document === 'string'
+                          ? document
+                          : isJsonObject(document) && typeof document.url === 'string'
+                            ? document.url
+                            : null;
+                        if (!url) return null;
+                        const label = isJsonObject(document) && typeof document.name === 'string'
+                          ? document.name
+                          : url;
+                        return (
+                          <li key={`${url}-${index}`}>
+                            <a className="text-primary underline" href={url} target="_blank" rel="noreferrer">{label}</a>
+                          </li>
+                        );
+                      })}
                     </ul>
                   ) : <p className="text-sm text-muted-foreground">Aucun document fourni</p>}
-                  {Array.isArray(app.certifications) && app.certifications.length > 0 && (
+                  {isJsonArray(app.certifications) && app.certifications.length > 0 && (
                     <div className="mt-4">
                       <div className="text-sm font-medium mb-2">Certifications</div>
                       <div className="flex flex-wrap gap-2">
-                        {app.certifications.map((c: any, i: number) => (
-                          <Badge key={i} variant="outline">{typeof c === 'string' ? c : c.name ?? JSON.stringify(c)}</Badge>
+                        {app.certifications.map((certification, index) => (
+                          <Badge key={index} variant="outline">
+                            {typeof certification === 'string'
+                              ? certification
+                              : isJsonObject(certification) && typeof certification.name === 'string'
+                                ? certification.name
+                                : JSON.stringify(certification)}
+                          </Badge>
                         ))}
                       </div>
                     </div>
@@ -144,7 +168,7 @@ export default function SupplierApplicationDetail() {
                       <Select value={assignee} onValueChange={setAssignee}>
                         <SelectTrigger className="flex-1"><SelectValue placeholder={app.assigned_to_name ?? 'Choisir un gestionnaire'} /></SelectTrigger>
                         <SelectContent>
-                          {managers.map((m: any) => <SelectItem key={m.id} value={m.id}>{m.name}</SelectItem>)}
+                          {managers.map((manager) => <SelectItem key={manager.id} value={manager.id}>{manager.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                       <Button onClick={doReassign} disabled={!assignee || reassign.isPending}><UserPlus className="h-4 w-4 mr-1" /> Assigner</Button>
@@ -171,11 +195,11 @@ export default function SupplierApplicationDetail() {
                 <CardContent className="pt-6">
                   {events.length === 0 ? <p className="text-sm text-muted-foreground">Aucun événement</p> : (
                     <ol className="space-y-3">
-                      {events.map((e: any) => (
-                        <li key={e.id} className="border-l-2 border-primary/40 pl-3">
-                          <div className="text-sm font-medium">{e.event_type}{e.to_status ? ` → ${statusLabels[e.to_status] ?? e.to_status}` : ''}</div>
-                          {e.notes && <div className="text-sm text-muted-foreground">{e.notes}</div>}
-                          <div className="text-xs text-muted-foreground">{new Date(e.created_at).toLocaleString('fr-FR')}</div>
+                      {events.map((event) => (
+                        <li key={event.id} className="border-l-2 border-primary/40 pl-3">
+                          <div className="text-sm font-medium">{event.event_type}{event.to_status ? ` → ${statusLabels[event.to_status] ?? event.to_status}` : ''}</div>
+                          {event.notes && <div className="text-sm text-muted-foreground">{event.notes}</div>}
+                          <div className="text-xs text-muted-foreground">{new Date(event.created_at).toLocaleString('fr-FR')}</div>
                         </li>
                       ))}
                     </ol>

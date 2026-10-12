@@ -810,7 +810,10 @@ const RHAccess = () => {
             .from(
               'access_assignments',
             )
-            .insert(payload);
+            .insert({
+              ...payload,
+              assigned_by: user.id,
+            });
 
         if (error) {
           throw error;

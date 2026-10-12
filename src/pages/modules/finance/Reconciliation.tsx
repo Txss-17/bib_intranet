@@ -14,9 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 
-const db = supabase as any;
-
-export const GAP_LABELS: Record<string, string> = {
+const GAP_LABELS: Record<string, string> = {
   stripe_manquant: 'Paiement Stripe absent', ecart_stripe: 'Écart montant Stripe',
   facture_manquante: 'Facture absente', ecart_facture: 'Écart montant facture',
   boutique_manquante: 'Boutique non rattachée', ecart_reversement: 'Écart reversement',
@@ -39,7 +37,7 @@ const eur = (n: number | null | undefined) =>
   n == null ? '—' : new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(Number(n));
 
 export default function Reconciliation() {
-  const { user } = useAuth() as any;
+  const { user } = useAuth();
   const qc = useQueryClient();
   const [status, setStatus] = useState('open');
   const [gap, setGap] = useState('all');
@@ -50,7 +48,7 @@ export default function Reconciliation() {
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['reconciliation'],
     queryFn: async () => {
-      const { data, error } = await db.from('reconciliation_items')
+      const { data, error } = await supabase.from('reconciliation_items')
         .select('*, orders(order_number, status, ordered_at), shops(name)').order('computed_at', { ascending: false });
       if (error) throw error;
       return (data || []) as Item[];
@@ -58,7 +56,7 @@ export default function Reconciliation() {
   });
 
   const run = useMutation({
-    mutationFn: async () => { const { data, error } = await db.rpc('run_reconciliation'); if (error) throw error; return data as number; },
+    mutationFn: async () => { const { data, error } = await supabase.rpc('run_reconciliation'); if (error) throw error; return data; },
     onSuccess: (n) => { toast.success('Rapprochement recalculé', { description: `${n} commande(s) analysée(s)` }); qc.invalidateQueries({ queryKey: ['reconciliation'] }); },
     onError: (e: Error) => toast.error('Rapprochement', { description: e.message }),
   });
@@ -67,7 +65,7 @@ export default function Reconciliation() {
     mutationFn: async ({ it, next, escalate }: { it: Item; next: string; escalate?: boolean }) => {
       let anomaly_id = it.anomaly_id;
       if (escalate && !anomaly_id) {
-        const { data, error } = await db.from('anomalies').insert({
+        const { data, error } = await supabase.from('anomalies').insert({
           source: it.gaps.some((g) => g.includes('stripe') || g === 'litige') ? 'stripe' : it.gaps.some((g) => g.includes('facture')) ? 'invoices' : 'payments',
           type: 'Écart de rapprochement', severity: it.gaps.includes('litige') ? 'high' : 'medium',
           title: `Écart rapprochement — commande ${it.orders?.order_number ?? it.order_id.slice(0, 8)}`,
@@ -77,7 +75,7 @@ export default function Reconciliation() {
         if (error) throw error;
         anomaly_id = data.id;
       }
-      const { error } = await db.from('reconciliation_items').update({
+      const { error } = await supabase.from('reconciliation_items').update({
         status: next, review_note: note || it.review_note, reviewed_by: user?.id, reviewed_at: new Date().toISOString(), anomaly_id,
       }).eq('id', it.id);
       if (error) throw error;

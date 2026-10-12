@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import {
   Package,
   Search,
@@ -78,6 +78,20 @@ const statusConfig: Record<IntegrationStatus, { label: string; variant: 'default
   info_requested: { label: 'Info demandée', variant: 'outline', className: 'text-warning border-warning' },
 };
 
+const toIntegrationStatus = (
+  status: string | null,
+): IntegrationStatus => {
+  switch (status) {
+    case 'integrated':
+    case 'rejected':
+    case 'info_requested':
+    case 'pending':
+      return status;
+    default:
+      return 'pending';
+  }
+};
+
 export default function ReceivedProducts() {
   const [products, setProducts] = useState<ReceivedProduct[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,7 +101,7 @@ export default function ReceivedProducts() {
   const [selectedProduct, setSelectedProduct] = useState<ReceivedProduct | null>(null);
   const { toast } = useToast();
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     setLoading(true);
     // Fetch products that have been transmitted to tech (tech_integration_status != 'not_sent')
     const { data: productsData, error } = await supabase
@@ -103,7 +117,7 @@ export default function ReceivedProducts() {
       return;
     }
 
-    const mapped: ReceivedProduct[] = (productsData || []).map((p: any) => ({
+    const mapped: ReceivedProduct[] = (productsData || []).map((p) => ({
       id: p.id,
       name: p.name,
       sku: p.sku || '',
@@ -127,26 +141,26 @@ export default function ReceivedProducts() {
       shelf_life: p.shelf_life || '',
       transmitted_at: p.transmitted_at || '',
       transmitted_by: p.transmitted_by || '',
-      tech_integration_status: (p.tech_integration_status as IntegrationStatus) || 'pending',
+      tech_integration_status: toIntegrationStatus(p.tech_integration_status),
     }));
 
     setProducts(mapped);
     setLoading(false);
-  };
+  }, [toast]);
 
   useEffect(() => {
-    fetchProducts();
+    void fetchProducts();
 
     // Realtime subscription
     const channel = supabase
       .channel('products-tech-changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
-        fetchProducts();
+        void fetchProducts();
       })
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [fetchProducts]);
 
   const categories = [...new Set(products.map(p => p.category))];
 
@@ -162,7 +176,7 @@ export default function ReceivedProducts() {
   const updateStatus = async (id: string, newStatus: IntegrationStatus, actionLabel: string) => {
     const { error } = await supabase
       .from('products')
-      .update({ tech_integration_status: newStatus } as any)
+      .update({ tech_integration_status: newStatus })
       .eq('id', id);
 
     if (error) {

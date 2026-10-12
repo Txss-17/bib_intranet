@@ -133,7 +133,7 @@ function TicketPage() {
       data.incident.assigned_to ??
         '',
     );
-  }, [data?.incident?.id]);
+  }, [data?.incident]);
 
   if (isLoading) {
     return (

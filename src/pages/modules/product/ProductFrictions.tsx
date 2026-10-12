@@ -100,8 +100,10 @@ export default function ProductFrictions() {
     isError,
   } = useProductFrictionsData();
 
-  const rows: ProductFrictionRow[] =
-    data?.rows ?? [];
+  const rows = useMemo<ProductFrictionRow[]>(
+    () => data?.rows ?? [],
+    [data?.rows],
+  );
 
   const isMock = data?.isMock ?? false;
 

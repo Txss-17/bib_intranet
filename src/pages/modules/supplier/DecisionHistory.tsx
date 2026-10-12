@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import type { LucideIcon } from 'lucide-react';
 
 function useDecisionHistory() {
   return useQuery({
@@ -27,7 +28,7 @@ function useDecisionHistory() {
   });
 }
 
-const decisionTypeConfig: Record<string, { label: string; icon: any; color: string; bgColor: string }> = {
+const decisionTypeConfig: Record<string, { label: string; icon: LucideIcon; color: string; bgColor: string }> = {
   validation: { label: 'Validation', icon: CheckCircle, color: 'text-success', bgColor: 'bg-success/10' },
   rejection: { label: 'Refus', icon: XCircle, color: 'text-destructive', bgColor: 'bg-destructive/10' },
   archive: { label: 'Archivage', icon: Archive, color: 'text-muted-foreground', bgColor: 'bg-muted' },
@@ -42,9 +43,9 @@ export default function DecisionHistory() {
   const { data: decisions = [], isLoading } = useDecisionHistory();
 
   const filteredDecisions = decisions.filter((decision) => {
-    const productName = (decision.products as any)?.name || '';
-    const productSku = (decision.products as any)?.sku || '';
-    const supplierName = (decision.products as any)?.suppliers?.name || '';
+    const productName = decision.products?.name || '';
+    const productSku = decision.products?.sku || '';
+    const supplierName = decision.products?.suppliers?.name || '';
     const matchesSearch = productName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       productSku.toLowerCase().includes(searchQuery.toLowerCase()) ||
       supplierName.toLowerCase().includes(searchQuery.toLowerCase());
@@ -102,7 +103,7 @@ export default function DecisionHistory() {
       </div>
 
       <div className="space-y-6">
-        {(Object.entries(groupedDecisions) as [string, any[]][]).map(([date, decs]) => (
+        {(Object.entries(groupedDecisions) as [string, (typeof decisions)[number][]][]).map(([date, decs]) => (
           <div key={date}>
             <div className="flex items-center gap-3 mb-3">
               <div className="h-px flex-1 bg-border" />
@@ -113,9 +114,9 @@ export default function DecisionHistory() {
               {decs.map((decision) => {
                 const config = decisionTypeConfig[decision.decision_type] || decisionTypeConfig.validation;
                 const Icon = config.icon;
-                const productName = (decision.products as any)?.name || 'Produit inconnu';
-                const productSku = (decision.products as any)?.sku || '';
-                const supplierName = (decision.products as any)?.suppliers?.name || '';
+                const productName = decision.products?.name || 'Produit inconnu';
+                const productSku = decision.products?.sku || '';
+                const supplierName = decision.products?.suppliers?.name || '';
 
                 return (
                   <div key={decision.id} className="enterprise-card p-4">

@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import type { Json } from '@/integrations/supabase/types';
 import {
   RoadmapItem, useIsLeadership, useRoadmapActions, useRoadmapHistory, useRoadmapItems,
 } from '@/hooks/useDirectionContent';
@@ -35,8 +36,23 @@ const toDraft = (i: RoadmapItem): Draft => ({
   objectives: i.objectives.map((o) => ({ name: o.name, completed: !!o.completed, start_date: o.start_date ?? '', end_date: o.end_date ?? '' })),
 });
 
-const changedFields = (o: any, n: any) =>
-  Object.keys(FIELD_LABELS).filter((k) => JSON.stringify(o?.[k]) !== JSON.stringify(n?.[k])).map((k) => FIELD_LABELS[k]);
+const changedFields = (
+  oldValue: Json | null,
+  newValue: Json | null,
+) => {
+  const oldFields: Record<string, Json | undefined> =
+    oldValue && typeof oldValue === 'object' && !Array.isArray(oldValue)
+      ? oldValue
+      : {};
+  const newFields: Record<string, Json | undefined> =
+    newValue && typeof newValue === 'object' && !Array.isArray(newValue)
+      ? newValue
+      : {};
+
+  return (Object.keys(FIELD_LABELS) as Array<keyof typeof FIELD_LABELS>)
+    .filter((key) => JSON.stringify(oldFields[key]) !== JSON.stringify(newFields[key]))
+    .map((key) => FIELD_LABELS[key]);
+};
 
 const VisionRoadmap = () => {
   const { data: items = [], isLoading } = useRoadmapItems();
@@ -58,7 +74,7 @@ const VisionRoadmap = () => {
       ? { ...base, phase: draft.phase || null, progress: Math.max(0, Math.min(100, Number(draft.progress) || 0)), objectives }
       : { ...base, weight: Number(draft.weight) || 0 };
     const sort_order = draft.id ? undefined : (items.filter((i) => i.kind === draft.kind).length + 1);
-    save.mutate({ ...(draft.id ? { id: draft.id } : { sort_order }), ...payload } as any, { onSuccess: () => setDraft(null) });
+    save.mutate({ ...(draft.id ? { id: draft.id } : { sort_order }), ...payload }, { onSuccess: () => setDraft(null) });
   };
 
   const toggleObjective = (item: RoadmapItem, idx: number) => {

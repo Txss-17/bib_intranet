@@ -95,7 +95,7 @@ const Salaries = () => {
             ]}
             data={(salaries || []).map(s => ({
               ...s,
-              employeeName: `${(s.employee as any)?.first_name || ''} ${(s.employee as any)?.last_name || ''}`.trim() || 'N/A',
+              employeeName: `${s.employee?.first_name || ''} ${s.employee?.last_name || ''}`.trim() || 'N/A',
             }))}
           />
           <Button>
@@ -237,7 +237,7 @@ const Salaries = () => {
             </TableHeader>
             <TableBody>
               {salaries?.map((salary) => {
-                const employee = salary.employee as any;
+                const employee = salary.employee;
                 return (
                   <TableRow key={salary.id}>
                     <TableCell className="font-medium">

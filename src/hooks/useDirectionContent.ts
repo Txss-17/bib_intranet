@@ -1,9 +1,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
-
-const db = supabase as any;
 
 export const useIsLeadership = () => {
   const { user } = useAuth();
@@ -11,7 +10,8 @@ export const useIsLeadership = () => {
     queryKey: ['is-leadership', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await db.rpc('is_leadership', { _user_id: user!.id });
+      const { data, error } = await supabase.rpc('is_leadership', { _user_id: user!.id });
+      if (error) throw error;
       return !!data;
     },
   });
@@ -35,8 +35,8 @@ export interface RoadmapHistory {
   id: string;
   item_title: string | null;
   action: 'create' | 'update' | 'delete';
-  old_value: any;
-  new_value: any;
+  old_value: Json | null;
+  new_value: Json | null;
   performed_by: string | null;
   performer_name?: string | null;
   created_at: string;
@@ -46,9 +46,24 @@ export const useRoadmapItems = () =>
   useQuery({
     queryKey: ['roadmap-items'],
     queryFn: async () => {
-      const { data, error } = await db.from('direction_roadmap_items').select('*').order('sort_order');
+      const { data, error } = await supabase.from('direction_roadmap_items').select('*').order('sort_order');
       if (error) throw error;
-      return (data || []).map((r: any) => ({ ...r, objectives: Array.isArray(r.objectives) ? r.objectives : [] })) as RoadmapItem[];
+      return (data || []).map((row) => ({
+        ...row,
+        objectives: Array.isArray(row.objectives)
+          ? row.objectives.filter(
+              (objective): objective is Record<string, Json> =>
+                typeof objective === 'object' &&
+                objective !== null &&
+                !Array.isArray(objective),
+            ).map((objective) => ({
+              name: typeof objective.name === 'string' ? objective.name : '',
+              completed: objective.completed === true,
+              start_date: typeof objective.start_date === 'string' ? objective.start_date : null,
+              end_date: typeof objective.end_date === 'string' ? objective.end_date : null,
+            }))
+          : [],
+      })) as RoadmapItem[];
     },
   });
 
@@ -57,15 +72,24 @@ export const useRoadmapHistory = (enabled: boolean) =>
     queryKey: ['roadmap-history'],
     enabled,
     queryFn: async () => {
-      const { data, error } = await db.from('direction_roadmap_history').select('*').order('created_at', { ascending: false }).limit(200);
+      const { data, error } = await supabase.from('direction_roadmap_history').select('*').order('created_at', { ascending: false }).limit(200);
       if (error) throw error;
-      const ids = [...new Set((data || []).map((r: any) => r.performed_by).filter(Boolean))];
+      const ids = [...new Set(data.map((row) => row.performed_by).filter((id): id is string => Boolean(id)))];
       const names: Record<string, string> = {};
       if (ids.length) {
-        const { data: p } = await db.from('profiles').select('id, first_name, last_name').in('id', ids);
-        (p || []).forEach((x: any) => { names[x.id] = `${x.first_name} ${x.last_name}`; });
+        const { data: profiles, error: profileError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .in('id', ids);
+        if (profileError) throw profileError;
+        profiles.forEach((profile) => {
+          names[profile.id] = `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim();
+        });
       }
-      return (data || []).map((r: any) => ({ ...r, performer_name: r.performed_by ? names[r.performed_by] ?? null : null })) as RoadmapHistory[];
+      return data.map((row) => ({
+        ...row,
+        performer_name: row.performed_by ? names[row.performed_by] ?? null : null,
+      })) as RoadmapHistory[];
     },
   });
 
@@ -80,9 +104,29 @@ export const useRoadmapActions = () => {
   return {
     save: useMutation({
       mutationFn: async ({ id, ...patch }: Partial<RoadmapItem>) => {
-        const { error } = id
-          ? await db.from('direction_roadmap_items').update(patch).eq('id', id)
-          : await db.from('direction_roadmap_items').insert(patch);
+        const objectives = patch.objectives?.map((objective) => ({
+          name: objective.name,
+          completed: objective.completed,
+          start_date: objective.start_date ?? null,
+          end_date: objective.end_date ?? null,
+        }));
+
+        if (id) {
+          const { error } = await supabase
+            .from('direction_roadmap_items')
+            .update({ ...patch, objectives })
+            .eq('id', id);
+          if (error) throw error;
+          return;
+        }
+
+        if (!patch.title) {
+          throw new Error('Le titre est obligatoire pour créer un élément de roadmap.');
+        }
+
+        const { error } = await supabase
+          .from('direction_roadmap_items')
+          .insert({ ...patch, title: patch.title, objectives });
         if (error) throw error;
       },
       onSuccess: () => done('Roadmap enregistrée'),
@@ -90,7 +134,7 @@ export const useRoadmapActions = () => {
     }),
     remove: useMutation({
       mutationFn: async (id: string) => {
-        const { error } = await db.from('direction_roadmap_items').delete().eq('id', id);
+        const { error } = await supabase.from('direction_roadmap_items').delete().eq('id', id);
         if (error) throw error;
       },
       onSuccess: () => done('Élément supprimé'),
@@ -109,7 +153,7 @@ export const useGovernanceDocs = (enabled: boolean) =>
     queryKey: ['governance-docs'],
     enabled,
     queryFn: async () => {
-      const { data, error } = await db.from('governance_documents').select('*').order('created_at', { ascending: false });
+      const { data, error } = await supabase.from('governance_documents').select('*').order('created_at', { ascending: false });
       if (error) throw error;
       return (data || []) as GovernanceDoc[];
     },
@@ -125,7 +169,7 @@ export const useGovernanceDocActions = () => {
         const path = `${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, '_')}`;
         const { error: e1 } = await supabase.storage.from('governance-documents').upload(path, file, { contentType: file.type });
         if (e1) throw e1;
-        const { error } = await db.from('governance_documents').insert({
+        const { error } = await supabase.from('governance_documents').insert({
           name: name || file.name, version: version || null, file_path: path, file_type: file.type, file_size: file.size,
         });
         if (error) {
@@ -139,7 +183,7 @@ export const useGovernanceDocActions = () => {
     remove: useMutation({
       mutationFn: async (doc: GovernanceDoc) => {
         await supabase.storage.from('governance-documents').remove([doc.file_path]);
-        const { error } = await db.from('governance_documents').delete().eq('id', doc.id);
+        const { error } = await supabase.from('governance_documents').delete().eq('id', doc.id);
         if (error) throw error;
       },
       onSuccess: () => { toast.success('Document supprimé'); refresh(); },
@@ -163,7 +207,7 @@ export const useGovernanceBlocks = () =>
   useQuery({
     queryKey: ['governance-blocks'],
     queryFn: async () => {
-      const { data, error } = await db.from('governance_blocks').select('*').order('sort_order');
+      const { data, error } = await supabase.from('governance_blocks').select('*').order('sort_order');
       if (error) throw error;
       return (data || []) as GovernanceBlock[];
     },
@@ -176,9 +220,22 @@ export const useGovernanceBlockActions = () => {
   return {
     save: useMutation({
       mutationFn: async ({ id, ...patch }: Partial<GovernanceBlock>) => {
-        const { error } = id
-          ? await db.from('governance_blocks').update(patch).eq('id', id)
-          : await db.from('governance_blocks').insert(patch);
+        if (id) {
+          const { error } = await supabase
+            .from('governance_blocks')
+            .update(patch)
+            .eq('id', id);
+          if (error) throw error;
+          return;
+        }
+
+        if (!patch.kind || !patch.name) {
+          throw new Error('Le type et le nom sont obligatoires pour créer un bloc de gouvernance.');
+        }
+
+        const { error } = await supabase
+          .from('governance_blocks')
+          .insert({ ...patch, kind: patch.kind, name: patch.name });
         if (error) throw error;
       },
       onSuccess: () => done('Bloc enregistré'),
@@ -186,7 +243,7 @@ export const useGovernanceBlockActions = () => {
     }),
     remove: useMutation({
       mutationFn: async (id: string) => {
-        const { error } = await db.from('governance_blocks').delete().eq('id', id);
+        const { error } = await supabase.from('governance_blocks').delete().eq('id', id);
         if (error) throw error;
       },
       onSuccess: () => done('Bloc supprimé'),

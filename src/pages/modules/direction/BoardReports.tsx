@@ -25,7 +25,9 @@ const Page = () => {
       toast.success('Rapport créé');
       setOpen(false);
       setForm({ title: '', type: 'monthly', period: '', summary: '' });
-    } catch (e: any) { toast.error(e.message); }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Impossible de créer le rapport.');
+    }
   };
 
   const exportBoardPack = () => {
@@ -41,16 +43,18 @@ const Page = () => {
           { header: 'Statut', accessor: 'status' },
           { header: 'Date', accessor: 'date' },
         ],
-        data: (data ?? []).map((r: any) => ({
-          title: r.title,
-          type: r.type,
-          period: r.period || '-',
-          status: r.status,
-          date: new Date(r.created_at).toLocaleDateString(),
+        data: (data ?? []).map((report) => ({
+          title: report.title,
+          type: report.type,
+          period: report.period || '-',
+          status: report.status,
+          date: new Date(report.created_at).toLocaleDateString(),
         })),
       });
       toast.success('PDF Board Pack généré');
-    } catch (e: any) { toast.error(e.message); }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Impossible de générer le PDF.');
+    }
   };
 
   return (
@@ -93,13 +97,13 @@ const Page = () => {
         <Card>
           <CardHeader><CardTitle>Rapports ({data?.length ?? 0})</CardTitle></CardHeader>
           <CardContent className="space-y-3">
-            {(data ?? []).map((r: any) => (
-              <div key={r.id} className="flex justify-between items-center p-3 border rounded">
+            {(data ?? []).map((report) => (
+              <div key={report.id} className="flex justify-between items-center p-3 border rounded">
                 <div>
-                  <div className="flex items-center gap-2"><span className="font-semibold">{r.title}</span><Badge variant="outline">{r.type}</Badge><Badge>{r.status}</Badge></div>
-                  <p className="text-sm text-muted-foreground">{r.period} — {r.summary}</p>
+                  <div className="flex items-center gap-2"><span className="font-semibold">{report.title}</span><Badge variant="outline">{report.type}</Badge><Badge>{report.status}</Badge></div>
+                  <p className="text-sm text-muted-foreground">{report.period} — {report.summary}</p>
                 </div>
-                <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</span>
+                <span className="text-xs text-muted-foreground">{new Date(report.created_at).toLocaleDateString()}</span>
               </div>
             ))}
             {(!data || data.length === 0) && <p className="text-sm text-muted-foreground text-center py-6">Aucun rapport</p>}

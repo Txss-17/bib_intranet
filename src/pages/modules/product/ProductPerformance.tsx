@@ -100,8 +100,10 @@ export default function ProductPerformance() {
     isError,
   } = useProductPerformanceData();
 
-  const rows: ProductPerformanceRow[] =
-    data?.rows ?? [];
+  const rows = useMemo<ProductPerformanceRow[]>(
+    () => data?.rows ?? [],
+    [data?.rows],
+  );
 
   const isMock = data?.isMock ?? false;
 
