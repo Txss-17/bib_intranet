@@ -730,7 +730,7 @@ const App = () => (
                 <Route path="/pole/audit/sanctions" element={<Sanctions />} />
                 <Route
                   path="/pole/audit/corrective-actions"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/audit/nonconformities" replace />}
                 />
 
                 {/* ====================================================
@@ -787,11 +787,11 @@ const App = () => (
                 />
                 <Route
                   path="/pole/product/roadmap"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/product/innovation" replace />}
                 />
                 <Route
                   path="/pole/product/backlog"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/product/performance" replace />}
                 />
                 <Route
                   path="/pole/product/engineering"
@@ -928,77 +928,77 @@ const App = () => (
                 {/* Security / Supabase supervision */}
                 <Route
                   path="/pole/security/edge-functions"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/infrastructure" replace />}
                 />
                 <Route
                   path="/pole/security/edge-functions/:id"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/infrastructure" replace />}
                 />
                 <Route
                   path="/pole/security/edge-functions/:id/logs"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/logs" replace />}
                 />
                 <Route
                   path="/pole/security/auth-logs"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/logs" replace />}
                 />
                 <Route
                   path="/pole/security/edge-logs"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/logs" replace />}
                 />
                 <Route
                   path="/pole/security/reports"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/documentation" replace />}
                 />
 
                 {/* Security incidents */}
                 <Route
                   path="/pole/security/incidents"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/security/incidents/new"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/security/incidents/:id"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/security/incidents/:id/report"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/security/incidents/:id/update"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/security/incidents/:id/delete"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/security/incidents/:id/assign"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/security/incidents/:id/close"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/security/incidents/:id/reopen"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/security/incidents/:id/escalate"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/security/incidents/:id/deescalate"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
                 <Route
                   path="/pole/security/incidents/:id/comment"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/security/security" replace />}
                 />
 
                 {/* ====================================================
