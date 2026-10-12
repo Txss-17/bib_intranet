@@ -172,6 +172,8 @@ export default function MerchantPortfolio() {
         return [];
       }
 
+      const now = new Date().toISOString();
+
       const {
         data,
         error,
@@ -197,11 +199,34 @@ export default function MerchantPortfolio() {
           'active',
         );
 
-      if (error) {
-        throw error;
+      const activeAssignmentsQuery = supabase
+        .from('access_portfolio_assignments')
+        .select(
+          `
+            id,
+            employee_id,
+            portfolio_id,
+            access_assignment_id,
+            assignment_status,
+            starts_at,
+            ends_at
+          `,
+        )
+        .eq('employee_id', currentUserId)
+        .eq('assignment_status', 'active')
+        .or(`starts_at.is.null,starts_at.lte.${now}`)
+        .or(`ends_at.is.null,ends_at.gte.${now}`);
+
+      const {
+        data: activeAssignmentsData,
+        error: activeAssignmentsError,
+      } = await activeAssignmentsQuery;
+
+      if (activeAssignmentsError) {
+        throw activeAssignmentsError;
       }
 
-      return (data ??
+      return (activeAssignmentsData ??
         []) as AccessPortfolioAssignment[];
     },
   });

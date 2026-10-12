@@ -528,6 +528,15 @@ const App = () => (
                     </ProtectedPage>
                   }
                 />
+
+                <Route
+                  path="/pole/marketplace/portfolio"
+                  element={
+                    <ProtectedPage pageId="marketplace.merchants">
+                      <MerchantPortfolio />
+                    </ProtectedPage>
+                  }
+                />
                 
                 <Route
                   path="/pole/marketplace/merchants/:id"
