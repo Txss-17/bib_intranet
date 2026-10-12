@@ -685,10 +685,6 @@ const App = () => (
                   path="/pole/rh/ethics"
                   element={<Navigate to="/modules/ethics" replace />}
                 />
-                <Route
-                  path="/pole/rh/recruitment"
-                  element={<SubSectionPage />}
-                />
                 <Route path="/pole/rh" element={<RHDashboard />} />
                 
                 <Route
