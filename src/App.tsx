@@ -411,8 +411,14 @@ const App = () => (
                 <Route path="/pole/finance/salaries" element={<Salaries />} />
                 <Route path="/pole/finance/cards" element={<CorporateCards />} />
                 <Route path="/pole/finance/guarantee" element={<GuaranteeFund />} />
-                <Route path="/pole/finance/billing" element={<SubSectionPage />} />
-                <Route path="/pole/finance/payouts" element={<SubSectionPage />} />
+                <Route
+                  path="/pole/finance/billing"
+                  element={<Navigate to="/pole/finance/transactions" replace />}
+                />
+                <Route
+                  path="/pole/finance/payouts"
+                  element={<Navigate to="/pole/finance/supplier-payments" replace />}
+                />
                 <Route
                   path="/pole/finance/reconciliation"
                   element={<Reconciliation />}
@@ -657,14 +663,17 @@ const App = () => (
                 <Route path="/pole/marketing/content" element={<Content />} />
                 <Route path="/pole/marketing/podcasts" element={<Podcasts />} />
                 <Route path="/pole/marketing/analytics" element={<Analytics />} />
-                <Route path="/pole/marketing/crm" element={<SubSectionPage />} />
+                <Route
+                  path="/pole/marketing/crm"
+                  element={<Navigate to="/pole/marketplace/customers" replace />}
+                />
                 <Route
                   path="/pole/marketing/journeys"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/marketing/campaigns" replace />}
                 />
                 <Route
                   path="/pole/marketing/reputation"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/pole/marketing/analytics" replace />}
                 />
 
                 {/* ====================================================
