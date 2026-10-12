@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_actions: {
+        Row: {
+          action_key: string
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+        }
+        Insert: {
+          action_key: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+        }
+        Update: {
+          action_key?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+        }
+        Relationships: []
+      }
       access_assignments: {
         Row: {
           created_at: string
@@ -102,6 +126,124 @@ export type Database = {
             columns: ["portfolio_type_id"]
             isOneToOne: false
             referencedRelation: "access_portfolio_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      access_change_history: {
+        Row: {
+          actor_id: string | null
+          change_type: string
+          created_at: string
+          id: string
+          new_value: Json | null
+          previous_value: Json | null
+          reason: string | null
+          role_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          change_type: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+          role_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          change_type?: string
+          created_at?: string
+          id?: string
+          new_value?: Json | null
+          previous_value?: Json | null
+          reason?: string | null
+          role_id?: string | null
+        }
+        Relationships: []
+      }
+      access_interfaces: {
+        Row: {
+          created_at: string
+          id: string
+          interface_key: string
+          label: string
+          module: string | null
+          path: string | null
+          pole: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interface_key: string
+          label: string
+          module?: string | null
+          path?: string | null
+          pole?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interface_key?: string
+          label?: string
+          module?: string | null
+          path?: string | null
+          pole?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      access_permissions: {
+        Row: {
+          action_id: string
+          allowed: boolean
+          id: string
+          interface_id: string
+          role_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          action_id: string
+          allowed?: boolean
+          id?: string
+          interface_id: string
+          role_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          action_id?: string
+          allowed?: boolean
+          id?: string
+          interface_id?: string
+          role_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_permissions_action_id_fkey"
+            columns: ["action_id"]
+            isOneToOne: false
+            referencedRelation: "access_actions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_permissions_interface_id_fkey"
+            columns: ["interface_id"]
+            isOneToOne: false
+            referencedRelation: "access_interfaces"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "access_permissions_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: false
+            referencedRelation: "access_roles"
             referencedColumns: ["id"]
           },
         ]
@@ -239,9 +381,14 @@ export type Database = {
           department: string | null
           description: string | null
           id: string
+          is_external: boolean
           label: string
+          landing_path: string | null
           owner_type: string | null
+          poles: string[]
+          read_only: boolean
           role_key: string
+          seniority: string | null
           status: string
           updated_at: string
         }
@@ -251,9 +398,14 @@ export type Database = {
           department?: string | null
           description?: string | null
           id?: string
+          is_external?: boolean
           label: string
+          landing_path?: string | null
           owner_type?: string | null
+          poles?: string[]
+          read_only?: boolean
           role_key: string
+          seniority?: string | null
           status?: string
           updated_at?: string
         }
@@ -263,9 +415,14 @@ export type Database = {
           department?: string | null
           description?: string | null
           id?: string
+          is_external?: boolean
           label?: string
+          landing_path?: string | null
           owner_type?: string | null
+          poles?: string[]
+          read_only?: boolean
           role_key?: string
+          seniority?: string | null
           status?: string
           updated_at?: string
         }
@@ -4603,6 +4760,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rh_employee_documents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          document_date: string | null
+          document_type: string
+          document_url: string | null
+          employee_id: string
+          expires_at: string | null
+          id: string
+          name: string
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          document_date?: string | null
+          document_type?: string
+          document_url?: string | null
+          employee_id: string
+          expires_at?: string | null
+          id?: string
+          name: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          document_date?: string | null
+          document_type?: string
+          document_url?: string | null
+          employee_id?: string
+          expires_at?: string | null
+          id?: string
+          name?: string
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       rh_position_catalog: {
         Row: {
