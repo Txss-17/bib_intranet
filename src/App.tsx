@@ -498,15 +498,6 @@ const App = () => (
                   element={<SupplierCatalogInbox />}
                 />
                 
-                <Route
-                  path="/pole/marketplace"
-                  element={
-                    <ProtectedPage pageId="marketplace.overview">
-                      <MarketplaceDashboard />
-                    </ProtectedPage>
-                  }
-                />
-
                 {/* ====================================================
                     5. MARKETPLACE & CUSTOMER
                     ==================================================== */}
@@ -694,17 +685,12 @@ const App = () => (
                   path="/pole/rh/ethics"
                   element={<Navigate to="/modules/ethics" replace />}
                 />
-                <Route path="/pole/rh" element={<RHDashboard />} />
                 
                 <Route
                   path="/pole/rh/portfolio"
                   element={<RHPortfolio />}
                 />
                 
-                <Route
-                  path="/pole/rh/employees"
-                  element={<Employees />}
-                />
                 <Route
                   path="/pole/rh/organization"
                   element={<Organization />}
@@ -1228,7 +1214,7 @@ const App = () => (
                   path="/pole/rd/products"
                   element={
                     <Navigate
-                      to="/pole/product/innovation"
+                      to="/pole/marketplace/products"
                       replace
                     />
                   }
@@ -1237,7 +1223,7 @@ const App = () => (
                   path="/pole/rd/shops"
                   element={
                     <Navigate
-                      to="/pole/product/innovation"
+                      to="/pole/marketplace/stores"
                       replace
                     />
                   }
@@ -1246,7 +1232,7 @@ const App = () => (
                   path="/pole/rd/suppliers"
                   element={
                     <Navigate
-                      to="/pole/product/innovation"
+                      to="/pole/supplier/portfolios"
                       replace
                     />
                   }
