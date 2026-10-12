@@ -694,12 +694,10 @@ const App = () => (
                   path="/pole/rh/ethics"
                   element={<Navigate to="/modules/ethics" replace />}
                 />
-                
                 <Route
                   path="/pole/rh/portfolio"
                   element={<RHPortfolio />}
                 />
-                
                 <Route
                   path="/pole/rh/organization"
                   element={<Organization />}
@@ -1390,7 +1388,7 @@ const App = () => (
 
                 <Route
                   path="/notifications"
-                  element={<SubSectionPage />}
+                  element={<Navigate to="/feed" replace />}
                 />
                 <Route path="/feed" element={<InternalFeed />} />
                 <Route path="/documents" element={<Documents />} />
