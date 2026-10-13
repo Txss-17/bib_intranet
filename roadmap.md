@@ -1,2 +1,5 @@
 - [ ] Restrict collaborator creation and account invitations to HR, and disable public signup.
 - [ ] Update the CEO name and verify persisted changes and application status.
+- [ ] All account settings (identity, post, poles, manager, subsidiary, work mode, contract type) come from HR onboarding; Settings shows them read-only.
+- [x] HR-attached documents (contracts, charters, policies) shown in account Settings > Ressources from real data.
+- [ ] Permissions page RBAC + catalog sync; remove fake data in RH (Publications), Security, Product poles.
