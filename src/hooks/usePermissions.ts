@@ -121,10 +121,12 @@ export const usePermissions = (): UsePermissionsReturn => {
   const canViewPage = useCallback((pageId: string) => permissions(pageId).read, [permissions]);
 
   const canViewPath = useCallback((path: string) => {
-    const page = getPageByPath(path);
-    if (!page) return true; // page hors registre : non restreinte
-    return permissions(page.id).read;
-  }, [permissions]);
+  const page = getPageByPath(path);
+
+  if (!page) return false;
+
+  return permissions(page.id).read;
+}, [permissions]);
 
   const visiblePoles = useMemo(() => {
     const scopes = Array.from(new Set(pageRegistry.filter((p) => !p.transversal).map((p) => p.scope)));
