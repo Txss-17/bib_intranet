@@ -146,7 +146,7 @@ export function useDashboardKPIs(enabled: boolean) {
           ),
 
         count('product_catalog', (q: any) =>
-          q.eq('status', 'active'),
+          q.eq('is_active', true),
         ),
 
         count('kpi_catalog', (q: any) =>
