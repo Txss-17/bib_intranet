@@ -1,13 +1,12 @@
+
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Activity,
-  Check,
-  KeyRound,
   Loader2,
   RefreshCw,
-  Search,
   ShieldCheck,
-  Users,
+  Plus,
+  Save,
   X,
 } from 'lucide-react';
 
@@ -15,30 +14,29 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from '@/hooks/use-toast';
+import { poles as availablePoles } from '@/data/poles';
+import {
+  syncAccessCatalog,
+  type AccessRolePayload,
+  type AccessRoleScopePayload,
+} from '@/lib/accessCatalogSync';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { poles as availablePoles } from '@/data/poles';
-import { syncAccessCatalog } from '@/lib/accessCatalogSync';
 
 type AccessRole = {
   id: string;
@@ -81,14 +79,42 @@ type AccessPermission = {
   allowed: boolean;
 };
 
-type PermissionCell = {
-  roleId: string;
-  interfaceId: string;
-  actionId: string;
-  allowed: boolean;
+type RoleScopeRow = {
+  role_id: string;
+  scope_id: string;
+  scope_value: string | null;
 };
 
-const PAGE_SIZE = 1000;
+type ScopeRow = {
+  id: string;
+  scope_key: string;
+  label: string;
+  scope_type: string;
+};
+
+type ScopeKind =
+  | 'global'
+  | 'pole'
+  | 'portfolio'
+  | 'region'
+  | 'own_records'
+  | 'subsidiary';
+
+const INITIAL_ROLE_FORM = {
+  role_key: '',
+  label: '',
+  department: '',
+  description: '',
+  owner_type: 'pole_responsible' as 'pole_responsible' | 'direction',
+  seniority: 'mid' as 'junior' | 'mid' | 'senior' | 'lead' | 'executive',
+  status: 'draft' as 'draft' | 'active',
+  is_external: false,
+  read_only: false,
+  landing_path: '',
+  scope_kind: 'pole' as ScopeKind,
+  selected_poles: [] as string[],
+  scope_value: '',
+};
 
 const RolesPermissions = () => {
   const { profile } = useAuth();
@@ -98,6 +124,8 @@ const RolesPermissions = () => {
   const [interfaces, setInterfaces] = useState<AccessInterface[]>([]);
   const [actions, setActions] = useState<AccessAction[]>([]);
   const [permissions, setPermissions] = useState<AccessPermission[]>([]);
+  const [roleScopes, setRoleScopes] = useState<RoleScopeRow[]>([]);
+  const [scopes, setScopes] = useState<ScopeRow[]>([]);
 
   const [selectedRoleId, setSelectedRoleId] = useState('');
   const [search, setSearch] = useState('');
@@ -107,10 +135,10 @@ const RolesPermissions = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [syncingCatalog, setSyncingCatalog] = useState(false);
+  const [creatingRole, setCreatingRole] = useState(false);
 
-  const [draft, setDraft] = useState<
-    Record<string, boolean>
-  >({});
+  const [draft, setDraft] = useState<Record<string, boolean>>({});
+  const [roleForm, setRoleForm] = useState({ ...INITIAL_ROLE_FORM });
 
   const loadCatalog = useCallback(async () => {
     setLoading(true);
@@ -121,90 +149,68 @@ const RolesPermissions = () => {
         interfacesResult,
         actionsResult,
         permissionsResult,
+        roleScopesResult,
+        scopesResult,
       ] = await Promise.all([
         supabase
           .from('access_roles')
-          .select(`
-            id,
-            role_key,
-            label,
-            department,
-            business_pole,
-            description,
-            owner_type,
-            status,
-            seniority,
-            is_external,
-            read_only,
-            poles,
-            landing_path
-          `)
+          .select(
+            'id, role_key, label, department, business_pole, description, owner_type, status, seniority, is_external, read_only, poles, landing_path',
+          )
           .order('label'),
 
         supabase
           .from('access_interfaces')
-          .select(`
-            id,
-            interface_key,
-            label,
-            module,
-            pole,
-            path,
-            status
-          `)
+          .select('id, interface_key, label, module, pole, path, status')
           .order('module')
           .order('label'),
 
         supabase
           .from('access_actions')
-          .select(`
-            id,
-            action_key,
-            label,
-            description
-          `)
+          .select('id, action_key, label, description')
           .order('label'),
 
         supabase
           .from('access_permissions')
-          .select(`
-            id,
-            role_id,
-            interface_id,
-            action_id,
-            allowed
-          `),
+          .select('id, role_id, interface_id, action_id, allowed'),
+
+        supabase
+          .from('access_role_scopes')
+          .select('role_id, scope_id, scope_value'),
+
+        supabase
+          .from('access_scopes')
+          .select('id, scope_key, label, scope_type')
+          .order('label'),
       ]);
 
       const error =
         rolesResult.error ||
         interfacesResult.error ||
         actionsResult.error ||
-        permissionsResult.error;
+        permissionsResult.error ||
+        roleScopesResult.error ||
+        scopesResult.error;
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
       const nextRoles = (rolesResult.data ?? []) as AccessRole[];
-      const nextInterfaces =
-        (interfacesResult.data ?? []) as AccessInterface[];
-      const nextActions =
-        (actionsResult.data ?? []) as AccessAction[];
-      const nextPermissions =
-        (permissionsResult.data ?? []) as AccessPermission[];
+      const nextInterfaces = (interfacesResult.data ?? []) as AccessInterface[];
+      const nextActions = (actionsResult.data ?? []) as AccessAction[];
+      const nextPermissions = (permissionsResult.data ?? []) as AccessPermission[];
 
       setRoles(nextRoles);
       setInterfaces(nextInterfaces);
       setActions(nextActions);
       setPermissions(nextPermissions);
+      setRoleScopes((roleScopesResult.data ?? []) as RoleScopeRow[]);
+      setScopes((scopesResult.data ?? []) as ScopeRow[]);
 
-      if (
-        !selectedRoleId ||
-        !nextRoles.some((role) => role.id === selectedRoleId)
-      ) {
-        setSelectedRoleId(nextRoles[0]?.id ?? '');
-      }
+      setSelectedRoleId((current) =>
+        current && nextRoles.some((role) => role.id === current)
+          ? current
+          : nextRoles[0]?.id ?? '',
+      );
 
       const nextDraft: Record<string, boolean> = {};
 
@@ -223,86 +229,44 @@ const RolesPermissions = () => {
         description:
           error instanceof Error
             ? error.message
-            : 'Impossible de charger le catalogue des permissions.',
+            : 'Impossible de charger le catalogue RBAC.',
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
-  }, [selectedRoleId]);
+  }, []);
 
   useEffect(() => {
     void loadCatalog();
   }, [loadCatalog]);
 
   const selectedRole = useMemo(
-    () =>
-      roles.find((role) => role.id === selectedRoleId) ??
-      null,
+    () => roles.find((role) => role.id === selectedRoleId) ?? null,
     [roles, selectedRoleId],
   );
 
-  const modules = useMemo(() => {
-    return Array.from(
-      new Set(
-        interfaces
-          .map((item) => item.module)
-          .filter(Boolean) as string[],
-      ),
-    ).sort();
-  }, [interfaces]);
-
-  const poleOptions = useMemo(() => {
-    const catalogPoles = new Set(
-      interfaces
-        .map((item) => item.pole)
-        .filter((pole): pole is string => Boolean(pole)),
-    );
-    const knownPoles = availablePoles.map(
-      (pole) => ({
-        id: pole.id,
-        label: pole.name,
-      }),
-    );
-    const knownPoleIds = new Set<string>(
-      knownPoles.map((pole) => pole.id),
-    );
-    const otherPoles = Array.from(catalogPoles)
-      .filter((pole) => !knownPoleIds.has(pole))
-      .sort()
-      .map((pole) => ({
-        id: pole,
-        label: pole === 'transversal' ? 'Transversal' : pole,
-      }));
-
-    return [...knownPoles, ...otherPoles];
-  }, [interfaces]);
+  const modules = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          interfaces
+            .map((item) => item.module)
+            .filter((value): value is string => Boolean(value)),
+        ),
+      ).sort(),
+    [interfaces],
+  );
 
   const visibleInterfaces = useMemo(() => {
     const query = search.trim().toLowerCase();
 
     return interfaces.filter((item) => {
-      if (item.status !== 'active') {
-        return false;
-      }
+      if (item.status !== 'active') return false;
+      if (moduleFilter !== 'all' && item.module !== moduleFilter) return false;
+      if (poleFilter !== 'all' && item.pole !== poleFilter) return false;
 
-      if (
-        moduleFilter !== 'all' &&
-        item.module !== moduleFilter
-      ) {
-        return false;
-      }
-
-      if (
-        poleFilter !== 'all' &&
-        item.pole !== poleFilter
-      ) {
-        return false;
-      }
-
-      if (!query) {
-        return true;
-      }
+      if (!query) return true;
 
       return [
         item.label,
@@ -312,62 +276,61 @@ const RolesPermissions = () => {
         item.path,
       ]
         .filter(Boolean)
-        .some((value) =>
-          String(value).toLowerCase().includes(query),
-        );
+        .some((value) => String(value).toLowerCase().includes(query));
     });
   }, [interfaces, moduleFilter, poleFilter, search]);
 
-  const rolePermissions = useMemo(() => {
-    const result = new Map<string, boolean>();
+  const roleScopeLabels = (roleId: string) => {
+    const assignments = roleScopes.filter((item) => item.role_id === roleId);
 
-    permissions
-      .filter(
-        (permission) =>
-          permission.role_id === selectedRoleId,
-      )
-      .forEach((permission) => {
-        result.set(
-          `${permission.interface_id}:${permission.action_id}`,
-          permission.allowed,
-        );
-      });
+    if (!assignments.length) return 'Aucun périmètre configuré';
 
-    return result;
-  }, [permissions, selectedRoleId]);
+    return assignments
+      .map((assignment) => {
+        const scope = scopes.find((item) => item.id === assignment.scope_id);
+        if (!scope) return assignment.scope_value ?? 'Périmètre';
 
-  const isAllowed = (
-    interfaceId: string,
-    actionId: string,
-  ) => {
+        if (assignment.scope_value) {
+          return `${scope.label} : ${assignment.scope_value}`;
+        }
+
+        return scope.label;
+      })
+      .join(', ');
+  };
+
+  const isAllowed = (interfaceId: string, actionId: string) => {
     const key = `${selectedRoleId}:${interfaceId}:${actionId}`;
 
-    if (key in draft) {
-      return draft[key];
-    }
+    if (key in draft) return draft[key];
 
     return (
-      rolePermissions.get(
-        `${interfaceId}:${actionId}`,
-      ) ?? false
+      permissions.find(
+        (permission) =>
+          permission.role_id === selectedRoleId &&
+          permission.interface_id === interfaceId &&
+          permission.action_id === actionId,
+      )?.allowed ?? false
     );
   };
 
   const togglePermission = (
     interfaceId: string,
     actionId: string,
-    value: boolean,
+    allowed: boolean,
   ) => {
     const key = `${selectedRoleId}:${interfaceId}:${actionId}`;
 
-    setDraft((current) => ({
-      ...current,
-      [key]: value,
-    }));
+    setDraft((current) => ({ ...current, [key]: allowed }));
   };
 
   const savePermissions = async () => {
     if (!selectedRoleId) {
+      toast({
+        title: 'Aucun rôle sélectionné',
+        description: 'Sélectionnez un rôle avant d’enregistrer les droits.',
+        variant: 'destructive',
+      });
       return;
     }
 
@@ -375,52 +338,42 @@ const RolesPermissions = () => {
 
     try {
       const existing = permissions.filter(
-        (permission) =>
-          permission.role_id === selectedRoleId,
+        (permission) => permission.role_id === selectedRoleId,
       );
 
       const existingByKey = new Map(
         existing.map((permission) => [
           `${permission.interface_id}:${permission.action_id}`,
-          permission,
+          permission.allowed,
         ]),
       );
 
-      const rows = [];
+      const rows = interfaces.flatMap((interfaceItem) =>
+        actions.map((action) => {
+          const pairKey = `${interfaceItem.id}:${action.id}`;
+          const draftKey = `${selectedRoleId}:${pairKey}`;
 
-      for (const interfaceItem of interfaces) {
-        for (const action of actions) {
-          const key =
-            `${interfaceItem.id}:${action.id}`;
-
-          const value =
-            draft[
-              `${selectedRoleId}:${key}`
-            ] ??
-            existingByKey.get(key)?.allowed ??
-            false;
-
-          rows.push({
+          return {
             role_id: selectedRoleId,
             interface_id: interfaceItem.id,
             action_id: action.id,
-            allowed: value,
-          });
-        }
-      }
+            allowed:
+              draft[draftKey] ??
+              existingByKey.get(pairKey) ??
+              false,
+          };
+        }),
+      );
 
       const { error } = await supabase
         .from('access_permissions')
         .upsert(rows, {
-          onConflict:
-            'role_id,interface_id,action_id',
+          onConflict: 'role_id,interface_id,action_id',
         });
 
-      if (error) {
-        throw error;
-      }
+      if (error) throw error;
 
-      await supabase
+      const historyResult = await supabase
         .from('access_change_history')
         .insert({
           actor_id: profile?.id ?? null,
@@ -428,14 +381,16 @@ const RolesPermissions = () => {
           change_type: 'permission_matrix_update',
           previous_value: existing,
           new_value: rows,
-          reason:
-            'Modification depuis Admin > Rôles & Permissions',
+          reason: 'Modification depuis Rôles & Permissions',
         });
+
+      if (historyResult.error) {
+        console.warn('RBAC history write failed:', historyResult.error.message);
+      }
 
       toast({
         title: 'Permissions enregistrées',
-        description:
-          `La matrice du rôle « ${selectedRole?.label ?? selectedRoleId} » a été enregistrée.`,
+        description: `La matrice de « ${selectedRole?.label ?? selectedRoleId} » a été enregistrée.`,
       });
 
       await loadCatalog();
@@ -459,13 +414,13 @@ const RolesPermissions = () => {
     setSyncingCatalog(true);
 
     try {
-      await syncAccessCatalog();
+      const result = await syncAccessCatalog();
       await loadCatalog();
 
       toast({
         title: 'Catalogue synchronisé',
         description:
-          'Les pôles, interfaces, rôles et actions sont à jour.',
+          `Interfaces : ${result.synchronized?.interfaces ?? 0}, rôles : ${result.synchronized?.roles ?? 0}, périmètres : ${result.synchronized?.scopes ?? 0}.`,
       });
     } catch (error) {
       console.error('RBAC catalog synchronization error', error);
@@ -475,7 +430,7 @@ const RolesPermissions = () => {
         description:
           error instanceof Error
             ? error.message
-            : 'Impossible de synchroniser le catalogue des permissions.',
+            : 'Impossible de synchroniser le catalogue.',
         variant: 'destructive',
       });
     } finally {
@@ -483,47 +438,177 @@ const RolesPermissions = () => {
     }
   };
 
-  const resetDraft = () => {
-    const nextDraft: Record<string, boolean> = {};
-
-    permissions
-      .filter(
-        (permission) =>
-          permission.role_id === selectedRoleId,
-      )
-      .forEach((permission) => {
-        nextDraft[
-          `${permission.role_id}:${permission.interface_id}:${permission.action_id}`
-        ] = permission.allowed;
-      });
-
-    setDraft(nextDraft);
+  const togglePole = (poleId: string, checked: boolean) => {
+    setRoleForm((current) => ({
+      ...current,
+      selected_poles: checked
+        ? Array.from(new Set([...current.selected_poles, poleId]))
+        : current.selected_poles.filter((item) => item !== poleId),
+    }));
   };
 
-  const enabledCount = useMemo(() => {
-    let count = 0;
+  const createRole = async () => {
+    const roleKey = roleForm.role_key
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]/g, '_')
+      .replace(/_+/g, '_');
 
-    visibleInterfaces.forEach((interfaceItem) => {
-      actions.forEach((action) => {
-        if (
-          isAllowed(
-            interfaceItem.id,
-            action.id,
-          )
-        ) {
-          count += 1;
-        }
+    const label = roleForm.label.trim();
+    const department = roleForm.department.trim();
+
+    if (!roleKey || !label || !department) {
+      toast({
+        title: 'Champs obligatoires',
+        description: 'Renseignez la clé, le libellé et le département.',
+        variant: 'destructive',
       });
-    });
+      return;
+    }
 
-    return count;
-  }, [
-    visibleInterfaces,
-    actions,
-    draft,
-    selectedRoleId,
-    rolePermissions,
-  ]);
+    if (roleForm.scope_kind === 'pole' && roleForm.selected_poles.length === 0) {
+      toast({
+        title: 'Périmètre incomplet',
+        description: 'Sélectionnez au moins un pôle pour ce rôle.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (
+      ['portfolio', 'region', 'subsidiary'].includes(roleForm.scope_kind) &&
+      !roleForm.scope_value.trim()
+    ) {
+      toast({
+        title: 'Valeur de périmètre manquante',
+        description: 'Saisissez la valeur du portefeuille, de la région ou de la filiale.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (roles.some((role) => role.role_key === roleKey)) {
+      toast({
+        title: 'Clé déjà utilisée',
+        description: `Le rôle « ${roleKey} » existe déjà.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setCreatingRole(true);
+
+    try {
+      const scopesToCreate: AccessRoleScopePayload[] = [];
+
+      if (roleForm.scope_kind === 'global') {
+        scopesToCreate.push({
+          role_key: roleKey,
+          scope_key: 'global',
+          scope_value: null,
+        });
+      }
+
+      if (roleForm.scope_kind === 'pole') {
+        roleForm.selected_poles.forEach((poleId) => {
+          scopesToCreate.push({
+            role_key: roleKey,
+            scope_key: 'pole',
+            scope_value: poleId,
+          });
+        });
+      }
+
+      if (roleForm.scope_kind === 'portfolio') {
+        scopesToCreate.push({
+          role_key: roleKey,
+          scope_key: 'portfolio',
+          scope_value: roleForm.scope_value.trim(),
+        });
+      }
+
+      if (roleForm.scope_kind === 'region') {
+        scopesToCreate.push({
+          role_key: roleKey,
+          scope_key: 'region',
+          scope_value: roleForm.scope_value.trim().toUpperCase(),
+        });
+      }
+
+      if (roleForm.scope_kind === 'own_records') {
+        scopesToCreate.push({
+          role_key: roleKey,
+          scope_key: 'own_records',
+          scope_value: null,
+        });
+      }
+
+      if (roleForm.scope_kind === 'subsidiary') {
+        scopesToCreate.push({
+          role_key: roleKey,
+          scope_key: 'subsidiary',
+          scope_value: roleForm.scope_value.trim(),
+        });
+      }
+
+      const businessPole =
+        roleForm.selected_poles[0] ??
+        (roleForm.scope_kind === 'pole' ? null : null);
+
+      const newRole: AccessRolePayload = {
+        role_key: roleKey,
+        label,
+        department,
+        business_pole: businessPole,
+        owner_type: roleForm.owner_type,
+        status: roleForm.status,
+        description: roleForm.description.trim() || null,
+        seniority: roleForm.seniority,
+        is_external: roleForm.is_external,
+        read_only: roleForm.read_only,
+        poles: roleForm.selected_poles,
+        landing_path: roleForm.landing_path.trim() || null,
+      };
+
+      await syncAccessCatalog({
+        extraRoles: [newRole],
+        extraRoleScopes: scopesToCreate,
+      });
+
+      setRoleForm({ ...INITIAL_ROLE_FORM });
+      await loadCatalog();
+
+      const { data: createdRole, error: createdRoleError } = await supabase
+        .from('access_roles')
+        .select('id')
+        .eq('role_key', roleKey)
+        .maybeSingle();
+
+      if (createdRoleError) {
+        console.warn('Could not reselect newly created role:', createdRoleError.message);
+      } else if (createdRole?.id) {
+        setSelectedRoleId(createdRole.id);
+      }
+
+      toast({
+        title: 'Rôle créé',
+        description: `Le rôle « ${label} » a été ajouté au catalogue. Ses permissions restent désactivées tant qu’elles ne sont pas configurées.`,
+      });
+    } catch (error) {
+      console.error('RBAC role creation error', error);
+
+      toast({
+        title: 'Création impossible',
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Impossible de créer le rôle. Vérifiez les autorisations et la synchronisation Supabase.',
+        variant: 'destructive',
+      });
+    } finally {
+      setCreatingRole(false);
+    }
+  };
 
   if (!isSuperAdmin) {
     return (
@@ -531,17 +616,10 @@ const RolesPermissions = () => {
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
             <ShieldCheck className="h-10 w-10 text-muted-foreground" />
-
-            <div>
-              <h1 className="text-xl font-semibold">
-                Accès restreint
-              </h1>
-
-              <p className="mt-2 text-sm text-muted-foreground">
-                La configuration des permissions est réservée
-                aux administrateurs autorisés.
-              </p>
-            </div>
+            <h1 className="text-xl font-semibold">Accès restreint</h1>
+            <p className="text-sm text-muted-foreground">
+              La configuration des rôles et permissions est réservée aux administrateurs autorisés.
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -556,19 +634,16 @@ const RolesPermissions = () => {
             <ShieldCheck className="h-6 w-6" />
             Rôles & Permissions
           </h1>
-
           <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
-            Gestion du RBAC réel BIB : rôle → interface → action.
-            Les permissions sont enregistrées dans Supabase et
-            utilisées par le contrôle d’accès.
+            Administration des rôles, de leurs périmètres métier et des actions autorisées sur chaque interface BIB.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="outline"
             onClick={() => void synchronizeCatalog()}
-            disabled={loading || saving || syncingCatalog}
+            disabled={loading || saving || syncingCatalog || creatingRole}
           >
             {syncingCatalog ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -581,7 +656,7 @@ const RolesPermissions = () => {
           <Button
             variant="outline"
             onClick={() => void loadCatalog()}
-            disabled={loading || saving}
+            disabled={loading || saving || creatingRole}
           >
             <RefreshCw className="mr-2 h-4 w-4" />
             Actualiser
@@ -589,470 +664,552 @@ const RolesPermissions = () => {
 
           <Button
             onClick={() => void savePermissions()}
-            disabled={
-              loading ||
-              saving ||
-              !selectedRoleId
-            }
+            disabled={loading || saving || !selectedRoleId}
           >
             {saving ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
-              <Check className="mr-2 h-4 w-4" />
+              <Save className="mr-2 h-4 w-4" />
             )}
-            Enregistrer
+            Enregistrer les droits
           </Button>
         </div>
       </div>
 
-      <Card>
-        <CardContent className="grid gap-4 pt-6 md:grid-cols-4">
-          <div>
-            <p className="text-xs text-muted-foreground">
-              Rôle
-            </p>
-
-            <Select
-              value={selectedRoleId}
-              onValueChange={setSelectedRoleId}
-            >
-              <SelectTrigger className="mt-1">
-                <SelectValue placeholder="Sélectionner un rôle" />
-              </SelectTrigger>
-
-              <SelectContent>
-                {roles
-                  .filter(
-                    (role) =>
-                      role.status === 'active',
-                  )
-                  .map((role) => (
-                    <SelectItem
-                      key={role.id}
-                      value={role.id}
-                    >
-                      {role.label} · {role.role_key}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <p className="text-xs text-muted-foreground">
-              Recherche
-            </p>
-
-            <div className="relative mt-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-
-              <Input
-                value={search}
-                onChange={(event) =>
-                  setSearch(event.target.value)
-                }
-                className="pl-9"
-                placeholder="Interface, module, chemin..."
-              />
-            </div>
-          </div>
-
-          <div>
-            <p className="text-xs text-muted-foreground">
-              Module
-            </p>
-
-            <Select
-              value={moduleFilter}
-              onValueChange={setModuleFilter}
-            >
-              <SelectTrigger className="mt-1">
-                <SelectValue />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="all">
-                  Tous les modules
-                </SelectItem>
-
-                {modules.map((module) => (
-                  <SelectItem
-                    key={module}
-                    value={module}
-                  >
-                    {module}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <p className="text-xs text-muted-foreground">
-              Pôle
-            </p>
-
-            <Select
-              value={poleFilter}
-              onValueChange={setPoleFilter}
-            >
-              <SelectTrigger className="mt-1">
-                <SelectValue />
-              </SelectTrigger>
-
-              <SelectContent>
-                <SelectItem value="all">
-                  Tous les pôles
-                </SelectItem>
-
-                {poleOptions.map((pole) => (
-                  <SelectItem
-                    key={pole.id}
-                    value={pole.id}
-                  >
-                    {pole.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      {selectedRole && (
+      <div className="grid gap-4 sm:grid-cols-3">
         <Card>
-          <CardHeader>
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  {selectedRole.label}
-                </CardTitle>
-
-                <p className="mt-1 text-sm text-muted-foreground">
-                  {selectedRole.description ||
-                    'Aucune description.'}
-                </p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">
-                  {selectedRole.role_key}
-                </Badge>
-
-                {selectedRole.business_pole && (
-                  <Badge variant="outline">
-                    {selectedRole.business_pole}
-                  </Badge>
-                )}
-
-                {selectedRole.read_only && (
-                  <Badge variant="outline">
-                    Lecture seule
-                  </Badge>
-                )}
-
-                {selectedRole.is_external && (
-                  <Badge variant="outline">
-                    Externe
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </CardHeader>
-
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground">
-                  Interfaces affichées
-                </p>
-
-                <p className="mt-1 text-2xl font-semibold">
-                  {visibleInterfaces.length}
-                </p>
-              </div>
-
-              <div className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground">
-                  Actions disponibles
-                </p>
-
-                <p className="mt-1 text-2xl font-semibold">
-                  {actions.length}
-                </p>
-              </div>
-
-              <div className="rounded-lg border p-3">
-                <p className="text-xs text-muted-foreground">
-                  Permissions actives
-                </p>
-
-                <p className="mt-1 text-2xl font-semibold">
-                  {enabledCount}
-                </p>
-              </div>
-            </div>
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">Rôles</p>
+            <p className="text-2xl font-semibold">{roles.length}</p>
           </CardContent>
         </Card>
-      )}
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">Interfaces actives</p>
+            <p className="text-2xl font-semibold">
+              {interfaces.filter((item) => item.status === 'active').length}
+            </p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <p className="text-sm text-muted-foreground">Actions disponibles</p>
+            <p className="text-2xl font-semibold">{actions.length}</p>
+          </CardContent>
+        </Card>
+      </div>
 
       <Tabs defaultValue="matrix">
-        <TabsList>
-          <TabsTrigger value="matrix">
-            <KeyRound className="mr-2 h-4 w-4" />
-            Matrice
-          </TabsTrigger>
-
-          <TabsTrigger value="roles">
-            <Users className="mr-2 h-4 w-4" />
-            Rôles
-          </TabsTrigger>
-
-          <TabsTrigger value="actions">
-            <Activity className="mr-2 h-4 w-4" />
-            Actions
-          </TabsTrigger>
+        <TabsList className="flex h-auto flex-wrap">
+          <TabsTrigger value="matrix">Matrice des permissions</TabsTrigger>
+          <TabsTrigger value="roles">Catalogue des rôles</TabsTrigger>
+          <TabsTrigger value="create">Créer un rôle</TabsTrigger>
+          <TabsTrigger value="actions">Actions disponibles</TabsTrigger>
         </TabsList>
 
-        <TabsContent
-          value="matrix"
-          className="mt-4"
-        >
+        <TabsContent value="matrix" className="mt-4 space-y-4">
           <Card>
             <CardHeader>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <CardTitle>
-                    Matrice des permissions
-                  </CardTitle>
-
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Chaque cellule correspond à une combinaison
-                    rôle / interface / action.
-                  </p>
+              <CardTitle>Configuration des droits</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Rôle</label>
+                  <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={selectedRoleId}
+                    onChange={(event) => setSelectedRoleId(event.target.value)}
+                  >
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.label} ({role.role_key})
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={resetDraft}
-                  disabled={saving}
-                >
-                  <X className="mr-2 h-4 w-4" />
-                  Annuler les changements
-                </Button>
-              </div>
-            </CardHeader>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Module</label>
+                  <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={moduleFilter}
+                    onChange={(event) => setModuleFilter(event.target.value)}
+                  >
+                    <option value="all">Tous les modules</option>
+                    {modules.map((module) => (
+                      <option key={module} value={module}>
+                        {module}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-            <CardContent>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Pôle de l’interface</label>
+                  <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={poleFilter}
+                    onChange={(event) => setPoleFilter(event.target.value)}
+                  >
+                    <option value="all">Tous les pôles</option>
+                    {Array.from(
+                      new Set(
+                        interfaces
+                          .map((item) => item.pole)
+                          .filter((value): value is string => Boolean(value)),
+                      ),
+                    )
+                      .sort()
+                      .map((pole) => (
+                        <option key={pole} value={pole}>
+                          {availablePoles.find((item) => item.id === pole)?.name ?? pole}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              </div>
+
+              <Input
+                placeholder="Rechercher une interface, un chemin ou un module…"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
+
+              {selectedRole && (
+                <div className="rounded-lg border p-3 text-sm">
+                  <p className="font-medium">{selectedRole.label}</p>
+                  <p className="mt-1 text-muted-foreground">
+                    Périmètre : {roleScopeLabels(selectedRole.id)}
+                  </p>
+                </div>
+              )}
+
               {loading ? (
                 <div className="flex justify-center py-12">
                   <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
               ) : visibleInterfaces.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 py-12 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    {interfaces.length === 0
-                      ? 'Le catalogue des interfaces est vide.'
-                      : 'Aucune interface ne correspond aux filtres.'}
-                  </p>
-                </div>
+                <p className="py-10 text-center text-sm text-muted-foreground">
+                  Aucune interface ne correspond aux filtres.
+                </p>
               ) : (
                 <div className="overflow-x-auto rounded-lg border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="min-w-[280px]">
-                          Interface
-                        </TableHead>
-
+                  <table className="w-full min-w-[900px] text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/40">
+                        <th className="p-3 text-left">Interface</th>
                         {actions.map((action) => (
-                          <TableHead
-                            key={action.id}
-                            className="min-w-[120px] text-center"
-                          >
+                          <th key={action.id} className="min-w-[100px] p-3 text-center">
                             {action.label}
-                          </TableHead>
+                          </th>
                         ))}
-                      </TableRow>
-                    </TableHeader>
-
-                    <TableBody>
-                      {visibleInterfaces.map(
-                        (interfaceItem) => (
-                          <TableRow
-                            key={interfaceItem.id}
-                          >
-                            <TableCell>
-                              <div className="font-medium">
-                                {interfaceItem.label}
-                              </div>
-
-                              <div className="mt-0.5 text-xs text-muted-foreground">
-                                {interfaceItem.interface_key}
-                              </div>
-
-                              {interfaceItem.path && (
-                                <div className="mt-0.5 text-xs text-muted-foreground">
-                                  {interfaceItem.path}
-                                </div>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {visibleInterfaces.map((item) => (
+                        <tr key={item.id} className="border-b last:border-0">
+                          <td className="p-3">
+                            <p className="font-medium">{item.label}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {item.interface_key}
+                            </p>
+                            {item.path && (
+                              <p className="text-xs text-muted-foreground">{item.path}</p>
+                            )}
+                            <div className="mt-1 flex flex-wrap gap-1">
+                              {item.module && (
+                                <Badge variant="outline">{item.module}</Badge>
                               )}
-
-                              <div className="mt-1 flex gap-1">
-                                {interfaceItem.module && (
-                                  <Badge
-                                    variant="outline"
-                                    className="text-[10px]"
-                                  >
-                                    {interfaceItem.module}
-                                  </Badge>
-                                )}
-
-                                {interfaceItem.pole && (
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-[10px]"
-                                  >
-                                    {interfaceItem.pole}
-                                  </Badge>
-                                )}
+                              {item.pole && (
+                                <Badge variant="secondary">{item.pole}</Badge>
+                              )}
+                            </div>
+                          </td>
+                          {actions.map((action) => (
+                            <td key={action.id} className="p-3 text-center">
+                              <div className="flex justify-center">
+                                <Switch
+                                  checked={isAllowed(item.id, action.id)}
+                                  onCheckedChange={(value) =>
+                                    togglePermission(item.id, action.id, value)
+                                  }
+                                  disabled={saving || !selectedRoleId}
+                                  aria-label={`${item.label} — ${action.label}`}
+                                />
                               </div>
-                            </TableCell>
-
-                            {actions.map((action) => {
-                              const allowed =
-                                isAllowed(
-                                  interfaceItem.id,
-                                  action.id,
-                                );
-
-                              return (
-                                <TableCell
-                                  key={action.id}
-                                  className="text-center"
-                                >
-                                  <div className="flex justify-center">
-                                    <Switch
-                                      checked={allowed}
-                                      onCheckedChange={(
-                                        value,
-                                      ) =>
-                                        togglePermission(
-                                          interfaceItem.id,
-                                          action.id,
-                                          value,
-                                        )
-                                      }
-                                      disabled={saving}
-                                      aria-label={`${interfaceItem.label} — ${action.label}`}
-                                    />
-                                  </div>
-                                </TableCell>
-                              );
-                            })}
-                          </TableRow>
-                        ),
-                      )}
-                    </TableBody>
-                  </Table>
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent
-          value="roles"
-          className="mt-4"
-        >
+        <TabsContent value="roles" className="mt-4">
           <Card>
             <CardHeader>
               <CardTitle>Catalogue des rôles</CardTitle>
             </CardHeader>
-
             <CardContent>
-              <div className="overflow-x-auto rounded-lg border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Rôle</TableHead>
-                      <TableHead>Pôle</TableHead>
-                      <TableHead>Département</TableHead>
-                      <TableHead>Séniorité</TableHead>
-                      <TableHead>Statut</TableHead>
-                    </TableRow>
-                  </TableHeader>
+              {loading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border">
+                  <table className="w-full min-w-[900px] text-sm">
+                    <thead>
+                      <tr className="border-b bg-muted/40">
+                        <th className="p-3 text-left">Rôle</th>
+                        <th className="p-3 text-left">Département</th>
+                        <th className="p-3 text-left">Périmètre</th>
+                        <th className="p-3 text-left">Séniorité</th>
+                        <th className="p-3 text-left">Statut</th>
+                        <th className="p-3 text-left">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {roles.map((role) => (
+                        <tr key={role.id} className="border-b last:border-0">
+                          <td className="p-3">
+                            <p className="font-medium">{role.label}</p>
+                            <p className="text-xs text-muted-foreground">{role.role_key}</p>
+                          </td>
+                          <td className="p-3">{role.department || '—'}</td>
+                          <td className="max-w-[280px] p-3">
+                            {roleScopeLabels(role.id)}
+                          </td>
+                          <td className="p-3">{role.seniority || '—'}</td>
+                          <td className="p-3">
+                            <Badge variant={role.status === 'active' ? 'secondary' : 'outline'}>
+                              {role.status}
+                            </Badge>
+                          </td>
+                          <td className="p-3">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedRoleId(role.id);
+                              }}
+                            >
+                              Configurer
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                      {roles.length === 0 && (
+                        <tr>
+                          <td colSpan={6} className="p-8 text-center text-muted-foreground">
+                            Aucun rôle dans le catalogue.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-                  <TableBody>
-                    {roles.map((role) => (
-                      <TableRow key={role.id}>
-                        <TableCell>
-                          <div className="font-medium">
-                            {role.label}
-                          </div>
+        <TabsContent value="create" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5" />
+                Créer un rôle métier
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                La création du rôle n’accorde aucun droit d’accès automatiquement. Configurez ensuite sa matrice.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Libellé du rôle *</label>
+                  <Input
+                    value={roleForm.label}
+                    placeholder="Ex. Gestionnaire de catalogue"
+                    onChange={(event) => {
+                      const label = event.target.value;
+                      setRoleForm((current) => ({
+                        ...current,
+                        label,
+                        role_key: current.role_key ||
+                          label.toLowerCase()
+                            .normalize('NFD')
+                            .replace(/[\u0300-\u036f]/g, '')
+                            .replace(/[^a-z0-9_-]+/g, '_')
+                            .replace(/^_+|_+$/g, ''),
+                      }));
+                    }}
+                  />
+                </div>
 
-                          <div className="text-xs text-muted-foreground">
-                            {role.role_key}
-                          </div>
-                        </TableCell>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Clé technique *</label>
+                  <Input
+                    value={roleForm.role_key}
+                    placeholder="gestionnaire_catalogue"
+                    onChange={(event) =>
+                      setRoleForm((current) => ({
+                        ...current,
+                        role_key: event.target.value
+                          .toLowerCase()
+                          .replace(/[^a-z0-9_-]/g, '_')
+                          .replace(/_+/g, '_'),
+                      }))
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Lettres minuscules, chiffres, tirets et tirets bas.
+                  </p>
+                </div>
 
-                        <TableCell>
-                          {role.business_pole || '—'}
-                        </TableCell>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Département *</label>
+                  <Input
+                    value={roleForm.department}
+                    placeholder="Ex. Fournisseurs & Produits"
+                    onChange={(event) =>
+                      setRoleForm((current) => ({
+                        ...current,
+                        department: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
 
-                        <TableCell>
-                          {role.department || '—'}
-                        </TableCell>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Propriétaire du rôle</label>
+                  <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={roleForm.owner_type}
+                    onChange={(event) =>
+                      setRoleForm((current) => ({
+                        ...current,
+                        owner_type: event.target.value as 'pole_responsible' | 'direction',
+                      }))
+                    }
+                  >
+                    <option value="pole_responsible">Responsable de pôle</option>
+                    <option value="direction">Direction</option>
+                  </select>
+                </div>
 
-                        <TableCell>
-                          {role.seniority || '—'}
-                        </TableCell>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Séniorité</label>
+                  <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={roleForm.seniority}
+                    onChange={(event) =>
+                      setRoleForm((current) => ({
+                        ...current,
+                        seniority: event.target.value as typeof current.seniority,
+                      }))
+                    }
+                  >
+                    <option value="junior">Junior</option>
+                    <option value="mid">Intermédiaire</option>
+                    <option value="senior">Senior</option>
+                    <option value="lead">Lead</option>
+                    <option value="executive">Exécutif</option>
+                  </select>
+                </div>
 
-                        <TableCell>
-                          <Badge
-                            variant={
-                              role.status === 'active'
-                                ? 'secondary'
-                                : 'outline'
-                            }
-                          >
-                            {role.status}
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Statut initial</label>
+                  <select
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={roleForm.status}
+                    onChange={(event) =>
+                      setRoleForm((current) => ({
+                        ...current,
+                        status: event.target.value as 'draft' | 'active',
+                      }))
+                    }
+                  >
+                    <option value="draft">Brouillon</option>
+                    <option value="active">Actif</option>
+                  </select>
+                </div>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Description</label>
+                  <textarea
+                    className="min-h-24 w-full rounded-md border bg-background p-3 text-sm"
+                    value={roleForm.description}
+                    placeholder="Responsabilités et limites du rôle…"
+                    onChange={(event) =>
+                      setRoleForm((current) => ({
+                        ...current,
+                        description: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4 rounded-lg border p-4">
+                <div>
+                  <h3 className="font-medium">Périmètre d’accès *</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Le périmètre définit les données auxquelles le rôle peut être rattaché. Il ne remplace pas les droits par interface.
+                  </p>
+                </div>
+
+                <select
+                  className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                  value={roleForm.scope_kind}
+                  onChange={(event) =>
+                    setRoleForm((current) => ({
+                      ...current,
+                      scope_kind: event.target.value as ScopeKind,
+                      scope_value: '',
+                      selected_poles: [],
+                    }))
+                  }
+                >
+                  <option value="global">Global</option>
+                  <option value="pole">Un ou plusieurs pôles</option>
+                  <option value="portfolio">Portefeuille déterminé</option>
+                  <option value="region">Région déterminée</option>
+                  <option value="own_records">Mes enregistrements uniquement</option>
+                  <option value="subsidiary">Filiale déterminée</option>
+                </select>
+
+                {roleForm.scope_kind === 'pole' && (
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    {availablePoles.map((pole) => (
+                      <label
+                        key={pole.id}
+                        className="flex cursor-pointer items-center gap-2 rounded-md border p-3 text-sm"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={roleForm.selected_poles.includes(pole.id)}
+                          onChange={(event) => togglePole(pole.id, event.target.checked)}
+                        />
+                        <span>{pole.name}</span>
+                      </label>
                     ))}
-                  </TableBody>
-                </Table>
+                  </div>
+                )}
+
+                {['portfolio', 'region', 'subsidiary'].includes(roleForm.scope_kind) && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">
+                      {roleForm.scope_kind === 'portfolio'
+                        ? 'Nom ou identifiant du portefeuille'
+                        : roleForm.scope_kind === 'region'
+                          ? 'Code de région'
+                          : 'Nom ou identifiant de la filiale'}
+                    </label>
+                    <Input
+                      value={roleForm.scope_value}
+                      placeholder={
+                        roleForm.scope_kind === 'region'
+                          ? 'Ex. FR'
+                          : 'Saisir une valeur de périmètre'
+                      }
+                      onChange={(event) =>
+                        setRoleForm((current) => ({
+                          ...current,
+                          scope_value: event.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <label className="flex items-center justify-between gap-4 rounded-lg border p-4">
+                  <span>
+                    <span className="block text-sm font-medium">Compte externe</span>
+                    <span className="text-xs text-muted-foreground">
+                      Marchand, fournisseur, prestataire ou autre tiers.
+                    </span>
+                  </span>
+                  <Switch
+                    checked={roleForm.is_external}
+                    onCheckedChange={(value) =>
+                      setRoleForm((current) => ({ ...current, is_external: value }))
+                    }
+                  />
+                </label>
+
+                <label className="flex items-center justify-between gap-4 rounded-lg border p-4">
+                  <span>
+                    <span className="block text-sm font-medium">Lecture seule</span>
+                    <span className="text-xs text-muted-foreground">
+                      Le rôle ne doit pas modifier les données.
+                    </span>
+                  </span>
+                  <Switch
+                    checked={roleForm.read_only}
+                    onCheckedChange={(value) =>
+                      setRoleForm((current) => ({ ...current, read_only: value }))
+                    }
+                  />
+                </label>
+
+                <div className="space-y-2 md:col-span-2">
+                  <label className="text-sm font-medium">Chemin d’accueil (facultatif)</label>
+                  <Input
+                    value={roleForm.landing_path}
+                    placeholder="/pole/supplier/catalogue"
+                    onChange={(event) =>
+                      setRoleForm((current) => ({
+                        ...current,
+                        landing_path: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setRoleForm({ ...INITIAL_ROLE_FORM })}
+                  disabled={creatingRole}
+                >
+                  <X className="mr-2 h-4 w-4" />
+                  Réinitialiser
+                </Button>
+                <Button onClick={() => void createRole()} disabled={creatingRole}>
+                  {creatingRole ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Plus className="mr-2 h-4 w-4" />
+                  )}
+                  Créer le rôle
+                </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent
-          value="actions"
-          className="mt-4"
-        >
+        <TabsContent value="actions" className="mt-4">
           <Card>
             <CardHeader>
               <CardTitle>Catalogue des actions</CardTitle>
             </CardHeader>
-
             <CardContent>
               <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
                 {actions.map((action) => (
-                  <div
-                    key={action.id}
-                    className="rounded-lg border p-4"
-                  >
-                    <div className="font-medium">
-                      {action.label}
-                    </div>
-
-                    <div className="mt-1 text-xs text-muted-foreground">
+                  <div key={action.id} className="rounded-lg border p-4">
+                    <p className="font-medium">{action.label}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
                       {action.action_key}
-                    </div>
-
+                    </p>
                     {action.description && (
                       <p className="mt-2 text-sm text-muted-foreground">
                         {action.description}
@@ -1060,6 +1217,11 @@ const RolesPermissions = () => {
                     )}
                   </div>
                 ))}
+                {actions.length === 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    Aucune action chargée. Synchronisez le catalogue.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
