@@ -1,61 +1,16 @@
 import { applyRemoteOverrides } from '@/data/permissionRules';
 import { supabase } from '@/integrations/supabase/client';
-// ---------------------------------------------------------------------------
-// MATRICE CENTRALISÉE DES PERMISSIONS
-// RBAC + restrictions de données + actions
-// ---------------------------------------------------------------------------
-//
-// Architecture BIB :
-//
-// 1. Pôles
-//    -> quels pôles sont visibles
-//
-// 2. Pages
-//    -> quelles pages du pôle sont visibles
-//
-// 3. Actions
-//    -> lire / créer / modifier / supprimer / publier / valider / administrer
-//
-// 4. Données
-//    -> régions / filiales / enregistrements propres
-//
-// Toute l'interface s'appuie sur cette matrice.
-// La sécurité réelle doit également être appliquée côté backend / RLS.
-// ---------------------------------------------------------------------------
-
 import {
   moduleNavigations,
   transversalNavigations,
   ModuleNavigationItem,
 } from '@/data/moduleNavigations';
-
-import {
-  jobRoles,
-  JobRole,
-} from '@/data/jobRoles';
-
-import {
-  Seniority,
-} from '@/data/permissionRules';
-
-import {
-  ActionSet,
-  DataScope,
-  MATRIX_EVENT,
-  PermissionAction,
-  getDataScope,
-  getPageByPath,
-  isTestRbacEnforced,
-  loadMatrixOverrides,
-  loadTestMatrixOverrides,
-  pageRegistry,
-  resolvePagePermissions,
-  NO_ACCESS,
-  startPermissionSync,
-} from '@/data/permissionMatrix';
+import { jobRoles, JobRole } from '@/data/jobRoles';
+import { Seniority } from '@/data/permissionRules';
 
 // ---------------------------------------------------------------------------
-// ACTIONS
+// MATRICE CENTRALISÉE DES PERMISSIONS
+// RBAC + restrictions de données + actions
 // ---------------------------------------------------------------------------
 
 export type PermissionAction =
@@ -116,17 +71,6 @@ export const makeActions = (
 // ---------------------------------------------------------------------------
 // REGISTRE DES PAGES
 // ---------------------------------------------------------------------------
-//
-// Identifiant stable :
-//   pole.page
-//   module.page
-//
-// Exemple :
-//   finance.cashflow
-//   product.engineering
-//   security.infrastructure
-//   gateway.messages
-// ---------------------------------------------------------------------------
 
 export interface PageDescriptor {
   id: string;
@@ -155,21 +99,13 @@ const buildRegistry = (): PageDescriptor[] => {
     }
   };
 
-  Object.entries(moduleNavigations).forEach(
-    ([pole, items]) => {
-      push(pole, items.items);
-    },
-  );
+  Object.entries(moduleNavigations).forEach(([pole, items]) => {
+    push(pole, items.items);
+  });
 
-  Object.entries(transversalNavigations).forEach(
-    ([module, items]) => {
-      push(module, (items as any).items ?? items, true);
-    },
-  );
-
-  // -------------------------------------------------------------------------
-  // Pages transversales hors navigation modulaire
-  // -------------------------------------------------------------------------
+  Object.entries(transversalNavigations).forEach(([module, items]) => {
+    push(module, (items as any).items ?? items, true);
+  });
 
   out.push(
     {
@@ -207,8 +143,6 @@ const buildRegistry = (): PageDescriptor[] => {
       path: '/settings',
       transversal: true,
     },
-
-    // Administration
     {
       id: 'admin.roles',
       scope: 'admin',
@@ -228,8 +162,7 @@ const buildRegistry = (): PageDescriptor[] => {
   return out;
 };
 
-export const pageRegistry: PageDescriptor[] =
-  buildRegistry();
+export const pageRegistry: PageDescriptor[] = buildRegistry();
 
 export const getPage = (
   id: string,
@@ -242,14 +175,7 @@ export const getPageByPath = (
   pageRegistry.find((page) => page.path === path);
 
 // ---------------------------------------------------------------------------
-// PROFILS AUTORISÉS POUR LES PAGES SENSIBLES
-// ---------------------------------------------------------------------------
-//
-// Une page présente dans cette liste n'est accessible qu'aux rôles explicitement
-// autorisés.
-//
-// IMPORTANT : les noms de pôles ne sont plus utilisés ici comme mécanisme
-// d'autorisation. Le rôle doit être explicitement autorisé.
+// RÔLES AUTORISÉS POUR LES PAGES SENSIBLES
 // ---------------------------------------------------------------------------
 
 const PRODUCT_OWNERS = [
@@ -335,16 +261,11 @@ const MARKETPLACE_OWNERS = [
 ];
 
 const ADMIN_OWNERS = [
-  // Direction
   'ceo',
-
-  // Sécurité / administration technique
   'cto',
   'responsable_tech',
   'admin_systeme',
   'rssi',
-
-  // RH — administration des comptes et affectations
   'directeur_rh',
   'responsable_rh',
   'gestionnaire_admin_rh',
@@ -354,14 +275,8 @@ const ADMIN_OWNERS = [
 // PAGES RESTREINTES
 // ---------------------------------------------------------------------------
 
-export const RESTRICTED_PAGES: Record<
-  string,
-  string[]
-> = {
-  // -------------------------------------------------------------------------
-  // PRODUIT & ENGINEERING
-  // -------------------------------------------------------------------------
-
+export const RESTRICTED_PAGES: Record<string, string[]> = {
+  // Produit et engineering
   'product.engineering': PRODUCT_OWNERS,
   'product.integrations': PRODUCT_OWNERS,
   'product.documentation': PRODUCT_OWNERS,
@@ -370,10 +285,7 @@ export const RESTRICTED_PAGES: Record<
   'product.code': PRODUCT_OWNERS,
   'product.console': PRODUCT_OWNERS,
 
-  // -------------------------------------------------------------------------
-  // SECURITY & IT
-  // -------------------------------------------------------------------------
-
+  // Sécurité et informatique
   'security.access': SECURITY_OWNERS,
   'security.security': SECURITY_OWNERS,
   'security.infrastructure': SECURITY_OWNERS,
@@ -381,115 +293,67 @@ export const RESTRICTED_PAGES: Record<
   'security.vpn': SECURITY_OWNERS,
   'security.logs': SECURITY_OWNERS,
 
-  // -------------------------------------------------------------------------
-  // ADMINISTRATION
-  // -------------------------------------------------------------------------
-
+  // Administration
   'admin.roles': ADMIN_OWNERS,
   'admin.test-accounts': ADMIN_OWNERS,
 
-  // -------------------------------------------------------------------------
-  // FINANCE
-  // -------------------------------------------------------------------------
-
-  'finance.salaries': RH_OWNERS.concat([
-    'ceo',
-    'cfo',
-  ]),
-
+  // Finance
+  'finance.salaries': [...RH_OWNERS, 'ceo', 'cfo'],
   'finance.cashflow': FINANCE_OWNERS,
-
   'finance.guarantee': FINANCE_OWNERS,
-
   'finance.cards': FINANCE_OWNERS,
-
   'finance.subscriptions': FINANCE_OWNERS,
-
   'finance.reconciliation': FINANCE_OWNERS,
-
   'finance.payouts': FINANCE_OWNERS,
 
-  // -------------------------------------------------------------------------
-  // RH
-  // -------------------------------------------------------------------------
-
+  // Ressources humaines
   'rh.employee-files': RH_OWNERS,
-
   'rh.employees': RH_OWNERS,
-
-  'rh.trips': RH_OWNERS.concat([
-    'ceo',
-    'cfo',
-  ]),
-
+  'rh.trips': [...RH_OWNERS, 'ceo', 'cfo'],
   'rh.performance': RH_OWNERS,
-
   'rh.attendance': RH_OWNERS,
-
   'rh.portfolio': RH_OWNERS,
 
-  // -------------------------------------------------------------------------
-  // CONFORMITÉ
-  // -------------------------------------------------------------------------
-
+  // Conformité
   'compliance.contracts': LEGAL_OWNERS,
-
   'compliance.disputes': LEGAL_OWNERS,
-
   'compliance.policies': LEGAL_OWNERS,
-
   'compliance.risks': LEGAL_OWNERS,
 
-  // -------------------------------------------------------------------------
-  // AUDIT
-  // -------------------------------------------------------------------------
-
+  // Audit
   'audit.reports': AUDIT_OWNERS,
-
   'audit.nonconformities': AUDIT_OWNERS,
-
   'audit.corrective-actions': AUDIT_OWNERS,
-
   'audit.sanctions': AUDIT_OWNERS,
 
-  // -------------------------------------------------------------------------
-  // MARKETPLACE
-  // -------------------------------------------------------------------------
-
+  // Marketplace
   'marketplace.overview': MARKETPLACE_OWNERS,
-  
   'marketplace.merchants': MARKETPLACE_OWNERS,
-
   'marketplace.portfolio': [
     'ceo',
     'responsable_marketplace',
     'gestionnaire_boutiques',
     'gestionnaire_vendeurs',
   ],
-
   'marketplace.stores': [
     'ceo',
     'responsable_marketplace',
     'gestionnaire_boutiques',
     'gestionnaire_vendeurs',
   ],
-
   'marketplace.opportunities': [
     'ceo',
     'responsable_marketplace',
     'gestionnaire_boutiques',
     'gestionnaire_vendeurs',
   ],
-
   'marketplace.analytics': MARKETPLACE_OWNERS,
-
   'marketplace.subscriptions': [
     'ceo',
     'responsable_marketplace',
     'gestionnaire_boutiques',
     'gestionnaire_vendeurs',
   ],
-
   'marketplace.products': [
     'ceo',
     'responsable_marketplace',
@@ -502,28 +366,10 @@ export const RESTRICTED_PAGES: Record<
 // ACTIONS PAR NIVEAU HIÉRARCHIQUE
 // ---------------------------------------------------------------------------
 
-export const SENIORITY_ACTIONS: Record<
-  Seniority,
-  ActionSet
-> = {
-  junior: makeActions([
-    'read',
-  ]),
-
-  mid: makeActions([
-    'read',
-    'create',
-    'update',
-  ]),
-
-  senior: makeActions([
-    'read',
-    'create',
-    'update',
-    'delete',
-    'validate',
-  ]),
-
+export const SENIORITY_ACTIONS: Record<Seniority, ActionSet> = {
+  junior: makeActions(['read']),
+  mid: makeActions(['read', 'create', 'update']),
+  senior: makeActions(['read', 'create', 'update', 'delete', 'validate']),
   lead: makeActions([
     'read',
     'create',
@@ -532,10 +378,7 @@ export const SENIORITY_ACTIONS: Record<
     'validate',
     'publish',
   ]),
-
-  executive: {
-    ...FULL_ACCESS,
-  },
+  executive: { ...FULL_ACCESS },
 };
 
 // ---------------------------------------------------------------------------
@@ -543,19 +386,11 @@ export const SENIORITY_ACTIONS: Record<
 // ---------------------------------------------------------------------------
 
 export interface DataScope {
-  /**
-   * null = toutes les régions
-   */
+  /** null signifie toutes les régions. */
   regions: string[] | null;
-
-  /**
-   * null = toutes les filiales
-   */
+  /** null signifie toutes les filiales. */
   subsidiaries: string[] | null;
-
-  /**
-   * Limite aux enregistrements appartenant à l'utilisateur.
-   */
+  /** Limite aux enregistrements appartenant à l'utilisateur. */
   ownRecordsOnly: boolean;
 }
 
@@ -565,53 +400,34 @@ export const GLOBAL_SCOPE: DataScope = {
   ownRecordsOnly: false,
 };
 
-export const ROLE_DATA_SCOPES: Record<
-  string,
-  Partial<DataScope>
-> = {
+export const ROLE_DATA_SCOPES: Record<string, Partial<DataScope>> = {
   gestionnaire_fournisseurs: {
     regions: ['FR'],
   },
-
   acheteur: {
-    regions: [
-      'FR',
-      'DE',
-      'ES',
-      'IT',
-      'BE',
-      'NL',
-    ],
+    regions: ['FR', 'DE', 'ES', 'IT', 'BE', 'NL'],
   },
-
   account_manager: {
     ownRecordsOnly: true,
   },
-
   business_developer: {
     ownRecordsOnly: true,
   },
-
   ext_fournisseur: {
     ownRecordsOnly: true,
   },
-
   ext_vendeur: {
     ownRecordsOnly: true,
   },
-
   ext_client_entreprise: {
     ownRecordsOnly: true,
   },
-
   ext_client_particulier: {
     ownRecordsOnly: true,
   },
-
   ext_prestataire: {
     ownRecordsOnly: true,
   },
-
   ext_auditeur: {
     ownRecordsOnly: true,
   },
@@ -620,34 +436,23 @@ export const ROLE_DATA_SCOPES: Record<
 export const getDataScope = (
   role?: JobRole | null,
 ): DataScope => {
-  if (!role) {
-    return GLOBAL_SCOPE;
-  }
+  if (!role) return GLOBAL_SCOPE;
 
-  const byId =
-    ROLE_DATA_SCOPES[role.id] || {};
-
+  const byId = ROLE_DATA_SCOPES[role.id] || {};
   const inferred: Partial<DataScope> = {};
 
   const regionMatch =
-    /_(france|allemagne|espagne|italie)$/.exec(
-      role.id,
-    );
+    /_(france|allemagne|espagne|italie)$/.exec(role.id);
 
   if (regionMatch) {
-    const regionMap: Record<
-      string,
-      string
-    > = {
+    const regionMap: Record<string, string> = {
       france: 'FR',
       allemagne: 'DE',
       espagne: 'ES',
       italie: 'IT',
     };
 
-    inferred.regions = [
-      regionMap[regionMatch[1]],
-    ];
+    inferred.regions = [regionMap[regionMatch[1]]];
   }
 
   if (role.external) {
@@ -665,28 +470,16 @@ export const getDataScope = (
 // MATRICE ÉDITABLE
 // ---------------------------------------------------------------------------
 
-const MATRIX_KEY =
-  'bib.permission_matrix.v1';
-
-const HISTORY_KEY =
-  'bib.permission_matrix.history.v1';
-
-const ENFORCE_KEY =
-  'bib.rbac_enforced.v1';
-
+const MATRIX_KEY = 'bib.permission_matrix.v1';
+const HISTORY_KEY = 'bib.permission_matrix.history.v1';
+const ENFORCE_KEY = 'bib.rbac_enforced.v1';
 const TEST_MATRIX_KEY = 'bib.permission_matrix.test.v1';
-
 const TEST_ENFORCE_KEY = 'bib.rbac_enforced.test.v1';
+const TEST_HISTORY_KEY = 'bib.permission_matrix.history.test.v1';
 
-const TEST_HISTORY_KEY =
-  'bib.permission_matrix.history.test.v1';
+export const MATRIX_EVENT = 'permission-matrix-changed';
 
-export const MATRIX_EVENT =
-  'permission-matrix-changed';
-
-/**
- * roleId -> pageId -> ActionSet partiel
- */
+/** roleId -> pageId -> permissions partielles. */
 export type MatrixOverrides = Record<
   string,
   Record<string, Partial<ActionSet>>
@@ -701,51 +494,42 @@ export interface MatrixHistoryEntry {
   value: boolean;
 }
 
-export const loadMatrixOverrides =
-  (): MatrixOverrides => {
-    try {
-      return JSON.parse(
-        localStorage.getItem(
-          MATRIX_KEY,
-        ) || '{}',
-      );
-    } catch {
-      return {};
-    }
-  };
+export const loadMatrixOverrides = (): MatrixOverrides => {
+  try {
+    return JSON.parse(localStorage.getItem(MATRIX_KEY) || '{}');
+  } catch {
+    return {};
+  }
+};
 
-export const saveMatrixOverrides = (
-  matrix: MatrixOverrides,
-) => {
-  localStorage.setItem(
-    MATRIX_KEY,
-    JSON.stringify(matrix),
-  );
-
-  window.dispatchEvent(
-    new Event(MATRIX_EVENT),
-  );
-  void pushPermissionSetting('matrix_overrides', matrix);
+export const saveMatrixOverrides = (matrix: MatrixOverrides) => {
+  try {
+    localStorage.setItem(MATRIX_KEY, JSON.stringify(matrix));
+    window.dispatchEvent(new Event(MATRIX_EVENT));
+    void pushPermissionSetting('matrix_overrides', matrix);
+  } catch {
+    // Le stockage local peut être indisponible.
+  }
 };
 
 /** Matrice exclusivement réservée aux comptes de test. */
 export const loadTestMatrixOverrides = (): MatrixOverrides => {
   try {
-    return JSON.parse(
-      localStorage.getItem(TEST_MATRIX_KEY) || '{}',
-    );
+    return JSON.parse(localStorage.getItem(TEST_MATRIX_KEY) || '{}');
   } catch {
     return {};
   }
 };
 
 /** Enregistre les permissions de test sans modifier la matrice globale. */
-export const saveTestMatrixOverrides = (
-  matrix: MatrixOverrides,
-) => {
-  localStorage.setItem(TEST_MATRIX_KEY, JSON.stringify(matrix));
-  window.dispatchEvent(new Event(MATRIX_EVENT));
-  void pushPermissionSetting('test_matrix_overrides', matrix);
+export const saveTestMatrixOverrides = (matrix: MatrixOverrides) => {
+  try {
+    localStorage.setItem(TEST_MATRIX_KEY, JSON.stringify(matrix));
+    window.dispatchEvent(new Event(MATRIX_EVENT));
+    void pushPermissionSetting('test_matrix_overrides', matrix);
+  } catch {
+    // Le stockage local peut être indisponible.
+  }
 };
 
 export const isTestRbacEnforced = (): boolean => {
@@ -758,50 +542,35 @@ export const isTestRbacEnforced = (): boolean => {
 
 export const setTestRbacEnforced = (enabled: boolean) => {
   try {
-    localStorage.setItem(
-      TEST_ENFORCE_KEY,
-      enabled ? 'on' : 'off',
-    );
+    localStorage.setItem(TEST_ENFORCE_KEY, enabled ? 'on' : 'off');
   } catch {
-    // localStorage indisponible
+    // localStorage indisponible.
   }
 
   window.dispatchEvent(new Event(MATRIX_EVENT));
   void pushPermissionSetting('test_rbac_enforced', enabled);
 };
 
-export const loadMatrixHistory =
-  (): MatrixHistoryEntry[] => {
-    try {
-      return JSON.parse(
-        localStorage.getItem(
-          HISTORY_KEY,
-        ) || '[]',
-      );
-    } catch {
-      return [];
-    }
-  };
-
-export const appendMatrixHistory = (
-  entries: MatrixHistoryEntry[],
-) => {
-  const next = [
-    ...entries,
-    ...loadMatrixHistory(),
-  ].slice(0, 500);
-
-  localStorage.setItem(
-    HISTORY_KEY,
-    JSON.stringify(next),
-  );
-
-  window.dispatchEvent(
-    new Event(MATRIX_EVENT),
-  );
+export const loadMatrixHistory = (): MatrixHistoryEntry[] => {
+  try {
+    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  } catch {
+    return [];
+  }
 };
 
-/** Historique isolé de la matrice expérimentale (comptes de test). */
+export const appendMatrixHistory = (entries: MatrixHistoryEntry[]) => {
+  const next = [...entries, ...loadMatrixHistory()].slice(0, 500);
+
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+    window.dispatchEvent(new Event(MATRIX_EVENT));
+  } catch {
+    // Stockage local indisponible.
+  }
+};
+
+/** Historique isolé de la matrice expérimentale. */
 export const loadTestMatrixHistory = (): MatrixHistoryEntry[] => {
   try {
     return JSON.parse(localStorage.getItem(TEST_HISTORY_KEY) || '[]');
@@ -812,8 +581,13 @@ export const loadTestMatrixHistory = (): MatrixHistoryEntry[] => {
 
 export const appendTestMatrixHistory = (entries: MatrixHistoryEntry[]) => {
   const next = [...entries, ...loadTestMatrixHistory()].slice(0, 500);
-  localStorage.setItem(TEST_HISTORY_KEY, JSON.stringify(next));
-  window.dispatchEvent(new Event(MATRIX_EVENT));
+
+  try {
+    localStorage.setItem(TEST_HISTORY_KEY, JSON.stringify(next));
+    window.dispatchEvent(new Event(MATRIX_EVENT));
+  } catch {
+    // Stockage local indisponible.
+  }
 };
 
 // ---------------------------------------------------------------------------
@@ -821,60 +595,70 @@ export const appendTestMatrixHistory = (entries: MatrixHistoryEntry[]) => {
 // ---------------------------------------------------------------------------
 
 /**
- * Le RBAC est-il actuellement appliqué ?
- *
- * "off" = mode construction / développement.
- * "on"  = mode RBAC normal.
- */
-/**
- * LEGACY : l'ancien mode construction global (ENFORCE_KEY / rbac_enforced)
- * ne doit plus jamais ouvrir l'accès aux comptes réels. Le RBAC réel est
- * toujours appliqué ; le mode expérimental passe par isTestRbacEnforced().
+ * Le RBAC réel reste toujours appliqué.
+ * Le mode expérimental des comptes de test est séparé.
  */
 export const isRbacEnforced = (): boolean => true;
 
-export const setRbacEnforced = (
-  enabled: boolean,
-) => {
+export const setRbacEnforced = (enabled: boolean) => {
   try {
-    localStorage.setItem(
-      ENFORCE_KEY,
-      enabled ? 'on' : 'off',
-    );
+    localStorage.setItem(ENFORCE_KEY, enabled ? 'on' : 'off');
   } catch {
-    // localStorage indisponible
+    // localStorage indisponible.
   }
 
-  window.dispatchEvent(
-    new Event(MATRIX_EVENT),
-  );
+  window.dispatchEvent(new Event(MATRIX_EVENT));
   void pushPermissionSetting('rbac_enforced', enabled);
 };
 
 // ---------------------------------------------------------------------------
-// SYNCHRONISATION BACKEND (source de vérité partagée entre tous les postes)
+// SYNCHRONISATION BACKEND
 // ---------------------------------------------------------------------------
 
-const pushPermissionSetting = async (key: string, value: unknown) => {
+const pushPermissionSetting = async (
+  key: string,
+  value: unknown,
+) => {
   const { error } = await (supabase as any)
     .from('permission_settings')
     .upsert({ key, value }, { onConflict: 'key' });
-  if (error) console.error('[permissions] synchronisation refusée', error.message);
+
+  if (error) {
+    console.error(
+      '[permissions] synchronisation refusée',
+      error.message,
+    );
+  }
 };
 
 let syncIsTest = false;
-const TEST_SETTING_KEYS = new Set(['test_matrix_overrides', 'test_rbac_enforced']);
+
+const TEST_SETTING_KEYS = new Set([
+  'test_matrix_overrides',
+  'test_rbac_enforced',
+]);
 
 const applyRemoteSetting = (key: string, value: unknown) => {
-  // Les comptes réels ignorent complètement les réglages expérimentaux.
+  // Les comptes réels ignorent les réglages expérimentaux.
   if (TEST_SETTING_KEYS.has(key) && !syncIsTest) return;
+
   try {
-    if (key === 'matrix_overrides') localStorage.setItem(MATRIX_KEY, JSON.stringify(value ?? {}));
-    if (key === 'sensitive_rules') applyRemoteOverrides(value as any);
-    if (key === 'rbac_enforced') localStorage.setItem(ENFORCE_KEY, value === false ? 'off' : 'on');
+    if (key === 'matrix_overrides') {
+      localStorage.setItem(MATRIX_KEY, JSON.stringify(value ?? {}));
+    }
+
+    if (key === 'sensitive_rules') {
+      applyRemoteOverrides(value as any);
+    }
+
+    if (key === 'rbac_enforced') {
+      localStorage.setItem(ENFORCE_KEY, value === false ? 'off' : 'on');
+    }
+
     if (key === 'test_matrix_overrides') {
       localStorage.setItem(TEST_MATRIX_KEY, JSON.stringify(value ?? {}));
     }
+
     if (key === 'test_rbac_enforced') {
       localStorage.setItem(
         TEST_ENFORCE_KEY,
@@ -882,52 +666,73 @@ const applyRemoteSetting = (key: string, value: unknown) => {
       );
     }
   } catch {
-    // localStorage indisponible
+    // Stockage local indisponible.
   }
+
   window.dispatchEvent(new Event(MATRIX_EVENT));
 };
 
 let syncStarted = false;
 
-/** Charge les permissions enregistrées en base et écoute leurs modifications en temps réel. */
+/** Charge les permissions depuis la base et écoute les changements temps réel. */
 export const startPermissionSync = (isTestAccount = false) => {
   const db = supabase as any;
   const switchedToTest = isTestAccount && !syncIsTest;
+
   syncIsTest = isTestAccount;
+
   if (!isTestAccount) {
-    // Purge locale : un compte réel ne conserve aucun réglage test actif.
+    // Un compte réel ne conserve aucun réglage test actif.
     try {
       localStorage.removeItem(TEST_MATRIX_KEY);
       localStorage.removeItem(TEST_ENFORCE_KEY);
-    } catch { /* indisponible */ }
+    } catch {
+      // Stockage local indisponible.
+    }
   }
+
   if (syncStarted && !switchedToTest) return;
+
   const firstStart = !syncStarted;
   syncStarted = true;
-  db.from('permission_settings').select('key, value').then(({ data }: any) => {
-    (data || []).forEach((r: any) => applyRemoteSetting(r.key, r.value));
-  });
+
+  void db
+    .from('permission_settings')
+    .select('key, value')
+    .then(({ data }: any) => {
+      (data || []).forEach((row: any) => {
+        applyRemoteSetting(row.key, row.value);
+      });
+    });
+
   if (!firstStart) return;
-  db.channel('permission-settings-sync')
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'permission_settings' },
-      (payload: any) => payload.new?.key && applyRemoteSetting(payload.new.key, payload.new.value))
+
+  db
+    .channel('permission-settings-sync')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'permission_settings',
+      },
+      (payload: any) => {
+        if (payload.new?.key) {
+          applyRemoteSetting(payload.new.key, payload.new.value);
+        }
+      },
+    )
     .subscribe();
 };
 
 // ---------------------------------------------------------------------------
 // PAGES PUBLIQUES / TRANSVERSALES
 // ---------------------------------------------------------------------------
-//
-// Ces pages ne dépendent pas du pôle métier de l'utilisateur.
-// Elles restent néanmoins soumises aux règles spécifiques lorsqu'une page
-// est explicitement restreinte.
-// ---------------------------------------------------------------------------
 
 export const PUBLIC_PAGES = new Set<string>([
   'app.dashboard',
   'app.feed',
   'app.documents',
-
   'ethics.report',
   'independent-audit.declare',
 ]);
@@ -939,28 +744,22 @@ export const PUBLIC_PAGES = new Set<string>([
 export interface ResolveContext {
   role?: JobRole | null;
 
-  /**
-   * Pôles réellement attribués au rôle/utilisateur.
-   */
+  /** Pôles réellement attribués à l'utilisateur. */
   poles: string[];
 
-  /**
-   * Niveau hiérarchique.
-   */
+  /** Niveau hiérarchique. */
   seniority: Seniority;
 
-  /**
-   * Administrateur technique global.
-   */
+  /** Administrateur technique global. */
   isSuperAdmin?: boolean;
 
   /**
-   * Surcharges de la matrice (matrice test uniquement pour les comptes de test).
-   * Absent = aucune surcharge (jamais la matrice globale legacy).
+   * Surcharges choisies par l'appelant.
+   * Les restrictions structurelles restent prioritaires.
    */
   overrides?: MatrixOverrides;
 
-  /** RBAC appliqué ? Absent = true. Seuls les comptes de test peuvent valoir false. */
+  /** Seuls les comptes de test peuvent désactiver l'application du RBAC. */
   enforced?: boolean;
 }
 
@@ -974,19 +773,13 @@ export const resolvePagePermissions = (
 ): ActionSet => {
   const page = getPage(pageId);
 
-  const overrides:
-    profile?.test_account === true
-      ? loadTestMatrixOverrides()
-      : loadMatrixOverrides(),
+  // Les surcharges sont fournies par usePermissions.ts.
+  // Aucune lecture de profil ni sélection de matrice n'est effectuée ici.
+  const roleOverrides = ctx.role
+    ? ctx.overrides?.[ctx.role.id]?.[pageId]
+    : undefined;
 
-  const roleOverrides =
-    ctx.role
-      ? overrides[ctx.role.id]?.[pageId]
-      : undefined;
-
-  const apply = (
-    base: ActionSet,
-  ): ActionSet =>
+  const apply = (base: ActionSet): ActionSet =>
     roleOverrides
       ? {
           ...base,
@@ -994,140 +787,61 @@ export const resolvePagePermissions = (
         }
       : base;
 
-  // -------------------------------------------------------------------------
-  // Mode construction / super-admin
-  // -------------------------------------------------------------------------
-
-  if (
-    ctx.enforced === false ||
-    ctx.isSuperAdmin
-  ) {
-    return {
-      ...NO_ACCESS,
-    };
+  // Le mode de test désactivé ne donne pas automatiquement accès.
+  if (ctx.enforced === false || ctx.isSuperAdmin) {
+    return { ...NO_ACCESS };
   }
 
-  // -------------------------------------------------------------------------
-  // Page inconnue
-  // -------------------------------------------------------------------------
-
+  // Une page inconnue est toujours refusée.
   if (!page) {
-    return apply({
-      ...NO_ACCESS,
-    });
+    return { ...NO_ACCESS };
   }
 
-  // -------------------------------------------------------------------------
-  // NIVEAU 1 — PÔLE
-  // -------------------------------------------------------------------------
-
+  // Niveau 1 : contrôle du périmètre métier.
   const inScope =
-    page.transversal ||
+    page.transversal === true ||
     ctx.poles.includes(page.scope);
 
-  if (
-    !inScope &&
-    !PUBLIC_PAGES.has(pageId)
-  ) {
-    return apply({
-      ...NO_ACCESS,
-    });
+  if (!inScope && !PUBLIC_PAGES.has(pageId)) {
+    return { ...NO_ACCESS };
   }
 
-  // -------------------------------------------------------------------------
-  // NIVEAU 2 — PAGE RESTREINTE
-  // -------------------------------------------------------------------------
+  // Niveau 2 : contrôle des rôles autorisés pour les pages sensibles.
+  const owners = RESTRICTED_PAGES[pageId];
 
-  const owners =
-    RESTRICTED_PAGES[pageId];
-
-  if (
-    owners &&
-    !(
-      ctx.role &&
-      owners.includes(ctx.role.id)
-    )
-  ) {
-    return apply({
-      ...NO_ACCESS,
-    });
+  if (owners && !(ctx.role && owners.includes(ctx.role.id))) {
+    return { ...NO_ACCESS };
   }
 
-  // -------------------------------------------------------------------------
-  // ADMINISTRATION
-  // -------------------------------------------------------------------------
-  //
-  // Les pages admin doivent obligatoirement avoir une liste explicite
-  // de rôles autorisés.
-  // -------------------------------------------------------------------------
-
-  if (
-    page.scope === 'admin' &&
-    !owners
-  ) {
-    return apply({
-      ...NO_ACCESS,
-    });
+  // Les pages d'administration doivent déclarer une liste de rôles autorisés.
+  if (page.scope === 'admin' && !owners) {
+    return { ...NO_ACCESS };
   }
 
-  // -------------------------------------------------------------------------
-  // PAGES PUBLIQUES
-  // -------------------------------------------------------------------------
-
-  if (
-    PUBLIC_PAGES.has(pageId)
-  ) {
-    return apply(
-      makeActions([
-        'read',
-        'create',
-      ]),
-    );
+  // Niveau 3 : permissions d'action.
+  if (PUBLIC_PAGES.has(pageId)) {
+    return apply(makeActions(['read', 'create']));
   }
-
-  // -------------------------------------------------------------------------
-  // NIVEAU 3 — ACTIONS
-  // -------------------------------------------------------------------------
 
   const base =
-    SENIORITY_ACTIONS[
-      ctx.seniority
-    ] ??
-    SENIORITY_ACTIONS.junior;
-
-  const result = {
-    ...base,
-  };
-
-  // -------------------------------------------------------------------------
-  // COMPTES EXTERNES / LECTURE SEULE
-  // -------------------------------------------------------------------------
+    SENIORITY_ACTIONS[ctx.seniority] ?? SENIORITY_ACTIONS.junior;
 
   if (ctx.role?.readOnly) {
-    return apply(
-      makeActions([
-        'read',
-      ]),
-    );
+    return apply(makeActions(['read']));
   }
 
-  return apply(result);
+  return apply({ ...base });
 };
 
 // ---------------------------------------------------------------------------
 // RÔLES POUVANT ACCÉDER À UNE PAGE
 // ---------------------------------------------------------------------------
 
-export const rolesForPage = (
-  pageId: string,
-): JobRole[] =>
+export const rolesForPage = (pageId: string): JobRole[] =>
   jobRoles.filter((role) =>
-    resolvePagePermissions(
-      pageId,
-      {
-        role,
-        poles: role.poles,
-        seniority: role.seniority,
-      },
-    ).read,
+    resolvePagePermissions(pageId, {
+      role,
+      poles: role.poles,
+      seniority: role.seniority,
+    }).read,
   );
