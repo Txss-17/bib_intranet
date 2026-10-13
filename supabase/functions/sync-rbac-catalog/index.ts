@@ -504,36 +504,47 @@ Deno.serve(async (request) => {
       });
     }
 
-    // Ne remplacer les périmètres que pour les rôles explicitement fournis.
-    // Les rôles personnalisés absents de ce payload ne sont pas touchés.
-    const suppliedRoleIds = [
-      ...new Set(
-        roles
-          .map((role) => roleMap.get(role.role_key))
-          .filter((id): id is string => Boolean(id)),
-      ),
-    ];
 
-    for (const roleId of suppliedRoleIds) {
-      const { error: deleteError } = await adminClient
+    // 5. Ajouter les nouveaux périmètres sans supprimer ceux existants.
+    // Les périmètres déjà présents en base sont conservés, y compris
+    // ceux qui ne figurent pas dans le catalogue transmis par le client.
+    const { data: existingScopeRows, error: existingScopesError } =
+      await adminClient
         .from('access_role_scopes')
-        .delete()
-        .eq('role_id', roleId);
+        .select('role_id, scope_id, scope_value');
 
-      if (deleteError) {
-        console.error(
-          'RBAC role scopes cleanup failed:',
-          deleteError.message,
-        );
+    if (existingScopesError) {
+      console.error(
+        'RBAC existing role scopes read failed:',
+        existingScopesError.message,
+      );
 
-        return errorResponse('role-scopes-delete', deleteError.message);
-      }
+      return errorResponse(
+        'role-scopes-read',
+        existingScopesError.message,
+      );
     }
 
-    if (roleScopeRows.length > 0) {
+    const existingScopeKeys = new Set(
+      (existingScopeRows ?? []).map((row) =>
+        `${row.role_id}|${row.scope_id}|${row.scope_value ?? ''}`,
+      ),
+    );
+
+    const missingRoleScopeRows = roleScopeRows.filter((row) => {
+      const key =
+        `${row.role_id}|${row.scope_id}|${row.scope_value ?? ''}`;
+
+      if (existingScopeKeys.has(key)) return false;
+
+      existingScopeKeys.add(key);
+      return true;
+    });
+
+    if (missingRoleScopeRows.length > 0) {
       const { error: insertError } = await adminClient
         .from('access_role_scopes')
-        .insert(roleScopeRows);
+        .insert(missingRoleScopeRows);
 
       if (insertError) {
         console.error(
@@ -541,7 +552,10 @@ Deno.serve(async (request) => {
           insertError.message,
         );
 
-        return errorResponse('role-scopes-insert', insertError.message);
+        return errorResponse(
+          'role-scopes-insert',
+          insertError.message,
+        );
       }
     }
 
