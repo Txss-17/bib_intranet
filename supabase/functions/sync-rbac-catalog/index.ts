@@ -23,37 +23,48 @@ type RolePayload = {
   landing_path?: string | null;
 };
 
+type InterfacePayload = {
+  interface_key: string;
+  label: string;
+  module: string;
+  pole: string;
+  path: string;
+  status: 'active' | 'draft' | 'inactive' | 'archived';
+};
+
+type ActionPayload = {
+  action_key: string;
+  label: string;
+  description?: string | null;
+};
+
+type ScopePayload = {
+  scope_key: string;
+  label: string;
+  scope_type: 'global' | 'pole' | 'portfolio' | 'region' | 'record' | 'custom';
+  description: string;
+};
+
+type RoleScopePayload = {
+  role_key: string;
+  scope_key: string;
+  scope_value: string | null;
+};
+
 type CatalogPayload = {
   roles?: RolePayload[];
-  interfaces?: Array<{
-    interface_key: string;
-    label: string;
-    module: string;
-    pole: string;
-    path: string;
-    status: 'active';
-  }>;
-  actions?: Array<{
-    action_key: string;
-    label: string;
-  }>;
-  scopes?: Array<{
-    scope_key: string;
-    label: string;
-    scope_type:
-      | 'global'
-      | 'pole'
-      | 'portfolio'
-      | 'region'
-      | 'record'
-      | 'custom';
-    description: string;
-  }>;
-  roleScopes?: Array<{
-    role_key: string;
-    scope_key: string;
-    scope_value: string | null;
-  }>;
+  interfaces?: InterfacePayload[];
+  actions?: ActionPayload[];
+  scopes?: ScopePayload[];
+  roleScopes?: RoleScopePayload[];
+};
+
+type IdRow = {
+  id: string;
+  role_key?: string;
+  interface_key?: string;
+  action_key?: string;
+  scope_key?: string;
 };
 
 function json(body: unknown, status = 200) {
@@ -66,15 +77,180 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function isValidRole(role: RolePayload): boolean {
-  return (
-    /^[a-zA-Z0-9_-]{2,80}$/.test(role.role_key) &&
-    role.label.trim().length > 0 &&
-    role.label.trim().length <= 150 &&
-    role.department.trim().length > 0 &&
-    ['pole_responsible', 'direction'].includes(role.owner_type) &&
-    ['active', 'draft', 'inactive', 'archived'].includes(role.status)
+function errorResponse(step: string, message: string, status = 500) {
+  return json(
+    {
+      success: false,
+      step,
+      error: message,
+    },
+    status,
   );
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function isValidKey(value: unknown): value is string {
+  return (
+    typeof value === 'string' &&
+    /^[a-zA-Z0-9_-]{2,100}$/.test(value)
+  );
+}
+
+function isNonEmptyString(
+  value: unknown,
+  maxLength = 200,
+): value is string {
+  return (
+    typeof value === 'string' &&
+    value.trim().length > 0 &&
+    value.trim().length <= maxLength
+  );
+}
+
+function hasUniqueKeys<T>(
+  rows: T[],
+  keyOf: (row: T) => string,
+): boolean {
+  const seen = new Set<string>();
+
+  for (const row of rows) {
+    const key = keyOf(row);
+
+    if (seen.has(key)) return false;
+    seen.add(key);
+  }
+
+  return true;
+}
+
+function validatePayload(payload: CatalogPayload): string | null {
+  const roles = payload.roles ?? [];
+  const interfaces = payload.interfaces ?? [];
+  const actions = payload.actions ?? [];
+  const scopes = payload.scopes ?? [];
+  const roleScopes = payload.roleScopes ?? [];
+
+  if (
+    roles.length === 0 ||
+    interfaces.length === 0 ||
+    actions.length === 0 ||
+    scopes.length === 0
+  ) {
+    return 'Catalogue incomplet : rôles, interfaces, actions et périmètres sont requis.';
+  }
+
+  if (
+    roles.length > 1000 ||
+    interfaces.length > 5000 ||
+    actions.length > 100 ||
+    scopes.length > 100 ||
+    roleScopes.length > 10000
+  ) {
+    return 'Le catalogue dépasse les limites autorisées.';
+  }
+
+  if (!hasUniqueKeys(roles, (row) => row.role_key)) {
+    return 'Des clés de rôle sont dupliquées.';
+  }
+
+  if (!hasUniqueKeys(interfaces, (row) => row.interface_key)) {
+    return 'Des clés d’interface sont dupliquées.';
+  }
+
+  if (!hasUniqueKeys(actions, (row) => row.action_key)) {
+    return 'Des clés d’action sont dupliquées.';
+  }
+
+  if (!hasUniqueKeys(scopes, (row) => row.scope_key)) {
+    return 'Des clés de périmètre sont dupliquées.';
+  }
+
+  for (const role of roles) {
+    if (
+      !isValidKey(role.role_key) ||
+      !isNonEmptyString(role.label, 150) ||
+      !isNonEmptyString(role.department, 150) ||
+      !['pole_responsible', 'direction'].includes(role.owner_type) ||
+      !['active', 'draft', 'inactive', 'archived'].includes(role.status)
+    ) {
+      return `Définition invalide pour le rôle « ${role.role_key ?? 'inconnu'} ».`;
+    }
+
+    if (
+      role.seniority != null &&
+      !['junior', 'mid', 'senior', 'lead', 'executive'].includes(
+        role.seniority,
+      )
+    ) {
+      return `Séniorité invalide pour le rôle « ${role.role_key} ».`;
+    }
+
+    if (
+      role.poles !== undefined &&
+      (!Array.isArray(role.poles) ||
+        role.poles.some((pole) => typeof pole !== 'string'))
+    ) {
+      return `Liste de pôles invalide pour « ${role.role_key} ».`;
+    }
+  }
+
+  for (const item of interfaces) {
+    if (
+      !isValidKey(item.interface_key) ||
+      !isNonEmptyString(item.label, 200) ||
+      !isNonEmptyString(item.path, 500) ||
+      !['active', 'draft', 'inactive', 'archived'].includes(item.status)
+    ) {
+      return `Définition invalide pour l’interface « ${item.interface_key ?? 'inconnue'} ».`;
+    }
+  }
+
+  for (const action of actions) {
+    if (
+      !isValidKey(action.action_key) ||
+      !isNonEmptyString(action.label, 150)
+    ) {
+      return `Définition d’action invalide : ${action.action_key ?? 'inconnue'}.`;
+    }
+  }
+
+  const validScopeTypes = [
+    'global',
+    'pole',
+    'portfolio',
+    'region',
+    'record',
+    'custom',
+  ];
+
+  for (const scope of scopes) {
+    if (
+      !isValidKey(scope.scope_key) ||
+      !isNonEmptyString(scope.label, 150) ||
+      !validScopeTypes.includes(scope.scope_type)
+    ) {
+      return `Définition de périmètre invalide : ${scope.scope_key ?? 'inconnu'}.`;
+    }
+  }
+
+  const roleKeys = new Set(roles.map((role) => role.role_key));
+  const scopeKeys = new Set(scopes.map((scope) => scope.scope_key));
+
+  for (const item of roleScopes) {
+    if (
+      !roleKeys.has(item.role_key) ||
+      !scopeKeys.has(item.scope_key) ||
+      (item.scope_value !== null &&
+        typeof item.scope_value !== 'string')
+    ) {
+      return `Référence de périmètre invalide : ${item.role_key}:${item.scope_key}.`;
+    }
+  }
+
+  return null;
 }
 
 Deno.serve(async (request) => {
@@ -83,8 +259,9 @@ Deno.serve(async (request) => {
   }
 
   if (request.method !== 'POST') {
-    return json(
-      { success: false, error: 'Méthode non autorisée.' },
+    return errorResponse(
+      'method',
+      'Seule la méthode POST est autorisée.',
       405,
     );
   }
@@ -93,67 +270,57 @@ Deno.serve(async (request) => {
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
   if (!supabaseUrl || !serviceRoleKey) {
-    return json(
-      {
-        success: false,
-        error: 'Configuration Supabase indisponible.',
-      },
+    console.error('Missing Supabase server environment variables.');
+
+    return errorResponse(
+      'configuration',
+      'Configuration serveur Supabase incomplète.',
       500,
     );
   }
 
-  const authHeader = request.headers.get('Authorization');
+  const authorization = request.headers.get('Authorization');
 
-  if (!authHeader) {
-    return json(
-      { success: false, error: 'Authentification requise.' },
+  if (!authorization?.startsWith('Bearer ')) {
+    return errorResponse(
+      'authentication',
+      'Une session authentifiée est obligatoire.',
       401,
     );
   }
 
-  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  const token = authorization.slice('Bearer '.length).trim();
 
   if (!token) {
-    return json(
-      { success: false, error: 'Jeton de session manquant.' },
+    return errorResponse(
+      'authentication',
+      'Jeton de session manquant.',
       401,
     );
   }
 
-  const authClient = createClient(
-    supabaseUrl,
-    serviceRoleKey,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
+  const adminClient = createClient(supabaseUrl, serviceRoleKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
     },
-  );
+  });
 
   const {
     data: { user },
-    error: userError,
-  } = await authClient.auth.getUser(token);
+    error: authError,
+  } = await adminClient.auth.getUser(token);
 
-  if (userError || !user) {
-    return json(
-      { success: false, error: 'Session invalide ou expirée.' },
+  if (authError || !user) {
+    return errorResponse(
+      'authentication',
+      'Session invalide ou expirée.',
       401,
     );
   }
 
-  const adminClient = createClient(
-    supabaseUrl,
-    serviceRoleKey,
-    {
-      auth: {
-        persistSession: false,
-        autoRefreshToken: false,
-      },
-    },
-  );
-
+  // Le client service_role est réservé à la fonction serveur.
+  // Le droit d'administrer le catalogue est contrôlé indépendamment.
   const {
     data: authorized,
     error: authorizationError,
@@ -163,25 +330,21 @@ Deno.serve(async (request) => {
 
   if (authorizationError) {
     console.error(
-      'RBAC authorization check failed:',
+      'RBAC authorization RPC failed:',
       authorizationError.message,
     );
 
-    return json(
-      {
-        success: false,
-        error: 'Impossible de vérifier les droits d’administration RBAC.',
-      },
+    return errorResponse(
+      'authorization',
+      'Impossible de vérifier les droits RBAC. Vérifiez la migration is_rbac_catalog_admin.',
       500,
     );
   }
 
   if (authorized !== true) {
-    return json(
-      {
-        success: false,
-        error: 'Vous n’êtes pas autorisé à administrer le catalogue RBAC.',
-      },
+    return errorResponse(
+      'authorization',
+      'Vous ne disposez pas des droits nécessaires pour synchroniser le catalogue.',
       403,
     );
   }
@@ -189,301 +352,244 @@ Deno.serve(async (request) => {
   let payload: CatalogPayload;
 
   try {
-    payload = await request.json();
+    const rawBody: unknown = await request.json();
+
+    if (!isObject(rawBody)) {
+      return errorResponse('payload', 'Le corps JSON doit être un objet.', 400);
+    }
+
+    payload = rawBody as CatalogPayload;
   } catch {
-    return json(
-      { success: false, error: 'Corps JSON invalide.' },
-      400,
-    );
+    return errorResponse('payload', 'Le corps JSON est invalide.', 400);
   }
 
-  const roles = payload.roles ?? [];
-  const interfaces = payload.interfaces ?? [];
-  const actions = payload.actions ?? [];
-  const scopes = payload.scopes ?? [];
+  const validationError = validatePayload(payload);
+
+  if (validationError) {
+    return errorResponse('validation', validationError, 400);
+  }
+
+  const roles = payload.roles!;
+  const interfaces = payload.interfaces!;
+  const actions = payload.actions!;
+  const scopes = payload.scopes!;
   const roleScopes = payload.roleScopes ?? [];
 
-  if (!roles.length || !interfaces.length || !actions.length || !scopes.length) {
-    return json(
-      {
-        success: false,
-        error: 'Catalogue incomplet : rôles, interfaces, actions et périmètres sont requis.',
-      },
-      400,
+  try {
+    // 1. Rôles : upsert sur la clé métier.
+    const { error: rolesError } = await adminClient
+      .from('access_roles')
+      .upsert(roles, { onConflict: 'role_key' });
+
+    if (rolesError) {
+      console.error('RBAC roles upsert failed:', rolesError.message);
+      return errorResponse('roles', rolesError.message);
+    }
+
+    // 2. Interfaces : aucun effacement des interfaces existantes.
+    const { error: interfacesError } = await adminClient
+      .from('access_interfaces')
+      .upsert(interfaces, { onConflict: 'interface_key' });
+
+    if (interfacesError) {
+      console.error(
+        'RBAC interfaces upsert failed:',
+        interfacesError.message,
+      );
+
+      return errorResponse('interfaces', interfacesError.message);
+    }
+
+    // 3. Actions.
+    const { error: actionsError } = await adminClient
+      .from('access_actions')
+      .upsert(actions, { onConflict: 'action_key' });
+
+    if (actionsError) {
+      console.error('RBAC actions upsert failed:', actionsError.message);
+      return errorResponse('actions', actionsError.message);
+    }
+
+    // 4. Périmètres.
+    const { error: scopesError } = await adminClient
+      .from('access_scopes')
+      .upsert(scopes, { onConflict: 'scope_key' });
+
+    if (scopesError) {
+      console.error('RBAC scopes upsert failed:', scopesError.message);
+      return errorResponse('scopes', scopesError.message);
+    }
+
+    // 5. Charger les identifiants réels, sans les déduire des clés.
+    const [
+      rolesResult,
+      interfacesResult,
+      actionsResult,
+      scopesResult,
+    ] = await Promise.all([
+      adminClient.from('access_roles').select('id, role_key'),
+      adminClient.from('access_interfaces').select('id, interface_key'),
+      adminClient.from('access_actions').select('id, action_key'),
+      adminClient.from('access_scopes').select('id, scope_key'),
+    ]);
+
+    for (const [step, result] of [
+      ['role-identifiers', rolesResult],
+      ['interface-identifiers', interfacesResult],
+      ['action-identifiers', actionsResult],
+      ['scope-identifiers', scopesResult],
+    ] as const) {
+      if (result.error) {
+        console.error(`RBAC ${step} failed:`, result.error.message);
+        return errorResponse(step, result.error.message);
+      }
+    }
+
+    const roleMap = new Map(
+      ((rolesResult.data ?? []) as IdRow[]).map((row) => [
+        row.role_key!,
+        row.id,
+      ]),
     );
-  }
 
-  const roleKeys = new Set<string>();
+    const interfaceMap = new Map(
+      ((interfacesResult.data ?? []) as IdRow[]).map((row) => [
+        row.interface_key!,
+        row.id,
+      ]),
+    );
 
-  for (const role of roles) {
-    if (!isValidRole(role)) {
-      return json(
-        {
-          success: false,
-          step: 'validate-roles',
-          error: `Définition invalide pour le rôle « ${role.role_key || 'sans identifiant'} ».`,
+    const actionMap = new Map(
+      ((actionsResult.data ?? []) as IdRow[]).map((row) => [
+        row.action_key!,
+        row.id,
+      ]),
+    );
+
+    const scopeMap = new Map(
+      ((scopesResult.data ?? []) as IdRow[]).map((row) => [
+        row.scope_key!,
+        row.id,
+      ]),
+    );
+
+    const roleScopeRows: Array<{
+      role_id: string;
+      scope_id: string;
+      scope_value: string | null;
+    }> = [];
+
+    const uniqueScopeRows = new Set<string>();
+
+    for (const item of roleScopes) {
+      const roleId = roleMap.get(item.role_key);
+      const scopeId = scopeMap.get(item.scope_key);
+
+      if (!roleId || !scopeId) {
+        return errorResponse(
+          'role-scopes-resolution',
+          `Référence introuvable : ${item.role_key}:${item.scope_key}.`,
+        );
+      }
+
+      const uniqueKey =
+        `${roleId}|${scopeId}|${item.scope_value ?? ''}`;
+
+      if (uniqueScopeRows.has(uniqueKey)) continue;
+      uniqueScopeRows.add(uniqueKey);
+
+      roleScopeRows.push({
+        role_id: roleId,
+        scope_id: scopeId,
+        scope_value: item.scope_value,
+      });
+    }
+
+    // Ne remplacer les périmètres que pour les rôles explicitement fournis.
+    // Les rôles personnalisés absents de ce payload ne sont pas touchés.
+    const suppliedRoleIds = [
+      ...new Set(
+        roles
+          .map((role) => roleMap.get(role.role_key))
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ];
+
+    for (const roleId of suppliedRoleIds) {
+      const { error: deleteError } = await adminClient
+        .from('access_role_scopes')
+        .delete()
+        .eq('role_id', roleId);
+
+      if (deleteError) {
+        console.error(
+          'RBAC role scopes cleanup failed:',
+          deleteError.message,
+        );
+
+        return errorResponse('role-scopes-delete', deleteError.message);
+      }
+    }
+
+    if (roleScopeRows.length > 0) {
+      const { error: insertError } = await adminClient
+        .from('access_role_scopes')
+        .insert(roleScopeRows);
+
+      if (insertError) {
+        console.error(
+          'RBAC role scopes insert failed:',
+          insertError.message,
+        );
+
+        return errorResponse('role-scopes-insert', insertError.message);
+      }
+    }
+
+    // Journaliser la synchronisation.
+    const { error: historyError } = await adminClient
+      .from('access_change_history')
+      .insert({
+        actor_id: user.id,
+        change_type: 'catalog_sync',
+        previous_value: null,
+        new_value: {
+          roles: roles.length,
+          interfaces: interfaces.length,
+          actions: actions.length,
+          scopes: scopes.length,
+          roleScopes: roleScopeRows.length,
         },
-        400,
+        reason: 'Synchronisation du catalogue RBAC',
+      });
+
+    if (historyError) {
+      // L'échec du journal est visible dans les logs, mais ne masque pas
+      // une synchronisation qui a déjà réussi.
+      console.error(
+        'RBAC audit log insert failed:',
+        historyError.message,
       );
     }
 
-    if (roleKeys.has(role.role_key)) {
-      return json(
-        {
-          success: false,
-          step: 'validate-roles',
-          error: `Clé de rôle dupliquée : ${role.role_key}.`,
-        },
-        400,
-      );
-    }
-
-    roleKeys.add(role.role_key);
-  }
-
-  const interfaceKeys = new Set<string>();
-
-  for (const item of interfaces) {
-    if (!item.interface_key || !item.label || !item.path) {
-      return json(
-        {
-          success: false,
-          step: 'validate-interfaces',
-          error: 'Une interface possède une clé, un libellé ou un chemin vide.',
-        },
-        400,
-      );
-    }
-
-    if (interfaceKeys.has(item.interface_key)) {
-      return json(
-        {
-          success: false,
-          step: 'validate-interfaces',
-          error: `Clé d’interface dupliquée : ${item.interface_key}.`,
-        },
-        400,
-      );
-    }
-
-    interfaceKeys.add(item.interface_key);
-  }
-
-  const {
-    data: roleRows,
-    error: roleError,
-  } = await adminClient
-    .from('access_roles')
-    .upsert(roles, { onConflict: 'role_key' })
-    .select('id, role_key');
-
-  if (roleError) {
-    console.error('RBAC roles sync failed:', roleError.message);
-
-    return json(
-      {
-        success: false,
-        step: 'roles',
-        error: roleError.message,
+    return json({
+      success: true,
+      synchronized: {
+        roles: roles.length,
+        interfaces: interfaces.length,
+        actions: actions.length,
+        scopes: scopes.length,
+        roleScopes: roleScopeRows.length,
       },
-      500,
-    );
-  }
-
-  const { error: interfaceError } = await adminClient
-    .from('access_interfaces')
-    .upsert(interfaces, { onConflict: 'interface_key' });
-
-  if (interfaceError) {
-    console.error(
-      'RBAC interfaces sync failed:',
-      interfaceError.message,
-    );
-
-    return json(
-      {
-        success: false,
-        step: 'interfaces',
-        error: interfaceError.message,
-      },
-      500,
-    );
-  }
-
-  const { error: actionError } = await adminClient
-    .from('access_actions')
-    .upsert(actions, { onConflict: 'action_key' });
-
-  if (actionError) {
-    console.error('RBAC actions sync failed:', actionError.message);
-
-    return json(
-      {
-        success: false,
-        step: 'actions',
-        error: actionError.message,
-      },
-      500,
-    );
-  }
-
-  const { error: scopeError } = await adminClient
-    .from('access_scopes')
-    .upsert(scopes, { onConflict: 'scope_key' });
-
-  if (scopeError) {
-    console.error('RBAC scopes sync failed:', scopeError.message);
-
-    return json(
-      {
-        success: false,
-        step: 'scopes',
-        error: scopeError.message,
-      },
-      500,
-    );
-  }
-
-  const [
-    roleResult,
-    interfaceResult,
-    actionResult,
-    scopeResult,
-  ] = await Promise.all([
-    adminClient.from('access_roles').select('id, role_key'),
-    adminClient.from('access_interfaces').select('id, interface_key'),
-    adminClient.from('access_actions').select('id, action_key'),
-    adminClient.from('access_scopes').select('id, scope_key'),
-  ]);
-
-  for (const [step, result] of [
-    ['role-identifiers', roleResult],
-    ['interface-identifiers', interfaceResult],
-    ['action-identifiers', actionResult],
-    ['scope-identifiers', scopeResult],
-  ] as const) {
-    if (result.error) {
-      return json(
-        {
-          success: false,
-          step,
-          error: result.error.message,
-        },
-        500,
-      );
-    }
-  }
-
-  const roleMap = new Map(
-    (roleResult.data ?? []).map((row) => [row.role_key, row.id]),
-  );
-  const interfaceMap = new Map(
-    (interfaceResult.data ?? []).map((row) => [row.interface_key, row.id]),
-  );
-  const actionMap = new Map(
-    (actionResult.data ?? []).map((row) => [row.action_key, row.id]),
-  );
-  const scopeMap = new Map(
-    (scopeResult.data ?? []).map((row) => [row.scope_key, row.id]),
-  );
-
-  const roleScopeRows: Array<{
-    role_id: string;
-    scope_id: string;
-    scope_value: string | null;
-  }> = [];
-
-  const unresolved: string[] = [];
-  const scopeRolesToReplace = new Set<string>();
-  const uniqueScopeKeys = new Set<string>();
-
-  for (const item of roleScopes) {
-    const roleId = roleMap.get(item.role_key);
-    const scopeId = scopeMap.get(item.scope_key);
-
-    if (!roleId || !scopeId) {
-      unresolved.push(`${item.role_key}:${item.scope_key}`);
-      continue;
-    }
-
-    const uniqueKey = `${item.role_key}|${item.scope_key}|${item.scope_value ?? ''}`;
-
-    if (uniqueScopeKeys.has(uniqueKey)) {
-      continue;
-    }
-
-    uniqueScopeKeys.add(uniqueKey);
-    scopeRolesToReplace.add(roleId);
-
-    roleScopeRows.push({
-      role_id: roleId,
-      scope_id: scopeId,
-      scope_value: item.scope_value,
     });
-  }
+  } catch (error) {
+    console.error('Unexpected RBAC synchronization error:', error);
 
-  if (unresolved.length > 0) {
-    return json(
-      {
-        success: false,
-        step: 'role-scopes-resolution',
-        error: 'Certaines références de rôle ou de périmètre sont introuvables.',
-        unresolved: unresolved.slice(0, 20),
-        unresolved_count: unresolved.length,
-      },
-      500,
+    return errorResponse(
+      'unexpected',
+      error instanceof Error
+        ? error.message
+        : 'Erreur inattendue pendant la synchronisation.',
     );
   }
-
-  // Remplacer les périmètres des rôles explicitement présents dans le payload.
-  // Les rôles personnalisés absents du payload restent inchangés.
-  for (const roleId of scopeRolesToReplace) {
-    const { error } = await adminClient
-      .from('access_role_scopes')
-      .delete()
-      .eq('role_id', roleId);
-
-    if (error) {
-      return json(
-        {
-          success: false,
-          step: 'role-scopes-delete',
-          error: error.message,
-        },
-        500,
-      );
-    }
-  }
-
-  if (roleScopeRows.length > 0) {
-    const { error } = await adminClient
-      .from('access_role_scopes')
-      .insert(roleScopeRows);
-
-    if (error) {
-      console.error('RBAC role scopes sync failed:', error.message);
-
-      return json(
-        {
-          success: false,
-          step: 'role-scopes-insert',
-          error: error.message,
-        },
-        500,
-      );
-    }
-  }
-
-  return json({
-    success: true,
-    synchronized: {
-      roles: roleMap.size,
-      interfaces: interfaceMap.size,
-      actions: actionMap.size,
-      scopes: scopeMap.size,
-      roleScopes: roleScopeRows.length,
-    },
-    user_id: user.id,
-  });
 });
-
