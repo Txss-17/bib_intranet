@@ -86,6 +86,10 @@ import { ExportButtons } from '@/components/ExportButtons';
 
 type DocumentType =
   | 'contract'
+  | 'charter'
+  | 'policy'
+  | 'payroll'
+  | 'regulatory'
   | 'identity'
   | 'diploma'
   | 'administrative'
@@ -123,6 +127,10 @@ interface EmployeeDocument {
 
 const documentTypeLabels: Record<DocumentType, string> = {
   contract: 'Contrat',
+  charter: 'Charte',
+  policy: 'Politique interne',
+  payroll: 'Paie',
+  regulatory: 'Réglementaire',
   identity: "Pièce d'identité",
   diploma: 'Diplôme',
   administrative: 'Administratif',

@@ -14,13 +14,7 @@ const LICENSES = [
   { name: 'VPN entreprise', detail: 'Actif', status: 'active' as const },
 ];
 
-const HR_DOCS = [
-  { name: 'Contrat de travail', type: 'Contrat' },
-  { name: 'Bulletins de salaire', type: 'Paie' },
-  { name: 'Convention collective', type: 'Réglementaire' },
-  { name: 'Charte informatique', type: 'Politique' },
-  { name: 'Politique de frais', type: 'Politique' },
-];
+import { HrDocumentsCard } from './HrDocumentsCard';
 
 function StatusBadge({ status }: { status: 'active' | 'pending' }) {
   if (status === 'active') return <Badge variant="secondary">Actif</Badge>;
@@ -89,22 +83,7 @@ export function ResourcesTab() {
         </div>
       </div>
 
-      <div className="enterprise-card p-6">
-        <h3 className="text-lg font-medium text-foreground mb-4 flex items-center gap-2">
-          <FileText className="h-4 w-4" /> Documents RH
-        </h3>
-        <div className="space-y-2">
-          {HR_DOCS.map((d) => (
-            <div key={d.name} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-              <div>
-                <p className="text-sm font-medium text-foreground">{d.name}</p>
-                <p className="text-xs text-muted-foreground">{d.type}</p>
-              </div>
-              <Button variant="outline" size="sm">Consulter</Button>
-            </div>
-          ))}
-        </div>
-      </div>
+      <HrDocumentsCard />
     </div>
   );
 }
