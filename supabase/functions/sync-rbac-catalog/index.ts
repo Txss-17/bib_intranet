@@ -12,9 +12,7 @@ type CatalogPayload = {
     label: string;
     department: string;
     business_pole: string | null;
-    owner_type:
-      | 'pole_responsible'
-      | 'direction';
+    owner_type: 'pole_responsible' | 'direction';
     status: 'active';
   }>;
 
@@ -52,21 +50,15 @@ type CatalogPayload = {
   }>;
 };
 
-const json = (
-  body: unknown,
-  status = 200,
-) =>
-  new Response(
-    JSON.stringify(body),
-    {
-      status,
-      headers: {
-        ...corsHeaders,
-        'Content-Type':
-          'application/json',
-      },
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'application/json',
     },
-  );
+  });
+}
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') {
@@ -77,144 +69,138 @@ Deno.serve(async (request) => {
 
   if (request.method !== 'POST') {
     return json(
-      {
-        success: false,
-        error: 'Method not allowed',
-      },
+      { success: false, error: 'Method not allowed' },
       405,
     );
   }
 
-  const supabaseUrl =
-    Deno.env.get('SUPABASE_URL');
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get(
+    'SUPABASE_SERVICE_ROLE_KEY',
+  );
 
-  const serviceRoleKey =
-    Deno.env.get(
-      'SUPABASE_SERVICE_ROLE_KEY',
-    );
-
-  if (
-    !supabaseUrl ||
-    !serviceRoleKey
-  ) {
+  if (!supabaseUrl || !serviceRoleKey) {
     return json(
       {
         success: false,
-        error:
-          'Supabase environment unavailable',
+        error: 'Supabase environment unavailable',
       },
       500,
     );
   }
 
-  const authHeader =
-    request.headers.get(
-      'Authorization',
-    );
+  // 1. Authentifier l'appelant avec son JWT utilisateur.
+  const authHeader = request.headers.get('Authorization');
 
   if (!authHeader) {
     return json(
-      {
-        success: false,
-        error: 'Authentication required',
-      },
+      { success: false, error: 'Authentication required' },
       401,
     );
   }
 
-  const supabase = createClient(
+  const token = authHeader
+    .replace(/^Bearer\s+/i, '')
+    .trim();
+
+  if (!token) {
+    return json(
+      { success: false, error: 'Authentication token missing' },
+      401,
+    );
+  }
+
+  // Client dédié à la validation du JWT.
+  // Ne pas lui transmettre le JWT comme header global.
+  const authClient = createClient(
     supabaseUrl,
     serviceRoleKey,
     {
-      global: {
-        headers: {
-          Authorization:
-            authHeader,
-        },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
       },
     },
   );
 
   const {
-    data: {
-      user,
-    },
+    data: { user },
     error: userError,
-  } =
-    await supabase.auth.getUser(
-      authHeader.replace(
-        /^Bearer\s+/i,
-        '',
-      ),
-    );
+  } = await authClient.auth.getUser(token);
 
   if (userError || !user) {
     return json(
-      {
-        success: false,
-        error: 'Invalid session',
-      },
+      { success: false, error: 'Invalid session' },
       401,
     );
   }
 
-  /*
-   * La fonction est volontairement réservée
-   * aux comptes autorisés à administrer le RBAC.
-   *
-   * Les fonctions métier existantes
-   * is_leadership / has_role sont utilisées
-   * directement côté SQL.
-   */
-
-  const { data: authorized } =
-    await supabase.rpc(
-      'is_rbac_catalog_admin',
-      {
-        p_user_id: user.id,
+  // 2. Client administratif indépendant.
+  // Aucun Authorization utilisateur n'est injecté ici.
+  const adminClient = createClient(
+    supabaseUrl,
+    serviceRoleKey,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
       },
+    },
+  );
+
+  // 3. Vérifier l'autorisation métier avant toute écriture.
+  const {
+    data: authorized,
+    error: authorizationError,
+  } = await adminClient.rpc(
+    'is_rbac_catalog_admin',
+    {
+      p_user_id: user.id,
+    },
+  );
+
+  if (authorizationError) {
+    console.error(
+      'RBAC authorization check failed:',
+      authorizationError.message,
     );
 
-  if (!authorized) {
     return json(
       {
         success: false,
-        error:
-          'RBAC catalog administration not authorized',
+        error: 'Unable to verify RBAC administration permission',
+      },
+      500,
+    );
+  }
+
+  if (authorized !== true) {
+    return json(
+      {
+        success: false,
+        error: 'RBAC catalog administration not authorized',
       },
       403,
     );
   }
 
+  // 4. Lire et contrôler le corps de la requête.
   let payload: CatalogPayload;
 
   try {
-    payload =
-      (await request.json()) as CatalogPayload;
+    payload = await request.json();
   } catch {
     return json(
-      {
-        success: false,
-        error: 'Invalid JSON body',
-      },
+      { success: false, error: 'Invalid JSON body' },
       400,
     );
   }
 
-  const roles =
-    payload.roles ?? [];
-
-  const interfaces =
-    payload.interfaces ?? [];
-
-  const actions =
-    payload.actions ?? [];
-
-  const scopes =
-    payload.scopes ?? [];
-
-  const roleScopes =
-    payload.roleScopes ?? [];
+  const roles = payload.roles ?? [];
+  const interfaces = payload.interfaces ?? [];
+  const actions = payload.actions ?? [];
+  const scopes = payload.scopes ?? [];
+  const roleScopes = payload.roleScopes ?? [];
 
   if (
     !roles.length ||
@@ -224,36 +210,26 @@ Deno.serve(async (request) => {
     return json(
       {
         success: false,
-        error:
-          'Incomplete RBAC catalog',
+        error: 'Incomplete RBAC catalog',
       },
       400,
     );
   }
 
-  /*
-   * --------------------------------------------------------
-   * ROLES
-   * --------------------------------------------------------
-   */
-
+  // 5. Synchroniser les rôles.
   const {
     data: roleRows,
     error: roleError,
-  } = await supabase
+  } = await adminClient
     .from('access_roles')
-    .upsert(
-      roles,
-      {
-        onConflict:
-          'role_key',
-      },
-    )
-    .select(
-      'id, role_key',
-    );
+    .upsert(roles, {
+      onConflict: 'role_key',
+    })
+    .select('id, role_key');
 
   if (roleError) {
+    console.error('RBAC roles sync failed:', roleError.message);
+
     return json(
       {
         success: false,
@@ -264,55 +240,39 @@ Deno.serve(async (request) => {
     );
   }
 
-  /*
-   * --------------------------------------------------------
-   * INTERFACES
-   * --------------------------------------------------------
-   */
-
-  const {
-    error: interfaceError,
-  } = await supabase
+  // 6. Synchroniser les interfaces.
+  const { error: interfaceError } = await adminClient
     .from('access_interfaces')
-    .upsert(
-      interfaces,
-      {
-        onConflict:
-          'interface_key',
-      },
-    );
+    .upsert(interfaces, {
+      onConflict: 'interface_key',
+    });
 
   if (interfaceError) {
+    console.error(
+      'RBAC interfaces sync failed:',
+      interfaceError.message,
+    );
+
     return json(
       {
         success: false,
         step: 'interfaces',
-        error:
-          interfaceError.message,
+        error: interfaceError.message,
       },
       500,
     );
   }
 
-  /*
-   * --------------------------------------------------------
-   * ACTIONS
-   * --------------------------------------------------------
-   */
-
-  const {
-    error: actionError,
-  } = await supabase
+  // 7. Synchroniser les actions.
+  const { error: actionError } = await adminClient
     .from('access_actions')
-    .upsert(
-      actions,
-      {
-        onConflict:
-          'action_key',
-      },
-    );
+    .upsert(actions, {
+      onConflict: 'action_key',
+    });
 
   if (actionError) {
+    console.error('RBAC actions sync failed:', actionError.message);
+
     return json(
       {
         success: false,
@@ -323,25 +283,16 @@ Deno.serve(async (request) => {
     );
   }
 
-  /*
-   * --------------------------------------------------------
-   * SCOPES
-   * --------------------------------------------------------
-   */
-
-  const {
-    error: scopeError,
-  } = await supabase
+  // 8. Synchroniser les périmètres.
+  const { error: scopeError } = await adminClient
     .from('access_scopes')
-    .upsert(
-      scopes,
-      {
-        onConflict:
-          'scope_key',
-      },
-    );
+    .upsert(scopes, {
+      onConflict: 'scope_key',
+    });
 
   if (scopeError) {
+    console.error('RBAC scopes sync failed:', scopeError.message);
+
     return json(
       {
         success: false,
@@ -352,189 +303,146 @@ Deno.serve(async (request) => {
     );
   }
 
-  /*
-   * --------------------------------------------------------
-   * IDENTIFIANTS
-   * --------------------------------------------------------
-   */
+  // 9. Charger les identifiants réels après synchronisation.
+  const [
+    interfaceResult,
+    actionResult,
+    scopeResult,
+  ] = await Promise.all([
+    adminClient
+      .from('access_interfaces')
+      .select('id, interface_key'),
 
-  const {
-    data: interfaceRows,
-    error:
-      interfaceReadError,
-  } = await supabase
-    .from('access_interfaces')
-    .select(
-      'id, interface_key',
-    );
+    adminClient
+      .from('access_actions')
+      .select('id, action_key'),
 
-  if (interfaceReadError) {
+    adminClient
+      .from('access_scopes')
+      .select('id, scope_key'),
+  ]);
+
+  if (interfaceResult.error) {
     return json(
       {
         success: false,
-        step:
-          'interface-identifiers',
-        error:
-          interfaceReadError.message,
+        step: 'interface-identifiers',
+        error: interfaceResult.error.message,
       },
       500,
     );
   }
 
-  const {
-    data: actionRows,
-    error:
-      actionReadError,
-  } = await supabase
-    .from('access_actions')
-    .select(
-      'id, action_key',
-    );
-
-  if (actionReadError) {
+  if (actionResult.error) {
     return json(
       {
         success: false,
-        step:
-          'action-identifiers',
-        error:
-          actionReadError.message,
+        step: 'action-identifiers',
+        error: actionResult.error.message,
       },
       500,
     );
   }
 
-  const {
-    data: scopeRows,
-    error:
-      scopeReadError,
-  } = await supabase
-    .from('access_scopes')
-    .select(
-      'id, scope_key',
-    );
-
-  if (scopeReadError) {
+  if (scopeResult.error) {
     return json(
       {
         success: false,
-        step:
-          'scope-identifiers',
-        error:
-          scopeReadError.message,
+        step: 'scope-identifiers',
+        error: scopeResult.error.message,
       },
       500,
     );
   }
 
   const roleMap = new Map(
-    (roleRows ?? []).map(
-      (row) => [
-        row.role_key,
-        row.id,
-      ],
-    ),
+    (roleRows ?? []).map((row) => [
+      row.role_key,
+      row.id,
+    ]),
   );
 
   const interfaceMap = new Map(
-    (interfaceRows ?? []).map(
-      (row) => [
-        row.interface_key,
-        row.id,
-      ],
-    ),
+    (interfaceResult.data ?? []).map((row) => [
+      row.interface_key,
+      row.id,
+    ]),
   );
 
   const actionMap = new Map(
-    (actionRows ?? []).map(
-      (row) => [
-        row.action_key,
-        row.id,
-      ],
-    ),
+    (actionResult.data ?? []).map((row) => [
+      row.action_key,
+      row.id,
+    ]),
   );
 
   const scopeMap = new Map(
-    (scopeRows ?? []).map(
-      (row) => [
-        row.scope_key,
-        row.id,
-      ],
-    ),
+    (scopeResult.data ?? []).map((row) => [
+      row.scope_key,
+      row.id,
+    ]),
   );
 
-  /*
-   * --------------------------------------------------------
-   * PERMISSIONS
-   *
-   * On ne copie pas aveuglément les permissions dans cette
-   * étape.
-   *
-   * Les permissions par interface dépendent encore du moteur
-   * resolvePagePermissions() et des RESTRICTED_PAGES.
-   *
-   * On crée d'abord le catalogue.
-   * --------------------------------------------------------
-   */
+  // 10. Préparer les associations rôle-périmètre.
+  const roleScopeRows: Array<{
+    role_id: string;
+    scope_id: string;
+    scope_value: string | null;
+  }> = [];
 
-  /*
-   * --------------------------------------------------------
-   * ROLE SCOPES
-   * --------------------------------------------------------
-   */
+  const unresolvedRoleScopes: string[] = [];
 
-  const roleScopeRows =
-    roleScopes
-      .map((item) => ({
-        role_id:
-          roleMap.get(
-            item.role_key,
-          ),
-        scope_id:
-          scopeMap.get(
-            item.scope_key,
-          ),
-        scope_value:
-          item.scope_value,
-      }))
-      .filter(
-        (
-          item,
-        ): item is {
-          role_id: string;
-          scope_id: string;
-          scope_value:
-            | string
-            | null;
-        } =>
-          Boolean(
-            item.role_id &&
-            item.scope_id,
-          ),
+  for (const item of roleScopes) {
+    const roleId = roleMap.get(item.role_key);
+    const scopeId = scopeMap.get(item.scope_key);
+
+    if (!roleId || !scopeId) {
+      unresolvedRoleScopes.push(
+        `${item.role_key}:${item.scope_key}`,
       );
+      continue;
+    }
 
-  if (roleScopeRows.length) {
-    const {
-      error:
-        roleScopeError,
-    } = await supabase
+    roleScopeRows.push({
+      role_id: roleId,
+      scope_id: scopeId,
+      scope_value: item.scope_value,
+    });
+  }
+
+  if (unresolvedRoleScopes.length > 0) {
+    return json(
+      {
+        success: false,
+        step: 'role-scopes-resolution',
+        error: 'Some role/scope references could not be resolved',
+        unresolved: unresolvedRoleScopes.slice(0, 20),
+        unresolved_count: unresolvedRoleScopes.length,
+      },
+      500,
+    );
+  }
+
+  // 11. Écrire les associations.
+  if (roleScopeRows.length > 0) {
+    const { error: roleScopeError } = await adminClient
       .from('access_role_scopes')
-      .upsert(
-        roleScopeRows,
-        {
-          onConflict:
-            'role_id,scope_id,scope_value',
-        },
-      );
+      .upsert(roleScopeRows, {
+        onConflict: 'role_id,scope_id,scope_value',
+        ignoreDuplicates: true,
+      });
 
     if (roleScopeError) {
+      console.error(
+        'RBAC role scopes sync failed:',
+        roleScopeError.message,
+      );
+
       return json(
         {
           success: false,
-          step:
-            'role-scopes',
-          error:
-            roleScopeError.message,
+          step: 'role-scopes',
+          error: roleScopeError.message,
         },
         500,
       );
@@ -545,12 +453,10 @@ Deno.serve(async (request) => {
     success: true,
     synchronized: {
       roles: roleMap.size,
-      interfaces:
-        interfaceMap.size,
+      interfaces: interfaceMap.size,
       actions: actionMap.size,
       scopes: scopeMap.size,
-      roleScopes:
-        roleScopeRows.length,
+      roleScopes: roleScopeRows.length,
     },
     user_id: user.id,
   });
