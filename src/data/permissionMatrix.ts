@@ -1002,9 +1002,9 @@ export const resolvePagePermissions = (
     ctx.enforced === false ||
     ctx.isSuperAdmin
   ) {
-    return apply({
-      ...FULL_ACCESS,
-    });
+    return {
+      ...NO_ACCESS,
+    };
   }
 
   // -------------------------------------------------------------------------
