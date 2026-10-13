@@ -38,6 +38,22 @@ import {
   Seniority,
 } from '@/data/permissionRules';
 
+import {
+  ActionSet,
+  DataScope,
+  MATRIX_EVENT,
+  PermissionAction,
+  getDataScope,
+  getPageByPath,
+  isTestRbacEnforced,
+  loadMatrixOverrides,
+  loadTestMatrixOverrides,
+  pageRegistry,
+  resolvePagePermissions,
+  NO_ACCESS,
+  startPermissionSync,
+} from '@/data/permissionMatrix';
+
 // ---------------------------------------------------------------------------
 // ACTIONS
 // ---------------------------------------------------------------------------
@@ -958,7 +974,10 @@ export const resolvePagePermissions = (
 ): ActionSet => {
   const page = getPage(pageId);
 
-  const overrides = ctx.overrides ?? {};
+  const overrides:
+    profile?.test_account === true
+      ? loadTestMatrixOverrides()
+      : loadMatrixOverrides(),
 
   const roleOverrides =
     ctx.role
