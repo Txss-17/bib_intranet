@@ -624,6 +624,31 @@ Deno.serve(
       );
     }
 
+    // Caller must be an internal job (service role) or a signed-in Gateway manager.
+    {
+      const deny = (status: number) =>
+        new Response(JSON.stringify({ error: status === 401 ? "Unauthorized" : "Forbidden" }), {
+          status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      const authHeader = req.headers.get("Authorization") ?? "";
+      const token = authHeader.replace(/^Bearer\s+/i, "");
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+      if (!token) return deny(401);
+      if (token !== serviceKey) {
+        const { createClient: mk } = await import("npm:@supabase/supabase-js@2");
+        const url = Deno.env.get("SUPABASE_URL")!;
+        const userClient = mk(url, Deno.env.get("SUPABASE_ANON_KEY")!, { global: { headers: { Authorization: authHeader } } });
+        const { data: claims, error: claimsError } = await userClient.auth.getClaims(token);
+        const uid = claims?.claims?.sub;
+        if (claimsError || !uid) return deny(401);
+        const admin = mk(url, serviceKey);
+        const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", uid);
+        const ok = (roles ?? []).some((r: { role: string }) => ["admin", "executive", "manager"].includes(r.role));
+        if (!ok) return deny(403);
+      }
+    }
+
     try {
       const result =
         await syncMailbox();
