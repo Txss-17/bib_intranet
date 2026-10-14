@@ -155,6 +155,13 @@
       "when": 1791952131451,
       "tag": "0021_security_hardening_policies",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1791953826831,
+      "tag": "0022_supplier_workflow_tables",
+      "breakpoints": true
     }
   ]
 }

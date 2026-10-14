@@ -5233,6 +5233,140 @@ export type Database = {
           },
         ]
       }
+      supplier_application_events: {
+        Row: {
+          application_id: string
+          created_at: string
+          event_type: string
+          from_status: string | null
+          id: string
+          metadata: Json
+          notes: string | null
+          performed_by: string | null
+          to_status: string | null
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          event_type: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          performed_by?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          event_type?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json
+          notes?: string | null
+          performed_by?: string | null
+          to_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_application_events_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_applications: {
+        Row: {
+          assigned_at: string | null
+          assigned_to_id: string | null
+          assigned_to_name: string | null
+          audit_accepted: boolean
+          blocking_criteria: string[]
+          category: string | null
+          certifications: Json
+          company_name: string
+          contact_email: string
+          contact_name: string | null
+          contact_phone: string | null
+          country: string | null
+          created_at: string
+          decision_at: string | null
+          decision_by: string | null
+          decision_notes: string | null
+          documents: Json
+          id: string
+          lead_time_days: number | null
+          moq: number | null
+          priority: string
+          raw_payload: Json
+          score: number
+          source: string
+          status: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_to_id?: string | null
+          assigned_to_name?: string | null
+          audit_accepted?: boolean
+          blocking_criteria?: string[]
+          category?: string | null
+          certifications?: Json
+          company_name: string
+          contact_email: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          decision_at?: string | null
+          decision_by?: string | null
+          decision_notes?: string | null
+          documents?: Json
+          id?: string
+          lead_time_days?: number | null
+          moq?: number | null
+          priority?: string
+          raw_payload?: Json
+          score?: number
+          source?: string
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_to_id?: string | null
+          assigned_to_name?: string | null
+          audit_accepted?: boolean
+          blocking_criteria?: string[]
+          category?: string | null
+          certifications?: Json
+          company_name?: string
+          contact_email?: string
+          contact_name?: string | null
+          contact_phone?: string | null
+          country?: string | null
+          created_at?: string
+          decision_at?: string | null
+          decision_by?: string | null
+          decision_notes?: string | null
+          documents?: Json
+          id?: string
+          lead_time_days?: number | null
+          moq?: number | null
+          priority?: string
+          raw_payload?: Json
+          score?: number
+          source?: string
+          status?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       supplier_audits: {
         Row: {
           app_origin: string
@@ -5282,6 +5416,68 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "supplier_audits_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_catalog_uploads: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          mime_type: string | null
+          notes: string | null
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_by_email: string | null
+          supplier_id: string
+          updated_at: string
+          version: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by_email?: string | null
+          supplier_id: string
+          updated_at?: string
+          version?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          mime_type?: string | null
+          notes?: string | null
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_by_email?: string | null
+          supplier_id?: string
+          updated_at?: string
+          version?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_catalog_uploads_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
@@ -5401,6 +5597,50 @@ export type Database = {
           },
         ]
       }
+      supplier_portal_notifications: {
+        Row: {
+          body: string | null
+          created_at: string
+          id: string
+          read_at: string | null
+          reference_id: string | null
+          reference_table: string | null
+          supplier_id: string
+          title: string
+          type: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          reference_id?: string | null
+          reference_table?: string | null
+          supplier_id: string
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          id?: string
+          read_at?: string | null
+          reference_id?: string | null
+          reference_table?: string | null
+          supplier_id?: string
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_portal_notifications_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_portfolios: {
         Row: {
           backup_id: string | null
@@ -5433,6 +5673,84 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      supplier_restock_orders: {
+        Row: {
+          acknowledged_at: string | null
+          catalog_id: string | null
+          created_at: string
+          created_by: string | null
+          customization_notes: string | null
+          destination_id: string | null
+          destination_name: string
+          destination_type: string
+          due_date: string | null
+          id: string
+          priority: string
+          product_name: string
+          quantity: number
+          received_at: string | null
+          sent_at: string | null
+          status: string
+          supplier_id: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          catalog_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customization_notes?: string | null
+          destination_id?: string | null
+          destination_name: string
+          destination_type: string
+          due_date?: string | null
+          id?: string
+          priority?: string
+          product_name: string
+          quantity: number
+          received_at?: string | null
+          sent_at?: string | null
+          status?: string
+          supplier_id: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          catalog_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          customization_notes?: string | null
+          destination_id?: string | null
+          destination_name?: string
+          destination_type?: string
+          due_date?: string | null
+          id?: string
+          priority?: string
+          product_name?: string
+          quantity?: number
+          received_at?: string | null
+          sent_at?: string | null
+          status?: string
+          supplier_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_restock_orders_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "product_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_restock_orders_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       suppliers: {
         Row: {
