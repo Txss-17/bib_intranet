@@ -70,6 +70,25 @@ Deno.serve(async (req) => {
     })
   }
 
+  // Verify actual file content matches the declared type
+  const h = bytes.subarray(0, 12)
+  const starts = (...sig: number[]) => sig.every((b, i) => h[i] === b)
+  const isText = () => !bytes.subarray(0, 4096).some((b) => b === 0)
+  const contentOk: Record<string, () => boolean> = {
+    'application/pdf': () => starts(0x25, 0x50, 0x44, 0x46),
+    'image/png': () => starts(0x89, 0x50, 0x4e, 0x47),
+    'image/jpeg': () => starts(0xff, 0xd8, 0xff),
+    'image/webp': () => starts(0x52, 0x49, 0x46, 0x46) && h[8] === 0x57 && h[9] === 0x45,
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': () => starts(0x50, 0x4b, 0x03, 0x04),
+    'application/vnd.ms-excel': () => starts(0xd0, 0xcf, 0x11, 0xe0) || isText(),
+    'text/csv': isText,
+  }
+  if (!contentOk[p.mime_type]?.()) {
+    return new Response(JSON.stringify({ error: 'File content does not match its type' }), {
+      status: 415, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
