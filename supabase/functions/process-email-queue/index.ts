@@ -617,9 +617,7 @@ Deno.serve(async (req) => {
             msg_id: msg.msg_id,
             message_id:
               payload.message_id,
-            recipient,
-            subject,
-            from,
+            recipient_domain: String(recipient ?? '').split('@')[1] ?? null,
             has_html: Boolean(html),
             has_thread_id:
               Boolean(threadId),
