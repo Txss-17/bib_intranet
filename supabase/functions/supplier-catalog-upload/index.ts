@@ -11,7 +11,15 @@ const PayloadSchema = z.object({
   supplier_id: z.string().uuid(),
   submitted_by_email: z.string().email().max(255).optional(),
   file_name: z.string().trim().min(1).max(255),
-  mime_type: z.string().trim().max(120).default('application/octet-stream'),
+  mime_type: z.enum([
+    'application/pdf',
+    'text/csv',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+  ]),
   file_base64: z.string().min(1), // bare base64, no data: prefix
   version: z.string().trim().max(40).optional(),
   notes: z.string().trim().max(2000).optional(),
