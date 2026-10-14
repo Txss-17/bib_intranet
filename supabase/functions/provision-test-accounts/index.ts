@@ -119,6 +119,8 @@ Deno.serve(async (req) => {
             onConflict: "id",
           },
         );
+      if (profileErr) errors.push(`${spec.email}: ${profileErr.message}`);
+    }
 
     return new Response(JSON.stringify({ created, updated, errors }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
