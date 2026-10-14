@@ -5508,6 +5508,7 @@ export type Database = {
           assigned_to: string | null
           category: string | null
           created_at: string | null
+          created_by: string | null
           description: string
           id: string
           platform_id: string | null
@@ -5524,6 +5525,7 @@ export type Database = {
           assigned_to?: string | null
           category?: string | null
           created_at?: string | null
+          created_by?: string | null
           description: string
           id?: string
           platform_id?: string | null
@@ -5540,6 +5542,7 @@ export type Database = {
           assigned_to?: string | null
           category?: string | null
           created_at?: string | null
+          created_by?: string | null
           description?: string
           id?: string
           platform_id?: string | null
