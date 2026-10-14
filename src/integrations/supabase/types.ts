@@ -133,8 +133,10 @@ export type Database = {
       access_change_history: {
         Row: {
           actor_id: string | null
+          assignment_id: string | null
           change_type: string
           created_at: string
+          employee_id: string | null
           id: string
           new_value: Json | null
           previous_value: Json | null
@@ -143,8 +145,10 @@ export type Database = {
         }
         Insert: {
           actor_id?: string | null
+          assignment_id?: string | null
           change_type: string
           created_at?: string
+          employee_id?: string | null
           id?: string
           new_value?: Json | null
           previous_value?: Json | null
@@ -153,8 +157,10 @@ export type Database = {
         }
         Update: {
           actor_id?: string | null
+          assignment_id?: string | null
           change_type?: string
           created_at?: string
+          employee_id?: string | null
           id?: string
           new_value?: Json | null
           previous_value?: Json | null
@@ -173,6 +179,7 @@ export type Database = {
           path: string | null
           pole: string | null
           status: string
+          updated_at: string
         }
         Insert: {
           created_at?: string
@@ -183,6 +190,7 @@ export type Database = {
           path?: string | null
           pole?: string | null
           status?: string
+          updated_at?: string
         }
         Update: {
           created_at?: string
@@ -193,6 +201,7 @@ export type Database = {
           path?: string | null
           pole?: string | null
           status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -6287,6 +6296,7 @@ export type Database = {
         Returns: boolean
       }
       is_leadership: { Args: { _user_id: string }; Returns: boolean }
+      is_rbac_catalog_admin: { Args: { p_user_id: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
