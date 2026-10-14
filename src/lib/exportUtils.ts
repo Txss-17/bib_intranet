@@ -133,9 +133,11 @@ export const exportToPDF = ({ filename, title, columns, data, poleName }: Export
    const rows = data.map(item => 
      columns.map(col => {
        const value = item[col.accessor];
-       const stringValue = value !== undefined && value !== null ? String(value) : '';
+       let stringValue = value !== undefined && value !== null ? String(value) : '';
+       // Neutralize spreadsheet formulas (CSV injection)
+       if (/^[=+\-@\t\r]/.test(stringValue)) stringValue = `'${stringValue}`;
        // Escape quotes and wrap in quotes if contains comma
-       return stringValue.includes(',') || stringValue.includes('"') 
+       return /[",\n\r]/.test(stringValue) 
          ? `"${stringValue.replace(/"/g, '""')}"` 
          : stringValue;
      }).join(',')

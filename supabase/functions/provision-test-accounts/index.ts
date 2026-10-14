@@ -5,7 +5,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PASSWORD = "BibTest!2026";
+// Random, never-shared password: test accounts are opened via a one-time admin sign-in link.
+const randomPassword = () => {
+  const b = new Uint8Array(24); crypto.getRandomValues(b);
+  return btoa(String.fromCharCode(...b)) + "Aa1!";
+};
+const TEST_EMAIL_RE = /\.test@brand-in-a-box\.space$/i;
 
 interface RoleSpec {
   id: string;
@@ -40,6 +45,23 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
+
+    // One-time sign-in for an existing test account (admin only, test emails only).
+    if (body?.action === "sign_in") {
+      const email = String(body?.email ?? "").trim().toLowerCase();
+      if (!TEST_EMAIL_RE.test(email)) {
+        return new Response(JSON.stringify({ error: "Compte de test invalide" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: prof } = await admin.from("profiles").select("test_account").ilike("email", email).maybeSingle();
+      if (!prof?.test_account) {
+        return new Response(JSON.stringify({ error: "Compte de test introuvable" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      const { data: link, error: linkErr } = await admin.auth.admin.generateLink({ type: "magiclink", email });
+      if (linkErr || !link?.properties?.hashed_token) {
+        return new Response(JSON.stringify({ error: "Connexion impossible" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      return new Response(JSON.stringify({ token_hash: link.properties.hashed_token }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     const specs: RoleSpec[] = Array.isArray(body?.roles) ? body.roles : [];
     if (!specs.length) {
       return new Response(JSON.stringify({ error: "Aucun rôle fourni" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -54,7 +76,7 @@ Deno.serve(async (req) => {
 
       const { data: newUser, error: createErr } = await admin.auth.admin.createUser({
         email: spec.email,
-        password: PASSWORD,
+        password: randomPassword(),
         email_confirm: true,
         user_metadata: {
           first_name: spec.label,
@@ -70,7 +92,7 @@ Deno.serve(async (req) => {
         const existing = list?.users?.find((u) => u.email?.toLowerCase() === spec.email.toLowerCase());
         if (!existing) { errors.push(`${spec.email}: ${createErr.message}`); continue; }
         userId = existing.id;
-        await admin.auth.admin.updateUserById(userId, { password: PASSWORD, email_confirm: true });
+        await admin.auth.admin.updateUserById(userId, { password: randomPassword(), email_confirm: true });
         updated++;
       } else {
         userId = newUser.user!.id;
@@ -97,6 +119,8 @@ Deno.serve(async (req) => {
             onConflict: "id",
           },
         );
+      if (profileErr) errors.push(`${spec.email}: ${profileErr.message}`);
+    }
 
     return new Response(JSON.stringify({ created, updated, errors }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

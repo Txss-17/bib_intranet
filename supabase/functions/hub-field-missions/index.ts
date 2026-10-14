@@ -52,6 +52,10 @@ Deno.serve(async (req) => {
   const { data: prof } = await admin.from('profiles').select('id').ilike('email', body.auditor_email).maybeSingle()
   if (!prof) return json({ error: 'auditor_not_found', message: "Aucun compte intranet avec cette adresse e-mail." }, 404)
   const auditorId = prof.id as string
+  const { data: authUser } = await admin.auth.admin.getUserById(auditorId)
+  if (!authUser?.user?.email_confirmed_at || authUser.user.email?.toLowerCase() !== body.auditor_email.toLowerCase()) {
+    return json({ error: 'auditor_not_verified', message: "L'adresse de l'auditeur n'est pas confirmée." }, 403)
+  }
 
   const own = async (id: string) => {
     const { data } = await admin.from('field_audits').select('id, workflow_status, auditor_id').eq('id', id).maybeSingle()

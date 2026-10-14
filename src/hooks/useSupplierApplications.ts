@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Database, Json } from '@/integrations/supabase/types';
+import { supabase as typedSupabase } from '@/integrations/supabase/client';
+// Supplier tables are not yet in the generated schema types.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = typedSupabase as any;
+import type { Json } from '@/integrations/supabase/types';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
@@ -83,7 +86,7 @@ export function useUpdateApplicationStatus() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async ({ id, status, notes, fromStatus }: { id: string; status: SupplierApplicationStatus; notes?: string; fromStatus?: string }) => {
-      const update: Database['public']['Tables']['supplier_applications']['Update'] = { status };
+      const update: Record<string, unknown> = { status };
       if (status === 'approved' || status === 'rejected') {
         update.decision_at = new Date().toISOString();
         update.decision_by = user?.id;

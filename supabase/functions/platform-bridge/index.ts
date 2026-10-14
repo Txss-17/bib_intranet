@@ -2045,6 +2045,32 @@ Deno.serve(
         }
 
 
+        // Supplier-pole callers may only publish products of suppliers in their own portfolio.
+        const supplierOnly =
+          !leadership &&
+          !poles.includes('tech') &&
+          !poles.includes('marketplace')
+
+        if (supplierOnly) {
+          const callerId = userResult.user.id
+          const { data: portfolios } = await admin
+            .from('supplier_portfolios')
+            .select('id')
+            .or(`responsible_id.eq.${callerId},backup_id.eq.${callerId}`)
+          const portfolioIds = (portfolios ?? []).map((p: { id: string }) => p.id)
+          let query = admin
+            .from('portfolio_assignments')
+            .select('id')
+            .eq('supplier_id', product.supplier_id)
+          query = portfolioIds.length
+            ? query.or(`assigned_to_id.eq.${callerId},portfolio_id.in.(${portfolioIds.join(',')})`)
+            : query.eq('assigned_to_id', callerId)
+          const { data: owned } = await query.limit(1)
+          if (!product.supplier_id || !owned?.length) {
+            return json({ error: 'Forbidden' }, 403)
+          }
+        }
+
         if (
           ![
             'validated',

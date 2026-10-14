@@ -1,6 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Database } from '@/integrations/supabase/types';
+import { supabase as typedSupabase } from '@/integrations/supabase/client';
+// Supplier tables are not yet in the generated schema types.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const supabase = typedSupabase as any;
+
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 
@@ -66,7 +69,7 @@ export function useUpdateRestockOrder() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<SupplierRestockOrder> }) => {
-      const update: Database['public']['Tables']['supplier_restock_orders']['Update'] = { ...patch };
+      const update: Record<string, unknown> = { ...patch };
       if (patch.status === 'sent' && !patch.sent_at) update.sent_at = new Date().toISOString();
       if (patch.status === 'acknowledged' && !patch.acknowledged_at) update.acknowledged_at = new Date().toISOString();
       if (patch.status === 'received' && !patch.received_at) update.received_at = new Date().toISOString();

@@ -148,6 +148,13 @@
       "when": 1791764725034,
       "tag": "0020_rh_documents_and_access_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1791952131451,
+      "tag": "0021_security_hardening_policies",
+      "breakpoints": true
     }
   ]
 }

@@ -13,7 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useViewAs } from '@/hooks/useViewAs';
 import {
   jobRoles, jobDepartments, priorityRoles, testAccountEmail,
-  TEST_ACCOUNT_PASSWORD, JobRole,
+  JobRole,
 } from '@/data/jobRoles';
 
 const seniorityLabel: Record<string, string> = {
@@ -66,9 +66,13 @@ export default function TestAccounts() {
 
   const signInAs = async (r: JobRole) => {
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: testAccountEmail(r), password: TEST_ACCOUNT_PASSWORD,
+    const { data: linkData, error: linkError } = await supabase.functions.invoke('provision-test-accounts', {
+      body: { action: 'sign_in', email: testAccountEmail(r) },
     });
+    const tokenHash = (linkData as { token_hash?: string } | null)?.token_hash;
+    const { error } = linkError || !tokenHash
+      ? { error: linkError ?? new Error('Lien de connexion indisponible') }
+      : await supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'magiclink' });
     setBusy(false);
     if (error) return toast.error(`Connexion impossible : ${error.message}. Provisionnez d'abord le compte.`);
     setRole(null);
@@ -155,7 +159,7 @@ export default function TestAccounts() {
               <CardTitle className="text-base">Comptes de test réels</CardTitle>
               <CardDescription>
                 Provisionne de véritables comptes (email confirmé, profil, pôles) pour valider les workflows de bout en bout.
-                Mot de passe commun : <code>{TEST_ACCOUNT_PASSWORD}</code>
+                Connexion via un lien à usage unique réservé aux administrateurs.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

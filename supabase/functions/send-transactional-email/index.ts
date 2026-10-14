@@ -56,6 +56,22 @@ Deno.serve(async (req) => {
     )
   }
 
+  // Caller must be a signed-in user of this app or an internal function (service role).
+  {
+    const authHeader = req.headers.get('Authorization') ?? ''
+    const token = authHeader.replace(/^Bearer\s+/i, '')
+    if (!token) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+    if (token !== supabaseServiceKey) {
+      const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY') ?? supabaseServiceKey, { global: { headers: { Authorization: authHeader } } })
+      const { data: claims, error: claimsError } = await authClient.auth.getClaims(token)
+      if (claimsError || !claims?.claims?.sub) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
+    }
+  }
+
   let templateName: string
   let recipientEmail: string | undefined
   let idempotencyKey: string
@@ -257,7 +273,7 @@ Deno.serve(async (req) => {
       'Suppression check failed — refusing to send',
       {
         error: suppressionError,
-        effectiveRecipient,
+        recipient_domain: effectiveRecipient?.split("@")[1] ?? null,
       }
     )
 
@@ -290,7 +306,7 @@ Deno.serve(async (req) => {
     console.log(
       'Email suppressed',
       {
-        effectiveRecipient,
+        recipient_domain: effectiveRecipient?.split("@")[1] ?? null,
         templateName,
       }
     )
@@ -332,7 +348,7 @@ Deno.serve(async (req) => {
       'Token lookup failed',
       {
         error: tokenLookupError,
-        email: normalizedEmail,
+        recipient_domain: normalizedEmail.split("@")[1] ?? null,
       }
     )
 
@@ -380,7 +396,7 @@ Deno.serve(async (req) => {
       .upsert(
         {
           token: unsubscribeToken,
-          email: normalizedEmail,
+          recipient_domain: normalizedEmail.split("@")[1] ?? null,
         },
         {
           onConflict: 'email',
@@ -441,7 +457,7 @@ Deno.serve(async (req) => {
         'Failed to read back unsubscribe token',
         {
           error: reReadError,
-          email: normalizedEmail,
+          recipient_domain: normalizedEmail.split("@")[1] ?? null,
         }
       )
 
@@ -479,7 +495,7 @@ Deno.serve(async (req) => {
     console.warn(
       'Unsubscribe token already used but email not suppressed',
       {
-        email: normalizedEmail,
+        recipient_domain: normalizedEmail.split("@")[1] ?? null,
       }
     )
 
@@ -620,7 +636,7 @@ Deno.serve(async (req) => {
       {
         error: enqueueError,
         templateName,
-        effectiveRecipient,
+        recipient_domain: effectiveRecipient?.split("@")[1] ?? null,
       }
     )
 
@@ -656,7 +672,7 @@ Deno.serve(async (req) => {
     'Transactional email enqueued for Google Workspace Gmail',
     {
       templateName,
-      effectiveRecipient,
+      recipient_domain: effectiveRecipient?.split("@")[1] ?? null,
       gmailThreadId:
         gmailThreadId ?? null,
       inReplyTo:

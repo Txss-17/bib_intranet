@@ -1384,4 +1384,4 @@ export const priorityRoles = (): JobRole[] =>
 export const testAccountEmail = (role: JobRole) =>
   `${role.id.replace(/_/g, '-')}.test@brand-in-a-box.space`;
 
-export const TEST_ACCOUNT_PASSWORD = 'BibTest!2026';
+// Test accounts have random passwords; admins open them via a one-time sign-in link.
