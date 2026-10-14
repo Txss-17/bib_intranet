@@ -193,7 +193,7 @@ export const useGovernanceDocActions = () => {
 };
 
 export const openGovernanceDoc = async (doc: GovernanceDoc) => {
-  const { data, error } = await supabase.storage.from('governance-documents').createSignedUrl(doc.file_path, 300);
+  const { data, error } = await supabase.storage.from('governance-documents').createSignedUrl(doc.file_path, 60);
   if (error || !data) { toast.error('Lecture impossible', { description: error?.message }); return; }
   window.open(data.signedUrl, '_blank', 'noopener');
 };

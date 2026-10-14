@@ -159,7 +159,7 @@ export default function TestAccounts() {
               <CardTitle className="text-base">Comptes de test réels</CardTitle>
               <CardDescription>
                 Provisionne de véritables comptes (email confirmé, profil, pôles) pour valider les workflows de bout en bout.
-                Mot de passe commun : <code>{TEST_ACCOUNT_PASSWORD}</code>
+                Connexion via un lien à usage unique réservé aux administrateurs.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
