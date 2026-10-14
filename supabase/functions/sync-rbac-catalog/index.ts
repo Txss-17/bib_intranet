@@ -94,7 +94,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 function isValidKey(value: unknown): value is string {
   return (
     typeof value === 'string' &&
-    /^[a-zA-Z0-9_-]{2,100}$/.test(value)
+    /^[a-zA-Z0-9_.-]{2,100}$/.test(value)
   );
 }
 
