@@ -169,6 +169,13 @@
       "when": 1792044373987,
       "tag": "0023_hr_account_audit_and_onboarding_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792044405593,
+      "tag": "0024_block_intranet_self_signup",
+      "breakpoints": true
     }
   ]
 }
