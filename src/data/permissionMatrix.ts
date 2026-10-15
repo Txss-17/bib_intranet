@@ -761,6 +761,9 @@ export interface ResolveContext {
 
   /** Seuls les comptes de test peuvent désactiver l'application du RBAC. */
   enforced?: boolean;
+
+  /** Permissions enregistrées en base (page → actions) : source de vérité si présentes. */
+  dbPermissions?: Record<string, Partial<ActionSet>>;
 }
 
 // ---------------------------------------------------------------------------
@@ -788,13 +791,24 @@ export const resolvePagePermissions = (
       : base;
 
   // Le mode de test désactivé ne donne pas automatiquement accès.
-  if (ctx.enforced === false || ctx.isSuperAdmin) {
+  if (ctx.enforced === false) {
     return { ...NO_ACCESS };
+  }
+
+  // Administrateur réel (hors simulation) : accès complet.
+  if (ctx.isSuperAdmin) {
+    return { ...FULL_ACCESS };
   }
 
   // Une page inconnue est toujours refusée.
   if (!page) {
     return { ...NO_ACCESS };
+  }
+
+  // Matrice enregistrée depuis Rôles & Permissions : elle fait foi.
+  const saved = ctx.dbPermissions?.[pageId];
+  if (saved) {
+    return apply({ ...NO_ACCESS, ...saved });
   }
 
   // Niveau 1 : contrôle du périmètre métier.

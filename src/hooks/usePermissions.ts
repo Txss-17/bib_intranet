@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useViewAs } from '@/hooks/useViewAs';
@@ -72,6 +74,38 @@ export const usePermissions = (): UsePermissionsReturn => {
   }, []);
 
   const role = simulatedRole ?? inferRole(profile?.position, profile?.poles);
+
+  // Permissions enregistrées en base pour ce rôle (Rôles & Permissions).
+  const { data: dbPermissions } = useQuery({
+    queryKey: ['access-permissions', role?.id, tick],
+    enabled: !!role?.id,
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('access_permissions')
+        .select('allowed, access_roles!inner(role_key), access_interfaces!inner(interface_key), access_actions!inner(action_key)')
+        .eq('access_roles.role_key', role!.id)
+        .limit(5000);
+      if (error) return {};
+      const map: Record<string, Partial<ActionSet>> = {};
+      (data || []).forEach((r: any) => {
+        const page = r.access_interfaces?.interface_key;
+        const action = r.access_actions?.action_key as PermissionAction;
+        if (!page || !action) return;
+        (map[page] ??= {})[action] = !!r.allowed;
+      });
+      return map;
+    },
+  });
+
+  useEffect(() => {
+    const ch = (supabase as any)
+      .channel(`access-permissions-${Math.random().toString(36).slice(2)}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'access_permissions' }, () => setTick((t) => t + 1))
+      .subscribe();
+    return () => { (supabase as any).removeChannel(ch); };
+  }, []);
+
   const poles = simulatedRole ? simulatedRole.poles : (profile?.poles ?? role?.poles ?? []);
   const seniority = (simulatedRole?.seniority ?? (profile?.seniority as Seniority) ?? role?.seniority ?? 'junior');
   const isTestAccount = profile?.test_account === true;
@@ -90,6 +124,7 @@ export const usePermissions = (): UsePermissionsReturn => {
     seniority,
     isSuperAdmin,
     enforced,
+    dbPermissions: dbPermissions ?? {},
 
     // Les surcharges de test ne sont appliquées qu'aux comptes de test.
     overrides:
@@ -106,6 +141,7 @@ export const usePermissions = (): UsePermissionsReturn => {
     tick,
     enforced,
     profile?.test_account,
+    dbPermissions,
   ]);
 
   const permissions = useCallback(
