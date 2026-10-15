@@ -1,108 +1,832 @@
-import { Building2, TrendingUp, Users, Package, ShoppingCart, AlertTriangle, DollarSign, Activity, BarChart3 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+Scale,
+Clock,
+CheckCircle2,
+XCircle,
+AlertTriangle,
+FileText,
+Plus,
+History,
+Loader2,
+CalendarClock,
+RefreshCw,
+} from 'lucide-react';
+
+import {
+Card,
+CardContent,
+CardDescription,
+CardHeader,
+CardTitle,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Loader2 } from 'lucide-react';
-import { useExecutiveKPIs, usePolePerformance, useRecentCriticalAlerts } from '@/hooks/useExecutiveKPIs';
-import { Progress } from '@/components/ui/progress';
-import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend, BarChart, Bar } from 'recharts';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+Dialog,
+DialogContent,
+DialogDescription,
+DialogFooter,
+DialogHeader,
+DialogTitle,
+} from '@/components/ui/dialog';
+import {
+Select,
+SelectContent,
+SelectItem,
+SelectTrigger,
+SelectValue,
+} from '@/components/ui/select';
 
-export default function DirectionGlobal() {
-  const { data: kpis, isLoading } = useExecutiveKPIs();
-  const { data: poles = [] } = usePolePerformance();
-  const { data: alerts = [] } = useRecentCriticalAlerts();
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useIsLeadership } from '@/hooks/useDirectionContent';
+import { toast } from 'sonner';
 
-  const fmt = (n: number) => n >= 1_000_000 ? `${(n / 1_000_000).toFixed(2)} M€` : n >= 1000 ? `${(n / 1000).toFixed(0)} K€` : `${n.toFixed(0)} €`;
+type DecisionStatus = 'pending' | 'approved' | 'refused' | 'deferred';
+type DecisionPriority = 'low' | 'medium' | 'high' | 'critical';
 
-  if (isLoading) return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+type Decision = {
+id: string;
+title: string;
+description: string;
+category: string;
+priority: DecisionPriority;
+impact: string | null;
+recommendation: string | null;
+status: DecisionStatus;
+decision_notes: string | null;
+defer_until: string | null;
+submitted_by: string;
+submitted_by_name: string | null;
+decided_by: string | null;
+decided_at: string | null;
+created_at: string;
+updated_at: string;
+};
 
-  const cards = [
-    { label: 'CA consolidé', value: fmt(kpis?.totalRevenue || 0), icon: DollarSign, color: 'text-emerald-500' },
-    { label: 'EBITDA', value: fmt(kpis?.ebitda || 0), icon: TrendingUp, color: (kpis?.ebitda || 0) >= 0 ? 'text-emerald-500' : 'text-destructive' },
-    { label: 'Commandes', value: String(kpis?.totalOrders || 0), icon: ShoppingCart, color: 'text-primary' },
-    { label: 'Clients actifs', value: String(kpis?.totalUsers || 0), icon: Users, color: 'text-blue-500' },
-    { label: 'Fournisseurs', value: String(kpis?.totalSuppliers || 0), icon: Package, color: 'text-emerald-500' },
-    { label: 'Incidents', value: String(kpis?.openIncidents || 0), icon: AlertTriangle, color: kpis?.openIncidents ? 'text-destructive' : 'text-emerald-500' },
-    { label: 'Tickets support', value: String(kpis?.openTickets || 0), icon: Activity, color: 'text-yellow-500' },
-    { label: 'Qualité fourn.', value: `${kpis?.avgSupplierQuality || 'N/A'}%`, icon: BarChart3, color: 'text-primary' },
-  ];
+type DecisionHistory = {
+id: string;
+decision_id: string;
+event_type: string;
+old_status: string | null;
+new_status: string | null;
+notes: string | null;
+actor_id: string | null;
+created_at: string;
+};
 
-  return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+type DecisionDraft = {
+title: string;
+description: string;
+category: string;
+priority: DecisionPriority;
+impact: string;
+recommendation: string;
+};
+
+const emptyDraft: DecisionDraft = {
+title: '',
+description: '',
+category: 'general',
+priority: 'medium',
+impact: '',
+recommendation: '',
+};
+
+const statusLabels: Record<DecisionStatus, string> = {
+pending: 'En attente',
+approved: 'Approuvée',
+refused: 'Refusée',
+deferred: 'Reportée',
+};
+
+const priorityLabels: Record<DecisionPriority, string> = {
+low: 'Basse',
+medium: 'Moyenne',
+high: 'Haute',
+critical: 'Critique',
+};
+
+const categoryLabels: Record<string, string> = {
+general: 'Générale',
+finance: 'Finance',
+supplier: 'Fournisseurs',
+operations: 'Opérations',
+technology: 'Technologie',
+marketing: 'Marketing',
+human_resources: 'Ressources humaines',
+strategy: 'Stratégie',
+other: 'Autre',
+};
+
+const statusVariant = (status: DecisionStatus) => {
+if (status === 'approved') return 'default' as const;
+if (status === 'refused') return 'destructive' as const;
+return 'secondary' as const;
+};
+
+const priorityVariant = (priority: DecisionPriority) => {
+if (priority === 'critical' || priority === 'high') return 'destructive' as const;
+if (priority === 'medium') return 'secondary' as const;
+return 'outline' as const;
+};
+
+const formatDate = (value: string | null | undefined) => {
+if (!value) return '—';
+
+const date = new Date(value);
+if (Number.isNaN(date.getTime())) return value;
+
+return date.toLocaleString('fr-FR', {
+dateStyle: 'medium',
+timeStyle: value.includes('T') ? 'short' : undefined,
+});
+};
+
+const errorMessage = (error: unknown) =>
+error instanceof Error ? error.message : 'Une erreur inattendue est survenue.';
+
+const DecisionArbitrage = () => {
+const queryClient = useQueryClient();
+const { user, profile } = useAuth();
+const { data: canDecide = false } = useIsLeadership();
+
+const [createOpen, setCreateOpen] = useState(false);
+const [reviewOpen, setReviewOpen] = useState(false);
+const [selectedDecision, setSelectedDecision] = useState<Decision | null>(null);
+const [draft, setDraft] = useState<DecisionDraft>(emptyDraft);
+const [decisionNotes, setDecisionNotes] = useState('');
+const [deferUntil, setDeferUntil] = useState('');
+const [statusFilter, setStatusFilter] = useState('all');
+const [priorityFilter, setPriorityFilter] = useState('all');
+const [search, setSearch] = useState('');
+
+const db = supabase as any;
+
+const decisionsQuery = useQuery({
+queryKey: ['direction-decisions'],
+queryFn: async (): Promise<Decision[]> => {
+const { data, error } = await db
+.from('direction_decisions')
+.select('*')
+.order('created_at', { ascending: false });
+
+```
+  if (error) throw error;
+  return (data ?? []) as Decision[];
+},
+refetchInterval: 60_000,
+```
+
+});
+
+const historyQuery = useQuery({
+queryKey: ['direction-decision-history'],
+queryFn: async (): Promise<DecisionHistory[]> => {
+const { data, error } = await db
+.from('direction_decision_history')
+.select('*')
+.order('created_at', { ascending: false });
+
+```
+  if (error) throw error;
+  return (data ?? []) as DecisionHistory[];
+},
+```
+
+});
+
+const decisions = decisionsQuery.data ?? [];
+const history = historyQuery.data ?? [];
+
+const filteredDecisions = useMemo(() => {
+const term = search.trim().toLocaleLowerCase('fr');
+
+```
+return decisions.filter((decision) => {
+  if (statusFilter !== 'all' && decision.status !== statusFilter) return false;
+  if (priorityFilter !== 'all' && decision.priority !== priorityFilter) return false;
+
+  if (!term) return true;
+
+  return [
+    decision.title,
+    decision.description,
+    decision.submitted_by_name ?? '',
+    categoryLabels[decision.category] ?? decision.category,
+  ].some((value) => value.toLocaleLowerCase('fr').includes(term));
+});
+```
+
+}, [decisions, search, statusFilter, priorityFilter]);
+
+const stats = useMemo(() => ({
+pending: decisions.filter((d) => d.status === 'pending').length,
+urgent: decisions.filter(
+(d) => d.status === 'pending' && ['high', 'critical'].includes(d.priority),
+).length,
+approved: decisions.filter((d) => {
+if (d.status !== 'approved' || !d.decided_at) return false;
+const date = new Date(d.decided_at);
+const now = new Date();
+return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+}).length,
+refused: decisions.filter((d) => {
+if (d.status !== 'refused' || !d.decided_at) return false;
+const date = new Date(d.decided_at);
+const now = new Date();
+return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
+}).length,
+}), [decisions]);
+
+const createMutation = useMutation({
+mutationFn: async (payload: DecisionDraft) => {
+if (!user?.id) throw new Error('Vous devez être connecté pour soumettre une décision.');
+
+```
+  const submittedByName = [profile?.first_name, profile?.last_name]
+    .filter(Boolean)
+    .join(' ')
+    || profile?.email
+    || user.email
+    || 'Collaborateur';
+
+  const { error } = await db.from('direction_decisions').insert({
+    title: payload.title.trim(),
+    description: payload.description.trim(),
+    category: payload.category,
+    priority: payload.priority,
+    impact: payload.impact.trim() || null,
+    recommendation: payload.recommendation.trim() || null,
+    status: 'pending',
+    submitted_by: user.id,
+    submitted_by_name: submittedByName,
+  });
+
+  if (error) throw error;
+},
+onSuccess: async () => {
+  await queryClient.invalidateQueries({ queryKey: ['direction-decisions'] });
+  await queryClient.invalidateQueries({ queryKey: ['direction-decision-history'] });
+  toast.success('Décision soumise.');
+  setCreateOpen(false);
+  setDraft(emptyDraft);
+},
+onError: (error) => toast.error(`Création impossible : ${errorMessage(error)}`),
+```
+
+});
+
+const decisionMutation = useMutation({
+mutationFn: async ({
+decision,
+status,
+notes,
+deferDate,
+}: {
+decision: Decision;
+status: DecisionStatus;
+notes: string;
+deferDate: string;
+}) => {
+if (!canDecide) {
+throw new Error('Vous ne disposez pas des droits d’arbitrage.');
+}
+
+```
+  if (status === 'refused' && !notes.trim()) {
+    throw new Error('Motivez le refus dans les notes de décision.');
+  }
+
+  if (status === 'deferred' && !deferDate) {
+    throw new Error('Choisissez une date de réexamen pour reporter cette décision.');
+  }
+
+  const updates: Record<string, unknown> = {
+    status,
+    decision_notes: notes.trim() || null,
+    defer_until: status === 'deferred' ? deferDate : null,
+  };
+
+  const { error } = await db
+    .from('direction_decisions')
+    .update(updates)
+    .eq('id', decision.id)
+    .eq('status', decision.status);
+
+  if (error) throw error;
+},
+onSuccess: async () => {
+  await queryClient.invalidateQueries({ queryKey: ['direction-decisions'] });
+  await queryClient.invalidateQueries({ queryKey: ['direction-decision-history'] });
+  toast.success('Arbitrage enregistré.');
+  setReviewOpen(false);
+  setSelectedDecision(null);
+  setDecisionNotes('');
+  setDeferUntil('');
+},
+onError: (error) => toast.error(`Arbitrage impossible : ${errorMessage(error)}`),
+```
+
+});
+
+const openReview = (decision: Decision) => {
+setSelectedDecision(decision);
+setDecisionNotes(decision.decision_notes ?? '');
+setDeferUntil(decision.defer_until ?? '');
+setReviewOpen(true);
+};
+
+const submitDecision = (status: DecisionStatus) => {
+if (!selectedDecision) return;
+
+```
+decisionMutation.mutate({
+  decision: selectedDecision,
+  status,
+  notes: decisionNotes,
+  deferDate: deferUntil,
+});
+```
+
+};
+
+const submitDraft = () => {
+if (!draft.title.trim() || !draft.description.trim()) {
+toast.error('Le titre et la description sont obligatoires.');
+return;
+}
+
+```
+createMutation.mutate(draft);
+```
+
+};
+
+const selectedHistory = selectedDecision
+? history.filter((item) => item.decision_id === selectedDecision.id)
+: [];
+
+return ( <div className="space-y-6 p-4 md:p-6"> <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"> <div> <h1 className="flex items-center gap-3 text-2xl font-bold md:text-3xl"> <Scale className="h-8 w-8 text-primary" />
+Arbitrage des décisions </h1> <p className="mt-1 text-muted-foreground">
+Soumission, examen et traçabilité des décisions de la Direction. </p> </div>
+
+```
+    <Button onClick={() => setCreateOpen(true)}>
+      <Plus className="mr-2 h-4 w-4" />
+      Soumettre une décision
+    </Button>
+  </div>
+
+  <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+    <Card>
+      <CardContent className="flex items-center gap-3 p-4">
+        <Clock className="h-7 w-7 text-yellow-500" />
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3"><Building2 className="h-7 w-7 text-primary" /> Direction — Vue Groupe</h1>
-          <p className="text-muted-foreground mt-1">Consolidation temps réel de tous les pôles LINKSY.</p>
+          <p className="text-2xl font-bold">{stats.pending}</p>
+          <p className="text-sm text-muted-foreground">En attente</p>
         </div>
-        <Badge variant="outline"><Activity className="h-3 w-3 mr-1 text-emerald-500" /> Live</Badge>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardContent className="flex items-center gap-3 p-4">
+        <AlertTriangle className="h-7 w-7 text-destructive" />
+        <div>
+          <p className="text-2xl font-bold">{stats.urgent}</p>
+          <p className="text-sm text-muted-foreground">Prioritaires</p>
+        </div>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardContent className="flex items-center gap-3 p-4">
+        <CheckCircle2 className="h-7 w-7 text-emerald-500" />
+        <div>
+          <p className="text-2xl font-bold">{stats.approved}</p>
+          <p className="text-sm text-muted-foreground">Approuvées ce mois</p>
+        </div>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardContent className="flex items-center gap-3 p-4">
+        <XCircle className="h-7 w-7 text-muted-foreground" />
+        <div>
+          <p className="text-2xl font-bold">{stats.refused}</p>
+          <p className="text-sm text-muted-foreground">Refusées ce mois</p>
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+
+  <Card>
+    <CardHeader>
+      <CardTitle>Registre des décisions</CardTitle>
+      <CardDescription>
+        Les compteurs sont calculés à partir des enregistrements accessibles dans Supabase.
+      </CardDescription>
+      <div className="grid grid-cols-1 gap-3 pt-3 md:grid-cols-3">
+        <Input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Rechercher une décision…"
+          aria-label="Rechercher une décision"
+        />
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Tous les statuts" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="pending">En attente</SelectItem>
+            <SelectItem value="approved">Approuvées</SelectItem>
+            <SelectItem value="refused">Refusées</SelectItem>
+            <SelectItem value="deferred">Reportées</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+          <SelectTrigger>
+            <SelectValue placeholder="Toutes les priorités" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Toutes les priorités</SelectItem>
+            <SelectItem value="critical">Critique</SelectItem>
+            <SelectItem value="high">Haute</SelectItem>
+            <SelectItem value="medium">Moyenne</SelectItem>
+            <SelectItem value="low">Basse</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
+    </CardHeader>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {cards.map(c => (
-          <Card key={c.label}>
-            <CardContent className="p-4">
-              <c.icon className={`h-5 w-5 ${c.color} mb-2`} />
-              <p className="text-xl font-bold">{c.value}</p>
-              <p className="text-xs text-muted-foreground">{c.label}</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+    <CardContent className="space-y-4">
+      {decisionsQuery.isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        </div>
+      ) : decisionsQuery.isError ? (
+        <div className="space-y-3 rounded-lg border border-destructive/30 p-5 text-sm">
+          <p className="font-medium text-destructive">Impossible de charger les décisions.</p>
+          <p className="text-muted-foreground">{errorMessage(decisionsQuery.error)}</p>
+          <Button variant="outline" onClick={() => decisionsQuery.refetch()}>
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Réessayer
+          </Button>
+        </div>
+      ) : filteredDecisions.length === 0 ? (
+        <div className="py-12 text-center">
+          <FileText className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+          <p className="font-medium">Aucune décision à afficher</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Modifiez les filtres ou soumettez une nouvelle décision.
+          </p>
+        </div>
+      ) : (
+        filteredDecisions.map((decision) => (
+          <div key={decision.id} className="rounded-lg border p-4 transition-colors hover:bg-muted/20">
+            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+              <div className="min-w-0 flex-1 space-y-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h3 className="font-semibold">{decision.title}</h3>
+                  <Badge variant={statusVariant(decision.status)}>
+                    {statusLabels[decision.status]}
+                  </Badge>
+                  <Badge variant={priorityVariant(decision.priority)}>
+                    {priorityLabels[decision.priority]}
+                  </Badge>
+                </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader><CardTitle>Performance financière (K€)</CardTitle></CardHeader>
-          <CardContent>
-            {kpis?.chartData && kpis.chartData.length > 0 ? (
-              <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={kpis.chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                  <XAxis dataKey="month" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
-                  <Legend />
-                  <Line type="monotone" dataKey="ca" name="CA" stroke="hsl(var(--chart-1))" strokeWidth={2} />
-                  <Line type="monotone" dataKey="ebitda" name="EBITDA" stroke="hsl(var(--chart-2))" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : <p className="text-center text-muted-foreground py-12">Pas encore de données</p>}
-          </CardContent>
-        </Card>
+                <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                  {decision.description}
+                </p>
 
-        <Card>
-          <CardHeader><CardTitle>Santé des pôles</CardTitle></CardHeader>
-          <CardContent className="space-y-3">
-            {poles.map(p => (
-              <div key={p.id} className="flex items-center justify-between">
-                <span className="text-sm font-medium">{p.name}</span>
-                <div className="flex items-center gap-2">
-                  <Progress value={p.score} className="w-32 h-2" />
-                  <span className="text-sm w-10 text-right">{p.score}%</span>
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span>Catégorie : {categoryLabels[decision.category] ?? decision.category}</span>
+                  <span>Soumise par : {decision.submitted_by_name || 'Collaborateur'}</span>
+                  <span>Créée le : {formatDate(decision.created_at)}</span>
+                  {decision.defer_until && (
+                    <span>Réexamen prévu : {formatDate(decision.defer_until)}</span>
+                  )}
                 </div>
               </div>
-            ))}
-            {poles.length === 0 && <p className="text-muted-foreground text-sm">Aucune donnée</p>}
-          </CardContent>
-        </Card>
+
+              <Button variant="outline" onClick={() => openReview(decision)}>
+                Examiner
+              </Button>
+            </div>
+          </div>
+        ))
+      )}
+    </CardContent>
+  </Card>
+
+  <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+    <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      <DialogHeader>
+        <DialogTitle>Soumettre une décision</DialogTitle>
+        <DialogDescription>
+          Décrivez l’arbitrage demandé. La demande sera enregistrée avec votre identité.
+        </DialogDescription>
+      </DialogHeader>
+
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="decision-title">Titre *</Label>
+          <Input
+            id="decision-title"
+            value={draft.title}
+            maxLength={180}
+            onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+            placeholder="Ex. : Validation d’un investissement"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label>Catégorie</Label>
+            <Select
+              value={draft.category}
+              onValueChange={(value) => setDraft({ ...draft, category: value })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(categoryLabels).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Priorité</Label>
+            <Select
+              value={draft.priority}
+              onValueChange={(value: DecisionPriority) => setDraft({ ...draft, priority: value })}
+            >
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="low">Basse</SelectItem>
+                <SelectItem value="medium">Moyenne</SelectItem>
+                <SelectItem value="high">Haute</SelectItem>
+                <SelectItem value="critical">Critique</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="decision-description">Contexte et justification *</Label>
+          <Textarea
+            id="decision-description"
+            rows={4}
+            value={draft.description}
+            onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+            placeholder="Présentez la situation, le besoin et les éléments utiles à l'arbitrage."
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="decision-impact">Impact attendu</Label>
+          <Textarea
+            id="decision-impact"
+            rows={2}
+            value={draft.impact}
+            onChange={(e) => setDraft({ ...draft, impact: e.target.value })}
+            placeholder="Impact financier, opérationnel, humain ou stratégique."
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="decision-recommendation">Recommandation du demandeur</Label>
+          <Textarea
+            id="decision-recommendation"
+            rows={2}
+            value={draft.recommendation}
+            onChange={(e) => setDraft({ ...draft, recommendation: e.target.value })}
+            placeholder="Décision recommandée et conditions éventuelles."
+          />
+        </div>
       </div>
 
-      <Card>
-        <CardHeader><CardTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5" /> Alertes récentes</CardTitle></CardHeader>
-        <CardContent>
-          {alerts.length === 0 ? (
-            <p className="text-muted-foreground text-sm text-center py-4">Aucune alerte active</p>
-          ) : (
-            <div className="space-y-2">
-              {alerts.slice(0, 8).map(a => (
-                <div key={a.id} className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
-                  <Badge className={a.severity === 'critical' ? 'bg-destructive text-destructive-foreground' : 'bg-orange-500 text-white'}>{a.severity}</Badge>
-                  <p className="text-sm flex-1">{a.message}</p>
-                  <span className="text-xs text-muted-foreground">{a.pole}</span>
-                </div>
-              ))}
+      <DialogFooter>
+        <Button variant="outline" onClick={() => setCreateOpen(false)}>
+          Annuler
+        </Button>
+        <Button
+          onClick={submitDraft}
+          disabled={createMutation.isPending || !draft.title.trim() || !draft.description.trim()}
+        >
+          {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+          Soumettre
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  <Dialog
+    open={reviewOpen}
+    onOpenChange={(open) => {
+      setReviewOpen(open);
+      if (!open) {
+        setSelectedDecision(null);
+        setDecisionNotes('');
+        setDeferUntil('');
+      }
+    }}
+  >
+    <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+      {selectedDecision && (
+        <>
+          <DialogHeader>
+            <DialogTitle>{selectedDecision.title}</DialogTitle>
+            <DialogDescription>
+              Soumise par {selectedDecision.submitted_by_name || 'Collaborateur'} ·{' '}
+              {formatDate(selectedDecision.created_at)}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant={statusVariant(selectedDecision.status)}>
+                {statusLabels[selectedDecision.status]}
+              </Badge>
+              <Badge variant={priorityVariant(selectedDecision.priority)}>
+                Priorité {priorityLabels[selectedDecision.priority].toLowerCase()}
+              </Badge>
+              <Badge variant="outline">
+                {categoryLabels[selectedDecision.category] ?? selectedDecision.category}
+              </Badge>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
+
+            <div>
+              <h4 className="mb-1 font-medium">Contexte</h4>
+              <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                {selectedDecision.description}
+              </p>
+            </div>
+
+            {selectedDecision.impact && (
+              <div>
+                <h4 className="mb-1 font-medium">Impact attendu</h4>
+                <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                  {selectedDecision.impact}
+                </p>
+              </div>
+            )}
+
+            {selectedDecision.recommendation && (
+              <div>
+                <h4 className="mb-1 font-medium">Recommandation</h4>
+                <p className="whitespace-pre-wrap text-sm text-muted-foreground">
+                  {selectedDecision.recommendation}
+                </p>
+              </div>
+            )}
+
+            {selectedDecision.status === 'pending' && canDecide && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="decision-notes">Notes, motifs ou conditions</Label>
+                  <Textarea
+                    id="decision-notes"
+                    rows={3}
+                    value={decisionNotes}
+                    onChange={(e) => setDecisionNotes(e.target.value)}
+                    placeholder="Motif du refus, conditions d'approbation ou éléments de suivi…"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="decision-defer-date">Date de réexamen (pour un report)</Label>
+                  <Input
+                    id="decision-defer-date"
+                    type="date"
+                    min={new Date().toISOString().slice(0, 10)}
+                    value={deferUntil}
+                    onChange={(e) => setDeferUntil(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {selectedDecision.status !== 'pending' && (
+              <div className="rounded-lg bg-muted/40 p-3">
+                <p className="text-sm font-medium">
+                  Décision : {statusLabels[selectedDecision.status]}
+                </p>
+                {selectedDecision.decided_at && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Traitée le {formatDate(selectedDecision.decided_at)}
+                  </p>
+                )}
+                {selectedDecision.decision_notes && (
+                  <p className="mt-2 whitespace-pre-wrap text-sm">
+                    {selectedDecision.decision_notes}
+                  </p>
+                )}
+              </div>
+            )}
+
+            <div className="border-t pt-4">
+              <h4 className="mb-3 flex items-center gap-2 font-medium">
+                <History className="h-4 w-4" />
+                Historique de la décision
+              </h4>
+
+              {historyQuery.isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              ) : historyQuery.isError ? (
+                <p className="text-sm text-destructive">
+                  Historique indisponible : {errorMessage(historyQuery.error)}
+                </p>
+              ) : selectedHistory.length === 0 ? (
+                <p className="text-sm text-muted-foreground">
+                  Aucun événement d’historique accessible.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {selectedHistory.map((item) => (
+                    <div key={item.id} className="border-l-2 pl-3">
+                      <p className="text-sm font-medium">
+                        {item.event_type === 'created'
+                          ? 'Décision créée'
+                          : item.event_type === 'status_changed'
+                            ? `${statusLabels[item.new_status as DecisionStatus] ?? item.new_status ?? 'Statut modifié'}`
+                            : 'Détails modifiés'}
+                      </p>
+                      {item.old_status && item.new_status && item.old_status !== item.new_status && (
+                        <p className="text-xs text-muted-foreground">
+                          {statusLabels[item.old_status as DecisionStatus] ?? item.old_status}
+                          {' → '}
+                          {statusLabels[item.new_status as DecisionStatus] ?? item.new_status}
+                        </p>
+                      )}
+                      {item.notes && (
+                        <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                          {item.notes}
+                        </p>
+                      )}
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatDate(item.created_at)}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            {selectedDecision.status === 'pending' && canDecide ? (
+              <>
+                <Button
+                  variant="outline"
+                  disabled={decisionMutation.isPending}
+                  onClick={() => submitDecision('deferred')}
+                >
+                  <CalendarClock className="mr-2 h-4 w-4" />
+                  Reporter
+                </Button>
+                <Button
+                  variant="destructive"
+                  disabled={decisionMutation.isPending || !decisionNotes.trim()}
+                  onClick={() => submitDecision('refused')}
+                >
+                  <XCircle className="mr-2 h-4 w-4" />
+                  Refuser
+                </Button>
+                <Button
+                  disabled={decisionMutation.isPending}
+                  onClick={() => submitDecision('approved')}
+                >
+                  {decisionMutation.isPending
+                    ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                  Approuver
+                </Button>
+              </>
+            ) : (
+              <Button variant="outline" onClick={() => setReviewOpen(false)}>
+                Fermer
+              </Button>
+            )}
+          </DialogFooter>
+        </>
+      )}
+    </DialogContent>
+  </Dialog>
+</div>
+```
+
+);
+};
+
+export default DecisionArbitrage;
