@@ -162,6 +162,13 @@
       "when": 1791953826831,
       "tag": "0022_supplier_workflow_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792044373987,
+      "tag": "0023_hr_account_audit_and_onboarding_fields",
+      "breakpoints": true
     }
   ]
 }
