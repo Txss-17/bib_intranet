@@ -2,4 +2,4 @@
 - [ ] Update the CEO name and verify persisted changes and application status.
 - [ ] All account settings (identity, post, poles, manager, subsidiary, work mode, contract type) come from HR onboarding; Settings shows them read-only.
 - [x] HR-attached documents (contracts, charters, policies) shown in account Settings > Ressources from real data.
-- [ ] Permissions page RBAC + catalog sync; remove fake data in RH (Publications), Security, Product poles.
+- [x] Permissions page saves now control access. [ ] Remove fake data in RH (Publications), Security, Product poles; browser check per role; remove fake data in RH (Publications), Security, Product poles.
