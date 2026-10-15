@@ -599,7 +599,7 @@ Deno.serve(
                 last_name:
                   request.last_name,
                 app_origin:
-                  'bos',
+                  'connect',
               },
               redirectTo:
                 'https://workspace.brand-in-a-box.space/reset-password',
@@ -789,11 +789,45 @@ Deno.serve(
             manager_id:
               request.manager_id ??
               null,
+            work_mode:
+              request.work_mode ?? null,
+            subsidiary:
+              request.subsidiary ?? null,
           })
           .eq(
             'id',
             userId,
           );
+
+      /*
+       * Chartes, politiques et documents rattachés au dossier.
+       */
+      const attachedDocs: Array<{ name?: string; document_type?: string; document_url?: string | null }> =
+        Array.isArray(request.attached_documents) ? request.attached_documents : [];
+      if (attachedDocs.length > 0) {
+        const { data: existingDocs } = await admin
+          .from('rh_employee_documents')
+          .select('name')
+          .eq('employee_id', userId);
+        const existingNames = new Set((existingDocs ?? []).map((d: { name: string }) => d.name));
+        const docRows = attachedDocs
+          .filter((d) => d?.name && !existingNames.has(d.name))
+          .map((d) => ({
+            employee_id: userId,
+            name: String(d.name).slice(0, 200),
+            document_type: d.document_type ?? 'charte',
+            source: 'onboarding',
+            document_url: d.document_url ?? null,
+            description: 'Rattaché lors de l’onboarding RH — à prendre connaissance',
+            document_date: new Date().toISOString().slice(0, 10),
+            status: 'active',
+            created_by: user.id,
+          }));
+        if (docRows.length) {
+          const { error: docsError } = await admin.from('rh_employee_documents').insert(docRows);
+          if (docsError) console.error('attach documents failed:', docsError.message);
+        }
+      }
 
 
       if (
@@ -1110,6 +1144,54 @@ Deno.serve(
         }`.trim() ||
         'Utilisateur habilité';
 
+
+      /*
+       * Journal d'audit des comptes : qui a créé / invité, rôles et permissions.
+       */
+      const { data: grantedPerms } = await admin
+        .from('access_permissions')
+        .select('allowed, access_interfaces!inner(interface_key), access_actions!inner(action_key)')
+        .eq('role_id', accessRole.id)
+        .eq('allowed', true)
+        .limit(2000);
+      const permissionSummary: Record<string, string[]> = {};
+      (grantedPerms ?? []).forEach((r: any) => {
+        const k = r.access_interfaces?.interface_key;
+        if (k) (permissionSummary[k] ??= []).push(r.access_actions?.action_key);
+      });
+      const auditBase = {
+        actor_id: user.id,
+        actor_name: actorName,
+        target_user_id: userId,
+        target_email: email,
+        request_id: requestId,
+      };
+      const { error: auditError } = await admin.from('hr_account_audit_log').insert([
+        {
+          ...auditBase,
+          action: accountAlreadyExisted ? 'collaborator_synced' : 'collaborator_invited',
+          details: {
+            position: request.position_key ?? request.position,
+            poles: request.poles,
+            seniority: request.seniority,
+            invitation_sent: invitationSent,
+            documents: (Array.isArray(request.attached_documents) ? request.attached_documents : []).map((d: any) => d?.name),
+          },
+        },
+        {
+          ...auditBase,
+          action: 'access_role_assigned',
+          role_key: accessRole.role_key,
+          details: { role_label: accessRole.label, access_assignment_id: accessAssignmentId },
+        },
+        {
+          ...auditBase,
+          action: 'permissions_assigned',
+          role_key: accessRole.role_key,
+          details: { pages: Object.keys(permissionSummary).length, permissions: permissionSummary },
+        },
+      ]);
+      if (auditError) console.error('account audit failed:', auditError.message);
 
       await admin
         .from(
