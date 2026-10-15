@@ -2423,6 +2423,45 @@ export type Database = {
           },
         ]
       }
+      hr_account_audit_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_name: string | null
+          created_at: string
+          details: Json
+          id: string
+          request_id: string | null
+          role_key: string | null
+          target_email: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          request_id?: string | null
+          role_key?: string | null
+          target_email?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_name?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          request_id?: string | null
+          role_key?: string | null
+          target_email?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: []
+      }
       hr_attendance_records: {
         Row: {
           check_in: string | null
@@ -2563,6 +2602,7 @@ export type Database = {
         Row: {
           account_created_at: string | null
           account_created_by: string | null
+          attached_documents: Json
           collaborator_type: string
           contract_type: string | null
           created_at: string
@@ -2586,12 +2626,15 @@ export type Database = {
           seniority: string
           start_date: string | null
           status: string
+          subsidiary: string | null
           updated_at: string
           work_email: string | null
+          work_mode: string | null
         }
         Insert: {
           account_created_at?: string | null
           account_created_by?: string | null
+          attached_documents?: Json
           collaborator_type?: string
           contract_type?: string | null
           created_at?: string
@@ -2615,12 +2658,15 @@ export type Database = {
           seniority?: string
           start_date?: string | null
           status?: string
+          subsidiary?: string | null
           updated_at?: string
           work_email?: string | null
+          work_mode?: string | null
         }
         Update: {
           account_created_at?: string | null
           account_created_by?: string | null
+          attached_documents?: Json
           collaborator_type?: string
           contract_type?: string | null
           created_at?: string
@@ -2644,8 +2690,10 @@ export type Database = {
           seniority?: string
           start_date?: string | null
           status?: string
+          subsidiary?: string | null
           updated_at?: string
           work_email?: string | null
+          work_mode?: string | null
         }
         Relationships: []
       }
