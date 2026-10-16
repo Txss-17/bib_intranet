@@ -176,12 +176,10 @@ const { data, error } = await db
 .select('*')
 .order('created_at', { ascending: false });
 
-```
   if (error) throw error;
   return (data ?? []) as Decision[];
 },
 refetchInterval: 60_000,
-```
 
 });
 
@@ -193,11 +191,9 @@ const { data, error } = await db
 .select('*')
 .order('created_at', { ascending: false });
 
-```
   if (error) throw error;
   return (data ?? []) as DecisionHistory[];
 },
-```
 
 });
 
@@ -207,7 +203,6 @@ const history = historyQuery.data ?? [];
 const filteredDecisions = useMemo(() => {
 const term = search.trim().toLocaleLowerCase('fr');
 
-```
 return decisions.filter((decision) => {
   if (statusFilter !== 'all' && decision.status !== statusFilter) return false;
   if (priorityFilter !== 'all' && decision.priority !== priorityFilter) return false;
@@ -221,7 +216,6 @@ return decisions.filter((decision) => {
     categoryLabels[decision.category] ?? decision.category,
   ].some((value) => value.toLocaleLowerCase('fr').includes(term));
 });
-```
 
 }, [decisions, search, statusFilter, priorityFilter]);
 
@@ -248,7 +242,6 @@ const createMutation = useMutation({
 mutationFn: async (payload: DecisionDraft) => {
 if (!user?.id) throw new Error('Vous devez être connecté pour soumettre une décision.');
 
-```
   const submittedByName = [profile?.first_name, profile?.last_name]
     .filter(Boolean)
     .join(' ')
@@ -278,7 +271,6 @@ onSuccess: async () => {
   setDraft(emptyDraft);
 },
 onError: (error) => toast.error(`Création impossible : ${errorMessage(error)}`),
-```
 
 });
 
@@ -298,7 +290,6 @@ if (!canDecide) {
 throw new Error('Vous ne disposez pas des droits d’arbitrage.');
 }
 
-```
   if (status === 'refused' && !notes.trim()) {
     throw new Error('Motivez le refus dans les notes de décision.');
   }
@@ -331,7 +322,6 @@ onSuccess: async () => {
   setDeferUntil('');
 },
 onError: (error) => toast.error(`Arbitrage impossible : ${errorMessage(error)}`),
-```
 
 });
 
@@ -345,14 +335,12 @@ setReviewOpen(true);
 const submitDecision = (status: DecisionStatus) => {
 if (!selectedDecision) return;
 
-```
 decisionMutation.mutate({
   decision: selectedDecision,
   status,
   notes: decisionNotes,
   deferDate: deferUntil,
 });
-```
 
 };
 
@@ -362,9 +350,7 @@ toast.error('Le titre et la description sont obligatoires.');
 return;
 }
 
-```
 createMutation.mutate(draft);
-```
 
 };
 
@@ -376,7 +362,6 @@ return ( <div className="space-y-6 p-4 md:p-6"> <div className="flex flex-col ga
 Arbitrage des décisions </h1> <p className="mt-1 text-muted-foreground">
 Soumission, examen et traçabilité des décisions de la Direction. </p> </div>
 
-```
     <Button onClick={() => setCreateOpen(true)}>
       <Plus className="mr-2 h-4 w-4" />
       Soumettre une décision
@@ -824,7 +809,6 @@ Soumission, examen et traçabilité des décisions de la Direction. </p> </div>
     </DialogContent>
   </Dialog>
 </div>
-```
 
 );
 };
