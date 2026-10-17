@@ -190,7 +190,14 @@ function NewEmployeeDialog() {
     start_date: '',
     notes: '',
     manager_id: '',
+    work_mode: 'onsite',
+    subsidiary: '',
   });
+
+  const [attachedDocs, setAttachedDocs] = useState<
+    { name: string; document_type: string; document_url: string | null }[]
+  >([]);
+  const [docDraft, setDocDraft] = useState({ name: '', document_type: 'charter', document_url: '' });
 
   const [poles, setPoles] = useState<string[]>(['ops']);
 
@@ -226,7 +233,11 @@ function NewEmployeeDialog() {
       start_date: '',
       notes: '',
       manager_id: '',
+      work_mode: 'onsite',
+      subsidiary: '',
     });
+    setAttachedDocs([]);
+    setDocDraft({ name: '', document_type: 'charter', document_url: '' });
 
     setPrimaryPole('');
     setPoles([]);
@@ -272,7 +283,10 @@ function NewEmployeeDialog() {
         form.manager_id || null,
       notes:
         form.notes.trim() || null,
-    });
+      work_mode: form.work_mode || null,
+      subsidiary: form.subsidiary.trim() || null,
+      attached_documents: attachedDocs,
+    } as any);
 
     setOpen(false);
     resetForm();
@@ -863,6 +877,76 @@ function NewEmployeeDialog() {
               et non de l'ancien système
               viewer/operator/manager.
             </p>
+          </section>
+
+          <Separator />
+
+          {/* PARAMÈTRES DU COMPTE */}
+          <section className="space-y-4">
+            <h4 className="text-sm font-medium text-foreground">Paramètres du compte</h4>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Mode de travail</Label>
+                <Select
+                  value={form.work_mode}
+                  onValueChange={(value) => setForm((p) => ({ ...p, work_mode: value }))}
+                >
+                  <SelectTrigger aria-label="Mode de travail"><SelectValue placeholder="Choisir" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="onsite">Sur site</SelectItem>
+                    <SelectItem value="hybrid">Hybride</SelectItem>
+                    <SelectItem value="remote">Télétravail</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Filiale</Label>
+                <Input
+                  aria-label="Filiale"
+                  value={form.subsidiary}
+                  onChange={(e) => setForm((p) => ({ ...p, subsidiary: e.target.value }))}
+                  placeholder="Ex. Brand-in-a-box France"
+                />
+              </div>
+            </div>
+          </section>
+
+          <Separator />
+
+          {/* CHARTES & POLITIQUES */}
+          <section className="space-y-3">
+            <h4 className="text-sm font-medium text-foreground">Chartes et politiques à rattacher</h4>
+            <p className="text-xs text-muted-foreground">
+              Ces documents apparaîtront dans Paramètres → Ressources du collaborateur dès la création du compte.
+            </p>
+            {attachedDocs.map((doc, i) => (
+              <div key={i} className="flex items-center justify-between rounded-md border border-border p-2 text-sm">
+                <span>{doc.name} · {doc.document_type === 'charter' ? 'Charte' : 'Politique interne'}</span>
+                <Button variant="ghost" size="sm" onClick={() => setAttachedDocs((d) => d.filter((_, j) => j !== i))}>
+                  Retirer
+                </Button>
+              </div>
+            ))}
+            <div className="grid gap-2 md:grid-cols-[1fr_160px_1fr_auto]">
+              <Input aria-label="Nom du document" placeholder="Nom (ex. Charte informatique)" value={docDraft.name}
+                onChange={(e) => setDocDraft((d) => ({ ...d, name: e.target.value }))} />
+              <Select value={docDraft.document_type} onValueChange={(v) => setDocDraft((d) => ({ ...d, document_type: v }))}>
+                <SelectTrigger aria-label="Type de document"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="charter">Charte</SelectItem>
+                  <SelectItem value="policy">Politique interne</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input aria-label="Lien du document" placeholder="Lien (facultatif)" value={docDraft.document_url}
+                onChange={(e) => setDocDraft((d) => ({ ...d, document_url: e.target.value }))} />
+              <Button type="button" variant="outline" disabled={!docDraft.name.trim()}
+                onClick={() => {
+                  setAttachedDocs((d) => [...d, { name: docDraft.name.trim(), document_type: docDraft.document_type, document_url: docDraft.document_url.trim() || null }]);
+                  setDocDraft({ name: '', document_type: 'charter', document_url: '' });
+                }}>
+                Rattacher
+              </Button>
+            </div>
           </section>
 
           <Separator />
