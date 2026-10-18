@@ -2614,6 +2614,7 @@ export type Database = {
           id: string
           last_name: string
           manager_id: string | null
+          mutation_of: string | null
           notes: string | null
           personal_email: string | null
           poles: string[]
@@ -2646,6 +2647,7 @@ export type Database = {
           id?: string
           last_name: string
           manager_id?: string | null
+          mutation_of?: string | null
           notes?: string | null
           personal_email?: string | null
           poles?: string[]
@@ -2678,6 +2680,7 @@ export type Database = {
           id?: string
           last_name?: string
           manager_id?: string | null
+          mutation_of?: string | null
           notes?: string | null
           personal_email?: string | null
           poles?: string[]
@@ -2695,7 +2698,15 @@ export type Database = {
           work_email?: string | null
           work_mode?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "hr_employee_requests_mutation_of_fkey"
+            columns: ["mutation_of"]
+            isOneToOne: false
+            referencedRelation: "hr_employee_requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hr_leave_requests: {
         Row: {
