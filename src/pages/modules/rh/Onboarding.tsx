@@ -241,9 +241,44 @@ function NewEmployeeDialog() {
     });
     setAttachedDocs([]);
     setDocDraft({ name: '', document_type: 'charter', document_url: '' });
+    setMutationOf(null);
 
     setPrimaryPole('');
     setPoles([]);
+  };
+
+  // Pré-remplit le formulaire pour muter un collaborateur existant
+  // vers un autre rôle ou pôle. Le compte existant est mis à jour
+  // lors de la validation, sans nouvelle invitation.
+  const startMutation = (request: any) => {
+    resetForm();
+    setMutationOf(request.id);
+    setForm({
+      first_name: request.first_name ?? '',
+      last_name: request.last_name ?? '',
+      personal_email: request.personal_email ?? '',
+      work_email: request.work_email ?? '',
+      collaborator_type: request.collaborator_type ?? 'internal',
+      position: request.position ?? '',
+      seniority: request.seniority ?? 'junior',
+      requested_role: request.requested_role ?? '',
+      contract_type: request.contract_type ?? 'CDI',
+      start_date: request.start_date ?? '',
+      notes: request.notes ?? '',
+      manager_id: request.manager_id ?? '',
+      work_mode: request.work_mode ?? 'onsite',
+      subsidiary: request.subsidiary ?? '',
+    });
+    setAttachedDocs(
+      (request.attached_documents ?? []).map((d: any) => ({
+        name: d.name ?? '',
+        document_type: d.document_type ?? 'charter',
+        document_url: d.document_url ?? null,
+      })),
+    );
+    setPrimaryPole(request.primary_pole ?? '');
+    setPoles(request.poles ?? []);
+    setOpen(true);
   };
 
   const togglePole = (poleId: string) => {
