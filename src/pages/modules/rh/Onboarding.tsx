@@ -199,6 +199,9 @@ function NewEmployeeDialog() {
   >([]);
   const [docDraft, setDocDraft] = useState({ name: '', document_type: 'charter', document_url: '' });
 
+  // Dossier d'origine lorsqu'il s'agit d'une mutation (changement de rôle/pôle).
+  const [mutationOf, setMutationOf] = useState<string | null>(null);
+
   const [poles, setPoles] = useState<string[]>(['ops']);
 
   const requiredPole = primaryPole;
