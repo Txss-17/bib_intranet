@@ -3,3 +3,5 @@
 - [ ] All account settings (identity, post, poles, manager, subsidiary, work mode, contract type) come from HR onboarding; Settings shows them read-only.
 - [x] HR-attached documents (contracts, charters, policies) shown in account Settings > Ressources from real data.
 - [x] Permissions page saves now control access. [ ] Remove fake data in RH (Publications), Security, Product poles; browser check per role; remove fake data in RH (Publications), Security, Product poles.
+- [ ] Allow an existing account to go through onboarding again when changing role or pole (mutation), updating settings and documents.
+- [ ] Sign in as RH, submit a complete collaborator file (subsidiary, work mode, charters), verify account settings and documents appear.
