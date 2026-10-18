@@ -226,9 +226,21 @@ const RolesPermissions = () => {
           .select('id, action_key, label, description')
           .order('label'),
 
-        supabase
-          .from('access_permissions')
-          .select('id, role_id, interface_id, action_id, allowed'),
+        // La table dépasse la limite de 1000 lignes par requête : on pagine.
+        (async () => {
+          const all: AccessPermission[] = [];
+          const PAGE_SIZE = 1000;
+          for (let from = 0; ; from += PAGE_SIZE) {
+            const { data, error } = await supabase
+              .from('access_permissions')
+              .select('id, role_id, interface_id, action_id, allowed')
+              .range(from, from + PAGE_SIZE - 1);
+            if (error) return { data: null, error };
+            all.push(...((data ?? []) as AccessPermission[]));
+            if (!data || data.length < PAGE_SIZE) break;
+          }
+          return { data: all, error: null };
+        })(),
 
         supabase
           .from('access_role_scopes')
