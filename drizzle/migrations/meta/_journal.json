@@ -183,6 +183,13 @@
       "when": 1792819113630,
       "tag": "0025_scope_access_catalog_reads_to_staff",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1792819327181,
+      "tag": "0026_restrict_roles_permissions_media_reads",
+      "breakpoints": true
     }
   ]
 }
