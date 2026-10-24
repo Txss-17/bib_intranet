@@ -176,6 +176,13 @@
       "when": 1792044405593,
       "tag": "0024_block_intranet_self_signup",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1792819113630,
+      "tag": "0025_scope_access_catalog_reads_to_staff",
+      "breakpoints": true
     }
   ]
 }

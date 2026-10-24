@@ -6675,6 +6675,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_intranet_staff: { Args: { _uid: string }; Returns: boolean }
       is_leadership: { Args: { _user_id: string }; Returns: boolean }
       is_rbac_catalog_admin: { Args: { p_user_id: string }; Returns: boolean }
       move_to_dlq: {
