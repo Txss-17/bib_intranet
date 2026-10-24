@@ -17,7 +17,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { positionInfos, EmployeePosition } from '@/types/positions';
 
 const WORK_MODES = [
-  { value: 'onsite', label: 'Sur site' },
+  { value: 'office', label: 'Sur site' },
   { value: 'hybrid', label: 'Hybride' },
   { value: 'remote', label: 'Télétravail' },
 ];
@@ -31,7 +31,7 @@ const SUBSIDIARIES = [
 
 export function ProfessionalTab() {
   const { profile, refreshProfile } = useAuth() as any;
-  const [workMode, setWorkMode] = useState<string>(profile?.work_mode || 'onsite');
+  const [workMode, setWorkMode] = useState<string>(profile?.work_mode || 'office');
   const [subsidiary, setSubsidiary] = useState<string>(profile?.subsidiary || '');
   const [managerEmail, setManagerEmail] = useState<string>('');
   const [managerName, setManagerName] = useState<string>('');

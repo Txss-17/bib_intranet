@@ -190,7 +190,7 @@ function NewEmployeeDialog() {
     start_date: '',
     notes: '',
     manager_id: '',
-    work_mode: 'onsite',
+    work_mode: 'office',
     subsidiary: '',
   });
 
@@ -236,7 +236,7 @@ function NewEmployeeDialog() {
       start_date: '',
       notes: '',
       manager_id: '',
-      work_mode: 'onsite',
+      work_mode: 'office',
       subsidiary: '',
     });
     setAttachedDocs([]);
@@ -266,7 +266,7 @@ function NewEmployeeDialog() {
       start_date: request.start_date ?? '',
       notes: request.notes ?? '',
       manager_id: request.manager_id ?? '',
-      work_mode: request.work_mode ?? 'onsite',
+      work_mode: request.work_mode ?? 'office',
       subsidiary: request.subsidiary ?? '',
     });
     setAttachedDocs(
@@ -931,7 +931,7 @@ function NewEmployeeDialog() {
                 >
                   <SelectTrigger aria-label="Mode de travail"><SelectValue placeholder="Choisir" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="onsite">Sur site</SelectItem>
+                    <SelectItem value="office">Sur site</SelectItem>
                     <SelectItem value="hybrid">Hybride</SelectItem>
                     <SelectItem value="remote">Télétravail</SelectItem>
                   </SelectContent>

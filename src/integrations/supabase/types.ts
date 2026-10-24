@@ -1804,6 +1804,104 @@ export type Database = {
         }
         Relationships: []
       }
+      direction_decision_history: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          decision_id: string
+          event_type: string
+          id: string
+          new_status: string | null
+          notes: string | null
+          old_status: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          decision_id: string
+          event_type: string
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          old_status?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          decision_id?: string
+          event_type?: string
+          id?: string
+          new_status?: string | null
+          notes?: string | null
+          old_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direction_decision_history_decision_id_fkey"
+            columns: ["decision_id"]
+            isOneToOne: false
+            referencedRelation: "direction_decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      direction_decisions: {
+        Row: {
+          category: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          decision_notes: string | null
+          defer_until: string | null
+          description: string
+          id: string
+          impact: string | null
+          priority: string
+          recommendation: string | null
+          status: string
+          submitted_by: string
+          submitted_by_name: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          defer_until?: string | null
+          description: string
+          id?: string
+          impact?: string | null
+          priority?: string
+          recommendation?: string | null
+          status?: string
+          submitted_by?: string
+          submitted_by_name?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          decision_notes?: string | null
+          defer_until?: string | null
+          description?: string
+          id?: string
+          impact?: string | null
+          priority?: string
+          recommendation?: string | null
+          status?: string
+          submitted_by?: string
+          submitted_by_name?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       direction_roadmap_history: {
         Row: {
           action: string
