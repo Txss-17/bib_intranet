@@ -1,18 +1,16 @@
-import { useEffect, useState } from 'react';
-import {
-  Outlet,
-  useLocation,
-} from 'react-router-dom';
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
+import { Outlet, useLocation } from "react-router-dom";
 
-import { cn } from '@/lib/utils';
-import { AppSidebar } from './AppSidebar';
-import { TopBar } from './TopBar';
-import { ModuleNavigation } from './ModuleNavigation';
+import { cn } from "@/lib/utils";
+import { AppSidebar } from "./AppSidebar";
+import { TopBar } from "./TopBar";
+import { ModuleNavigation } from "./ModuleNavigation";
 
-import { ViewAsBanner } from '@/components/admin/ViewAsBanner';
-import { SandboxBanner } from '@/components/sandbox/SandboxBanner';
+import { ViewAsBanner } from "@/components/admin/ViewAsBanner";
+import { SandboxBanner } from "@/components/sandbox/SandboxBanner";
 
-import { PoleId } from '@/types';
+import { PoleId } from "@/types";
 
 // ---------------------------------------------------------------------------
 // MODULES TRANSVERSAUX AVEC NAVIGATION HORIZONTALE
@@ -22,49 +20,34 @@ import { PoleId } from '@/types';
 // ModuleNavigation.tsx.
 // ---------------------------------------------------------------------------
 
-type TransversalModule =
-  | 'ethics'
-  | 'gateway'
-  | 'independent-audit';
+type TransversalModule = "ethics" | "gateway" | "independent-audit";
 
 const TRANSVERSAL_MODULES: TransversalModule[] = [
-  'ethics',
-  'gateway',
-  'independent-audit',
+  "ethics",
+  "gateway",
+  "independent-audit",
 ];
 
 // ---------------------------------------------------------------------------
 // HELPERS
 // ---------------------------------------------------------------------------
 
-const getPoleIdFromPath = (
-  pathname: string,
-): PoleId | undefined => {
-  const match =
-    pathname.match(
-      /^\/pole\/([^/]+)/,
-    );
+const getPoleIdFromPath = (pathname: string): PoleId | undefined => {
+  const match = pathname.match(/^\/pole\/([^/]+)/);
 
-  return match?.[1] as
-    | PoleId
-    | undefined;
+  return match?.[1] as PoleId | undefined;
 };
 
 const getTransversalModuleFromPath = (
   pathname: string,
 ): TransversalModule | undefined => {
-  const match =
-    pathname.match(
-      /^\/modules\/([^/]+)/,
-    );
+  const match = pathname.match(/^\/modules\/([^/]+)/);
 
   const moduleId = match?.[1];
 
   if (
     !moduleId ||
-    !TRANSVERSAL_MODULES.includes(
-      moduleId as TransversalModule,
-    )
+    !TRANSVERSAL_MODULES.includes(moduleId as TransversalModule)
   ) {
     return undefined;
   }
@@ -77,56 +60,30 @@ const getTransversalModuleFromPath = (
 // ---------------------------------------------------------------------------
 
 export function MainLayout() {
-  const [
-    sidebarCollapsed,
-    setSidebarCollapsed,
-  ] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const [
-    darkMode,
-    setDarkMode,
-  ] = useState(true);
+  const { resolvedTheme, setTheme } = useTheme();
+  const darkMode = resolvedTheme === "dark";
 
-  const location =
-    useLocation();
+  const location = useLocation();
 
   // -------------------------------------------------------------------------
   // DARK MODE
   // -------------------------------------------------------------------------
 
-  useEffect(() => {
-    document.documentElement.classList.toggle(
-      'dark',
-      darkMode,
-    );
-  }, [darkMode]);
-
   // -------------------------------------------------------------------------
   // ROUTE CONTEXT
   // -------------------------------------------------------------------------
 
-  const pathname =
-    location.pathname;
+  const pathname = location.pathname;
 
-  const isPolePage =
-    pathname.startsWith('/pole/');
+  const isPolePage = pathname.startsWith("/pole/");
 
-  const extractedPoleId =
-    isPolePage
-      ? getPoleIdFromPath(
-          pathname,
-        )
-      : undefined;
+  const extractedPoleId = isPolePage ? getPoleIdFromPath(pathname) : undefined;
 
-  const transversalModule =
-    getTransversalModuleFromPath(
-      pathname,
-    );
+  const transversalModule = getTransversalModuleFromPath(pathname);
 
-  const isTransversalModule =
-    Boolean(
-      transversalModule,
-    );
+  const isTransversalModule = Boolean(transversalModule);
 
   // -------------------------------------------------------------------------
   // NAVIGATION HORIZONTALE
@@ -143,11 +100,7 @@ export function MainLayout() {
   //   /admin/*
   // -------------------------------------------------------------------------
 
-  const showModuleNav =
-    Boolean(
-      extractedPoleId ||
-      transversalModule,
-    );
+  const showModuleNav = Boolean(extractedPoleId || transversalModule);
 
   // -------------------------------------------------------------------------
   // RENDER
@@ -159,38 +112,18 @@ export function MainLayout() {
       {/* SIDEBAR                                                          */}
       {/* ----------------------------------------------------------------- */}
 
-      <AppSidebar
-        collapsed={
-          sidebarCollapsed
-        }
-      />
+      <AppSidebar collapsed={sidebarCollapsed} />
 
       {/* ----------------------------------------------------------------- */}
       {/* TOP BAR                                                          */}
       {/* ----------------------------------------------------------------- */}
 
       <TopBar
-        onToggleSidebar={() =>
-          setSidebarCollapsed(
-            (previous) =>
-              !previous,
-          )
-        }
-        sidebarCollapsed={
-          sidebarCollapsed
-        }
+        onToggleSidebar={() => setSidebarCollapsed((previous) => !previous)}
+        sidebarCollapsed={sidebarCollapsed}
         darkMode={darkMode}
-        onToggleDarkMode={() =>
-          setDarkMode(
-            (previous) =>
-              !previous,
-          )
-        }
-        activePoleId={
-          isPolePage
-            ? extractedPoleId
-            : undefined
-        }
+        onToggleDarkMode={() => setTheme(darkMode ? "light" : "dark")}
+        activePoleId={isPolePage ? extractedPoleId : undefined}
       />
 
       {/* ----------------------------------------------------------------- */}
@@ -199,19 +132,11 @@ export function MainLayout() {
 
       {showModuleNav && (
         <ModuleNavigation
-          poleId={
-            isPolePage
-              ? extractedPoleId
-              : undefined
-          }
+          poleId={isPolePage ? extractedPoleId : undefined}
           transversalModule={
-            isTransversalModule
-              ? transversalModule
-              : undefined
+            isTransversalModule ? transversalModule : undefined
           }
-          sidebarCollapsed={
-            sidebarCollapsed
-          }
+          sidebarCollapsed={sidebarCollapsed}
         />
       )}
 
@@ -221,13 +146,9 @@ export function MainLayout() {
 
       <main
         className={cn(
-          'min-h-screen transition-all duration-300',
-          sidebarCollapsed
-            ? 'pl-16'
-            : 'pl-64',
-          showModuleNav
-            ? 'pt-28'
-            : 'pt-16',
+          "min-h-screen transition-all duration-300",
+          sidebarCollapsed ? "pl-16" : "pl-64",
+          showModuleNav ? "pt-28" : "pt-16",
         )}
       >
         <SandboxBanner />

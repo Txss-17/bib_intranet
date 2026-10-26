@@ -19,6 +19,7 @@ interface PlatformStatus {
 }
 
 interface PlatformSyncResponse {
+  configured?: boolean;
   success?: boolean;
   status?: "success" | "partial" | "error" | string;
   items?: number;
@@ -29,20 +30,20 @@ interface PlatformSyncResponse {
 const invokePlatformBridge = async (
   body: Record<string, unknown>,
 ): Promise<PlatformSyncResponse> => {
-  const { data, error } = await supabase.functions.invoke(
-    "platform-bridge",
-    {
-      body,
-    },
-  );
+  const { data, error } = await supabase.functions.invoke("platform-bridge", {
+    body,
+  });
 
   if (error) {
     let message = error.message;
 
     try {
-      const context = await (error as any).context?.json?.();
+      const context: unknown =
+        "context" in error && error.context instanceof Response
+          ? await error.context.json()
+          : null;
 
-      if (context?.error) {
+      if (context && typeof context === "object" && "error" in context) {
         message =
           typeof context.error === "string"
             ? context.error
@@ -57,9 +58,7 @@ const invokePlatformBridge = async (
 
   if (data?.error) {
     throw new Error(
-      typeof data.error === "string"
-        ? data.error
-        : JSON.stringify(data.error),
+      typeof data.error === "string" ? data.error : JSON.stringify(data.error),
     );
   }
 
@@ -78,7 +77,7 @@ export const usePlatformStatus = () =>
       });
 
       return {
-        configured: Boolean((data as any)?.configured),
+        configured: Boolean(data.configured),
       };
     },
     retry: false,
@@ -101,20 +100,10 @@ export const usePlatformSyncRuns = () =>
   useQuery<PlatformSyncRun[]>({
     queryKey: ["platform-sync-runs"],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("platform_sync_runs")
         .select(
-          [
-            "id",
-            "direction",
-            "action",
-            "triggered_by",
-            "status",
-            "items_count",
-            "errors",
-            "started_at",
-            "finished_at",
-          ].join(", "),
+          "id,direction,action,triggered_by,status,items_count,errors,started_at,finished_at",
         )
         .order("started_at", {
           ascending: false,
@@ -153,6 +142,9 @@ const invalidatePlatformData = async (
       queryKey: ["validated-products"],
     }),
     queryClient.invalidateQueries({
+      queryKey: ["customization-review-requests"],
+    }),
+    queryClient.invalidateQueries({
       queryKey: ["marketplace-favorites"],
     }),
   ]);
@@ -184,9 +176,7 @@ export const usePlatformActions = () => {
     onSuccess: async (result) => {
       const status = result.status ?? "success";
       const items = result.items ?? 0;
-      const errors = Array.isArray(result.errors)
-        ? result.errors
-        : [];
+      const errors = Array.isArray(result.errors) ? result.errors : [];
 
       if (status === "success") {
         toast.success("Synchronisation terminée", {
@@ -238,8 +228,7 @@ export const usePlatformActions = () => {
         });
       } else {
         toast.error("Transmission en erreur", {
-          description:
-            "Le produit n'a pas pu être transmis correctement.",
+          description: "Le produit n'a pas pu être transmis correctement.",
         });
       }
 
@@ -291,9 +280,31 @@ export const usePlatformActions = () => {
     onSettled,
   });
 
-  return {
-    pull,
-    pushProduct,
-    pushShopStatus,
-  };
+  const reviewCustomization = useMutation({
+    mutationFn: async (input: {
+      requestId: string;
+      version: number;
+      status: string;
+      comment: string | null;
+    }) =>
+      invokePlatformBridge({
+        action: "review_customization",
+        request_id: input.requestId,
+        version: input.version,
+        status: input.status,
+        comment: input.comment,
+      }),
+    onSuccess: async (result) => {
+      if (result.status !== "success")
+        throw new Error("La décision n’a pas été confirmée par Platform.");
+      toast.success("Décision transmise à Platform");
+      await queryClient.invalidateQueries({
+        queryKey: ["customization-review-requests"],
+      });
+    },
+    onError,
+    onSettled,
+  });
+
+  return { pull, pushProduct, pushShopStatus, reviewCustomization };
 };
