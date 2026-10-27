@@ -238,6 +238,8 @@ BEGIN
   IF public.can_hr_publication_action('read') THEN RAISE EXCEPTION 'ordinary recipient became an HR manager'; END IF;
   IF (SELECT count(*) FROM public.publications WHERE title IN ('Visible own user','Visible own subsidiary','Visible own role'))<>3 THEN
     RAISE EXCEPTION 'legitimate audience blocked by legacy SELECT policy';
+  IF NOT EXISTS(SELECT 1 FROM public.publications WHERE title='Visible own user') THEN
+    RAISE EXCEPTION 'legitimate user audience blocked by legacy SELECT policy';
   END IF;
   IF EXISTS(SELECT 1 FROM public.publications WHERE title LIKE 'Hidden%') THEN
     RAISE EXCEPTION 'legacy scoped policy leaked unreleased HR content';
