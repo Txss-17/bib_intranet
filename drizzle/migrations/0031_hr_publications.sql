@@ -85,6 +85,12 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_t
       ))
     );
 $$;
+-- A restrictive policy cannot grant a legitimate recipient access by itself.
+-- Add the matching permissive read path for user, role and subsidiary audiences.
+DROP POLICY IF EXISTS "HR released audience read" ON public.publications;
+CREATE POLICY "HR released audience read" ON public.publications FOR SELECT TO authenticated
+USING(type='hr' AND public.can_read_released_hr_publication(
+  status,publish_at,available_at,archive_at,visibility_scope,visibility_targets));
 DROP POLICY IF EXISTS "HR publication release boundary" ON public.publications;
 CREATE POLICY "HR publication release boundary" ON public.publications AS RESTRICTIVE FOR SELECT TO authenticated
 USING(type<>'hr' OR public.can_hr_publication_action('read') OR
