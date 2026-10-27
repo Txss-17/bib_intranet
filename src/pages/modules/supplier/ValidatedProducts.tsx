@@ -15,6 +15,7 @@ import {
 } from "@/lib/productCustomization";
 import { CatalogCustomizationDialog } from "@/components/product/CatalogCustomizationDialog";
 import { CustomizationReviewQueue } from "@/components/product/CustomizationReviewQueue";
+import { RestockReviewQueue } from "@/components/product/RestockReviewQueue";
 
 const qualified = (product: QualifiedCatalogProduct) => {
   try {
@@ -234,6 +235,7 @@ export default function ValidatedProducts() {
         </div>
       )}
       <CustomizationReviewQueue canReview={canReview} />
+      <RestockReviewQueue canReview={canReview} />
       <CatalogCustomizationDialog
         product={selected}
         onClose={() => setSelected(null)}

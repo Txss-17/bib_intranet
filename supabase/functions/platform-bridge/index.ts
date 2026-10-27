@@ -6,6 +6,11 @@ import {
   supplierProductPayload,
 } from "../_shared/platform-payloads.ts";
 
+import { parseRestockRequest, restockMirrorPayload, assertRestockReview } from "../_shared/restock-contract.ts";
+
+class BridgeError extends Error {
+  constructor(message: string, public status = 502) { super(message); }
+}
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -22,6 +27,13 @@ const json = (body: unknown, status = 200) =>
 const Body = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("status"),
+  }),
+  z.object({
+    action: z.literal("review_restock"),
+    request_id: z.string().uuid(),
+    version: z.number().int().min(1),
+    status: z.enum(["approved", "rejected"]),
+    comment: z.string().max(2000).nullable().optional(),
   }),
   z.object({
     action: z.literal("review_customization"),
@@ -250,7 +262,7 @@ Deno.serve(async (req) => {
     const text = await response.text();
 
     if (!response.ok) {
-      throw new Error(`${fn} ${response.status}: ${text.slice(0, 500)}`);
+      throw new BridgeError(`${fn} ${response.status}: ${text.slice(0, 500)}`, response.status === 409 ? 409 : 502);
     }
 
     return JSON.parse(text);
@@ -290,6 +302,7 @@ Deno.serve(async (req) => {
   const errors: string[] = [];
 
   let count = 0;
+  let reviewedRestock: Record<string, unknown> | undefined;
 
   const now = new Date().toISOString();
 
@@ -519,6 +532,24 @@ Deno.serve(async (req) => {
           );
         if (linkError) errors.push("Liaison produit : " + linkError.message);
         else count++;
+      }
+
+      // Restock is an independent merchant workflow, never a supplier purchase or stock credit.
+      // Reject incomplete exports instead of recording a successful synchronization watermark.
+      if (!Array.isArray(data.restock_requests))
+        throw new Error("Export Platform incomplet : demandes de réapprovisionnement absentes");
+      for (const raw of data.restock_requests) {
+        const request = parseRestockRequest(raw);
+        const { data: product, error: mappingError } = await admin.from("products")
+          .select("id").eq("id", request.intranet_product_id)
+          .eq("platform_id", request.supplier_product_id).maybeSingle();
+        if (mappingError || !product)
+          throw new Error("Correspondance catalogue introuvable pour la demande " + request.id);
+        const { error: mirrorError } = await admin.rpc("upsert_platform_stock_restock_request", {
+          p_row: restockMirrorPayload(request),
+        });
+        if (mirrorError) throw new Error("Demande de réapprovisionnement : " + mirrorError.message);
+        count++;
       }
 
       // Versioned customization requests; unfinished merchant configurations stay private.
@@ -926,6 +957,46 @@ Deno.serve(async (req) => {
       count = 1;
     }
 
+    if (body.action === "review_restock") {
+      const comment = body.comment?.trim() || null;
+      if (body.status === "rejected" && !comment)
+        throw new BridgeError("Un motif est obligatoire pour refuser une demande.", 400);
+      const { data: request, error: requestError } = await admin.from("platform_stock_restock_requests")
+        .select("*").eq("id", body.request_id).maybeSingle();
+      if (requestError || !request)
+        throw new BridgeError("Demande de réapprovisionnement introuvable.", 404);
+      // Check product scope using the caller JWT, not a privileged impersonation.
+      const caller = createClient(url, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: "Bearer " + token } },
+      });
+      const { data: permitted, error: permissionError } = await caller.rpc("can_manage_product_customization", {
+        p_product_id: request.product_id, p_user_id: uid,
+      });
+      if (permissionError || permitted !== true)
+        throw new BridgeError("Revue non autorisée pour ce portefeuille produit.", 403);
+      const replay = request.version === body.version + 1
+        && request.status === body.status && request.review_comment === comment;
+      if ((!replay && request.version !== body.version) || (!replay && request.status !== "requested"))
+        throw new BridgeError("La demande a changé : actualisez la liste.", 409);
+      const source = parseRestockRequest({
+        ...request, id: request.platform_request_id, product_id: request.platform_product_id,
+        supplier_product_id: request.platform_supplier_product_id, intranet_product_id: request.product_id,
+        boutique_id: request.platform_boutique_id,
+      });
+      const response = await callPlatform("intranet-import", {
+        type: "restock_review",
+        data: { request_id: request.platform_request_id, version: body.version, status: body.status, comment },
+      });
+      const authoritative = assertRestockReview(source, response.request, body.version, body.status, comment);
+      const { error: mirrorError } = await admin.rpc("upsert_platform_stock_restock_request", {
+        p_row: restockMirrorPayload(authoritative),
+      });
+      if (mirrorError)
+        throw new BridgeError("Décision transmise, actualisation locale à reprendre : " + mirrorError.message);
+      reviewedRestock = { id: authoritative.id, version: authoritative.version, status: authoritative.status };
+      count = 1;
+    }
+
     if (body.action === "review_customization") {
       const { data: request, error: requestError } = await admin
         .from("platform_customization_requests")
@@ -1194,6 +1265,7 @@ Deno.serve(async (req) => {
       items: count,
 
       errors,
+      ...(reviewedRestock ? { request: reviewedRestock } : {}),
     });
   } catch (error) {
     // ======================================================
@@ -1251,7 +1323,7 @@ Deno.serve(async (req) => {
 
         errors: finalErrors,
       },
-      502,
+      error instanceof BridgeError ? error.status : 502,
     );
   }
 });
