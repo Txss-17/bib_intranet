@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
 
 export type KpiFrequency = 'realtime' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'quarterly';
 export type KpiStatus = 'draft' | 'active' | 'deprecated' | 'archived';
@@ -139,9 +140,12 @@ export interface PublicationRow {
   updated_at: string;
 }
 
-export const usePublications = (filters?: { type?: string }) =>
-  useQuery({
-    queryKey: ['publications', filters],
+export const usePublications = (filters?: { type?: string }) => {
+  const { user }=useAuth();
+  return useQuery({
+    queryKey: ['publications', user?.id, filters],
+    enabled: !!user,
+    refetchInterval: 30_000,
     queryFn: async () => {
       let q = supabase.from('publications' as any).select('*').order('publish_at', { ascending: false, nullsFirst: false });
       if (filters?.type && filters.type !== 'all') q = q.eq('type', filters.type);
@@ -150,6 +154,7 @@ export const usePublications = (filters?: { type?: string }) =>
       return (data ?? []) as unknown as PublicationRow[];
     },
   });
+};
 
 export const useCreatePublication = () => {
   const qc = useQueryClient();

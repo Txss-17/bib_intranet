@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { usePublications } from '@/hooks/useDataQueries';
+import { isPublicationReleased } from '@/lib/hrPublications';
 import { poles } from '@/data/poles';
 import type { FeedItem, PoleId } from '@/types';
 
@@ -123,8 +124,9 @@ export default function InternalFeed() {
 
   const [searchParams, setSearchParams] = useSearchParams();
   const initialTab = searchParams.get('tab') || 'all';
-  const { data: pubs = [] } = usePublications();
-  const publishedPubs = pubs.filter((p) => p.status === 'published' || p.status === 'scheduled');
+  const publications = usePublications();
+  const pubs = publications.data ?? [];
+  const publishedPubs = pubs.filter((publication) => isPublicationReleased(publication));
   const filteredPubs = publishedPubs.filter((p) =>
     !searchQuery || p.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -184,7 +186,15 @@ export default function InternalFeed() {
           ) : filtered.map((item) => <FeedCard key={item.id} item={item} />)}
         </TabsContent>
         <TabsContent value="news" className="space-y-3">
-          {filteredPubs.length === 0 ? (
+          {publications.isLoading ? (
+            <p role="status" className="enterprise-card p-6 text-sm text-muted-foreground">Chargement des nouveautés…</p>
+          ) : publications.isError ? (
+            <div role="alert" className="enterprise-card space-y-3 p-6">
+              <p className="text-sm text-destructive">Les nouveautés n’ont pas pu être chargées.</p>
+              <Button variant="outline" size="sm" disabled={publications.isFetching}
+                onClick={() => void publications.refetch()}>Réessayer</Button>
+            </div>
+          ) : filteredPubs.length === 0 ? (
             <div className="enterprise-card p-12 text-center text-muted-foreground">Aucune nouveauté publiée</div>
           ) : filteredPubs.map((p) => (
             <Card key={p.id}>
@@ -198,7 +208,11 @@ export default function InternalFeed() {
                 </div>
               </CardHeader>
               <CardContent>
-                {p.summary && <p className="text-sm text-muted-foreground">{p.summary}</p>}
+                {p.summary && <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{p.summary}</p>}
+                {p.body && <details className="mt-3 text-sm">
+                  <summary className="cursor-pointer font-medium">Lire le contenu</summary>
+                  <p className="mt-3 whitespace-pre-wrap break-words">{p.body}</p>
+                </details>}
                 <div className="flex items-center gap-3 text-xs text-muted-foreground mt-3">
                   {p.author_pole && <Badge variant="outline">{p.author_pole}</Badge>}
                   {p.publish_at && <span>{new Date(p.publish_at).toLocaleDateString('fr-FR')}</span>}

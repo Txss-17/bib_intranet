@@ -533,6 +533,12 @@ rh: {
       icon: 'Plane',
     },
     {
+      id: 'publications',
+      label: 'Publications internes',
+      path: '/pole/rh/publications',
+      icon: 'FileText',
+    },
+    {
       id: 'alerts',
       label: 'Alertes RH',
       path: '/pole/rh/alerts',
