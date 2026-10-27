@@ -278,6 +278,18 @@ Deno.serve(
       }
 
 
+      // Existing-account changes use caller-authorized SQL before ANY invitation.
+      if (request.request_kind === 'mutation') {
+        const { data: mutation, error: mutationError } = await caller.rpc('apply_hr_employee_mutation', { p_request_id: request.id });
+        if (mutationError) return json({ error: mutationError.message }, mutationError.code === '42501' ? 403 : 409);
+        if (!mutation || mutation.invitationSent !== false || mutation.userId !== request.target_user_id)
+          return json({ error: 'La mutation n’a pas été confirmée.' }, 502);
+        return json({ ...mutation, accountAlreadyExisted: true, email: request.work_email });
+      }
+      const { data: mayApply, error: applyPermissionError } = await caller.rpc('can_hr_employee_mutation_action', { p_action: 'apply' });
+      if (applyPermissionError || mayApply !== true)
+        return json({ error: 'Vos droits RH ne permettent pas de provisionner ce dossier.' }, 403);
+
       if (
         request.status ===
           'completed' ||
@@ -381,7 +393,7 @@ Deno.serve(
       } = await admin
         .from('rh_position_catalog')
         .select('position_key, label, pole_id, active')
-        .eq('position_key', request.position)
+        .eq('position_key', request.position_key ?? request.position)
         .maybeSingle();
 
       if (positionCatalogError) {
@@ -584,6 +596,12 @@ Deno.serve(
         false;
 
 
+      const { data: emailExists, error: accountCheckError } = await admin.rpc('hr_account_email_exists', { p_email: email });
+      if (accountCheckError || typeof emailExists !== 'boolean')
+        return json({ error: 'La disponibilité du compte n’a pas pu être vérifiée.' }, 502);
+      if (emailExists)
+        return json({ error: 'Ce compte existe déjà. Sélectionnez son identité dans le parcours de mutation RH.' }, 409);
+
       const {
         data: invited,
         error:
@@ -600,6 +618,7 @@ Deno.serve(
                   request.last_name,
                 app_origin:
                   'connect',
+                hr_onboarding_request_id: request.id,
               },
               redirectTo:
                 'https://workspace.brand-in-a-box.space/reset-password',
@@ -625,61 +644,8 @@ Deno.serve(
         }
 
 
-        /*
-         * 'Compte existant rattaché au dossier RH ; accès RBAC conservés'.
-         */
-        const {
-          data: users,
-          error:
-            listError,
-        } =
-          await admin.auth.admin
-            .listUsers({
-              page: 1,
-              perPage: 1000,
-            });
-
-
-        if (
-          listError
-        ) {
-          return json(
-            {
-              error:
-                `Compte existant mais impossible à retrouver : ${listError.message}`,
-            },
-            500,
-          );
-        }
-
-
-        const existing =
-          users.users.find(
-            (
-              candidate,
-            ) =>
-              candidate.email
-                ?.toLowerCase() ===
-              email,
-          );
-
-
-        if (!existing) {
-          return json(
-            {
-              error:
-                'Le compte semble exister mais son identifiant n’a pas pu être retrouvé.',
-            },
-            409,
-          );
-        }
-
-
-        userId =
-          existing.id;
-
-        accountAlreadyExisted =
-          true;
+        // A duplicate is never an authorization to attach an existing account.
+        return json({ error: 'Ce compte existe déjà. Utilisez une mutation RH avec son identifiant vérifié.' }, 409);
       } else {
         userId =
           invited.user?.id ??
@@ -689,6 +655,9 @@ Deno.serve(
           Boolean(userId);
       }
 
+
+      if (invited.user?.user_metadata?.hr_onboarding_request_id !== request.id)
+        return json({ error: 'Le compte renvoyé n’est pas rattaché à cette création RH. Aucun accès n’a été modifié.' }, 409);
 
       if (!userId) {
         return json(
@@ -777,6 +746,7 @@ Deno.serve(
             email,
             position:
               request.position,
+            position_key: request.position_key ?? request.position,
             poles:
               request.poles,
             seniority:
