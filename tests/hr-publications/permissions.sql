@@ -35,6 +35,11 @@ CREATE FUNCTION public.update_updated_at() RETURNS trigger LANGUAGE plpgsql AS $
 CREATE TRIGGER trg_publications_updated BEFORE UPDATE ON public.publications FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 \ir ../../drizzle/migrations/0031_hr_publications.sql
 \ir ../../drizzle/migrations/0032_protect_profile_authorization_fields.sql
+-- Emulate an already-applied earlier 0031 before the forward repair.
+CREATE OR REPLACE FUNCTION public.legacy_hr_publication_role(p_position text,p_poles text[])
+RETURNS text LANGUAGE sql IMMUTABLE AS $$ SELECT CASE WHEN p_position='rh_manager' THEN 'directeur_rh' ELSE NULL END $$;
+DROP POLICY IF EXISTS "HR released audience read" ON public.publications;
+\ir ../../drizzle/migrations/0033_hr_publication_access_repair.sql
 INSERT INTO public.profiles(id,poles,seniority,subsidiary,staff,admin,leadership) VALUES
 ('20000000-0000-4000-8000-000000000001',ARRAY['rh'],'lead','BIB',true,false,false),
 ('20000000-0000-4000-8000-000000000002',ARRAY['rh'],'mid','BIB',true,false,false),
