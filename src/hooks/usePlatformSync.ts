@@ -133,6 +133,7 @@ const invalidatePlatformData = async (
     queryClient.invalidateQueries({
       queryKey: ["shops"],
     }),
+    queryClient.invalidateQueries({ queryKey: ["marketplace"] }),
     queryClient.invalidateQueries({
       queryKey: ["orders"],
     }),
