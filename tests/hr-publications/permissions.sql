@@ -121,7 +121,7 @@ BEGIN
 END;
 $$;
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000009',true);
-DO $ BEGIN IF NOT public.can_hr_publication_action('read') OR public.can_hr_publication_action('create') OR public.can_hr_publication_action('publish') THEN RAISE EXCEPTION 'legacy inferred-role saved denial bypassed'; END IF; END $;
+DO $$ BEGIN IF NOT public.can_hr_publication_action('read') OR public.can_hr_publication_action('create') OR public.can_hr_publication_action('publish') THEN RAISE EXCEPTION 'legacy inferred-role saved denial bypassed'; END IF; END $$;
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000007',true);
 DO $$ BEGIN IF public.can_hr_publication_action('read') THEN RAISE EXCEPTION 'revoked role fell back to HR lead'; END IF; END $$;
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000008',true);
