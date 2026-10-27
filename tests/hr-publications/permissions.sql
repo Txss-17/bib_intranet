@@ -208,6 +208,15 @@ BEGIN
 END;
 $$;
 RESET ROLE;
+INSERT INTO public.access_roles(id,role_key) VALUES
+('30000000-0000-4000-8000-000000000007','publication_recipient');
+INSERT INTO public.access_assignments(employee_id,role_id,status,starts_at,ends_at) VALUES
+('20000000-0000-4000-8000-000000000003','30000000-0000-4000-8000-000000000007','active',now()-interval '1 day',null);
+INSERT INTO public.publications(title,body,type,status,visibility_scope,visibility_targets,publish_at) VALUES
+('Visible own subsidiary','Body','hr','published','subsidiary',ARRAY['BIB'],now()-interval '1 day'),
+('Hidden other subsidiary','Body','hr','published','subsidiary',ARRAY['Other company'],now()-interval '1 day'),
+('Visible own role','Body','hr','published','role',ARRAY['publication_recipient'],now()-interval '1 day'),
+('Hidden other role','Body','hr','published','role',ARRAY['different_role'],now()-interval '1 day');
 -- Also exercise the legacy scoped SELECT policy, not only a permissive adversarial fixture.
 DROP POLICY "legacy read all" ON public.publications;
 DROP POLICY "legacy manage all" ON public.publications;
@@ -221,8 +230,9 @@ SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000003',true);
 DO $$
 BEGIN
-  IF NOT EXISTS(SELECT 1 FROM public.publications WHERE title='Visible own user') THEN
-    RAISE EXCEPTION 'legitimate user audience blocked by legacy SELECT policy';
+  IF public.can_hr_publication_action('read') THEN RAISE EXCEPTION 'ordinary recipient became an HR manager'; END IF;
+  IF (SELECT count(*) FROM public.publications WHERE title IN ('Visible own user','Visible own subsidiary','Visible own role'))<>3 THEN
+    RAISE EXCEPTION 'legitimate audience blocked by legacy SELECT policy';
   END IF;
   IF EXISTS(SELECT 1 FROM public.publications WHERE title LIKE 'Hidden%') THEN
     RAISE EXCEPTION 'legacy scoped policy leaked unreleased HR content';
