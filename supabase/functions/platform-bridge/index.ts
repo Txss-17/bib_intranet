@@ -12,6 +12,7 @@ import { parseRestockRequest, restockMirrorPayload, assertRestockReview } from "
 const OwnershipSnapshot = z.object({
   merchants_complete: z.literal(true),
   boutiques_complete: z.literal(true),
+  snapshot_at: z.string().datetime({ offset: true }),
   merchants: z.array(z.object({ id: z.string().uuid() }).passthrough()),
   boutiques: z.array(z.object({
     id: z.string().uuid(),
@@ -360,6 +361,7 @@ Deno.serve(async (req) => {
       const ownership = OwnershipSnapshot.safeParse(data);
       if (!ownership.success)
         throw new Error("Export Platform incomplet : identités marchandes et boutiques requises.");
+      const ownershipSnapshotAt = ownership.data.snapshot_at;
       const merchantIds = new Set(ownership.data.merchants.map((merchant) => merchant.id));
       const boutiqueIds = new Set(ownership.data.boutiques.map((boutique) => boutique.id));
       if (merchantIds.size !== ownership.data.merchants.length
@@ -379,16 +381,27 @@ Deno.serve(async (req) => {
           contact_name: merchant.full_name ?? null,
           contact_email: merchant.email ?? "inconnu@platform",
           subscription_status: merchant.subscription_status ?? null,
-          platform_synced_at: now,
+          platform_synced_at: ownershipSnapshotAt,
         };
         const { data: existing, error: lookupError } = await admin
-          .from("user_accounts").select("id").eq("platform_id", merchant.id).maybeSingle();
+          .from("user_accounts").select("id,platform_synced_at").eq("platform_id", merchant.id).maybeSingle();
         if (lookupError) {
           errors.push("Lecture du marchand " + merchant.id + " : " + lookupError.message);
           continue;
         }
-        const result = existing
-          ? await admin.from("user_accounts").update(row).eq("id", existing.id).select("id").single()
+        if (existing?.platform_synced_at
+            && Date.parse(existing.platform_synced_at) >= Date.parse(ownershipSnapshotAt)) {
+          merchantMap.set(merchant.id, existing.id);
+          continue;
+        }
+        let update = existing
+          ? admin.from("user_accounts").update(row).eq("id", existing.id)
+          : null;
+        if (update) update = existing.platform_synced_at
+          ? update.eq("platform_synced_at", existing.platform_synced_at)
+          : update.is("platform_synced_at", null);
+        const result = update
+          ? await update.select("id").single()
           : await admin.from("user_accounts").insert(row).select("id").single();
         if (result.error || !result.data?.id) {
           errors.push("Marchand " + merchant.id + " : " + (result.error?.message ?? "résultat manquant"));
@@ -415,17 +428,28 @@ Deno.serve(async (req) => {
           category: boutique.category ?? null,
           subscription_plan: boutique.subscription_plan ?? null,
           status: SHOP_STATUS[boutique.status] ?? "review",
-          platform_synced_at: now,
+          platform_synced_at: ownershipSnapshotAt,
           app_origin: "platform",
         };
         const { data: existing, error: lookupError } = await admin
-          .from("shops").select("id").eq("platform_id", boutique.id).maybeSingle();
+          .from("shops").select("id,platform_synced_at").eq("platform_id", boutique.id).maybeSingle();
         if (lookupError) {
           errors.push("Lecture de la boutique " + boutique.id + " : " + lookupError.message);
           continue;
         }
-        const result = existing
-          ? await admin.from("shops").update(row).eq("id", existing.id).select("id").single()
+        if (existing?.platform_synced_at
+            && Date.parse(existing.platform_synced_at) >= Date.parse(ownershipSnapshotAt)) {
+          shopMap.set(boutique.id, existing.id);
+          continue;
+        }
+        let update = existing
+          ? admin.from("shops").update(row).eq("id", existing.id)
+          : null;
+        if (update) update = existing.platform_synced_at
+          ? update.eq("platform_synced_at", existing.platform_synced_at)
+          : update.is("platform_synced_at", null);
+        const result = update
+          ? await update.select("id").single()
           : await admin.from("shops").insert({
               ...row,
               shop_code: "BOS-" + String(boutique.id).slice(0, 8).toUpperCase(),
