@@ -67,10 +67,13 @@ BEGIN
       IF incoming.updated_at<>current_row.updated_at OR incoming.status<>current_row.status
           OR incoming.requested_quantity<>current_row.requested_quantity OR incoming.catalog_moq<>current_row.catalog_moq
           OR incoming.review_comment IS DISTINCT FROM current_row.review_comment
-          OR incoming.note IS DISTINCT FROM current_row.note OR incoming.product_name<>current_row.product_name
-          OR incoming.boutique_name IS DISTINCT FROM current_row.boutique_name THEN
+          OR incoming.note IS DISTINCT FROM current_row.note THEN
         RAISE EXCEPTION 'platform_restock_version_conflict' USING ERRCODE='40001';
       END IF;
+      -- Display names are live export enrichment, outside the request version.
+      UPDATE public.platform_stock_restock_requests SET product_name=incoming.product_name,
+        boutique_name=incoming.boutique_name,platform_synced_at=clock_timestamp()
+      WHERE id=current_row.id;
       RETURN current_row.id;
     END IF;
     IF incoming.updated_at<current_row.updated_at THEN

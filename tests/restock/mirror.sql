@@ -43,6 +43,8 @@ BEGIN
   decided:=payload||'{"status":"approved","version":2,"review_comment":"Confirmé","updated_at":"2026-10-27T10:00:00Z"}'::jsonb;
   PERFORM public.upsert_platform_stock_restock_request(decided);
   PERFORM public.upsert_platform_stock_restock_request(payload);
+  PERFORM public.upsert_platform_stock_restock_request(decided||'{"product_name":"Produit renommé","boutique_name":"Boutique renommée"}'::jsonb);
+  IF (SELECT product_name FROM public.platform_stock_restock_requests WHERE id=saved)<>'Produit renommé' THEN RAISE EXCEPTION 'live enrichment rename rejected'; END IF;
   IF (SELECT status FROM public.platform_stock_restock_requests WHERE id=saved)<>'approved' THEN RAISE EXCEPTION 'late snapshot regressed decision'; END IF;
   BEGIN
     PERFORM public.upsert_platform_stock_restock_request(decided||'{"status":"rejected"}'::jsonb);
