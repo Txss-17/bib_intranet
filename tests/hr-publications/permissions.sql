@@ -208,6 +208,28 @@ BEGIN
 END;
 $$;
 RESET ROLE;
+-- Also exercise the legacy scoped SELECT policy, not only a permissive adversarial fixture.
+DROP POLICY "legacy read all" ON public.publications;
+DROP POLICY "legacy manage all" ON public.publications;
+CREATE POLICY "legacy scoped read" ON public.publications FOR SELECT TO authenticated
+USING(author_id=auth.uid() OR visibility_scope='all'
+  OR visibility_targets && coalesce((SELECT poles FROM public.profiles WHERE id=auth.uid()),'{}'::text[]));
+CREATE POLICY "legacy scoped manage" ON public.publications FOR ALL TO authenticated
+USING(author_id=auth.uid() OR public.can_access_rh_profiles(auth.uid()))
+WITH CHECK(author_id=auth.uid() OR public.can_access_rh_profiles(auth.uid()));
+SET LOCAL ROLE authenticated;
+SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000003',true);
+DO $$
+BEGIN
+  IF NOT EXISTS(SELECT 1 FROM public.publications WHERE title='Visible own user') THEN
+    RAISE EXCEPTION 'legitimate user audience blocked by legacy SELECT policy';
+  END IF;
+  IF EXISTS(SELECT 1 FROM public.publications WHERE title LIKE 'Hidden%') THEN
+    RAISE EXCEPTION 'legacy scoped policy leaked unreleased HR content';
+  END IF;
+END;
+$$;
+RESET ROLE;
 DO $$ BEGIN
   IF has_function_privilege('anon','public.save_hr_publication(uuid,timestamptz,text,text,text,text,text,text,text[],uuid)','EXECUTE') THEN RAISE EXCEPTION 'anonymous save granted'; END IF;
 END $$;
