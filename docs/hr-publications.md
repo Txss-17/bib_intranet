@@ -4,7 +4,7 @@ La page Ressources Humaines → Publications internes utilise les lignes type hr
 
 ## Droits et diffusion
 
-La navigation et le catalogue des permissions utilisent rh.publications. Les droits sont calculés par le serveur et utilisés dans l’interface : permissions sauvegardées des rôles affectés actifs ; sans affectation, rôle historique déduit comme usePermissions ; puis matrice de séniorité RH seulement en l’absence de droits sauvegardés. Une action absente d’une page sauvegardée est refusée. Les affectations révoquées ou expirées ne permettent pas de revenir à la matrice. L’administrateur technique conserve son accès complet. La simulation peut seulement restreindre les droits réels.
+La navigation et le catalogue des permissions utilisent rh.publications. Les droits sont calculés par le serveur et utilisés dans l’interface : permissions sauvegardées des rôles affectés actifs ; sans affectation, rôle historique dont le poste et les pôles sont compatibles avec le catalogue ; puis matrice de séniorité RH seulement en l’absence de droits sauvegardés. Une action absente d’une page sauvegardée est refusée. Les affectations révoquées ou expirées ne permettent pas de revenir à la matrice. L’administrateur technique conserve son accès complet. La simulation peut seulement restreindre les droits réels.
 
 Créer/modifier un brouillon exige create/update. Modifier tout contenu déjà publié, programmé ou archivé et effectuer toute transition hors brouillon exige aussi publish. Les écritures directes client de type hr sont bloquées ; le service de sauvegarde impose le type et l’auteur et ne permet aucun changement vers une autre catégorie de données.
 
@@ -20,6 +20,8 @@ Le texte est affiché comme texte simple. Les limites sont titre 255, résumé 1
 
 ## Intégration et validation
 
-Appliquer uniquement la nouvelle migration drizzle/migrations/0031_hr_publications.sql après vérification de l’historique, puis publier le frontend. Elle dépend du schéma publications existant, des profils et du catalogue RBAC. Elle n’insère aucune communication de démonstration. Cette PR ne modifie pas la base publiée.
+Appliquer les migrations drizzle/migrations/0031_hr_publications.sql et 0032_protect_profile_authorization_fields.sql après vérification de l’historique, puis publier le frontend. Elle dépend du schéma publications existant, des profils et du catalogue RBAC. Elle n’insère aucune communication de démonstration. Cette PR ne modifie pas la base publiée.
 
 GitHub Actions exécute les tests de validation et des dates du feed, le contrôle du rôle historique par rapport au catalogue, les tests PostgreSQL des permissions et audiences, les protections d’écriture, les conflits et la reprise, puis le typage et la compilation. La fixture SQL exige une base de test vide et annule sa transaction.
+
+La migration 0032 protège les champs qui déterminent les droits du profil : un collaborateur ne peut pas changer ses propres pôles, poste ou séniorité par une écriture directe. Les informations personnelles ordinaires restent modifiables selon les règles RLS existantes ; les RH continuent d’administrer les collègues, et les administrateurs et le service de provisioning conservent leurs droits.
