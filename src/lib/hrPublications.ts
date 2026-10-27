@@ -57,3 +57,19 @@ export function isPublicationReleased(row: {
   return row.status==="published"&&reached(row.publish_at)&&reached(row.available_at)
     &&(row.archive_at===null||(Number.isFinite(Date.parse(row.archive_at))&&Date.parse(row.archive_at)>now));
 }
+
+export interface HrPublicationPermissions {
+  read: boolean; create: boolean; update: boolean; publish: boolean;
+}
+
+/** Real server permissions are authoritative; a preview may only narrow them. */
+export function effectiveHrPublicationPermissions(
+  actual?: Partial<HrPublicationPermissions>,
+  preview?: Partial<HrPublicationPermissions>,
+): HrPublicationPermissions {
+  return Object.fromEntries(
+    (["read", "create", "update", "publish"] as const).map((action) => [
+      action, actual?.[action] === true && (!preview || preview[action] === true),
+    ]),
+  ) as unknown as HrPublicationPermissions;
+}

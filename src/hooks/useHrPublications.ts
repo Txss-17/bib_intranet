@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
-import { hrPublicationPayload, hrPublicationError, type HrPublication, type HrPublicationInput } from "@/lib/hrPublications";
+import { hrPublicationPayload, hrPublicationError, effectiveHrPublicationPermissions, type HrPublication, type HrPublicationInput } from "@/lib/hrPublications";
 
 interface PublicationPermissions { read:boolean; create:boolean; update:boolean; publish:boolean }
 export function useHrPublicationPermissions() {
@@ -21,11 +21,13 @@ export function useHrPublicationPermissions() {
   });
   // A role preview may narrow the actor's real permissions, never enlarge them.
   const actual=query.data;
-  const data=actual&&Object.fromEntries(
-    (["read","create","update","publish"] as const).map(action=>[
-      action,actual[action]===true&&(!simulation.isSimulating||simulation.can("rh.publications",action)),
-    ]),
-  ) as unknown as PublicationPermissions|undefined;
+  const preview=simulation.isSimulating?{
+    read:simulation.can("rh.publications","read"),
+    create:simulation.can("rh.publications","create"),
+    update:simulation.can("rh.publications","update"),
+    publish:simulation.can("rh.publications","publish"),
+  }:undefined;
+  const data=actual?effectiveHrPublicationPermissions(actual,preview):undefined;
   return {...query,data};
 }
 export function useHrPublications() {
