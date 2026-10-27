@@ -8,6 +8,17 @@ import {
 
 import { parseRestockRequest, restockMirrorPayload, assertRestockReview } from "../_shared/restock-contract.ts";
 
+// Validate ownership identities before any merchant or shop mutation.
+const OwnershipSnapshot = z.object({
+  merchants_complete: z.literal(true),
+  boutiques_complete: z.literal(true),
+  merchants: z.array(z.object({ id: z.string().uuid() }).passthrough()),
+  boutiques: z.array(z.object({
+    id: z.string().uuid(),
+    user_id: z.string().uuid(),
+  }).passthrough()),
+});
+
 class BridgeError extends Error {
   constructor(message: string, public status = 502) { super(message); }
 }
@@ -346,147 +357,87 @@ Deno.serve(async (req) => {
         since: body.since ?? null,
       });
 
-      // ====================================================
-      // 1. MARCHANDS
-      // ====================================================
+      const ownership = OwnershipSnapshot.safeParse(data);
+      if (!ownership.success)
+        throw new Error("Export Platform incomplet : identités marchandes et boutiques requises.");
+      const merchantIds = new Set(ownership.data.merchants.map((merchant) => merchant.id));
+      const boutiqueIds = new Set(ownership.data.boutiques.map((boutique) => boutique.id));
+      if (merchantIds.size !== ownership.data.merchants.length
+          || boutiqueIds.size !== ownership.data.boutiques.length
+          || ownership.data.boutiques.some((boutique) => !merchantIds.has(boutique.user_id)))
+        throw new Error("Export Platform incohérent : propriétaire manquant ou identités dupliquées.");
 
-      for (const merchant of data.merchants ?? []) {
-        const row = {
-          platform_id: merchant.id,
-
-          company_name:
-            merchant.company_name ??
-            merchant.full_name ??
-            merchant.email ??
-            "Marchand",
-
-          contact_name: merchant.full_name ?? null,
-
-          contact_email: merchant.email ?? "inconnu@platform",
-
-          subscription_status: merchant.subscription_status ?? null,
-
-          platform_synced_at: now,
-        };
-
-        const { data: existing } = await admin
-          .from("user_accounts")
-          .select("id")
-          .eq("platform_id", merchant.id)
-          .maybeSingle();
-
-        const result = existing
-          ? await admin
-              .from("user_accounts")
-              .update(row)
-              .eq("id", existing.id)
-              .select("id")
-              .single()
-          : await admin.from("user_accounts").insert(row).select("id").single();
-
-        if (result.error) {
-          errors.push(`marchand ${row.company_name}: ${result.error.message}`);
-        } else {
-          count++;
-
-          if (!existing) {
-            notify(
-              "marketplace",
-              "Nouveau marchand",
-              row.company_name,
-              "/pole/marketplace/merchants",
-            );
-          }
-        }
-      }
-
-      // ====================================================
-      // 2. INDEX MARCHANDS
-      // ====================================================
-
-      const { data: merchantRows } = await admin
-        .from("user_accounts")
-        .select("id, platform_id")
-        .not("platform_id", "is", null);
-
+      // Build the index from successful import results. An unpaged SELECT would
+      // silently lose owners after PostgREST's row limit or a lookup outage.
       const merchantMap = new Map<string, string>();
-
-      for (const merchant of merchantRows ?? []) {
-        if (merchant.platform_id) {
-          merchantMap.set(merchant.platform_id, merchant.id);
-        }
-      }
-
-      // ====================================================
-      // 3. BOUTIQUES
-      // ====================================================
-
       const shopMap = new Map<string, string>();
 
-      for (const boutique of data.boutiques ?? []) {
-        const merchantId = merchantMap.get(boutique.user_id) ?? null;
+      for (const merchant of data.merchants) {
+        const row = {
+          platform_id: merchant.id,
+          company_name: merchant.company_name ?? merchant.full_name ?? merchant.email ?? "Marchand",
+          contact_name: merchant.full_name ?? null,
+          contact_email: merchant.email ?? "inconnu@platform",
+          subscription_status: merchant.subscription_status ?? null,
+          platform_synced_at: now,
+        };
+        const { data: existing, error: lookupError } = await admin
+          .from("user_accounts").select("id").eq("platform_id", merchant.id).maybeSingle();
+        if (lookupError) {
+          errors.push("Lecture du marchand " + merchant.id + " : " + lookupError.message);
+          continue;
+        }
+        const result = existing
+          ? await admin.from("user_accounts").update(row).eq("id", existing.id).select("id").single()
+          : await admin.from("user_accounts").insert(row).select("id").single();
+        if (result.error || !result.data?.id) {
+          errors.push("Marchand " + merchant.id + " : " + (result.error?.message ?? "résultat manquant"));
+          continue;
+        }
+        merchantMap.set(merchant.id, result.data.id);
+        count++;
+        if (!existing)
+          notify("marketplace", "Nouveau marchand", row.company_name, "/pole/marketplace/merchants");
+      }
 
+      for (const boutique of data.boutiques) {
+        const merchantId = merchantMap.get(boutique.user_id);
+        if (!merchantId) {
+          // Preserve any previous link when the owner could not be synchronized.
+          errors.push("Boutique " + boutique.id + " : propriétaire non synchronisé.");
+          continue;
+        }
         const row = {
           platform_id: boutique.id,
-
           name: boutique.name,
-
           slug: boutique.slug ?? null,
-
           merchant_id: merchantId,
-
           category: boutique.category ?? null,
-
           subscription_plan: boutique.subscription_plan ?? null,
-
           status: SHOP_STATUS[boutique.status] ?? "review",
-
           platform_synced_at: now,
-
           app_origin: "platform",
         };
-
-        const { data: existing } = await admin
-          .from("shops")
-          .select("id")
-          .eq("platform_id", boutique.id)
-          .maybeSingle();
-
-        const result = existing
-          ? await admin
-              .from("shops")
-              .update(row)
-              .eq("id", existing.id)
-              .select("id")
-              .single()
-          : await admin
-              .from("shops")
-              .insert({
-                ...row,
-
-                shop_code: `BOS-${String(boutique.id)
-                  .slice(0, 8)
-                  .toUpperCase()}`,
-              })
-              .select("id")
-              .single();
-
-        if (result.error) {
-          errors.push(`boutique ${row.name}: ${result.error.message}`);
-        } else {
-          shopMap.set(boutique.id, result.data.id);
-
-          count++;
-
-          if (!existing) {
-            notify(
-              "marketplace",
-              "Nouvelle boutique à examiner",
-              boutique.name,
-              "/pole/marketplace/stores",
-            );
-          }
+        const { data: existing, error: lookupError } = await admin
+          .from("shops").select("id").eq("platform_id", boutique.id).maybeSingle();
+        if (lookupError) {
+          errors.push("Lecture de la boutique " + boutique.id + " : " + lookupError.message);
+          continue;
         }
+        const result = existing
+          ? await admin.from("shops").update(row).eq("id", existing.id).select("id").single()
+          : await admin.from("shops").insert({
+              ...row,
+              shop_code: "BOS-" + String(boutique.id).slice(0, 8).toUpperCase(),
+            }).select("id").single();
+        if (result.error || !result.data?.id) {
+          errors.push("Boutique " + boutique.id + " : " + (result.error?.message ?? "résultat manquant"));
+          continue;
+        }
+        shopMap.set(boutique.id, result.data.id);
+        count++;
+        if (!existing)
+          notify("marketplace", "Nouvelle boutique à examiner", boutique.name, "/pole/marketplace/stores");
       }
 
       // Catalog ids and boutique-product ids belong to different tables in Platform.
