@@ -232,6 +232,13 @@
       "when": 1793129400000,
       "tag": "0032_protect_profile_authorization_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1793130000000,
+      "tag": "0033_hr_publication_access_repair",
+      "breakpoints": true
     }
   ]
 }

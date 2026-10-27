@@ -6,6 +6,7 @@ import { useUserRole } from '@/hooks/useUserRole';
 import { useViewAs } from '@/hooks/useViewAs';
 import { jobRoles, JobRole } from '@/data/jobRoles';
 import { Seniority } from '@/data/permissionRules';
+import { effectiveHrPublicationPermissions, type HrPublicationPermissions } from '@/lib/hrPublications';
 import {
   ActionSet,
   DataScope,
@@ -74,6 +75,22 @@ export const usePermissions = (): UsePermissionsReturn => {
   }, []);
 
   const role = simulatedRole ?? inferRole(profile?.position, profile?.poles);
+
+  // Navigation and page actions must agree with the server's assigned-role checks.
+  const hrRights = useQuery({
+    queryKey: ['hr-publication-permissions', profile?.id],
+    enabled: !!profile?.id,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+    queryFn: async (): Promise<HrPublicationPermissions> => {
+      const { data, error } = await supabase.rpc('get_hr_publication_permissions' as never);
+      if (error) throw error;
+      if (!data || typeof data !== 'object' || Array.isArray(data))
+        throw new Error('Droits des publications RH indisponibles.');
+      return effectiveHrPublicationPermissions(data as unknown as HrPublicationPermissions);
+    },
+  });
+
 
   // Permissions enregistrées en base pour ce rôle (Rôles & Permissions).
   const { data: dbPermissions } = useQuery({
@@ -145,8 +162,15 @@ export const usePermissions = (): UsePermissionsReturn => {
   ]);
 
   const permissions = useCallback(
-    (pageId: string): ActionSet => (pageId ? resolvePagePermissions(pageId, ctx) : { ...NO_ACCESS }),
-    [ctx],
+    (pageId: string): ActionSet => {
+      if (!pageId) return { ...NO_ACCESS };
+      if (pageId === 'rh.publications') {
+        const preview = simulatedRole ? resolvePagePermissions(pageId, ctx) : undefined;
+        return { ...NO_ACCESS, ...effectiveHrPublicationPermissions(hrRights.data, preview) };
+      }
+      return resolvePagePermissions(pageId, ctx);
+    },
+    [ctx, hrRights.data, simulatedRole],
   );
 
   const can = useCallback(

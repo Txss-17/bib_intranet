@@ -4,7 +4,7 @@ import fs from "node:fs";
 import ts from "typescript";
 const source=fs.readFileSync(new URL("../../src/lib/hrPublications.ts",import.meta.url),"utf8");
 const javascript=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText;
-const {hrPublicationPayload,hrPublicationError,isPublicationReleased}=await import("data:text/javascript;base64,"+Buffer.from(javascript).toString("base64"));
+const {hrPublicationPayload,hrPublicationError,isPublicationReleased,effectiveHrPublicationPermissions}=await import("data:text/javascript;base64,"+Buffer.from(javascript).toString("base64"));
 const key="40000000-0000-4000-8000-000000000001";
 const input=()=>({title:" Titre ",summary:" Résumé ",body:" Corps ",subtype:"announcement",status:"draft",visibility:"all",poles:[],creationKey:key});
 test("new publication payload normalizes content and excludes caller identity",()=>{
@@ -61,4 +61,17 @@ test("the common feed never releases draft, archive, scheduled or future content
   for(const patch of [{status:"draft"},{status:"scheduled"},{status:"archived"},{publish_at:"2026-10-28T00:00:00Z"},{available_at:"2026-10-28T00:00:00Z"},{archive_at:"2026-10-27T12:00:00Z"},{publish_at:"invalid"}])
     assert.equal(isPublicationReleased({...row,...patch},now),false);
   assert.equal(isPublicationReleased({...row,publish_at:"2026-10-27T12:00:00Z",archive_at:"2026-10-28T00:00:00Z"},now),true);
+});
+
+test("server-assigned publication rights remain effective without a matching legacy role",()=>{
+  assert.deepEqual(effectiveHrPublicationPermissions({read:true,create:true,update:false,publish:false}),
+    {read:true,create:true,update:false,publish:false});
+});
+test("publication role previews only narrow the actor's real server rights",()=>{
+  assert.deepEqual(effectiveHrPublicationPermissions({read:true,create:false,update:true,publish:false},
+    {read:true,create:true,update:false,publish:true}),{read:true,create:false,update:false,publish:false});
+});
+test("unknown server publication permissions never expose page navigation or actions",()=>{
+  assert.deepEqual(effectiveHrPublicationPermissions(undefined,{read:true,create:true,update:true,publish:true}),
+    {read:false,create:false,update:false,publish:false});
 });

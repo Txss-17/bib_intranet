@@ -20,8 +20,10 @@ Le texte est affiché comme texte simple. Les limites sont titre 255, résumé 1
 
 ## Intégration et validation
 
-Appliquer les migrations drizzle/migrations/0031_hr_publications.sql et 0032_protect_profile_authorization_fields.sql après vérification de l’historique, puis publier le frontend. Elle dépend du schéma publications existant, des profils et du catalogue RBAC. Elle n’insère aucune communication de démonstration. Cette PR ne modifie pas la base publiée.
+Appliquer les migrations drizzle/migrations/0031_hr_publications.sql et 0032_protect_profile_authorization_fields.sql puis 0033_hr_publication_access_repair.sql après vérification de l’historique, puis publier le frontend. Elle dépend du schéma publications existant, des profils et du catalogue RBAC. Elle n’insère aucune communication de démonstration. Cette PR ne modifie pas la base publiée.
 
 GitHub Actions exécute les tests de validation et des dates du feed, le contrôle du rôle historique par rapport au catalogue, les tests PostgreSQL des permissions et audiences, les protections d’écriture, les conflits et la reprise, puis le typage et la compilation. La fixture SQL exige une base de test vide et annule sa transaction.
 
 La migration 0032 protège les champs qui déterminent les droits du profil : un collaborateur ne peut pas changer ses propres pôles, poste ou séniorité par une écriture directe. Les informations personnelles ordinaires restent modifiables selon les règles RLS existantes ; les RH continuent d’administrer les collègues, et les administrateurs et le service de provisioning conservent leurs droits.
+
+La migration 0033 est un correctif en avant pour un environnement qui aurait déjà enregistré une première version de 0031 : elle rétablit le contrôle du rôle historique et l’accès des destinataires autorisés sans rejouer les anciennes migrations. Les tests simulent aussi cet état initial.
