@@ -56,6 +56,12 @@ jobs:
       - name: Test restock mirror and product permissions
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/restock/mirror.sql
 
+      - name: Test HR publication contract and release boundaries
+        run: npm run test:hr-publications
+
+      - name: Test HR publication permissions and writes
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/hr-publications/permissions.sql
+
       - name: Typecheck application
         run: npx tsc --noEmit -p tsconfig.app.json
 
