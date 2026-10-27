@@ -4,7 +4,7 @@ CREATE ROLE anon NOLOGIN;
 CREATE ROLE authenticated NOLOGIN;
 CREATE ROLE service_role NOLOGIN BYPASSRLS;
 CREATE SCHEMA auth;
-CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $ SELECT current_setting('request.jwt.claim.role',true) $;
+CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $$ SELECT current_setting('request.jwt.claim.role',true) $$;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
 GRANT USAGE ON SCHEMA public,auth TO authenticated;
 CREATE TABLE public.profiles(id uuid PRIMARY KEY,poles text[],seniority text,subsidiary text,position text DEFAULT 'rh_manager',first_name text,staff boolean DEFAULT true,admin boolean DEFAULT false,leadership boolean DEFAULT false);
@@ -181,7 +181,7 @@ END;
 $$;
 -- Role inputs stay server-owned even when legacy profile RLS permits arbitrary UPDATE.
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000003',true);
-DO $
+DO $$
 BEGIN
   BEGIN
     UPDATE public.profiles SET position='rh_manager',poles=ARRAY['rh'],seniority='lead' WHERE id=auth.uid();
@@ -193,9 +193,9 @@ BEGIN
   UPDATE public.profiles SET first_name='Prénom' WHERE id=auth.uid();
   IF (SELECT first_name FROM public.profiles WHERE id=auth.uid())<>'Prénom' THEN RAISE EXCEPTION 'ordinary profile edit blocked'; END IF;
 END;
-$;
+$$;
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
-DO $
+DO $$
 BEGIN
   BEGIN
     UPDATE public.profiles SET seniority='executive' WHERE id=auth.uid();
@@ -206,9 +206,9 @@ BEGIN
     RAISE EXCEPTION 'authorized HR colleague management blocked';
   END IF;
 END;
-$;
+$$;
 RESET ROLE;
-DO $ BEGIN
+DO $$ BEGIN
   IF has_function_privilege('anon','public.save_hr_publication(uuid,timestamptz,text,text,text,text,text,text,text[],uuid)','EXECUTE') THEN RAISE EXCEPTION 'anonymous save granted'; END IF;
 END $$;
 ROLLBACK;
