@@ -61,7 +61,7 @@ export function canUsePlatformBridge(
   leadership: boolean,
   poles: string[],
 ) {
-  if (action === "review_customization")
+  if (action === "review_customization" || action === "review_restock")
     return (
       leadership ||
       poles.includes("tech") ||

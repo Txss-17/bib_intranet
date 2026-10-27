@@ -25,6 +25,7 @@ interface PlatformSyncResponse {
   items?: number;
   errors?: unknown[];
   error?: string;
+  request?: { id: string; version: number; status: "approved" | "rejected" };
 }
 
 const invokePlatformBridge = async (
@@ -144,6 +145,7 @@ const invalidatePlatformData = async (
     queryClient.invalidateQueries({
       queryKey: ["customization-review-requests"],
     }),
+    queryClient.invalidateQueries({ queryKey: ["platform-restock-requests"] }),
     queryClient.invalidateQueries({
       queryKey: ["marketplace-favorites"],
     }),
@@ -306,5 +308,26 @@ export const usePlatformActions = () => {
     onSettled,
   });
 
-  return { pull, pushProduct, pushShopStatus, reviewCustomization };
+  const reviewRestock = useMutation({
+    mutationFn: async (input: {
+      requestId: string;
+      version: number;
+      status: "approved" | "rejected";
+      comment: string | null;
+    }) => {
+      const result = await invokePlatformBridge({
+        action: "review_restock", request_id: input.requestId,
+        version: input.version, status: input.status, comment: input.comment,
+      });
+      if (result.status !== "success" || !result.request
+          || result.request.version !== input.version + 1 || result.request.status !== input.status)
+        throw new Error("La décision n’a pas été confirmée par Platform.");
+      return result;
+    },
+    onSuccess: () => { toast.success("Décision de réapprovisionnement confirmée"); },
+    onError,
+    onSettled,
+  });
+
+  return { pull, pushProduct, pushShopStatus, reviewCustomization, reviewRestock };
 };
