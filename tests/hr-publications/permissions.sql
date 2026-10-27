@@ -4,12 +4,18 @@ CREATE ROLE anon NOLOGIN;
 CREATE ROLE authenticated NOLOGIN;
 CREATE ROLE service_role NOLOGIN BYPASSRLS;
 CREATE SCHEMA auth;
+CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $ SELECT current_setting('request.jwt.claim.role',true) $;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
 GRANT USAGE ON SCHEMA public,auth TO authenticated;
-CREATE TABLE public.profiles(id uuid PRIMARY KEY,poles text[],seniority text,subsidiary text,position text DEFAULT 'rh_manager',staff boolean DEFAULT true,admin boolean DEFAULT false,leadership boolean DEFAULT false);
+CREATE TABLE public.profiles(id uuid PRIMARY KEY,poles text[],seniority text,subsidiary text,position text DEFAULT 'rh_manager',first_name text,staff boolean DEFAULT true,admin boolean DEFAULT false,leadership boolean DEFAULT false);
 CREATE FUNCTION public.is_intranet_staff(p_uid uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT coalesce((SELECT staff FROM public.profiles WHERE id=p_uid),false) $$;
 CREATE FUNCTION public.has_role(p_uid uuid,p_role text) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT p_role='admin' AND coalesce((SELECT admin FROM public.profiles WHERE id=p_uid),false) $$;
 CREATE FUNCTION public.is_leadership(p_uid uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT coalesce((SELECT leadership FROM public.profiles WHERE id=p_uid),false) $$;
+CREATE FUNCTION public.can_access_rh_profiles(p_uid uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT public.has_role(p_uid,'admin') OR public.is_leadership(p_uid) OR coalesce((SELECT 'rh'=ANY(poles) FROM public.profiles WHERE id=p_uid),false) $$;
+GRANT SELECT,UPDATE ON public.profiles TO authenticated;
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "legacy broad profile read" ON public.profiles FOR SELECT TO authenticated USING(true);
+CREATE POLICY "legacy broad profile update" ON public.profiles FOR UPDATE TO authenticated USING(true) WITH CHECK(true);
 CREATE TABLE public.access_roles(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),role_key text,status text DEFAULT 'active',read_only boolean DEFAULT false);
 CREATE TABLE public.access_assignments(id uuid DEFAULT gen_random_uuid(),employee_id uuid,role_id uuid,status text DEFAULT 'active',starts_at timestamptz,ends_at timestamptz);
 CREATE TABLE public.access_interfaces(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),interface_key text UNIQUE,label text,module text,pole text,path text,status text DEFAULT 'active');
@@ -28,6 +34,7 @@ CREATE POLICY "legacy manage all" ON public.publications FOR ALL TO authenticate
 CREATE FUNCTION public.update_updated_at() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN NEW.updated_at:=now(); RETURN NEW; END; $$;
 CREATE TRIGGER trg_publications_updated BEFORE UPDATE ON public.publications FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
 \ir ../../drizzle/migrations/0031_hr_publications.sql
+\ir ../../drizzle/migrations/0032_protect_profile_authorization_fields.sql
 INSERT INTO public.profiles(id,poles,seniority,subsidiary,staff,admin,leadership) VALUES
 ('20000000-0000-4000-8000-000000000001',ARRAY['rh'],'lead','BIB',true,false,false),
 ('20000000-0000-4000-8000-000000000002',ARRAY['rh'],'mid','BIB',true,false,false),
@@ -172,8 +179,36 @@ BEGIN
   IF drafted->>'publish_at' IS NOT NULL OR drafted->>'available_at' IS NOT NULL OR drafted->>'archive_at' IS NOT NULL THEN RAISE EXCEPTION 'redraft retained release schedule'; END IF;
 END;
 $$;
+-- Role inputs stay server-owned even when legacy profile RLS permits arbitrary UPDATE.
+SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000003',true);
+DO $
+BEGIN
+  BEGIN
+    UPDATE public.profiles SET position='rh_manager',poles=ARRAY['rh'],seniority='lead' WHERE id=auth.uid();
+    RAISE EXCEPTION 'self promotion allowed';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  IF public.can_hr_publication_action('publish') OR public.can_hr_publication_action('read') THEN
+    RAISE EXCEPTION 'profile editing elevated publication access';
+  END IF;
+  UPDATE public.profiles SET first_name='Prénom' WHERE id=auth.uid();
+  IF (SELECT first_name FROM public.profiles WHERE id=auth.uid())<>'Prénom' THEN RAISE EXCEPTION 'ordinary profile edit blocked'; END IF;
+END;
+$;
+SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
+DO $
+BEGIN
+  BEGIN
+    UPDATE public.profiles SET seniority='executive' WHERE id=auth.uid();
+    RAISE EXCEPTION 'HR self promotion allowed';
+  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
+  UPDATE public.profiles SET seniority='senior' WHERE id='20000000-0000-4000-8000-000000000002';
+  IF (SELECT seniority FROM public.profiles WHERE id='20000000-0000-4000-8000-000000000002')<>'senior' THEN
+    RAISE EXCEPTION 'authorized HR colleague management blocked';
+  END IF;
+END;
+$;
 RESET ROLE;
-DO $$ BEGIN
+DO $ BEGIN
   IF has_function_privilege('anon','public.save_hr_publication(uuid,timestamptz,text,text,text,text,text,text,text[],uuid)','EXECUTE') THEN RAISE EXCEPTION 'anonymous save granted'; END IF;
 END $$;
 ROLLBACK;
