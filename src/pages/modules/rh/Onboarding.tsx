@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -64,6 +64,13 @@ import {
 
 import { poles as allPoles } from '@/data/poles';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  useHrOnboardingPermissions,
+  useHrMutationTargets,
+  useSubmitHrEmployeeMutation,
+  useSetHrMutationStatus,
+  useApplyHrEmployeeMutation,
+} from '@/hooks/useHrEmployeeMutations';
 
 import {
   COLLABORATOR_TYPE_LABELS,
@@ -158,8 +165,19 @@ const employeeName = (
     .join(' ')
     .trim() || fallback;
 
-function NewEmployeeDialog() {
+function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
   const [open, setOpen] = useState(false);
+  const mutationTargets = useHrMutationTargets();
+  const submitMutation = useSubmitHrEmployeeMutation();
+  const allPositions = useHrPositionCatalog();
+  const [targetId, setTargetId] = useState('');
+  const [replacementIds, setReplacementIds] = useState<string[]>([]);
+  const [mutationConfirmed, setMutationConfirmed] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const creationKey = useRef<string | null>(null);
+  const targetRevision = useRef<string | null>(null);
+  const saving = useRef(false);
+  const selectedTarget = mutationTargets.data?.find((target) => target.id === targetId);
 
   const { create } = useHrOnboardingActions();
 
@@ -199,8 +217,7 @@ function NewEmployeeDialog() {
   >([]);
   const [docDraft, setDocDraft] = useState({ name: '', document_type: 'charter', document_url: '' });
 
-  // Dossier d'origine lorsqu'il s'agit d'une mutation (changement de rôle/pôle).
-  const [mutationOf, setMutationOf] = useState<string | null>(null);
+  const pending = create.isPending || submitMutation.isPending;
 
   const [poles, setPoles] = useState<string[]>(['ops']);
 
@@ -216,11 +233,18 @@ function NewEmployeeDialog() {
     () =>
       accessRoles.filter(
         (role) =>
-          !role.business_pole ||
-          poles.includes(role.business_pole),
+          (!role.business_pole || poles.includes(role.business_pole)) &&
+          (!mutation || (!role.is_external && !role.role_key.startsWith('svc_') &&
+            (role.poles ?? []).every((pole) => poles.includes(pole)))),
       ),
-    [accessRoles, poles],
+    [accessRoles, poles, mutation],
   );
+
+  const selectedAccessRole = compatibleRoles.find((role) => role.role_key === form.requested_role);
+  useEffect(() => {
+    if (mutation && selectedAccessRole?.seniority && form.seniority !== selectedAccessRole.seniority)
+      setForm((previous) => ({ ...previous, seniority: selectedAccessRole.seniority! }));
+  }, [mutation, selectedAccessRole?.seniority, form.seniority]);
 
   const resetForm = () => {
     setForm({
@@ -241,45 +265,44 @@ function NewEmployeeDialog() {
     });
     setAttachedDocs([]);
     setDocDraft({ name: '', document_type: 'charter', document_url: '' });
-    setMutationOf(null);
+    setTargetId('');
+    setReplacementIds([]);
+    setMutationConfirmed(false);
+    setSubmitError('');
+    creationKey.current = null;
+    targetRevision.current = null;
 
     setPrimaryPole('');
     setPoles([]);
   };
 
-  // Pré-remplit le formulaire pour muter un collaborateur existant
-  // vers un autre rôle ou pôle. Le compte existant est mis à jour
-  // lors de la validation, sans nouvelle invitation.
-  const startMutation = (request: any) => {
+  const selectMutationTarget = (id: string) => {
+    const target = mutationTargets.data?.find((item) => item.id === id);
+    if (!target) return;
     resetForm();
-    setMutationOf(request.id);
+    setTargetId(id);
+    creationKey.current = crypto.randomUUID();
+    targetRevision.current = target.revision;
+    const positionKey = target.position_key ?? target.position ?? '';
+    const position = allPositions.data?.find((item) => item.position_key === positionKey);
     setForm({
-      first_name: request.first_name ?? '',
-      last_name: request.last_name ?? '',
-      personal_email: request.personal_email ?? '',
-      work_email: request.work_email ?? '',
-      collaborator_type: request.collaborator_type ?? 'internal',
-      position: request.position ?? '',
-      seniority: request.seniority ?? 'junior',
-      requested_role: request.requested_role ?? '',
-      contract_type: request.contract_type ?? 'CDI',
-      start_date: request.start_date ?? '',
-      notes: request.notes ?? '',
-      manager_id: request.manager_id ?? '',
-      work_mode: request.work_mode ?? 'office',
-      subsidiary: request.subsidiary ?? '',
+      first_name: target.first_name ?? '', last_name: target.last_name ?? '',
+      personal_email: '', work_email: target.email ?? '',
+      collaborator_type: target.collaborator_type as CollaboratorType,
+      position: positionKey, seniority: target.seniority ?? 'junior',
+      requested_role: target.requested_role ?? '',
+      contract_type: target.contract_type ?? '', start_date: target.start_date ?? '',
+      notes: '', manager_id: target.manager_id ?? '',
+      work_mode: target.work_mode ?? '', subsidiary: target.subsidiary ?? '',
     });
-    setAttachedDocs(
-      (request.attached_documents ?? []).map((d: any) => ({
-        name: d.name ?? '',
-        document_type: d.document_type ?? 'charter',
-        document_url: d.document_url ?? null,
-      })),
-    );
-    setPrimaryPole(request.primary_pole ?? '');
-    setPoles(request.poles ?? []);
-    setOpen(true);
+    setPrimaryPole(position?.pole_id ?? '');
+    setPoles(target.poles ?? []);
+    setAttachedDocs(target.attached_documents ?? []);
   };
+
+  useEffect(() => {
+    setMutationConfirmed(false);
+  }, [form, poles, replacementIds, attachedDocs]);
 
   const togglePole = (poleId: string) => {
     if (poleId === requiredPole) {
@@ -299,35 +322,43 @@ function NewEmployeeDialog() {
   };
 
   const submit = async () => {
-    await create.mutateAsync({
-      first_name: form.first_name.trim(),
-      last_name: form.last_name.trim(),
-      personal_email:
-        form.personal_email.trim() || null,
-      work_email:
-        form.work_email.trim() || null,
-      collaborator_type:
-        form.collaborator_type,
-      position: form.position,
-      poles,
-      primary_pole: primaryPole,
-      seniority: form.seniority,
-      requested_role: form.requested_role,
-      contract_type:
-        form.contract_type.trim() || null,
-      start_date:
-        form.start_date || null,
-      manager_id:
-        form.manager_id || null,
-      notes:
-        form.notes.trim() || null,
-      work_mode: form.work_mode || null,
-      subsidiary: form.subsidiary.trim() || null,
-      attached_documents: attachedDocs,
-    } as any);
-
-    setOpen(false);
-    resetForm();
+    if (pending || saving.current) return;
+    if (!valid) { setSubmitError('Vérifiez les champs obligatoires et les changements à confirmer.'); return; }
+    saving.current = true;
+    setSubmitError('');
+    try {
+      const classification = {
+        position: form.position, poles, primary_pole: primaryPole,
+        seniority: form.seniority, requested_role: form.requested_role,
+        contract_type: form.contract_type.trim() || null,
+        start_date: form.start_date || null, manager_id: form.manager_id || null,
+        notes: form.notes.trim() || null, work_mode: form.work_mode || null,
+        subsidiary: form.subsidiary.trim() || null, attached_documents: attachedDocs,
+      };
+      if (mutation) {
+        if (!targetId || !creationKey.current || !targetRevision.current || !mutationConfirmed)
+          throw new Error('Choisissez le collaborateur et confirmez les changements.');
+        await submitMutation.mutateAsync({
+          targetUserId: targetId, creationKey: creationKey.current,
+          expectedTargetRevision: targetRevision.current,
+          replaceAssignmentIds: replacementIds, payload: classification,
+        });
+      } else {
+        await create.mutateAsync({
+          ...classification,
+          first_name: form.first_name.trim(), last_name: form.last_name.trim(),
+          personal_email: form.personal_email.trim() || null,
+          work_email: form.work_email.trim() || null,
+          collaborator_type: form.collaborator_type,
+        } as any);
+      }
+      setOpen(false);
+      resetForm();
+    } catch (error) {
+      setSubmitError(error instanceof Error ? error.message : 'La confirmation n’a pas pu être obtenue. Votre saisie est conservée.');
+    } finally {
+      saving.current = false;
+    }
   };
 
   const valid =
@@ -342,7 +373,12 @@ function NewEmployeeDialog() {
     poles.length > 0 &&
     poles.includes(primaryPole) &&
     Boolean(form.requested_role) &&
-    (form.position === 'ceo' || Boolean(form.manager_id));
+    (form.position === 'ceo' || Boolean(form.manager_id)) &&
+    (!mutation || (!mutationTargets.isFetching && !mutationTargets.isError && !mutationTargets.isLoading &&
+      !allPositions.isLoading && Boolean(selectedTarget) && Boolean(targetRevision.current) &&
+      selectedTarget?.revision === targetRevision.current && Boolean(selectedAccessRole) &&
+      poles.every((pole) => allPoles.some((item) => item.id === pole)) && mutationConfirmed &&
+      (!selectedTarget?.assignments.length || replacementIds.length > 0)));
 
   const [positionDialogOpen, setPositionDialogOpen] = useState(false);
   const [newPositionLabel, setNewPositionLabel] = useState('');
@@ -382,7 +418,9 @@ function NewEmployeeDialog() {
     <Dialog
       open={open}
       onOpenChange={(nextOpen) => {
+        if (pending || saving.current) return;
         setOpen(nextOpen);
+        if (nextOpen && mutation) void mutationTargets.refetch();
 
         if (!nextOpen) {
           resetForm();
@@ -390,27 +428,60 @@ function NewEmployeeDialog() {
       }}
     >
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" variant={mutation ? 'outline' : 'default'}>
           <Plus className="mr-1.5 h-4 w-4" />
-          Nouveau collaborateur
+          {mutation ? 'Mutation d’un collaborateur' : 'Nouveau collaborateur'}
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto"
+        onEscapeKeyDown={(event) => { if (pending || saving.current) event.preventDefault(); }}
+        onPointerDownOutside={(event) => { if (pending || saving.current) event.preventDefault(); }}>
         <DialogHeader>
           <DialogTitle>
-            Créer un dossier collaborateur
+            {mutation ? 'Préparer une mutation' : 'Créer un dossier collaborateur'}
           </DialogTitle>
 
           <DialogDescription>
-            Les RH définissent l'identité, la classification,
-            l'affectation, le référent et le besoin d'accès.
-            Le compte applicatif n'est créé qu'après validation
-            RH.
+            {mutation
+              ? 'Le compte existant conserve son identité. Le dossier est soumis, validé puis appliqué sans invitation. Les accès actuels restent inchangés jusqu’à l’application.'
+              : 'Les RH définissent l’identité, la classification, l’affectation, le référent et le besoin d’accès. Le compte applicatif n’est créé qu’après validation RH.'}
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <fieldset disabled={pending} className="space-y-6">
+          {mutation && <section className="space-y-3 rounded-lg border p-4">
+            <Label htmlFor="mutation-target">Collaborateur concerné</Label>
+            {mutationTargets.isLoading ? <p role="status" className="text-sm text-muted-foreground">Chargement des collaborateurs…</p>
+              : mutationTargets.isError ? <div role="alert" className="space-y-2">
+                <p className="text-sm text-destructive">Les collaborateurs n’ont pas pu être chargés.</p>
+                <Button type="button" size="sm" variant="outline" onClick={() => void mutationTargets.refetch()}>Réessayer</Button>
+              </div> : <Select value={targetId} disabled={mutationTargets.isFetching} onValueChange={selectMutationTarget}>
+                <SelectTrigger id="mutation-target"><SelectValue placeholder="Choisir un compte existant…" /></SelectTrigger>
+                <SelectContent>{(mutationTargets.data ?? []).map((target) => (
+                  <SelectItem key={target.id} value={target.id}>{employeeName(target.first_name, target.last_name)} · {target.email}</SelectItem>
+                ))}</SelectContent>
+              </Select>}
+            {!mutationTargets.isLoading && !mutationTargets.isError && !mutationTargets.data?.length &&
+              <p className="text-sm text-muted-foreground">Aucun collaborateur éligible dans votre périmètre.</p>}
+            {selectedTarget && <div className="space-y-3">
+              <p className="text-sm">Compte conservé : <strong>{selectedTarget.email}</strong>.</p>
+              {selectedTarget.revision !== targetRevision.current && <div role="alert" className="space-y-2 rounded-md border p-3">
+                <p className="text-sm text-destructive">La fiche du collaborateur a changé depuis sa sélection. Votre saisie est conservée ; rechargez la fiche avant de préparer la mutation.</p>
+                <Button type="button" size="sm" variant="outline" disabled={mutationTargets.isFetching}
+                  onClick={() => selectMutationTarget(targetId)}>Recharger la fiche du collaborateur</Button>
+              </div>}
+              <p className="text-sm">Cochez les affectations métier à remplacer. Les autres seront conservées.</p>
+              {selectedTarget.assignments.length ? <div className="space-y-2">
+                {selectedTarget.assignments.map((assignment) => <label key={assignment.id} className="flex items-start gap-2 rounded-md border p-2 text-sm">
+                  <Checkbox checked={replacementIds.includes(assignment.id)} onCheckedChange={(checked) =>
+                    setReplacementIds((ids) => checked === true ? [...ids, assignment.id] : ids.filter((id) => id !== assignment.id))} />
+                  <span>{assignment.label || assignment.role_key}{assignment.scope_value ? ' · ' + assignment.scope_value : ''}</span>
+                </label>)}
+              </div> : <p className="text-sm text-muted-foreground">Aucune affectation métier active. Le nouveau rôle sera créé après validation.</p>}
+              <p className="text-sm text-muted-foreground">Privilèges techniques conservés : {selectedTarget.technical_roles.length ? selectedTarget.technical_roles.join(', ') : 'aucun'}.</p>
+            </div>}
+          </section>}
           {/* IDENTITÉ */}
           <section>
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -421,6 +492,7 @@ function NewEmployeeDialog() {
               <div>
                 <Label>Prénom</Label>
                 <Input
+                  readOnly={mutation}
                   value={form.first_name}
                   onChange={(event) =>
                     setForm((previous) => ({
@@ -435,6 +507,7 @@ function NewEmployeeDialog() {
               <div>
                 <Label>Nom</Label>
                 <Input
+                  readOnly={mutation}
                   value={form.last_name}
                   onChange={(event) =>
                     setForm((previous) => ({
@@ -450,6 +523,7 @@ function NewEmployeeDialog() {
                 <Label>Email personnel</Label>
                 <Input
                   type="email"
+                  readOnly={mutation}
                   value={form.personal_email}
                   onChange={(event) =>
                     setForm((previous) => ({
@@ -465,6 +539,7 @@ function NewEmployeeDialog() {
                 <Label>Email professionnel</Label>
                 <Input
                   type="email"
+                  readOnly={mutation}
                   value={form.work_email}
                   onChange={(event) =>
                     setForm((previous) => ({
@@ -494,6 +569,7 @@ function NewEmployeeDialog() {
                 </Label>
 
                 <Select
+                  disabled={mutation}
                   value={form.collaborator_type}
                   onValueChange={(value) =>
                     setForm((previous) => ({
@@ -558,6 +634,7 @@ function NewEmployeeDialog() {
                 <Label>Niveau</Label>
 
                 <Select
+                  disabled={mutation && !!selectedAccessRole?.seniority}
                   value={form.seniority}
                   onValueChange={(value) =>
                     setForm((previous) => ({
@@ -584,7 +661,7 @@ function NewEmployeeDialog() {
               </div>
 
               <div>
-                <Label>Date d'entrée</Label>
+                <Label>{mutation ? 'Date de prise d’effet' : 'Date d’entrée'}</Label>
 
                 <Input
                   type="date"
@@ -774,6 +851,21 @@ function NewEmployeeDialog() {
                 </Dialog>
               </div>
             </div>
+            <fieldset className="mt-4 rounded-lg border p-3">
+              <legend className="px-1 text-sm font-medium">Pôles affectés</legend>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {allPoles.map((pole) => <label key={pole.id} className="flex items-center gap-2 text-sm">
+                  <Checkbox checked={poles.includes(pole.id)} disabled={pole.id === primaryPole}
+                    onCheckedChange={() => togglePole(pole.id)} />
+                  {pole.name}
+                </label>)}
+              </div>
+              {poles.filter((pole) => !allPoles.some((item) => item.id === pole)).map((pole) =>
+                <div key={pole} className="mt-2 flex flex-wrap items-center gap-2 text-sm">
+                  <span>Ancien pôle à vérifier : {pole}</span>
+                  <Button type="button" size="sm" variant="outline" onClick={() => setPoles((ids) => ids.filter((id) => id !== pole))}>Retirer du dossier</Button>
+                </div>)}
+            </fieldset>
           </section>
 
           <Separator />
@@ -864,6 +956,8 @@ function NewEmployeeDialog() {
                   setForm((previous) => ({
                     ...previous,
                     requested_role: value,
+                    ...(mutation && compatibleRoles.find((role) => role.role_key === value)?.seniority
+                      ? { seniority: compatibleRoles.find((role) => role.role_key === value)!.seniority! } : {}),
                   }))
                 }
                 disabled={
@@ -908,12 +1002,8 @@ function NewEmployeeDialog() {
               )}
 
             <p className="mt-2 text-xs text-muted-foreground">
-              Le rôle provient du catalogue RBAC
-              <code className="mx-1">
-                access_roles
-              </code>
-              et non de l'ancien système
-              viewer/operator/manager.
+              Choisissez un rôle confirmé dans le catalogue des accès. Ses pôles doivent correspondre au dossier.
+              {mutation && selectedAccessRole?.seniority && ' Le niveau de séniorité est repris du rôle sélectionné.'}
             </p>
           </section>
 
@@ -955,11 +1045,13 @@ function NewEmployeeDialog() {
           <section className="space-y-3">
             <h4 className="text-sm font-medium text-foreground">Chartes et politiques à rattacher</h4>
             <p className="text-xs text-muted-foreground">
-              Ces documents apparaîtront dans Paramètres → Ressources du collaborateur dès la création du compte.
+              {mutation
+                ? 'Les documents retenus apparaîtront dans Paramètres → Ressources après l’application de la mutation.'
+                : 'Ces documents apparaîtront dans Paramètres → Ressources du collaborateur dès la création du compte.'}
             </p>
             {attachedDocs.map((doc, i) => (
               <div key={i} className="flex items-center justify-between rounded-md border border-border p-2 text-sm">
-                <span>{doc.name} · {doc.document_type === 'charter' ? 'Charte' : 'Politique interne'}</span>
+                <span>{doc.name} · {({ charter: 'Charte', charte: 'Charte', policy: 'Politique interne', contract: 'Contrat' } as Record<string, string>)[doc.document_type] ?? doc.document_type}</span>
                 <Button variant="ghost" size="sm" onClick={() => setAttachedDocs((d) => d.filter((_, j) => j !== i))}>
                   Retirer
                 </Button>
@@ -1005,26 +1097,36 @@ function NewEmployeeDialog() {
               placeholder="Informations utiles au traitement du dossier..."
             />
           </section>
-        </div>
+          {mutation && <section className="space-y-3 rounded-lg border p-4">
+            <p className="text-sm">Les documents d’onboarding retirés de ce dossier seront archivés à l’application. Les documents ajoutés manuellement seront conservés.</p>
+            <p className="text-sm">La date renseignée est la date d’effet. Une mutation future devra être appliquée manuellement à partir de cette date.</p>
+            <label className="flex items-start gap-2 text-sm">
+              <Checkbox checked={mutationConfirmed} onCheckedChange={(checked) => setMutationConfirmed(checked === true)} />
+              <span>J’ai vérifié le nouveau poste, les pôles, le rôle et les affectations cochées à remplacer.</span>
+            </label>
+          </section>}
+        </fieldset>
+        {submitError && <p role="alert" className="whitespace-pre-wrap text-sm text-destructive">{submitError}</p>}
 
         <DialogFooter>
           <Button
             variant="ghost"
-            onClick={() => setOpen(false)}
+            disabled={pending}
+            onClick={() => { if (!saving.current) { setOpen(false); resetForm(); } }}
           >
             Annuler
           </Button>
 
           <Button
-            onClick={submit}
+            onClick={() => void submit()}
             disabled={
               !valid ||
-              create.isPending ||
+              pending ||
               referentsLoading ||
               rolesLoading
             }
           >
-            {create.isPending && (
+            {pending && (
               <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
             )}
 
@@ -1075,11 +1177,38 @@ function RequestSheet({
   } = useHrOnboardingActions();
 
   const [reason, setReason] = useState('');
+  const mutationStatus = useSetHrMutationStatus();
+  const applyMutation = useApplyHrEmployeeMutation();
+  const { user } = useAuth();
+  const isMutation = request.request_kind === 'mutation';
+  const actionPending = setStatus.isPending || provisionAccount.isPending || mutationStatus.isPending || applyMutation.isPending;
+  const mayValidate = canValidate && (!isMutation || request.target_user_id !== user?.id);
+  const mayApply = canProvision && (!isMutation || request.target_user_id !== user?.id);
+  const statusAction = (status: 'hr_validated' | 'rejected') => {
+    if (actionPending) return;
+    if (isMutation) mutationStatus.mutate({ request, status, note: reason.trim() || undefined });
+    else setStatus.mutate({ request, status, ...(status === 'rejected' ? { reason: reason.trim() } : {}) });
+  };
+  const applyAction = () => {
+    if (actionPending) return;
+    if (isMutation) applyMutation.mutate(request);
+    else provisionAccount.mutate(request);
+  };
+  const failedAction = isMutation
+    ? mutationStatus.error ?? applyMutation.error
+    : setStatus.error ?? provisionAccount.error;
+  const snapshot = (request.mutation_snapshot ?? {}) as {
+    assignments?: { id: string; role_key?: string; label?: string; scope_value?: string | null }[];
+    technical_roles?: string[];
+  };
+  const replacedIds = request.mutation_replace_assignment_ids ?? [];
+  const snapshotAssignments = Array.isArray(snapshot.assignments) ? snapshot.assignments : [];
 
   const statusConfig =
     HR_STATUS[request.status];
 
-  const step = statusConfig.step;
+  const steps = isMutation ? ['Dossier soumis', 'Validation RH', 'Mutation appliquée'] : HR_STEPS;
+  const step = isMutation ? (request.status === 'completed' ? 2 : request.status === 'hr_validated' ? 1 : 0) : statusConfig.step;
 
   const referentQuery = useHrReferents();
 
@@ -1089,11 +1218,12 @@ function RequestSheet({
   );
 
   return (
-    <Sheet open onOpenChange={onClose}>
+    <Sheet open onOpenChange={(nextOpen) => { if (!nextOpen && !actionPending) onClose(); }}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-xl">
         <SheetHeader>
           <SheetTitle className="flex flex-wrap items-center gap-2">
             {request.reference}
+            {isMutation && <Badge variant="outline">Mutation</Badge>}
 
             <Badge
               variant={statusConfig.variant}
@@ -1108,7 +1238,7 @@ function RequestSheet({
             {collaboratorTypeLabel(
               request.collaborator_type,
             )}{' '}
-            · {positionLabel(request.position)}
+            · {positionLabel(request.position_key ?? request.position)}
           </SheetDescription>
         </SheetHeader>
 
@@ -1118,13 +1248,13 @@ function RequestSheet({
             <Progress
               value={
                 (step /
-                  (HR_STEPS.length - 1)) *
+                  (steps.length - 1)) *
                 100
               }
             />
 
             <div className="mt-1 flex justify-between gap-1 text-[10px] text-muted-foreground">
-              {HR_STEPS.map(
+              {steps.map(
                 (stepLabel) => (
                   <span
                     key={stepLabel}
@@ -1197,7 +1327,7 @@ function RequestSheet({
 
             <p>
               <span className="text-muted-foreground">
-                Entrée :
+                {isMutation ? 'Prise d’effet :' : 'Entrée :'}
               </span>{' '}
               {request.start_date ?? '—'}
             </p>
@@ -1277,104 +1407,54 @@ function RequestSheet({
             </p>
           )}
 
+          {isMutation && <section className="space-y-3 rounded-lg border p-3 text-sm">
+            <h3 className="font-medium">{request.status === 'completed' ? 'Changements appliqués au compte existant' : 'Changements à appliquer au compte existant'}</h3>
+            <p>{request.work_email ?? request.personal_email ?? 'Compte conservé'} · aucun nouvel envoi d’invitation.</p>
+            <p>Nouveau rôle : <strong>{request.requested_role}</strong>.</p>
+            <div className="space-y-2">
+              {snapshotAssignments.map((assignment) => <p key={assignment.id} className="flex flex-wrap items-center gap-2">
+                <Badge variant={replacedIds.includes(assignment.id) ? 'secondary' : 'outline'}>
+                  {replacedIds.includes(assignment.id) ? (request.status === 'completed' ? 'Remplacée' : 'À remplacer') : 'Conservée'}
+                </Badge>
+                {assignment.label ?? assignment.role_key ?? assignment.id}
+                {assignment.scope_value ? ' · ' + assignment.scope_value : ''}
+              </p>)}
+              {!snapshotAssignments.length && <p className="text-muted-foreground">Aucune affectation métier active dans le dossier d’origine.</p>}
+            </div>
+            <p className="text-muted-foreground">Privilèges techniques conservés : {snapshot.technical_roles?.length ? snapshot.technical_roles.join(', ') : 'aucun'}.</p>
+            <p className="text-muted-foreground">Les documents d’onboarding retirés seront archivés. Les documents ajoutés manuellement seront conservés.</p>
+            <p className="text-muted-foreground">Les accès changent uniquement lors de l’application. Une date d’effet future exige une application à partir de cette date.</p>
+            {request.target_user_id === user?.id && <p role="alert" className="text-destructive">Un autre responsable RH doit traiter votre mutation.</p>}
+          </section>}
+
           {/* ACTIONS */}
-          {(canValidate ||
-            canProvision) &&
-            request.status !==
-              'completed' && (
-              <div className="rounded-lg border border-border p-3">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Actions
-                </p>
-
-                <Textarea
-                  className="mt-2"
-                  rows={2}
-                  placeholder="Motif obligatoire pour un refus"
-                  value={reason}
-                  onChange={(event) =>
-                    setReason(
-                      event.target.value,
-                    )
-                  }
-                />
-
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {canValidate &&
-                    request.status ===
-                      'submitted' && (
-                      <Button
-                        size="sm"
-                        disabled={
-                          setStatus.isPending
-                        }
-                        onClick={() =>
-                          setStatus.mutate({
-                            request,
-                            status:
-                              'hr_validated',
-                          })
-                        }
-                      >
-                        {setStatus.isPending ? (
-                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" />
-                        )}
-
-                        Valider RH
-                      </Button>
-                    )}
-
-                  {canProvision &&
-                    request.status ===
-                      'hr_validated' && (
-                      <Button
-                        size="sm"
-                        disabled={
-                          provisionAccount.isPending
-                        }
-                        onClick={() =>
-                          provisionAccount.mutate(
-                            request,
-                          )
-                        }
-                      >
-                        {provisionAccount.isPending ? (
-                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
-                        ) : (
-                          <UserPlus className="mr-1.5 h-3.5 w-3.5" />
-                        )}
-
-                        Créer compte & accès
-                      </Button>
-                    )}
-
-                  {(canValidate ||
-                    canProvision) && (
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      disabled={
-                        !reason.trim() ||
-                        setStatus.isPending
-                      }
-                      onClick={() =>
-                        setStatus.mutate({
-                          request,
-                          status:
-                            'rejected',
-                          reason,
-                        })
-                      }
-                    >
-                      <XCircle className="mr-1.5 h-3.5 w-3.5" />
-                      Refuser
-                    </Button>
-                  )}
-                </div>
+          {(mayValidate || mayApply) && request.status !== 'completed' &&
+            (!isMutation || ['submitted', 'hr_validated'].includes(request.status)) && (
+            <div className="space-y-3 rounded-lg border border-border p-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</p>
+              <Textarea rows={2} maxLength={2000} placeholder="Motif obligatoire pour un refus"
+                value={reason} disabled={actionPending} onChange={(event) => setReason(event.target.value)} />
+              <div className="flex flex-wrap gap-2">
+                {mayValidate && request.status === 'submitted' && <Button size="sm" disabled={actionPending}
+                  onClick={() => statusAction('hr_validated')}>
+                  <CheckCircle2 className="mr-1.5 h-3.5 w-3.5" /> Valider RH
+                </Button>}
+                {mayApply && request.status === 'hr_validated' && <Button size="sm" disabled={actionPending}
+                  onClick={applyAction}>
+                  <UserPlus className="mr-1.5 h-3.5 w-3.5" />
+                  {isMutation ? 'Appliquer la mutation' : 'Créer compte & accès'}
+                </Button>}
+                {mayValidate && <Button size="sm" variant="destructive"
+                  disabled={!reason.trim() || actionPending} onClick={() => statusAction('rejected')}>
+                  <XCircle className="mr-1.5 h-3.5 w-3.5" /> Refuser
+                </Button>}
               </div>
-            )}
+              {actionPending && <p role="status" className="text-sm text-muted-foreground">Confirmation en cours…</p>}
+              {failedAction && <p role="alert" className="whitespace-pre-wrap text-sm text-destructive">
+                {failedAction instanceof Error ? failedAction.message : 'L’action n’a pas pu être confirmée. Actualisez le dossier puis réessayez.'}
+              </p>}
+            </div>
+          )}
 
           <Separator />
 
@@ -1386,6 +1466,11 @@ function RequestSheet({
             </p>
 
             <div className="mt-2 space-y-2">
+              {events.isLoading && <p role="status" className="text-sm text-muted-foreground">Chargement de l’historique…</p>}
+              {events.isError && <div role="alert" className="space-y-2">
+                <p className="text-sm text-destructive">L’historique n’a pas pu être chargé.</p>
+                <Button size="sm" variant="outline" disabled={events.isFetching} onClick={() => void events.refetch()}>Réessayer</Button>
+              </div>}
               {(events.data ?? []).map(
                 (event) => (
                   <div
@@ -1424,7 +1509,7 @@ function RequestSheet({
                 ),
               )}
 
-              {!events.data?.length && (
+              {!events.isLoading && !events.isError && !events.data?.length && (
                 <p className="text-sm text-muted-foreground">
                   Aucun événement.
                 </p>
@@ -1435,6 +1520,7 @@ function RequestSheet({
           <Button
             variant="ghost"
             className="w-full"
+            disabled={actionPending}
             onClick={onClose}
           >
             Fermer
@@ -1446,18 +1532,17 @@ function RequestSheet({
 }
 
 export default function Onboarding() {
-  const { profile } = useAuth();
-
-  const userPoles = profile?.poles ?? [];
-
-  const canValidate = userPoles.includes('rh');
-
-  const canProvision = userPoles.includes('rh');
+  const permissions = useHrOnboardingPermissions();
+  const canValidate = permissions.data?.validate === true;
+  const canProvision = permissions.data?.apply === true;
+  const canCreate = permissions.data?.create === true;
 
   const {
     data: requests = [],
     isLoading,
     isError,
+    isFetching,
+    refetch,
   } = useHrEmployeeRequests();
 
   const [selected, setSelected] =
@@ -1493,6 +1578,13 @@ export default function Onboarding() {
     [requests],
   );
 
+  if (permissions.isLoading) return <p role="status" className="enterprise-card p-6 text-sm text-muted-foreground">Vérification de vos droits RH…</p>;
+  if (permissions.isError) return <div role="alert" className="enterprise-card space-y-3 p-6">
+    <p className="text-sm text-destructive">Vos droits RH n’ont pas pu être vérifiés.</p>
+    <Button size="sm" variant="outline" disabled={permissions.isFetching} onClick={() => void permissions.refetch()}>Réessayer</Button>
+  </div>;
+  if (!permissions.data?.read) return <p role="alert" className="enterprise-card p-6 text-sm">Vous n’avez pas accès à l’onboarding RH.</p>;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1508,9 +1600,13 @@ export default function Onboarding() {
           </p>
         </div>
 
-        {canValidate && (
-          <NewEmployeeDialog />
-        )}
+        <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="outline" disabled={isFetching} onClick={() => void refetch()}>Actualiser les dossiers</Button>
+          {canCreate && <>
+            <NewEmployeeDialog />
+            <NewEmployeeDialog mutation />
+          </>}
+        </div>
       </div>
 
       {/* KPI */}
@@ -1540,7 +1636,7 @@ export default function Onboarding() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">
-              Comptes à créer
+              À finaliser
             </p>
             <p className="mt-1 text-2xl font-semibold">
               {kpis.toProvision}
@@ -1564,12 +1660,11 @@ export default function Onboarding() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Dossiers d'intégration
+            Dossiers RH
           </CardTitle>
 
           <CardDescription>
-            Le dossier RH précède toujours la création
-            du profil applicatif et des accès.
+            La validation RH précède la création d’un compte ou l’application d’une mutation sur un compte existant.
           </CardDescription>
         </CardHeader>
 
@@ -1579,7 +1674,7 @@ export default function Onboarding() {
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
           ) : isError ? (
-            <div className="flex items-center gap-2 rounded-md border border-destructive/40 p-4 text-sm text-destructive">
+            <div role="alert" className="flex items-center gap-2 rounded-md border border-destructive/40 p-4 text-sm text-destructive">
               <AlertCircle className="h-4 w-4" />
               Impossible de charger les dossiers
               d'onboarding.
@@ -1635,6 +1730,7 @@ export default function Onboarding() {
                       >
                         <TableCell className="font-medium">
                           {request.reference}
+                          {request.request_kind === 'mutation' && <Badge variant="outline" className="ml-2">Mutation</Badge>}
                         </TableCell>
 
                         <TableCell>
@@ -1658,7 +1754,7 @@ export default function Onboarding() {
 
                         <TableCell>
                           {positionLabel(
-                            request.position,
+                            request.position_key ?? request.position,
                           )}
                         </TableCell>
 

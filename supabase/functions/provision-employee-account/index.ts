@@ -282,7 +282,7 @@ Deno.serve(
       if (request.request_kind === 'mutation') {
         const { data: mutation, error: mutationError } = await caller.rpc('apply_hr_employee_mutation', { p_request_id: request.id });
         if (mutationError) return json({ error: mutationError.message }, mutationError.code === '42501' ? 403 : 409);
-        if (!mutation || mutation.invitationSent !== false || mutation.userId !== request.target_user_id)
+        if (!mutation || mutation.requestId !== request.id || !mutation.accessAssignmentId || mutation.invitationSent !== false || mutation.userId !== request.target_user_id)
           return json({ error: 'La mutation n’a pas été confirmée.' }, 502);
         return json({ ...mutation, accountAlreadyExisted: true, email: request.work_email });
       }
@@ -341,7 +341,7 @@ Deno.serve(
 
 
       if (
-        !request.position
+        !(request.position_key ?? request.position)
       ) {
         return json(
           {
@@ -410,7 +410,7 @@ Deno.serve(
         return json(
           {
             error:
-              `Le poste "${request.position}" n'existe pas dans le catalogue RH.`,
+              `Le poste "${request.position_key ?? request.position}" n'existe pas dans le catalogue RH.`,
           },
           400,
         );
@@ -602,6 +602,9 @@ Deno.serve(
       if (emailExists)
         return json({ error: 'Ce compte existe déjà. Sélectionnez son identité dans le parcours de mutation RH.' }, 409);
 
+      // Existing unconfirmed Auth users retain their metadata in the invite endpoint.
+      // A fresh attempt nonce proves this response created this identity, including races.
+      const onboardingAttemptNonce = crypto.randomUUID();
       const {
         data: invited,
         error:
@@ -619,6 +622,7 @@ Deno.serve(
                 app_origin:
                   'connect',
                 hr_onboarding_request_id: request.id,
+                hr_onboarding_attempt_nonce: onboardingAttemptNonce,
               },
               redirectTo:
                 'https://workspace.brand-in-a-box.space/reset-password',
@@ -656,7 +660,8 @@ Deno.serve(
       }
 
 
-      if (invited.user?.user_metadata?.hr_onboarding_request_id !== request.id)
+      if (invited.user?.user_metadata?.hr_onboarding_request_id !== request.id ||
+          invited.user?.user_metadata?.hr_onboarding_attempt_nonce !== onboardingAttemptNonce)
         return json({ error: 'Le compte renvoyé n’est pas rattaché à cette création RH. Aucun accès n’a été modifié.' }, 409);
 
       if (!userId) {

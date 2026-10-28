@@ -121,6 +121,14 @@ export interface HrEmployeeRequest {
   notes: string | null;
 
   created_user_id: string | null;
+  request_kind?: 'onboarding' | 'mutation';
+  target_user_id?: string | null;
+  mutation_snapshot?: unknown;
+  mutation_replace_assignment_ids?: string[];
+  mutation_result_assignment_id?: string | null;
+  work_mode?: string | null;
+  subsidiary?: string | null;
+  attached_documents?: { name: string; document_type: string; document_url: string | null }[];
 
   created_at: string;
   updated_at: string;
@@ -148,6 +156,10 @@ export interface HrReferent {
 }
 
 export interface HrAccessRole {
+  seniority?: string | null;
+  poles?: string[];
+  is_external?: boolean;
+  read_only?: boolean;
   id: string;
   role_key: string;
   label: string;
@@ -362,6 +374,10 @@ export const useHrAccessRoles = (
           label,
           business_pole,
           department,
+          seniority,
+          poles,
+          is_external,
+          read_only,
           status
         `)
         .eq('status', 'active')

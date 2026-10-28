@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test:restock": "node --test tests/restock/*.test.mjs",
-    "test:hr-publications": "node --test tests/hr-publications/*.test.mjs"
+    "test:hr-publications": "node --test tests/hr-publications/*.test.mjs",
+    "test:hr-mutations": "node --test tests/hr-mutations/*.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
