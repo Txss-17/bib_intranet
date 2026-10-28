@@ -181,7 +181,7 @@ INSERT INTO public.access_assignments(id,employee_id,role_id,status,starts_at,en
  ('40000000-0000-4000-8000-000000000103','20000000-0000-4000-8000-000000000010','30000000-0000-4000-8000-000000000004','active',clock_timestamp()-interval '2 days',clock_timestamp()-interval '1 day');
 
 SET LOCAL ROLE authenticated;
-DO $
+DO $validity$
 DECLARE boundary record; target jsonb; request jsonb;
   payload jsonb:=current_setting('test.mutation.payload')::jsonb;
   before_profile jsonb; before_assignments jsonb; failure text;
@@ -217,7 +217,7 @@ BEGIN
     PERFORM public.set_hr_employee_mutation_status((request->>'id')::uuid,'rejected',
       'L’affectation destination hors période doit être sélectionnée pour remplacement.');
   END LOOP;
-END $;
+END $validity$;
 RESET ROLE;
 
 ROLLBACK;

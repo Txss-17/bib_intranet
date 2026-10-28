@@ -35,3 +35,5 @@ Si le frontend ou la fonction Edge sont publiés avant les nouveaux services SQL
 Cette modification ne déploie aucune fonction et ne modifie pas la base publiée. La recette avec un vrai compte RH et un collaborateur reste à effectuer après intégration et déploiement.
 
 La navigation de l’onboarding utilise les droits renvoyés par le serveur pour l’utilisateur connecté. Un rôle attribué en base reste utilisable avec un poste personnalisé ; la simulation de rôle peut seulement réduire ces droits.
+
+Un profil sans poste historique reconnu conserve une position indéfinie dans les anciennes protections ; il ne devient jamais CEO par défaut. Le chargement et la déconnexion refusent l’accès. Un administrateur vérifié garde ses droits explicites sans recevoir un poste inventé.

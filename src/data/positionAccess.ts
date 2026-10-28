@@ -249,17 +249,17 @@ const collectExtraScreens = (extraPoles?: string[]): Set<string> => {
 
 export const isBuildModeOpen = (): boolean => !isRbacEnforced();
 
+export const isKnownPosition = (value: unknown): value is EmployeePosition =>
+  typeof value === 'string' && Object.prototype.hasOwnProperty.call(positionAccess, value);
+
 export const canAccessPole = (
-  position: EmployeePosition | undefined,
+  position: EmployeePosition | null | undefined,
   poleId: PoleId,
   extraPoles?: string[],
 ): boolean => {
+  if (!isKnownPosition(position)) return false;
   if (isBuildModeOpen()) {
     return true;
-  }
-
-  if (!position) {
-    return false;
   }
 
   if (position === 'ceo') {
@@ -280,16 +280,13 @@ const PUBLIC_SCREENS = new Set<string>([
 ]);
 
 export const canAccessScreen = (
-  position: EmployeePosition | undefined,
+  position: EmployeePosition | null | undefined,
   screenId: string,
   extraPoles?: string[],
 ): boolean => {
+  if (!isKnownPosition(position)) return false;
   if (isBuildModeOpen()) {
     return true;
-  }
-
-  if (!position) {
-    return false;
   }
 
   if (position === 'ceo') {
@@ -329,15 +326,12 @@ export const canAccessScreen = (
 };
 
 export const getAccessiblePoles = (
-  position: EmployeePosition | undefined,
+  position: EmployeePosition | null | undefined,
   extraPoles?: string[],
 ): PoleId[] => {
+  if (!isKnownPosition(position)) return [];
   if (isBuildModeOpen()) {
     return [...positionAccess.ceo.poles];
-  }
-
-  if (!position) {
-    return [];
   }
 
   const base = positionAccess[position].poles;
@@ -354,3 +348,35 @@ export const getAccessiblePoles = (
 
   return Array.from(merged);
 };
+
+interface PositionAccessContext {
+  authenticated: boolean;
+  loading: boolean;
+  position?: unknown;
+  poles?: unknown;
+  isAdmin?: boolean;
+  simulation?: { position: unknown; poles?: unknown } | null;
+}
+
+/** Resolve identity separately from the explicit administrator override. */
+export function resolvePositionAccess(context: PositionAccessContext) {
+  const simulation = context.simulation ?? null;
+  const value = simulation ? simulation.position : context.position;
+  const blocked = !context.authenticated || context.loading;
+  const position = !blocked && isKnownPosition(value) ? value : undefined;
+  const rawPoles = simulation ? simulation.poles : context.poles;
+  const poles = Array.isArray(rawPoles)
+    ? rawPoles.filter((pole): pole is string => typeof pole === 'string')
+    : [];
+  const administrator = !blocked && context.isAdmin === true && !simulation;
+  return {
+    position,
+    canAccessPole: (poleId: PoleId) => !blocked &&
+      (administrator || (position !== undefined && canAccessPole(position, poleId, poles))),
+    canAccessScreen: (screenId: string) => !blocked &&
+      (administrator || (position !== undefined && canAccessScreen(position, screenId, poles))),
+    accessiblePoles: blocked ? [] : administrator
+      ? [...positionAccess.ceo.poles]
+      : position === undefined ? [] : [...getAccessiblePoles(position, poles)],
+  };
+}
