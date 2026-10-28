@@ -5,7 +5,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { toast } from "sonner";
 import type { HrEmployeeRequest } from "@/hooks/useHrOnboarding";
 import {
-  hrMutationPayload,hrMutationError,type HrOnboardingPermissions,type HrMutationSubmission,type HrMutationTarget,
+  hrMutationPayload,hrMutationError,normalizeHrOnboardingPermissions,type HrOnboardingPermissions,type HrMutationSubmission,type HrMutationTarget,
 } from "@/lib/hrEmployeeMutations";
 export type { HrMutationTarget } from "@/lib/hrEmployeeMutations";
 
@@ -17,7 +17,7 @@ export function useHrOnboardingPermissions() {
     queryFn:async():Promise<HrOnboardingPermissions>=>{
       const {data,error}=await supabase.rpc("get_hr_onboarding_permissions" as never);
       if(error||!data||typeof data!=="object"||Array.isArray(data))throw new Error("Vos droits RH n’ont pas pu être vérifiés.");
-      return data as unknown as HrOnboardingPermissions;
+      return normalizeHrOnboardingPermissions(data);
     },
   });
   const actual=query.data;

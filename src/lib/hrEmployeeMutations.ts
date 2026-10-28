@@ -76,6 +76,8 @@ export function hrMutationError(error:{code?:string;message?:string}) {
     return "Une demande existe déjà pour ce collaborateur ou cette saisie. Actualisez les dossiers pour la consulter.";
   if(message.includes("hr_mutation_not_effective_yet"))return "La date d’effet n’est pas encore atteinte. La mutation reste à appliquer manuellement à partir de cette date.";
   if(message.includes("hr_mutation_pending_access"))return "Des affectations sont en attente pour ce compte. Faites-les traiter avant de préparer une mutation.";
+  if(message.includes("hr_mutation_destination_assignment_not_effective"))
+    return "Une affectation de ce rôle est future ou expirée. Sélectionnez-la parmi les affectations à remplacer, puis soumettez un nouveau dossier.";
   if(message.includes("hr_mutation_role_scope_ambiguous"))return "Ce rôle possède plusieurs périmètres. Faites préciser son affectation dans Accès et permissions avant de poursuivre.";
   if(message.includes("hr_mutation_leadership_forbidden"))return "L’attribution d’un accès de direction exige un administrateur RH habilité.";
   if(error.code==="42501"||message.includes("forbidden"))return "Vos droits RH ne permettent pas cette opération sur ce compte. Une auto-mutation est interdite.";
@@ -85,4 +87,22 @@ export function hrMutationError(error:{code?:string;message?:string}) {
   if(error.code==="22023"||message.includes("invalid"))
     return "Vérifiez les postes, rôles et pôles du catalogue, la date d’effet, le référent RH et les documents.";
   return "La confirmation n’a pas pu être obtenue. Votre saisie est conservée ; actualisez les dossiers ou réessayez la même action.";
+}
+
+export function normalizeHrOnboardingPermissions(input:unknown):HrOnboardingPermissions {
+  const value=input&&typeof input==="object"&&!Array.isArray(input)?input as Record<string,unknown>:{};
+  // Keep the raw RPC shape in the shared query cache; in particular apply must not become update here.
+  return {read:value.read===true,create:value.create===true,validate:value.validate===true,apply:value.apply===true};
+}
+export function effectiveHrOnboardingPermissions(
+  input:Partial<HrOnboardingPermissions>|undefined,
+  preview?:Partial<Record<"read"|"create"|"update"|"delete"|"publish"|"validate"|"administer",boolean>>,
+) {
+  const read=input?.read===true&&(!preview||preview.read===true);
+  const validate=read&&input?.validate===true&&(!preview||preview.validate===true);
+  return {
+    read,create:read&&input?.create===true&&(!preview||preview.create===true),
+    validate,update:validate&&input?.apply===true&&(!preview||preview.update===true),
+    delete:false,publish:false,administer:false,
+  };
 }

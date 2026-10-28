@@ -65,6 +65,7 @@ GRANT SELECT ON public.rh_employee_documents,public.access_assignments,public.ac
 \ir ../../drizzle/migrations/0032_protect_profile_authorization_fields.sql
 \ir ../../drizzle/migrations/0034_hr_employee_mutations.sql
 \ir ../../drizzle/migrations/0035_hr_employee_mutation_compatibility.sql
+\ir ../../drizzle/migrations/0037_hr_mutation_destination_validity.sql
 
 INSERT INTO auth.users(id,email,email_confirmed_at) SELECT
  ('20000000-0000-4000-8000-'||lpad(n::text,12,'0'))::uuid,'person'||n||'@bib.test',CASE WHEN n<>10 THEN now() ELSE NULL END FROM generate_series(1,11)n;

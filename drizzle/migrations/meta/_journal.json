@@ -260,6 +260,13 @@
       "when": 1793149202000,
       "tag": "0036_hr_onboarding_invitation_claims",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1793171700000,
+      "tag": "0037_hr_mutation_destination_validity",
+      "breakpoints": true
     }
   ]
 }
