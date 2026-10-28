@@ -70,6 +70,7 @@ import {
   useSubmitHrEmployeeMutation,
   useSetHrMutationStatus,
   useApplyHrEmployeeMutation,
+  type HrMutationTarget,
 } from '@/hooks/useHrEmployeeMutations';
 
 import {
@@ -167,7 +168,10 @@ const employeeName = (
 
 function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
   const [open, setOpen] = useState(false);
-  const mutationTargets = useHrMutationTargets();
+  const [targetSearch, setTargetSearch] = useState('');
+  const mutationTargets = useHrMutationTargets(targetSearch);
+  const [selectedTarget, setSelectedTarget] = useState<HrMutationTarget | null>(null);
+  const selectedTargetSource = useHrMutationTargets(selectedTarget?.email ?? '');
   const submitMutation = useSubmitHrEmployeeMutation();
   const allPositions = useHrPositionCatalog();
   const [targetId, setTargetId] = useState('');
@@ -176,8 +180,13 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
   const [submitError, setSubmitError] = useState('');
   const creationKey = useRef<string | null>(null);
   const targetRevision = useRef<string | null>(null);
+  const targetIdentity = useRef<string | null>(null);
   const saving = useRef(false);
-  const selectedTarget = mutationTargets.data?.find((target) => target.id === targetId);
+  const refreshedTarget = selectedTargetSource.data?.find((target) => target.id === targetId);
+  const reviewedTarget = refreshedTarget ?? selectedTarget;
+  const targetOptions = selectedTarget && !mutationTargets.data?.some((target) => target.id === selectedTarget.id)
+    ? [selectedTarget, ...(mutationTargets.data ?? [])]
+    : mutationTargets.data ?? [];
 
   const { create } = useHrOnboardingActions();
 
@@ -266,21 +275,23 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
     setAttachedDocs([]);
     setDocDraft({ name: '', document_type: 'charter', document_url: '' });
     setTargetId('');
+    setSelectedTarget(null);
     setReplacementIds([]);
     setMutationConfirmed(false);
     setSubmitError('');
     creationKey.current = null;
     targetRevision.current = null;
+    targetIdentity.current = null;
 
     setPrimaryPole('');
     setPoles([]);
   };
 
-  const selectMutationTarget = (id: string) => {
-    const target = mutationTargets.data?.find((item) => item.id === id);
-    if (!target) return;
+  const fillMutationTarget = (target: HrMutationTarget) => {
     resetForm();
-    setTargetId(id);
+    setSelectedTarget(target);
+    setTargetId(target.id);
+    targetIdentity.current = target.id;
     creationKey.current = crypto.randomUUID();
     targetRevision.current = target.revision;
     const positionKey = target.position_key ?? target.position ?? '';
@@ -298,6 +309,27 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
     setPrimaryPole(position?.pole_id ?? '');
     setPoles(target.poles ?? []);
     setAttachedDocs(target.attached_documents ?? []);
+  };
+
+  const selectMutationTarget = (id: string) => {
+    const target = targetOptions.find((item) => item.id === id);
+    if (target) fillMutationTarget(target);
+  };
+  const reloadMutationTarget = async () => {
+    const id = targetId;
+    try {
+      const result = await selectedTargetSource.refetch();
+      if (targetIdentity.current !== id) return;
+      const target = result.data?.find((item) => item.id === id);
+      if (result.error || !target) {
+        setSubmitError('La fiche sélectionnée n’a pas pu être rechargée. Recherchez le collaborateur puis sélectionnez sa fiche actuelle.');
+        return;
+      }
+      fillMutationTarget(target);
+    } catch {
+      if (targetIdentity.current === id)
+        setSubmitError('La fiche n’a pas pu être rechargée. Votre saisie est conservée.');
+    }
   };
 
   useEffect(() => {
@@ -376,9 +408,10 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
     (form.position === 'ceo' || Boolean(form.manager_id)) &&
     (!mutation || (!mutationTargets.isFetching && !mutationTargets.isError && !mutationTargets.isLoading &&
       !allPositions.isLoading && Boolean(selectedTarget) && Boolean(targetRevision.current) &&
-      selectedTarget?.revision === targetRevision.current && Boolean(selectedAccessRole) &&
+      !selectedTargetSource.isFetching && !selectedTargetSource.isError && Boolean(refreshedTarget) &&
+      refreshedTarget?.revision === targetRevision.current && Boolean(selectedAccessRole) &&
       poles.every((pole) => allPoles.some((item) => item.id === pole)) && mutationConfirmed &&
-      (!selectedTarget?.assignments.length || replacementIds.length > 0)));
+      (!reviewedTarget?.assignments.length || replacementIds.length > 0)));
 
   const [positionDialogOpen, setPositionDialogOpen] = useState(false);
   const [newPositionLabel, setNewPositionLabel] = useState('');
@@ -451,6 +484,13 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
 
         <fieldset disabled={pending} className="space-y-6">
           {mutation && <section className="space-y-3 rounded-lg border p-4">
+            <div className="space-y-2">
+              <Label htmlFor="mutation-target-search">Rechercher un collaborateur</Label>
+              <Input id="mutation-target-search" value={targetSearch}
+                onChange={(event) => setTargetSearch(event.target.value)}
+                placeholder="Nom, prénom ou email…" />
+              <p className="text-xs text-muted-foreground">200 résultats maximum ; affinez la recherche. Votre sélection reste conservée.</p>
+            </div>
             <Label htmlFor="mutation-target">Collaborateur concerné</Label>
             {mutationTargets.isLoading ? <p role="status" className="text-sm text-muted-foreground">Chargement des collaborateurs…</p>
               : mutationTargets.isError ? <div role="alert" className="space-y-2">
@@ -458,28 +498,35 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
                 <Button type="button" size="sm" variant="outline" onClick={() => void mutationTargets.refetch()}>Réessayer</Button>
               </div> : <Select value={targetId} disabled={mutationTargets.isFetching} onValueChange={selectMutationTarget}>
                 <SelectTrigger id="mutation-target"><SelectValue placeholder="Choisir un compte existant…" /></SelectTrigger>
-                <SelectContent>{(mutationTargets.data ?? []).map((target) => (
+                <SelectContent>{targetOptions.map((target) => (
                   <SelectItem key={target.id} value={target.id}>{employeeName(target.first_name, target.last_name)} · {target.email}</SelectItem>
                 ))}</SelectContent>
               </Select>}
             {!mutationTargets.isLoading && !mutationTargets.isError && !mutationTargets.data?.length &&
-              <p className="text-sm text-muted-foreground">Aucun collaborateur éligible dans votre périmètre.</p>}
-            {selectedTarget && <div className="space-y-3">
-              <p className="text-sm">Compte conservé : <strong>{selectedTarget.email}</strong>.</p>
-              {selectedTarget.revision !== targetRevision.current && <div role="alert" className="space-y-2 rounded-md border p-3">
-                <p className="text-sm text-destructive">La fiche du collaborateur a changé depuis sa sélection. Votre saisie est conservée ; rechargez la fiche avant de préparer la mutation.</p>
-                <Button type="button" size="sm" variant="outline" disabled={mutationTargets.isFetching}
-                  onClick={() => selectMutationTarget(targetId)}>Recharger la fiche du collaborateur</Button>
+              <p className="text-sm text-muted-foreground">Aucun résultat pour cette recherche dans votre périmètre. {selectedTarget ? 'La fiche sélectionnée est conservée.' : 'Affinez votre recherche.'}</p>}
+            {reviewedTarget && <div className="space-y-3">
+              <p className="text-sm">Compte conservé : <strong>{reviewedTarget.email}</strong>.</p>
+              {selectedTargetSource.isFetching && <p role="status" className="text-sm text-muted-foreground">Vérification de la fiche sélectionnée…</p>}
+              {!selectedTargetSource.isFetching && (selectedTargetSource.isError || !refreshedTarget) && <div role="alert" className="space-y-2 rounded-md border p-3">
+                <p className="text-sm text-destructive">La fiche sélectionnée n’a pas pu être vérifiée. Votre saisie est conservée.</p>
+                <Button type="button" size="sm" variant="outline" onClick={() => void selectedTargetSource.refetch()}>Réessayer la vérification</Button>
+              </div>}
+              {refreshedTarget && refreshedTarget.revision !== targetRevision.current && <div role="alert" className="space-y-2 rounded-md border p-3">
+                <p className="text-sm text-destructive">La fiche du collaborateur a changé depuis sa sélection. Votre saisie est conservée. Recharger remplacera les valeurs du formulaire par les informations courantes.</p>
+                <Button type="button" size="sm" variant="outline" disabled={selectedTargetSource.isFetching}
+                  onClick={() => void reloadMutationTarget()}>Recharger la fiche du collaborateur</Button>
               </div>}
               <p className="text-sm">Cochez les affectations métier à remplacer. Les autres seront conservées.</p>
-              {selectedTarget.assignments.length ? <div className="space-y-2">
-                {selectedTarget.assignments.map((assignment) => <label key={assignment.id} className="flex items-start gap-2 rounded-md border p-2 text-sm">
+              {reviewedTarget.assignments.length ? <div className="space-y-2">
+                {reviewedTarget.assignments.map((assignment) => <label key={assignment.id} className="flex items-start gap-2 rounded-md border p-2 text-sm">
                   <Checkbox checked={replacementIds.includes(assignment.id)} onCheckedChange={(checked) =>
                     setReplacementIds((ids) => checked === true ? [...ids, assignment.id] : ids.filter((id) => id !== assignment.id))} />
-                  <span>{assignment.label || assignment.role_key}{assignment.scope_value ? ' · ' + assignment.scope_value : ''}</span>
+                  <span>{assignment.label || assignment.role_key}{assignment.scope_value ? ' · ' + assignment.scope_value : ''}
+                    <span className="block break-all font-mono text-xs text-muted-foreground">Référence : {assignment.id}</span>
+                  </span>
                 </label>)}
               </div> : <p className="text-sm text-muted-foreground">Aucune affectation métier active. Le nouveau rôle sera créé après validation.</p>}
-              <p className="text-sm text-muted-foreground">Privilèges techniques conservés : {selectedTarget.technical_roles.length ? selectedTarget.technical_roles.join(', ') : 'aucun'}.</p>
+              <p className="text-sm text-muted-foreground">Privilèges techniques conservés : {reviewedTarget.technical_roles.length ? reviewedTarget.technical_roles.join(', ') : 'aucun'}.</p>
             </div>}
           </section>}
           {/* IDENTITÉ */}
@@ -1418,6 +1465,7 @@ function RequestSheet({
                 </Badge>
                 {assignment.label ?? assignment.role_key ?? assignment.id}
                 {assignment.scope_value ? ' · ' + assignment.scope_value : ''}
+                <span className="basis-full break-all font-mono text-xs text-muted-foreground">Référence : {assignment.id}</span>
               </p>)}
               {!snapshotAssignments.length && <p className="text-muted-foreground">Aucune affectation métier active dans le dossier d’origine.</p>}
             </div>
@@ -1729,7 +1777,11 @@ export default function Onboarding() {
                         }
                       >
                         <TableCell className="font-medium">
-                          {request.reference}
+                          <Button type="button" variant="link" className="h-auto p-0 text-left"
+                            aria-label={'Ouvrir le dossier ' + request.reference}
+                            onClick={(event) => { event.stopPropagation(); setSelected(request); }}>
+                            {request.reference}
+                          </Button>
                           {request.request_kind === 'mutation' && <Badge variant="outline" className="ml-2">Mutation</Badge>}
                         </TableCell>
 

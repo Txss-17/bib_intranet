@@ -8,7 +8,7 @@ const javascript=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKin
 const id=n=>"10000000-0000-4000-8000-"+String(n).padStart(12,"0");
 async function invoke(options={}) {
  const calls={invites:[],writes:[],rpc:[],clients:[]};
- const request={id:id(1),reference:"HR-TEST",request_kind:"onboarding",status:"hr_validated",created_user_id:null,target_user_id:id(3),
+ const request={id:id(1),reference:"HR-TEST",request_kind:"onboarding",status:"hr_validated",hr_validated_by:id(2),created_user_id:null,target_user_id:id(3),
  first_name:"Nouveau",last_name:"Collaborateur",work_email:"new@bib.test",personal_email:null,position:"ops_logistics_manager",
  position_key:"ops_logistics_manager",poles:["ops"],primary_pole:"ops",seniority:"mid",collaborator_type:"internal",manager_id:id(2),
  requested_role:"new_ops",contract_type:"CDI",start_date:"2026-01-01",work_mode:"office",subsidiary:"BIB",attached_documents:[],...options.request};
@@ -40,6 +40,7 @@ async function invoke(options={}) {
    calls.rpc.push({client:"caller",name,args});
    if(name==="apply_hr_employee_mutation")return options.mutationError?{data:null,error:options.mutationError}:
      {data:options.mutationResult??{requestId:request.id,userId:request.target_user_id,invitationSent:false,accessAssignmentId:id(8)},error:null};
+   if(name==="reserve_hr_onboarding_invitation")return {data:options.reservationResult??true,error:options.reservationError??null};
    if(name==="can_hr_employee_mutation_action")return {data:options.permission!==false,error:options.permissionError??null};
    throw new Error("Unexpected caller RPC "+name);
   },
