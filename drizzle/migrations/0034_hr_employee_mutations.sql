@@ -315,7 +315,7 @@ BEGIN
     AND NOT (id=ANY(request.mutation_replace_assignment_ids)) AND role_id=role_row.id
     AND scope_id IS NOT DISTINCT FROM scope_row.scope_id AND scope_value IS NOT DISTINCT FROM scope_row.scope_value;
   IF (SELECT count(*) FROM public.access_assignments WHERE employee_id=target.id AND status='active'
-      AND NOT (id=ANY(request.mutation_replace_assignment_ids)) AND role_id=role_row.id)>CASE WHEN new_assignment IS NULL THEN 0 ELSE 1 END THEN
+      AND NOT (id=ANY(request.mutation_replace_assignment_ids)) AND role_id=role_row.id)>(CASE WHEN new_assignment IS NULL THEN 0 ELSE 1 END) THEN
     RAISE EXCEPTION 'hr_mutation_role_scope_ambiguous' USING ERRCODE='40001'; END IF;
   SELECT coalesce(array_agg(id ORDER BY id),'{}') INTO preserved FROM public.access_assignments
     WHERE employee_id=target.id AND status='active' AND NOT (id=ANY(request.mutation_replace_assignment_ids));
