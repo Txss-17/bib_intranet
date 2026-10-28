@@ -253,6 +253,13 @@
       "when": 1793149201000,
       "tag": "0035_hr_employee_mutation_compatibility",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1793149202000,
+      "tag": "0036_hr_onboarding_invitation_claims",
+      "breakpoints": true
     }
   ]
 }

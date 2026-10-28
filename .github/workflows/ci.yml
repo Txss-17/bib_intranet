@@ -49,6 +49,7 @@ jobs:
           cache: npm
         
       - name: Install dependencies
+        id: dependencies
         run: npm ci
 
       - name: Test restock contract
@@ -67,13 +68,21 @@ jobs:
         run: npm run test:hr-mutations
 
       - name: Test employee mutation permissions and atomic application
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/hr-mutations/workflow.sql
 
+      - name: Test private onboarding invitation claims
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/hr-mutations/invitation-claims.sql
+
       - name: Typecheck employee provisioning boundary
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npx tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --lib ES2022,DOM --skipLibCheck --strictNullChecks --noImplicitAny false tests/hr-mutations/edge-env.d.ts supabase/functions/provision-employee-account/index.ts
 
       - name: Typecheck application
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npx tsc --noEmit -p tsconfig.app.json
 
       - name: Build application
+        if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run build

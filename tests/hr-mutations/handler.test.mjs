@@ -40,7 +40,7 @@ async function invoke(options={}) {
    calls.rpc.push({client:"caller",name,args});
    if(name==="apply_hr_employee_mutation")return options.mutationError?{data:null,error:options.mutationError}:
      {data:options.mutationResult??{requestId:request.id,userId:request.target_user_id,invitationSent:false,accessAssignmentId:id(8)},error:null};
-   if(name==="reserve_hr_onboarding_invitation")return {data:options.reservationResult??true,error:options.reservationError??null};
+   if(name==="reserve_hr_onboarding_invitation")return {data:(Object.hasOwn(options,'reservationResult')?options.reservationResult:true),error:options.reservationError??null};
    if(name==="can_hr_employee_mutation_action")return {data:options.permission!==false,error:options.permissionError??null};
    throw new Error("Unexpected caller RPC "+name);
   },
@@ -123,4 +123,21 @@ test("mutation requires the complete authoritative request and assignment confir
   const r=await invoke({request:{request_kind:"mutation"},mutationResult});
   assert.equal(r.status,502);assert.equal(r.calls.invites.length,0);assert.equal(r.calls.writes.length,0);
  }
+});
+
+test("reservation errors fail before any invitation or profile/role writes",async()=>{
+ for(const [reservationError,status] of [[{code:"42501",message:"forbidden"},403],[{code:"40001",message:"changed"},409]]){
+  const r=await invoke({reservationError});assert.equal(r.status,status);assert.equal(r.calls.invites.length,0);assert.equal(r.calls.writes.length,0);
+ }
+});
+test("only an explicit true invitation reservation can authorize sending",async()=>{
+ for(const reservationResult of [false,null,{},undefined]){
+  const r=await invoke({reservationResult});assert.equal(r.status,502);assert.equal(r.calls.invites.length,0);assert.equal(r.calls.writes.length,0);
+ }
+});
+test("normal newhire reservation and invitation use the same fresh request nonce",async()=>{
+ const r=await invoke();assert.equal(r.status,200);
+ const reservation=r.calls.rpc.find(x=>x.name==="reserve_hr_onboarding_invitation");
+ assert.ok(reservation);assert.equal(reservation.client,"caller");assert.equal(reservation.args.p_request_id,id(1));
+ assert.equal(reservation.args.p_attempt_nonce,r.calls.invites[0].settings.data.hr_onboarding_attempt_nonce);
 });

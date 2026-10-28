@@ -764,7 +764,12 @@ export const useHrOnboardingActions = () => {
       );
 
       if (error) {
-        throw error;
+        let message = error.message;
+        try {
+          const response = "context" in error && error.context instanceof Response ? await error.context.json() : null;
+          if (response && typeof response.error === "string") message = response.error.slice(0, 2000);
+        } catch { /* Keep the transport error if no structured response is available. */ }
+        throw new Error(message);
       }
 
       if (
