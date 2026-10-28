@@ -63,6 +63,15 @@ jobs:
       - name: Test HR publication permissions and writes
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/hr-publications/permissions.sql
 
+      - name: Test employee mutation contract and provisioning handler
+        run: npm run test:hr-mutations
+
+      - name: Test employee mutation permissions and atomic application
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/hr-mutations/workflow.sql
+
+      - name: Typecheck employee provisioning boundary
+        run: npx tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --lib ES2022,DOM --skipLibCheck --strictNullChecks --noImplicitAny false tests/hr-mutations/edge-env.d.ts supabase/functions/provision-employee-account/index.ts
+
       - name: Typecheck application
         run: npx tsc --noEmit -p tsconfig.app.json
 

@@ -21,3 +21,11 @@
 - [x] Remplacer les publications fictives et les actions sans effet par les publications RH persistées : lecture complète, brouillon, modification, publication et archivage.
 - [x] Appliquer les permissions sauvegardées côté serveur, protéger les contenus non publiés et les audiences, gérer les conflits et les reprises de création.
 - [ ] Appliquer la migration 0031_hr_publications.sql puis vérifier le parcours RH dans l’application publiée.
+
+## Mutation des collaborateurs existants — 28 octobre 2026
+
+- [x] Ouvrir un dossier depuis une identité réelle, avec sélection explicite des affectations à remplacer et conservation des autres accès.
+- [x] Autoriser séparément création, validation et application depuis les droits enregistrés ; appliquer profil, accès et documents ensemble, sans invitation.
+- [x] Détecter les fiches et droits devenus obsolètes, refuser les auto-mutations et protéger les privilèges techniques.
+- [x] Afficher les informations professionnelles RH en lecture seule dans Settings.
+- [ ] Appliquer les migrations 0034 puis 0035, déployer la fonction et vérifier un parcours RH complet dans l’application publiée.

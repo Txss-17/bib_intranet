@@ -239,6 +239,20 @@
       "when": 1793130000000,
       "tag": "0033_hr_publication_access_repair",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1793149200000,
+      "tag": "0034_hr_employee_mutations",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1793149201000,
+      "tag": "0035_hr_employee_mutation_compatibility",
+      "breakpoints": true
     }
   ]
 }
