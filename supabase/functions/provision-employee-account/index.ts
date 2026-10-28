@@ -605,6 +605,14 @@ Deno.serve(
       // Existing unconfirmed Auth users retain their metadata in the invite endpoint.
       // A fresh attempt nonce proves this response created this identity, including races.
       const onboardingAttemptNonce = crypto.randomUUID();
+      const { data: invitationReserved, error: invitationReservationError } = await caller.rpc(
+        'reserve_hr_onboarding_invitation',
+        { p_request_id: request.id, p_attempt_nonce: onboardingAttemptNonce },
+      );
+      if (invitationReservationError)
+        return json({ error: invitationReservationError.message }, invitationReservationError.code === '42501' ? 403 : 409);
+      if (invitationReserved !== true)
+        return json({ error: 'L’autorisation de cette invitation RH n’a pas été confirmée.' }, 502);
       const {
         data: invited,
         error:

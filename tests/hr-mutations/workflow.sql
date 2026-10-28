@@ -82,10 +82,10 @@ END $$;
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000002',true);
 DO $$ BEGIN IF public.can_hr_employee_mutation_action('validate') OR public.can_hr_employee_mutation_action('apply') THEN RAISE EXCEPTION 'mid creator may validate or apply'; END IF; END $$;
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000011',true);
-DO $ BEGIN
+DO $$ BEGIN
  IF NOT public.can_hr_employee_mutation_action('apply') THEN RAISE EXCEPTION 'RH senior enum-array fallback without assignments denied'; END IF;
  IF NOT public.can_hr_publication_action('read') OR public.can_hr_publication_action(NULL) THEN RAISE EXCEPTION 'publication enum-array or null action repair invalid'; END IF;
-END $;
+END $$;
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000008',true);
 DO $$ BEGIN IF public.can_hr_employee_mutation_action('create') OR public.can_hr_employee_mutation_action('apply') THEN RAISE EXCEPTION 'legacy saved deny bypassed'; END IF; END $$;
 SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000009',true);
@@ -130,7 +130,7 @@ BEGIN
    OR (SELECT status FROM public.hr_employee_requests WHERE id=(request->>'id')::uuid)<>'hr_validated' THEN RAISE EXCEPTION 'failed document update left partial authority or success audit'; END IF;
 END $$;
 
-DO $
+DO $$
 DECLARE target jsonb; payload jsonb:=current_setting('test.mutation.payload')::jsonb; request jsonb;
 BEGIN
  SELECT x INTO target FROM jsonb_array_elements(public.list_hr_mutation_targets())x WHERE x->>'id'='20000000-0000-4000-8000-000000000005';
@@ -151,7 +151,7 @@ BEGIN
  PERFORM public.set_hr_employee_mutation_status((request->>'id')::uuid,'hr_validated');
  BEGIN PERFORM public.apply_hr_employee_mutation((request->>'id')::uuid); RAISE EXCEPTION 'future mutation applied before its effective date';
  EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
-END $;
+END $$;
 
 RESET ROLE;
 SET LOCAL ROLE service_role;

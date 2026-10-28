@@ -310,3 +310,75 @@ BEGIN
   RETURN jsonb_build_object('requestId',request.id,'userId',target.id,'invitationSent',false,'accessAssignmentId',new_assignment);
 END;
 $$;
+
+--> statement-breakpoint
+-- The existing catalogue trigger also reads the enum[] profile poles when validating a referent.
+CREATE OR REPLACE FUNCTION public.rh_validate_onboarding_request()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  catalog_key TEXT;
+  catalog_pole TEXT;
+  catalog_active BOOLEAN;
+BEGIN
+  catalog_key := COALESCE(
+    NULLIF(NEW.position_key, ''),
+    NEW.position::TEXT
+  );
+
+  IF catalog_key IS NULL THEN
+    RAISE EXCEPTION 'Un poste doit être sélectionné.';
+  END IF;
+
+  SELECT pole_id, active
+    INTO catalog_pole, catalog_active
+  FROM public.rh_position_catalog
+  WHERE position_key = catalog_key
+  LIMIT 1;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION
+      'Le poste "%" est absent du catalogue RH.',
+      catalog_key;
+  END IF;
+
+  IF catalog_active IS DISTINCT FROM TRUE THEN
+    RAISE EXCEPTION
+      'Le poste "%" est désactivé dans le catalogue RH.',
+      catalog_key;
+  END IF;
+
+  IF NOT (
+    catalog_pole = ANY(
+      COALESCE(NEW.poles, ARRAY[]::TEXT[])
+    )
+  ) THEN
+    RAISE EXCEPTION
+      'Le poste "%" exige le pôle "%".',
+      catalog_key,
+      catalog_pole;
+  END IF;
+
+  IF NEW.manager_id IS NOT NULL
+     AND NOT EXISTS (
+       SELECT 1
+       FROM public.profiles p
+       WHERE p.id = NEW.manager_id
+         AND COALESCE(p.test_account, FALSE) = FALSE
+         AND COALESCE(p.hr_status, 'active')
+             IN ('active', 'onboarding')
+         AND p.position = 'rh_manager'
+         AND 'rh' = ANY(
+           COALESCE(p.poles::TEXT[], ARRAY[]::TEXT[])
+         )
+     )
+  THEN
+    RAISE EXCEPTION
+      'Le référent sélectionné doit être un responsable RH réel, actif ou en onboarding.';
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
