@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { EmployeePosition, positionInfos } from '@/types/positions';
-import { canAccessPole, canAccessScreen, getAccessiblePoles } from '@/data/positionAccess';
+import { resolvePositionAccess } from '@/data/positionAccess';
 import { PoleId } from '@/types';
 import { useViewAs } from '@/hooks/useViewAs';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 
 interface UsePositionReturn {
   position: EmployeePosition | undefined;
@@ -12,49 +14,48 @@ interface UsePositionReturn {
   canAccessPole: (poleId: PoleId) => boolean;
   canAccessScreen: (screenId: string) => boolean;
   accessiblePoles: PoleId[];
-  /** Rôle métier simulé via « Visualiser comme », si actif */
   simulatedRoleLabel?: string;
 }
 
+interface PositionProfile {
+  position: unknown;
+  poles: unknown;
+}
+
 export const usePosition = (): UsePositionReturn => {
-  const [position, setPosition] = useState<EmployeePosition | undefined>(undefined);
-  const [extraPoles, setExtraPoles] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const { isAdmin, isLoading: rolesLoading } = useUserRole();
   const { role: simulatedRole } = useViewAs();
-
-  useEffect(() => {
-    const fetchPosition = async () => {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('position, poles')
-            .eq('id', user.id)
-            .single();
-          if (profile?.position) setPosition(profile.position as EmployeePosition);
-          if (profile?.poles) setExtraPoles(profile.poles as string[]);
-        }
-      } catch (error) {
-        console.error('Error fetching position:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchPosition();
-  }, []);
-
-  // Mode « Visualiser comme » : le rôle métier simulé prend le dessus.
-  const effectivePosition = simulatedRole?.position ?? position ?? 'ceo';
-  const effectivePoles = simulatedRole ? simulatedRole.poles : extraPoles;
+  const profile = useQuery({
+    queryKey: ['position-access-profile', user?.id],
+    enabled: !!user?.id,
+    staleTime: 15_000,
+    retryOnMount: false,
+    refetchInterval: 30_000,
+    queryFn: async (): Promise<PositionProfile | null> => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('position, poles')
+        .eq('id', user!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data ?? null;
+    },
+  });
+  const isLoading = authLoading || (!!user?.id && (profile.isLoading || rolesLoading));
+  const access = resolvePositionAccess({
+    authenticated: !!user?.id,
+    loading: isLoading,
+    position: profile.isError ? undefined : profile.data?.position,
+    poles: profile.isError ? [] : profile.data?.poles,
+    isAdmin,
+    simulation: simulatedRole,
+  });
 
   return {
-    position: effectivePosition,
-    positionInfo: effectivePosition ? positionInfos[effectivePosition] : undefined,
+    ...access,
+    positionInfo: access.position ? positionInfos[access.position] : undefined,
     isLoading,
-    canAccessPole: (poleId: PoleId) => canAccessPole(effectivePosition, poleId, effectivePoles),
-    canAccessScreen: (screenId: string) => canAccessScreen(effectivePosition, screenId, effectivePoles),
-    accessiblePoles: getAccessiblePoles(effectivePosition, effectivePoles),
     simulatedRoleLabel: simulatedRole?.label,
   };
 };

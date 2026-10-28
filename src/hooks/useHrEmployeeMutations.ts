@@ -46,7 +46,7 @@ function useMutationRefresh() {
   return async()=>{
     await Promise.all(["hr_employee_requests","hr_employee_request_events","rh-collaborators","employees","hr-mutation-targets",
       "hr-onboarding-permissions","hr-professional-details","my-hr-professional-details","rh-employee-documents","employee-documents",
-      "access-assignments","access-permissions"].map(key=>cache.invalidateQueries({queryKey:[key]})));
+      "access-assignments","access-permissions","position-access-profile","user-roles"].map(key=>cache.invalidateQueries({queryKey:[key]})));
   };
 }
 export function useSubmitHrEmployeeMutation() {
