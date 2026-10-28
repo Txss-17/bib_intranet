@@ -7,6 +7,7 @@ import { useViewAs } from '@/hooks/useViewAs';
 import { jobRoles, JobRole } from '@/data/jobRoles';
 import { Seniority } from '@/data/permissionRules';
 import { effectiveHrPublicationPermissions, type HrPublicationPermissions } from '@/lib/hrPublications';
+import { effectiveHrOnboardingPermissions, normalizeHrOnboardingPermissions, type HrOnboardingPermissions } from '@/lib/hrEmployeeMutations';
 import {
   ActionSet,
   DataScope,
@@ -53,7 +54,7 @@ export interface UsePermissionsReturn {
 }
 
 export const usePermissions = (): UsePermissionsReturn => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const { isAdmin } = useUserRole();
   const { role: simulatedRole } = useViewAs();
   const [tick, setTick] = useState(0);
@@ -91,6 +92,21 @@ export const usePermissions = (): UsePermissionsReturn => {
     },
   });
 
+
+  // The same raw RPC result is shared with the onboarding page, including apply.
+  const onboardingRights = useQuery({
+    queryKey: ['hr-onboarding-permissions', profile?.id],
+    enabled: !!profile?.id && profile.id === user?.id,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+    queryFn: async (): Promise<HrOnboardingPermissions> => {
+      const { data, error } = await supabase.rpc('get_hr_onboarding_permissions' as never);
+      if (error) throw error;
+      if (!data || typeof data !== 'object' || Array.isArray(data))
+        throw new Error('Droits de l’onboarding RH indisponibles.');
+      return normalizeHrOnboardingPermissions(data);
+    },
+  });
 
   // Permissions enregistrées en base pour ce rôle (Rôles & Permissions).
   const { data: dbPermissions } = useQuery({
@@ -164,13 +180,18 @@ export const usePermissions = (): UsePermissionsReturn => {
   const permissions = useCallback(
     (pageId: string): ActionSet => {
       if (!pageId) return { ...NO_ACCESS };
+      if (pageId === 'rh.onboarding') {
+        if (!profile?.id || profile.id !== user?.id) return { ...NO_ACCESS };
+        const preview = simulatedRole ? resolvePagePermissions(pageId, ctx) : undefined;
+        return { ...NO_ACCESS, ...effectiveHrOnboardingPermissions(onboardingRights.data, preview) };
+      }
       if (pageId === 'rh.publications') {
         const preview = simulatedRole ? resolvePagePermissions(pageId, ctx) : undefined;
         return { ...NO_ACCESS, ...effectiveHrPublicationPermissions(hrRights.data, preview) };
       }
       return resolvePagePermissions(pageId, ctx);
     },
-    [ctx, hrRights.data, simulatedRole],
+    [ctx, hrRights.data, onboardingRights.data, simulatedRole, profile?.id, user?.id],
   );
 
   const can = useCallback(

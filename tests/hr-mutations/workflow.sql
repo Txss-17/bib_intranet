@@ -75,7 +75,7 @@ BEGIN
    RAISE EXCEPTION 'nonadmin HR granted global direction authority';
  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
  BEGIN
-   INSERT INTO public.hr_employee_requests(first_name,last_name,request_kind,target_user_id) VALUES('Forged','Mutation','mutation',(target->>'id')::uuid);
+   INSERT INTO public.hr_employee_requests(first_name,last_name,request_kind,target_user_id,position,position_key,poles,manager_id) VALUES('Forged','Mutation','mutation',(target->>'id')::uuid,'ops_logistics_manager','ops_logistics_manager',ARRAY['ops'],'20000000-0000-4000-8000-000000000001');
    RAISE EXCEPTION 'direct client forged mutation';
  EXCEPTION WHEN insufficient_privilege THEN NULL; END;
 END $$;
@@ -164,4 +164,60 @@ DO $$ BEGIN
  IF has_function_privilege('authenticated','public.hr_account_email_exists(text)','EXECUTE') THEN RAISE EXCEPTION 'Auth email lookup exposed to client'; END IF;
  IF has_function_privilege('anon','public.apply_hr_employee_mutation(uuid)','EXECUTE') THEN RAISE EXCEPTION 'anonymous mutation granted'; END IF;
 END $$;
+
+-- Reusing an unselected destination role is safe only while its period is effective.
+-- Close the deliberate document-failure proposal so the independent target can be reused.
+RESET ROLE;
+SELECT set_config('request.jwt.claim.role','authenticated',true);
+SELECT set_config('request.jwt.claim.sub','20000000-0000-4000-8000-000000000001',true);
+SELECT public.set_hr_employee_mutation_status(id,'rejected','Clôture du scénario de document refusé.')
+FROM public.hr_employee_requests
+WHERE request_kind='mutation' AND target_user_id='20000000-0000-4000-8000-000000000004'
+  AND status IN ('submitted','hr_validated');
+
+INSERT INTO public.access_assignments(id,employee_id,role_id,status,starts_at,ends_at) VALUES
+ ('40000000-0000-4000-8000-000000000101','20000000-0000-4000-8000-000000000004','30000000-0000-4000-8000-000000000004','active',clock_timestamp()+interval '1 day',NULL),
+ ('40000000-0000-4000-8000-000000000102','20000000-0000-4000-8000-000000000010','30000000-0000-4000-8000-000000000002','active',clock_timestamp()-interval '3 days',NULL),
+ ('40000000-0000-4000-8000-000000000103','20000000-0000-4000-8000-000000000010','30000000-0000-4000-8000-000000000004','active',clock_timestamp()-interval '2 days',clock_timestamp()-interval '1 day');
+
+SET LOCAL ROLE authenticated;
+DO $
+DECLARE boundary record; target jsonb; request jsonb;
+  payload jsonb:=current_setting('test.mutation.payload')::jsonb;
+  before_profile jsonb; before_assignments jsonb; failure text;
+BEGIN
+  FOR boundary IN
+    SELECT * FROM (VALUES
+      ('20000000-0000-4000-8000-000000000004'::uuid,'40000000-0000-4000-8000-000000000006'::uuid,'50000000-0000-4000-8000-000000000006'::uuid,'future'),
+      ('20000000-0000-4000-8000-000000000010'::uuid,'40000000-0000-4000-8000-000000000102'::uuid,'50000000-0000-4000-8000-000000000007'::uuid,'expired')
+    ) AS cases(target_id,replacement_id,creation_key,period)
+  LOOP
+    SELECT x INTO target FROM jsonb_array_elements(public.list_hr_mutation_targets()) x
+      WHERE x->>'id'=boundary.target_id::text;
+    IF target IS NULL THEN RAISE EXCEPTION 'missing % destination-period target',boundary.period; END IF;
+    request:=public.submit_hr_employee_mutation(boundary.target_id,boundary.creation_key,target->>'revision',
+      ARRAY[boundary.replacement_id]::uuid[],payload);
+    PERFORM public.set_hr_employee_mutation_status((request->>'id')::uuid,'hr_validated');
+    SELECT to_jsonb(p) INTO before_profile FROM public.profiles p WHERE id=boundary.target_id;
+    SELECT jsonb_agg(to_jsonb(a) ORDER BY a.id) INTO before_assignments
+      FROM public.access_assignments a WHERE employee_id=boundary.target_id;
+    BEGIN
+      PERFORM public.apply_hr_employee_mutation((request->>'id')::uuid);
+      RAISE EXCEPTION '% destination assignment was reported applied without an effective role',boundary.period;
+    EXCEPTION WHEN serialization_failure THEN
+      GET STACKED DIAGNOSTICS failure=MESSAGE_TEXT;
+      IF failure<>'hr_mutation_destination_assignment_not_effective' THEN RAISE; END IF;
+    END;
+    IF (SELECT to_jsonb(p) FROM public.profiles p WHERE id=boundary.target_id) IS DISTINCT FROM before_profile
+        OR (SELECT jsonb_agg(to_jsonb(a) ORDER BY a.id) FROM public.access_assignments a WHERE employee_id=boundary.target_id) IS DISTINCT FROM before_assignments
+        OR (SELECT status FROM public.hr_employee_requests WHERE id=(request->>'id')::uuid)<>'hr_validated'
+        OR EXISTS(SELECT 1 FROM public.hr_account_audit_log WHERE request_id=(request->>'id')::uuid AND action='collaborator_mutated') THEN
+      RAISE EXCEPTION 'rejected % destination period left partial profile/access changes or success audit',boundary.period;
+    END IF;
+    PERFORM public.set_hr_employee_mutation_status((request->>'id')::uuid,'rejected',
+      'L’affectation destination hors période doit être sélectionnée pour remplacement.');
+  END LOOP;
+END $;
+RESET ROLE;
+
 ROLLBACK;
