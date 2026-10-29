@@ -1,3 +1,4 @@
+import { ManagedDocumentLink } from '@/components/operations/ManagedDocumentLink';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -60,7 +61,7 @@ export default function Campaigns() {
       updateCampaign.mutate({ id: editingId, ...formData }, { onSuccess: () => toast.success('Campagne modifiée') });
       saveAttachments.mutate({ entityType: 'campaign', entityId: editingId, files: formFiles });
     } else {
-      const num = `CMP-${String(Math.floor(Math.random() * 999)).padStart(3, '0')}`;
+      const num = `CMP-${crypto.randomUUID().slice(0,8).toUpperCase()}`;
       createCampaign.mutate({ campaign_number: num, spent: '0 €', ...formData }, {
         onSuccess: (data: any) => {
           toast.success('Campagne créée');
@@ -243,11 +244,11 @@ export default function Campaigns() {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-muted-foreground uppercase">Fichiers</p>
                   {getFilesForCampaign(viewing.id).map((f: any, i: number) => (
-                    <a key={i} href={f.url} target="_blank" rel="noreferrer" className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 hover:bg-muted text-sm">
+                    <ManagedDocumentLink key={i} url={f.url} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 hover:bg-muted text-sm">
                       <FileText className="h-4 w-4 text-primary" />
                       <span className="flex-1 truncate text-foreground">{f.name}</span>
                       <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                    </a>
+                    </ManagedDocumentLink>
                   ))}
                 </div>
               )}

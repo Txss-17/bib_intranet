@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { intranetRpc, moduleById } from '@/lib/intranet';
 import { useWorkTaskPermissions } from '@/hooks/useWorkTasks';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useViewAs } from '@/hooks/useViewAs';
@@ -60,6 +61,13 @@ export const usePermissions = (): UsePermissionsReturn => {
   const taskRights = useWorkTaskPermissions();
   const { role: simulatedRole } = useViewAs();
   const [tick, setTick] = useState(0);
+  const serverRights = useQuery({
+    queryKey: ['intranet-permissions', user?.id, tick],
+    enabled: !!user?.id && profile?.id === user.id,
+    staleTime: 30000, refetchInterval: 60000,
+    queryFn: () => intranetRpc<Record<string, ActionSet>>('get_intranet_permissions'),
+  });
+
 
   useEffect(() => {
     if (profile) startPermissionSync(profile.test_account === true);
@@ -182,6 +190,7 @@ export const usePermissions = (): UsePermissionsReturn => {
   const permissions = useCallback(
     (pageId: string): ActionSet => {
       if (!pageId) return { ...NO_ACCESS };
+      pageId = moduleById(pageId)?.id || pageId;
       if (pageId === 'work.tasks') {
         if (!profile?.id || profile.id !== user?.id) return { ...NO_ACCESS };
         const preview = simulatedRole ? resolvePagePermissions(pageId, ctx) : undefined;
@@ -202,9 +211,12 @@ export const usePermissions = (): UsePermissionsReturn => {
         const preview = simulatedRole ? resolvePagePermissions(pageId, ctx) : undefined;
         return { ...NO_ACCESS, ...effectiveHrPublicationPermissions(hrRights.data, preview) };
       }
-      return resolvePagePermissions(pageId, ctx);
+      const actual = !serverRights.isError ? serverRights.data?.[pageId] : undefined;
+      if (!actual || !profile?.id || profile.id !== user?.id) return { ...NO_ACCESS };
+      const preview = simulatedRole ? resolvePagePermissions(pageId, ctx) : undefined;
+      return Object.fromEntries(Object.keys(NO_ACCESS).map(action => [action, actual[action as PermissionAction] === true && (!preview || preview[action as PermissionAction])])) as ActionSet;
     },
-    [ctx, taskRights.data, hrRights.data, onboardingRights.data, simulatedRole, profile?.id, user?.id],
+    [ctx, serverRights.data, serverRights.isError, taskRights.data, hrRights.data, onboardingRights.data, simulatedRole, profile?.id, user?.id],
   );
 
   const can = useCallback(

@@ -30,9 +30,9 @@ const Page = () => {
     }
   };
 
-  const exportBoardPack = () => {
+  const exportBoardPack = async () => {
     try {
-      exportToPDF({
+      await exportToPDF({
         filename: 'board-pack',
         title: 'Board Pack — Rapports consolidés',
         poleName: 'Direction',
@@ -51,7 +51,7 @@ const Page = () => {
           date: new Date(report.created_at).toLocaleDateString(),
         })),
       });
-      toast.success('PDF Board Pack généré');
+      toast.success('Board Pack enregistré dans votre Drive BIB');
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Impossible de générer le PDF.');
     }

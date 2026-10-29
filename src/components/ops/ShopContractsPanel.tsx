@@ -1,3 +1,4 @@
+import { ManagedDocumentLink } from '@/components/operations/ManagedDocumentLink';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Plus, ExternalLink, Upload } from 'lucide-react';
@@ -37,7 +38,7 @@ export function ShopContractsPanel({ shop }: { shop: Shop }) {
                 <span className="text-xs text-muted-foreground">{c.contract_number} · {c.type}{c.end_date ? ` · fin ${c.end_date}` : ''}</span>
               </span>
               <span className="flex items-center gap-1">
-                {c.document_url && <Button variant="ghost" size="icon" asChild><a href={c.document_url} target="_blank" rel="noreferrer" aria-label="Voir le document"><ExternalLink className="h-4 w-4" /></a></Button>}
+                {c.document_url && <Button variant="ghost" size="icon" asChild><ManagedDocumentLink url={c.document_url} aria-label="Voir le document"><ExternalLink className="h-4 w-4" /></ManagedDocumentLink></Button>}
                 <Badge variant={statusVariant(c.status)}>{CONTRACT_STATUS_LABELS[c.status]}</Badge>
               </span>
             </li>

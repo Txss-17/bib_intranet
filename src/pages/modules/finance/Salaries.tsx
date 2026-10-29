@@ -23,16 +23,12 @@ const Salaries = () => {
   const { data: stats } = useSalaryStats(selectedYear);
   const updateSalary = useUpdateSalary();
 
-  // Create chart data from salary history
-  const salaryHistory = Array.from({ length: 6 }, (_, i) => {
-    const month = currentDate.getMonth() - 5 + i;
-    const date = new Date(selectedYear, month, 1);
-    return {
-      month: date.toLocaleDateString('fr-FR', { month: 'short' }),
-      gross: Math.floor(Math.random() * 20000) + 70000,
-      net: Math.floor(Math.random() * 16000) + 56000,
-    };
-  });
+  const { data: salaryYear = [] } = useSalaries({ year: selectedYear });
+  const salaryHistory = Array.from({ length: 12 }, (_, month) => ({
+    month: new Date(selectedYear, month, 1).toLocaleDateString('fr-FR', { month: 'short' }),
+    gross: salaryYear.filter(s => s.period_month === month + 1).reduce((sum, s) => sum + s.gross_amount, 0),
+    net: salaryYear.filter(s => s.period_month === month + 1).reduce((sum, s) => sum + s.net_amount, 0),
+  }));
 
   const totalGross = salaries?.reduce((sum, s) => sum + s.gross_amount, 0) || 0;
   const totalNet = salaries?.reduce((sum, s) => sum + s.net_amount, 0) || 0;
@@ -77,9 +73,7 @@ const Salaries = () => {
               <SelectValue placeholder="Période" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value={`1-2026`}>Janvier 2026</SelectItem>
-              <SelectItem value={`12-2025`}>Décembre 2025</SelectItem>
-              <SelectItem value={`11-2025`}>Novembre 2025</SelectItem>
+              {Array.from({ length: 24 }, (_, i) => { const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1); return <SelectItem key={i} value={`${date.getMonth() + 1}-${date.getFullYear()}`}>{date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</SelectItem>; })}
             </SelectContent>
           </Select>
           <ExportButtons

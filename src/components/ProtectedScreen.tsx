@@ -2,7 +2,9 @@ import React from 'react';
 import { usePosition } from '@/hooks/usePosition';
 import { Shield, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { usePermissions } from '@/hooks/usePermissions';
+import { resolveIntranetPage, moduleById } from '@/lib/intranet';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 interface ProtectedScreenProps {
   screenId: string;
@@ -45,7 +47,10 @@ export const ProtectedScreen: React.FC<ProtectedScreenProps> = ({
   children,
   fallback
 }) => {
-  const { canAccessScreen, isLoading } = usePosition();
+  const { canViewPage } = usePermissions();
+  const location = useLocation();
+  const page = moduleById(screenId) || resolveIntranetPage(location.pathname);
+  const isLoading = false;
 
   if (isLoading) {
     return (
@@ -55,7 +60,7 @@ export const ProtectedScreen: React.FC<ProtectedScreenProps> = ({
     );
   }
 
-  if (!canAccessScreen(screenId)) {
+  if (!page || !canViewPage(page.id)) {
     return fallback ? <>{fallback}</> : <AccessDenied />;
   }
 

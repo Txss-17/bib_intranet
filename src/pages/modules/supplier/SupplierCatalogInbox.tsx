@@ -1,3 +1,4 @@
+import { ManagedDocumentLink } from '@/components/operations/ManagedDocumentLink';
 import { useMemo, useState } from 'react';
 import { ProtectedScreen } from '@/components/ProtectedScreen';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -89,7 +90,7 @@ export default function SupplierCatalogInbox() {
                       <TableCell>
                         <div className="flex gap-1">
                           <Button size="sm" variant="outline" asChild>
-                            <a href={u.file_url} target="_blank" rel="noreferrer"><ExternalLink className="h-3 w-3" /></a>
+                            <ManagedDocumentLink url={u.file_url}><ExternalLink className="h-3 w-3" /></ManagedDocumentLink>
                           </Button>
                           {(u.status === 'pending' || u.status === 'reviewing') && (
                             <>

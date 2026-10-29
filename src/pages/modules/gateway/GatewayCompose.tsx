@@ -691,7 +691,7 @@ export default function GatewayCompose() {
               {isSending
                 ? 'Envoi…'
                 : isReply
-                  ? 'Envoyer la réponse'
+                  ? 'Soumettre la réponse'
                   : `Envoyer${
                       totalRecipients > 1
                         ? ` à ${totalRecipients}`

@@ -1,6 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import * as XLSX from 'xlsx';
+import { exportDocumentToDrive, currentDocumentPage } from '@/lib/driveDocuments';
 
 interface ExportColumn {
   header: string;
@@ -13,6 +13,17 @@ interface ExportOptions {
   columns: ExportColumn[];
   data: Record<string, any>[];
   poleName?: string;
+  requestKey?: string;
+}
+
+type PreparedExport = { name: string; mime: string; bytes: Uint8Array; table?: {headers:string[];rows:unknown[][]}; key:string };
+const pendingExports = new Map<string, PreparedExport>();
+async function exportPrepared(format:string,options:ExportOptions,prepare:()=>Omit<PreparedExport,'key'>){
+ const fingerprint=JSON.stringify([currentDocumentPage(),format,options]);
+ let prepared=pendingExports.get(fingerprint);
+ if(!prepared){prepared={...prepare(),key:options.requestKey||crypto.randomUUID()};pendingExports.set(fingerprint,prepared)}
+ const result=await exportDocumentToDrive(prepared.name,prepared.mime,prepared.bytes,prepared.key,prepared.table);
+ pendingExports.delete(fingerprint);return result;
 }
 
 const drawLinksyHeader = (doc: jsPDF, poleName?: string) => {
@@ -49,7 +60,8 @@ const drawLinksyHeader = (doc: jsPDF, poleName?: string) => {
   doc.setTextColor(0, 0, 0);
 };
 
-export const exportToPDF = ({ filename, title, columns, data, poleName }: ExportOptions) => {
+export const exportToPDF = async (options: ExportOptions) => exportPrepared('pdf', options, () => {
+  const {filename,title,columns,data,poleName}=options;
   const doc = new jsPDF();
   
   // Add Linksy branded header
@@ -100,35 +112,19 @@ export const exportToPDF = ({ filename, title, columns, data, poleName }: Export
      },
    });
    
-   doc.save(`${filename}.pdf`);
- };
+   return {name:`${filename}.pdf`, mime:'application/pdf', bytes:new Uint8Array(doc.output('arraybuffer'))};
+ });
  
- export const exportToExcel = ({ filename, title, columns, data }: ExportOptions) => {
-   // Prepare data with headers
-   const headers = columns.map(col => col.header);
-   const rows = data.map(item => 
-     columns.map(col => {
-       const value = item[col.accessor];
-       return value !== undefined && value !== null ? value : '';
-     })
-   );
-   
-   // Create worksheet
-   const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-   
-   // Set column widths
-   const colWidths = columns.map(col => ({ wch: Math.max(col.header.length, 15) }));
-   ws['!cols'] = colWidths;
-   
-   // Create workbook
-   const wb = XLSX.utils.book_new();
-   XLSX.utils.book_append_sheet(wb, ws, title || 'Données');
-   
-   // Save file
-   XLSX.writeFile(wb, `${filename}.xlsx`);
- };
- 
- export const exportToCSV = ({ filename, columns, data }: ExportOptions) => {
+ export const exportToExcel = async (options: ExportOptions) => exportPrepared('xlsx', options, () => {
+   const {filename,columns,data}=options;
+   const table = { headers: columns.map(c => c.header), rows: data.map(row => columns.map(c => {
+     const v = row[c.accessor]; return v == null ? '' : typeof v === 'object' ? JSON.stringify(v) : v;
+   })) };
+   return {name:`${filename}.xlsx`,mime:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',bytes:new Uint8Array(),table};
+ });
+
+ export const exportToCSV = async (options: ExportOptions) => exportPrepared('csv', options, () => {
+   const {filename,columns,data}=options;
    const headers = columns.map(col => col.header).join(',');
    const rows = data.map(item => 
      columns.map(col => {
@@ -144,9 +140,5 @@ export const exportToPDF = ({ filename, title, columns, data, poleName }: Export
    );
    
    const csv = [headers, ...rows].join('\n');
-   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-   const link = document.createElement('a');
-   link.href = URL.createObjectURL(blob);
-   link.download = `${filename}.csv`;
-   link.click();
- };
+   return {name:`${filename}.csv`,mime:'text/csv',bytes:new TextEncoder().encode(csv)};
+ });

@@ -6,18 +6,7 @@ export function useExecutiveKPIs() {
     queryKey: ['executive_kpis'],
 
     queryFn: async () => {
-      const [
-        { count: totalUsers },
-        { count: atRiskUsers },
-        { count: openIncidents },
-        { count: totalSuppliers },
-        { count: openTickets },
-        { count: totalOrders },
-        { data: cashflows },
-        { data: recentAlerts },
-        { count: pendingProducts },
-        { data: supplierScores },
-      ] = await Promise.all([
+      const sourceResults = await Promise.all([
         supabase
           .from('user_accounts')
           .select('*', {
@@ -67,8 +56,9 @@ export function useExecutiveKPIs() {
         supabase
           .from('cashflows')
           .select(
-            'amount, type, transaction_date, category',
+            'amount, type, transaction_date, category, currency',
           )
+          .eq('currency','EUR')
           .order('transaction_date', {
             ascending: false,
           })
@@ -94,8 +84,21 @@ export function useExecutiveKPIs() {
           .select('quality_score')
           .not('quality_score', 'is', null),
       ]);
+      if (sourceResults.some(result => result.error)) throw new Error('Une source de pilotage est indisponible ou non autorisée.');
+      const [
+        { count: totalUsers },
+        { count: atRiskUsers },
+        { count: openIncidents },
+        { count: totalSuppliers },
+        { count: openTickets },
+        { count: totalOrders },
+        { data: cashflows },
+        { data: recentAlerts },
+        { count: pendingProducts },
+        { data: supplierScores },
+      ] = sourceResults;
 
-      const totalRevenue = (cashflows || [])
+      const recordedIncome = (cashflows || [])
         .filter((cashflow) => cashflow.type === 'income')
         .reduce(
           (sum, cashflow) =>
@@ -103,7 +106,7 @@ export function useExecutiveKPIs() {
           0,
         );
 
-      const totalExpenses = (cashflows || [])
+      const recordedExpense = (cashflows || [])
         .filter((cashflow) => cashflow.type === 'expense')
         .reduce(
           (sum, cashflow) =>
@@ -166,8 +169,8 @@ export function useExecutiveKPIs() {
         .map(([key, value]) => ({
           month:
             monthNames[key.split('-')[1]] || key,
-          ca: Math.round(value.income / 1000),
-          ebitda: Math.round(
+          income: Math.round(value.income / 1000),
+          cashBalance: Math.round(
             (value.income - value.expense) / 1000,
           ),
         }));
@@ -192,9 +195,9 @@ export function useExecutiveKPIs() {
         totalSuppliers: totalSuppliers || 0,
         openTickets: openTickets || 0,
         totalOrders: totalOrders || 0,
-        totalRevenue,
-        totalExpenses,
-        ebitda: totalRevenue - totalExpenses,
+        recordedIncome,
+        recordedExpense,
+        cashBalance: recordedIncome - recordedExpense,
         chartData,
         criticalAlerts: recentAlerts || [],
         pendingProducts: pendingProducts || 0,
@@ -211,11 +214,7 @@ export function useRecentCriticalAlerts() {
     queryKey: ['executive_critical_alerts'],
 
     queryFn: async () => {
-      const [
-        { data: qualityAlerts },
-        { data: incidents },
-        { data: notifications },
-      ] = await Promise.all([
+      const sourceResults = await Promise.all([
         supabase
           .from('quality_alerts')
           .select(
@@ -251,6 +250,12 @@ export function useRecentCriticalAlerts() {
           })
           .limit(5),
       ]);
+      if (sourceResults.some(result => result.error)) throw new Error('Une source de pilotage est indisponible ou non autorisée.');
+      const [
+        { data: qualityAlerts },
+        { data: incidents },
+        { data: notifications },
+      ] = sourceResults;
 
       const alerts = [
         ...(qualityAlerts || []).map((alert) => ({
@@ -298,15 +303,7 @@ export function usePolePerformance() {
     queryKey: ['pole_performance'],
 
     queryFn: async () => {
-      const [
-        { count: activeSuppliers },
-        { count: totalSuppliers },
-        { count: openIncidents },
-        { count: totalIncidents },
-        { count: openTickets },
-        { count: totalTickets },
-        { data: supplierAudits },
-      ] = await Promise.all([
+      const sourceResults = await Promise.all([
         supabase
           .from('suppliers')
           .select('*', {
@@ -358,6 +355,16 @@ export function usePolePerformance() {
           .not('score', 'is', null)
           .limit(50),
       ]);
+      if (sourceResults.some(result => result.error)) throw new Error('Une source de pilotage est indisponible ou non autorisée.');
+      const [
+        { count: activeSuppliers },
+        { count: totalSuppliers },
+        { count: openIncidents },
+        { count: totalIncidents },
+        { count: openTickets },
+        { count: totalTickets },
+        { data: supplierAudits },
+      ] = sourceResults;
 
       const supplierScore = totalSuppliers
         ? Math.round(
@@ -365,7 +372,7 @@ export function usePolePerformance() {
               (totalSuppliers || 1)) *
               100,
           )
-        : 80;
+        : null;
 
       const opsScore = totalIncidents
         ? Math.round(
@@ -377,7 +384,7 @@ export function usePolePerformance() {
                 )) *
               100,
           )
-        : 90;
+        : null;
 
       const supportScore = totalTickets
         ? Math.round(
@@ -389,7 +396,7 @@ export function usePolePerformance() {
                 )) *
               100,
           )
-        : 85;
+        : null;
 
       const auditAvg =
         supplierAudits &&
@@ -401,59 +408,39 @@ export function usePolePerformance() {
                 0,
               ) / supplierAudits.length,
             )
-          : 85;
+          : null;
 
       return [
         {
           id: 'supplier',
           name: 'Fournisseurs & Produits',
-          score: Math.min(
-            supplierScore,
-            100,
-          ),
+          score: supplierScore == null ? null : Math.min(supplierScore,100),
           status:
-            supplierScore >= 80
-              ? 'healthy'
-              : 'warning',
+            supplierScore == null ? 'unknown' : supplierScore >= 80 ? 'healthy' : 'warning',
         },
 
         {
           id: 'ops',
           name: 'Opérations & Logistique',
-          score: Math.min(
-            opsScore,
-            100,
-          ),
+          score: opsScore == null ? null : Math.min(opsScore,100),
           status:
-            opsScore >= 80
-              ? 'healthy'
-              : 'warning',
+            opsScore == null ? 'unknown' : opsScore >= 80 ? 'healthy' : 'warning',
         },
 
         {
           id: 'support',
           name: 'Support & Customer Success',
-          score: Math.min(
-            supportScore,
-            100,
-          ),
+          score: supportScore == null ? null : Math.min(supportScore,100),
           status:
-            supportScore >= 80
-              ? 'healthy'
-              : 'warning',
+            supportScore == null ? 'unknown' : supportScore >= 80 ? 'healthy' : 'warning',
         },
 
         {
           id: 'audit',
           name: 'Qualité & Audit',
-          score: Math.min(
-            auditAvg,
-            100,
-          ),
+          score: auditAvg == null ? null : Math.min(auditAvg,100),
           status:
-            auditAvg >= 80
-              ? 'healthy'
-              : 'warning',
+            auditAvg == null ? 'unknown' : auditAvg >= 80 ? 'healthy' : 'warning',
         },
       ];
     },

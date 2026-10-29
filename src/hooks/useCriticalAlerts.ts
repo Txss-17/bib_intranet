@@ -47,65 +47,6 @@ function mapNotificationToAlert(n: any): CriticalAlert | null {
 }
 
 // Fallback static alerts for when DB is empty
-const FALLBACK_ALERTS: CriticalAlert[] = [
-  {
-    id: 'ca-1', module: 'ethics', severity: 'critical',
-    title: 'Signalement prioritaire P1',
-    description: 'Nouveau signalement anonyme de harcèlement — traitement sous 24h requis.',
-    timestamp: new Date(Date.now() - 12 * 60000).toISOString(), read: false,
-    actionUrl: '/modules/ethics/received',
-  },
-  {
-    id: 'ca-2', module: 'gateway', severity: 'critical',
-    title: 'Message DGCCRF non traité',
-    description: 'Courrier de la DGCCRF en attente de validation depuis 48h.',
-    timestamp: new Date(Date.now() - 35 * 60000).toISOString(), read: false,
-    actionUrl: '/modules/gateway/validation',
-  },
-  {
-    id: 'ca-3', module: 'audit', severity: 'critical',
-    title: 'Audit fournisseur — score critique',
-    description: 'BioCosmetics SAS a obtenu un score de 38% — suspension recommandée.',
-    timestamp: new Date(Date.now() - 45 * 60000).toISOString(), read: false,
-    actionUrl: '/pole/audit/supplier',
-  },
-  {
-    id: 'ca-4', module: 'supplier', severity: 'high',
-    title: 'Fournisseur suspendu automatiquement',
-    description: 'OrganicWorld Ltd suspendu suite à un score audit < 50%.',
-    timestamp: new Date(Date.now() - 1.5 * 3600000).toISOString(), read: false,
-    actionUrl: '/pole/supplier/suppliers',
-  },
-  {
-    id: 'ca-5', module: 'risk', severity: 'high',
-    title: 'Incident cybersécurité détecté',
-    description: 'Tentative d\'accès non autorisé sur l\'API partenaire.',
-    timestamp: new Date(Date.now() - 2 * 3600000).toISOString(), read: false,
-    actionUrl: '/pole/tech/security',
-  },
-  {
-    id: 'ca-6', module: 'performance', severity: 'high',
-    title: 'Taux de livraison en baisse',
-    description: 'Le taux de livraison à temps est passé sous 85% — seuil d\'alerte franchi.',
-    timestamp: new Date(Date.now() - 5 * 3600000).toISOString(), read: true,
-    actionUrl: '/pole/ops',
-  },
-  {
-    id: 'ca-7', module: 'audit', severity: 'medium',
-    title: '3 audits périodiques en retard',
-    description: 'Les audits planifiés pour NaturaCare, GreenBeauty et AromaPlantes sont en retard.',
-    timestamp: new Date(Date.now() - 8 * 3600000).toISOString(), read: true,
-    actionUrl: '/pole/audit/supplier',
-  },
-  {
-    id: 'ca-8', module: 'supplier', severity: 'medium',
-    title: 'Certifications expirant bientôt',
-    description: '4 certifications fournisseurs expirent dans les 30 prochains jours.',
-    timestamp: new Date(Date.now() - 10 * 3600000).toISOString(), read: true,
-    actionUrl: '/pole/supplier/certifications',
-  },
-];
-
 export function useCriticalAlerts() {
   const [localAlerts, setLocalAlerts] = useState<CriticalAlert[]>([]);
   const [lastAlert, setLastAlert] = useState<CriticalAlert | null>(null);
@@ -203,7 +144,7 @@ export function useCriticalAlerts() {
     const merged = [...fromDb, ...fromQuality, ...fromLogistics, ...localAlerts];
     
     // If no real data, use fallbacks
-    if (merged.length === 0) return FALLBACK_ALERTS;
+    if (merged.length === 0) return [];
 
     // Sort by timestamp desc
     return merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());

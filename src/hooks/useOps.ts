@@ -120,231 +120,7 @@ export interface LogisticsPartner {
   updated_at: string;
 }
 
-// ============================================================
-// MOCK DATA TEMPORAIRE
-// ============================================================
-//
-// Les commandes ne sont PLUS mockées.
-// Les autres sous-modules Ops seront raccordés à Supabase
-// dans les étapes suivantes.
-//
-
-const mockShipments: Shipment[] = [
-  {
-    id: '1',
-    order_id: '2',
-    tracking_number: 'DHL-FR-123456',
-    carrier: 'DHL',
-    status: 'in_transit',
-    destination_address: 'Lyon, France',
-    weight_kg: 2.5,
-    estimated_delivery: new Date(Date.now() + 86400000).toISOString(),
-    shipping_cost: 12.5,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    order_id: '4',
-    tracking_number: 'COL-789012',
-    carrier: 'Colissimo',
-    status: 'delivered',
-    destination_address: 'Bordeaux, France',
-    weight_kg: 0.8,
-    actual_delivery: new Date(Date.now() - 86400000).toISOString(),
-    shipping_cost: 8,
-    created_at: new Date(Date.now() - 259200000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    order_id: '1',
-    tracking_number: 'UPS-345678',
-    carrier: 'UPS',
-    status: 'preparing',
-    destination_address: 'Paris, France',
-    weight_kg: 4.2,
-    estimated_delivery: new Date(Date.now() + 172800000).toISOString(),
-    shipping_cost: 15,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    tracking_number: 'FDX-901234',
-    carrier: 'FedEx',
-    status: 'out_for_delivery',
-    destination_address: 'Nice, France',
-    weight_kg: 1.2,
-    estimated_delivery: new Date().toISOString(),
-    shipping_cost: 18.5,
-    created_at: new Date(Date.now() - 172800000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '5',
-    order_id: '6',
-    tracking_number: 'DHL-FR-654321',
-    carrier: 'DHL',
-    status: 'picked_up',
-    destination_address: 'Nantes, France',
-    weight_kg: 3.1,
-    estimated_delivery: new Date(Date.now() + 259200000).toISOString(),
-    shipping_cost: 14,
-    created_at: new Date(Date.now() - 43200000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-const mockIncidents: LogisticsIncident[] = [
-  {
-    id: '1',
-    shipment_id: '1',
-    type: 'delay',
-    severity: 'medium',
-    status: 'investigating',
-    description: 'Retard de livraison dû aux conditions météo',
-    reported_by: 'Client',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    order_id: '3',
-    type: 'wrong_address',
-    severity: 'high',
-    status: 'open',
-    description: 'Adresse de livraison incorrecte signalée',
-    reported_by: 'Transporteur',
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    shipment_id: '2',
-    type: 'damage',
-    severity: 'low',
-    status: 'resolved',
-    description: 'Emballage légèrement endommagé',
-    resolution: 'Remboursement partiel accordé',
-    reported_by: 'Client',
-    resolved_at: new Date().toISOString(),
-    created_at: new Date(Date.now() - 259200000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    type: 'customer_complaint',
-    severity: 'critical',
-    status: 'open',
-    description: 'Colis non reçu après 10 jours',
-    reported_by: 'Client VIP',
-    assigned_to: 'Sophie Martin',
-    created_at: new Date(Date.now() - 43200000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '5',
-    shipment_id: '4',
-    type: 'delay',
-    severity: 'medium',
-    status: 'investigating',
-    description: 'Retard de livraison - camion en panne',
-    reported_by: 'FedEx',
-    assigned_to: 'Jean Dupont',
-    created_at: new Date(Date.now() - 21600000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-const mockPartners: LogisticsPartner[] = [
-  {
-    id: '1',
-    name: 'DHL Express',
-    type: 'carrier',
-    contact_email: 'contact@dhl.fr',
-    status: 'active',
-    performance_score: 92,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '2',
-    name: 'Colissimo',
-    type: 'carrier',
-    contact_email: 'pro@colissimo.fr',
-    status: 'active',
-    performance_score: 88,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '3',
-    name: 'UPS France',
-    type: 'carrier',
-    contact_email: 'business@ups.fr',
-    status: 'active',
-    performance_score: 85,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '4',
-    name: 'Entrepôt Paris Nord',
-    type: 'warehouse',
-    contact_email: 'ops@parisnord.fr',
-    status: 'active',
-    performance_score: 95,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '5',
-    name: 'FedEx',
-    type: 'carrier',
-    contact_email: 'france@fedex.com',
-    status: 'inactive',
-    performance_score: 78,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '6',
-    name: 'Entrepôt Lyon Sud',
-    type: 'warehouse',
-    contact_email: 'contact@lyonsud.fr',
-    contact_phone: '+33 4 72 XX XX XX',
-    status: 'active',
-    performance_score: 91,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: '7',
-    name: 'Chronopost',
-    type: 'carrier',
-    contact_email: 'pro@chronopost.fr',
-    status: 'active',
-    performance_score: 86,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-];
-
-// ============================================================
-// ORDER STATUS NORMALIZATION
-// ============================================================
-//
-// La plateforme peut transmettre des statuts de paiement ou
-// de logistique différents de ceux utilisés par l'interface Ops.
-//
-// Exemple :
-// paid + null       -> confirmed
-// paid + processing -> processing
-// paid + shipped    -> shipped
-// paid + delivered  -> delivered
-//
-
+// Order normalization uses the saved lifecycle stage.
 const normalizeOrderStatus = (
   rawStatus: string | null | undefined,
   currentStage: string | null | undefined
@@ -515,7 +291,9 @@ export const useShipments = () => {
   return useQuery({
     queryKey: ['shipments'],
     queryFn: async () => {
-      return mockShipments;
+      const { data, error } = await (supabase as any).from('shipments').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as Shipment[];
     },
   });
 };
@@ -528,7 +306,9 @@ export const useLogisticsIncidents = () => {
   return useQuery({
     queryKey: ['logistics-incidents'],
     queryFn: async () => {
-      return mockIncidents;
+      const { data, error } = await supabase.from('logistics_incidents').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as LogisticsIncident[];
     },
   });
 };
@@ -541,7 +321,9 @@ export const useLogisticsPartners = () => {
   return useQuery({
     queryKey: ['logistics-partners'],
     queryFn: async () => {
-      return mockPartners;
+      const { data, error } = await supabase.from('logistics_partners').select('*').order('created_at', { ascending: false });
+      if (error) throw error;
+      return (data || []) as unknown as LogisticsPartner[];
     },
   });
 };

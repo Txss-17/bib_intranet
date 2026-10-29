@@ -35,7 +35,7 @@ const FLOWS: DataFlow[] = [
   {
     from: 'BIB Intranet',
     to: 'Backend partagé',
-    via: 'app_origin: intranet',
+    via: 'app_origin: connect',
     description:
       'Accès interne aux services métier et aux données opérationnelles.',
     icon: Lock,
@@ -43,9 +43,9 @@ const FLOWS: DataFlow[] = [
   {
     from: 'Edge Functions',
     to: 'Tables Supabase',
-    via: 'service_role + RLS',
+    via: 'service_role + contrôles serveur',
     description:
-      'Traitement serveur contrôlé avec application des politiques de sécurité.',
+      'Traitement serveur contrôlé avec vérification explicite des permissions avant les opérations privilégiées.',
     icon: Server,
   },
   {

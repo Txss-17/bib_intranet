@@ -94,17 +94,6 @@ export const useAssignees = () =>
     },
   });
 
-export const requestTriage = async (description: string, context?: string): Promise<AiSuggestion> => {
-  const { data, error } = await supabase.functions.invoke('anomaly-triage', { body: { description, context } });
-  if (error) {
-    let msg = error.message;
-    try { const b = await (error as any).context?.json(); if (b?.error) msg = b.error; } catch { /* ignore */ }
-    throw new Error(msg);
-  }
-  if ((data as any)?.error) throw new Error((data as any).error);
-  return data as AiSuggestion;
-};
-
 export const useAnomalyActions = () => {
   const qc = useQueryClient();
   const done = () => { qc.invalidateQueries({ queryKey: ['anomalies'] }); qc.invalidateQueries({ queryKey: ['anomaly-events'] }); };

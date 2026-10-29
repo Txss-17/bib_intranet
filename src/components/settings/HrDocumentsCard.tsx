@@ -3,6 +3,8 @@ import { FileText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import { openManagedDocument } from '@/lib/driveDocuments';
+import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 
 const TYPE_LABELS: Record<string, string> = {
@@ -90,7 +92,7 @@ export function HrDocumentsCard() {
                     variant="outline"
                     size="sm"
                     disabled={!d.document_url}
-                    onClick={() => d.document_url && window.open(d.document_url, '_blank', 'noopener')}
+                    onClick={() => { try { openManagedDocument(d.document_url); } catch (e) { toast.error((e as Error).message); } }}
                   >
                     Consulter
                   </Button>

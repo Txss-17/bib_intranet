@@ -1,3 +1,4 @@
+import { intranetModules, moduleById, resolveIntranetPage } from '@/lib/intranet';
 import { applyRemoteOverrides } from '@/data/permissionRules';
 import { supabase } from '@/integrations/supabase/client';
 import {
@@ -159,7 +160,7 @@ const buildRegistry = (): PageDescriptor[] => {
     },
   );
 
-  return out;
+  return intranetModules.map(p => ({ id: p.id, scope: p.scope, label: p.label, path: p.path, transversal: p.transversal }));
 };
 
 export const pageRegistry: PageDescriptor[] = buildRegistry();
@@ -169,10 +170,10 @@ export const getPage = (
 ): PageDescriptor | undefined =>
   pageRegistry.find((page) => page.id === id);
 
-export const getPageByPath = (
-  path: string,
-): PageDescriptor | undefined =>
-  pageRegistry.find((page) => page.path === path);
+export const getPageByPath = (path: string): PageDescriptor | undefined => {
+  const definition = resolveIntranetPage(path);
+  return definition ? { id: definition.id, scope: definition.scope, label: definition.label, path: definition.path, transversal: definition.transversal } : undefined;
+};
 
 // ---------------------------------------------------------------------------
 // RÔLES AUTORISÉS POUR LES PAGES SENSIBLES
@@ -774,6 +775,7 @@ export const resolvePagePermissions = (
   pageId: string,
   ctx: ResolveContext,
 ): ActionSet => {
+  pageId = moduleById(pageId)?.id || pageId;
   const page = getPage(pageId);
 
   // Les surcharges sont fournies par usePermissions.ts.
@@ -816,14 +818,14 @@ export const resolvePagePermissions = (
     page.transversal === true ||
     ctx.poles.includes(page.scope);
 
-  if (!inScope && !PUBLIC_PAGES.has(pageId)) {
+  if (!inScope && !(PUBLIC_PAGES.has(pageId) || moduleById(pageId)?.public === true)) {
     return { ...NO_ACCESS };
   }
 
   // Niveau 2 : contrôle des rôles autorisés pour les pages sensibles.
-  const owners = RESTRICTED_PAGES[pageId];
+  const owners = RESTRICTED_PAGES[pageId] || (moduleById(pageId) as unknown as { restrictedRoles?: string[] })?.restrictedRoles;
 
-  if (owners && !(ctx.role && owners.includes(ctx.role.id))) {
+  if (owners?.length && !(ctx.role && owners.includes(ctx.role.id))) {
     return { ...NO_ACCESS };
   }
 
@@ -833,7 +835,7 @@ export const resolvePagePermissions = (
   }
 
   // Niveau 3 : permissions d'action.
-  if (PUBLIC_PAGES.has(pageId)) {
+  if ((PUBLIC_PAGES.has(pageId) || moduleById(pageId)?.public === true) || (moduleById(pageId) as unknown as { public?: boolean })?.public) {
     return apply(makeActions(['read', 'create']));
   }
 

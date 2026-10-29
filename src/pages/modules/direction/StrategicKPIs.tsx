@@ -4,15 +4,16 @@ import { Loader2 } from 'lucide-react';
 import { useExecutiveKPIs } from '@/hooks/useExecutiveKPIs';
 
 export default function StrategicKPIs() {
-  const { data, isLoading } = useExecutiveKPIs();
+  const { data, isLoading, isError, refetch } = useExecutiveKPIs();
 
   if (isLoading) {
     return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
 
+  if(isError)return <p role="alert">Les indicateurs sont indisponibles ou hors de votre périmètre. <button onClick={()=>void refetch()}>Réessayer</button></p>;
   const kpis = [
-    { label: "Chiffre d'affaires", value: (data?.totalRevenue ?? 0).toLocaleString('fr-FR'), unit: '€' },
-    { label: 'EBITDA', value: (data?.ebitda ?? 0).toLocaleString('fr-FR'), unit: '€' },
+    { label: "Entrées EUR", value: (data?.recordedIncome ?? 0).toLocaleString('fr-FR'), unit: '€' },
+    { label: 'Solde des flux', value: (data?.cashBalance ?? 0).toLocaleString('fr-FR'), unit: '€' },
     { label: 'Commandes', value: data?.totalOrders ?? 0, unit: '' },
     { label: 'Fournisseurs actifs', value: data?.totalSuppliers ?? 0, unit: '' },
     { label: 'Utilisateurs à risque', value: data?.atRiskUsers ?? 0, unit: '' },
@@ -24,7 +25,7 @@ export default function StrategicKPIs() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">KPI stratégiques</h1>
+        <h1 className="text-2xl font-semibold text-foreground">KPI stratégiques</h1><p className="text-xs text-muted-foreground">Trésorerie EUR : 500 derniers mouvements enregistrés.</p>
         <p className="text-sm text-muted-foreground mt-0.5">
           Indicateurs clés consolidés en temps réel.
         </p>

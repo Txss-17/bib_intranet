@@ -1,3 +1,4 @@
+ import { useState } from 'react';
  import { Button } from '@/components/ui/button';
  import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
  import { Download, FileSpreadsheet, FileText } from 'lucide-react';
@@ -20,39 +21,43 @@ interface ExportButtonsProps {
 }
 
 export function ExportButtons({ filename, title, columns, data, variant = 'outline', size = 'default', poleName }: ExportButtonsProps) {
-  const handleExportPDF = () => {
+  const [pending, setPending] = useState(false);
+  const handleExportPDF = async () => {
+    setPending(true);
     try {
-      exportToPDF({ filename, title, columns, data, poleName });
-      toast.success('Export PDF réussi');
+      await exportToPDF({ filename, title, columns, data, poleName });
+      toast.success('PDF enregistré dans votre Drive BIB');
     } catch (error) {
-      toast.error('Erreur lors de l\'export PDF');
-    }
+      toast.error('Export Drive non confirmé. Réessayez.');
+    } finally { setPending(false); }
   };
  
-   const handleExportExcel = () => {
+   const handleExportExcel = async () => {
+     setPending(true);
      try {
-       exportToExcel({ filename, title, columns, data });
-       toast.success('Export Excel réussi');
+       await exportToExcel({ filename, title, columns, data });
+       toast.success('Excel enregistré dans votre Drive BIB');
      } catch (error) {
-       toast.error('Erreur lors de l\'export Excel');
-     }
+       toast.error('Export Drive non confirmé. Réessayez.');
+     } finally { setPending(false); }
    };
  
-   const handleExportCSV = () => {
+   const handleExportCSV = async () => {
+     setPending(true);
      try {
-       exportToCSV({ filename, columns, data });
-       toast.success('Export CSV réussi');
+       await exportToCSV({ filename, columns, data });
+       toast.success('CSV enregistré dans votre Drive BIB');
      } catch (error) {
-       toast.error('Erreur lors de l\'export CSV');
-     }
+       toast.error('Export Drive non confirmé. Réessayez.');
+     } finally { setPending(false); }
    };
  
    return (
      <DropdownMenu>
        <DropdownMenuTrigger asChild>
-         <Button variant={variant} size={size}>
+         <Button variant={variant} size={size} disabled={pending}>
            <Download className="h-4 w-4 mr-2" />
-           Exporter
+           Exporter → Drive BIB
          </Button>
        </DropdownMenuTrigger>
        <DropdownMenuContent align="end">

@@ -1,3 +1,4 @@
+import BusinessHistoryPanel from '@/components/operations/BusinessHistoryPanel';
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
@@ -7,6 +8,7 @@ import { AppSidebar } from "./AppSidebar";
 import { TopBar } from "./TopBar";
 import { ModuleNavigation } from "./ModuleNavigation";
 
+import { RouteAccessGate } from "@/components/operations/RouteAccessGate";
 import { ViewAsBanner } from "@/components/admin/ViewAsBanner";
 import { SandboxBanner } from "@/components/sandbox/SandboxBanner";
 
@@ -156,7 +158,7 @@ export function MainLayout() {
         <ViewAsBanner />
 
         <div className="p-6">
-          <Outlet />
+          <RouteAccessGate><Outlet /><BusinessHistoryPanel key={pathname} /></RouteAccessGate>
         </div>
       </main>
     </div>

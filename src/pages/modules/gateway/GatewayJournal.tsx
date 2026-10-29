@@ -1,3 +1,5 @@
+import GatewayOutbox from '@/components/operations/GatewayOutbox';
+import { Tabs,TabsContent,TabsList,TabsTrigger } from '@/components/ui/tabs';
 import { useMemo, useState } from 'react';
 import {
   Card,
@@ -105,7 +107,7 @@ const sanitizeNotes = (
     );
 };
 
-export default function GatewayJournal() {
+function IncomingJournal() {
   const {
     data: entries = [],
     isLoading,
@@ -675,3 +677,5 @@ export default function GatewayJournal() {
     </div>
   );
 }
+
+export default function GatewayJournal(){return <Tabs defaultValue="outbox"><TabsList><TabsTrigger value="outbox">Communications sortantes</TabsTrigger><TabsTrigger value="incoming">Routage des messages</TabsTrigger></TabsList><TabsContent value="outbox"><GatewayOutbox /></TabsContent><TabsContent value="incoming"><IncomingJournal /></TabsContent></Tabs>}

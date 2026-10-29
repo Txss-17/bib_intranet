@@ -1,3 +1,4 @@
+import { usePermissions } from '@/hooks/usePermissions';
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -571,17 +572,8 @@ export default function ProductStudio() {
   const { profile } = useAuth();
 
   const profilePoles = profile?.poles ?? [];
-
-  const canManageProduct =
-    profilePoles.includes('product') ||
-    profilePoles.includes('direction');
-
-  const canManageSecurity =
-    profilePoles.includes('security') ||
-    profilePoles.includes('direction');
-
-  const canManageRequests =
-    canManageProduct || canManageSecurity;
+  const {can}=usePermissions();
+  const canManageRequests=can('product.studio','update')||can('security.code','update');
 
   const { data: requests = [], isLoading } =
     useProductRequests();

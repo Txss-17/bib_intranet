@@ -14,6 +14,7 @@ import {
   useApproveTransaction, useRejectTransaction,
 } from '@/hooks/usePhase4';
 import { useUserRole } from '@/hooks/useUserRole';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/hooks/useAuth';
 
 const APPROVAL_META: Record<string, { label: string; className: string; icon: LucideIcon }> = {
@@ -30,7 +31,8 @@ export default function CorporateCards() {
   const approve = useApproveTransaction();
   const reject = useRejectTransaction();
   const { isAdmin, isManager } = useUserRole();
-  const canApprove = isAdmin || isManager;
+  const { can } = usePermissions();
+  const canApprove = can('finance.cards', 'validate');
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ card_id: '', amount: '', merchant: '', category: 'travel', description: '' });

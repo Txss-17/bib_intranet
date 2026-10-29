@@ -7,7 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, Legend, BarChart, Bar } from 'recharts';
 
 export default function DirectionGlobal() {
-  const { data: kpis, isLoading } = useExecutiveKPIs();
+  const { data: kpis, isLoading, isError, refetch } = useExecutiveKPIs();
   const { data: poles = [] } = usePolePerformance();
   const { data: alerts = [] } = useRecentCriticalAlerts();
 
@@ -15,9 +15,10 @@ export default function DirectionGlobal() {
 
   if (isLoading) return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
+  if(isError)return <p role="alert">Les indicateurs sont indisponibles ou hors de votre périmètre. <button onClick={()=>void refetch()}>Réessayer</button></p>;
   const cards = [
-    { label: 'CA consolidé', value: fmt(kpis?.totalRevenue || 0), icon: DollarSign, color: 'text-emerald-500' },
-    { label: 'EBITDA', value: fmt(kpis?.ebitda || 0), icon: TrendingUp, color: (kpis?.ebitda || 0) >= 0 ? 'text-emerald-500' : 'text-destructive' },
+    { label: 'Entrées EUR', value: fmt(kpis?.recordedIncome || 0), icon: DollarSign, color: 'text-emerald-500' },
+    { label: 'Solde des flux', value: fmt(kpis?.cashBalance || 0), icon: TrendingUp, color: (kpis?.cashBalance || 0) >= 0 ? 'text-emerald-500' : 'text-destructive' },
     { label: 'Commandes', value: String(kpis?.totalOrders || 0), icon: ShoppingCart, color: 'text-primary' },
     { label: 'Clients actifs', value: String(kpis?.totalUsers || 0), icon: Users, color: 'text-blue-500' },
     { label: 'Fournisseurs', value: String(kpis?.totalSuppliers || 0), icon: Package, color: 'text-emerald-500' },
@@ -30,8 +31,8 @@ export default function DirectionGlobal() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3"><Building2 className="h-7 w-7 text-primary" /> Direction — Vue Groupe</h1>
-          <p className="text-muted-foreground mt-1">Consolidation temps réel de tous les pôles LINKSY.</p>
+          <h1 className="text-3xl font-bold flex items-center gap-3"><Building2 className="h-7 w-7 text-primary" /> Direction — Vue Groupe</h1><p className="text-xs text-muted-foreground">Trésorerie EUR : 500 derniers mouvements enregistrés.</p>
+          <p className="text-muted-foreground mt-1">Indicateurs du périmètre autorisé.</p>
         </div>
         <Badge variant="outline"><Activity className="h-3 w-3 mr-1 text-emerald-500" /> Live</Badge>
       </div>
@@ -60,8 +61,8 @@ export default function DirectionGlobal() {
                   <YAxis className="text-xs" />
                   <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
                   <Legend />
-                  <Line type="monotone" dataKey="ca" name="CA" stroke="hsl(var(--chart-1))" strokeWidth={2} />
-                  <Line type="monotone" dataKey="ebitda" name="EBITDA" stroke="hsl(var(--chart-2))" strokeWidth={2} />
+                  <Line type="monotone" dataKey="income" name="CA" stroke="hsl(var(--chart-1))" strokeWidth={2} />
+                  <Line type="monotone" dataKey="cashBalance" name="Solde des flux" stroke="hsl(var(--chart-2))" strokeWidth={2} />
                 </LineChart>
               </ResponsiveContainer>
             ) : <p className="text-center text-muted-foreground py-12">Pas encore de données</p>}
@@ -75,8 +76,8 @@ export default function DirectionGlobal() {
               <div key={p.id} className="flex items-center justify-between">
                 <span className="text-sm font-medium">{p.name}</span>
                 <div className="flex items-center gap-2">
-                  <Progress value={p.score} className="w-32 h-2" />
-                  <span className="text-sm w-10 text-right">{p.score}%</span>
+                  {p.score != null && <Progress value={p.score} className="w-32 h-2" />}
+                  <span className="text-sm w-10 text-right">{p.score == null ? '—' : `${p.score}%`}</span>
                 </div>
               </div>
             ))}

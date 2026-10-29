@@ -30,7 +30,9 @@ import PoleDashboard from "./pages/PoleDashboard";
 import SubSectionPage from "./pages/modules/SubSectionPage";
 
 import InternalFeed from "./pages/InternalFeed";
+import ModuleWorkspace from '@/components/operations/ModuleWorkspace';
 import Documents from "./pages/Documents";
+import Notifications from "./pages/Notifications";
 import Settings from "./pages/Settings";
 
 import RolesPermissions from "@/pages/admin/RolesPermissions";
@@ -413,7 +415,7 @@ const App = () => (
                 <Route path="/pole/finance/guarantee" element={<GuaranteeFund />} />
                 <Route
                   path="/pole/finance/billing"
-                  element={<Navigate to="/pole/finance/transactions" replace />}
+                  element={<ModuleWorkspace pageId="finance.billing" />}
                 />
                 <Route
                   path="/pole/finance/payouts"
@@ -1388,10 +1390,14 @@ const App = () => (
 
                 <Route
                   path="/notifications"
-                  element={<Navigate to="/feed" replace />}
+                  element={<Notifications />}
                 />
                 <Route path="/feed" element={<InternalFeed />} />
                 <Route path="/documents" element={<Documents />} />
+                <Route path="/documents/imports" element={<Documents />} />
+                <Route path="/documents/exports" element={<Documents />} />
+                <Route path="/documents/journal" element={<Documents />} />
+                <Route path="/modules/independent-audit/incident" element={<IncidentDeclaration />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/profile" element={<Profile />} />
 

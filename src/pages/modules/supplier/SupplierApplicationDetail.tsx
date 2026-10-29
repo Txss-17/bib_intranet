@@ -1,3 +1,4 @@
+import { ManagedDocumentLink } from '@/components/operations/ManagedDocumentLink';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
@@ -130,7 +131,7 @@ export default function SupplierApplicationDetail() {
                           : url;
                         return (
                           <li key={`${url}-${index}`}>
-                            <a className="text-primary underline" href={url} target="_blank" rel="noreferrer">{label}</a>
+                            <ManagedDocumentLink className="text-primary underline" url={url}>{label}</ManagedDocumentLink>
                           </li>
                         );
                       })}

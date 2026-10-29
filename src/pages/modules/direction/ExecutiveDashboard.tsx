@@ -20,7 +20,7 @@ import DirectionOpsPanel from '@/components/direction/DirectionOpsPanel';
 
 const ExecutiveDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const { data: kpis, isLoading: kpisLoading } = useExecutiveKPIs();
+  const { data: kpis, isLoading: kpisLoading, isError:kpisError, refetch:retryKpis } = useExecutiveKPIs();
   const { data: criticalAlerts = [], isLoading: alertsLoading } = useRecentCriticalAlerts();
   const { data: polePerformance = [], isLoading: polesLoading } = usePolePerformance();
 
@@ -59,8 +59,9 @@ const ExecutiveDashboard = () => {
     );
   }
 
+  if(kpisError)return <p role="alert">Les indicateurs sont indisponibles ou hors de votre périmètre. <button onClick={()=>void retryKpis()}>Réessayer</button></p>;
   const globalKPIs = [
-    { label: 'Revenu Total', value: formatCurrency(kpis?.totalRevenue || 0), icon: DollarSign, change: formatCurrency(kpis?.ebitda || 0) + ' EBITDA', color: 'text-emerald-500' },
+    { label: 'Entrées EUR', value: formatCurrency(kpis?.recordedIncome || 0), icon: DollarSign, change: formatCurrency(kpis?.cashBalance || 0) + ' Solde des flux', color: 'text-emerald-500' },
     { label: 'Clients Actifs', value: String(kpis?.totalUsers || 0), icon: Users, change: `${kpis?.atRiskUsers || 0} à risque`, color: kpis?.atRiskUsers ? 'text-destructive' : 'text-blue-500' },
     { label: 'Commandes', value: String(kpis?.totalOrders || 0), icon: ShoppingCart, change: 'total', color: 'text-primary' },
     { label: 'Fournisseurs', value: String(kpis?.totalSuppliers || 0), icon: Package, change: `Qualité: ${kpis?.avgSupplierQuality || 'N/A'}%`, color: 'text-emerald-500' },
@@ -75,7 +76,7 @@ const ExecutiveDashboard = () => {
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
             <Building2 className="h-8 w-8 text-primary" />
             Executive Dashboard
-          </h1>
+          </h1><p className="text-xs text-muted-foreground">Trésorerie EUR : 500 derniers mouvements enregistrés.</p>
           <p className="text-muted-foreground mt-1">Vue consolidée — LINKSY Group · Données temps réel</p>
         </div>
         <Badge variant="outline" className="text-sm">
@@ -127,7 +128,7 @@ const ExecutiveDashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Revenue chart */}
             <Card>
-              <CardHeader><CardTitle>Performance CA & EBITDA (K€)</CardTitle></CardHeader>
+              <CardHeader><CardTitle>Flux enregistrés en milliers d’euros</CardTitle></CardHeader>
               <CardContent>
                 {kpis?.chartData && kpis.chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height={280}>
@@ -137,8 +138,8 @@ const ExecutiveDashboard = () => {
                       <YAxis className="text-xs" />
                       <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
                       <Legend />
-                      <Line type="monotone" dataKey="ca" name="Chiffre d'affaires" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 3 }} />
-                      <Line type="monotone" dataKey="ebitda" name="EBITDA" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="income" name="Entrées EUR" stroke="hsl(var(--chart-1))" strokeWidth={2} dot={{ r: 3 }} />
+                      <Line type="monotone" dataKey="cashBalance" name="Solde des flux" stroke="hsl(var(--chart-2))" strokeWidth={2} dot={{ r: 3 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
@@ -162,8 +163,8 @@ const ExecutiveDashboard = () => {
                           <span className="font-medium text-sm">{pole.name}</span>
                         </div>
                         <div className="flex items-center gap-3">
-                          <Progress value={pole.score} className="w-24 h-2" />
-                          <span className="text-sm font-medium w-10">{pole.score}%</span>
+                          {pole.score != null && <Progress value={pole.score} className="w-24 h-2" />}
+                          <span className="text-sm font-medium w-10">{pole.score == null ? '—' : `${pole.score}%`}</span>
                           {pole.status === 'healthy' ? (
                             <TrendingUp className="h-4 w-4 text-emerald-500" />
                           ) : (
@@ -187,22 +188,22 @@ const ExecutiveDashboard = () => {
               <CardContent className="p-4">
                 <DollarSign className="h-5 w-5 text-emerald-500 mb-2" />
                 <p className="text-xs text-muted-foreground">Revenus</p>
-                <p className="text-xl font-bold text-emerald-500">{formatCurrency(kpis?.totalRevenue || 0)}</p>
+                <p className="text-xl font-bold text-emerald-500">{formatCurrency(kpis?.recordedIncome || 0)}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
                 <TrendingDown className="h-5 w-5 text-destructive mb-2" />
                 <p className="text-xs text-muted-foreground">Dépenses</p>
-                <p className="text-xl font-bold text-destructive">{formatCurrency(kpis?.totalExpenses || 0)}</p>
+                <p className="text-xl font-bold text-destructive">{formatCurrency(kpis?.recordedExpense || 0)}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
                 <Target className="h-5 w-5 text-primary mb-2" />
-                <p className="text-xs text-muted-foreground">EBITDA</p>
-                <p className={`text-xl font-bold ${(kpis?.ebitda || 0) >= 0 ? 'text-emerald-500' : 'text-destructive'}`}>
-                  {formatCurrency(kpis?.ebitda || 0)}
+                <p className="text-xs text-muted-foreground">Solde des flux</p>
+                <p className={`text-xl font-bold ${(kpis?.cashBalance || 0) >= 0 ? 'text-emerald-500' : 'text-destructive'}`}>
+                  {formatCurrency(kpis?.cashBalance || 0)}
                 </p>
               </CardContent>
             </Card>
@@ -221,8 +222,8 @@ const ExecutiveDashboard = () => {
                     <YAxis className="text-xs" />
                     <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--background))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
                     <Legend />
-                    <Bar dataKey="ca" name="CA" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="ebitda" name="EBITDA" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="income" name="CA" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="cashBalance" name="Solde des flux" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
@@ -273,7 +274,7 @@ const ExecutiveDashboard = () => {
                   {alertsTable.processedData.length === 0 && (
                     <div className="text-center py-8">
                       <Shield className="h-8 w-8 mx-auto mb-2 text-emerald-500 opacity-50" />
-                      <p className="text-muted-foreground">Aucune alerte active — tout est sous contrôle</p>
+                      <p className="text-muted-foreground">Aucune alerte active dans le périmètre consulté</p>
                     </div>
                   )}
                 </div>
