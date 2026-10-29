@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   Building2,
   Search,
@@ -11,6 +13,7 @@ import {
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
 import {
@@ -23,16 +26,17 @@ import type { Database } from '@/integrations/supabase/types';
 type UserAccount = Database['public']['Tables']['user_accounts']['Row'];
 
 const CustomerSuccess = () => {
+  const { can } = usePermissions();
   const [search, setSearch] = useState('');
 
   const {
     data: accounts = [],
-    isLoading,
+    isLoading, isError, refetch,
   } = useUserAccounts({
     limit: 50,
   });
 
-  const { data: stats } = useUserAccountStats();
+  const { data: stats, isError: statsError, refetch: refetchStats } = useUserAccountStats();
 
   const filteredAccounts = useMemo(() => {
     const normalizedSearch = search.toLowerCase().trim();
@@ -73,6 +77,7 @@ const CustomerSuccess = () => {
         </p>
       </div>
 
+      {(isError || statsError) && <p role="alert">Comptes indisponibles. <Button variant="link" onClick={() => { void refetch(); void refetchStats(); }}>Réessayer</Button></p>}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="flex items-center gap-4 p-4">
@@ -80,7 +85,7 @@ const CustomerSuccess = () => {
 
             <div>
               <p className="text-2xl font-bold">
-                {stats?.totalUsers ?? 0}
+                {stats?.totalUsers ?? '—'}
               </p>
               <p className="text-sm text-muted-foreground">
                 Comptes suivis
@@ -95,7 +100,7 @@ const CustomerSuccess = () => {
 
             <div>
               <p className="text-2xl font-bold">
-                {stats?.activeUsers ?? 0}
+                {stats?.activeUsers ?? '—'}
               </p>
               <p className="text-sm text-muted-foreground">
                 Comptes actifs
@@ -110,7 +115,7 @@ const CustomerSuccess = () => {
 
             <div>
               <p className="text-2xl font-bold">
-                {stats?.atRiskUsers ?? 0}
+                {stats?.atRiskUsers ?? '—'}
               </p>
               <p className="text-sm text-muted-foreground">
                 Comptes à risque
@@ -125,7 +130,7 @@ const CustomerSuccess = () => {
 
             <div>
               <p className="text-2xl font-bold">
-                {stats?.unpaidUsers ?? 0}
+                {stats?.unpaidUsers ?? '—'}
               </p>
               <p className="text-sm text-muted-foreground">
                 Paiements en retard
@@ -152,7 +157,7 @@ const CustomerSuccess = () => {
             />
           </div>
 
-          {filteredAccounts.length === 0 ? (
+          {!isError && filteredAccounts.length === 0 ? (
             <div className="py-8 text-center text-sm text-muted-foreground">
               Aucun compte correspondant.
             </div>
@@ -198,7 +203,8 @@ const CustomerSuccess = () => {
                         Risque {risk}
                       </Badge>
 
-                      {account.payment_status === 'overdue' && (
+                      {can('support.tickets', 'read') && <Button variant="outline" size="sm" asChild><Link to={`/pole/support/tickets?account=${account.id}`}>Voir les tickets</Link></Button>}
+                      {['late', 'overdue', 'critical'].includes(account.payment_status || '') && (
                         <Badge variant="destructive">
                           Paiement en retard
                         </Badge>

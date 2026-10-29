@@ -330,6 +330,13 @@
       "when": 1793289600000,
       "tag": "0046_intranet_gateway_replies",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1793293200000,
+      "tag": "0047_support_ticket_workflow",
+      "breakpoints": true
     }
   ]
 }

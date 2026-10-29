@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 interface ActivityAccount {
@@ -91,7 +92,7 @@ const getRiskVariant = (
 };
 
 const SupportMonitoring = () => {
-  const { data, isLoading } =
+  const { data, isLoading, isError, refetch } =
     useSupportActivityMonitoring();
 
   if (isLoading) {
@@ -101,6 +102,8 @@ const SupportMonitoring = () => {
       </div>
     );
   }
+
+  if (isError) return <div role="alert" className="space-y-3 p-6"><p>Suivi client indisponible.</p><Button variant="outline" onClick={() => void refetch()}>Réessayer</Button></div>;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-6">
@@ -170,7 +173,7 @@ const SupportMonitoring = () => {
         <Card>
           <CardHeader>
             <CardTitle className="text-base">
-              Derniers comptes actifs
+              Comptes, par dernière commande
             </CardTitle>
           </CardHeader>
 
@@ -206,7 +209,7 @@ const SupportMonitoring = () => {
                         account.risk_level,
                       )}
                     >
-                      {account.risk_level || 'low'}
+                      {account.risk_level || 'Non renseigné'}
                     </Badge>
                   </div>
                 ))}
@@ -225,7 +228,7 @@ const SupportMonitoring = () => {
           <CardContent>
             {!data?.events.length ? (
               <p className="py-4 text-sm text-muted-foreground">
-                Aucun événement récent.
+                Aucun événement dans votre périmètre.
               </p>
             ) : (
               <div className="space-y-2">

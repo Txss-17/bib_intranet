@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { usePermissions } from '@/hooks/usePermissions';
 import { 
-  Users, Search, Building2, DollarSign,
-  Package, CreditCard, MoreVertical, Loader2
+  Users, Search, Building2, Activity,
+  AlertTriangle, CreditCard, Loader2
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,14 +28,15 @@ import { ExportButtons } from '@/components/ExportButtons';
 import { useUserAccounts, useUserAccountStats } from '@/hooks/useLifecycle';
 
 const UserAccounts = () => {
+  const { can } = usePermissions();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const { data: accounts, isLoading } = useUserAccounts({
+  const { data: accounts, isLoading, isError, refetch } = useUserAccounts({
     paymentStatus: statusFilter !== 'all' ? statusFilter : undefined,
     search: searchQuery || undefined,
   });
-  const { data: stats } = useUserAccountStats();
+  const { data: stats, isError: statsError, refetch: refetchStats } = useUserAccountStats();
 
   const getPaymentBadge = (status: string | null) => {
     switch (status) {
@@ -92,32 +95,33 @@ const UserAccounts = () => {
         />
       </div>
 
+      {(isError || statsError) && <p role="alert">Comptes ou indicateurs indisponibles. <Button variant="link" onClick={() => { void refetch(); void refetchStats(); }}>Réessayer</Button></p>}
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-4">
             <Building2 className="h-8 w-8 text-blue-500" />
             <div>
-              <p className="text-2xl font-bold">{stats?.totalUsers ?? 0}</p>
-              <p className="text-sm text-muted-foreground">Comptes actifs</p>
+              <p className="text-2xl font-bold">{stats?.totalUsers ?? '—'}</p>
+              <p className="text-sm text-muted-foreground">Comptes suivis</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-4">
-            <DollarSign className="h-8 w-8 text-emerald-500" />
+            <Activity className="h-8 w-8 text-emerald-500" />
             <div>
-              <p className="text-2xl font-bold">€{((stats?.totalRevenue ?? 0) / 1000).toFixed(0)}K</p>
-              <p className="text-sm text-muted-foreground">CA Total</p>
+              <p className="text-2xl font-bold">{stats?.activeUsers ?? '—'}</p>
+              <p className="text-sm text-muted-foreground">Abonnements actifs</p>
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 flex items-center gap-4">
-            <Package className="h-8 w-8 text-purple-500" />
+            <AlertTriangle className="h-8 w-8 text-purple-500" />
             <div>
-              <p className="text-2xl font-bold">€{((stats?.mrr ?? 0) / 1000).toFixed(0)}K</p>
-              <p className="text-sm text-muted-foreground">MRR</p>
+              <p className="text-2xl font-bold">{stats?.atRiskUsers ?? '—'}</p>
+              <p className="text-sm text-muted-foreground">Comptes à risque</p>
             </div>
           </CardContent>
         </Card>
@@ -125,7 +129,7 @@ const UserAccounts = () => {
           <CardContent className="p-4 flex items-center gap-4">
             <CreditCard className="h-8 w-8 text-orange-500" />
             <div>
-              <p className="text-2xl font-bold">{stats?.unpaidUsers ?? 0}</p>
+              <p className="text-2xl font-bold">{stats?.unpaidUsers ?? '—'}</p>
               <p className="text-sm text-muted-foreground">Paiements à surveiller</p>
             </div>
           </CardContent>
@@ -137,6 +141,7 @@ const UserAccounts = () => {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
+            maxLength={200}
             placeholder="Rechercher..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -163,12 +168,12 @@ const UserAccounts = () => {
             <TableRow>
               <TableHead>Entreprise</TableHead>
               <TableHead>Contact</TableHead>
-              <TableHead className="text-right">CA</TableHead>
+              <TableHead className="text-right">CA déclaré</TableHead>
               <TableHead className="text-right">Stock</TableHead>
               <TableHead>Paiement</TableHead>
               <TableHead>Risque</TableHead>
               <TableHead>Dernière commande</TableHead>
-              <TableHead></TableHead>
+              {can('support.tickets', 'read') && <TableHead>Support</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -181,21 +186,17 @@ const UserAccounts = () => {
                     <p className="text-sm text-muted-foreground">{account.contact_email}</p>
                   </div>
                 </TableCell>
-                <TableCell className="text-right">€{(account.revenue || 0).toLocaleString()}</TableCell>
-                <TableCell className="text-right">€{(account.stock_engaged || 0).toLocaleString()}</TableCell>
+                <TableCell className="text-right">{account.revenue?.toLocaleString() ?? '—'}</TableCell>
+                <TableCell className="text-right">{account.stock_engaged?.toLocaleString() ?? '—'}</TableCell>
                 <TableCell>{getPaymentBadge(account.payment_status)}</TableCell>
                 <TableCell>{getRiskBadge(account.risk_level)}</TableCell>
                 <TableCell>{account.last_order_date || 'N/A'}</TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="sm">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </TableCell>
+                {can('support.tickets', 'read') && <TableCell><Button variant="outline" size="sm" asChild><Link to={`/pole/support/tickets?account=${account.id}`}>Tickets</Link></Button></TableCell>}
               </TableRow>
             ))}
-            {(!accounts || accounts.length === 0) && (
+            {!isError && accounts?.length === 0 && (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={can('support.tickets', 'read') ? 8 : 7} className="text-center py-8 text-muted-foreground">
                   Aucun compte trouvé
                 </TableCell>
               </TableRow>
