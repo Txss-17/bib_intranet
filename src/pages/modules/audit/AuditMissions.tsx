@@ -1,4 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { ClipboardCheck, Plus, Search } from 'lucide-react';
@@ -21,21 +24,32 @@ const statusVariant = (s: MissionStatus) =>
   s === 'non_compliant' ? 'destructive' : s === 'compliant' || s === 'closed' ? 'default' : 'outline';
 
 export default function AuditMissions() {
-  const { data: rows = [], isLoading } = useAuditMissions();
+  const { data: rows = [], isLoading, isError, refetch } = useAuditMissions();
+  const { user } = useAuth(); const { can } = usePermissions();
+  const mayCreate = can('audit.missions', 'create');
+  const mayUpdate = can('audit.missions', 'update') || can('audit.field', 'update');
+  const mayValidate = can('audit.missions', 'validate') || can('audit.field', 'validate');
+  const [params, setParams] = useSearchParams();
   const { data: auditors = [] } = useAuditors();
   const { create, update } = useMissionActions();
   const [q, setQ] = useState('');
   const [step, setStep] = useState<string>('open');
-  const [open, setOpen] = useState(false);
-  const [selId, setSelId] = useState<string | null>(null);
+  const open = params.get('new') === '1' && mayCreate;
+  const setOpen = (value: boolean) => { const next = new URLSearchParams(params); if (value) next.set('new', '1'); else next.delete('new'); setParams(next, { replace: true }); };
+  const selId = params.get('mission');
+  const setSelId = (value: string | null) => { const next = new URLSearchParams(params); if (value) next.set('mission', value); else next.delete('mission'); setParams(next, { replace: true }); setReason(''); setResults(null); setProof(null); setDraftRevision(null); };
   const [form, setForm] = useState({ target_name: '', target_type: 'supplier', audit_type: 'quality', scheduled_date: '', auditor_id: '' });
   const [reason, setReason] = useState('');
+  const [draftRevision, setDraftRevision] = useState<number | null>(null);
+  const [results, setResults] = useState<{ findings: string; recommendations: string; score: string } | null>(null);
+  const [proof, setProof] = useState<string | null>(null);
   const [corrective, setCorrective] = useState({ action: '', due: '' });
+  useEffect(() => { setReason(''); setResults(null); setProof(null); setDraftRevision(null); setCorrective({ action: '', due: '' }); }, [selId]);
 
   const sel = rows.find((r) => r.id === selId) ?? null;
-  const { data: events = [] } = useMissionEvents(sel?.id);
+  const { data: events = [], isError: eventsError } = useMissionEvents(sel?.id);
   const name = (id: string | null) => {
-    const p = auditors.find((a: any) => a.id === id);
+    const p = auditors.find((a) => a.id === id);
     return p ? `${p.first_name} ${p.last_name}` : '—';
   };
 
@@ -43,16 +57,19 @@ export default function AuditMissions() {
     (step === 'all' || (step === 'open' ? r.workflow_status !== 'closed' : r.workflow_status === step)) &&
     (!q || `${r.mission_reference} ${r.target_name}`.toLowerCase().includes(q.toLowerCase()))), [rows, q, step]);
 
+  const canEdit = !!sel && mayUpdate && (mayValidate || sel.created_by === user?.id || sel.auditor_id === user?.id);
+  const canDecide = !!sel && mayValidate && sel.created_by !== user?.id && sel.auditor_id !== user?.id;
   const count = (s: MissionStatus[]) => rows.filter((r) => s.includes(r.workflow_status)).length;
 
   const move = (m: AuditMission, to: MissionStatus) => {
     if (['non_compliant', 'compliant'].includes(to) && !reason) return;
     if (to === 'corrective_action' && !corrective.action) return;
     update.mutate({
-      id: m.id, workflow_status: to,
-      ...(reason ? { decision_reason: reason } : {}),
+      id: m.id, revision: draftRevision ?? m.revision, workflow_status: to,
+      ...(['compliant', 'non_compliant'].includes(to) ? { decision_reason: reason.trim() } : {}),
+      ...(reason ? { change_note: reason.trim() } : {}),
       ...(to === 'corrective_action' ? { corrective_action: corrective.action, corrective_due_date: corrective.due || null } : {}),
-    }, { onSuccess: () => { setReason(''); setCorrective({ action: '', due: '' }); } });
+    }, { onSuccess: () => { setReason(''); setCorrective({ action: '', due: '' }); setResults(null); setProof(null); setDraftRevision(null); } });
   };
 
   return (
@@ -62,7 +79,7 @@ export default function AuditMissions() {
           <h1 className="flex items-center gap-2 text-2xl font-semibold"><ClipboardCheck className="h-5 w-5" />Suivi des missions</h1>
           <p className="text-sm text-muted-foreground">Mission → planification → affectation → terrain (Audit Hub) → synchronisation → analyse → décision → action corrective → clôture.</p>
         </div>
-        <Button onClick={() => setOpen(true)}><Plus className="mr-2 h-4 w-4" />Nouvelle mission</Button>
+        <Button disabled={!mayCreate} onClick={() => setOpen(true)}><Plus className="mr-2 h-4 w-4" />Nouvelle mission</Button>
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
@@ -73,7 +90,7 @@ export default function AuditMissions() {
           ['Non conformes / actions', ['non_compliant', 'corrective_action']],
           ['Clôturées', ['closed', 'compliant']],
         ] as [string, MissionStatus[]][]).map(([l, s]) => (
-          <Card key={l}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{l}</p><p className="text-2xl font-semibold">{count(s)}</p></CardContent></Card>
+          <Card key={l}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{l}</p><p className="text-2xl font-semibold">{isError ? '—' : count(s)}</p></CardContent></Card>
         ))}
       </div>
 
@@ -92,6 +109,7 @@ export default function AuditMissions() {
         </Select>
       </div>
 
+      {isError && <p role="alert">Missions indisponibles. <Button variant="link" onClick={() => void refetch()}>Réessayer</Button></p>}
       <Card>
         <CardContent className="p-0">
           {isLoading ? <p className="p-6 text-sm text-muted-foreground">Chargement…</p> : filtered.length === 0 ? (
@@ -120,7 +138,7 @@ export default function AuditMissions() {
         </CardContent>
       </Card>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={value => !create.isPending && setOpen(value)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Nouvelle mission d’audit</DialogTitle></DialogHeader>
           <div className="grid gap-3">
@@ -152,30 +170,31 @@ export default function AuditMissions() {
               <div><Label>Auditeur</Label>
                 <Select value={form.auditor_id} onValueChange={(v) => setForm({ ...form, auditor_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
-                  <SelectContent>{auditors.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.first_name} {a.last_name} · {a.email}</SelectItem>)}</SelectContent>
+                  <SelectContent>{auditors.map((a) => <SelectItem key={a.id} value={a.id}>{a.first_name} {a.last_name} · {a.email}</SelectItem>)}</SelectContent>
                 </Select></div>
             </div>
-            <p className="text-xs text-muted-foreground">Avec une date et un auditeur, la mission est envoyée directement à l’app B.I.B Audit Hub de l’auditeur (même adresse e-mail).</p>
+            <p className="text-xs text-muted-foreground">Choisissez une date et un auditeur pour affecter la mission. Le retour terrain alimente ensuite l’analyse et la décision.</p>
           </div>
           <DialogFooter>
-            <Button variant="outline" disabled={!form.target_name || create.isPending}
-              onClick={() => create.mutate({ ...form, scheduled_date: form.scheduled_date || null, auditor_id: form.auditor_id || null } as any, { onSuccess: () => { setOpen(false); setForm({ ...form, target_name: '' }); } })}>
+            <Button variant="outline" disabled={!mayCreate || !form.target_name.trim() || create.isPending}
+              onClick={() => create.mutate({ ...form, scheduled_date: form.scheduled_date || null, auditor_id: form.auditor_id || null }, { onSuccess: () => { setOpen(false); setForm({ ...form, target_name: '' }); } })}>
               Créer en brouillon
             </Button>
-            <Button disabled={!form.target_name || !form.scheduled_date || !form.auditor_id || create.isPending}
-              onClick={() => create.mutate({ ...form, workflow_status: 'assigned', assigned_at: new Date().toISOString() } as any, { onSuccess: () => { setOpen(false); setForm({ ...form, target_name: '' }); } })}>
-              Envoyer à Audit Hub
+            <Button disabled={!mayCreate || !form.target_name.trim() || !form.scheduled_date || !form.auditor_id || create.isPending}
+              onClick={() => create.mutate({ ...form, workflow_status: 'assigned' }, { onSuccess: () => { setOpen(false); setForm({ ...form, target_name: '' }); } })}>
+              Affecter la mission
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Sheet open={!!sel} onOpenChange={(o) => !o && setSelId(null)}>
+      <Sheet open={!!selId} onOpenChange={(o) => !o && setSelId(null)}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+          {selId && !sel && !isLoading && <p role="alert" className="mt-8">Mission indisponible ou accès refusé.</p>}
           {sel && (
             <>
               <SheetHeader><SheetTitle>{sel.target_name}</SheetTitle></SheetHeader>
-              <div className="mt-4 space-y-5 text-sm">
+              <div className="mt-4 space-y-5 text-sm">{draftRevision != null && draftRevision !== sel.revision && <p role="alert">La mission a été modifiée. Rouvrez-la pour reprendre avec la version actuelle.</p>}
                 <div className="flex flex-wrap gap-1">
                   {MISSION_STEPS.map((s) => {
                     const idx = MISSION_STEPS.indexOf(sel.workflow_status);
@@ -186,14 +205,14 @@ export default function AuditMissions() {
                 </div>
                 <p className="text-muted-foreground">{sel.mission_reference} · <SourceBadge source={sel.app_origin} /></p>
 
-                {['mission', 'planned', 'assigned'].includes(sel.workflow_status) && (
+                {canEdit && ['mission', 'planned', 'assigned'].includes(sel.workflow_status) && (
                   <div className="grid grid-cols-2 gap-3">
                     <div><Label>Date prévue</Label>
-                      <Input type="date" defaultValue={sel.scheduled_date ?? ''} onBlur={(e) => e.target.value && update.mutate({ id: sel.id, scheduled_date: e.target.value })} /></div>
+                      <Input key={`${sel.id}:${sel.revision}`} disabled={update.isPending} type="date" defaultValue={sel.scheduled_date ?? ''} onBlur={(e) => e.target.value && update.mutate({ id: sel.id, revision: sel.revision, scheduled_date: e.target.value })} /></div>
                     <div><Label>Auditeur</Label>
-                      <Select value={sel.auditor_id ?? ''} onValueChange={(v) => update.mutate({ id: sel.id, auditor_id: v })}>
+                      <Select disabled={update.isPending} value={sel.auditor_id ?? ''} onValueChange={(v) => update.mutate({ id: sel.id, revision: sel.revision, auditor_id: v })}>
                         <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
-                        <SelectContent>{auditors.map((a: any) => <SelectItem key={a.id} value={a.id}>{a.first_name} {a.last_name} · {a.email}</SelectItem>)}</SelectContent>
+                        <SelectContent>{auditors.map((a) => <SelectItem key={a.id} value={a.id}>{a.first_name} {a.last_name} · {a.email}</SelectItem>)}</SelectContent>
                       </Select></div>
                   </div>
                 )}
@@ -212,27 +231,31 @@ export default function AuditMissions() {
                 )}
                 {sel.anomaly_id && <p className="text-xs text-muted-foreground">Anomalie ouverte automatiquement (Opérations → Anomalies).</p>}
 
-                {sel.workflow_status === 'analysis' && (
-                  <div><Label>Motif de la décision (obligatoire)</Label><Textarea value={reason} onChange={(e) => setReason(e.target.value)} /></div>
+                {canDecide && ['analysis', 'compliant', 'corrective_action'].includes(sel.workflow_status) && (
+                  <div><Label>Compte rendu de décision ou de clôture (obligatoire)</Label><Textarea value={reason} onChange={(e) => { setReason(e.target.value); setDraftRevision(current => current ?? sel.revision); }} /></div>
                 )}
-                {sel.workflow_status === 'non_compliant' && (
+                {canEdit && sel.workflow_status === 'non_compliant' && (
                   <div className="grid gap-2">
                     <Label>Action corrective demandée</Label>
-                    <Textarea value={corrective.action} onChange={(e) => setCorrective({ ...corrective, action: e.target.value })} />
-                    <Input type="date" value={corrective.due} onChange={(e) => setCorrective({ ...corrective, due: e.target.value })} />
+                    <Textarea value={corrective.action} onChange={(e) => { setCorrective({ ...corrective, action: e.target.value }); setDraftRevision(current => current ?? sel.revision); }} />
+                    <Input type="date" value={corrective.due} onChange={(e) => { setCorrective({ ...corrective, due: e.target.value }); setDraftRevision(current => current ?? sel.revision); }} />
                   </div>
                 )}
 
+                {canEdit && ['in_field','synced','analysis'].includes(sel.workflow_status) && <div className="space-y-2 rounded border p-3"><Label>Constats terrain</Label><Textarea maxLength={20000} value={results?.findings ?? sel.findings ?? ''} onChange={event => { setDraftRevision(current => current ?? sel.revision); setResults({ findings: event.target.value, recommendations: results?.recommendations ?? sel.recommendations ?? '', score: results?.score ?? (sel.score == null ? '' : String(sel.score)) }); }} /><Label>Recommandations</Label><Textarea maxLength={10000} value={results?.recommendations ?? sel.recommendations ?? ''} onChange={event => { setDraftRevision(current => current ?? sel.revision); setResults({ findings: results?.findings ?? sel.findings ?? '', recommendations: event.target.value, score: results?.score ?? (sel.score == null ? '' : String(sel.score)) }); }} /><Label>Score sur 100 (facultatif)</Label><Input type="number" min={0} max={100} value={results?.score ?? (sel.score == null ? '' : String(sel.score))} onChange={event => { setDraftRevision(current => current ?? sel.revision); setResults({ findings: results?.findings ?? sel.findings ?? '', recommendations: results?.recommendations ?? sel.recommendations ?? '', score: event.target.value }); }} /><Button disabled={update.isPending || !results || results.score !== '' && (!Number.isInteger(Number(results.score)) || Number(results.score) < 0 || Number(results.score) > 100)} onClick={() => results && update.mutate({ id: sel.id, revision: draftRevision ?? sel.revision, findings: results.findings.trim() || null, recommendations: results.recommendations.trim() || null, score: results.score === '' ? null : Number(results.score) }, { onSuccess: () => { setResults(null); setProof(null); setReason(''); setCorrective({ action: '', due: '' }); setDraftRevision(null); } })}>Enregistrer les résultats</Button></div>}
+                {canEdit && sel.workflow_status === 'corrective_action' && <div className="space-y-2 rounded border p-3"><Label>Preuve de correction et vérification effectuée</Label><Textarea maxLength={10000} value={proof ?? sel.correction_evidence ?? ''} onChange={event => { setProof(event.target.value); setDraftRevision(current => current ?? sel.revision); }} /><Button disabled={update.isPending || proof == null || !proof.trim()} onClick={() => update.mutate({ id: sel.id, revision: draftRevision ?? sel.revision, correction_evidence: proof?.trim() }, { onSuccess: () => { setProof(null); setResults(null); setReason(''); setCorrective({ action: '', due: '' }); setDraftRevision(null); } })}>Enregistrer la preuve</Button></div>}
+                {sel.correction_evidence && <div><p className="font-medium">Preuve de correction enregistrée</p><p className="whitespace-pre-wrap">{sel.correction_evidence}</p></div>}
+                {sel.decision_reason && <div><p className="font-medium">Décision</p><p className="whitespace-pre-wrap">{sel.decision_reason}</p></div>}
                 <div className="flex flex-wrap gap-2">
-                  {MISSION_TRANSITIONS[sel.workflow_status].map((to) => {
-                    const needsReason = ['compliant', 'non_compliant'].includes(to) && !reason;
+                  {MISSION_TRANSITIONS[sel.workflow_status].filter(to => ['compliant', 'non_compliant', 'closed'].includes(to) ? canDecide : canEdit).map((to) => {
+                    const needsReason = ['compliant', 'non_compliant', 'closed'].includes(to) && !reason.trim();
                     const needsAction = to === 'corrective_action' && !corrective.action;
                     const needsAssign = to === 'assigned' && (!sel.auditor_id || !sel.scheduled_date);
                     return (
                       <Button key={to} size="sm" variant={to === 'non_compliant' ? 'destructive' : 'default'}
-                        disabled={update.isPending || needsReason || needsAction || needsAssign}
+                        disabled={update.isPending || needsReason || needsAction || needsAssign || ['compliant','non_compliant'].includes(to) && !sel.findings?.trim() || to === 'closed' && sel.workflow_status === 'corrective_action' && !sel.correction_evidence?.trim()}
                         onClick={() => move(sel, to)}>
-                        {to === 'assigned' ? 'Envoyer à Audit Hub' : `→ ${MISSION_LABELS[to]}`}
+                        {to === 'assigned' ? 'Affecter la mission' : `→ ${MISSION_LABELS[to]}`}
                       </Button>
                     );
                   })}
@@ -243,6 +266,7 @@ export default function AuditMissions() {
 
                 <div>
                   <p className="mb-2 font-medium">Historique</p>
+                  {eventsError && <p role="alert">Historique indisponible.</p>}
                   <ul className="space-y-2">
                     {events.map((e) => (
                       <li key={e.id} className="border-l-2 pl-3">

@@ -337,6 +337,20 @@
       "when": 1793293200000,
       "tag": "0047_support_ticket_workflow",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1793296800000,
+      "tag": "0048_quality_alert_workflow",
+      "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1793296900000,
+      "tag": "0049_audit_mission_authority",
+      "breakpoints": true
     }
   ]
 }

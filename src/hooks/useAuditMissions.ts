@@ -1,6 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useRef } from 'react';
+import { useAuth } from './useAuth';
+import { useFieldAuditRows } from './useFieldAuditRows';
+import { intranetRpc } from '@/lib/intranet';
+import { readAllPages } from '@/lib/operationsMetrics';
+import type { Database } from '@/integrations/supabase/types';
 
 export type MissionStatus =
   | 'mission' | 'planned' | 'assigned' | 'in_field' | 'synced' | 'analysis'
@@ -27,77 +33,43 @@ export const MISSION_TRANSITIONS: Record<MissionStatus, MissionStatus[]> = {
   closed: [],
 };
 
-export interface AuditMission {
-  id: string; mission_reference: string | null; audit_type: string; target_type: string | null;
-  target_name: string | null; auditor_id: string | null; scheduled_date: string | null;
-  completed_date: string | null; workflow_status: MissionStatus; findings: string | null;
-  recommendations: string | null; score: number | null; app_origin: string | null;
-  decision_reason: string | null; corrective_action: string | null; corrective_due_date: string | null;
-  anomaly_id: string | null; synced_at: string | null; created_at: string;
-}
+export type AuditMission = Omit<Database['public']['Tables']['field_audits']['Row'], 'workflow_status'> & { workflow_status: MissionStatus };
+export type NewMission = Pick<AuditMission, 'target_name' | 'target_type' | 'audit_type' | 'scheduled_date' | 'auditor_id'> & { workflow_status?: MissionStatus };
+export type MissionPatch = Partial<Pick<AuditMission, 'target_name' | 'target_type' | 'audit_type' | 'scheduled_date' | 'auditor_id' | 'workflow_status' | 'findings' | 'recommendations' | 'score' | 'decision_reason' | 'corrective_action' | 'corrective_due_date' | 'correction_evidence' | 'change_note'>>;
 export interface MissionEvent {
   id: string; from_status: string | null; to_status: string | null; message: string | null;
   origin: string; created_at: string;
 }
 
-const db = supabase as any;
-
-export const useAuditMissions = () =>
-  useQuery({
-    queryKey: ['audit-missions'],
+export function useAuditMissions() {
+  const result = useFieldAuditRows();
+  return { ...result, data: result.data as AuditMission[] | undefined };
+}
+export function useMissionEvents(id?: string) {
+  const { user, profile } = useAuth();
+  return useQuery({ queryKey: ['audit-mission-events', user?.id, profile?.test_account === true, id], enabled: !!user && !!id,
     queryFn: async () => {
-      const { data, error } = await db.from('field_audits').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []) as AuditMission[];
+      const events = await readAllPages(cursor => { let query = supabase.from('audit_mission_events').select('*').eq('audit_id', id!).order('id').limit(500); if (cursor) query = query.gt('id', cursor); return query; });
+      return events.sort((a, b) => a.created_at.localeCompare(b.created_at)) as MissionEvent[];
     },
   });
-
-export const useMissionEvents = (id?: string) =>
-  useQuery({
-    queryKey: ['audit-mission-events', id],
-    enabled: !!id,
-    queryFn: async () => {
-      const { data, error } = await db.from('audit_mission_events').select('*').eq('audit_id', id).order('created_at');
-      if (error) throw error;
-      return (data || []) as MissionEvent[];
-    },
+}
+export function useAuditors() {
+  const { user, profile } = useAuth();
+  return useQuery({ queryKey: ['auditors', user?.id, profile?.test_account === true], enabled: !!user && !!profile,
+    queryFn: () => intranetRpc<{ id: string; first_name: string; last_name: string; email: string }[]>('list_audit_people', {}),
   });
-
-export const useAuditors = () =>
-  useQuery({
-    queryKey: ['auditors'],
-    queryFn: async () => {
-      const { data, error } = await db.from('profiles').select('id, first_name, last_name, email, poles');
-      if (error) throw error;
-      return ((data || []) as any[]).filter((p) => (p.poles || []).includes('audit'));
-    },
-  });
-
+}
 export const useMissionActions = () => {
-  const qc = useQueryClient();
-  const done = () => {
-    ['audit-missions', 'audit-mission-events', 'anomalies'].forEach((k) => qc.invalidateQueries({ queryKey: [k] }));
-  };
-  const onError = (e: Error) => toast.error('Mission d’audit', { description: e.message });
-
-  const create = useMutation({
-    mutationFn: async (input: Partial<AuditMission>) => {
-      const { error } = await db.from('field_audits').insert({ ...input, status: 'scheduled', app_origin: 'connect' });
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success('Mission créée'); done(); }, onError,
-  });
-  const update = useMutation({
-    mutationFn: async ({ id, ...patch }: Partial<AuditMission> & { id: string }) => {
-      const { error } = await db.from('field_audits').update(patch).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: (_d, v) => {
-      toast.success(v.workflow_status ? `Étape : ${MISSION_LABELS[v.workflow_status]}` : 'Mission mise à jour',
-        { description: v.workflow_status === 'non_compliant' ? 'Une anomalie a été ouverte automatiquement.' : undefined });
-      done();
-    },
-    onError,
-  });
+  const qc = useQueryClient(); const { user } = useAuth(); const keys = useRef(new Map<string, string>());
+  const done = () => { for (const key of ['field-audit-rows','audit-missions','audit-mission-events','anomalies','notifications','business-history']) void qc.invalidateQueries({ queryKey: [key] }); };
+  const onError = (error: Error) => toast.error('Mission d’audit', { description: error.message });
+  const create = useMutation({ mutationFn: async (input: NewMission) => {
+    const fingerprint = JSON.stringify([user?.id, input]); const key = keys.current.get(fingerprint) || crypto.randomUUID(); keys.current.set(fingerprint, key);
+    const result = await intranetRpc<AuditMission>('create_audit_mission', { p_key: key, p_payload: input }); keys.current.delete(fingerprint); return result;
+  }, onSuccess: () => { toast.success('Mission créée'); done(); }, onError });
+  const update = useMutation({ mutationFn: ({ id, revision, ...patch }: MissionPatch & { id: string; revision: number }) =>
+    intranetRpc<AuditMission>('update_audit_mission', { p_id: id, p_revision: revision, p_patch: patch }),
+    onSuccess: () => { toast.success('Mission mise à jour'); done(); }, onError });
   return { create, update };
 };

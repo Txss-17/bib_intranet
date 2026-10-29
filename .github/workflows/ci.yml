@@ -98,6 +98,9 @@ jobs:
       - name: Test Support workflow, customer context and resolution metrics
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/support-tickets/workflow.sql
 
+      - name: Test quality findings, independent validation and audit mission authority
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/quality/workflow.sql
+
       - name: Test Work module lifecycle and activity feed
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/work-module/workflow.sql
 

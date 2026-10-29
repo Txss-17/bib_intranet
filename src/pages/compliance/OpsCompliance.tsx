@@ -1,3 +1,4 @@
+import QualityPreview from '@/components/operations/QualityPreview';
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -12,11 +13,10 @@ function useOpsCompliance() {
   return useQuery({
     queryKey: ['compliance_ops'],
     queryFn: async () => {
-      const [incidents, syncEvents, replen, qa] = await Promise.all([
+      const [incidents, syncEvents, replen] = await Promise.all([
         supabase.from('logistics_incidents').select('id, incident_type, severity, status, description, created_at').order('created_at', { ascending: false }).limit(100),
         supabase.from('partner_sync_events').select('id, partner_id, event_type, status, error_message, created_at').eq('status', 'failed').order('created_at', { ascending: false }).limit(20),
         supabase.from('replenishment_suggestions').select('id, priority, status, reason, created_at').eq('status', 'pending').order('created_at', { ascending: false }).limit(20),
-        supabase.from('quality_alerts').select('id, title, severity, status, created_at').eq('status', 'open').order('created_at', { ascending: false }).limit(10),
       ]);
       const inc = incidents.data || [];
       const open = inc.filter((i) => i.status !== 'resolved' && i.status !== 'closed');
@@ -27,7 +27,6 @@ function useOpsCompliance() {
         critical,
         syncFailed: syncEvents.data || [],
         pendingReplen: replen.data || [],
-        qualityAlerts: qa.data || [],
       };
     },
   });
@@ -114,21 +113,10 @@ export default function OpsCompliance() {
 
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Alertes qualité ouvertes</CardTitle>
+            <CardTitle className="text-base">Constats qualité actifs</CardTitle>
           </CardHeader>
           <CardContent>
-            {!d?.qualityAlerts.length ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Aucune alerte qualité.</p>
-            ) : (
-              <div className="space-y-2">
-                {d.qualityAlerts.map((a) => (
-                  <div key={a.id} className="flex items-start justify-between gap-3 border-b last:border-0 pb-2">
-                    <p className="text-sm truncate">{a.title}</p>
-                    <Badge variant={a.severity === 'critical' || a.severity === 'high' ? 'destructive' : 'secondary'} className="capitalize">{a.severity}</Badge>
-                  </div>
-                ))}
-              </div>
-            )}
+            <QualityPreview limit={10} />
           </CardContent>
         </Card>
       </div>
@@ -136,7 +124,7 @@ export default function OpsCompliance() {
   );
 }
 
-function KPI({ label, value, tone = 'default' }: { label: string; value: any; tone?: 'default' | 'warning' | 'destructive' }) {
+function KPI({ label, value, tone = 'default' }: { label: string; value: string | number; tone?: 'default' | 'warning' | 'destructive' }) {
   return (
     <Card>
       <CardContent className="p-4">

@@ -14,27 +14,26 @@ import { Link } from 'react-router-dom';
 import { SupplierOrgChart } from '@/components/supplier/SupplierOrgChart';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useQualityStats } from '@/hooks/useQualityAlerts';
+import { measuredAverage, readAllPages } from '@/lib/operationsMetrics';
 
 function useSupplierStats() {
+  const { user, profile } = useAuth();
+  const { can } = usePermissions();
+  const mayProducts = can('supplier.pending-products', 'read') || can('supplier.validated-products', 'read') || can('marketplace.products', 'read') || can('product.performance', 'read');
+  const mayOrders = can('ops.orders', 'read') || can('marketplace.orders', 'read');
   return useQuery({
-    queryKey: ['supplier_dashboard_stats'],
+    queryKey: ['supplier_dashboard_stats', user?.id, profile?.test_account === true, mayProducts, mayOrders],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      const [suppliersRes, productsRes, alertsRes, ordersRes] = await Promise.all([
-        supabase.from('suppliers').select('id, name, country, quality_score, status', { count: 'exact' }),
-        supabase.from('products').select('id, category, status', { count: 'exact' }),
-        supabase.from('quality_alerts').select('id, severity, status', { count: 'exact' }).in('status', ['open', 'investigating']),
-        supabase.from('orders').select('id, order_number, status, total_amount, ordered_at, user_account_id', { count: 'exact' }).neq('status', 'delivered'),
+      const [suppliers, products, orders] = await Promise.all([
+        readAllPages(cursor => { let query = supabase.from('suppliers').select('id,name,country,quality_score,status').order('id').limit(500); if (cursor) query = query.gt('id', cursor); return query; }),
+        mayProducts ? readAllPages(cursor => { let query = supabase.from('products').select('id,category,status').order('id').limit(500); if (cursor) query = query.gt('id', cursor); return query; }) : Promise.resolve([]),
+        mayOrders ? readAllPages(cursor => { let query = supabase.from('orders').select('id,status').not('status', 'in', '(delivered,cancelled,canceled)').order('id').limit(500); if (cursor) query = query.gt('id', cursor); return query; }) : Promise.resolve([]),
       ]);
-
-      const suppliers = suppliersRes.data || [];
-      const products = productsRes.data || [];
-      const alerts = alertsRes.data || [];
-      const orders = ordersRes.data || [];
-
-      const activeSuppliers = suppliers.filter(s => s.status === 'active').length;
-      const pendingOrders = orders.length;
-      const openIncidents = alerts.length;
-
+      const activeSuppliers = suppliers.filter(supplier => supplier.status === 'active').length;
       // Category distribution from products
       const catCounts: Record<string, number> = {};
       products.forEach(p => {
@@ -50,31 +49,28 @@ function useSupplierStats() {
 
       // Top suppliers by quality_score
       const topSuppliers = [...suppliers]
-        .filter(s => s.status === 'active')
+        .filter(s => s.status === 'active' && measuredAverage([s.quality_score]).samples > 0)
         .sort((a, b) => (b.quality_score || 0) - (a.quality_score || 0))
         .slice(0, 5)
         .map(s => ({
           name: s.name,
           country: s.country || '🌍',
-          rating: ((s.quality_score || 70) / 20).toFixed(1),
+          rating: (s.quality_score! / 20).toFixed(1),
           status: (s.quality_score || 0) >= 70 ? 'active' : 'warning',
         }));
 
       // Avg quality
-      const avgQuality = suppliers.length > 0
-        ? (suppliers.reduce((sum, s) => sum + (s.quality_score || 0), 0) / suppliers.length).toFixed(1)
-        : '0';
-
+      const quality = measuredAverage(suppliers.map(supplier => supplier.quality_score));
+      const avgQuality = quality.average == null ? '—' : `${quality.average.toFixed(1)}%`;
       return {
         stats: [
           { label: 'Fournisseurs actifs', value: activeSuppliers, icon: Users, color: 'text-primary' },
-          { label: 'Commandes en cours', value: pendingOrders, icon: ShoppingCart, color: 'text-blue-500' },
-          { label: 'Produits catalogue', value: products.length, icon: Package, color: 'text-emerald-500' },
-          { label: 'Incidents ouverts', value: openIncidents, icon: AlertTriangle, color: 'text-destructive' },
+          { label: 'Commandes en cours', value: mayOrders ? orders.length : '—', icon: ShoppingCart, color: 'text-blue-500' },
+          { label: 'Produits catalogue', value: mayProducts ? products.length : '—', icon: Package, color: 'text-emerald-500' },
         ],
         topSuppliers,
         categoryData,
-        avgQuality,
+        avgQuality, qualitySamples: quality.samples, mayProducts,
       };
     },
   });
@@ -93,12 +89,13 @@ const getStatusBadge = (status: string) => {
 };
 
 export default function SupplierDashboard() {
-  const { data, isLoading } = useSupplierStats();
+  const { data, isLoading, isError, refetch } = useSupplierStats();
+  const quality = useQualityStats('supplier.overview');
   const [dashTab, setDashTab] = useState('overview');
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 
-  const stats = data?.stats || [];
+  const stats = [...(data?.stats || [{ label: 'Fournisseurs actifs', value: '—', icon: Users, color: 'text-primary' }, { label: 'Commandes en cours', value: '—', icon: ShoppingCart, color: 'text-blue-500' }, { label: 'Produits catalogue', value: '—', icon: Package, color: 'text-emerald-500' }]), { label: 'Signalements qualité actifs', value: quality.data?.active ?? '—', icon: AlertTriangle, color: 'text-destructive' }];
   const topSuppliers = data?.topSuppliers || [];
   const categoryData = data?.categoryData || [];
 
@@ -116,6 +113,8 @@ export default function SupplierDashboard() {
         </div>
       </div>
 
+      {(isError || quality.isError) && <p role="alert">Indicateurs indisponibles. <Button variant="link" onClick={() => { void refetch(); void quality.refetch(); }}>Réessayer</Button></p>}
+      <p className="text-xs text-muted-foreground">Indicateurs des données accessibles, toutes dates. Signalements qualité hors archives.</p>
       <Tabs value={dashTab} onValueChange={setDashTab}>
         <TabsList>
           <TabsTrigger value="overview">Vue globale</TabsTrigger>
@@ -147,7 +146,7 @@ export default function SupplierDashboard() {
               <CardContent>
                 <div className="space-y-3">
                   {topSuppliers.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-4">Aucun fournisseur</p>
+                    <p className="text-center text-muted-foreground py-4">Aucun fournisseur actif avec une note renseignée</p>
                   ) : topSuppliers.map((s) => (
                     <div key={s.name} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                       <div className="flex items-center gap-3">
@@ -173,7 +172,7 @@ export default function SupplierDashboard() {
               <CardHeader><CardTitle>Produits par Catégorie</CardTitle></CardHeader>
               <CardContent>
                 {categoryData.length === 0 ? (
-                  <p className="text-center text-muted-foreground py-8">Aucune donnée</p>
+                  <p className="text-center text-muted-foreground py-8">{data?.mayProducts ? 'Aucune donnée' : 'Accès au catalogue requis'}</p>
                 ) : (
                   <ResponsiveContainer width="100%" height={220}>
                     <PieChart>
@@ -198,15 +197,15 @@ export default function SupplierDashboard() {
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="p-4 rounded-lg bg-muted/50">
                   <p className="text-sm text-muted-foreground">Qualité Moyenne</p>
-                  <p className="text-xl font-bold">{data?.avgQuality}%</p>
+                  <p className="text-xl font-bold">{data?.avgQuality ?? '—'}</p><p className="text-xs text-muted-foreground">{data?.qualitySamples ?? '—'} note(s) renseignée(s)</p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/50">
                   <p className="text-sm text-muted-foreground">Fournisseurs Actifs</p>
-                  <p className="text-xl font-bold">{stats[0]?.value || 0}</p>
+                  <p className="text-xl font-bold">{stats[0]?.value ?? '—'}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted/50">
                   <p className="text-sm text-muted-foreground">Incidents Ouverts</p>
-                  <p className="text-xl font-bold">{stats[3]?.value || 0}</p>
+                  <p className="text-xl font-bold">{stats[3]?.value ?? '—'}</p>
                 </div>
               </div>
             </CardContent>
