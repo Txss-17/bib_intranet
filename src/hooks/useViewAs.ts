@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useUserRole } from '@/hooks/useUserRole';
 import { getJobRole, JobRole } from '@/data/jobRoles';
 
 const STORAGE_KEY = 'bib.view_as_role.v1';
@@ -17,6 +18,7 @@ export const setViewAsRole = (roleId: string | null) => {
 };
 
 export const useViewAs = (): { roleId: string | null; role: JobRole | undefined; setRole: (id: string | null) => void } => {
+  const { isAdmin } = useUserRole();
   const [roleId, setRoleId] = useState<string | null>(getViewAsRoleId());
 
   useEffect(() => {
@@ -29,5 +31,11 @@ export const useViewAs = (): { roleId: string | null; role: JobRole | undefined;
     };
   }, []);
 
-  return { roleId, role: getJobRole(roleId), setRole: setViewAsRole };
+  // Stored browser state never authorizes a role preview for another account.
+  return {
+    roleId: isAdmin ? roleId : null,
+    role: isAdmin ? getJobRole(roleId) : undefined,
+    setRole: (id: string | null) => { if (isAdmin) setViewAsRole(id); },
+  };
 };
+

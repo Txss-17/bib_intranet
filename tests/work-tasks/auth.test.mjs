@@ -54,3 +54,19 @@ test('protected children require a loaded profile belonging to this intranet and
   assert.ok(!JSON.stringify(guard({...base,...patch})).includes('protected-child'));
  assert.equal(guard({...base,session:null}).type,'navigate');
 });
+
+function preview(isAdmin) {
+ let stored='ceo';
+ const exports={};const react={useState:initial=>[initial,()=>{}],useEffect:()=>{}};
+ vm.runInNewContext(compile('../../src/hooks/useViewAs.ts'),{exports,
+  localStorage:{getItem:()=>stored,setItem:(_,value)=>{stored=value;},removeItem:()=>{stored=null;}},
+  window:{dispatchEvent(){}},Event:class {},require:name=>name==='react'?react:name.includes('useUserRole')?{useUserRole:()=>({isAdmin})}:{getJobRole:id=>id?{id}:undefined}});
+ return {value:exports.useViewAs(),stored:()=>stored};
+}
+test('a non-administrator cannot activate the role stored by another account',()=>{
+ const h=preview(false);assert.equal(h.value.roleId,null);assert.equal(h.value.role,undefined);
+ h.value.setRole('cto');assert.equal(h.stored(),'ceo');
+});
+test('a verified administrator retains the role preview',()=>{
+ const h=preview(true);assert.equal(h.value.role.id,'ceo');h.value.setRole('cto');assert.equal(h.stored(),'cto');
+});
