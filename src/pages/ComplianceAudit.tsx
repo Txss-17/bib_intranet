@@ -1,3 +1,5 @@
+import type { LucideIcon } from 'lucide-react';
+import QualityPreview from '@/components/operations/QualityPreview';
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -29,13 +31,11 @@ function usePendingReviews() {
   return useQuery({
     queryKey: ['compliance_audit_pending'],
     queryFn: async () => {
-      const [nc, audits, incidents] = await Promise.all([
-        supabase.from('quality_alerts').select('id,title,severity,status,created_at').eq('status', 'open').order('created_at', { ascending: false }).limit(5),
+      const [audits, incidents] = await Promise.all([
         supabase.from('field_audits').select('id,target_name,audit_type,status,scheduled_date').eq('status', 'scheduled').order('scheduled_date', { ascending: true }).limit(5),
         supabase.from('audit_incidents').select('id,title,severity,status,declared_at').in('status', ['declared', 'investigating']).order('declared_at', { ascending: false }).limit(5),
       ]);
       return {
-        nonConformities: nc.data || [],
         scheduledAudits: audits.data || [],
         incidents: incidents.data || [],
       };
@@ -156,16 +156,7 @@ export default function ComplianceAudit() {
             <CardTitle className="text-base flex items-center gap-2"><AlertTriangle className="h-4 w-4" /> Actions à revoir</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <ReviewBlock
-              title="Non-conformités ouvertes"
-              items={(pending?.nonConformities || []).map((nc) => ({
-                id: nc.id,
-                label: nc.title,
-                meta: nc.severity,
-                tone: nc.severity === 'high' || nc.severity === 'critical' ? 'destructive' : 'secondary',
-              }))}
-              cta={{ label: 'Voir les non-conformités', to: '/pole/audit/nonconformities' }}
-            />
+            <div><h2 className="mb-2 text-sm font-semibold">Non-conformités actives récentes</h2><QualityPreview kind="formal" /></div>
             <ReviewBlock
               title="Audits planifiés"
               items={(pending?.scheduledAudits || []).map((a) => ({
@@ -193,7 +184,7 @@ export default function ComplianceAudit() {
   );
 }
 
-function PoleLink({ to, icon: Icon, label, description }: { to: string; icon: any; label: string; description: string }) {
+function PoleLink({ to, icon: Icon, label, description }: { to: string; icon: LucideIcon; label: string; description: string }) {
   return (
     <Link to={to} className="flex items-center gap-3 rounded-lg border p-3 hover:bg-accent transition-colors group">
       <div className="h-9 w-9 rounded-md bg-primary/10 text-primary flex items-center justify-center">
@@ -208,7 +199,7 @@ function PoleLink({ to, icon: Icon, label, description }: { to: string; icon: an
   );
 }
 
-function StatusItem({ icon: Icon, label, allowed }: { icon: any; label: string; allowed: boolean }) {
+function StatusItem({ icon: Icon, label, allowed }: { icon: LucideIcon; label: string; allowed: boolean }) {
   return (
     <div className="flex items-center gap-3 rounded-lg border p-3">
       <div className={`h-8 w-8 rounded-md flex items-center justify-center ${allowed ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
@@ -247,7 +238,7 @@ function ReviewBlock({
           {items.map((it) => (
             <div key={it.id} className="flex items-center justify-between gap-2 text-sm">
               <span className="truncate">{it.label}</span>
-              {it.meta && <Badge variant={it.tone as any} className="text-[10px] capitalize shrink-0">{it.meta}</Badge>}
+              {it.meta && <Badge variant={it.tone} className="text-[10px] capitalize shrink-0">{it.meta}</Badge>}
             </div>
           ))}
         </div>

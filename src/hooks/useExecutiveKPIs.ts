@@ -220,7 +220,8 @@ export function useRecentCriticalAlerts() {
           .select(
             'id, title, severity, created_at',
           )
-          .in('status', ['open'])
+          .in('status', ['open', 'investigating', 'resolved', 'reviewed'])
+          .is('archived_at', null)
           .in('severity', ['critical', 'high'])
           .order('created_at', {
             ascending: false,

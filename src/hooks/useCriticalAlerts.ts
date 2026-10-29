@@ -1,3 +1,6 @@
+import type { Database } from '@/integrations/supabase/types';
+import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
 import { useState, useEffect, useCallback } from 'react';
 import { playCriticalAlertSound, playHighAlertSound } from '@/lib/alertSounds';
 import { useAlertSoundSetting } from '@/hooks/useAlertSoundSetting';
@@ -19,7 +22,7 @@ export interface CriticalAlert {
 }
 
 // Map notification types to alert modules based on content/pole
-function mapNotificationToAlert(n: any): CriticalAlert | null {
+function mapNotificationToAlert(n: Database['public']['Tables']['notifications']['Row']): CriticalAlert | null {
   const type = n.type as string;
   const severity: AlertSeverity = type === 'critical' ? 'critical' : type === 'warning' ? 'high' : 'medium';
   
@@ -48,6 +51,9 @@ function mapNotificationToAlert(n: any): CriticalAlert | null {
 
 // Fallback static alerts for when DB is empty
 export function useCriticalAlerts() {
+  const { user, profile } = useAuth();
+  const { can } = usePermissions();
+  const qualityPage = can('supplier.alerts', 'read') ? 'supplier.alerts' : 'audit.nonconformities';
   const [localAlerts, setLocalAlerts] = useState<CriticalAlert[]>([]);
   const [lastAlert, setLastAlert] = useState<CriticalAlert | null>(null);
   const { soundEnabled } = useAlertSoundSetting();
@@ -55,7 +61,8 @@ export function useCriticalAlerts() {
 
   // Fetch critical/warning notifications from DB
   const { data: dbNotifications = [] } = useQuery({
-    queryKey: ['critical_notifications'],
+    queryKey: ['critical_notifications', user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notifications')
@@ -82,12 +89,14 @@ export function useCriticalAlerts() {
 
   // Also fetch from other sources: quality_alerts, logistics_incidents, supplier_audits
   const { data: qualityAlerts = [] } = useQuery({
-    queryKey: ['critical_quality_alerts'],
+    queryKey: ['critical_quality_alerts', user?.id, profile?.test_account === true, qualityPage],
+    enabled: !!user && !!profile && can(qualityPage, 'read'),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('quality_alerts')
         .select('*')
-        .in('status', ['open', 'investigating'])
+        .in('status', ['open', 'investigating', 'resolved', 'reviewed'])
+        .is('archived_at', null)
         .in('severity', ['critical', 'high'])
         .order('created_at', { ascending: false })
         .limit(10);
@@ -98,7 +107,8 @@ export function useCriticalAlerts() {
   });
 
   const { data: logisticsIncidents = [] } = useQuery({
-    queryKey: ['critical_logistics'],
+    queryKey: ['critical_logistics', user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('logistics_incidents')
@@ -119,7 +129,7 @@ export function useCriticalAlerts() {
       .map(mapNotificationToAlert)
       .filter((a): a is CriticalAlert => a !== null);
 
-    const fromQuality: CriticalAlert[] = qualityAlerts.map((qa: any) => ({
+    const fromQuality: CriticalAlert[] = qualityAlerts.map((qa) => ({
       id: `qa-${qa.id}`,
       module: 'supplier' as AlertModule,
       severity: qa.severity === 'critical' ? 'critical' as AlertSeverity : 'high' as AlertSeverity,
@@ -127,10 +137,10 @@ export function useCriticalAlerts() {
       description: qa.description,
       timestamp: qa.created_at,
       read: qa.status === 'resolved',
-      actionUrl: '/pole/supplier/alerts',
+      actionUrl: `${qualityPage === 'supplier.alerts' ? '/pole/supplier/alerts' : '/pole/audit/nonconformities'}?alert=${qa.id}`,
     }));
 
-    const fromLogistics: CriticalAlert[] = logisticsIncidents.map((li: any) => ({
+    const fromLogistics: CriticalAlert[] = logisticsIncidents.map((li) => ({
       id: `li-${li.id}`,
       module: 'performance' as AlertModule,
       severity: li.severity === 'critical' ? 'critical' as AlertSeverity : 'high' as AlertSeverity,

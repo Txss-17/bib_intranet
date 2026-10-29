@@ -2378,6 +2378,15 @@ export type Database = {
       }
       field_audits: {
         Row: {
+          revision: number
+          created_by: string | null
+          test_account: boolean
+          decided_by: string | null
+          closed_by: string | null
+          correction_evidence: string | null
+          change_note: string | null
+          creation_key: string | null
+          creation_request: Json | null
           anomaly_id: string | null
           app_origin: string
           assigned_at: string | null
@@ -2406,6 +2415,15 @@ export type Database = {
           workflow_status: string
         }
         Insert: {
+          revision?: number
+          created_by?: string | null
+          test_account?: boolean
+          decided_by?: string | null
+          closed_by?: string | null
+          correction_evidence?: string | null
+          change_note?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           anomaly_id?: string | null
           app_origin?: string
           assigned_at?: string | null
@@ -2434,6 +2452,15 @@ export type Database = {
           workflow_status?: string
         }
         Update: {
+          revision?: number
+          created_by?: string | null
+          test_account?: boolean
+          decided_by?: string | null
+          closed_by?: string | null
+          correction_evidence?: string | null
+          change_note?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           anomaly_id?: string | null
           app_origin?: string
           assigned_at?: string | null
@@ -4727,6 +4754,25 @@ export type Database = {
       }
       quality_alerts: {
         Row: {
+          revision: number
+          test_account: boolean
+          is_nonconformity: boolean
+          approval_levels: number
+          legacy_record: boolean
+          origin_page: string | null
+          creation_key: string | null
+          creation_request: Json | null
+          corrective_action: string | null
+          corrective_due_date: string | null
+          evidence: string | null
+          document_ids: string[]
+          resolved_by: string | null
+          first_reviewer: string | null
+          reviewed_at: string | null
+          closed_by: string | null
+          closed_at: string | null
+          archived_at: string | null
+          change_note: string | null
           assigned_to: string | null
           created_at: string
           description: string
@@ -4742,6 +4788,25 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          revision?: number
+          test_account?: boolean
+          is_nonconformity?: boolean
+          approval_levels?: number
+          legacy_record?: boolean
+          origin_page?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
+          corrective_action?: string | null
+          corrective_due_date?: string | null
+          evidence?: string | null
+          document_ids?: string[]
+          resolved_by?: string | null
+          first_reviewer?: string | null
+          reviewed_at?: string | null
+          closed_by?: string | null
+          closed_at?: string | null
+          archived_at?: string | null
+          change_note?: string | null
           assigned_to?: string | null
           created_at?: string
           description: string
@@ -4757,6 +4822,25 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          revision?: number
+          test_account?: boolean
+          is_nonconformity?: boolean
+          approval_levels?: number
+          legacy_record?: boolean
+          origin_page?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
+          corrective_action?: string | null
+          corrective_due_date?: string | null
+          evidence?: string | null
+          document_ids?: string[]
+          resolved_by?: string | null
+          first_reviewer?: string | null
+          reviewed_at?: string | null
+          closed_by?: string | null
+          closed_at?: string | null
+          archived_at?: string | null
+          change_note?: string | null
           assigned_to?: string | null
           created_at?: string
           description?: string

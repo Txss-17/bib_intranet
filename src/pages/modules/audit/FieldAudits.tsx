@@ -7,39 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Search, Plus, MapPin, Calendar, FileText, Loader2, Eye, RefreshCw } from 'lucide-react';
 import { ExportButtons } from '@/components/ExportButtons';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useFieldAuditRows } from '@/hooks/useFieldAuditRows';
+import { auditMetrics, AUDIT_TYPES } from '@/lib/operationsMetrics';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { SourceBadge, SourceFilter } from '@/components/audit/SourceBadge';
 
-function useFieldAudits() {
-  return useQuery({
-    queryKey: ['field_audits'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('field_audits')
-        .select('*')
-        .order('scheduled_date', { ascending: false });
-      if (error) throw error;
-      return data.map((a: any) => ({
-        id: a.id,
-        location: a.target_name || 'N/A',
-        type: a.target_type,
-        auditType: a.audit_type,
-        auditor: a.auditor_id || 'Non assigné',
-        scheduledDate: a.scheduled_date || '',
-        status: a.status || 'scheduled',
-        score: a.score,
-        app_origin: a.app_origin || 'connect',
-      }));
-    },
-  });
-}
-
-const auditTypeLabels: Record<string, string> = {
-  initial: 'Initial',
-  continuous: 'Continu',
-  periodic: 'Périodique',
-};
+const auditTypeLabels = AUDIT_TYPES;
 
 const auditTypeColors: Record<string, string> = {
   initial: 'bg-blue-500/10 text-blue-500',
@@ -51,7 +26,11 @@ export default function FieldAudits() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
-  const { data: fieldAudits = [], isLoading } = useFieldAudits();
+  const { data: rows = [], isLoading, isError, refetch } = useFieldAuditRows();
+  const { can } = usePermissions();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selected = rows.find(row => row.id === selectedId);
+  const fieldAudits = rows.map(row => ({ ...row, location: row.target_name || 'Cible non renseignée', type: row.target_type, auditType: row.audit_type, scheduledDate: row.scheduled_date || '', app_origin: row.app_origin || 'connect' }));
 
   const filteredAudits = fieldAudits.filter(a => {
     const matchesSearch = a.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -70,13 +49,9 @@ export default function FieldAudits() {
     }
   };
 
-  const scheduledCount = fieldAudits.filter(a => a.status === 'scheduled').length;
-  const inProgressCount = fieldAudits.filter(a => a.status === 'in_progress').length;
-  const completedCount = fieldAudits.filter(a => a.status === 'completed').length;
-  const completedWithScore = fieldAudits.filter(a => a.score !== null);
-  const avgScore = completedWithScore.length > 0
-    ? (completedWithScore.reduce((s, a) => s + (a.score || 0), 0) / completedWithScore.length).toFixed(1)
-    : '—';
+  const metrics = auditMetrics(rows);
+  const { scheduled: scheduledCount, inProgress: inProgressCount, completed: completedCount } = metrics;
+  const avgScore = metrics.average == null ? '—' : `${metrics.average.toFixed(1)}%`;
 
   if (isLoading) {
     return <div className="flex justify-center py-16"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
@@ -87,13 +62,10 @@ export default function FieldAudits() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Audits Terrain</h1>
-          <p className="text-muted-foreground">Audits des sites et points de vente — 3 niveaux</p>
+          <p className="text-muted-foreground">Audits des sites et points de vente — résultats et suivi des missions</p>
         </div>
         <div className="flex gap-2">
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            Planifier un audit
-          </Button>
+          {can('audit.missions', 'read') && can('audit.missions', 'create') && <Button asChild><Link to="/pole/audit/missions?new=1"><Plus className="mr-2 h-4 w-4" />Planifier un audit</Link></Button>}
           <ExportButtons
             filename="audits-terrain"
             title="Audits terrain"
@@ -110,34 +82,36 @@ export default function FieldAudits() {
         </div>
       </div>
 
+      {isError && <p role="alert">Audits indisponibles. <Button variant="link" onClick={() => void refetch()}>Réessayer</Button></p>}
+      <p className="text-xs text-muted-foreground">Indicateurs de tous les audits accessibles, indépendamment des filtres ci-dessous. {metrics.samples} score(s) renseigné(s) sur les audits terminés.</p>
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Planifiés</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{scheduledCount}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold">{isError ? '—' : scheduledCount}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">En cours</CardTitle>
             <MapPin className="h-4 w-4 text-blue-500" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold text-blue-500">{inProgressCount}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-blue-500">{isError ? '—' : inProgressCount}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Terminés</CardTitle>
             <FileText className="h-4 w-4 text-green-500" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold text-green-500">{completedCount}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-green-500">{isError ? '—' : completedCount}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Score moyen</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{avgScore}%</div></CardContent>
+          <CardContent><div className="text-2xl font-bold">{avgScore}</div></CardContent>
         </Card>
       </div>
 
@@ -155,9 +129,7 @@ export default function FieldAudits() {
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Niveau d'audit" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tous les niveaux</SelectItem>
-            <SelectItem value="initial"><Eye className="h-3 w-3 inline mr-1" />Initial</SelectItem>
-            <SelectItem value="continuous"><RefreshCw className="h-3 w-3 inline mr-1" />Continu</SelectItem>
-            <SelectItem value="periodic"><Calendar className="h-3 w-3 inline mr-1" />Périodique</SelectItem>
+            {Object.entries(AUDIT_TYPES).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}
           </SelectContent>
         </Select>
         <SourceFilter value={sourceFilter} onChange={setSourceFilter} />
@@ -210,7 +182,7 @@ export default function FieldAudits() {
                       ) : '—'}
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="sm">Voir</Button>
+                      {can('audit.missions', 'read') ? <Button variant="ghost" size="sm" asChild><Link to={`/pole/audit/missions?mission=${audit.id}`}>Voir la mission</Link></Button> : <Button variant="ghost" size="sm" onClick={() => setSelectedId(audit.id)}>Voir</Button>}
                     </TableCell>
                   </TableRow>
                 ))
@@ -219,6 +191,7 @@ export default function FieldAudits() {
           </Table>
         </CardContent>
       </Card>
+      <Sheet open={!!selectedId} onOpenChange={open => !open && setSelectedId(null)}><SheetContent className="overflow-y-auto">{selected && <><SheetHeader><SheetTitle>{selected.target_name || 'Audit terrain'}</SheetTitle></SheetHeader><div className="mt-5 space-y-4 text-sm"><p>{AUDIT_TYPES[selected.audit_type] || selected.audit_type} · {selected.status}</p><p>Date prévue : {selected.scheduled_date || 'Non renseignée'}</p><p>Score : {selected.score == null ? 'Non renseigné' : `${selected.score}/100`}</p><div><h2 className="font-medium">Constats</h2><p className="whitespace-pre-wrap">{selected.findings || 'Non renseignés'}</p></div><div><h2 className="font-medium">Recommandations</h2><p className="whitespace-pre-wrap">{selected.recommendations || 'Non renseignées'}</p></div>{selected.decision_reason && <p className="whitespace-pre-wrap">Décision : {selected.decision_reason}</p>}{selected.corrective_action && <p className="whitespace-pre-wrap">Action corrective : {selected.corrective_action}</p>}</div></>}</SheetContent></Sheet>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+import QualityPreview from '@/components/operations/QualityPreview';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -17,29 +18,6 @@ export default function AuditLink() {
       return data ?? [];
     },
   });
-
-  const alerts = useQuery({
-    queryKey: ['ops-audit-link', 'quality_alerts'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quality_alerts')
-        .select('id, title, severity, status, created_at, suppliers:supplier_id(name)')
-        .order('created_at', { ascending: false })
-        .limit(20);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const sevBadge = (s: string) => {
-    const v: Record<string, 'destructive' | 'default' | 'secondary' | 'outline'> = {
-      critical: 'destructive',
-      high: 'destructive',
-      medium: 'default',
-      low: 'secondary',
-    };
-    return <Badge variant={v[s] ?? 'outline'}>{s}</Badge>;
-  };
 
   return (
     <div className="space-y-6 p-6">
@@ -87,28 +65,7 @@ export default function AuditLink() {
           <CardTitle>Anomalies fournisseurs (impact stock potentiel)</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Titre</TableHead>
-                <TableHead>Fournisseur</TableHead>
-                <TableHead>Sévérité</TableHead>
-                <TableHead>Statut</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {(alerts.data as Array<{ id: string; title: string; severity: string; status: string; suppliers?: { name: string } | null }> ?? []).map((a) => (
-                <TableRow key={a.id}>
-                  <TableCell>{a.title}</TableCell>
-                  <TableCell>{a.suppliers?.name ?? '—'}</TableCell>
-                  <TableCell>{sevBadge(a.severity)}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{a.status}</Badge>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <QualityPreview limit={20} />
         </CardContent>
       </Card>
     </div>
