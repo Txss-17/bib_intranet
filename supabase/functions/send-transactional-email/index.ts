@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
     )
   }
 
-  // Caller must be a signed-in user of this app or an internal function (service role).
+  // External communication is dispatched by the approved Gateway service only.
   {
     const authHeader = req.headers.get('Authorization') ?? ''
     const token = authHeader.replace(/^Bearer\s+/i, '')
@@ -64,11 +64,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
     if (token !== supabaseServiceKey) {
-      const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY') ?? supabaseServiceKey, { global: { headers: { Authorization: authHeader } } })
-      const { data: claims, error: claimsError } = await authClient.auth.getClaims(token)
-      if (claimsError || !claims?.claims?.sub) {
-        return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-      }
+      return new Response(JSON.stringify({ error: 'Les envois externes passent par le workflow Gateway approuvé.' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
   }
 
@@ -396,7 +392,7 @@ Deno.serve(async (req) => {
       .upsert(
         {
           token: unsubscribeToken,
-          recipient_domain: normalizedEmail.split("@")[1] ?? null,
+          email: normalizedEmail,
         },
         {
           onConflict: 'email',
@@ -619,15 +615,16 @@ Deno.serve(async (req) => {
       replyTo
   }
 
+  if (typeof templateData.intranetOutboxId === 'string') {
+    queuePayload.intranet_outbox_id = templateData.intranetOutboxId
+    queuePayload.rfc_message_id = templateData.rfcMessageId
+  }
+
   const {
     error: enqueueError,
   } = await supabase.rpc(
-    'enqueue_email',
-    {
-      queue_name:
-        'transactional_emails',
-      payload: queuePayload,
-    }
+    'enqueue_intranet_email',
+    { p_key: idempotencyKey, p_payload: queuePayload }
   )
 
   if (enqueueError) {

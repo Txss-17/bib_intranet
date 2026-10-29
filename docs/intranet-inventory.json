@@ -1,0 +1,2719 @@
+{
+  "poles": [
+    "direction",
+    "finance",
+    "ops",
+    "supplier",
+    "marketplace",
+    "support",
+    "marketing",
+    "rh",
+    "audit",
+    "compliance",
+    "rse",
+    "product",
+    "data",
+    "security"
+  ],
+  "transversal": [
+    "work",
+    "notifications",
+    "gateway",
+    "documents",
+    "feed",
+    "ethics",
+    "independentAudit",
+    "permissions"
+  ],
+  "pages": [
+    {
+      "id": "direction.overview",
+      "path": "/pole/direction",
+      "scope": "direction",
+      "transversal": false,
+      "component": "ExecutiveDashboard",
+      "source": "src/pages/modules/direction/ExecutiveDashboard.tsx"
+    },
+    {
+      "id": "direction.strategy",
+      "path": "/pole/direction/strategic-kpis",
+      "scope": "direction",
+      "transversal": false,
+      "component": "StrategicKPIs",
+      "source": "src/pages/modules/direction/StrategicKPIs.tsx"
+    },
+    {
+      "id": "direction.alerts",
+      "path": "/pole/direction/critical-alerts",
+      "scope": "direction",
+      "transversal": false,
+      "component": "CriticalAlertsPage",
+      "source": "src/pages/modules/direction/CriticalAlerts.tsx"
+    },
+    {
+      "id": "direction.arbitrage",
+      "path": "/pole/direction/decision-arbitrage",
+      "scope": "direction",
+      "transversal": false,
+      "component": "DecisionArbitrage",
+      "source": "src/pages/modules/direction/DecisionArbitrage.tsx"
+    },
+    {
+      "id": "direction.roadmap",
+      "path": "/pole/direction/vision-roadmap",
+      "scope": "direction",
+      "transversal": false,
+      "component": "VisionRoadmap",
+      "source": "src/pages/modules/direction/VisionRoadmap.tsx"
+    },
+    {
+      "id": "direction.governance",
+      "path": "/pole/direction/group-governance",
+      "scope": "direction",
+      "transversal": false,
+      "component": "GroupGovernance",
+      "source": "src/pages/modules/direction/GroupGovernance.tsx"
+    },
+    {
+      "id": "direction.reports",
+      "path": "/pole/direction/board-reports",
+      "scope": "direction",
+      "transversal": false,
+      "component": "BoardReports",
+      "source": "src/pages/modules/direction/BoardReports.tsx"
+    },
+    {
+      "id": "finance.overview",
+      "path": "/pole/finance",
+      "scope": "finance",
+      "transversal": false,
+      "component": "FinanceDashboard",
+      "source": "src/pages/modules/finance/FinanceDashboard.tsx"
+    },
+    {
+      "id": "finance.cashflow",
+      "path": "/pole/finance/cashflow",
+      "scope": "finance",
+      "transversal": false,
+      "component": "CashflowRealtime",
+      "source": "src/pages/modules/finance/CashflowRealtime.tsx"
+    },
+    {
+      "id": "finance.transactions",
+      "path": "/pole/finance/transactions",
+      "scope": "finance",
+      "transversal": false,
+      "component": "Transactions",
+      "source": "src/pages/modules/finance/Transactions.tsx"
+    },
+    {
+      "id": "finance.billing",
+      "path": "/pole/finance/billing",
+      "scope": "finance",
+      "transversal": false,
+      "component": "ModuleWorkspace",
+      "source": "src/components/operations/ModuleWorkspace.tsx"
+    },
+    {
+      "id": "finance.payouts",
+      "path": "/pole/finance/payouts",
+      "scope": "finance",
+      "transversal": false,
+      "component": "Navigate",
+      "source": "src/pages/SubSectionPage.tsx"
+    },
+    {
+      "id": "finance.reconciliation",
+      "path": "/pole/finance/reconciliation",
+      "scope": "finance",
+      "transversal": false,
+      "component": "Reconciliation",
+      "source": "src/pages/modules/finance/Reconciliation.tsx"
+    },
+    {
+      "id": "finance.subscriptions",
+      "path": "/pole/finance/subscriptions",
+      "scope": "finance",
+      "transversal": false,
+      "component": "Subscriptions",
+      "source": "src/pages/modules/finance/Subscriptions.tsx"
+    },
+    {
+      "id": "finance.cards",
+      "path": "/pole/finance/cards",
+      "scope": "finance",
+      "transversal": false,
+      "component": "CorporateCards",
+      "source": "src/pages/modules/finance/CorporateCards.tsx"
+    },
+    {
+      "id": "finance.guarantee",
+      "path": "/pole/finance/guarantee",
+      "scope": "finance",
+      "transversal": false,
+      "component": "GuaranteeFund",
+      "source": "src/pages/modules/finance/GuaranteeFund.tsx"
+    },
+    {
+      "id": "ops.overview",
+      "path": "/pole/ops",
+      "scope": "ops",
+      "transversal": false,
+      "component": "OpsDashboard",
+      "source": "src/pages/modules/ops/OpsDashboard.tsx"
+    },
+    {
+      "id": "ops.shops",
+      "path": "/pole/ops/shops",
+      "scope": "ops",
+      "transversal": false,
+      "component": "ShopsSupervision",
+      "source": "src/pages/modules/ops/ShopsSupervision.tsx"
+    },
+    {
+      "id": "ops.catalog",
+      "path": "/pole/ops/catalog",
+      "scope": "ops",
+      "transversal": false,
+      "component": "ProductCatalog",
+      "source": "src/pages/modules/ops/ProductCatalog.tsx"
+    },
+    {
+      "id": "ops.anomalies",
+      "path": "/pole/ops/anomalies",
+      "scope": "ops",
+      "transversal": false,
+      "component": "Anomalies",
+      "source": "src/pages/modules/ops/Anomalies.tsx"
+    },
+    {
+      "id": "ops.orders",
+      "path": "/pole/ops/pipeline",
+      "scope": "ops",
+      "transversal": false,
+      "component": "OrderPipeline",
+      "source": "src/pages/modules/ops/OrderPipeline.tsx"
+    },
+    {
+      "id": "ops.product-lifecycle",
+      "path": "/pole/ops/product-lifecycle",
+      "scope": "ops",
+      "transversal": false,
+      "component": "ProductLifecycle",
+      "source": "src/pages/modules/ops/ProductLifecycle.tsx"
+    },
+    {
+      "id": "ops.shipments",
+      "path": "/pole/ops/shipments",
+      "scope": "ops",
+      "transversal": false,
+      "component": "Shipments",
+      "source": "src/pages/modules/ops/Shipments.tsx"
+    },
+    {
+      "id": "ops.stocks",
+      "path": "/pole/ops/stocks",
+      "scope": "ops",
+      "transversal": false,
+      "component": "DistributedStocks",
+      "source": "src/pages/modules/ops/DistributedStocks.tsx"
+    },
+    {
+      "id": "ops.partners",
+      "path": "/pole/ops/partners",
+      "scope": "ops",
+      "transversal": false,
+      "component": "Partners",
+      "source": "src/pages/modules/ops/Partners.tsx"
+    },
+    {
+      "id": "ops.flows",
+      "path": "/pole/ops/flows",
+      "scope": "ops",
+      "transversal": false,
+      "component": "SyncFlows",
+      "source": "src/pages/modules/ops/SyncFlows.tsx"
+    },
+    {
+      "id": "ops.incidents",
+      "path": "/pole/ops/incidents",
+      "scope": "ops",
+      "transversal": false,
+      "component": "LogisticsIncidents",
+      "source": "src/pages/modules/ops/LogisticsIncidents.tsx"
+    },
+    {
+      "id": "ops.thresholds",
+      "path": "/pole/ops/thresholds",
+      "scope": "ops",
+      "transversal": false,
+      "component": "StockThresholds",
+      "source": "src/pages/modules/ops/StockThresholds.tsx"
+    },
+    {
+      "id": "ops.forecast",
+      "path": "/pole/ops/forecast",
+      "scope": "ops",
+      "transversal": false,
+      "component": "DemandForecast",
+      "source": "src/pages/modules/ops/DemandForecast.tsx"
+    },
+    {
+      "id": "ops.replenishment",
+      "path": "/pole/ops/replenishment",
+      "scope": "ops",
+      "transversal": false,
+      "component": "Replenishment",
+      "source": "src/pages/modules/ops/Replenishment.tsx"
+    },
+    {
+      "id": "ops.supplier-lead-times",
+      "path": "/pole/ops/suppliers-lead-times",
+      "scope": "ops",
+      "transversal": false,
+      "component": "SupplierLeadTimes",
+      "source": "src/pages/modules/ops/SupplierLeadTimes.tsx"
+    },
+    {
+      "id": "supplier.overview",
+      "path": "/pole/supplier",
+      "scope": "supplier",
+      "transversal": false,
+      "component": "SupplierDashboard",
+      "source": "src/pages/modules/supplier/SupplierDashboard.tsx"
+    },
+    {
+      "id": "supplier.applications",
+      "path": "/pole/supplier/applications",
+      "scope": "supplier",
+      "transversal": false,
+      "component": "SupplierApplications",
+      "source": "src/pages/modules/supplier/SupplierApplications.tsx"
+    },
+    {
+      "id": "supplier.catalog-inbox",
+      "path": "/pole/supplier/catalog-inbox",
+      "scope": "supplier",
+      "transversal": false,
+      "component": "SupplierCatalogInbox",
+      "source": "src/pages/modules/supplier/SupplierCatalogInbox.tsx"
+    },
+    {
+      "id": "supplier.pending-products",
+      "path": "/pole/supplier/pending",
+      "scope": "supplier",
+      "transversal": false,
+      "component": "PendingProducts",
+      "source": "src/pages/modules/supplier/PendingProducts.tsx"
+    },
+    {
+      "id": "supplier.validated-products",
+      "path": "/pole/supplier/validated",
+      "scope": "supplier",
+      "transversal": false,
+      "component": "ValidatedProducts",
+      "source": "src/pages/modules/supplier/ValidatedProducts.tsx"
+    },
+    {
+      "id": "supplier.portfolios",
+      "path": "/pole/supplier/portfolios",
+      "scope": "supplier",
+      "transversal": false,
+      "component": "SupplierPortfolios",
+      "source": "src/pages/modules/supplier/SupplierPortfolios.tsx"
+    },
+    {
+      "id": "supplier.certifications",
+      "path": "/pole/supplier/certifications",
+      "scope": "supplier",
+      "transversal": false,
+      "component": "Certifications",
+      "source": "src/pages/modules/supplier/Certifications.tsx"
+    },
+    {
+      "id": "supplier.decisions",
+      "path": "/pole/supplier/decisions",
+      "scope": "supplier",
+      "transversal": false,
+      "component": "DecisionHistory",
+      "source": "src/pages/modules/supplier/DecisionHistory.tsx"
+    },
+    {
+      "id": "supplier.restock",
+      "path": "/pole/supplier/restock-orders",
+      "scope": "supplier",
+      "transversal": false,
+      "component": "SupplierRestockOrders",
+      "source": "src/pages/modules/supplier/SupplierRestockOrders.tsx"
+    },
+    {
+      "id": "marketplace.overview",
+      "path": "/pole/marketplace",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MarketplaceDashboard",
+      "source": "src/pages/modules/marketplace/MarketplaceDashboard.tsx"
+    },
+    {
+      "id": "marketplace.merchants",
+      "path": "/pole/marketplace/merchants",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MerchantPortfolio",
+      "source": "src/pages/modules/marketplace/MerchantPortfolio.tsx"
+    },
+    {
+      "id": "marketplace.portfolio",
+      "path": "/pole/marketplace/portfolio",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MerchantPortfolio",
+      "source": "src/pages/modules/marketplace/MerchantPortfolio.tsx"
+    },
+    {
+      "id": "marketplace.stores",
+      "path": "/pole/marketplace/stores",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MarketplaceStores",
+      "source": "src/pages/modules/marketplace/MarketplaceStores.tsx"
+    },
+    {
+      "id": "marketplace.opportunities",
+      "path": "/pole/marketplace/opportunities",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MarketplaceOpportunities",
+      "source": "src/pages/modules/marketplace/MarketplaceOpportunities.tsx"
+    },
+    {
+      "id": "marketplace.analytics",
+      "path": "/pole/marketplace/analytics",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MarketplaceAnalytics",
+      "source": "src/pages/modules/marketplace/MarketplaceAnalytics.tsx"
+    },
+    {
+      "id": "marketplace.subscriptions",
+      "path": "/pole/marketplace/subscriptions",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MarketplaceSubscriptions",
+      "source": "src/pages/modules/marketplace/MarketplaceSubscriptions.tsx"
+    },
+    {
+      "id": "marketplace.products",
+      "path": "/pole/marketplace/products",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MarketplaceProducts",
+      "source": "src/pages/modules/marketplace/MarketplaceProducts.tsx"
+    },
+    {
+      "id": "support.overview",
+      "path": "/pole/support",
+      "scope": "support",
+      "transversal": false,
+      "component": "PoleDashboard",
+      "source": "src/pages/PoleDashboard.tsx"
+    },
+    {
+      "id": "support.tickets",
+      "path": "/pole/support/tickets",
+      "scope": "support",
+      "transversal": false,
+      "component": "SupportTickets",
+      "source": "src/pages/modules/support/SupportTickets.tsx"
+    },
+    {
+      "id": "support.customer-success",
+      "path": "/pole/support/customer-success",
+      "scope": "support",
+      "transversal": false,
+      "component": "CustomerSuccess",
+      "source": "src/pages/modules/support/CustomerSucces.tsx"
+    },
+    {
+      "id": "support.monitoring",
+      "path": "/pole/support/monitoring",
+      "scope": "support",
+      "transversal": false,
+      "component": "SupportMonitoring",
+      "source": "src/pages/modules/support/SupportMonitoring.tsx"
+    },
+    {
+      "id": "support.escalations",
+      "path": "/pole/support/escalations",
+      "scope": "support",
+      "transversal": false,
+      "component": "SupportEscalations",
+      "source": "src/pages/modules/support/SupportEscalations.tsx"
+    },
+    {
+      "id": "marketing.overview",
+      "path": "/pole/marketing",
+      "scope": "marketing",
+      "transversal": false,
+      "component": "MarketingDashboard",
+      "source": "src/pages/modules/marketing/MarketingDashboard.tsx"
+    },
+    {
+      "id": "marketing.campaigns",
+      "path": "/pole/marketing/campaigns",
+      "scope": "marketing",
+      "transversal": false,
+      "component": "Campaigns",
+      "source": "src/pages/modules/marketing/Campaigns.tsx"
+    },
+    {
+      "id": "marketing.content",
+      "path": "/pole/marketing/content",
+      "scope": "marketing",
+      "transversal": false,
+      "component": "Content",
+      "source": "src/pages/modules/marketing/Content.tsx"
+    },
+    {
+      "id": "marketing.crm",
+      "path": "/pole/marketing/crm",
+      "scope": "marketing",
+      "transversal": false,
+      "component": "Navigate",
+      "source": "src/pages/SubSectionPage.tsx"
+    },
+    {
+      "id": "marketing.journeys",
+      "path": "/pole/marketing/journeys",
+      "scope": "marketing",
+      "transversal": false,
+      "component": "Navigate",
+      "source": "src/pages/SubSectionPage.tsx"
+    },
+    {
+      "id": "marketing.analytics",
+      "path": "/pole/marketing/analytics",
+      "scope": "marketing",
+      "transversal": false,
+      "component": "Analytics",
+      "source": "src/pages/modules/marketing/Analytics.tsx"
+    },
+    {
+      "id": "marketing.reputation",
+      "path": "/pole/marketing/reputation",
+      "scope": "marketing",
+      "transversal": false,
+      "component": "Navigate",
+      "source": "src/pages/SubSectionPage.tsx"
+    },
+    {
+      "id": "rh.overview",
+      "path": "/pole/rh",
+      "scope": "rh",
+      "transversal": false,
+      "component": "RHDashboard",
+      "source": "src/pages/modules/rh/RHDashboard.tsx"
+    },
+    {
+      "id": "rh.employees",
+      "path": "/pole/rh/employees",
+      "scope": "rh",
+      "transversal": false,
+      "component": "Employees",
+      "source": "src/pages/modules/rh/Employees.tsx"
+    },
+    {
+      "id": "rh.recruitment",
+      "path": "/pole/rh/recruitment",
+      "scope": "rh",
+      "transversal": false,
+      "component": "Recruitment",
+      "source": "src/pages/modules/rh/Recruitment.tsx"
+    },
+    {
+      "id": "rh.files",
+      "path": "/pole/rh/files",
+      "scope": "rh",
+      "transversal": false,
+      "component": "EmployeeFiles",
+      "source": "src/pages/modules/rh/EmployeeFiles.tsx"
+    },
+    {
+      "id": "rh.onboarding",
+      "path": "/pole/rh/onboarding",
+      "scope": "rh",
+      "transversal": false,
+      "component": "RHOnboarding",
+      "source": "src/pages/modules/rh/Onboarding.tsx"
+    },
+    {
+      "id": "rh.attendance",
+      "path": "/pole/rh/attendance",
+      "scope": "rh",
+      "transversal": false,
+      "component": "Attendance",
+      "source": "src/pages/modules/rh/Attendance.tsx"
+    },
+    {
+      "id": "rh.leave",
+      "path": "/pole/rh/leave",
+      "scope": "rh",
+      "transversal": false,
+      "component": "Leave",
+      "source": "src/pages/modules/rh/Leave.tsx"
+    },
+    {
+      "id": "rh.training",
+      "path": "/pole/rh/training",
+      "scope": "rh",
+      "transversal": false,
+      "component": "Training",
+      "source": "src/pages/modules/rh/Training.tsx"
+    },
+    {
+      "id": "rh.trips",
+      "path": "/pole/rh/trips",
+      "scope": "rh",
+      "transversal": false,
+      "component": "BusinessTrips",
+      "source": "src/pages/modules/rh/BusinessTrips.tsx"
+    },
+    {
+      "id": "rh.publications",
+      "path": "/pole/rh/publications",
+      "scope": "rh",
+      "transversal": false,
+      "component": "Publications",
+      "source": "src/pages/modules/rh/Publications.tsx"
+    },
+    {
+      "id": "rh.alerts",
+      "path": "/pole/rh/alerts",
+      "scope": "rh",
+      "transversal": false,
+      "component": "HRAlerts",
+      "source": "src/pages/modules/rh/HRAlerts.tsx"
+    },
+    {
+      "id": "rh.portfolio",
+      "path": "/pole/rh/portfolio",
+      "scope": "rh",
+      "transversal": false,
+      "component": "RHPortfolio",
+      "source": "src/pages/modules/rh/RHPortfolio.tsx"
+    },
+    {
+      "id": "rh.organization",
+      "path": "/pole/rh/organization",
+      "scope": "rh",
+      "transversal": false,
+      "component": "Organization",
+      "source": "src/pages/modules/rh/Oraganization.tsx"
+    },
+    {
+      "id": "rh.access",
+      "path": "/pole/rh/access",
+      "scope": "rh",
+      "transversal": false,
+      "component": "RHAccess",
+      "source": "src/pages/modules/rh/RHAccess.tsx"
+    },
+    {
+      "id": "audit.overview",
+      "path": "/pole/audit",
+      "scope": "audit",
+      "transversal": false,
+      "component": "AuditDashboard",
+      "source": "src/pages/modules/audit/AuditDashboard.tsx"
+    },
+    {
+      "id": "audit.field",
+      "path": "/pole/audit/field",
+      "scope": "audit",
+      "transversal": false,
+      "component": "FieldAudits",
+      "source": "src/pages/modules/audit/FieldAudits.tsx"
+    },
+    {
+      "id": "audit.missions",
+      "path": "/pole/audit/missions",
+      "scope": "audit",
+      "transversal": false,
+      "component": "AuditMissions",
+      "source": "src/pages/modules/audit/AuditMissions.tsx"
+    },
+    {
+      "id": "audit.supplier",
+      "path": "/pole/audit/supplier",
+      "scope": "audit",
+      "transversal": false,
+      "component": "SupplierAudits",
+      "source": "src/pages/modules/audit/SupplierAudits.tsx"
+    },
+    {
+      "id": "audit.operations",
+      "path": "/pole/audit/ops",
+      "scope": "audit",
+      "transversal": false,
+      "component": "OpsAudits",
+      "source": "src/pages/modules/audit/OpsAudits.tsx"
+    },
+    {
+      "id": "audit.reports",
+      "path": "/pole/audit/reports",
+      "scope": "audit",
+      "transversal": false,
+      "component": "AuditReports",
+      "source": "src/pages/modules/audit/Reports.tsx"
+    },
+    {
+      "id": "audit.nonconformities",
+      "path": "/pole/audit/nonconformities",
+      "scope": "audit",
+      "transversal": false,
+      "component": "NonConformities",
+      "source": "src/pages/modules/audit/NonConformities.tsx"
+    },
+    {
+      "id": "audit.corrective-actions",
+      "path": "/pole/audit/corrective-actions",
+      "scope": "audit",
+      "transversal": false,
+      "component": "Navigate",
+      "source": "src/pages/SubSectionPage.tsx"
+    },
+    {
+      "id": "audit.sanctions",
+      "path": "/pole/audit/sanctions",
+      "scope": "audit",
+      "transversal": false,
+      "component": "Sanctions",
+      "source": "src/pages/modules/audit/Sanctions.tsx"
+    },
+    {
+      "id": "compliance.overview",
+      "path": "/pole/compliance",
+      "scope": "compliance",
+      "transversal": false,
+      "component": "ComplianceDashboard",
+      "source": "src/pages/modules/compliance/ComplianceDashboard.tsx"
+    },
+    {
+      "id": "compliance.contracts",
+      "path": "/pole/compliance/contracts",
+      "scope": "compliance",
+      "transversal": false,
+      "component": "Contracts",
+      "source": "src/pages/modules/compliance/Contracts.tsx"
+    },
+    {
+      "id": "compliance.policies",
+      "path": "/pole/compliance/policies",
+      "scope": "compliance",
+      "transversal": false,
+      "component": "Policies",
+      "source": "src/pages/modules/compliance/Policies.tsx"
+    },
+    {
+      "id": "compliance.disputes",
+      "path": "/pole/compliance/disputes",
+      "scope": "compliance",
+      "transversal": false,
+      "component": "Disputes",
+      "source": "src/pages/modules/compliance/Disputes.tsx"
+    },
+    {
+      "id": "compliance.risks",
+      "path": "/pole/compliance/risks",
+      "scope": "compliance",
+      "transversal": false,
+      "component": "ComplianceRiskRegister",
+      "source": "src/pages/modules/compliance/RiskRegister.tsx"
+    },
+    {
+      "id": "rse.overview",
+      "path": "/pole/rse",
+      "scope": "rse",
+      "transversal": false,
+      "component": "RSEDashboard",
+      "source": "src/pages/modules/rse/RSEDashboard.tsx"
+    },
+    {
+      "id": "rse.packaging",
+      "path": "/pole/rse/packaging",
+      "scope": "rse",
+      "transversal": false,
+      "component": "ValidatedPackaging",
+      "source": "src/pages/modules/rse/ValidatedPackaging.tsx"
+    },
+    {
+      "id": "rse.recycling",
+      "path": "/pole/rse/recycling",
+      "scope": "rse",
+      "transversal": false,
+      "component": "RecyclingStats",
+      "source": "src/pages/modules/rse/RecyclingStats.tsx"
+    },
+    {
+      "id": "rse.co2",
+      "path": "/pole/rse/co2",
+      "scope": "rse",
+      "transversal": false,
+      "component": "CO2Impact",
+      "source": "src/pages/modules/rse/CO2Impact.tsx"
+    },
+    {
+      "id": "rse.esg",
+      "path": "/pole/rse/esg",
+      "scope": "rse",
+      "transversal": false,
+      "component": "ESGReports",
+      "source": "src/pages/modules/rse/ESGReports.tsx"
+    },
+    {
+      "id": "product.overview",
+      "path": "/pole/product",
+      "scope": "product",
+      "transversal": false,
+      "component": "ProductEngineeringDashboard",
+      "source": "src/pages/modules/product/ProductEngineeringDashboard.tsx"
+    },
+    {
+      "id": "product.product",
+      "path": "/pole/product/product",
+      "scope": "product",
+      "transversal": false,
+      "component": "ProductEngineeringDashboard",
+      "source": "src/pages/modules/product/ProductEngineeringDashboard.tsx"
+    },
+    {
+      "id": "product.roadmap",
+      "path": "/pole/product/roadmap",
+      "scope": "product",
+      "transversal": false,
+      "component": "Navigate",
+      "source": "src/pages/SubSectionPage.tsx"
+    },
+    {
+      "id": "product.backlog",
+      "path": "/pole/product/backlog",
+      "scope": "product",
+      "transversal": false,
+      "component": "Navigate",
+      "source": "src/pages/SubSectionPage.tsx"
+    },
+    {
+      "id": "product.engineering",
+      "path": "/pole/product/engineering",
+      "scope": "product",
+      "transversal": false,
+      "component": "ProductEngineeringDashboard",
+      "source": "src/pages/modules/product/ProductEngineeringDashboard.tsx"
+    },
+    {
+      "id": "product.studio",
+      "path": "/pole/product/studio",
+      "scope": "product",
+      "transversal": false,
+      "component": "ProductStudio",
+      "source": "src/pages/modules/product/ProductStudio.tsx"
+    },
+    {
+      "id": "product.integrations",
+      "path": "/pole/product/integrations",
+      "scope": "product",
+      "transversal": false,
+      "component": "ProductIntegrations",
+      "source": "src/pages/modules/product/ProductIntegrations.tsx"
+    },
+    {
+      "id": "product.documentation",
+      "path": "/pole/product/documentation",
+      "scope": "product",
+      "transversal": false,
+      "component": "ProductDocumentation",
+      "source": "src/pages/modules/product/ProductDocumention.tsx"
+    },
+    {
+      "id": "product.innovation",
+      "path": "/pole/product/innovation",
+      "scope": "product",
+      "transversal": false,
+      "component": "ProductInnovation",
+      "source": "src/pages/modules/product/ProductInnovation.tsx"
+    },
+    {
+      "id": "product.performance",
+      "path": "/pole/product/performance",
+      "scope": "product",
+      "transversal": false,
+      "component": "ProductPerformance",
+      "source": "src/pages/modules/product/ProductPerformance.tsx"
+    },
+    {
+      "id": "product.supplier-performance",
+      "path": "/pole/product/supplier-performance",
+      "scope": "product",
+      "transversal": false,
+      "component": "SupplierPerformance",
+      "source": "src/pages/modules/product/SupplierPerformance.tsx"
+    },
+    {
+      "id": "product.frictions",
+      "path": "/pole/product/frictions",
+      "scope": "product",
+      "transversal": false,
+      "component": "ProductFrictions",
+      "source": "src/pages/modules/product/ProductFrictions.tsx"
+    },
+    {
+      "id": "product.reports",
+      "path": "/pole/product/reports",
+      "scope": "product",
+      "transversal": false,
+      "component": "ProductReports",
+      "source": "src/pages/modules/product/ProductReports.tsx"
+    },
+    {
+      "id": "data.overview",
+      "path": "/pole/data",
+      "scope": "data",
+      "transversal": false,
+      "component": "DataDashboard",
+      "source": "src/pages/modules/data/DataDashboard.tsx"
+    },
+    {
+      "id": "data.kpi",
+      "path": "/pole/data/kpi",
+      "scope": "data",
+      "transversal": false,
+      "component": "KPICatalog",
+      "source": "src/pages/modules/data/KPICatalog.tsx"
+    },
+    {
+      "id": "data.reports",
+      "path": "/pole/data/reports",
+      "scope": "data",
+      "transversal": false,
+      "component": "DataReports",
+      "source": "src/pages/modules/data/Reports.tsx"
+    },
+    {
+      "id": "data.bi",
+      "path": "/pole/data/bi",
+      "scope": "data",
+      "transversal": false,
+      "component": "BIOverview",
+      "source": "src/pages/modules/data/bi/BIOverview.tsx"
+    },
+    {
+      "id": "data.requests",
+      "path": "/pole/data/requests",
+      "scope": "data",
+      "transversal": false,
+      "component": "PublicationRequestsPage",
+      "source": "src/pages/modules/data/PublicationRequests.tsx"
+    },
+    {
+      "id": "data.versions",
+      "path": "/pole/data/versions",
+      "scope": "data",
+      "transversal": false,
+      "component": "KPIVersions",
+      "source": "src/pages/modules/data/KPIVersions.tsx"
+    },
+    {
+      "id": "security.overview",
+      "path": "/pole/security",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecurityDashboard",
+      "source": "src/pages/modules/security/SecurityDashboard.tsx"
+    },
+    {
+      "id": "security.access",
+      "path": "/pole/security/access",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecurityAccess",
+      "source": "src/pages/modules/security/SecurityAccess.tsx"
+    },
+    {
+      "id": "security.security",
+      "path": "/pole/security/security",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecurityOperations",
+      "source": "src/pages/modules/security/Security.tsx"
+    },
+    {
+      "id": "security.infrastructure",
+      "path": "/pole/security/infrastructure",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecurityInfrastructure",
+      "source": "src/pages/modules/security/SecurityInfrastructure.tsx"
+    },
+    {
+      "id": "security.environments",
+      "path": "/pole/security/environments",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecurityEnvironments",
+      "source": "src/pages/modules/security/SecurityEnvironments.tsx"
+    },
+    {
+      "id": "security.vpn",
+      "path": "/pole/security/vpn",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecurityVPN",
+      "source": "src/pages/modules/security/SecurityVPN.tsx"
+    },
+    {
+      "id": "security.logs",
+      "path": "/pole/security/logs",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecurityLogs",
+      "source": "src/pages/modules/security/SecurityLogs.tsx"
+    },
+    {
+      "id": "work.tasks",
+      "path": "/work/tasks",
+      "scope": "work",
+      "transversal": true,
+      "component": "WorkTasks",
+      "source": "src/pages/modules/work/WorkTasks.tsx"
+    },
+    {
+      "id": "work.projects",
+      "path": "/work/projects",
+      "scope": "work",
+      "transversal": true,
+      "component": "WorkProjects",
+      "source": "src/pages/modules/work/WorkProjects.tsx"
+    },
+    {
+      "id": "work.processes",
+      "path": "/work/processes",
+      "scope": "work",
+      "transversal": true,
+      "component": "WorkProcesses",
+      "source": "src/pages/modules/work/WorkProcesses.tsx"
+    },
+    {
+      "id": "work.validations",
+      "path": "/work/validations",
+      "scope": "work",
+      "transversal": true,
+      "component": "WorkValidations",
+      "source": "src/pages/modules/work/WorkValidations.tsx"
+    },
+    {
+      "id": "work.escalations",
+      "path": "/work/escalations",
+      "scope": "work",
+      "transversal": true,
+      "component": "WorkEscalations",
+      "source": "src/pages/modules/work/WorkEscalations.tsx"
+    },
+    {
+      "id": "work.activities",
+      "path": "/work/activities",
+      "scope": "work",
+      "transversal": true,
+      "component": "WorkActivities",
+      "source": "src/pages/modules/work/WorkActivities.tsx"
+    },
+    {
+      "id": "notifications.all",
+      "path": "/notifications",
+      "scope": "notifications",
+      "transversal": true,
+      "component": "Notifications",
+      "source": "src/pages/Notifications.tsx"
+    },
+    {
+      "id": "gateway.overview",
+      "path": "/modules/gateway",
+      "scope": "gateway",
+      "transversal": true,
+      "component": "GatewayDashboard",
+      "source": "src/pages/modules/gateway/GatewayDashboard.tsx"
+    },
+    {
+      "id": "gateway.inbox",
+      "path": "/modules/gateway/inbox",
+      "scope": "gateway",
+      "transversal": true,
+      "component": "GatewayInbox",
+      "source": "src/pages/modules/gateway/GatewayInbox.tsx"
+    },
+    {
+      "id": "gateway.routing",
+      "path": "/modules/gateway/routing",
+      "scope": "gateway",
+      "transversal": true,
+      "component": "GatewayRouting",
+      "source": "src/pages/modules/gateway/GatewayRouting.tsx"
+    },
+    {
+      "id": "gateway.validation",
+      "path": "/modules/gateway/validation",
+      "scope": "gateway",
+      "transversal": true,
+      "component": "GatewayValidation",
+      "source": "src/pages/modules/gateway/GatewayValidation.tsx"
+    },
+    {
+      "id": "gateway.responses",
+      "path": "/modules/gateway/responses",
+      "scope": "gateway",
+      "transversal": true,
+      "component": "GatewayResponses",
+      "source": "src/pages/modules/gateway/GatewayResponses.tsx"
+    },
+    {
+      "id": "gateway.journal",
+      "path": "/modules/gateway/journal",
+      "scope": "gateway",
+      "transversal": true,
+      "component": "GatewayJournal",
+      "source": "src/pages/modules/gateway/GatewayJournal.tsx"
+    },
+    {
+      "id": "documents.imports",
+      "path": "/documents/imports",
+      "scope": "documents",
+      "transversal": true,
+      "component": "Documents",
+      "source": "src/pages/Documents.tsx"
+    },
+    {
+      "id": "documents.exports",
+      "path": "/documents/exports",
+      "scope": "documents",
+      "transversal": true,
+      "component": "Documents",
+      "source": "src/pages/Documents.tsx"
+    },
+    {
+      "id": "documents.journal",
+      "path": "/documents/journal",
+      "scope": "documents",
+      "transversal": true,
+      "component": "Documents",
+      "source": "src/pages/Documents.tsx"
+    },
+    {
+      "id": "ethics.overview",
+      "path": "/modules/ethics",
+      "scope": "ethics",
+      "transversal": true,
+      "component": "EthicsDashboard",
+      "source": "src/pages/modules/ethics/EthicsDashboard.tsx"
+    },
+    {
+      "id": "ethics.report",
+      "path": "/modules/ethics/report",
+      "scope": "ethics",
+      "transversal": true,
+      "component": "EthicsReport",
+      "source": "src/pages/modules/ethics/EthicsReport.tsx"
+    },
+    {
+      "id": "ethics.received",
+      "path": "/modules/ethics/received",
+      "scope": "ethics",
+      "transversal": true,
+      "component": "EthicsReceived",
+      "source": "src/pages/modules/ethics/EthicsReceived.tsx"
+    },
+    {
+      "id": "ethics.ongoing",
+      "path": "/modules/ethics/ongoing",
+      "scope": "ethics",
+      "transversal": true,
+      "component": "EthicsOngoing",
+      "source": "src/pages/modules/ethics/EthicsOngoing.tsx"
+    },
+    {
+      "id": "ethics.closed",
+      "path": "/modules/ethics/closed",
+      "scope": "ethics",
+      "transversal": true,
+      "component": "EthicsClosed",
+      "source": "src/pages/modules/ethics/EthicsClosed.tsx"
+    },
+    {
+      "id": "ethics.stats",
+      "path": "/modules/ethics/stats",
+      "scope": "ethics",
+      "transversal": true,
+      "component": "EthicsStats",
+      "source": "src/pages/modules/ethics/EthicsStats.tsx"
+    },
+    {
+      "id": "independentAudit.overview",
+      "path": "/modules/independent-audit",
+      "scope": "independentAudit",
+      "transversal": true,
+      "component": "IndependentAuditDashboard",
+      "source": "src/pages/modules/independent-audit/IndependentAuditDashboard.tsx"
+    },
+    {
+      "id": "independentAudit.incident",
+      "path": "/modules/independent-audit/incident",
+      "scope": "independentAudit",
+      "transversal": true,
+      "component": "IncidentDeclaration",
+      "source": "src/pages/modules/independent-audit/IncidentDeclaration.tsx"
+    },
+    {
+      "id": "independentAudit.resolution",
+      "path": "/modules/independent-audit/resolution",
+      "scope": "independentAudit",
+      "transversal": true,
+      "component": "ResolutionTracking",
+      "source": "src/pages/modules/independent-audit/ResolutionTracking.tsx"
+    },
+    {
+      "id": "app.dashboard",
+      "path": "/",
+      "scope": "app",
+      "transversal": true,
+      "component": "Index",
+      "source": "src/pages/Index.tsx"
+    },
+    {
+      "id": "app.feed",
+      "path": "/feed",
+      "scope": "app",
+      "transversal": true,
+      "component": "InternalFeed",
+      "source": "src/pages/InternalFeed.tsx"
+    },
+    {
+      "id": "app.documents",
+      "path": "/documents",
+      "scope": "app",
+      "transversal": true,
+      "component": "Documents",
+      "source": "src/pages/Documents.tsx"
+    },
+    {
+      "id": "app.compliance-audit",
+      "path": "/compliance-audit",
+      "scope": "app",
+      "transversal": true,
+      "component": "ComplianceAudit",
+      "source": "src/pages/ComplianceAudit.tsx"
+    },
+    {
+      "id": "app.settings",
+      "path": "/settings",
+      "scope": "app",
+      "transversal": true,
+      "component": "Settings",
+      "source": "src/pages/Settings.tsx"
+    },
+    {
+      "id": "admin.roles",
+      "path": "/admin/roles-permissions",
+      "scope": "admin",
+      "transversal": true,
+      "component": "RolesPermissions",
+      "source": "src/pages/admin/RolesPermissions.tsx"
+    },
+    {
+      "id": "admin.test-accounts",
+      "path": "/admin/test-accounts",
+      "scope": "admin",
+      "transversal": true,
+      "component": "Navigate",
+      "source": "src/pages/SubSectionPage.tsx"
+    },
+    {
+      "id": "app.profile",
+      "path": "/profile",
+      "scope": "app",
+      "transversal": true,
+      "component": "Profile",
+      "source": "src/pages/Profile.tsx"
+    },
+    {
+      "id": "marketing.podcasts",
+      "path": "/pole/marketing/podcasts",
+      "scope": "marketing",
+      "transversal": false,
+      "component": "Podcasts",
+      "source": "src/pages/modules/marketing/Podcasts.tsx"
+    },
+    {
+      "id": "rse.points",
+      "path": "/pole/rse/points",
+      "scope": "rse",
+      "transversal": false,
+      "component": "CustomerPoints",
+      "source": "src/pages/modules/rse/CustomerPoints.tsx"
+    },
+    {
+      "id": "security.code",
+      "path": "/pole/security/code",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecurityCode",
+      "source": "src/pages/modules/security/SecurityCode.tsx"
+    },
+    {
+      "id": "security.console",
+      "path": "/pole/security/console",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecurityConsole",
+      "source": "src/pages/modules/security/SecurityConsole.tsx"
+    },
+    {
+      "id": "security.documentation",
+      "path": "/pole/security/documentation",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecurityDocumentation",
+      "source": "src/pages/modules/security/SecurityDocumentation.tsx"
+    },
+    {
+      "id": "support.compliance",
+      "path": "/pole/support/compliance",
+      "scope": "support",
+      "transversal": false,
+      "component": "ModuleWorkspace (registry fallback)",
+      "source": "src/pages/SubSectionPage.tsx"
+    },
+    {
+      "id": "support.onboarding",
+      "path": "/pole/support/onboarding",
+      "scope": "support",
+      "transversal": false,
+      "component": "ModuleWorkspace (registry fallback)",
+      "source": "src/pages/SubSectionPage.tsx"
+    },
+    {
+      "id": "direction.global",
+      "path": "/pole/direction/global",
+      "scope": "direction",
+      "transversal": false,
+      "component": "DirectionGlobal",
+      "source": "src/pages/modules/direction/DirectionGlobal.tsx"
+    },
+    {
+      "id": "finance.salaries",
+      "path": "/pole/finance/salaries",
+      "scope": "finance",
+      "transversal": false,
+      "component": "Salaries",
+      "source": "src/pages/modules/finance/Salaries.tsx"
+    },
+    {
+      "id": "ops.audit-link",
+      "path": "/pole/ops/audit-link",
+      "scope": "ops",
+      "transversal": false,
+      "component": "AuditLink",
+      "source": "src/pages/modules/ops/AuditLink.tsx"
+    },
+    {
+      "id": "supplier.suppliers",
+      "path": "/pole/supplier/suppliers",
+      "scope": "supplier",
+      "transversal": false,
+      "component": "SupplierFiles",
+      "source": "src/pages/modules/supplier/SupplierFiles.tsx"
+    },
+    {
+      "id": "supplier.alerts",
+      "path": "/pole/supplier/alerts",
+      "scope": "supplier",
+      "transversal": false,
+      "component": "QualityAlerts",
+      "source": "src/pages/modules/supplier/QualityAlerts.tsx"
+    },
+    {
+      "id": "marketplace.customers",
+      "path": "/pole/marketplace/customers",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MarketplaceCustomers",
+      "source": "src/pages/modules/marketplace/MarketplaceCustomers.tsx"
+    },
+    {
+      "id": "marketplace.orders",
+      "path": "/pole/marketplace/orders",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MarketplaceOrders",
+      "source": "src/pages/modules/marketplace/MarketplaceOrders.tsx"
+    },
+    {
+      "id": "marketplace.subscribers",
+      "path": "/pole/marketplace/subscribers",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MarketplaceSubscribers",
+      "source": "src/pages/modules/marketplace/MarketplaceSubscribers.tsx"
+    },
+    {
+      "id": "marketplace.favorites",
+      "path": "/pole/marketplace/favorites",
+      "scope": "marketplace",
+      "transversal": false,
+      "component": "MarketplaceFavorites",
+      "source": "src/pages/modules/marketplace/MarketplaceFavorites.tsx"
+    },
+    {
+      "id": "data.backlog",
+      "path": "/pole/data/backlog",
+      "scope": "data",
+      "transversal": false,
+      "component": "TechBacklogPage",
+      "source": "src/pages/modules/data/TechBacklog.tsx"
+    },
+    {
+      "id": "data.bi-dashboards",
+      "path": "/pole/data/bi/dashboards",
+      "scope": "data",
+      "transversal": false,
+      "component": "BIDashboardsList",
+      "source": "src/pages/modules/data/bi/BIDashboardsList.tsx"
+    },
+    {
+      "id": "data.bi-templates",
+      "path": "/pole/data/bi/templates",
+      "scope": "data",
+      "transversal": false,
+      "component": "BITemplates",
+      "source": "src/pages/modules/data/bi/BITemplates.tsx"
+    },
+    {
+      "id": "data.bi-sources",
+      "path": "/pole/data/bi/sources",
+      "scope": "data",
+      "transversal": false,
+      "component": "BIDataSources",
+      "source": "src/pages/modules/data/bi/BIDataSources.tsx"
+    },
+    {
+      "id": "data.bi-library",
+      "path": "/pole/data/bi/library",
+      "scope": "data",
+      "transversal": false,
+      "component": "BIWidgetLibrary",
+      "source": "src/pages/modules/data/bi/BIWidgetLibrary.tsx"
+    },
+    {
+      "id": "security.sandbox",
+      "path": "/pole/security/sandbox",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecuritySandbox",
+      "source": "src/pages/modules/security/SecuritySandbox.tsx"
+    },
+    {
+      "id": "security.supervision",
+      "path": "/pole/security/supervision",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecuritySupervision",
+      "source": "src/pages/modules/security/SecuritySupervision.tsx"
+    },
+    {
+      "id": "security.dataflow",
+      "path": "/pole/security/dataflow",
+      "scope": "security",
+      "transversal": false,
+      "component": "SecurityDataFlow",
+      "source": "src/pages/modules/security/SecurityDataFlow.tsx"
+    },
+    {
+      "id": "gateway.compose",
+      "path": "/modules/gateway/compose",
+      "scope": "gateway",
+      "transversal": true,
+      "component": "GatewayCompose",
+      "source": "src/pages/modules/gateway/GatewayCompose.tsx"
+    }
+  ],
+  "routes": [
+    {
+      "path": "/login",
+      "component": "Login",
+      "file": "src/pages/Login.tsx"
+    },
+    {
+      "path": "/reset-password",
+      "component": "ResetPassword",
+      "file": "src/pages/ResetPassword.tsx"
+    },
+    {
+      "path": "/unsubscribe",
+      "component": "Unsubscribe",
+      "file": "src/pages/Unsubscribe.tsx"
+    },
+    {
+      "path": "/",
+      "component": "Index",
+      "file": "src/pages/Index.tsx"
+    },
+    {
+      "path": "/pole/direction",
+      "component": "ExecutiveDashboard",
+      "file": "src/pages/modules/direction/ExecutiveDashboard.tsx"
+    },
+    {
+      "path": "/pole/direction/global",
+      "component": "DirectionGlobal",
+      "file": "src/pages/modules/direction/DirectionGlobal.tsx"
+    },
+    {
+      "path": "/pole/direction/kpi",
+      "component": "StrategicKPIs",
+      "file": "src/pages/modules/direction/StrategicKPIs.tsx"
+    },
+    {
+      "path": "/pole/direction/strategic-kpis",
+      "component": "StrategicKPIs",
+      "file": "src/pages/modules/direction/StrategicKPIs.tsx"
+    },
+    {
+      "path": "/pole/direction/alerts",
+      "component": "CriticalAlertsPage",
+      "file": "src/pages/modules/direction/CriticalAlerts.tsx"
+    },
+    {
+      "path": "/pole/direction/critical-alerts",
+      "component": "CriticalAlertsPage",
+      "file": "src/pages/modules/direction/CriticalAlerts.tsx"
+    },
+    {
+      "path": "/pole/direction/decisions",
+      "component": "DecisionArbitrage",
+      "file": "src/pages/modules/direction/DecisionArbitrage.tsx"
+    },
+    {
+      "path": "/pole/direction/decision-arbitrage",
+      "component": "DecisionArbitrage",
+      "file": "src/pages/modules/direction/DecisionArbitrage.tsx"
+    },
+    {
+      "path": "/pole/direction/vision",
+      "component": "VisionRoadmap",
+      "file": "src/pages/modules/direction/VisionRoadmap.tsx"
+    },
+    {
+      "path": "/pole/direction/vision-roadmap",
+      "component": "VisionRoadmap",
+      "file": "src/pages/modules/direction/VisionRoadmap.tsx"
+    },
+    {
+      "path": "/pole/direction/governance",
+      "component": "GroupGovernance",
+      "file": "src/pages/modules/direction/GroupGovernance.tsx"
+    },
+    {
+      "path": "/pole/direction/group-governance",
+      "component": "GroupGovernance",
+      "file": "src/pages/modules/direction/GroupGovernance.tsx"
+    },
+    {
+      "path": "/pole/direction/reports",
+      "component": "BoardReports",
+      "file": "src/pages/modules/direction/BoardReports.tsx"
+    },
+    {
+      "path": "/pole/direction/board-reports",
+      "component": "BoardReports",
+      "file": "src/pages/modules/direction/BoardReports.tsx"
+    },
+    {
+      "path": "/pole/direction/access",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/finance",
+      "component": "FinanceDashboard",
+      "file": "src/pages/modules/finance/FinanceDashboard.tsx"
+    },
+    {
+      "path": "/pole/finance/cashflow",
+      "component": "CashflowRealtime",
+      "file": "src/pages/modules/finance/CashflowRealtime.tsx"
+    },
+    {
+      "path": "/pole/finance/transactions",
+      "component": "Transactions",
+      "file": "src/pages/modules/finance/Transactions.tsx"
+    },
+    {
+      "path": "/pole/finance/supplier-payments",
+      "component": "SupplierPayments",
+      "file": "src/pages/modules/finance/SupplierPayments.tsx"
+    },
+    {
+      "path": "/pole/finance/subscriptions",
+      "component": "Subscriptions",
+      "file": "src/pages/modules/finance/Subscriptions.tsx"
+    },
+    {
+      "path": "/pole/finance/salaries",
+      "component": "Salaries",
+      "file": "src/pages/modules/finance/Salaries.tsx"
+    },
+    {
+      "path": "/pole/finance/cards",
+      "component": "CorporateCards",
+      "file": "src/pages/modules/finance/CorporateCards.tsx"
+    },
+    {
+      "path": "/pole/finance/guarantee",
+      "component": "GuaranteeFund",
+      "file": "src/pages/modules/finance/GuaranteeFund.tsx"
+    },
+    {
+      "path": "/pole/finance/billing",
+      "component": "ModuleWorkspace",
+      "file": "src/components/operations/ModuleWorkspace.tsx"
+    },
+    {
+      "path": "/pole/finance/payouts",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/finance/reconciliation",
+      "component": "Reconciliation",
+      "file": "src/pages/modules/finance/Reconciliation.tsx"
+    },
+    {
+      "path": "/pole/ops",
+      "component": "OpsDashboard",
+      "file": "src/pages/modules/ops/OpsDashboard.tsx"
+    },
+    {
+      "path": "/pole/ops/shops",
+      "component": "ShopsSupervision",
+      "file": "src/pages/modules/ops/ShopsSupervision.tsx"
+    },
+    {
+      "path": "/pole/ops/anomalies",
+      "component": "Anomalies",
+      "file": "src/pages/modules/ops/Anomalies.tsx"
+    },
+    {
+      "path": "/pole/ops/pipeline",
+      "component": "OrderPipeline",
+      "file": "src/pages/modules/ops/OrderPipeline.tsx"
+    },
+    {
+      "path": "/pole/ops/orders",
+      "component": "Orders",
+      "file": "src/pages/modules/ops/Orders.tsx"
+    },
+    {
+      "path": "/pole/ops/shipments",
+      "component": "Shipments",
+      "file": "src/pages/modules/ops/Shipments.tsx"
+    },
+    {
+      "path": "/pole/ops/stocks",
+      "component": "DistributedStocks",
+      "file": "src/pages/modules/ops/DistributedStocks.tsx"
+    },
+    {
+      "path": "/pole/ops/catalog",
+      "component": "ProductCatalog",
+      "file": "src/pages/modules/ops/ProductCatalog.tsx"
+    },
+    {
+      "path": "/pole/ops/product-lifecycle",
+      "component": "ProductLifecycle",
+      "file": "src/pages/modules/ops/ProductLifecycle.tsx"
+    },
+    {
+      "path": "/pole/ops/shops/:id",
+      "component": "ShopDetail",
+      "file": "src/pages/modules/ops/ShopDetail.tsx"
+    },
+    {
+      "path": "/pole/ops/partners",
+      "component": "Partners",
+      "file": "src/pages/modules/ops/Partners.tsx"
+    },
+    {
+      "path": "/pole/ops/flows",
+      "component": "SyncFlows",
+      "file": "src/pages/modules/ops/SyncFlows.tsx"
+    },
+    {
+      "path": "/pole/ops/incidents",
+      "component": "LogisticsIncidents",
+      "file": "src/pages/modules/ops/LogisticsIncidents.tsx"
+    },
+    {
+      "path": "/pole/ops/replenishment",
+      "component": "Replenishment",
+      "file": "src/pages/modules/ops/Replenishment.tsx"
+    },
+    {
+      "path": "/pole/ops/forecast",
+      "component": "DemandForecast",
+      "file": "src/pages/modules/ops/DemandForecast.tsx"
+    },
+    {
+      "path": "/pole/ops/thresholds",
+      "component": "StockThresholds",
+      "file": "src/pages/modules/ops/StockThresholds.tsx"
+    },
+    {
+      "path": "/pole/ops/suppliers-lead-times",
+      "component": "SupplierLeadTimes",
+      "file": "src/pages/modules/ops/SupplierLeadTimes.tsx"
+    },
+    {
+      "path": "/pole/ops/suppliers-lt",
+      "component": "SupplierLeadTimes",
+      "file": "src/pages/modules/ops/SupplierLeadTimes.tsx"
+    },
+    {
+      "path": "/pole/ops/audit-link",
+      "component": "AuditLink",
+      "file": "src/pages/modules/ops/AuditLink.tsx"
+    },
+    {
+      "path": "/pole/supplier",
+      "component": "SupplierDashboard",
+      "file": "src/pages/modules/supplier/SupplierDashboard.tsx"
+    },
+    {
+      "path": "/pole/supplier/pending",
+      "component": "PendingProducts",
+      "file": "src/pages/modules/supplier/PendingProducts.tsx"
+    },
+    {
+      "path": "/pole/supplier/validated",
+      "component": "ValidatedProducts",
+      "file": "src/pages/modules/supplier/ValidatedProducts.tsx"
+    },
+    {
+      "path": "/pole/supplier/suppliers",
+      "component": "SupplierFiles",
+      "file": "src/pages/modules/supplier/SupplierFiles.tsx"
+    },
+    {
+      "path": "/pole/supplier/certifications",
+      "component": "Certifications",
+      "file": "src/pages/modules/supplier/Certifications.tsx"
+    },
+    {
+      "path": "/pole/supplier/decisions",
+      "component": "DecisionHistory",
+      "file": "src/pages/modules/supplier/DecisionHistory.tsx"
+    },
+    {
+      "path": "/pole/supplier/alerts",
+      "component": "QualityAlerts",
+      "file": "src/pages/modules/supplier/QualityAlerts.tsx"
+    },
+    {
+      "path": "/pole/supplier/portfolios",
+      "component": "SupplierPortfolios",
+      "file": "src/pages/modules/supplier/SupplierPortfolios.tsx"
+    },
+    {
+      "path": "/pole/supplier/applications",
+      "component": "SupplierApplications",
+      "file": "src/pages/modules/supplier/SupplierApplications.tsx"
+    },
+    {
+      "path": "/pole/supplier/applications/:id",
+      "component": "SupplierApplicationDetail",
+      "file": "src/pages/modules/supplier/SupplierApplicationDetail.tsx"
+    },
+    {
+      "path": "/pole/supplier/restock-orders",
+      "component": "SupplierRestockOrders",
+      "file": "src/pages/modules/supplier/SupplierRestockOrders.tsx"
+    },
+    {
+      "path": "/pole/supplier/catalog-inbox",
+      "component": "SupplierCatalogInbox",
+      "file": "src/pages/modules/supplier/SupplierCatalogInbox.tsx"
+    },
+    {
+      "path": "/pole/marketplace",
+      "component": "MarketplaceDashboard",
+      "file": "src/pages/modules/marketplace/MarketplaceDashboard.tsx"
+    },
+    {
+      "path": "/pole/marketplace/merchants",
+      "component": "MerchantPortfolio",
+      "file": "src/pages/modules/marketplace/MerchantPortfolio.tsx"
+    },
+    {
+      "path": "/pole/marketplace/portfolio",
+      "component": "MerchantPortfolio",
+      "file": "src/pages/modules/marketplace/MerchantPortfolio.tsx"
+    },
+    {
+      "path": "/pole/marketplace/merchants/:id",
+      "component": "MerchantDetail",
+      "file": "src/pages/modules/marketplace/MerchantDetail.tsx"
+    },
+    {
+      "path": "/pole/marketplace/stores",
+      "component": "MarketplaceStores",
+      "file": "src/pages/modules/marketplace/MarketplaceStores.tsx"
+    },
+    {
+      "path": "/pole/marketplace/stores/:id",
+      "component": "MarketplaceStoreDetail",
+      "file": "src/pages/modules/marketplace/MarketplaceStoreDetail.tsx"
+    },
+    {
+      "path": "/pole/marketplace/products",
+      "component": "MarketplaceProducts",
+      "file": "src/pages/modules/marketplace/MarketplaceProducts.tsx"
+    },
+    {
+      "path": "/pole/marketplace/customers",
+      "component": "MarketplaceCustomers",
+      "file": "src/pages/modules/marketplace/MarketplaceCustomers.tsx"
+    },
+    {
+      "path": "/pole/marketplace/orders",
+      "component": "MarketplaceOrders",
+      "file": "src/pages/modules/marketplace/MarketplaceOrders.tsx"
+    },
+    {
+      "path": "/pole/marketplace/subscribers",
+      "component": "MarketplaceSubscribers",
+      "file": "src/pages/modules/marketplace/MarketplaceSubscribers.tsx"
+    },
+    {
+      "path": "/pole/marketplace/favorites",
+      "component": "MarketplaceFavorites",
+      "file": "src/pages/modules/marketplace/MarketplaceFavorites.tsx"
+    },
+    {
+      "path": "/pole/marketplace/rewards",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/marketplace/recycling",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/marketplace/opportunities",
+      "component": "MarketplaceOpportunities",
+      "file": "src/pages/modules/marketplace/MarketplaceOpportunities.tsx"
+    },
+    {
+      "path": "/pole/marketplace/analytics",
+      "component": "MarketplaceAnalytics",
+      "file": "src/pages/modules/marketplace/MarketplaceAnalytics.tsx"
+    },
+    {
+      "path": "/pole/marketplace/subscriptions",
+      "component": "MarketplaceSubscriptions",
+      "file": "src/pages/modules/marketplace/MarketplaceSubscriptions.tsx"
+    },
+    {
+      "path": "/pole/support",
+      "component": "PoleDashboard",
+      "file": "src/pages/PoleDashboard.tsx"
+    },
+    {
+      "path": "/pole/support/tickets",
+      "component": "SupportTickets",
+      "file": "src/pages/modules/support/SupportTickets.tsx"
+    },
+    {
+      "path": "/pole/support/customer-success",
+      "component": "CustomerSuccess",
+      "file": "src/pages/modules/support/CustomerSucces.tsx"
+    },
+    {
+      "path": "/pole/support/monitoring",
+      "component": "SupportMonitoring",
+      "file": "src/pages/modules/support/SupportMonitoring.tsx"
+    },
+    {
+      "path": "/pole/support/escalations",
+      "component": "SupportEscalations",
+      "file": "src/pages/modules/support/SupportEscalations.tsx"
+    },
+    {
+      "path": "/pole/marketing",
+      "component": "MarketingDashboard",
+      "file": "src/pages/modules/marketing/MarketingDashboard.tsx"
+    },
+    {
+      "path": "/pole/marketing/campaigns",
+      "component": "Campaigns",
+      "file": "src/pages/modules/marketing/Campaigns.tsx"
+    },
+    {
+      "path": "/pole/marketing/content",
+      "component": "Content",
+      "file": "src/pages/modules/marketing/Content.tsx"
+    },
+    {
+      "path": "/pole/marketing/podcasts",
+      "component": "Podcasts",
+      "file": "src/pages/modules/marketing/Podcasts.tsx"
+    },
+    {
+      "path": "/pole/marketing/analytics",
+      "component": "Analytics",
+      "file": "src/pages/modules/marketing/Analytics.tsx"
+    },
+    {
+      "path": "/pole/marketing/crm",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/marketing/journeys",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/marketing/reputation",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/rh",
+      "component": "RHDashboard",
+      "file": "src/pages/modules/rh/RHDashboard.tsx"
+    },
+    {
+      "path": "/pole/rh/employees",
+      "component": "Employees",
+      "file": "src/pages/modules/rh/Employees.tsx"
+    },
+    {
+      "path": "/pole/rh/files",
+      "component": "EmployeeFiles",
+      "file": "src/pages/modules/rh/EmployeeFiles.tsx"
+    },
+    {
+      "path": "/pole/rh/alerts",
+      "component": "HRAlerts",
+      "file": "src/pages/modules/rh/HRAlerts.tsx"
+    },
+    {
+      "path": "/pole/rh/onboarding",
+      "component": "RHOnboarding",
+      "file": "src/pages/modules/rh/Onboarding.tsx"
+    },
+    {
+      "path": "/pole/rh/attendance",
+      "component": "Attendance",
+      "file": "src/pages/modules/rh/Attendance.tsx"
+    },
+    {
+      "path": "/pole/rh/leave",
+      "component": "Leave",
+      "file": "src/pages/modules/rh/Leave.tsx"
+    },
+    {
+      "path": "/pole/rh/training",
+      "component": "Training",
+      "file": "src/pages/modules/rh/Training.tsx"
+    },
+    {
+      "path": "/pole/rh/trips",
+      "component": "BusinessTrips",
+      "file": "src/pages/modules/rh/BusinessTrips.tsx"
+    },
+    {
+      "path": "/pole/rh/publications",
+      "component": "Publications",
+      "file": "src/pages/modules/rh/Publications.tsx"
+    },
+    {
+      "path": "/pole/rh/ethics",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/rh/portfolio",
+      "component": "RHPortfolio",
+      "file": "src/pages/modules/rh/RHPortfolio.tsx"
+    },
+    {
+      "path": "/pole/rh/organization",
+      "component": "Organization",
+      "file": "src/pages/modules/rh/Oraganization.tsx"
+    },
+    {
+      "path": "/pole/rh/access",
+      "component": "RHAccess",
+      "file": "src/pages/modules/rh/RHAccess.tsx"
+    },
+    {
+      "path": "/pole/rh/recruitment",
+      "component": "Recruitment",
+      "file": "src/pages/modules/rh/Recruitment.tsx"
+    },
+    {
+      "path": "/pole/audit",
+      "component": "AuditDashboard",
+      "file": "src/pages/modules/audit/AuditDashboard.tsx"
+    },
+    {
+      "path": "/pole/audit/field",
+      "component": "FieldAudits",
+      "file": "src/pages/modules/audit/FieldAudits.tsx"
+    },
+    {
+      "path": "/pole/audit/missions",
+      "component": "AuditMissions",
+      "file": "src/pages/modules/audit/AuditMissions.tsx"
+    },
+    {
+      "path": "/pole/audit/supplier",
+      "component": "SupplierAudits",
+      "file": "src/pages/modules/audit/SupplierAudits.tsx"
+    },
+    {
+      "path": "/pole/audit/ops",
+      "component": "OpsAudits",
+      "file": "src/pages/modules/audit/OpsAudits.tsx"
+    },
+    {
+      "path": "/pole/audit/reports",
+      "component": "AuditReports",
+      "file": "src/pages/modules/audit/Reports.tsx"
+    },
+    {
+      "path": "/pole/audit/nonconformities",
+      "component": "NonConformities",
+      "file": "src/pages/modules/audit/NonConformities.tsx"
+    },
+    {
+      "path": "/pole/audit/sanctions",
+      "component": "Sanctions",
+      "file": "src/pages/modules/audit/Sanctions.tsx"
+    },
+    {
+      "path": "/pole/audit/corrective-actions",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/compliance",
+      "component": "ComplianceDashboard",
+      "file": "src/pages/modules/compliance/ComplianceDashboard.tsx"
+    },
+    {
+      "path": "/pole/compliance/contracts",
+      "component": "Contracts",
+      "file": "src/pages/modules/compliance/Contracts.tsx"
+    },
+    {
+      "path": "/pole/compliance/policies",
+      "component": "Policies",
+      "file": "src/pages/modules/compliance/Policies.tsx"
+    },
+    {
+      "path": "/pole/compliance/disputes",
+      "component": "Disputes",
+      "file": "src/pages/modules/compliance/Disputes.tsx"
+    },
+    {
+      "path": "/pole/compliance/risks",
+      "component": "ComplianceRiskRegister",
+      "file": "src/pages/modules/compliance/RiskRegister.tsx"
+    },
+    {
+      "path": "/pole/rse",
+      "component": "RSEDashboard",
+      "file": "src/pages/modules/rse/RSEDashboard.tsx"
+    },
+    {
+      "path": "/pole/rse/packaging",
+      "component": "ValidatedPackaging",
+      "file": "src/pages/modules/rse/ValidatedPackaging.tsx"
+    },
+    {
+      "path": "/pole/rse/packaging-lifecycle",
+      "component": "PackagingDashboard",
+      "file": "src/pages/modules/packaging/PackagingDashboard.tsx"
+    },
+    {
+      "path": "/pole/rse/recycling",
+      "component": "RecyclingStats",
+      "file": "src/pages/modules/rse/RecyclingStats.tsx"
+    },
+    {
+      "path": "/pole/rse/points",
+      "component": "CustomerPoints",
+      "file": "src/pages/modules/rse/CustomerPoints.tsx"
+    },
+    {
+      "path": "/pole/rse/co2",
+      "component": "CO2Impact",
+      "file": "src/pages/modules/rse/CO2Impact.tsx"
+    },
+    {
+      "path": "/pole/rse/esg",
+      "component": "ESGReports",
+      "file": "src/pages/modules/rse/ESGReports.tsx"
+    },
+    {
+      "path": "/pole/product",
+      "component": "ProductEngineeringDashboard",
+      "file": "src/pages/modules/product/ProductEngineeringDashboard.tsx"
+    },
+    {
+      "path": "/pole/product/product",
+      "component": "ProductEngineeringDashboard",
+      "file": "src/pages/modules/product/ProductEngineeringDashboard.tsx"
+    },
+    {
+      "path": "/pole/product/roadmap",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/product/backlog",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/product/engineering",
+      "component": "ProductEngineeringDashboard",
+      "file": "src/pages/modules/product/ProductEngineeringDashboard.tsx"
+    },
+    {
+      "path": "/pole/product/studio",
+      "component": "ProductStudio",
+      "file": "src/pages/modules/product/ProductStudio.tsx"
+    },
+    {
+      "path": "/pole/product/integrations",
+      "component": "ProductIntegrations",
+      "file": "src/pages/modules/product/ProductIntegrations.tsx"
+    },
+    {
+      "path": "/pole/product/documentation",
+      "component": "ProductDocumentation",
+      "file": "src/pages/modules/product/ProductDocumention.tsx"
+    },
+    {
+      "path": "/pole/product/innovation",
+      "component": "ProductInnovation",
+      "file": "src/pages/modules/product/ProductInnovation.tsx"
+    },
+    {
+      "path": "/pole/product/performance",
+      "component": "ProductPerformance",
+      "file": "src/pages/modules/product/ProductPerformance.tsx"
+    },
+    {
+      "path": "/pole/product/supplier-performance",
+      "component": "SupplierPerformance",
+      "file": "src/pages/modules/product/SupplierPerformance.tsx"
+    },
+    {
+      "path": "/pole/product/frictions",
+      "component": "ProductFrictions",
+      "file": "src/pages/modules/product/ProductFrictions.tsx"
+    },
+    {
+      "path": "/pole/product/reports",
+      "component": "ProductReports",
+      "file": "src/pages/modules/product/ProductReports.tsx"
+    },
+    {
+      "path": "/pole/product/tickets/:id",
+      "component": "ProductTicketDetail",
+      "file": "src/pages/modules/product/ProductTicketDetail.tsx"
+    },
+    {
+      "path": "/pole/data",
+      "component": "DataDashboard",
+      "file": "src/pages/modules/data/DataDashboard.tsx"
+    },
+    {
+      "path": "/pole/data/kpi",
+      "component": "KPICatalog",
+      "file": "src/pages/modules/data/KPICatalog.tsx"
+    },
+    {
+      "path": "/pole/data/requests",
+      "component": "PublicationRequestsPage",
+      "file": "src/pages/modules/data/PublicationRequests.tsx"
+    },
+    {
+      "path": "/pole/data/backlog",
+      "component": "TechBacklogPage",
+      "file": "src/pages/modules/data/TechBacklog.tsx"
+    },
+    {
+      "path": "/pole/data/versions",
+      "component": "KPIVersions",
+      "file": "src/pages/modules/data/KPIVersions.tsx"
+    },
+    {
+      "path": "/pole/data/reports",
+      "component": "DataReports",
+      "file": "src/pages/modules/data/Reports.tsx"
+    },
+    {
+      "path": "/pole/data/bi",
+      "component": "BIOverview",
+      "file": "src/pages/modules/data/bi/BIOverview.tsx"
+    },
+    {
+      "path": "/pole/data/bi/dashboards",
+      "component": "BIDashboardsList",
+      "file": "src/pages/modules/data/bi/BIDashboardsList.tsx"
+    },
+    {
+      "path": "/pole/data/bi/designer/:id",
+      "component": "BIDesigner",
+      "file": "src/pages/modules/data/bi/BIDesigner.tsx"
+    },
+    {
+      "path": "/pole/data/bi/templates",
+      "component": "BITemplates",
+      "file": "src/pages/modules/data/bi/BITemplates.tsx"
+    },
+    {
+      "path": "/pole/data/bi/sources",
+      "component": "BIDataSources",
+      "file": "src/pages/modules/data/bi/BIDataSources.tsx"
+    },
+    {
+      "path": "/pole/data/bi/library",
+      "component": "BIWidgetLibrary",
+      "file": "src/pages/modules/data/bi/BIWidgetLibrary.tsx"
+    },
+    {
+      "path": "/pole/data/bi/history/:id",
+      "component": "BIHistory",
+      "file": "src/pages/modules/data/bi/BIHistory.tsx"
+    },
+    {
+      "path": "/pole/security",
+      "component": "SecurityDashboard",
+      "file": "src/pages/modules/security/SecurityDashboard.tsx"
+    },
+    {
+      "path": "/pole/security/security",
+      "component": "SecurityOperations",
+      "file": "src/pages/modules/security/Security.tsx"
+    },
+    {
+      "path": "/pole/security/access",
+      "component": "SecurityAccess",
+      "file": "src/pages/modules/security/SecurityAccess.tsx"
+    },
+    {
+      "path": "/pole/security/infrastructure",
+      "component": "SecurityInfrastructure",
+      "file": "src/pages/modules/security/SecurityInfrastructure.tsx"
+    },
+    {
+      "path": "/pole/security/environments",
+      "component": "SecurityEnvironments",
+      "file": "src/pages/modules/security/SecurityEnvironments.tsx"
+    },
+    {
+      "path": "/pole/security/vpn",
+      "component": "SecurityVPN",
+      "file": "src/pages/modules/security/SecurityVPN.tsx"
+    },
+    {
+      "path": "/pole/security/logs",
+      "component": "SecurityLogs",
+      "file": "src/pages/modules/security/SecurityLogs.tsx"
+    },
+    {
+      "path": "/pole/security/code",
+      "component": "SecurityCode",
+      "file": "src/pages/modules/security/SecurityCode.tsx"
+    },
+    {
+      "path": "/pole/security/console",
+      "component": "SecurityConsole",
+      "file": "src/pages/modules/security/SecurityConsole.tsx"
+    },
+    {
+      "path": "/pole/security/documentation",
+      "component": "SecurityDocumentation",
+      "file": "src/pages/modules/security/SecurityDocumentation.tsx"
+    },
+    {
+      "path": "/pole/security/sandbox",
+      "component": "SecuritySandbox",
+      "file": "src/pages/modules/security/SecuritySandbox.tsx"
+    },
+    {
+      "path": "/pole/security/supervision",
+      "component": "SecuritySupervision",
+      "file": "src/pages/modules/security/SecuritySupervision.tsx"
+    },
+    {
+      "path": "/pole/security/dataflow",
+      "component": "SecurityDataFlow",
+      "file": "src/pages/modules/security/SecurityDataFlow.tsx"
+    },
+    {
+      "path": "/pole/security/edge-functions",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/edge-functions/:id",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/edge-functions/:id/logs",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/auth-logs",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/edge-logs",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/reports",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents/new",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents/:id",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents/:id/report",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents/:id/update",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents/:id/delete",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents/:id/assign",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents/:id/close",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents/:id/reopen",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents/:id/escalate",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents/:id/deescalate",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/security/incidents/:id/comment",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/access",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/vpn",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/logs",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/deployments",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/environments",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/security",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/infrastructure",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/catalog",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/received-products",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/dataflow",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/sandbox",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/test-accounts",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/integrations",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/code",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/supervision",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/documentation",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/console",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/tech/studio",
+      "component": "Navigate"
+    },
+    {
+      "path": "/tech-studio",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/lifecycle",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/lifecycle/onboarding",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/lifecycle/monitoring",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/lifecycle/user-accounts",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/lifecycle/risk-alerts",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/lifecycle/emails",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/lifecycle/trustpilot",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/lifecycle/support",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/lifecycle/scoring",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/lifecycle/compliance",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/rd",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/rd/products",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/rd/shops",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/rd/suppliers",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/rd/frictions",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/rd/reports",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/rd/tickets/:id",
+      "component": "ProductTicketDetail",
+      "file": "src/pages/modules/product/ProductTicketDetail.tsx"
+    },
+    {
+      "path": "/modules/gateway",
+      "component": "GatewayDashboard",
+      "file": "src/pages/modules/gateway/GatewayDashboard.tsx"
+    },
+    {
+      "path": "/modules/gateway/inbox",
+      "component": "GatewayInbox",
+      "file": "src/pages/modules/gateway/GatewayInbox.tsx"
+    },
+    {
+      "path": "/modules/gateway/validation",
+      "component": "GatewayValidation",
+      "file": "src/pages/modules/gateway/GatewayValidation.tsx"
+    },
+    {
+      "path": "/modules/gateway/routing",
+      "component": "GatewayRouting",
+      "file": "src/pages/modules/gateway/GatewayRouting.tsx"
+    },
+    {
+      "path": "/modules/gateway/responses",
+      "component": "GatewayResponses",
+      "file": "src/pages/modules/gateway/GatewayResponses.tsx"
+    },
+    {
+      "path": "/modules/gateway/compose",
+      "component": "GatewayCompose",
+      "file": "src/pages/modules/gateway/GatewayCompose.tsx"
+    },
+    {
+      "path": "/modules/gateway/journal",
+      "component": "GatewayJournal",
+      "file": "src/pages/modules/gateway/GatewayJournal.tsx"
+    },
+    {
+      "path": "/modules/gateway/message/:messageId",
+      "component": "GatewayMessageDetail",
+      "file": "src/pages/modules/gateway/GatewayMessageDetail.tsx"
+    },
+    {
+      "path": "/modules/gateway/:subSection",
+      "component": "GatewayDashboard",
+      "file": "src/pages/modules/gateway/GatewayDashboard.tsx"
+    },
+    {
+      "path": "/modules/ethics",
+      "component": "EthicsDashboard",
+      "file": "src/pages/modules/ethics/EthicsDashboard.tsx"
+    },
+    {
+      "path": "/modules/ethics/dashboard",
+      "component": "EthicsDashboard",
+      "file": "src/pages/modules/ethics/EthicsDashboard.tsx"
+    },
+    {
+      "path": "/modules/ethics/report",
+      "component": "EthicsReport",
+      "file": "src/pages/modules/ethics/EthicsReport.tsx"
+    },
+    {
+      "path": "/modules/ethics/received",
+      "component": "EthicsReceived",
+      "file": "src/pages/modules/ethics/EthicsReceived.tsx"
+    },
+    {
+      "path": "/modules/ethics/ongoing",
+      "component": "EthicsOngoing",
+      "file": "src/pages/modules/ethics/EthicsOngoing.tsx"
+    },
+    {
+      "path": "/modules/ethics/closed",
+      "component": "EthicsClosed",
+      "file": "src/pages/modules/ethics/EthicsClosed.tsx"
+    },
+    {
+      "path": "/modules/ethics/stats",
+      "component": "EthicsStats",
+      "file": "src/pages/modules/ethics/EthicsStats.tsx"
+    },
+    {
+      "path": "/modules/ethics/:subSection",
+      "component": "EthicsDashboard",
+      "file": "src/pages/modules/ethics/EthicsDashboard.tsx"
+    },
+    {
+      "path": "/modules/independent-audit",
+      "component": "IndependentAuditDashboard",
+      "file": "src/pages/modules/independent-audit/IndependentAuditDashboard.tsx"
+    },
+    {
+      "path": "/modules/independent-audit/declare",
+      "component": "IncidentDeclaration",
+      "file": "src/pages/modules/independent-audit/IncidentDeclaration.tsx"
+    },
+    {
+      "path": "/modules/independent-audit/resolution",
+      "component": "ResolutionTracking",
+      "file": "src/pages/modules/independent-audit/ResolutionTracking.tsx"
+    },
+    {
+      "path": "/work/tasks",
+      "component": "WorkTasks",
+      "file": "src/pages/modules/work/WorkTasks.tsx"
+    },
+    {
+      "path": "/work/projects",
+      "component": "WorkProjects",
+      "file": "src/pages/modules/work/WorkProjects.tsx"
+    },
+    {
+      "path": "/work/processes",
+      "component": "WorkProcesses",
+      "file": "src/pages/modules/work/WorkProcesses.tsx"
+    },
+    {
+      "path": "/work/validations",
+      "component": "WorkValidations",
+      "file": "src/pages/modules/work/WorkValidations.tsx"
+    },
+    {
+      "path": "/work/escalations",
+      "component": "WorkEscalations",
+      "file": "src/pages/modules/work/WorkEscalations.tsx"
+    },
+    {
+      "path": "/work/activities",
+      "component": "WorkActivities",
+      "file": "src/pages/modules/work/WorkActivities.tsx"
+    },
+    {
+      "path": "/notifications",
+      "component": "Notifications",
+      "file": "src/pages/Notifications.tsx"
+    },
+    {
+      "path": "/feed",
+      "component": "InternalFeed",
+      "file": "src/pages/InternalFeed.tsx"
+    },
+    {
+      "path": "/documents",
+      "component": "Documents",
+      "file": "src/pages/Documents.tsx"
+    },
+    {
+      "path": "/documents/imports",
+      "component": "Documents",
+      "file": "src/pages/Documents.tsx"
+    },
+    {
+      "path": "/documents/exports",
+      "component": "Documents",
+      "file": "src/pages/Documents.tsx"
+    },
+    {
+      "path": "/documents/journal",
+      "component": "Documents",
+      "file": "src/pages/Documents.tsx"
+    },
+    {
+      "path": "/modules/independent-audit/incident",
+      "component": "IncidentDeclaration",
+      "file": "src/pages/modules/independent-audit/IncidentDeclaration.tsx"
+    },
+    {
+      "path": "/settings",
+      "component": "Settings",
+      "file": "src/pages/Settings.tsx"
+    },
+    {
+      "path": "/profile",
+      "component": "Profile",
+      "file": "src/pages/Profile.tsx"
+    },
+    {
+      "path": "/admin/test-accounts",
+      "component": "Navigate"
+    },
+    {
+      "path": "/admin/roles-permissions",
+      "component": "RolesPermissions",
+      "file": "src/pages/admin/RolesPermissions.tsx"
+    },
+    {
+      "path": "/permissions",
+      "component": "Navigate"
+    },
+    {
+      "path": "/compliance-audit",
+      "component": "ComplianceAudit",
+      "file": "src/pages/ComplianceAudit.tsx"
+    },
+    {
+      "path": "/compliance-audit/finance",
+      "component": "FinanceCompliance",
+      "file": "src/pages/compliance/FinanceCompliance.tsx"
+    },
+    {
+      "path": "/compliance-audit/ops",
+      "component": "OpsCompliance",
+      "file": "src/pages/compliance/OpsCompliance.tsx"
+    },
+    {
+      "path": "/compliance-audit/tech",
+      "component": "Navigate"
+    },
+    {
+      "path": "/whats-new",
+      "component": "Navigate"
+    },
+    {
+      "path": "/pole/:poleId",
+      "component": "PoleDashboard",
+      "file": "src/pages/PoleDashboard.tsx"
+    },
+    {
+      "path": "/pole/:poleId/:subSection",
+      "component": "SubSectionPage",
+      "file": "src/pages/modules/SubSectionPage.tsx"
+    },
+    {
+      "path": "/modules/:moduleId/:subSection",
+      "component": "SubSectionPage",
+      "file": "src/pages/modules/SubSectionPage.tsx"
+    },
+    {
+      "path": "*",
+      "component": "NotFound",
+      "file": "src/pages/NotFound.tsx"
+    }
+  ]
+}

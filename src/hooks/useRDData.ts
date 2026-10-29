@@ -66,190 +66,6 @@ export interface ProductFrictionRow {
 /* Données de démonstration                                                   */
 /* -------------------------------------------------------------------------- */
 
-const MOCK_PRODUCTS: ProductPerformanceRow[] = [
-  {
-    id: 'mock-1',
-    name: 'Infuseur Thé Zen',
-    category: 'Lifestyle',
-    supplier_name: 'Fournisseur A',
-    status: 'dormant',
-    orders_30d: 2,
-    revenue_30d: 340,
-    adoption: 12,
-    isMock: true,
-  },
-  {
-    id: 'mock-2',
-    name: 'Carnet Recyclé A5',
-    category: 'Éco',
-    supplier_name: 'Fournisseur B',
-    status: 'active',
-    orders_30d: 124,
-    revenue_30d: 12400,
-    adoption: 78,
-    isMock: true,
-  },
-  {
-    id: 'mock-3',
-    name: 'Chargeur Solaire Mini',
-    category: 'Tech',
-    supplier_name: 'Fournisseur C',
-    status: 'declining',
-    orders_30d: 18,
-    revenue_30d: 2100,
-    adoption: 35,
-    isMock: true,
-  },
-  {
-    id: 'mock-4',
-    name: 'Bougie Soja Bio',
-    category: 'Maison',
-    supplier_name: 'Fournisseur A',
-    status: 'active',
-    orders_30d: 187,
-    revenue_30d: 18700,
-    adoption: 92,
-    isMock: true,
-  },
-  {
-    id: 'mock-5',
-    name: 'Gourde Inox 500ml',
-    category: 'Éco',
-    supplier_name: 'Fournisseur D',
-    status: 'dormant',
-    orders_30d: 1,
-    revenue_30d: 120,
-    adoption: 5,
-    isMock: true,
-  },
-  {
-    id: 'mock-6',
-    name: 'Étui Phone Liège',
-    category: 'Lifestyle',
-    supplier_name: 'Fournisseur E',
-    status: 'active',
-    orders_30d: 89,
-    revenue_30d: 8900,
-    adoption: 65,
-    isMock: true,
-  },
-];
-
-const MOCK_SUPPLIERS: SupplierPerformanceRow[] = [
-  {
-    id: 'mock-1',
-    name: 'Fournisseur A',
-    country: 'France',
-    products_count: 45,
-    quality_score: 88,
-    risk_score: 12,
-    status: 'active',
-    last_audit_date: '2026-03-12',
-    isMock: true,
-  },
-  {
-    id: 'mock-2',
-    name: 'Fournisseur B',
-    country: 'Allemagne',
-    products_count: 32,
-    quality_score: 57,
-    risk_score: 43,
-    status: 'active',
-    last_audit_date: '2026-03-08',
-    isMock: true,
-  },
-  {
-    id: 'mock-3',
-    name: 'Fournisseur C',
-    country: 'Espagne',
-    products_count: 18,
-    quality_score: 92,
-    risk_score: 8,
-    status: 'active',
-    last_audit_date: '2026-03-15',
-    isMock: true,
-  },
-  {
-    id: 'mock-4',
-    name: 'Fournisseur D',
-    country: 'Italie',
-    products_count: 27,
-    quality_score: 78,
-    risk_score: 22,
-    status: 'active',
-    last_audit_date: '2026-03-10',
-    isMock: true,
-  },
-  {
-    id: 'mock-5',
-    name: 'Fournisseur F',
-    country: 'Belgique',
-    products_count: 38,
-    quality_score: 45,
-    risk_score: 65,
-    status: 'at_risk',
-    last_audit_date: '2026-03-05',
-    isMock: true,
-  },
-];
-
-const MOCK_FRICTIONS: ProductFrictionRow[] = [
-  {
-    id: 'mock-1',
-    title: 'Flux de validation commande trop complexe',
-    description: '5 étapes nécessaires, taux d’abandon élevé',
-    severity: 'high',
-    status: 'open',
-    environment: 'Commandes',
-    created_at: '2026-03-10',
-    isMock: true,
-  },
-  {
-    id: 'mock-2',
-    title: 'Listing produits lent (>3s)',
-    description: 'Performance dégradée sur catalogue +500 items',
-    severity: 'medium',
-    status: 'in_progress',
-    environment: 'Catalogue',
-    created_at: '2026-03-08',
-    isMock: true,
-  },
-  {
-    id: 'mock-3',
-    title: 'Erreur réconciliation paiements',
-    description: 'Bug récurrent sur paiements fournisseurs',
-    severity: 'critical',
-    status: 'open',
-    environment: 'Paiements',
-    created_at: '2026-03-12',
-    isMock: true,
-  },
-  {
-    id: 'mock-4',
-    title: 'Synchronisation inventaire lente',
-    description: 'Délai de synchronisation entre entrepôts',
-    severity: 'high',
-    status: 'in_progress',
-    environment: 'Stock',
-    created_at: '2026-03-11',
-    isMock: true,
-  },
-  {
-    id: 'mock-5',
-    title: 'Formulaire Onboarding RH — intégration collaborateur trop long',
-    description: '12 champs obligatoires, friction lors de l’intégration',
-    severity: 'high',
-    status: 'open',
-    environment: 'Onboarding RH — intégration collaborateur',
-    created_at: '2026-03-14',
-    isMock: true,
-  },
-];
-
-/* -------------------------------------------------------------------------- */
-/* Produit & Engineering — performance produits                              */
-/* -------------------------------------------------------------------------- */
-
 export const useProductPerformanceData = () =>
   useQuery({
     queryKey: ['product_performance_data'],
@@ -283,8 +99,8 @@ export const useProductPerformanceData = () =>
 
       if (!products || products.length === 0) {
         return {
-          rows: MOCK_PRODUCTS,
-          isMock: true,
+          rows: [],
+          isMock: false,
         };
       }
 
@@ -462,8 +278,8 @@ export const useProductSupplierData = () =>
 
       if (!suppliers || suppliers.length === 0) {
         return {
-          rows: MOCK_SUPPLIERS,
-          isMock: true,
+          rows: [],
+          isMock: false,
         };
       }
 
@@ -578,8 +394,8 @@ export const useProductFrictionsData = () =>
 
       if (!bugs || bugs.length === 0) {
         return {
-          rows: MOCK_FRICTIONS,
-          isMock: true,
+          rows: [],
+          isMock: false,
         };
       }
 

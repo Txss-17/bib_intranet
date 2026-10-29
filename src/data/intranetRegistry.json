@@ -1,0 +1,7996 @@
+[
+  {
+    "id": "direction.overview",
+    "path": "/pole/direction",
+    "label": "Vue d’ensemble",
+    "scope": "direction",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif stratégique",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "impact",
+        "label": "Impact attendu",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "indicator",
+        "label": "Indicateur",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "target",
+        "label": "Cible",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "direction.strategy",
+    "path": "/pole/direction/strategic-kpis",
+    "label": "Stratégie & KPIs",
+    "scope": "direction",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif stratégique",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "impact",
+        "label": "Impact attendu",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "indicator",
+        "label": "Indicateur",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "target",
+        "label": "Cible",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "direction.alerts",
+    "path": "/pole/direction/critical-alerts",
+    "label": "Alertes critiques",
+    "scope": "direction",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif stratégique",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "impact",
+        "label": "Impact attendu",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "indicator",
+        "label": "Indicateur",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "target",
+        "label": "Cible",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "direction.arbitrage",
+    "path": "/pole/direction/decision-arbitrage",
+    "label": "Arbitrages",
+    "scope": "direction",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif stratégique",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "impact",
+        "label": "Impact attendu",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "indicator",
+        "label": "Indicateur",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "target",
+        "label": "Cible",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "direction.roadmap",
+    "path": "/pole/direction/vision-roadmap",
+    "label": "Vision & Roadmap",
+    "scope": "direction",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif stratégique",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "impact",
+        "label": "Impact attendu",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "indicator",
+        "label": "Indicateur",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "target",
+        "label": "Cible",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "direction.governance",
+    "path": "/pole/direction/group-governance",
+    "label": "Gouvernance",
+    "scope": "direction",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif stratégique",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "impact",
+        "label": "Impact attendu",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "indicator",
+        "label": "Indicateur",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "target",
+        "label": "Cible",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "direction.reports",
+    "path": "/pole/direction/board-reports",
+    "label": "Rapports de direction",
+    "scope": "direction",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif stratégique",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "impact",
+        "label": "Impact attendu",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "indicator",
+        "label": "Indicateur",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "target",
+        "label": "Cible",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "finance.overview",
+    "path": "/pole/finance",
+    "label": "Vue d’ensemble",
+    "scope": "finance",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "counterparty",
+        "label": "Tiers",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence justificative",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "Montant",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "currency",
+        "label": "Devise",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "lines",
+        "label": "Lignes justificatives",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "finance.cashflow",
+    "path": "/pole/finance/cashflow",
+    "label": "Trésorerie",
+    "scope": "finance",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cfo",
+      "comptable",
+      "controleur_gestion",
+      "analyste_financier",
+      "tresorier",
+      "gestionnaire_paiements",
+      "gestionnaire_facturation"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "counterparty",
+        "label": "Tiers",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence justificative",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "Montant",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "currency",
+        "label": "Devise",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "lines",
+        "label": "Lignes justificatives",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "finance.transactions",
+    "path": "/pole/finance/transactions",
+    "label": "Transactions",
+    "scope": "finance",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "counterparty",
+        "label": "Tiers",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence justificative",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "Montant",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "currency",
+        "label": "Devise",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "lines",
+        "label": "Lignes justificatives",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "finance.billing",
+    "path": "/pole/finance/billing",
+    "label": "Facturation",
+    "scope": "finance",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "counterparty",
+        "label": "Tiers",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence justificative",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "Montant",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "currency",
+        "label": "Devise",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "lines",
+        "label": "Lignes justificatives",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "finance.payouts",
+    "path": "/pole/finance/payouts",
+    "label": "Paiements partenaires",
+    "scope": "finance",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cfo",
+      "comptable",
+      "controleur_gestion",
+      "analyste_financier",
+      "tresorier",
+      "gestionnaire_paiements",
+      "gestionnaire_facturation"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "counterparty",
+        "label": "Tiers",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence justificative",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "Montant",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "currency",
+        "label": "Devise",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "lines",
+        "label": "Lignes justificatives",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "finance.reconciliation",
+    "path": "/pole/finance/reconciliation",
+    "label": "Rapprochement",
+    "scope": "finance",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cfo",
+      "comptable",
+      "controleur_gestion",
+      "analyste_financier",
+      "tresorier",
+      "gestionnaire_paiements",
+      "gestionnaire_facturation"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "counterparty",
+        "label": "Tiers",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence justificative",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "Montant",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "currency",
+        "label": "Devise",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "lines",
+        "label": "Lignes justificatives",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "finance.subscriptions",
+    "path": "/pole/finance/subscriptions",
+    "label": "Abonnements",
+    "scope": "finance",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cfo",
+      "comptable",
+      "controleur_gestion",
+      "analyste_financier",
+      "tresorier",
+      "gestionnaire_paiements",
+      "gestionnaire_facturation"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "counterparty",
+        "label": "Tiers",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence justificative",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "Montant",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "currency",
+        "label": "Devise",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "lines",
+        "label": "Lignes justificatives",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "finance.cards",
+    "path": "/pole/finance/cards",
+    "label": "Cartes",
+    "scope": "finance",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cfo",
+      "comptable",
+      "controleur_gestion",
+      "analyste_financier",
+      "tresorier",
+      "gestionnaire_paiements",
+      "gestionnaire_facturation"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "counterparty",
+        "label": "Tiers",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence justificative",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "Montant",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "currency",
+        "label": "Devise",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "lines",
+        "label": "Lignes justificatives",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "finance.guarantee",
+    "path": "/pole/finance/guarantee",
+    "label": "Fonds de garantie",
+    "scope": "finance",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cfo",
+      "comptable",
+      "controleur_gestion",
+      "analyste_financier",
+      "tresorier",
+      "gestionnaire_paiements",
+      "gestionnaire_facturation"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "counterparty",
+        "label": "Tiers",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence justificative",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "Montant",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "currency",
+        "label": "Devise",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "lines",
+        "label": "Lignes justificatives",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "ops.overview",
+    "path": "/pole/ops",
+    "label": "Vue d’ensemble",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.shops",
+    "path": "/pole/ops/shops",
+    "label": "Boutiques & Marchands",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.catalog",
+    "path": "/pole/ops/catalog",
+    "label": "Référentiel produits",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.anomalies",
+    "path": "/pole/ops/anomalies",
+    "label": "Anomalies",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.orders",
+    "path": "/pole/ops/pipeline",
+    "label": "Commandes",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.product-lifecycle",
+    "path": "/pole/ops/product-lifecycle",
+    "label": "Cycle de vie produits",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.shipments",
+    "path": "/pole/ops/shipments",
+    "label": "Expéditions",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.stocks",
+    "path": "/pole/ops/stocks",
+    "label": "Stocks",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.partners",
+    "path": "/pole/ops/partners",
+    "label": "Partenaires logistiques",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.flows",
+    "path": "/pole/ops/flows",
+    "label": "Flux & synchronisations",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.incidents",
+    "path": "/pole/ops/incidents",
+    "label": "Incidents logistiques",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.thresholds",
+    "path": "/pole/ops/thresholds",
+    "label": "Seuils de stock",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.forecast",
+    "path": "/pole/ops/forecast",
+    "label": "Prévisions",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.replenishment",
+    "path": "/pole/ops/replenishment",
+    "label": "Réapprovisionnement",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "ops.supplier-lead-times",
+    "path": "/pole/ops/suppliers-lead-times",
+    "label": "Délais fournisseurs",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "supplier.overview",
+    "path": "/pole/supplier",
+    "label": "Vue d’ensemble",
+    "scope": "supplier",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "supplier",
+        "label": "Fournisseur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "product",
+        "label": "Produit ou référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Exigence",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "assessment",
+        "label": "Évaluation",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expiry",
+        "label": "Expiration",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "supplier.applications",
+    "path": "/pole/supplier/applications",
+    "label": "Candidatures",
+    "scope": "supplier",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "supplier",
+        "label": "Fournisseur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "product",
+        "label": "Produit ou référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Exigence",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "assessment",
+        "label": "Évaluation",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expiry",
+        "label": "Expiration",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "supplier.catalog-inbox",
+    "path": "/pole/supplier/catalog-inbox",
+    "label": "Catalogue à contrôler",
+    "scope": "supplier",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "supplier",
+        "label": "Fournisseur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "product",
+        "label": "Produit ou référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Exigence",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "assessment",
+        "label": "Évaluation",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expiry",
+        "label": "Expiration",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "supplier.pending-products",
+    "path": "/pole/supplier/pending",
+    "label": "Produits en attente",
+    "scope": "supplier",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "supplier",
+        "label": "Fournisseur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "product",
+        "label": "Produit ou référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Exigence",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "assessment",
+        "label": "Évaluation",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expiry",
+        "label": "Expiration",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "supplier.validated-products",
+    "path": "/pole/supplier/validated",
+    "label": "Produits validés",
+    "scope": "supplier",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "supplier",
+        "label": "Fournisseur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "product",
+        "label": "Produit ou référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Exigence",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "assessment",
+        "label": "Évaluation",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expiry",
+        "label": "Expiration",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "supplier.portfolios",
+    "path": "/pole/supplier/portfolios",
+    "label": "Portefeuilles",
+    "scope": "supplier",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "supplier",
+        "label": "Fournisseur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "product",
+        "label": "Produit ou référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Exigence",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "assessment",
+        "label": "Évaluation",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expiry",
+        "label": "Expiration",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "supplier.certifications",
+    "path": "/pole/supplier/certifications",
+    "label": "Certifications",
+    "scope": "supplier",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "supplier",
+        "label": "Fournisseur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "product",
+        "label": "Produit ou référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Exigence",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "assessment",
+        "label": "Évaluation",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expiry",
+        "label": "Expiration",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "supplier.decisions",
+    "path": "/pole/supplier/decisions",
+    "label": "Historique des décisions",
+    "scope": "supplier",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "supplier",
+        "label": "Fournisseur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "product",
+        "label": "Produit ou référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Exigence",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "assessment",
+        "label": "Évaluation",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expiry",
+        "label": "Expiration",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "supplier.restock",
+    "path": "/pole/supplier/restock-orders",
+    "label": "Réapprovisionnement",
+    "scope": "supplier",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "supplier",
+        "label": "Fournisseur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "product",
+        "label": "Produit ou référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Exigence",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "assessment",
+        "label": "Évaluation",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expiry",
+        "label": "Expiration",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.overview",
+    "path": "/pole/marketplace",
+    "label": "Vue d’ensemble",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "responsable_marketplace",
+      "gestionnaire_boutiques",
+      "gestionnaire_vendeurs",
+      "gestionnaire_commandes",
+      "gestionnaire_litiges",
+      "gestionnaire_avis"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.merchants",
+    "path": "/pole/marketplace/merchants",
+    "label": "Marchands & portefeuilles",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "responsable_marketplace",
+      "gestionnaire_boutiques",
+      "gestionnaire_vendeurs",
+      "gestionnaire_commandes",
+      "gestionnaire_litiges",
+      "gestionnaire_avis"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.portfolio",
+    "path": "/pole/marketplace/portfolio",
+    "label": "Portefeuille",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "responsable_marketplace",
+      "gestionnaire_boutiques",
+      "gestionnaire_vendeurs"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.stores",
+    "path": "/pole/marketplace/stores",
+    "label": "Boutiques",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "responsable_marketplace",
+      "gestionnaire_boutiques",
+      "gestionnaire_vendeurs"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.opportunities",
+    "path": "/pole/marketplace/opportunities",
+    "label": "Opportunités & développement",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "responsable_marketplace",
+      "gestionnaire_boutiques",
+      "gestionnaire_vendeurs"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.analytics",
+    "path": "/pole/marketplace/analytics",
+    "label": "Performance portefeuille",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "responsable_marketplace",
+      "gestionnaire_boutiques",
+      "gestionnaire_vendeurs",
+      "gestionnaire_commandes",
+      "gestionnaire_litiges",
+      "gestionnaire_avis"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.subscriptions",
+    "path": "/pole/marketplace/subscriptions",
+    "label": "Abonnements & add-ons marchands",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "responsable_marketplace",
+      "gestionnaire_boutiques",
+      "gestionnaire_vendeurs"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.products",
+    "path": "/pole/marketplace/products",
+    "label": "Produits",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "responsable_marketplace",
+      "gestionnaire_boutiques",
+      "gestionnaire_vendeurs"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "support.overview",
+    "path": "/pole/support",
+    "label": "Vue d’ensemble",
+    "scope": "support",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "account",
+        "label": "Compte concerné",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "issue",
+        "label": "Demande ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "resolution",
+        "label": "Résolution proposée",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "sla_date",
+        "label": "Échéance de réponse",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "support.tickets",
+    "path": "/pole/support/tickets",
+    "label": "Tickets",
+    "scope": "support",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "account",
+        "label": "Compte concerné",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "issue",
+        "label": "Demande ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "resolution",
+        "label": "Résolution proposée",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "sla_date",
+        "label": "Échéance de réponse",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "support.customer-success",
+    "path": "/pole/support/customer-success",
+    "label": "Customer Success",
+    "scope": "support",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "account",
+        "label": "Compte concerné",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "issue",
+        "label": "Demande ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "resolution",
+        "label": "Résolution proposée",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "sla_date",
+        "label": "Échéance de réponse",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "support.monitoring",
+    "path": "/pole/support/monitoring",
+    "label": "Suivi clients",
+    "scope": "support",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "account",
+        "label": "Compte concerné",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "issue",
+        "label": "Demande ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "resolution",
+        "label": "Résolution proposée",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "sla_date",
+        "label": "Échéance de réponse",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "support.escalations",
+    "path": "/pole/support/escalations",
+    "label": "Escalades",
+    "scope": "support",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "account",
+        "label": "Compte concerné",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "issue",
+        "label": "Demande ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "resolution",
+        "label": "Résolution proposée",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "sla_date",
+        "label": "Échéance de réponse",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketing.overview",
+    "path": "/pole/marketing",
+    "label": "Vue d’ensemble",
+    "scope": "marketing",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "audience",
+        "label": "Public cible",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "content",
+        "label": "Contenu",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "publication_date",
+        "label": "Date de publication",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "budget",
+        "label": "Budget",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat mesuré",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketing.campaigns",
+    "path": "/pole/marketing/campaigns",
+    "label": "Campagnes",
+    "scope": "marketing",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "audience",
+        "label": "Public cible",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "content",
+        "label": "Contenu",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "publication_date",
+        "label": "Date de publication",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "budget",
+        "label": "Budget",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat mesuré",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketing.content",
+    "path": "/pole/marketing/content",
+    "label": "Contenus",
+    "scope": "marketing",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "audience",
+        "label": "Public cible",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "content",
+        "label": "Contenu",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "publication_date",
+        "label": "Date de publication",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "budget",
+        "label": "Budget",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat mesuré",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketing.crm",
+    "path": "/pole/marketing/crm",
+    "label": "CRM",
+    "scope": "marketing",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "audience",
+        "label": "Public cible",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "content",
+        "label": "Contenu",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "publication_date",
+        "label": "Date de publication",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "budget",
+        "label": "Budget",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat mesuré",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketing.journeys",
+    "path": "/pole/marketing/journeys",
+    "label": "Parcours & automatisations",
+    "scope": "marketing",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "audience",
+        "label": "Public cible",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "content",
+        "label": "Contenu",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "publication_date",
+        "label": "Date de publication",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "budget",
+        "label": "Budget",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat mesuré",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketing.analytics",
+    "path": "/pole/marketing/analytics",
+    "label": "Analytics",
+    "scope": "marketing",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "value",
+        "label": "Valeur mesurée",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "unit",
+        "label": "Unité",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "analysis",
+        "label": "Analyse",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketing.reputation",
+    "path": "/pole/marketing/reputation",
+    "label": "Réputation",
+    "scope": "marketing",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "audience",
+        "label": "Public cible",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "content",
+        "label": "Contenu",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "publication_date",
+        "label": "Date de publication",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "budget",
+        "label": "Budget",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat mesuré",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.overview",
+    "path": "/pole/rh",
+    "label": "Vue d’ensemble",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.employees",
+    "path": "/pole/rh/employees",
+    "label": "Collaborateurs",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_rh",
+      "responsable_rh",
+      "gestionnaire_paie",
+      "gestionnaire_admin_rh",
+      "charge_recrutement"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.recruitment",
+    "path": "/pole/rh/recruitment",
+    "label": "Recrutement",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.files",
+    "path": "/pole/rh/files",
+    "label": "Dossiers collaborateurs",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.onboarding",
+    "path": "/pole/rh/onboarding",
+    "label": "Onboarding RH — intégration collaborateur",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.attendance",
+    "path": "/pole/rh/attendance",
+    "label": "Présences",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_rh",
+      "responsable_rh",
+      "gestionnaire_paie",
+      "gestionnaire_admin_rh",
+      "charge_recrutement"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.leave",
+    "path": "/pole/rh/leave",
+    "label": "Congés",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.training",
+    "path": "/pole/rh/training",
+    "label": "Formation",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.trips",
+    "path": "/pole/rh/trips",
+    "label": "Déplacements",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_rh",
+      "responsable_rh",
+      "gestionnaire_paie",
+      "gestionnaire_admin_rh",
+      "charge_recrutement",
+      "ceo",
+      "cfo"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.publications",
+    "path": "/pole/rh/publications",
+    "label": "Publications internes",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.alerts",
+    "path": "/pole/rh/alerts",
+    "label": "Alertes RH",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.portfolio",
+    "path": "/pole/rh/portfolio",
+    "label": "Portefeuille",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_rh",
+      "responsable_rh",
+      "gestionnaire_paie",
+      "gestionnaire_admin_rh",
+      "charge_recrutement"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.organization",
+    "path": "/pole/rh/organization",
+    "label": "Organisation",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rh.access",
+    "path": "/pole/rh/access",
+    "label": "Accès & permissions",
+    "scope": "rh",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "employee",
+        "label": "Collaborateur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Type de dossier",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d’effet",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "manager",
+        "label": "Responsable hiérarchique",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "permissionAliases": [
+      "direction.access-permissions"
+    ]
+  },
+  {
+    "id": "audit.overview",
+    "path": "/pole/audit",
+    "label": "Vue d’ensemble",
+    "scope": "audit",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité auditée",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Mission ou non-conformité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "finding",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "evidence",
+        "label": "Éléments de preuve",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "corrective_action",
+        "label": "Action corrective",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "review_date",
+        "label": "Date de contrôle",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "audit.field",
+    "path": "/pole/audit/field",
+    "label": "Audits terrain",
+    "scope": "audit",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité auditée",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Mission ou non-conformité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "finding",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "evidence",
+        "label": "Éléments de preuve",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "corrective_action",
+        "label": "Action corrective",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "review_date",
+        "label": "Date de contrôle",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "audit.missions",
+    "path": "/pole/audit/missions",
+    "label": "Suivi des missions",
+    "scope": "audit",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité auditée",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Mission ou non-conformité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "finding",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "evidence",
+        "label": "Éléments de preuve",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "corrective_action",
+        "label": "Action corrective",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "review_date",
+        "label": "Date de contrôle",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "audit.supplier",
+    "path": "/pole/audit/supplier",
+    "label": "Audits fournisseurs",
+    "scope": "audit",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité auditée",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Mission ou non-conformité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "finding",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "evidence",
+        "label": "Éléments de preuve",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "corrective_action",
+        "label": "Action corrective",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "review_date",
+        "label": "Date de contrôle",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "audit.operations",
+    "path": "/pole/audit/ops",
+    "label": "Audits opérations",
+    "scope": "audit",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité auditée",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Mission ou non-conformité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "finding",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "evidence",
+        "label": "Éléments de preuve",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "corrective_action",
+        "label": "Action corrective",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "review_date",
+        "label": "Date de contrôle",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "audit.reports",
+    "path": "/pole/audit/reports",
+    "label": "Rapports",
+    "scope": "audit",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_qualite",
+      "responsable_qualite",
+      "auditeur_qualite",
+      "auditeur_terrain",
+      "responsable_conformite",
+      "conformite_juridique"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité auditée",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Mission ou non-conformité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "finding",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "evidence",
+        "label": "Éléments de preuve",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "corrective_action",
+        "label": "Action corrective",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "review_date",
+        "label": "Date de contrôle",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "audit.nonconformities",
+    "path": "/pole/audit/nonconformities",
+    "label": "Non-conformités",
+    "scope": "audit",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_qualite",
+      "responsable_qualite",
+      "auditeur_qualite",
+      "auditeur_terrain",
+      "responsable_conformite",
+      "conformite_juridique"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité auditée",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Mission ou non-conformité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "finding",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "evidence",
+        "label": "Éléments de preuve",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "corrective_action",
+        "label": "Action corrective",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "review_date",
+        "label": "Date de contrôle",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "audit.corrective-actions",
+    "path": "/pole/audit/corrective-actions",
+    "label": "Actions correctives",
+    "scope": "audit",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_qualite",
+      "responsable_qualite",
+      "auditeur_qualite",
+      "auditeur_terrain",
+      "responsable_conformite",
+      "conformite_juridique"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité auditée",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Mission ou non-conformité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "finding",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "evidence",
+        "label": "Éléments de preuve",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "corrective_action",
+        "label": "Action corrective",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "review_date",
+        "label": "Date de contrôle",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "audit.sanctions",
+    "path": "/pole/audit/sanctions",
+    "label": "Sanctions",
+    "scope": "audit",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_qualite",
+      "responsable_qualite",
+      "auditeur_qualite",
+      "auditeur_terrain",
+      "responsable_conformite",
+      "conformite_juridique"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité auditée",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Mission ou non-conformité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "finding",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "evidence",
+        "label": "Éléments de preuve",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "corrective_action",
+        "label": "Action corrective",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "review_date",
+        "label": "Date de contrôle",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "compliance.overview",
+    "path": "/pole/compliance",
+    "label": "Vue d’ensemble",
+    "scope": "compliance",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité ou périmètre",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "requirement",
+        "label": "Obligation ou risque",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "legal_reference",
+        "label": "Référence applicable",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "assessment",
+        "label": "Analyse",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "mitigation",
+        "label": "Mesure de traitement",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "compliance.contracts",
+    "path": "/pole/compliance/contracts",
+    "label": "Contrats",
+    "scope": "compliance",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "juriste",
+      "conformite_juridique",
+      "responsable_conformite",
+      "analyste_rgpd",
+      "gestionnaire_contrats"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité ou périmètre",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "requirement",
+        "label": "Obligation ou risque",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "legal_reference",
+        "label": "Référence applicable",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "assessment",
+        "label": "Analyse",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "mitigation",
+        "label": "Mesure de traitement",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "compliance.policies",
+    "path": "/pole/compliance/policies",
+    "label": "Politiques",
+    "scope": "compliance",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "juriste",
+      "conformite_juridique",
+      "responsable_conformite",
+      "analyste_rgpd",
+      "gestionnaire_contrats"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité ou périmètre",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "requirement",
+        "label": "Obligation ou risque",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "legal_reference",
+        "label": "Référence applicable",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "assessment",
+        "label": "Analyse",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "mitigation",
+        "label": "Mesure de traitement",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "compliance.disputes",
+    "path": "/pole/compliance/disputes",
+    "label": "Litiges",
+    "scope": "compliance",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "juriste",
+      "conformite_juridique",
+      "responsable_conformite",
+      "analyste_rgpd",
+      "gestionnaire_contrats"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité ou périmètre",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "requirement",
+        "label": "Obligation ou risque",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "legal_reference",
+        "label": "Référence applicable",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "assessment",
+        "label": "Analyse",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "mitigation",
+        "label": "Mesure de traitement",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "compliance.risks",
+    "path": "/pole/compliance/risks",
+    "label": "Registre des risques",
+    "scope": "compliance",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "juriste",
+      "conformite_juridique",
+      "responsable_conformite",
+      "analyste_rgpd",
+      "gestionnaire_contrats"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Entité ou périmètre",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "requirement",
+        "label": "Obligation ou risque",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "legal_reference",
+        "label": "Référence applicable",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "assessment",
+        "label": "Analyse",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "mitigation",
+        "label": "Mesure de traitement",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rse.overview",
+    "path": "/pole/rse",
+    "label": "Vue d’ensemble",
+    "scope": "rse",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité mesurée",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "unit",
+        "label": "Unité",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "method",
+        "label": "Méthode et périmètre",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "rse.packaging",
+    "path": "/pole/rse/packaging",
+    "label": "Emballages",
+    "scope": "rse",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité mesurée",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "unit",
+        "label": "Unité",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "method",
+        "label": "Méthode et périmètre",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "rse.recycling",
+    "path": "/pole/rse/recycling",
+    "label": "Recyclage",
+    "scope": "rse",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité mesurée",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "unit",
+        "label": "Unité",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "method",
+        "label": "Méthode et périmètre",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "rse.co2",
+    "path": "/pole/rse/co2",
+    "label": "Impact CO₂",
+    "scope": "rse",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité mesurée",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "unit",
+        "label": "Unité",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "method",
+        "label": "Méthode et périmètre",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "rse.esg",
+    "path": "/pole/rse/esg",
+    "label": "Reporting ESG",
+    "scope": "rse",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité mesurée",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "unit",
+        "label": "Unité",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "method",
+        "label": "Méthode et périmètre",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "product.overview",
+    "path": "/pole/product",
+    "label": "Vue d’ensemble",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.product",
+    "path": "/pole/product/product",
+    "label": "Produit",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.roadmap",
+    "path": "/pole/product/roadmap",
+    "label": "Roadmap produit",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.backlog",
+    "path": "/pole/product/backlog",
+    "label": "Backlog",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.engineering",
+    "path": "/pole/product/engineering",
+    "label": "Engineering",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "product_manager",
+      "product_owner",
+      "devops_engineer",
+      "sre",
+      "admin_systeme",
+      "dba",
+      "architecte_logiciel",
+      "architecte_cloud",
+      "dev_backend",
+      "dev_fullstack",
+      "rssi",
+      "ingenieur_cybersecurite"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.studio",
+    "path": "/pole/product/studio",
+    "label": "Studio",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "product_manager",
+      "product_owner",
+      "devops_engineer",
+      "sre",
+      "admin_systeme",
+      "dba",
+      "architecte_logiciel",
+      "architecte_cloud",
+      "dev_backend",
+      "dev_fullstack",
+      "rssi",
+      "ingenieur_cybersecurite"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.integrations",
+    "path": "/pole/product/integrations",
+    "label": "Intégrations",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "product_manager",
+      "product_owner",
+      "devops_engineer",
+      "sre",
+      "admin_systeme",
+      "dba",
+      "architecte_logiciel",
+      "architecte_cloud",
+      "dev_backend",
+      "dev_fullstack",
+      "rssi",
+      "ingenieur_cybersecurite"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.documentation",
+    "path": "/pole/product/documentation",
+    "label": "Documentation",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "product_manager",
+      "product_owner",
+      "devops_engineer",
+      "sre",
+      "admin_systeme",
+      "dba",
+      "architecte_logiciel",
+      "architecte_cloud",
+      "dev_backend",
+      "dev_fullstack",
+      "rssi",
+      "ingenieur_cybersecurite"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.innovation",
+    "path": "/pole/product/innovation",
+    "label": "Innovation & R&D",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "product_manager",
+      "product_owner",
+      "devops_engineer",
+      "sre",
+      "admin_systeme",
+      "dba",
+      "architecte_logiciel",
+      "architecte_cloud",
+      "dev_backend",
+      "dev_fullstack",
+      "rssi",
+      "ingenieur_cybersecurite"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.performance",
+    "path": "/pole/product/performance",
+    "label": "Performance produit",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.supplier-performance",
+    "path": "/pole/product/supplier-performance",
+    "label": "Performance fournisseurs",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.frictions",
+    "path": "/pole/product/frictions",
+    "label": "Frictions produit",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "product.reports",
+    "path": "/pole/product/reports",
+    "label": "Rapports & recommandations",
+    "scope": "product",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "area",
+        "label": "Produit ou parcours",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "problem",
+        "label": "Besoin ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "acceptance",
+        "label": "Critères d’acceptation",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "version",
+        "label": "Version",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "dependency",
+        "label": "Dépendance",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat du test",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "data.overview",
+    "path": "/pole/data",
+    "label": "Vue d’ensemble",
+    "scope": "data",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur ou jeu de données",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "definition",
+        "label": "Définition",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "value",
+        "label": "Valeur",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "quality",
+        "label": "Contrôle qualité",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "data.kpi",
+    "path": "/pole/data/kpi",
+    "label": "Catalogue KPI",
+    "scope": "data",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur ou jeu de données",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "definition",
+        "label": "Définition",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "value",
+        "label": "Valeur",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "quality",
+        "label": "Contrôle qualité",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "data.reports",
+    "path": "/pole/data/reports",
+    "label": "Rapports",
+    "scope": "data",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur ou jeu de données",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "definition",
+        "label": "Définition",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "value",
+        "label": "Valeur",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "quality",
+        "label": "Contrôle qualité",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "data.bi",
+    "path": "/pole/data/bi",
+    "label": "Business Intelligence",
+    "scope": "data",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur ou jeu de données",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "definition",
+        "label": "Définition",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "value",
+        "label": "Valeur",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "quality",
+        "label": "Contrôle qualité",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "data.requests",
+    "path": "/pole/data/requests",
+    "label": "Demandes Data",
+    "scope": "data",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur ou jeu de données",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "definition",
+        "label": "Définition",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "value",
+        "label": "Valeur",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "quality",
+        "label": "Contrôle qualité",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "data.versions",
+    "path": "/pole/data/versions",
+    "label": "Versions & gouvernance",
+    "scope": "data",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur ou jeu de données",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "definition",
+        "label": "Définition",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "value",
+        "label": "Valeur",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "quality",
+        "label": "Contrôle qualité",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.overview",
+    "path": "/pole/security",
+    "label": "Vue d’ensemble",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.access",
+    "path": "/pole/security/access",
+    "label": "Accès & identités",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "rssi",
+      "ingenieur_cybersecurite",
+      "analyste_cyber",
+      "gestionnaire_iam",
+      "admin_systeme",
+      "devops_engineer",
+      "sre",
+      "architecte_cloud",
+      "dba"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.security",
+    "path": "/pole/security/security",
+    "label": "Sécurité",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "rssi",
+      "ingenieur_cybersecurite",
+      "analyste_cyber",
+      "gestionnaire_iam",
+      "admin_systeme",
+      "devops_engineer",
+      "sre",
+      "architecte_cloud",
+      "dba"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.infrastructure",
+    "path": "/pole/security/infrastructure",
+    "label": "Infrastructure",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "rssi",
+      "ingenieur_cybersecurite",
+      "analyste_cyber",
+      "gestionnaire_iam",
+      "admin_systeme",
+      "devops_engineer",
+      "sre",
+      "architecte_cloud",
+      "dba"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.environments",
+    "path": "/pole/security/environments",
+    "label": "Environnements",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "rssi",
+      "ingenieur_cybersecurite",
+      "analyste_cyber",
+      "gestionnaire_iam",
+      "admin_systeme",
+      "devops_engineer",
+      "sre",
+      "architecte_cloud",
+      "dba"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.vpn",
+    "path": "/pole/security/vpn",
+    "label": "VPN",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "rssi",
+      "ingenieur_cybersecurite",
+      "analyste_cyber",
+      "gestionnaire_iam",
+      "admin_systeme",
+      "devops_engineer",
+      "sre",
+      "architecte_cloud",
+      "dba"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.logs",
+    "path": "/pole/security/logs",
+    "label": "Logs & supervision",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "rssi",
+      "ingenieur_cybersecurite",
+      "analyste_cyber",
+      "gestionnaire_iam",
+      "admin_systeme",
+      "devops_engineer",
+      "sre",
+      "architecte_cloud",
+      "dba"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "work.tasks",
+    "path": "/work/tasks",
+    "label": "Tâches",
+    "scope": "work",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "deliverable",
+        "label": "Livrable",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "dependencies",
+        "label": "Dépendances",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "steps",
+        "label": "Étapes",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "work.projects",
+    "path": "/work/projects",
+    "label": "Projets",
+    "scope": "work",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "deliverable",
+        "label": "Livrable",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "dependencies",
+        "label": "Dépendances",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "steps",
+        "label": "Étapes",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "work.processes",
+    "path": "/work/processes",
+    "label": "Processus",
+    "scope": "work",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "deliverable",
+        "label": "Livrable",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "dependencies",
+        "label": "Dépendances",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "steps",
+        "label": "Étapes",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "work.validations",
+    "path": "/work/validations",
+    "label": "Validations",
+    "scope": "work",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "deliverable",
+        "label": "Livrable",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "dependencies",
+        "label": "Dépendances",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "steps",
+        "label": "Étapes",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "work.escalations",
+    "path": "/work/escalations",
+    "label": "Escalades",
+    "scope": "work",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "deliverable",
+        "label": "Livrable",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "dependencies",
+        "label": "Dépendances",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "steps",
+        "label": "Étapes",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "work.activities",
+    "path": "/work/activities",
+    "label": "Activités",
+    "scope": "work",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "deliverable",
+        "label": "Livrable",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "dependencies",
+        "label": "Dépendances",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "steps",
+        "label": "Étapes",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "notifications.all",
+    "path": "/notifications",
+    "label": "Toutes les notifications",
+    "scope": "notifications",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "gateway.overview",
+    "path": "/modules/gateway",
+    "label": "Vue d’ensemble",
+    "scope": "gateway",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "Destinataire",
+        "type": "email",
+        "required": true
+      },
+      {
+        "key": "subject",
+        "label": "Objet",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "message",
+        "label": "Message",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "gateway.inbox",
+    "path": "/modules/gateway/inbox",
+    "label": "Boîte de réception",
+    "scope": "gateway",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "Destinataire",
+        "type": "email",
+        "required": true
+      },
+      {
+        "key": "subject",
+        "label": "Objet",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "message",
+        "label": "Message",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "gateway.routing",
+    "path": "/modules/gateway/routing",
+    "label": "Routage",
+    "scope": "gateway",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "Destinataire",
+        "type": "email",
+        "required": true
+      },
+      {
+        "key": "subject",
+        "label": "Objet",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "message",
+        "label": "Message",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "gateway.validation",
+    "path": "/modules/gateway/validation",
+    "label": "Validations",
+    "scope": "gateway",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "Destinataire",
+        "type": "email",
+        "required": true
+      },
+      {
+        "key": "subject",
+        "label": "Objet",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "message",
+        "label": "Message",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "gateway.responses",
+    "path": "/modules/gateway/responses",
+    "label": "Réponses",
+    "scope": "gateway",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "Destinataire",
+        "type": "email",
+        "required": true
+      },
+      {
+        "key": "subject",
+        "label": "Objet",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "message",
+        "label": "Message",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "gateway.journal",
+    "path": "/modules/gateway/journal",
+    "label": "Journal",
+    "scope": "gateway",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "Destinataire",
+        "type": "email",
+        "required": true
+      },
+      {
+        "key": "subject",
+        "label": "Objet",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "message",
+        "label": "Message",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "documents.imports",
+    "path": "/documents/imports",
+    "label": "Imports depuis Google Drive",
+    "scope": "documents",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "documents.exports",
+    "path": "/documents/exports",
+    "label": "Exports vers Google Drive",
+    "scope": "documents",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "documents.journal",
+    "path": "/documents/journal",
+    "label": "Journal documentaire",
+    "scope": "documents",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "ethics.overview",
+    "path": "/modules/ethics",
+    "label": "Vue d’ensemble",
+    "scope": "ethics",
+    "transversal": true,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_qualite",
+      "responsable_qualite",
+      "auditeur_qualite",
+      "auditeur_terrain",
+      "responsable_conformite",
+      "conformite_juridique",
+      "rssi",
+      "directeur_rh"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "facts",
+        "label": "Faits",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "date",
+        "label": "Date des faits",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "ethics.report",
+    "path": "/modules/ethics/report",
+    "label": "Nouveau signalement",
+    "scope": "ethics",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": true,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "facts",
+        "label": "Faits",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "date",
+        "label": "Date des faits",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "ethics.received",
+    "path": "/modules/ethics/received",
+    "label": "Signalements reçus",
+    "scope": "ethics",
+    "transversal": true,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_qualite",
+      "responsable_qualite",
+      "auditeur_qualite",
+      "auditeur_terrain",
+      "responsable_conformite",
+      "conformite_juridique",
+      "rssi",
+      "directeur_rh"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "facts",
+        "label": "Faits",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "date",
+        "label": "Date des faits",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "ethics.ongoing",
+    "path": "/modules/ethics/ongoing",
+    "label": "En cours",
+    "scope": "ethics",
+    "transversal": true,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_qualite",
+      "responsable_qualite",
+      "auditeur_qualite",
+      "auditeur_terrain",
+      "responsable_conformite",
+      "conformite_juridique",
+      "rssi",
+      "directeur_rh"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "facts",
+        "label": "Faits",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "date",
+        "label": "Date des faits",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "ethics.closed",
+    "path": "/modules/ethics/closed",
+    "label": "Clôturés",
+    "scope": "ethics",
+    "transversal": true,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_qualite",
+      "responsable_qualite",
+      "auditeur_qualite",
+      "auditeur_terrain",
+      "responsable_conformite",
+      "conformite_juridique",
+      "rssi",
+      "directeur_rh"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "facts",
+        "label": "Faits",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "date",
+        "label": "Date des faits",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "ethics.stats",
+    "path": "/modules/ethics/stats",
+    "label": "Statistiques",
+    "scope": "ethics",
+    "transversal": true,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_qualite",
+      "responsable_qualite",
+      "auditeur_qualite",
+      "auditeur_terrain",
+      "responsable_conformite",
+      "conformite_juridique",
+      "rssi",
+      "directeur_rh"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "facts",
+        "label": "Faits",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "date",
+        "label": "Date des faits",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "independentAudit.overview",
+    "path": "/modules/independent-audit",
+    "label": "Vue d’ensemble",
+    "scope": "independentAudit",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Périmètre audité",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "incident",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "risk",
+        "label": "Risque",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "resolution",
+        "label": "Plan de résolution",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "independentAudit.incident",
+    "path": "/modules/independent-audit/incident",
+    "label": "Déclarer un incident",
+    "scope": "independentAudit",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": true,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Périmètre audité",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "incident",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "risk",
+        "label": "Risque",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "resolution",
+        "label": "Plan de résolution",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "independentAudit.resolution",
+    "path": "/modules/independent-audit/resolution",
+    "label": "Suivi des résolutions",
+    "scope": "independentAudit",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "entity",
+        "label": "Périmètre audité",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "incident",
+        "label": "Constat",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "risk",
+        "label": "Risque",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "resolution",
+        "label": "Plan de résolution",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "app.dashboard",
+    "path": "/",
+    "label": "Tableau de bord",
+    "scope": "app",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": true,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "app.feed",
+    "path": "/feed",
+    "label": "Internal Feed",
+    "scope": "app",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": true,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "permissionAliases": [
+      "feed.all"
+    ]
+  },
+  {
+    "id": "app.documents",
+    "path": "/documents",
+    "label": "Documents",
+    "scope": "app",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": true,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "permissionAliases": [
+      "documents.all"
+    ]
+  },
+  {
+    "id": "app.compliance-audit",
+    "path": "/compliance-audit",
+    "label": "Conformité & Audit",
+    "scope": "app",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "app.settings",
+    "path": "/settings",
+    "label": "Paramètres",
+    "scope": "app",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "admin.roles",
+    "path": "/admin/roles-permissions",
+    "label": "Rôles & Permissions",
+    "scope": "admin",
+    "transversal": true,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "admin_systeme",
+      "rssi",
+      "directeur_rh",
+      "responsable_rh",
+      "gestionnaire_admin_rh"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ],
+    "permissionAliases": [
+      "permissions.roles"
+    ]
+  },
+  {
+    "id": "admin.test-accounts",
+    "path": "/admin/test-accounts",
+    "label": "Comptes de test / Visualiser comme",
+    "scope": "admin",
+    "transversal": true,
+    "restrictedRoles": [
+      "ceo",
+      "cto",
+      "responsable_tech",
+      "admin_systeme",
+      "rssi",
+      "directeur_rh",
+      "responsable_rh",
+      "gestionnaire_admin_rh"
+    ],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "app.profile",
+    "path": "/profile",
+    "label": "Mon profil",
+    "scope": "app",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "description",
+        "label": "Description",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketing.podcasts",
+    "path": "/pole/marketing/podcasts",
+    "label": "Podcasts",
+    "scope": "marketing",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "audience",
+        "label": "Public cible",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "content",
+        "label": "Contenu",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "publication_date",
+        "label": "Date de publication",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "budget",
+        "label": "Budget",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "result",
+        "label": "Résultat mesuré",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "rse.points",
+    "path": "/pole/rse/points",
+    "label": "Points clients",
+    "scope": "rse",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité mesurée",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "unit",
+        "label": "Unité",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "method",
+        "label": "Méthode et périmètre",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source de mesure",
+        "type": "text",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "security.code",
+    "path": "/pole/security/code",
+    "label": "Référentiel du code",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.console",
+    "path": "/pole/security/console",
+    "label": "Opérations techniques",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.documentation",
+    "path": "/pole/security/documentation",
+    "label": "Documentation technique",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "support.compliance",
+    "path": "/pole/support/compliance",
+    "label": "Conformité des comptes",
+    "scope": "support",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "account",
+        "label": "Compte concerné",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "issue",
+        "label": "Demande ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "resolution",
+        "label": "Résolution proposée",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "sla_date",
+        "label": "Échéance de réponse",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "support.onboarding",
+    "path": "/pole/support/onboarding",
+    "label": "Parcours d’intégration",
+    "scope": "support",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "account",
+        "label": "Compte concerné",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "category",
+        "label": "Catégorie",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "issue",
+        "label": "Demande ou problème",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "resolution",
+        "label": "Résolution proposée",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "sla_date",
+        "label": "Échéance de réponse",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "direction.global",
+    "path": "/pole/direction/global",
+    "label": "Pilotage global",
+    "scope": "direction",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "objective",
+        "label": "Objectif stratégique",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "impact",
+        "label": "Impact attendu",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "indicator",
+        "label": "Indicateur",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "target",
+        "label": "Cible",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "finance.salaries",
+    "path": "/pole/finance/salaries",
+    "label": "Salaires et primes",
+    "scope": "finance",
+    "transversal": false,
+    "restrictedRoles": [
+      "ceo",
+      "directeur_rh",
+      "responsable_rh",
+      "gestionnaire_paie",
+      "gestionnaire_admin_rh",
+      "charge_recrutement",
+      "ceo",
+      "cfo"
+    ],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "counterparty",
+        "label": "Tiers",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "reference",
+        "label": "Référence justificative",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "amount",
+        "label": "Montant",
+        "type": "number",
+        "required": true
+      },
+      {
+        "key": "currency",
+        "label": "Devise",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "lines",
+        "label": "Lignes justificatives",
+        "type": "lines",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "ops.audit-link",
+    "path": "/pole/ops/audit-link",
+    "label": "Liaison avec l’audit",
+    "scope": "ops",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "reference",
+        "label": "Commande ou expédition",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "location",
+        "label": "Lieu",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "quantity",
+        "label": "Quantité",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "incident",
+        "label": "Constat et action",
+        "type": "textarea",
+        "required": true
+      }
+    ]
+  },
+  {
+    "id": "supplier.suppliers",
+    "path": "/pole/supplier/suppliers",
+    "label": "Dossiers fournisseurs",
+    "scope": "supplier",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "supplier",
+        "label": "Fournisseur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "product",
+        "label": "Produit ou référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Exigence",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "assessment",
+        "label": "Évaluation",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expiry",
+        "label": "Expiration",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "supplier.alerts",
+    "path": "/pole/supplier/alerts",
+    "label": "Alertes qualité",
+    "scope": "supplier",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "supplier",
+        "label": "Fournisseur",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "product",
+        "label": "Produit ou référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Exigence",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "assessment",
+        "label": "Évaluation",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "expiry",
+        "label": "Expiration",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.customers",
+    "path": "/pole/marketplace/customers",
+    "label": "Clients",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.orders",
+    "path": "/pole/marketplace/orders",
+    "label": "Commandes",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.subscribers",
+    "path": "/pole/marketplace/subscribers",
+    "label": "Abonnés",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "marketplace.favorites",
+    "path": "/pole/marketplace/favorites",
+    "label": "Favoris clients",
+    "scope": "marketplace",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "merchant",
+        "label": "Marchand",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "shop",
+        "label": "Boutique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reference",
+        "label": "Référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "request",
+        "label": "Demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "outcome",
+        "label": "Résultat attendu",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "data.backlog",
+    "path": "/pole/data/backlog",
+    "label": "Backlog Data",
+    "scope": "data",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur ou jeu de données",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "definition",
+        "label": "Définition",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "value",
+        "label": "Valeur",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "quality",
+        "label": "Contrôle qualité",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "data.bi-dashboards",
+    "path": "/pole/data/bi/dashboards",
+    "label": "Tableaux de bord BI",
+    "scope": "data",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur ou jeu de données",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "definition",
+        "label": "Définition",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "value",
+        "label": "Valeur",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "quality",
+        "label": "Contrôle qualité",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "data.bi-templates",
+    "path": "/pole/data/bi/templates",
+    "label": "Modèles BI",
+    "scope": "data",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur ou jeu de données",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "definition",
+        "label": "Définition",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "value",
+        "label": "Valeur",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "quality",
+        "label": "Contrôle qualité",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "data.bi-sources",
+    "path": "/pole/data/bi/sources",
+    "label": "Sources BI",
+    "scope": "data",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur ou jeu de données",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "definition",
+        "label": "Définition",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "value",
+        "label": "Valeur",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "quality",
+        "label": "Contrôle qualité",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "data.bi-library",
+    "path": "/pole/data/bi/library",
+    "label": "Bibliothèque BI",
+    "scope": "data",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "indicator",
+        "label": "Indicateur ou jeu de données",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "definition",
+        "label": "Définition",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "source",
+        "label": "Source",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "period",
+        "label": "Période",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "value",
+        "label": "Valeur",
+        "type": "number",
+        "required": false
+      },
+      {
+        "key": "quality",
+        "label": "Contrôle qualité",
+        "type": "textarea",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.sandbox",
+    "path": "/pole/security/sandbox",
+    "label": "Bac à sable",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.supervision",
+    "path": "/pole/security/supervision",
+    "label": "Supervision technique",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "security.dataflow",
+    "path": "/pole/security/dataflow",
+    "label": "Flux de données",
+    "scope": "security",
+    "transversal": false,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 2,
+    "fields": [
+      {
+        "key": "asset",
+        "label": "Actif ou service",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "environment",
+        "label": "Environnement",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "finding",
+        "label": "Constat ou demande",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "action",
+        "label": "Action prévue",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "verification",
+        "label": "Preuve de vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "review_date",
+        "label": "Prochaine revue",
+        "type": "date",
+        "required": false
+      }
+    ]
+  },
+  {
+    "id": "gateway.compose",
+    "path": "/modules/gateway/compose",
+    "label": "Nouveau message",
+    "scope": "gateway",
+    "transversal": true,
+    "restrictedRoles": [],
+    "public": false,
+    "approvalLevels": 1,
+    "fields": [
+      {
+        "key": "recipient",
+        "label": "Destinataire",
+        "type": "email",
+        "required": true
+      },
+      {
+        "key": "subject",
+        "label": "Objet",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "message",
+        "label": "Message",
+        "type": "textarea",
+        "required": true
+      },
+      {
+        "key": "channel",
+        "label": "Canal",
+        "type": "text",
+        "required": false
+      }
+    ]
+  }
+]

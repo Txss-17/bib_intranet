@@ -1,144 +1,24 @@
 import { useState, useRef } from 'react';
-import { Upload, X, FileText, Image as ImageIcon, Film, Music, Loader2 } from 'lucide-react';
+import { CloudDownload, X, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-
-interface UploadedFile {
-  name: string;
-  url: string;
-  type: string;
-  size: number;
-}
-
-interface FileUploadZoneProps {
-  bucket: string;
-  folder: string;
-  accept?: string;
-  multiple?: boolean;
-  maxSizeMB?: number;
-  files: UploadedFile[];
-  onFilesChange: (files: UploadedFile[]) => void;
-  label?: string;
-}
-
-const getFileIcon = (type: string) => {
-  if (type.startsWith('image/')) return <ImageIcon className="h-4 w-4 text-primary" />;
-  if (type.startsWith('video/')) return <Film className="h-4 w-4 text-primary" />;
-  if (type.startsWith('audio/')) return <Music className="h-4 w-4 text-primary" />;
-  return <FileText className="h-4 w-4 text-primary" />;
-};
-
-const formatSize = (bytes: number) => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
-
-export default function FileUploadZone({
-  bucket,
-  folder,
-  accept = '*',
-  multiple = true,
-  maxSizeMB = 20,
-  files,
-  onFilesChange,
-  label = 'Glissez vos fichiers ici ou cliquez pour parcourir',
-}: FileUploadZoneProps) {
-  const [uploading, setUploading] = useState(false);
-  const [dragActive, setDragActive] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-
-  const uploadFiles = async (fileList: FileList) => {
-    const maxBytes = maxSizeMB * 1024 * 1024;
-    const validFiles = Array.from(fileList).filter(f => {
-      if (f.size > maxBytes) {
-        toast({ title: 'Fichier trop volumineux', description: `${f.name} dépasse ${maxSizeMB} MB`, variant: 'destructive' });
-        return false;
-      }
-      return true;
-    });
-    if (!validFiles.length) return;
-
-    setUploading(true);
-    const newFiles: UploadedFile[] = [];
-
-    for (const file of validFiles) {
-      const ext = file.name.split('.').pop();
-      const path = `${folder}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from(bucket).upload(path, file);
-      if (error) {
-        toast({ title: 'Erreur upload', description: error.message, variant: 'destructive' });
-        continue;
-      }
-      const { data: urlData } = supabase.storage.from(bucket).getPublicUrl(path);
-      newFiles.push({ name: file.name, url: urlData.publicUrl, type: file.type, size: file.size });
-    }
-
-    onFilesChange([...files, ...newFiles]);
-    setUploading(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragActive(false);
-    if (e.dataTransfer.files.length) uploadFiles(e.dataTransfer.files);
-  };
-
-  const removeFile = (index: number) => {
-    onFilesChange(files.filter((_, i) => i !== index));
-  };
-
-  return (
-    <div className="space-y-3">
-      <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
-          dragActive ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
-        }`}
-        onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-        onDragLeave={() => setDragActive(false)}
-        onDrop={handleDrop}
-        onClick={() => inputRef.current?.click()}
-      >
-        {uploading ? (
-          <div className="flex flex-col items-center gap-2">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            <p className="text-sm text-muted-foreground">Upload en cours...</p>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center gap-2">
-            <Upload className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">{label}</p>
-            <p className="text-xs text-muted-foreground">Max {maxSizeMB} MB par fichier</p>
-          </div>
-        )}
-        <input
-          ref={inputRef}
-          type="file"
-          accept={accept}
-          multiple={multiple}
-          className="hidden"
-          onChange={(e) => e.target.files && uploadFiles(e.target.files)}
-        />
-      </div>
-
-      {files.length > 0 && (
-        <div className="space-y-2">
-          {files.map((file, i) => (
-            <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-muted/50 text-sm">
-              {getFileIcon(file.type)}
-              <div className="flex-1 min-w-0">
-                <p className="truncate font-medium text-foreground">{file.name}</p>
-                <p className="text-xs text-muted-foreground">{formatSize(file.size)}</p>
-              </div>
-              <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={(e) => { e.stopPropagation(); removeFile(i); }}>
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { driveAction, DriveDocument, DriveSource, currentDocumentPage } from '@/lib/driveDocuments';
+import { toast } from 'sonner';
+interface UploadedFile { name: string; url: string; type: string; size: number }
+interface Props { bucket: string; folder: string; accept?: string; multiple?: boolean; maxSizeMB?: number; files: UploadedFile[]; onFilesChange: (files: UploadedFile[]) => void; label?: string }
+export default function FileUploadZone({ folder, multiple = true, maxSizeMB = 20, files, onFilesChange }: Props) {
+ const [open, setOpen] = useState(false); const [search, setSearch] = useState(''); const [source, setSource] = useState(''); const [results, setResults] = useState<DriveSource[]>([]); const [next, setNext] = useState<string>(); const [loading, setLoading] = useState(false); const [pending, setPending] = useState(false); const [failure, setFailure] = useState(''); const [key, setKey] = useState(() => crypto.randomUUID());
+ const list = async (page?: string) => { setLoading(true); setFailure(''); try { const result = await driveAction<{ files: DriveSource[]; nextPageToken?: string }>({ action: 'list', search, page_token: page }); setResults(page ? [...results, ...result.files] : result.files); setNext(result.nextPageToken); } catch (e) { setFailure((e as Error).message); } finally { setLoading(false); } };
+ const requestKeys = useRef(new Map<string, string>());
+ const importSource = async (s?: DriveSource) => {
+  if (!s && !source.trim()) return; if (s && Number(s.size || 0) > maxSizeMB * 1024 * 1024) { setFailure('Ce fichier dépasse la taille autorisée.'); return; }
+  const operationKey = s ? (requestKeys.current.get(s.id) || crypto.randomUUID()) : key;
+  if (s) requestKeys.current.set(s.id, operationKey);
+  setPending(true); setFailure('');
+  try { const result = await driveAction<DriveDocument>({ action: 'import', request_key: operationKey, source: s?.id || source, page_id: currentDocumentPage(), name: s?.name || 'Document BIB.pdf', classification: 'confidential', public_asset: folder === 'products' && !!s?.mimeType.startsWith('image/') });
+   onFilesChange([...(multiple ? files : []), { name: result.name, url: new URL(result.url!, window.location.origin).href, type: result.mime_type, size: result.size_bytes }]); if (s) requestKeys.current.delete(s.id); setKey(crypto.randomUUID()); setOpen(false); setSource(''); toast.success('Document importé depuis Drive BIB');
+  } catch (e) { setFailure((e as Error).message); } finally { setPending(false); }
+ };
+ return <div className="space-y-3"><Button type="button" variant="outline" className="w-full" onClick={() => { setOpen(true); void list(); }}><CloudDownload className="mr-2 h-4 w-4" />Importer depuis Google Drive BIB</Button><p className="text-xs text-muted-foreground">Documents PDF, PNG/JPEG et documents Google Workspace. {folder === 'products' ? 'Les images de catalogue choisies sont destinées à la publication.' : 'Les documents restent dans l’espace professionnel BIB.'}</p>{files.map((f, i) => <div key={`${f.url}-${i}`} className="flex items-center justify-between rounded border p-2 text-sm"><span className="truncate">{f.name}</span><Button type="button" variant="ghost" size="icon" aria-label={`Retirer ${f.name}`} onClick={() => onFilesChange(files.filter((_, n) => i !== n))}><X className="h-4 w-4" /></Button></div>)}<Dialog open={open} onOpenChange={o => !pending && setOpen(o)}><DialogContent className="max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>Importer depuis votre Drive BIB</DialogTitle></DialogHeader><div className="flex gap-2"><Input placeholder="Rechercher un fichier…" value={search} onChange={e => setSearch(e.target.value)} /><Button type="button" variant="outline" disabled={loading || pending} onClick={() => void list()}><Search className="h-4 w-4" /></Button></div>{failure && <p role="alert" className="text-sm text-destructive">{failure}</p>}{loading && <Loader2 className="h-5 w-5 animate-spin" />}<ul className="max-h-64 divide-y overflow-y-auto">{results.map(s => <li key={s.id}><button type="button" disabled={pending} className="w-full p-3 text-left hover:bg-muted" onClick={() => { void importSource(s); }}><span className="block text-sm font-medium">{s.name}</span><span className="text-xs text-muted-foreground">{s.mimeType}</span></button></li>)}</ul>{next && <Button type="button" variant="outline" disabled={loading || pending} onClick={() => void list(next)}>Afficher la suite</Button>}<div className="space-y-2 border-t pt-3"><Input value={source} disabled={pending} onChange={e => { setSource(e.target.value); setKey(crypto.randomUUID()); }} placeholder="Ou collez un lien Google Drive BIB" /><Button type="button" disabled={pending || !source.trim()} onClick={() => void importSource()}>{pending ? 'Import en cours…' : 'Importer ce lien'}</Button></div></DialogContent></Dialog></div>;
 }

@@ -143,61 +143,6 @@ export const useRoadmapActions = () => {
   };
 };
 
-export interface GovernanceDoc {
-  id: string; name: string; version: string | null; file_path: string;
-  file_type: string | null; file_size: number | null; created_at: string;
-}
-
-export const useGovernanceDocs = (enabled: boolean) =>
-  useQuery({
-    queryKey: ['governance-docs'],
-    enabled,
-    queryFn: async () => {
-      const { data, error } = await supabase.from('governance_documents').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []) as GovernanceDoc[];
-    },
-  });
-
-export const useGovernanceDocActions = () => {
-  const qc = useQueryClient();
-  const refresh = () => qc.invalidateQueries({ queryKey: ['governance-docs'] });
-  const onError = (e: Error) => toast.error('Documents', { description: e.message });
-  return {
-    upload: useMutation({
-      mutationFn: async ({ file, name, version }: { file: File; name: string; version: string }) => {
-        const path = `${crypto.randomUUID()}-${file.name.replace(/[^\w.-]/g, '_')}`;
-        const { error: e1 } = await supabase.storage.from('governance-documents').upload(path, file, { contentType: file.type });
-        if (e1) throw e1;
-        const { error } = await supabase.from('governance_documents').insert({
-          name: name || file.name, version: version || null, file_path: path, file_type: file.type, file_size: file.size,
-        });
-        if (error) {
-          await supabase.storage.from('governance-documents').remove([path]);
-          throw error;
-        }
-      },
-      onSuccess: () => { toast.success('Document ajouté'); refresh(); },
-      onError,
-    }),
-    remove: useMutation({
-      mutationFn: async (doc: GovernanceDoc) => {
-        await supabase.storage.from('governance-documents').remove([doc.file_path]);
-        const { error } = await supabase.from('governance_documents').delete().eq('id', doc.id);
-        if (error) throw error;
-      },
-      onSuccess: () => { toast.success('Document supprimé'); refresh(); },
-      onError,
-    }),
-  };
-};
-
-export const openGovernanceDoc = async (doc: GovernanceDoc) => {
-  const { data, error } = await supabase.storage.from('governance-documents').createSignedUrl(doc.file_path, 60);
-  if (error || !data) { toast.error('Lecture impossible', { description: error?.message }); return; }
-  window.open(data.signedUrl, '_blank', 'noopener');
-};
-
 export interface GovernanceBlock {
   id: string; kind: 'entity' | 'board_member'; name: string; subtitle: string | null;
   description: string | null; detail: string | null; status: string; sort_order: number;

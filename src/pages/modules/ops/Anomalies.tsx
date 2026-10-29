@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import {
   AiSuggestion, Anomaly, AnomalySeverity, AnomalyStatus, ANOMALY_SOURCES, ANOMALY_STATUS_LABELS, ANOMALY_TRANSITIONS,
-  isOverdue, NOTIF_KIND_LABELS, requestTriage, SEVERITY_LABELS, useAnomalies, useAnomalyActions, useAnomalyEvents,
+  isOverdue, NOTIF_KIND_LABELS, SEVERITY_LABELS, useAnomalies, useAnomalyActions, useAnomalyEvents,
   useAnomalyNotifications, useAssignees,
 } from '@/hooks/useAnomalies';
 
@@ -70,34 +70,13 @@ export default function Anomalies() {
 
   const resetDialog = () => { setForm(emptyForm); setChecks([]); setSuggestion(null); setAiDecision(null); };
 
-  const suggest = async () => {
-    setAiLoading(true);
-    try {
-      const s = await requestTriage(form.description, form.team);
-      setSuggestion(s); setAiDecision(null);
-    } catch (e) {
-      toast.error('Suggestion IA', { description: (e as Error).message });
-    } finally { setAiLoading(false); }
-  };
-  const acceptSuggestion = () => {
-    if (!suggestion) return;
-    setForm({ ...form, source: suggestion.source, severity: suggestion.severity, category: suggestion.category,
-      type: form.type || suggestion.category, title: form.title || suggestion.title });
-    setChecks(suggestion.checks);
-    setAiDecision('accepted');
-  };
-
   const submit = () => {
-    const modified = suggestion && aiDecision === 'accepted' && (
-      form.source !== suggestion.source || form.severity !== suggestion.severity || form.category !== suggestion.category ||
-      JSON.stringify(checks) !== JSON.stringify(suggestion.checks));
     create.mutate({
       title: form.title, source: form.source, type: form.type, severity: form.severity as AnomalySeverity,
       description: form.description || null, object_type: form.object_type || null, object_id: form.object_id || null,
       owner_id: form.owner_id || null, due_at: fromLocalInput(form.due_at), reminder_at: fromLocalInput(form.reminder_at),
       category: form.category || null, checks: checks.filter(Boolean),
-      ai_suggestion: suggestion, ai_decision: suggestion ? (aiDecision === 'accepted' ? (modified ? 'modified' : 'accepted') : 'rejected') : null,
-      ai_validated_by: suggestion ? user?.id : null, ai_validated_at: suggestion ? new Date().toISOString() : null,
+      ai_suggestion: null, ai_decision: null, ai_validated_by: null, ai_validated_at: null,
     } as any, { onSuccess: () => { setOpen(false); resetDialog(); } });
   };
 
@@ -212,7 +191,7 @@ export default function Anomalies() {
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Déclarer une anomalie</DialogTitle>
-            <DialogDescription>Décrivez le problème, puis demandez une suggestion à Lovable AI. Vous validez ou corrigez avant d'enregistrer.</DialogDescription>
+            <DialogDescription>Décrivez le problème, renseignez sa catégorie et sa priorité, puis listez les vérifications à effectuer.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-3">
             <div className="grid grid-cols-3 gap-3">
@@ -226,30 +205,7 @@ export default function Anomalies() {
             <div>
               <Label>Description</Label>
               <Textarea rows={4} placeholder="Que s'est-il passé ? Quelle commande, quel produit, quel montant…" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-              <Button type="button" variant="secondary" size="sm" className="mt-2" disabled={form.description.trim().length < 10 || aiLoading} onClick={suggest}>
-                {aiLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}Suggérer catégorie, priorité et vérifications
-              </Button>
             </div>
-
-            {suggestion && (
-              <div className="rounded-md border bg-muted/40 p-3 text-sm">
-                <div className="mb-2 flex flex-wrap items-center gap-2">
-                  <span className="font-medium">Suggestion IA</span>
-                  <Badge variant="secondary">{ANOMALY_SOURCES[suggestion.source]}</Badge>
-                  <Badge variant="outline">{suggestion.category}</Badge>
-                  <Badge variant={sevVariant(suggestion.severity)}>{SEVERITY_LABELS[suggestion.severity]}</Badge>
-                  {aiDecision && <Badge variant="outline">{aiDecision === 'accepted' ? 'Appliquée' : 'Écartée'}</Badge>}
-                </div>
-                <p className="text-muted-foreground">{suggestion.rationale}</p>
-                <ul className="mt-2 list-disc pl-5">{suggestion.checks.map((c, i) => <li key={i}>{c}</li>)}</ul>
-                {!aiDecision && (
-                  <div className="mt-3 flex gap-2">
-                    <Button size="sm" onClick={acceptSuggestion}><Check className="mr-1 h-4 w-4" />Appliquer</Button>
-                    <Button size="sm" variant="outline" onClick={() => setAiDecision('rejected')}><X className="mr-1 h-4 w-4" />Écarter</Button>
-                  </div>
-                )}
-              </div>
-            )}
 
             <div className="grid grid-cols-3 gap-3">
               <div><Label>Source</Label>

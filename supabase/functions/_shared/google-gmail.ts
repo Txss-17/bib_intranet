@@ -216,9 +216,8 @@ async function gmailRequest<T>(
     const errorText =
       await response.text();
 
-    throw new Error(
-      `Gmail API request failed (${response.status}): ${errorText}`,
-    );
+    const error = new Error(`Gmail API request failed (${response.status})`) as Error & { status: number };
+    error.status = response.status; throw error;
   }
 
   if (response.status === 204) {
@@ -363,6 +362,7 @@ function buildMimeMessage(options: {
   replyTo?: string;
   inReplyTo?: string;
   references?: string;
+  messageId?: string;
 }): string {
   const config =
     getConfig();
@@ -406,6 +406,8 @@ function buildMimeMessage(options: {
     "MIME-Version: 1.0",
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
   ];
+
+  if (options.messageId) { assertSafeHeaderValue(options.messageId, 'Message-ID'); lines.push(`Message-ID: ${options.messageId}`); }
 
   if (replyTo) {
     lines.push(
@@ -476,6 +478,7 @@ export async function sendGmailMessage(
     inReplyTo?: string;
     references?: string;
     threadId?: string;
+    messageId?: string;
   },
 ): Promise<GmailMessage> {
   const rawMime =

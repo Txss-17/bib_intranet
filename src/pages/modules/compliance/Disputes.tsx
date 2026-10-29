@@ -23,7 +23,7 @@ export default function Disputes() {
     if (editingDispute) {
       updateDispute.mutate({ id: editingDispute.id, ...data }, { onSuccess: () => toast.success('Litige modifié') });
     } else {
-      const num = `LIT-${new Date().getFullYear()}-${String(Math.floor(Math.random() * 999)).padStart(3, '0')}`;
+      const num = `LIT-${new Date().getFullYear()}-${crypto.randomUUID().slice(0,8).toUpperCase()}`;
       createDispute.mutate({ dispute_number: num, open_date: new Date().toISOString().split('T')[0], resolved_date: null, ...data }, { onSuccess: () => toast.success('Litige créé') });
     }
     setEditingDispute(undefined);

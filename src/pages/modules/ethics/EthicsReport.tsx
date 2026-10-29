@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Shield, Lock, Send, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 
 const categories = [
@@ -54,7 +55,9 @@ export default function EthicsReport() {
 
   const update = (k: string, v: any) => setForm(p => ({ ...p, [k]: v }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [pending, setPending] = useState(false);
+  const operation = useRef({ key: crypto.randomUUID(), fingerprint: '' });
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.category || !form.description || !form.consent) {
       toast({ title: 'Champs requis', description: 'Catégorie, description et consentement sont obligatoires.', variant: 'destructive' });
@@ -64,9 +67,16 @@ export default function EthicsReport() {
       toast({ title: 'Identité requise', description: 'Nom et email sont nécessaires en mode identifié.', variant: 'destructive' });
       return;
     }
-    const ref = `ETH-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}`;
-    setSubmitted(ref);
-    toast({ title: 'Signalement enregistré', description: `Référence : ${ref}` });
+    const report = { mode: mode === 'anonyme' ? 'anonymous' : 'identified', category: form.category, severity: ({ critique: 'critical', haute: 'high', moyenne: 'medium', basse: 'low' } as Record<string, string>)[form.priority], title: form.title, facts: form.description, date: form.when, location: form.where, persons: form.persons, witnesses: form.witnesses, evidence: form.evidence, consent: form.consent, ...(mode === 'identifie' ? { name: form.name, email: form.email, phone: form.phone } : {}) };
+    const fingerprint = JSON.stringify(report);
+    if (fingerprint !== operation.current.fingerprint) operation.current = { key: crypto.randomUUID(), fingerprint };
+    setPending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('intranet-ethics', { body: { action: 'submit', request_key: operation.current.key, report } });
+      if (error || !data?.reference) throw new Error('Le signalement n’est pas confirmé. Votre saisie est conservée pour réessayer.');
+      setSubmitted(data.reference);
+    } catch (error) { toast({ title: 'Enregistrement non confirmé', description: (error as Error).message, variant: 'destructive' }); }
+    finally { setPending(false); }
   };
 
   if (submitted) {
@@ -83,9 +93,9 @@ export default function EthicsReport() {
           <CardContent className="space-y-4">
             <Alert>
               <Shield className="h-4 w-4" />
-              <AlertTitle>Confidentialité garantie</AlertTitle>
+              <AlertTitle>Traitement confidentiel</AlertTitle>
               <AlertDescription>
-                Votre signalement est chiffré et accessible uniquement aux référents Éthique & RH habilités.
+                Votre signalement est chiffré au stockage et réservé aux référents Éthique habilités.
                 Conservez votre référence pour suivre le traitement de votre dossier.
               </AlertDescription>
             </Alert>
@@ -118,7 +128,7 @@ export default function EthicsReport() {
         <AlertTitle>Protection du lanceur d'alerte</AlertTitle>
         <AlertDescription>
           Conformément à la loi Sapin II et à la directive européenne 2019/1937, votre signalement est protégé.
-          Vous pouvez rester totalement anonyme.
+          En mode anonyme, aucun nom, email ou identifiant de compte n’est conservé dans le dossier. Les faits que vous rédigez peuvent contenir des éléments permettant de vous reconnaître.
         </AlertDescription>
       </Alert>
 
@@ -251,7 +261,7 @@ export default function EthicsReport() {
               </AlertDescription>
             </Alert>
             <div className="flex justify-end gap-2">
-              <Button type="submit" className="gap-2">
+              <Button type="submit" className="gap-2" disabled={pending}>
                 <Send className="h-4 w-4" /> Transmettre le signalement
               </Button>
             </div>

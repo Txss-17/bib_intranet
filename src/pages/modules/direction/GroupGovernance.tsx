@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Building, Users, FileText, Heart, Briefcase, Upload, Eye, Trash2, Pencil, Plus } from 'lucide-react';
@@ -10,8 +10,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import Documents from '@/pages/Documents';
 import {
-  GovernanceBlock, openGovernanceDoc, useGovernanceBlockActions, useGovernanceBlocks, useGovernanceDocActions, useGovernanceDocs, useIsLeadership,
+  GovernanceBlock, useGovernanceBlockActions, useGovernanceBlocks, useIsLeadership,
 } from '@/hooks/useDirectionContent';
 
 type BlockDraft = { id?: string; kind: 'entity' | 'board_member'; name: string; subtitle: string; description: string; detail: string; status: string };
@@ -20,13 +21,6 @@ const formatSize = (n: number | null) => (!n ? '' : n > 1048576 ? `${(n / 104857
 
 const GroupGovernance = () => {
   const { data: isLeader = false } = useIsLeadership();
-  const { data: docs = [], isLoading } = useGovernanceDocs(isLeader);
-  const { upload, remove } = useGovernanceDocActions();
-  const [open, setOpen] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-  const [name, setName] = useState('');
-  const [version, setVersion] = useState('');
-  const inputRef = useRef<HTMLInputElement>(null);
 
   const { data: blocks = [] } = useGovernanceBlocks();
   const blockActions = useGovernanceBlockActions();
@@ -48,7 +42,7 @@ const GroupGovernance = () => {
     blockActions.save.mutate(id ? { id, ...payload } : { ...payload, sort_order: blocks.filter((b) => b.kind === bd.kind).length + 1 }, { onSuccess: () => setBd(null) });
   };
 
-  const reset = () => { setOpen(false); setFile(null); setName(''); setVersion(''); };
+
 
   return (
     <div className="space-y-6 p-6">
@@ -119,44 +113,7 @@ const GroupGovernance = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-2"><FileText className="h-5 w-5" />Documents Juridiques</CardTitle>
-          {isLeader && <Button size="sm" onClick={() => setOpen(true)}><Upload className="mr-1 h-4 w-4" />Ajouter un document</Button>}
-        </CardHeader>
-        <CardContent>
-          {!isLeader ? (
-            <p className="text-sm text-muted-foreground">Documents réservés à la Direction.</p>
-          ) : isLoading ? (
-            <p className="text-sm text-muted-foreground">Chargement…</p>
-          ) : docs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aucun document. Ajoutez les statuts, le pacte d'actionnaires, le règlement intérieur…</p>
-          ) : (
-            <div className="space-y-3">
-              {docs.map((doc) => (
-                <div key={doc.id} className="flex items-center justify-between gap-3 p-3 border rounded-lg hover:bg-muted/50">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <FileText className="h-5 w-5 shrink-0 text-muted-foreground" />
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{doc.name}</p>
-                      <p className="text-sm text-muted-foreground">
-                        Ajouté le {format(new Date(doc.created_at), 'dd MMM yyyy', { locale: fr })} {formatSize(doc.file_size) && `· ${formatSize(doc.file_size)}`}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-2">
-                    {doc.version && <Badge variant="outline">{doc.version}</Badge>}
-                    <Button size="sm" variant="outline" onClick={() => openGovernanceDoc(doc)}><Eye className="mr-1 h-4 w-4" />Lire</Button>
-                    <Button size="icon" variant="ghost" aria-label="Supprimer" onClick={() => confirm(`Supprimer « ${doc.name} » ?`) && remove.mutate(doc)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <Documents pageId="direction.governance" />
 
       <Dialog open={!!bd} onOpenChange={(o) => !o && setBd(null)}>
         <DialogContent>
@@ -182,28 +139,7 @@ const GroupGovernance = () => {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={open} onOpenChange={(o) => !o && reset()}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Ajouter un document juridique</DialogTitle></DialogHeader>
-          <div className="grid gap-3">
-            <div>
-              <Label>Fichier (20 Mo max)</Label>
-              <Input ref={inputRef} type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" onChange={(e) => {
-                const f = e.target.files?.[0] ?? null;
-                setFile(f);
-                if (f && !name) setName(f.name.replace(/\.[^.]+$/, ''));
-              }} />
-            </div>
-            <div><Label>Nom</Label><Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Statuts BIB SAS" /></div>
-            <div><Label>Version</Label><Input value={version} onChange={(e) => setVersion(e.target.value)} placeholder="v1.0" /></div>
-          </div>
-          <DialogFooter>
-            <Button disabled={!file || upload.isPending} onClick={() => file && upload.mutate({ file, name, version }, { onSuccess: reset })}>
-              {upload.isPending ? 'Envoi…' : 'Téléverser'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
     </div>
   );
 };

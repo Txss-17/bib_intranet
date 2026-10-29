@@ -1,3 +1,4 @@
+import { ManagedDocumentLink } from '@/components/operations/ManagedDocumentLink';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -96,7 +97,7 @@ export default function Contracts() {
                     <TableCell>{c.value || '—'}</TableCell>
                     <TableCell><Badge variant={statusVariant(c.status)}>{CONTRACT_STATUS_LABELS[c.status] ?? c.status}</Badge></TableCell>
                     <TableCell><div className="flex gap-1">
-                      {c.document_url && <Button variant="ghost" size="icon" asChild><a href={c.document_url} target="_blank" rel="noreferrer" aria-label="Voir le document"><ExternalLink className="h-4 w-4" /></a></Button>}
+                      {c.document_url && <Button variant="ghost" size="icon" asChild><ManagedDocumentLink url={c.document_url} aria-label="Voir le document"><ExternalLink className="h-4 w-4" /></ManagedDocumentLink></Button>}
                       <Button variant="ghost" size="icon" aria-label="Modifier" onClick={() => { setEditing(c); setFormOpen(true); }}><Edit className="h-4 w-4" /></Button>
                     </div></TableCell>
                   </TableRow>

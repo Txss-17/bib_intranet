@@ -160,52 +160,8 @@ Deno.serve(async (req) => {
    */
   const token = authHeader.slice('Bearer '.length).trim()
 
-  const parts = token.split('.')
-
-  if (parts.length < 2) {
-    return new Response(
-      JSON.stringify({
-        error: 'Forbidden',
-      }),
-      {
-        status: 403,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
-  }
-
-  let claims: Record<string, unknown> | null = null
-
-  try {
-    const payload = parts[1]
-      .replaceAll('-', '+')
-      .replaceAll('_', '/')
-      .padEnd(
-        Math.ceil(parts[1].length / 4) * 4,
-        '='
-      )
-
-    claims = JSON.parse(
-      atob(payload)
-    ) as Record<string, unknown>
-  } catch {
-    claims = null
-  }
-
-  if (claims?.role !== 'service_role') {
-    return new Response(
-      JSON.stringify({
-        error: 'Forbidden',
-      }),
-      {
-        status: 403,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    )
+  if (token !== supabaseServiceKey) {
+    return new Response(JSON.stringify({error:'Forbidden'}),{status:403,headers:{'Content-Type':'application/json'}})
   }
 
   const supabase = createClient(
@@ -626,7 +582,13 @@ Deno.serve(async (req) => {
           }
         )
 
-        await sendGmailMessage({
+        if (payload.intranet_outbox_id) {
+          const { data: claim, error: claimError } = await supabase.rpc('claim_intranet_delivery', { p_key: payload.idempotency_key, p_message: payload.message_id })
+          if (claimError || claim === 'unknown') throw new Error('Envoi à rapprocher avec Gmail avant toute reprise')
+          if (claim === 'sent') { await supabase.rpc('delete_email', { queue_name: queue, message_id: msg.msg_id }); continue }
+          if (claim !== 'claimed') throw new Error('Réservation d’envoi refusée')
+        }
+        const transportReceipt = await sendGmailMessage({
           to: recipient,
           subject,
           text,
@@ -636,7 +598,13 @@ Deno.serve(async (req) => {
           inReplyTo,
           references,
           threadId,
+          messageId: getPayloadString(payload, 'rfc_message_id'),
         })
+        if (payload.intranet_outbox_id) {
+          const { error: receiptError } = await supabase.rpc('mark_intranet_delivery_sent', { p_key: payload.idempotency_key, p_message: payload.message_id, p_provider: transportReceipt.id })
+          if (receiptError) throw new Error('Confirmation de transport à rapprocher avec Gmail')
+        }
+
 
         /*
          * The message reached Gmail successfully.
@@ -685,6 +653,13 @@ Deno.serve(async (req) => {
 
         totalProcessed++
       } catch (error) {
+        if (payload.intranet_outbox_id && error && typeof error === 'object' && 'status' in error && [400,401,403,404,429].includes(Number((error as { status: unknown }).status))) {
+          await supabase.rpc('release_rejected_intranet_delivery', { p_key: payload.idempotency_key, p_message: payload.message_id, p_status: Number((error as { status: unknown }).status) })
+        }
+
+        if (payload.intranet_outbox_id && !(error && typeof error === 'object' && 'status' in error && [400,401,403,404,429].includes(Number((error as {status:unknown}).status)))) {
+          await supabase.rpc('claim_intranet_delivery', { p_key: payload.idempotency_key, p_message: payload.message_id })
+        }
         const errorMsg =
           error instanceof Error
             ? error.message

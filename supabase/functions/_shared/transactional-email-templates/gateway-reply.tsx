@@ -88,7 +88,7 @@ const GatewayReply = ({ senderName = '', subject = '', message = '', messageRef 
 export const template = {
   component: GatewayReply,
   displayName: 'Gateway — Réponse',
-  subject: (d: Props) => `Re: ${d.subject || ''}`,
+  subject: (d: Props) => /^Re:/i.test(d.subject || '') ? d.subject! : `Re: ${d.subject || ''}`,
   previewData: {
     senderName: 'Marie', subject: 'Demande de partenariat',
     message: 'Bonjour, merci pour votre message...', messageRef: 'GW-2025-101', respondedBy: 'Pierre Moreau',
