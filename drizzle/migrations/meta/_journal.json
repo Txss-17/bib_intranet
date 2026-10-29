@@ -358,6 +358,13 @@
       "when": 1793297000000,
       "tag": "0050_ops_anomaly_workflow",
       "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "7",
+      "when": 1793383200000,
+      "tag": "0051_compliance_dispute_workflow",
+      "breakpoints": true
     }
   ]
 }

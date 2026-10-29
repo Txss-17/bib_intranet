@@ -1,63 +1,50 @@
-import { useState } from 'react';
-import { toast } from 'sonner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { useDeferredValue, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { Archive, Pencil, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Eye, MessageSquare, Edit, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { useAuth } from '@/hooks/useAuth';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useDisputes, useDispute, useDisputeStats, useDisputeActions } from '@/hooks/useDisputes';
+import { DISPUTE_STAGES, DISPUTE_OUTCOMES, disputeDate, disputeMoney, disputeStatus, disputeReady, disputeMayReview, type Dispute, type DisputeFields, type DisputeAction, type DisputePayload } from '@/lib/disputes';
 import DisputeForm from '@/components/forms/DisputeForm';
+import DisputeJournal from '@/components/operations/DisputeJournal';
+import { DocumentLinks } from '@/components/operations/RecordAttachments';
 import { ExportButtons } from '@/components/ExportButtons';
-import { useDisputes, useCreateDispute, useUpdateDispute } from '@/hooks/useDisputes';
-
+const PAGE = 'compliance.disputes';
 export default function Disputes() {
-  const [search, setSearch] = useState('');
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingDispute, setEditingDispute] = useState<any>(undefined);
-
-  const { data: disputes = [], isLoading } = useDisputes(search || undefined);
-  const createDispute = useCreateDispute();
-  const updateDispute = useUpdateDispute();
-
-  const handleSubmit = (data: any) => {
-    if (editingDispute) {
-      updateDispute.mutate({ id: editingDispute.id, ...data }, { onSuccess: () => toast.success('Litige modifié') });
-    } else {
-      const num = `LIT-${new Date().getFullYear()}-${crypto.randomUUID().slice(0,8).toUpperCase()}`;
-      createDispute.mutate({ dispute_number: num, open_date: new Date().toISOString().split('T')[0], resolved_date: null, ...data }, { onSuccess: () => toast.success('Litige créé') });
-    }
-    setEditingDispute(undefined);
-  };
-
-  const handleEdit = (d: any) => { setEditingDispute(d); setFormOpen(true); };
-  const handleNew = () => { setEditingDispute(undefined); setFormOpen(true); };
-
-  if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-
-  return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold">Litiges</h1><p className="text-muted-foreground">Suivi et gestion des litiges</p></div>
-        <div className="flex gap-2">
-          <ExportButtons filename="litiges" title="Liste des litiges" poleName="Compliance" columns={[
-            { header: 'N°', accessor: 'dispute_number' }, { header: 'Sujet', accessor: 'subject' },
-            { header: 'Partie', accessor: 'party' }, { header: 'Type', accessor: 'type' },
-            { header: 'Montant', accessor: 'amount' }, { header: 'Priorité', accessor: 'priority' },
-            { header: 'Statut', accessor: 'status' },
-          ]} data={disputes} />
-          <Button onClick={handleNew}><Plus className="mr-2 h-4 w-4" />Nouveau litige</Button>
-        </div>
-      </div>
-      <Card><CardHeader><div className="relative"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input placeholder="Rechercher un litige..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" /></div></CardHeader>
-        <CardContent><Table><TableHeader><TableRow><TableHead>N°</TableHead><TableHead>Sujet</TableHead><TableHead>Partie</TableHead><TableHead>Type</TableHead><TableHead>Montant</TableHead><TableHead>Priorité</TableHead><TableHead>Statut</TableHead><TableHead>Actions</TableHead></TableRow></TableHeader>
-          <TableBody>{disputes.map((d) => (
-            <TableRow key={d.id}><TableCell className="font-mono">{d.dispute_number}</TableCell><TableCell className="font-medium max-w-[200px] truncate">{d.subject}</TableCell><TableCell>{d.party}</TableCell><TableCell>{d.type}</TableCell><TableCell>{d.amount || '-'}</TableCell>
-              <TableCell><Badge variant={d.priority === 'high' ? 'destructive' : d.priority === 'medium' ? 'secondary' : 'outline'}>{d.priority === 'high' ? 'Haute' : d.priority === 'medium' ? 'Moyenne' : 'Basse'}</Badge></TableCell>
-              <TableCell><Badge variant={d.status === 'open' ? 'destructive' : d.status === 'negotiation' ? 'secondary' : 'default'}>{d.status === 'open' ? 'Ouvert' : d.status === 'negotiation' ? 'Négociation' : 'Résolu'}</Badge></TableCell>
-              <TableCell><div className="flex gap-2"><Button variant="ghost" size="icon"><Eye className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => handleEdit(d)}><Edit className="h-4 w-4" /></Button></div></TableCell></TableRow>
-          ))}{disputes.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucun litige trouvé</TableCell></TableRow>}</TableBody></Table>
-        </CardContent></Card>
-      <DisputeForm open={formOpen} onOpenChange={setFormOpen} dispute={editingDispute} onSubmit={handleSubmit} />
-    </div>
-  );
+ const { user } = useAuth();const { can } = usePermissions();const [params, setParams] = useSearchParams();const selectedId = params.get('record');
+ const [search, setSearch] = useState('');const [status, setStatus] = useState('active');const [stage, setStage] = useState('all');const [offset, setOffset] = useState(0);
+ const [editing, setEditing] = useState<Dispute | null | undefined>();const [note, setNote] = useState('');const [decisionRevision, setDecisionRevision] = useState<number | null>(null);
+ useEffect(() => { setNote('');setDecisionRevision(null); }, [selectedId]);
+ const query = useDisputes(useDeferredValue(search), status, stage, offset);const detail = useDispute(selectedId);const stats = useDisputeStats();const actions = useDisputeActions();const rows = query.isError ? [] : query.data?.rows || [];const current = detail.isError ? undefined : detail.data;const summary = stats.isError ? undefined : stats.data;
+ const manager = can(PAGE, 'validate');const owns = !!current && (manager || current.created_by === user?.id || current.owner_id === user?.id);const editable = !!current && owns && can(PAGE, 'update') && ['draft','rejected'].includes(current.status);
+ const mayApprove = !!current && disputeMayReview(current, user?.id, manager);const mayReturn = !!current && disputeMayReview(current, user?.id, manager, 'return');const mayReopen = !!current && current.status === 'approved' && manager;const mayArchive = !!current && current.status === 'approved' && owns && can(PAGE, 'delete');const busy = actions.save.isPending || actions.transition.isPending || detail.isFetching;
+ const select = (id: string | null) => { const next = new URLSearchParams(params);if (id) next.set('record', id);else next.delete('record');setParams(next, { replace: true }); };
+ const refresh = () => { void query.refetch();void stats.refetch();if (selectedId) void detail.refetch(); };
+ const save = (fields: DisputeFields) => actions.save.mutate({ original: editing || undefined, fields }, { onSuccess: saved => { setEditing(undefined);if (saved.visibility === 'restricted' && saved.created_by !== user?.id && saved.owner_id !== user?.id && !manager) select(null); } });
+ const run = (action: DisputeAction) => current && actions.transition.mutate({ record: { ...current, revision: decisionRevision ?? current.revision }, action, note }, { onSuccess: () => { setNote('');setDecisionRevision(null);if (action === 'archive') select(null); } });
+ const moveStage = (next: DisputePayload['stage']) => current && actions.save.mutate({ original: current, fields: { title: current.title, payload: { ...current.payload, stage: next }, owner: current.owner_id, due: current.due_date, priority: current.priority, visibility: current.visibility, documents: current.document_ids } });
+ return <div className="space-y-5"><div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold">Litiges</h1><p className="text-sm text-muted-foreground">Constat, analyse interne, négociation et résolution validée.</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={refresh} disabled={query.isFetching}>Actualiser</Button><ExportButtons filename="litiges" title="Litiges" poleName="Compliance" columns={[{ header: 'Référence', accessor: 'reference' }, { header: 'Sujet', accessor: 'title' }, { header: 'Partie', accessor: 'party' }, { header: 'Type', accessor: 'type' }, { header: 'Montant contesté', accessor: 'amount' }, { header: 'Devise', accessor: 'currency' }, { header: 'Statut', accessor: 'status' }]} data={rows.map(record => ({ reference: record.dispute_reference || record.id, title: record.title, party: record.payload.party, type: record.payload.type, amount: record.payload.amount, currency: record.payload.currency, status: disputeStatus(record) }))} /><Button disabled={!can(PAGE, 'create')} onClick={() => setEditing(null)}><Plus className="mr-2 h-4 w-4" />Nouveau litige</Button></div></div>
+ {stats.isError && <p role="alert">Indicateurs indisponibles. <Button variant="link" onClick={() => void stats.refetch()}>Réessayer</Button></p>}<p className="text-xs text-muted-foreground">Dossiers accessibles à votre compte, hors archives et indépendamment des filtres.</p><div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{([['Actifs', summary?.active], ['À valider', summary?.awaiting_review], ['Clôturés', summary?.closed], ['Échéances internes dépassées', summary?.overdue]] as const).map(([label, count]) => <div key={label} className="rounded border p-4"><p className="text-2xl font-semibold">{count ?? '—'}</p><p className="text-xs text-muted-foreground">{label}</p></div>)}</div>
+ {summary && <div className="rounded border p-3 text-sm"><p className="font-medium">Montants contestés renseignés, par devise</p>{summary.amounts.map(total => <p key={total.currency}>{disputeMoney(total.amount, total.currency)} · {total.samples} dossier(s)</p>)}<p className="text-xs text-muted-foreground">{summary.unknown_amounts} dossier(s) sans montant structuré. Aucune conversion entre devises.</p></div>}
+ <div className="flex flex-wrap gap-3"><Input aria-label="Rechercher un litige" maxLength={200} className="min-w-52 flex-1" placeholder="Référence, sujet ou partie…" value={search} onChange={event => { setSearch(event.target.value);setOffset(0); }} /><Select value={status} onValueChange={value => { setStatus(value);setOffset(0); }}><SelectTrigger className="w-52"><SelectValue /></SelectTrigger><SelectContent>{Object.entries({ active: 'Dossiers actifs', all: 'Tous hors archives', draft: 'En traitement', submitted: 'À valider', reviewed: 'Première validation', approved: 'Clôturés', rejected: 'Reprise demandée', archived: 'Archives' }).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select><Select value={stage} onValueChange={value => { setStage(value);setOffset(0); }}><SelectTrigger className="w-48"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toutes les étapes</SelectItem>{Object.entries(DISPUTE_STAGES).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div><p className="text-xs text-muted-foreground">L’export reprend la page affichée.</p>
+ {query.isLoading && <p role="status">Chargement…</p>}{query.isError && <p role="alert">Litiges indisponibles. <Button variant="link" onClick={() => void query.refetch()}>Réessayer</Button></p>}{!query.isLoading && !query.isError && rows.length === 0 && <p className="text-muted-foreground">Aucun litige dans cette vue.</p>}
+ <ul className="divide-y rounded border">{rows.map(record => <li key={record.id}><button className="flex w-full flex-wrap items-center justify-between gap-3 p-4 text-left hover:bg-muted/40" onClick={() => select(record.id)}><span><span className="block font-medium">{record.title}</span><span className="text-xs text-muted-foreground">{record.dispute_reference} · {record.payload.party} · {record.owner_name || (record.owner_id ? 'Compte indisponible' : 'Non attribué')}</span></span><span className="flex flex-wrap gap-2"><Badge variant="outline">{disputeStatus(record)}</Badge><span className="text-sm">{disputeMoney(record.payload.amount, record.payload.currency)}</span></span></button></li>)}</ul><div className="flex justify-end gap-2"><Button variant="outline" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 50))}>Précédent</Button><Button variant="outline" disabled={!query.data?.has_more} onClick={() => setOffset(offset + 50)}>Suivant</Button></div>
+ {editing !== undefined && <DisputeForm key={editing?.id || 'new'} original={editing || undefined} pending={actions.save.isPending} onClose={() => setEditing(undefined)} onSubmit={save} />}
+ <Sheet open={!!selectedId} onOpenChange={open => !open && select(null)}><SheetContent className="w-full overflow-y-auto sm:max-w-2xl"><SheetHeader><SheetTitle>{current?.title || 'Litige'}</SheetTitle></SheetHeader>{detail.isLoading && <p role="status" className="mt-5">Chargement…</p>}{detail.isError && <p role="alert" className="mt-5">Litige indisponible ou accès refusé.</p>}{current && <div className="mt-5 space-y-4 text-sm"><div className="flex flex-wrap gap-2"><Badge variant="outline">{current.dispute_reference}</Badge><Badge variant="outline">{disputeStatus(current)}</Badge><Badge variant="secondary">{current.visibility === 'restricted' ? 'Accès restreint' : 'Équipe habilitée'}</Badge><Badge variant="outline">{current.dispute_required_reviews || 2} validation(s)</Badge></div>
+ <p className="text-xs text-muted-foreground">Dossier enregistré le {disputeDate(current.dispute_opened_at)} par {current.creator_name || 'Compte indisponible'}</p><p>Partie : {current.payload.party} · {current.payload.type}</p><p className="whitespace-pre-wrap">{current.payload.description}</p><p>Montant contesté : {disputeMoney(current.payload.amount, current.payload.currency)}</p>{current.payload.amount_raw && <p>Montant historique non structuré : {current.payload.amount_raw}</p>}<p>Responsable : {current.owner_name || (current.owner_id ? 'Compte indisponible' : 'Non attribué')}</p><p>Échéance interne : {current.due_date || 'Non renseignée'}</p>
+ {current.payload.legal_reference && <p className="whitespace-pre-wrap">Référence applicable : {current.payload.legal_reference}</p>}{current.payload.assessment && <div><h2 className="font-medium">Analyse interne</h2><p className="whitespace-pre-wrap">{current.payload.assessment}</p></div>}{current.payload.proposal && <div><h2 className="font-medium">{DISPUTE_OUTCOMES[current.payload.outcome]}</h2><p className="whitespace-pre-wrap">{current.payload.proposal}</p></div>}{current.payload.evidence && <div><h2 className="font-medium">Justification et vérification</h2><p className="whitespace-pre-wrap">{current.payload.evidence}</p></div>}<DocumentLinks ids={current.document_ids} />
+ {current.dispute_submitted_by && <p>Proposition soumise par {current.submitter_name || 'Compte indisponible'} · {disputeDate(current.dispute_submitted_at)}</p>}{current.first_reviewer && <p>Première validation : {current.reviewer_name || 'Compte indisponible'} · {disputeDate(current.dispute_reviewed_at)}</p>}{current.approved_by && <p>Clôture validée par {current.approver_name || 'Compte indisponible'} · {disputeDate(current.dispute_approved_at)}</p>}{current.dispute_legacy && !current.dispute_approved_at && ['approved','archived'].includes(current.status) && <p className="text-muted-foreground">Dossier historique conservé ; les dates de validation ne sont pas reconstituées.</p>}{current.dispute_change_note && <p className="whitespace-pre-wrap">Dernier motif de décision : {current.dispute_change_note}</p>}
+ {editable && <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={() => setEditing(current)}><Pencil className="mr-2 h-4 w-4" />Modifier le dossier</Button>{current.payload.stage === 'open' && <Button variant="outline" disabled={busy} onClick={() => moveStage('analysis')}>Commencer l’analyse</Button>}{current.payload.stage === 'analysis' && <Button variant="outline" disabled={busy || !current.payload.assessment.trim()} onClick={() => moveStage('negotiation')}>Passer en négociation</Button>}{current.payload.stage === 'negotiation' && <Button variant="outline" disabled={busy} onClick={() => moveStage('analysis')}>Reprendre l’analyse</Button>}</div>}
+ {(editable || mayApprove || mayReturn || mayReopen || mayArchive) && <div className="space-y-3 rounded border p-3"><Label htmlFor="dispute-decision">Compte rendu ou motif de décision</Label><p className="text-xs text-muted-foreground">Les validateurs doivent être distincts du déclarant, du responsable et de l’auteur de la proposition.</p>{decisionRevision != null && decisionRevision !== current.revision && <p role="alert">Le dossier a été modifié. Rouvrez-le pour reprendre avec la version actuelle.</p>}<Textarea id="dispute-decision" maxLength={5000} rows={3} value={note} onChange={event => { setNote(event.target.value);setDecisionRevision(value => value ?? current.revision); }} /><div className="flex flex-wrap gap-2">{editable && <Button disabled={busy || !note.trim() || !disputeReady(current)} onClick={() => run('submit')}>Soumettre la proposition</Button>}{mayApprove && <Button disabled={busy || !note.trim()} onClick={() => run('approve')}>{current.status === 'submitted' && current.dispute_required_reviews === 2 ? 'Première validation' : 'Valider et clôturer'}</Button>}{mayReturn && <Button variant="outline" disabled={busy || !note.trim()} onClick={() => run('return')}>Demander une reprise</Button>}{mayReopen && <Button variant="outline" disabled={busy || !note.trim()} onClick={() => run('reopen')}>Rouvrir</Button>}</div></div>}
+ {['submitted','reviewed'].includes(current.status) && !current.dispute_submitted_by && <p className="text-muted-foreground">Cette proposition historique nécessite une reprise avant une nouvelle validation.</p>}
+ {mayArchive && <Button variant="outline" disabled={busy || !note.trim()} onClick={() => { if (window.confirm('Archiver ce dossier clôturé en conservant ses décisions ?')) run('archive'); }}><Archive className="mr-2 h-4 w-4" />Archiver</Button>}
+ <DisputeJournal key={current.id} id={current.id} canComment={!['approved','archived'].includes(current.status) && (can(PAGE, 'update') || manager)} />
+ </div>}</SheetContent></Sheet></div>;
 }

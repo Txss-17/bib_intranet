@@ -37,7 +37,9 @@ test('every concrete protected route and dynamic detail resolves to a real permi
  assert.equal(intranet.resolveIntranetPage('/pole/security/edge-functions/id/logs').id,'security.logs');
 });
 test('server seed equals the frontend registry including aliases, restrictions and schemas',()=>{
- const seed=read('drizzle/migrations/0039_intranet_modules.sql').match(/\$registry\$([\s\S]*?)\$registry\$/)[1];assert.deepEqual(JSON.parse(seed),registry);
+ const seed=JSON.parse(read('drizzle/migrations/0039_intranet_modules.sql').match(/\$registry\$([\s\S]*?)\$registry\$/)[1]);
+ const dispute=JSON.parse(read('drizzle/migrations/0051_compliance_dispute_workflow.sql').match(/\$dispute_definition\$([\s\S]*?)\$dispute_definition\$/)[1]);
+ assert.deepEqual(seed.map(page=>page.id===dispute.id?dispute:page),registry);
  for(const r of registry)for(const alias of r.permissionAliases||[])assert.equal(intranet.moduleById(alias).id,r.id);
 });
 test('dynamic form values preserve zero, optional numbers and line data',()=>{
