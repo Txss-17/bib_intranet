@@ -20,7 +20,8 @@ import { CriticalAlertToast } from '@/components/notifications/CriticalAlertToas
 import { useAuth } from '@/hooks/useAuth';
 import { positionInfos } from '@/types/positions';
 import { supabase } from '@/integrations/supabase/client';
-import { useQuery } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 
 interface TopBarProps {
   onToggleSidebar: () => void;
@@ -47,7 +48,8 @@ const statusLabels: Record<EmployeeStatus, string> = {
 function useNotifications() {
   const { profile } = useAuth();
   return useQuery({
-    queryKey: ['notifications', profile?.email],
+    queryKey: ['notifications', profile?.id],
+    refetchInterval: 30000,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notifications')
@@ -75,6 +77,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
   const { alerts, unreadCount, criticalCount, lastAlert, markAsRead, markAllAsRead, dismissLastAlert } = useCriticalAlerts();
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const { data: dbNotifications = [] } = useNotifications();
   
   const firstName = profile?.first_name || 'U';
@@ -157,7 +160,14 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
                 dbNotifications.slice(0, 5).map((notification) => {
                   const pole = notification.pole_id ? getPoleById(notification.pole_id as PoleId) : null;
                   return (
-                    <DropdownMenuItem key={notification.id} className="flex flex-col items-start gap-1 p-3 cursor-pointer">
+                    <DropdownMenuItem key={notification.id} onClick={async () => {
+                      const { error } = await supabase.from('notifications').update({ read: true }).eq('id', notification.id);
+                      if (error) { toast.error('Impossible de marquer cette notification comme lue.'); return; }
+                      void qc.invalidateQueries({ queryKey: ['notifications'] });
+                      void qc.invalidateQueries({ queryKey: ['critical_notifications'] });
+                      const target = notification.action_url;
+                      if (target?.startsWith('/') && !target.startsWith('//') && !target.includes('\\')) navigate(target);
+                    }} className="flex flex-col items-start gap-1 p-3 cursor-pointer">
                       <div className="flex items-center gap-2 w-full">
                         <span className={cn('h-2 w-2 rounded-full', getNotificationIcon(notification.type || 'info'))} />
                         <span className="text-sm font-medium truncate flex-1">{notification.title}</span>
@@ -217,3 +227,4 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
     </>
   );
 }
+

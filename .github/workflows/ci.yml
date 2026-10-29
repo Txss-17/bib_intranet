@@ -79,6 +79,12 @@ jobs:
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npx tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --lib ES2022,DOM --skipLibCheck --strictNullChecks --noImplicitAny false tests/hr-mutations/edge-env.d.ts supabase/functions/provision-employee-account/index.ts
 
+      - name: Test authentication and task views
+        run: npm run test:work-tasks
+
+      - name: Test task collaboration permissions and immutable history
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/work-tasks/permissions.sql
+
       - name: Typecheck application
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npx tsc --noEmit -p tsconfig.app.json
@@ -86,3 +92,4 @@ jobs:
       - name: Build application
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run build
+
