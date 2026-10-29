@@ -12,7 +12,7 @@ Les 14 pôles sont Direction, Finance, Opérations, Fournisseurs, Marketplace, S
 | Écrans auparavant de démonstration | Dossiers persistants avec schéma adapté au module, responsable, échéance, priorité, confidentialité, pièces Drive, recherche, commentaires et historique. |
 | Validation des dossiers | Brouillon → soumis → validé ; première revue puis seconde validation distincte pour Direction, Finance, Audit, Conformité et Sécurité. Auteur et responsable ne s’auto-valident pas. Refus et réouverture motivés, contrôle de révision et archivage conservant l’historique. |
 | Pilotage | Suppression des séries financières et techniques fabriquées. Totaux de trésorerie séparés par devise ; les vues Direction précisent leur fenêtre EUR. Une absence de données ne produit plus un score de performance fictif. |
-| Travail et notifications | Conservation des tâches collaboratives de la migration 0038, vues personnelle/pôle/multi-pôles/générale ; notifications consultables et marquage de lecture. |
+| Travail et notifications | Tâches collaboratives, projets, procédures publiées, validations attribuées et escalades résolues avec motif ; révisions, historique, archives, notifications d’attribution et fil d’activité paginé. Voir `docs/work-module.md`. |
 | Documents | Import Google Drive BIB, aperçu PDF filigrané, exports PDF/CSV/XLSX vers Drive, diffusion externe de PDF après validation distincte et journalisation. |
 | Éthique | Enregistrement serveur du signalement, chiffrement AES-GCM du contenu, exclusion des coordonnées en mode anonyme, reçu après confirmation, attribution, investigation, résolution, clôture et historique. |
 | Gateway | Destinataires et texte figés à la soumission, approbation distincte, mise en file atomique par destinataire, confirmation Gmail et rapprochement des retours incertains. |
@@ -62,15 +62,17 @@ Le statut « Transport confirmé » signifie que Gmail a accepté le message, sa
 
 ## Déploiement
 
-La PR précédente a ajouté 0038 et a été fusionnée. Cette livraison ajoute, dans cet ordre :
+Les migrations du socle et du module Travail suivent cet ordre après 0038 :
 
 1. `0039_intranet_modules.sql` : registre, permissions serveur, dossiers et journal.
 2. `0040_intranet_drive.sql` : réservations idempotentes, fichiers gérés, partage et traçabilité.
 3. `0041_intranet_ethics.sql` : canal confidentiel et workflow de traitement.
 4. `0042_intranet_business_boundaries.sql` : contrôles additionnels des tables métier et journal.
 5. `0043_intranet_gateway_outbox.sql` : soumission, approbation, file et confirmations de transport.
+6. `0044_intranet_identity_and_test_isolation.sql` : identité documentaire, cloisonnement réel/test et configuration atomique des comptes de test.
+7. `0045_work_module_lifecycle.sql` : cycles de vie Travail, révisions, archives, événements et fil d’activité.
 
-Appliquer les migrations avec la procédure Drizzle habituelle après sauvegarde et revue sur une copie de préproduction. Ne pas les dupliquer dans le répertoire des anciennes migrations Supabase. Publier ensuite `intranet-drive`, `intranet-ethics`, `gateway-dispatch`, les versions mises à jour de `send-transactional-email` et `process-email-queue`, ainsi que `anomaly-triage` qui refuse désormais la qualification automatique. Publier le frontend seulement après disponibilité des RPC.
+Appliquer les migrations avec la procédure Drizzle habituelle après sauvegarde et revue sur une copie de préproduction. Ne pas les dupliquer dans le répertoire des anciennes migrations Supabase. Les fonctions concernées sont `intranet-drive`, `intranet-ethics`, `gateway-dispatch`, `provision-test-accounts`, les versions mises à jour de `send-transactional-email` et `process-email-queue`, ainsi que `anomaly-triage` qui refuse désormais la qualification automatique. Publier le frontend seulement après disponibilité des RPC.
 
 Configurer les secrets Workspace/Éthique, la délégation et le dossier privé. Le scheduler du worker Gmail doit continuer à utiliser l’identité de service. Prévoir la conservation de l’ancienne clé Éthique lors d’une rotation et une migration explicite si des signalements historiques utilisent un autre format de chiffrement.
 

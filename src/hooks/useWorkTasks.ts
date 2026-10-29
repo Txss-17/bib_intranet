@@ -50,7 +50,6 @@ export const useWorkTasks = () => {
       const { data, error } = await db
         .from('work_tasks')
         .select('*, assignee:profiles!work_tasks_assignee_id_fkey(first_name, last_name)')
-        .is('archived_at', null)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data || []).map((t) => ({
@@ -61,19 +60,26 @@ export const useWorkTasks = () => {
   });
 };
 
-export const useTaskAssignees = () =>
-  useQuery({
-    queryKey: ['task-assignees'],
+export const useTaskAssignees = () => {
+  const { user, profile } = useAuth();
+  return useQuery({
+    queryKey: ['task-assignees', user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      const { data, error } = await db.from('profiles').select('id, first_name, last_name, email').order('first_name');
+      let query = db.from('profiles').select('id, first_name, last_name')
+        .eq('app_origin', 'connect').eq('hr_status', 'active');
+      query = profile?.test_account === true ? query.eq('test_account', true)
+        : query.or('test_account.is.null,test_account.eq.false');
+      const { data, error } = await query.order('first_name');
       if (error) throw error;
-      return (data || []) as { id: string; first_name: string; last_name: string; email: string }[];
+      return (data || []) as { id: string; first_name: string; last_name: string }[];
     },
   });
+};
 
 export const useWorkTaskActions = () => {
   const qc = useQueryClient();
-  const done = () => qc.invalidateQueries({ queryKey: ['work-tasks'] });
+  const done = () => Promise.all(['work-tasks', 'work-task-history', 'work-activity', 'notifications'].map(key => qc.invalidateQueries({ queryKey: [key] })));
   const onError = (e: Error) => toast.error('Tâches', { description: e.message });
 
   const create = useMutation({
@@ -146,7 +152,7 @@ export function useWorkTaskDiscussion(taskId: string) {
       const { error } = await db.from('work_task_comments').insert({ task_id: taskId, body: body.trim() }).select('id').single();
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['work-task-comments', taskId] }),
+    onSuccess: () => Promise.all([qc.invalidateQueries({ queryKey: ['work-task-comments', taskId] }), qc.invalidateQueries({ queryKey: ['work-activity'] })]),
     onError: () => toast.error('Commentaire non enregistré. Réessayez.'),
   });
   return { comments, history, addComment };

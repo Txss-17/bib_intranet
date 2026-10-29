@@ -62,22 +62,22 @@ export default function WorkTasks() {
   const sel = rows.find((r) => r.id === selId) ?? null;
 
   const ownsSelection = !!sel && (sel.created_by === user?.id || sel.assignee_id === user?.id || isSuperAdmin || profile?.poles?.includes('direction'));
-  const canEdit = allowed('update') && ownsSelection;
+  const canEdit = allowed('update') && ownsSelection && !sel?.archived_at;
   const selectablePoles = poles.filter(p => isSuperAdmin || profile?.poles?.includes('direction') || profile?.poles?.includes(p.id));
 
   const filtered = useMemo(
     () =>
       rows.filter(
         (t) =>
-          matchesTaskView(t, scope, user?.id, profile?.poles || [], poleFilter) &&
-          (status === 'all' || (status === 'open' ? t.status !== 'completed' : t.status === status)) &&
+          (status === 'archived' ? !!t.archived_at : !t.archived_at) && matchesTaskView(t, scope, user?.id, profile?.poles || [], poleFilter) &&
+          (status === 'all' || status === 'archived' || (status === 'open' ? t.status !== 'completed' : t.status === status)) &&
           (!q || `${t.title} ${t.description || ""} ${t.objective || ""} ${t.assignee_name} ${(t.task_poles || []).join(" ")}`.toLowerCase().includes(q.toLowerCase())),
       ),
     [rows, q, status, scope, poleFilter, user?.id, profile?.poles],
   );
 
-  const count = (s: TaskStatus[]) => rows.filter((t) => s.includes(t.status)).length;
-  const late = rows.filter(isLate).length;
+  const count = (s: TaskStatus[]) => rows.filter((t) => !t.archived_at && s.includes(t.status)).length;
+  const late = rows.filter(t => !t.archived_at && isLate(t)).length;
 
   return (
     <div className="space-y-6 p-6">
@@ -138,7 +138,7 @@ export default function WorkTasks() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="open">En cours</SelectItem>
-            <SelectItem value="all">Toutes</SelectItem>
+            <SelectItem value="all">Toutes</SelectItem><SelectItem value="archived">Archives</SelectItem>
             {Object.entries(TASK_STATUS_LABELS).map(([k, v]) => (
               <SelectItem key={k} value={k}>{v}</SelectItem>
             ))}
@@ -171,7 +171,7 @@ export default function WorkTasks() {
                     </span>
                     <span className="flex shrink-0 items-center gap-2">
                       <Badge variant={priorityVariant(t.priority)}>{TASK_PRIORITY_LABELS[t.priority]}</Badge>
-                      <Badge variant={statusVariant(t.status)}>{TASK_STATUS_LABELS[t.status]}</Badge>
+                      <Badge variant={statusVariant(t.status)}>{t.archived_at ? 'Archivée' : TASK_STATUS_LABELS[t.status]}</Badge>
                     </span>
                   </button>
                 </li>
@@ -274,9 +274,9 @@ export default function WorkTasks() {
               </SheetHeader>
               <div className="mt-4 space-y-5 text-sm">
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant={statusVariant(sel.status)}>{TASK_STATUS_LABELS[sel.status]}</Badge>
+                  <Badge variant={statusVariant(sel.status)}>{sel.archived_at ? 'Archivée' : TASK_STATUS_LABELS[sel.status]}</Badge>
                   <Badge variant={priorityVariant(sel.priority)}>{TASK_PRIORITY_LABELS[sel.priority]}</Badge>
-                  {isLate(sel) && <Badge variant="destructive">En retard</Badge>}
+                  {!sel.archived_at && isLate(sel) && <Badge variant="destructive">En retard</Badge>}
                 </div>
                 <TaskContentEditor key={`${sel.id}-${sel.updated_at}`} task={sel} disabled={!canEdit || update.isPending} save={patch => update.mutate({ id: sel.id, updated_at: sel.updated_at, ...patch })} />
                 {sel.objective && <p className="whitespace-pre-wrap"><strong>Objectif : </strong>{sel.objective}</p>}
@@ -345,7 +345,7 @@ export default function WorkTasks() {
                     Archiver
                   </Button>
                 </div>
-                <TaskDiscussion key={sel.id} taskId={sel.id} canComment={allowed('update')} people={people} />
+                <TaskDiscussion key={sel.id} taskId={sel.id} canComment={allowed('update') && !sel.archived_at} people={people} />
               </div>
             </>
           )}
@@ -386,7 +386,7 @@ function TaskDiscussion({ taskId, canComment, people }: { taskId: string; canCom
     <h2 className="font-semibold">Historique</h2>
     {history.isLoading && <p>Chargement…</p>}
     {history.isError && <p role="alert">Historique indisponible. <button onClick={() => void history.refetch()}>Réessayer</button></p>}
-    {history.data?.map(h => <details key={h.id} className="rounded border p-3"><summary className="cursor-pointer">{h.action === 'created' ? 'Création' : h.action === 'archived' ? 'Archivage' : 'Modification'} · {author(h.actor_id)} · {format(new Date(h.created_at), 'dd/MM/yyyy HH:mm')}</summary>
+    {history.data?.map(h => <details key={h.id} className="rounded border p-3"><summary className="cursor-pointer">{h.action === 'imported' ? 'État existant repris' : h.action === 'created' ? 'Création' : h.action === 'archived' ? 'Archivage' : 'Modification'} · {author(h.actor_id)} · {format(new Date(h.created_at), 'dd/MM/yyyy HH:mm')}</summary>
       <dl className="mt-2 space-y-1">{Object.entries(fields).filter(([key]) => JSON.stringify(h.before_state?.[key]) !== JSON.stringify(h.after_state[key])).map(([key, label]) => <div key={key}><dt className="font-medium">{label}</dt><dd className="whitespace-pre-wrap break-words">{JSON.stringify(h.before_state?.[key] ?? '—')} → {JSON.stringify(h.after_state[key] ?? '—')}</dd></div>)}</dl>
     </details>)}
   </div>;

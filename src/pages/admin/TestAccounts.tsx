@@ -53,12 +53,14 @@ export default function TestAccounts() {
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke('provision-test-accounts', {
-        body: { roles: roles.map((r) => ({ id: r.id, label: r.label, email: testAccountEmail(r), position: r.position, poles: r.poles, seniority: r.seniority })) },
+        body: { roles: roles.map((r) => r.id) },
       });
       if (error) throw error;
-      toast.success(`${(data as any)?.created ?? 0} compte(s) créé(s), ${(data as any)?.updated ?? 0} mis à jour`);
-    } catch (e: any) {
-      toast.error(e?.message || 'Provisionnement impossible');
+      const failures=Array.isArray(data?.errors)?data.errors:[];
+      if(failures.length)toast.error(`${failures.length} configuration(s) non confirmée(s).`,{description:failures.join(' ')});
+      else toast.success(`${data?.created ?? 0} compte(s) créé(s), ${data?.updated ?? 0} mis à jour`);
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : 'Provisionnement impossible');
     } finally {
       setBusy(false);
     }
