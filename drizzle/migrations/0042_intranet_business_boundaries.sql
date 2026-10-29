@@ -28,6 +28,7 @@ DECLARE visible boolean;
 BEGIN
  IF NOT public.is_intranet_actor()OR NOT public.can_intranet_table_action(p_table,'read')OR NOT EXISTS(SELECT 1 FROM public.profiles WHERE id=auth.uid()AND coalesce(test_account,false)=p_test)THEN RETURN false;END IF;
  IF NOT EXISTS(SELECT 1 FROM public.intranet_business_tables WHERE table_name=p_table)THEN RETURN false;END IF;
+ IF public.has_role(auth.uid(),'admin')THEN RETURN true;END IF;
  EXECUTE format('SELECT EXISTS(SELECT 1 FROM public.%I WHERE id::text=$1)',p_table)INTO visible USING p_id;RETURN visible;
 END;
 $$;
@@ -90,7 +91,7 @@ END;
 $$;
 DO $$DECLARE t record;BEGIN
  FOR t IN SELECT table_name FROM public.intranet_business_tables LOOP
-  IF to_regclass('public.'||quote_ident(t.table_name))IS NULL THEN CONTINUE;END IF;
+  IF NOT EXISTS(SELECT 1 FROM pg_class WHERE oid=to_regclass('public.'||quote_ident(t.table_name))AND relkind IN ('r','p'))THEN CONTINUE;END IF;
   EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY',t.table_name);
   EXECUTE format('CREATE POLICY intranet_read_boundary ON public.%I AS RESTRICTIVE FOR SELECT TO authenticated USING(public.can_intranet_table_action(%L,''read''))',t.table_name,t.table_name);
   EXECUTE format('CREATE POLICY intranet_create_boundary ON public.%I AS RESTRICTIVE FOR INSERT TO authenticated WITH CHECK(public.can_intranet_table_action(%L,''create''))',t.table_name,t.table_name);

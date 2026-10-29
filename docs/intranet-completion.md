@@ -25,7 +25,7 @@ Les dossiers de suivi sont des opérations manuelles : leur approbation n’exé
 
 `RouteAccessGate` protège les routes et refuse les chemins inconnus. Les mutations sensibles sont aussi contrôlées côté serveur ; masquer un bouton n’est pas une autorisation. Les mécanismes RH de provisionnement/publication et le workflow des tâches conservent leurs RPC dédiées.
 
-La migration 0042 ajoute des politiques **restrictives** aux tables métier recensées : elle ne remplace pas les règles existantes de portefeuille, d’appartenance ou de propriétaire. Les tables commerciales partagées gardent les politiques Platform pour leurs utilisateurs Platform. Le journal métier est append-only et sa consultation passe par la politique de ligne actuelle de l’enregistrement source.
+La migration 0042 ajoute des politiques **restrictives** aux tables métier recensées : elle ne remplace pas les règles existantes de portefeuille, d’appartenance ou de propriétaire. Les tables commerciales partagées gardent les politiques Platform pour leurs utilisateurs Platform. Le journal métier est append-only et sa consultation passe par la politique de ligne actuelle de l’enregistrement source. Un administrateur technique actif peut également consulter les événements des enregistrements supprimés.
 
 ## Documents Google Workspace
 

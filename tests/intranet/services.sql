@@ -118,4 +118,13 @@ DO $$DECLARE payload jsonb;BEGIN
  IF public.claim_intranet_delivery('stable-dispatch','queue-message-1')<>'sent'THEN RAISE EXCEPTION 'confirmed delivery resent';END IF;
  IF(SELECT status FROM public.intranet_outbox WHERE id=current_setting('test.outbox')::uuid)<>'sent'THEN RAISE EXCEPTION 'receipt did not settle outbox';END IF;
 END $$;
+RESET ROLE;
+SELECT set_config('request.jwt.claim.role','authenticated',true);
+SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
+SET LOCAL ROLE authenticated;
+DELETE FROM public.cashflows;
+RESET ROLE;
+INSERT INTO public.user_roles(user_id,role)VALUES('10000000-0000-4000-8000-000000000001','admin');
+SET LOCAL ROLE authenticated;
+DO $$BEGIN IF NOT EXISTS(SELECT 1 FROM public.intranet_business_history WHERE table_name='cashflows'AND action='delete')THEN RAISE EXCEPTION 'administrator lost deleted-row audit';END IF;END $$;
 ROLLBACK;
