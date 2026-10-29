@@ -58,6 +58,8 @@ SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001'
 DO $$
 DECLARE total integer; stamp timestamptz;
 BEGIN
+ IF public.can_work_task_action(NULL) THEN RAISE EXCEPTION 'null action allowed'; END IF;
+ BEGIN UPDATE public.work_tasks SET status='unknown' WHERE id='20000000-0000-4000-8000-000000000001'; RAISE EXCEPTION 'unknown status accepted'; EXCEPTION WHEN invalid_parameter_value THEN NULL; END;
  IF NOT public.can_work_task_action('update') THEN RAISE EXCEPTION 'senior cannot update'; END IF;
  SELECT count(*) INTO total FROM public.work_tasks;
  IF total<>3 THEN RAISE EXCEPTION 'scope or test isolation leak: %',total; END IF;

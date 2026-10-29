@@ -107,7 +107,9 @@ CREATE OR REPLACE FUNCTION public.guard_work_task_write()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE actor uuid:=auth.uid(); actor_test boolean; actor_poles text[];
 BEGIN
- IF char_length(btrim(coalesce(NEW.title,''))) NOT BETWEEN 1 AND 255
+ IF NEW.status IS NULL OR NEW.status NOT IN ('pending','in_progress','review','completed')
+ OR NEW.priority IS NULL OR NEW.priority NOT IN ('low','medium','high','critical')
+ OR char_length(btrim(coalesce(NEW.title,''))) NOT BETWEEN 1 AND 255
  OR char_length(coalesce(NEW.description,''))>20000 OR char_length(coalesce(NEW.objective,''))>5000
  OR NEW.task_poles IS NULL OR array_ndims(NEW.task_poles)>1 OR array_position(NEW.task_poles,NULL) IS NOT NULL THEN
  RAISE EXCEPTION 'invalid_work_task' USING ERRCODE='22023'; END IF;
