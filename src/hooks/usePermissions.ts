@@ -116,14 +116,14 @@ export const usePermissions = (): UsePermissionsReturn => {
     enabled: !!role?.id,
     staleTime: 60_000,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from('access_permissions')
         .select('allowed, access_roles!inner(role_key), access_interfaces!inner(interface_key), access_actions!inner(action_key)')
         .eq('access_roles.role_key', role!.id)
         .limit(5000);
       if (error) return {};
       const map: Record<string, Partial<ActionSet>> = {};
-      (data || []).forEach((r: any) => {
+      (data || []).forEach((r) => {
         const page = r.access_interfaces?.interface_key;
         const action = r.access_actions?.action_key as PermissionAction;
         if (!page || !action) return;
@@ -134,11 +134,11 @@ export const usePermissions = (): UsePermissionsReturn => {
   });
 
   useEffect(() => {
-    const ch = (supabase as any)
+    const ch = supabase
       .channel(`access-permissions-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'access_permissions' }, () => setTick((t) => t + 1))
       .subscribe();
-    return () => { (supabase as any).removeChannel(ch); };
+    return () => { supabase.removeChannel(ch); };
   }, []);
 
   const poles = simulatedRole ? simulatedRole.poles : (profile?.poles ?? role?.poles ?? []);
