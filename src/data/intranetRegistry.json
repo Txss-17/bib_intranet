@@ -4003,16 +4003,40 @@
     "approvalLevels": 2,
     "fields": [
       {
-        "key": "entity",
-        "label": "Entité ou périmètre",
+        "key": "party",
+        "label": "Partie concernée",
         "type": "text",
         "required": true
       },
       {
-        "key": "requirement",
-        "label": "Obligation ou risque",
+        "key": "type",
+        "label": "Type de litige",
+        "type": "text",
+        "required": true
+      },
+      {
+        "key": "description",
+        "label": "Constat",
         "type": "textarea",
         "required": true
+      },
+      {
+        "key": "stage",
+        "label": "Étape de traitement",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "amount",
+        "label": "Montant contesté",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "currency",
+        "label": "Devise",
+        "type": "text",
+        "required": false
       },
       {
         "key": "legal_reference",
@@ -4022,14 +4046,50 @@
       },
       {
         "key": "assessment",
-        "label": "Analyse",
+        "label": "Analyse interne",
         "type": "textarea",
-        "required": true
+        "required": false
+      },
+      {
+        "key": "proposal",
+        "label": "Proposition de traitement",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "evidence",
+        "label": "Justification et vérification",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "outcome",
+        "label": "Issue proposée",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "entity",
+        "label": "Périmètre historique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "requirement",
+        "label": "Constat historique",
+        "type": "textarea",
+        "required": false
       },
       {
         "key": "mitigation",
-        "label": "Mesure de traitement",
+        "label": "Traitement historique",
         "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "amount_raw",
+        "label": "Montant historique non structuré",
+        "type": "text",
         "required": false
       }
     ]

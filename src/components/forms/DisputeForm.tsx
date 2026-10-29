@@ -1,133 +1,29 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-
-interface DisputeFormProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  dispute?: {
-    id: string;
-    title: string;
-    type: string;
-    priority: string;
-    status: string;
-  };
-  onSubmit: (data: any) => void;
-}
-
-export default function DisputeForm({ open, onOpenChange, dispute, onSubmit }: DisputeFormProps) {
-  const [formData, setFormData] = useState({
-    title: dispute?.title || '',
-    type: dispute?.type || '',
-    priority: dispute?.priority || 'medium',
-    status: dispute?.status || 'open',
-    description: '',
-    plaintiff: '',
-    amount: ''
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSubmit(formData);
-    onOpenChange(false);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{dispute ? 'Modifier le litige' : 'Nouveau litige'}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Titre</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              placeholder="Ex: Litige facturation client X"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="plaintiff">Plaignant / Partie adverse</Label>
-            <Input
-              id="plaintiff"
-              value={formData.plaintiff}
-              onChange={(e) => setFormData({ ...formData, plaintiff: e.target.value })}
-              placeholder="Nom de la partie"
-            />
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Commercial">Commercial</SelectItem>
-                  <SelectItem value="Contrat">Contrat</SelectItem>
-                  <SelectItem value="Qualité">Qualité</SelectItem>
-                  <SelectItem value="Livraison">Livraison</SelectItem>
-                  <SelectItem value="Paiement">Paiement</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="priority">Priorité</Label>
-              <Select value={formData.priority} onValueChange={(value) => setFormData({ ...formData, priority: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Basse</SelectItem>
-                  <SelectItem value="medium">Moyenne</SelectItem>
-                  <SelectItem value="high">Haute</SelectItem>
-                  <SelectItem value="critical">Critique</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="amount">Montant en jeu (€)</Label>
-            <Input
-              id="amount"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              placeholder="Ex: 15 000 €"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Décrivez le litige en détail..."
-              rows={4}
-              required
-            />
-          </div>
-
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Annuler
-            </Button>
-            <Button type="submit">
-              {dispute ? 'Enregistrer' : 'Créer'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import RecordAttachments from '@/components/operations/RecordAttachments';
+import { useDisputePeople } from '@/hooks/useDisputes';
+import { DISPUTE_TYPES, DISPUTE_OUTCOMES, disputePayload, normalizeDisputeAmount, type Dispute, type DisputeFields, type DisputePayload } from '@/lib/disputes';
+import { toast } from 'sonner';
+export default function DisputeForm({ original, pending, onClose, onSubmit }: { original?: Dispute; pending: boolean; onClose: () => void; onSubmit: (fields: DisputeFields) => void }) {
+ const people = useDisputePeople();const [fields, setFields] = useState<DisputeFields>({ title: original?.title || '', payload: disputePayload(original?.payload || { currency: 'EUR' }), owner: original?.owner_id || null, due: original?.due_date || null, priority: original?.priority || 'medium', visibility: original?.visibility || 'restricted', documents: original?.document_ids || [] });
+ const set = <K extends keyof DisputeFields>(key: K, value: DisputeFields[K]) => setFields(current => ({ ...current, [key]: value }));
+ const payload = <K extends keyof DisputePayload>(key: K, value: DisputePayload[K]) => setFields(current => ({ ...current, payload: { ...current.payload, [key]: value } }));
+ return <Dialog open onOpenChange={open => !open && !pending && onClose()}><DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl"><DialogHeader><DialogTitle>{original ? 'Modifier le litige' : 'Nouveau litige'}</DialogTitle><DialogDescription>Consignez le constat et préparez le traitement. La proposition de résolution sera validée séparément.</DialogDescription></DialogHeader>
+ <form onSubmit={event => { event.preventDefault();if (pending) return;try { onSubmit({ ...fields, title: fields.title.trim(), payload: { ...fields.payload, party: fields.payload.party.trim(), type: fields.payload.type.trim(), description: fields.payload.description.trim(), amount: normalizeDisputeAmount(fields.payload.amount), currency: fields.payload.currency.trim().toUpperCase() } }); } catch (error) { toast.error((error as Error).message); } }}><fieldset disabled={pending} className="space-y-4">
+ <div><Label htmlFor="dispute-title">Sujet</Label><Input id="dispute-title" maxLength={255} required value={fields.title} onChange={event => set('title', event.target.value)} /></div><div><Label htmlFor="dispute-party">Partie concernée</Label><Input id="dispute-party" maxLength={255} required value={fields.payload.party} onChange={event => payload('party', event.target.value)} /></div>
+ <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><div><Label>Type</Label><Select disabled={pending} value={fields.payload.type} onValueChange={value => payload('type', value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{DISPUTE_TYPES.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}{!DISPUTE_TYPES.includes(fields.payload.type) && <SelectItem value={fields.payload.type} disabled>{fields.payload.type}</SelectItem>}</SelectContent></Select></div><div><Label>Priorité</Label><Select disabled={pending} value={fields.priority} onValueChange={value => set('priority', value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries({ low: 'Basse', medium: 'Moyenne', high: 'Haute', critical: 'Critique' }).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div></div>
+ <div><Label htmlFor="dispute-description">Constat</Label><Textarea id="dispute-description" required maxLength={20000} rows={3} value={fields.payload.description} onChange={event => payload('description', event.target.value)} /></div>
+ <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><div><Label htmlFor="dispute-amount">Montant contesté (facultatif)</Label><Input id="dispute-amount" inputMode="decimal" maxLength={25} placeholder="Ex. 15 000,00" value={fields.payload.amount} onChange={event => payload('amount', event.target.value)} /></div><div><Label htmlFor="dispute-currency">Devise (code à trois lettres)</Label><Input id="dispute-currency" maxLength={3} placeholder="EUR" value={fields.payload.currency} onChange={event => payload('currency', event.target.value.toUpperCase())} /></div></div>{fields.payload.amount_raw && <p className="text-xs text-muted-foreground">Montant historique non structuré conservé : {fields.payload.amount_raw}</p>}
+ <div><Label>Responsable</Label><Select disabled={pending || people.isLoading || people.isError} value={fields.owner || 'none'} onValueChange={value => set('owner', value === 'none' ? null : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Non attribué</SelectItem>{people.data?.map(person => <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>)}{original?.owner_id && !people.data?.some(person => person.id === original.owner_id) && <SelectItem value={original.owner_id} disabled>{original.owner_name || 'Compte indisponible'}</SelectItem>}</SelectContent></Select>{people.isError && <p role="alert">Responsables indisponibles.</p>}</div>
+ <div className="grid grid-cols-1 gap-3 sm:grid-cols-2"><div><Label htmlFor="dispute-due">Échéance interne</Label><Input id="dispute-due" type="date" value={fields.due || ''} onChange={event => set('due', event.target.value || null)} /></div><div><Label>Visibilité</Label><Select disabled={pending} value={fields.visibility} onValueChange={value => set('visibility', value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="restricted">Déclarant, responsable et validateurs</SelectItem><SelectItem value="pole">Équipe habilitée Conformité</SelectItem></SelectContent></Select></div></div>
+ <div><Label htmlFor="dispute-reference">Référence applicable</Label><Input id="dispute-reference" maxLength={20000} value={fields.payload.legal_reference} onChange={event => payload('legal_reference', event.target.value)} /></div><div><Label htmlFor="dispute-assessment">Analyse interne</Label><Textarea id="dispute-assessment" rows={3} maxLength={20000} value={fields.payload.assessment} onChange={event => payload('assessment', event.target.value)} /></div>
+ <div><Label>Issue proposée</Label><Select disabled={pending} value={fields.payload.outcome} onValueChange={value => payload('outcome', value as DisputePayload['outcome'])}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(DISPUTE_OUTCOMES).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div><div><Label htmlFor="dispute-proposal">Proposition de traitement</Label><Textarea id="dispute-proposal" maxLength={20000} rows={3} value={fields.payload.proposal} onChange={event => payload('proposal', event.target.value)} /></div><div><Label htmlFor="dispute-evidence">Justification et vérification</Label><Textarea id="dispute-evidence" maxLength={20000} rows={3} value={fields.payload.evidence} onChange={event => payload('evidence', event.target.value)} /></div>
+ <RecordAttachments value={fields.documents} onChange={documents => set('documents', documents)} ownerOnly />
+ <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={pending} onClick={onClose}>Annuler</Button><Button type="submit" disabled={pending || !fields.title.trim() || !fields.payload.party.trim() || !fields.payload.description.trim()}>{pending ? 'Enregistrement…' : 'Enregistrer'}</Button></div>
+ </fieldset></form></DialogContent></Dialog>;
 }
