@@ -101,6 +101,9 @@ jobs:
       - name: Test quality findings, independent validation and audit mission authority
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/quality/workflow.sql
 
+      - name: Test Ops anomaly decisions, evidence, reminders and Audit handoff
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/ops/workflow.sql
+
       - name: Test Work module lifecycle and activity feed
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/work-module/workflow.sql
 

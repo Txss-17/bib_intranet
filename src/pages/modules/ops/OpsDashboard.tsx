@@ -1,3 +1,5 @@
+import { useAnomalyStats } from '@/hooks/useAnomalies';
+import { usePermissions } from '@/hooks/usePermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
@@ -23,6 +25,8 @@ import { Progress } from '@/components/ui/progress';
 
 const OpsDashboard = () => {
   const k = useOpsControlKPIs();
+  const { can } = usePermissions();
+  const anomalies = useAnomalyStats('ops.overview');
   const { data: sync = [], isLoading: syncLoading } = useSyncEvents();
   const { data: repl = [], isLoading: replLoading } = useReplenishment();
 
@@ -35,6 +39,7 @@ const OpsDashboard = () => {
     .slice(0, 5);
 
   const tiles = [
+    ...(can('ops.anomalies', 'read') ? [{ label: 'Anomalies', to: '/pole/ops/anomalies', icon: AlertTriangle, value: anomalies.data ? `${anomalies.data.active} actives · ${anomalies.data.awaiting_review} à valider` : '—', alert: (anomalies.data?.critical || 0) + (anomalies.data?.overdue || 0) > 0 }] : []),
     {
       label: 'Référentiel',
       to: '/pole/ops/catalog',
@@ -102,6 +107,7 @@ const OpsDashboard = () => {
 
   return (
     <div className="space-y-6 p-6">
+      {anomalies.isError && can('ops.anomalies', 'read') && <p role="alert">Indicateurs des anomalies indisponibles.</p>}
       {/* Header */}
       <div>
         <div className="flex items-center gap-3">
