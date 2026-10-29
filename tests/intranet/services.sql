@@ -20,6 +20,7 @@ GRANT ALL ON public.whistleblower_submissions TO service_role;
 CREATE FUNCTION public.enqueue_email(queue_name text,payload jsonb)RETURNS void LANGUAGE sql AS $$ INSERT INTO public.test_queue VALUES(payload) $$;
 \ir ../../drizzle/migrations/0042_intranet_business_boundaries.sql
 \ir ../../drizzle/migrations/0043_intranet_gateway_outbox.sql
+\ir ../../drizzle/migrations/0046_intranet_gateway_replies.sql
 INSERT INTO public.profiles(id,position,poles,seniority,email)VALUES
  ('10000000-0000-4000-8000-000000000001','ceo','{direction,finance,ops,supplier,marketplace,support,marketing,rh,audit,compliance,rse,product,data,security}','executive','author@bib.test'),
  ('10000000-0000-4000-8000-000000000002','ceo','{direction,finance,ops,supplier,marketplace,support,marketing,rh,audit,compliance,rse,product,data,security}','executive','reviewer@bib.test'),

@@ -113,6 +113,7 @@ export const useUpdateUserAccount = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-accounts'] });
       queryClient.invalidateQueries({ queryKey: ['user-account-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['account-reputation'] });
       queryClient.invalidateQueries({ queryKey: ['at-risk-users'] });
     },
   });
