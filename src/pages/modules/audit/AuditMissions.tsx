@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { format } from 'date-fns';
@@ -229,7 +229,7 @@ export default function AuditMissions() {
                     <p className="mt-1">{sel.corrective_action}</p>
                   </div>
                 )}
-                {sel.anomaly_id && <p className="text-xs text-muted-foreground">Anomalie ouverte automatiquement (Opérations → Anomalies).</p>}
+                {sel.anomaly_id && <div><p className="text-xs text-muted-foreground">Anomalie Ops associée.</p>{can('ops.anomalies', 'read') && <Button variant="link" className="px-0" asChild><Link to={`/pole/ops/anomalies?anomaly=${sel.anomaly_id}`}>Ouvrir l’anomalie Ops</Link></Button>}</div>}
 
                 {canDecide && ['analysis', 'compliant', 'corrective_action'].includes(sel.workflow_status) && (
                   <div><Label>Compte rendu de décision ou de clôture (obligatoire)</Label><Textarea value={reason} onChange={(e) => { setReason(e.target.value); setDraftRevision(current => current ?? sel.revision); }} /></div>

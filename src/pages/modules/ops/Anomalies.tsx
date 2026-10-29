@@ -1,8 +1,6 @@
-import { useMemo, useState } from 'react';
-import { format, formatDistanceToNow } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { AlertTriangle, Bell, Check, Clock, Loader2, Plus, Search, Sparkles, X } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { useDeferredValue, useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Archive, Pencil, Plus } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,336 +8,58 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
-import {
-  AiSuggestion, Anomaly, AnomalySeverity, AnomalyStatus, ANOMALY_SOURCES, ANOMALY_STATUS_LABELS, ANOMALY_TRANSITIONS,
-  isOverdue, NOTIF_KIND_LABELS, SEVERITY_LABELS, useAnomalies, useAnomalyActions, useAnomalyEvents,
-  useAnomalyNotifications, useAssignees,
-} from '@/hooks/useAnomalies';
-
-const sevVariant = (s: AnomalySeverity) =>
-  s === 'critical' || s === 'high' ? 'destructive' : s === 'medium' ? 'secondary' : 'outline';
-const toLocalInput = (iso: string | null) => (iso ? format(new Date(iso), "yyyy-MM-dd'T'HH:mm") : '');
-const fromLocalInput = (v: string) => (v ? new Date(v).toISOString() : null);
-const TEAMS = ['Ops', 'Qualité', 'Finance'];
-
-const emptyForm = {
-  title: '', source: 'orders', type: '', severity: 'medium', description: '', object_type: '', object_id: '',
-  owner_id: '', due_at: '', reminder_at: '', category: '', team: 'Ops',
-};
+import { usePermissions } from '@/hooks/usePermissions';
+import { useAnomalies, useAnomaly, useAnomalyStats, useAnomalyActions } from '@/hooks/useAnomalies';
+import { ANOMALY_STATUS_LABELS, ANOMALY_SOURCES, ANOMALY_TEAMS, SEVERITY_LABELS, anomalyDate, isOverdue, anomalyMayReview, anomalyReadyForResolution, type Anomaly, type AnomalyAction, type AnomalyFields } from '@/lib/opsAnomalies';
+import { resolutionDuration } from '@/lib/supportTickets';
+import AnomalyEditor from '@/components/forms/AnomalyEditor';
+import AnomalyJournal, { AnomalyNotifications } from '@/components/operations/AnomalyJournal';
+import { DocumentLinks } from '@/components/operations/RecordAttachments';
+import { ExportButtons } from '@/components/ExportButtons';
 
 export default function Anomalies() {
-  const { user } = useAuth() as any;
-  const { data: rows = [], isLoading } = useAnomalies();
-  const { data: people = [] } = useAssignees();
-  const { data: allNotifs = [] } = useAnomalyNotifications();
-  const { create, setStatus, comment, update } = useAnomalyActions();
-  const [view, setView] = useState('all');
-  const [q, setQ] = useState('');
-  const [status, setStatusFilter] = useState<string>('active');
-  const [source, setSource] = useState<string>('all');
-  const [open, setOpen] = useState(false);
-  const [selected, setSelected] = useState<Anomaly | null>(null);
-  const [note, setNote] = useState('');
-  const [form, setForm] = useState(emptyForm);
-  const [checks, setChecks] = useState<string[]>([]);
-  const [suggestion, setSuggestion] = useState<AiSuggestion | null>(null);
-  const [aiDecision, setAiDecision] = useState<'accepted' | 'rejected' | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const { data: events = [] } = useAnomalyEvents(selected?.id);
-  const { data: notifs = [] } = useAnomalyNotifications(selected?.id);
-
-  const nameOf = (id: string | null) => {
-    const p = people.find((x) => x.id === id);
-    return p ? [p.first_name, p.last_name].filter(Boolean).join(' ') || p.email : '—';
-  };
-
-  const filtered = useMemo(() => rows.filter((r) =>
-    (view !== 'overdue' || isOverdue(r)) &&
-    (view !== 'mine' || r.owner_id === user?.id) &&
-    (status === 'all' || (status === 'active' ? !['resolved', 'closed'].includes(r.status) : r.status === status)) &&
-    (source === 'all' || r.source === source) &&
-    (!q || `${r.reference} ${r.title} ${r.type} ${r.category ?? ''}`.toLowerCase().includes(q.toLowerCase()))),
-  [rows, q, status, source, view, user?.id]);
-
-  const kpi = (fn: (a: Anomaly) => boolean) => rows.filter(fn).length;
-  const current = selected ? rows.find((r) => r.id === selected.id) ?? selected : null;
-
-  const resetDialog = () => { setForm(emptyForm); setChecks([]); setSuggestion(null); setAiDecision(null); };
-
-  const submit = () => {
-    create.mutate({
-      title: form.title, source: form.source, type: form.type, severity: form.severity as AnomalySeverity,
-      description: form.description || null, object_type: form.object_type || null, object_id: form.object_id || null,
-      owner_id: form.owner_id || null, due_at: fromLocalInput(form.due_at), reminder_at: fromLocalInput(form.reminder_at),
-      category: form.category || null, checks: checks.filter(Boolean),
-      ai_suggestion: null, ai_decision: null, ai_validated_by: null, ai_validated_at: null,
-    } as any, { onSuccess: () => { setOpen(false); resetDialog(); } });
-  };
-
-  return (
-    <div className="space-y-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="flex items-center gap-2 text-2xl font-semibold"><AlertTriangle className="h-5 w-5" />Anomalies</h1>
-          <p className="text-sm text-muted-foreground">Registre transversal : commandes, paiements, factures, stocks, fournisseurs, audits, logistique, tech.</p>
-        </div>
-        <Button onClick={() => { resetDialog(); setOpen(true); }}><Plus className="mr-2 h-4 w-4" />Déclarer une anomalie</Button>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        {[
-          ['Ouvertes', kpi((a) => a.status === 'open')],
-          ['En cours', kpi((a) => ['investigating', 'action_required'].includes(a.status))],
-          ['En retard', kpi(isOverdue)],
-          ['Critiques actives', kpi((a) => a.severity === 'critical' && !['resolved', 'closed'].includes(a.status))],
-          ['Résolues / clôturées', kpi((a) => ['resolved', 'closed'].includes(a.status))],
-        ].map(([l, v]) => (
-          <Card key={l as string}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{l}</p><p className="text-2xl font-semibold">{v}</p></CardContent></Card>
-        ))}
-      </div>
-
-      <Tabs value={view} onValueChange={setView}>
-        <TabsList>
-          <TabsTrigger value="all">Toutes</TabsTrigger>
-          <TabsTrigger value="mine">Assignées à moi</TabsTrigger>
-          <TabsTrigger value="overdue">En retard ({kpi(isOverdue)})</TabsTrigger>
-          <TabsTrigger value="notifications">Historique des notifications</TabsTrigger>
-        </TabsList>
-      </Tabs>
-
-      {view === 'notifications' ? (
-        <Card><CardContent className="p-0">
-          {allNotifs.length === 0 ? <p className="p-6 text-sm text-muted-foreground">Aucune notification envoyée pour l'instant.</p> : (
-            <ul className="divide-y">
-              {allNotifs.map((n) => {
-                const a = rows.find((r) => r.id === n.anomaly_id);
-                return (
-                  <li key={n.id}>
-                    <button className="flex w-full items-center justify-between gap-3 p-4 text-left hover:bg-muted/50" onClick={() => a && setSelected(a)}>
-                      <span className="min-w-0">
-                        <span className="block truncate font-medium">{a?.reference ?? '—'} · {n.message}</span>
-                        <span className="text-xs text-muted-foreground">À {nameOf(n.recipient_id)} · {format(new Date(n.sent_at), 'dd MMM yyyy HH:mm', { locale: fr })}</span>
-                      </span>
-                      <Badge variant={n.kind === 'overdue' ? 'destructive' : 'outline'}>{NOTIF_KIND_LABELS[n.kind] ?? n.kind}</Badge>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </CardContent></Card>
-      ) : (
-        <>
-          <div className="flex flex-wrap gap-2">
-            <div className="relative min-w-[220px] flex-1">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input className="pl-9" placeholder="Rechercher…" value={q} onChange={(e) => setQ(e.target.value)} />
-            </div>
-            <Select value={status} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="active">Actives</SelectItem>
-                <SelectItem value="all">Tous statuts</SelectItem>
-                {Object.entries(ANOMALY_STATUS_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={source} onValueChange={setSource}>
-              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes sources</SelectItem>
-                {Object.entries(ANOMALY_SOURCES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Card>
-            <CardContent className="p-0">
-              {isLoading ? <p className="p-6 text-sm text-muted-foreground">Chargement…</p> : filtered.length === 0 ? (
-                <p className="p-6 text-sm text-muted-foreground">Aucune anomalie.</p>
-              ) : (
-                <ul className="divide-y">
-                  {filtered.map((a) => (
-                    <li key={a.id}>
-                      <button className="flex w-full items-center justify-between gap-3 p-4 text-left hover:bg-muted/50" onClick={() => setSelected(a)}>
-                        <span className="min-w-0">
-                          <span className="block truncate font-medium">{a.title}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {a.reference} · {ANOMALY_SOURCES[a.source]} · {a.category ?? a.type} · {nameOf(a.owner_id)}
-                            {a.due_at && ` · échéance ${format(new Date(a.due_at), 'dd MMM HH:mm', { locale: fr })}`}
-                          </span>
-                        </span>
-                        <span className="flex shrink-0 gap-2">
-                          {isOverdue(a) && <Badge variant="destructive"><Clock className="mr-1 h-3 w-3" />En retard</Badge>}
-                          <Badge variant={sevVariant(a.severity)}>{SEVERITY_LABELS[a.severity]}</Badge>
-                          <Badge variant="outline">{ANOMALY_STATUS_LABELS[a.status]}</Badge>
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
-        </>
-      )}
-
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Déclarer une anomalie</DialogTitle>
-            <DialogDescription>Décrivez le problème, renseignez sa catégorie et sa priorité, puis listez les vérifications à effectuer.</DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-3">
-            <div className="grid grid-cols-3 gap-3">
-              <div><Label>Équipe</Label>
-                <Select value={form.team} onValueChange={(v) => setForm({ ...form, team: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{TEAMS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-                </Select></div>
-              <div className="col-span-2"><Label>Titre</Label><Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></div>
-            </div>
-            <div>
-              <Label>Description</Label>
-              <Textarea rows={4} placeholder="Que s'est-il passé ? Quelle commande, quel produit, quel montant…" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-            </div>
-
-            <div className="grid grid-cols-3 gap-3">
-              <div><Label>Source</Label>
-                <Select value={form.source} onValueChange={(v) => setForm({ ...form, source: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{Object.entries(ANOMALY_SOURCES).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
-                </Select></div>
-              <div><Label>Priorité</Label>
-                <Select value={form.severity} onValueChange={(v) => setForm({ ...form, severity: v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{Object.entries(SEVERITY_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}</SelectContent>
-                </Select></div>
-              <div><Label>Catégorie</Label><Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} /></div>
-            </div>
-            <div><Label>Type</Label><Input placeholder="ex. écart de montant, rupture, retard…" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} /></div>
-            <div className="grid grid-cols-2 gap-3">
-              <div><Label>Objet concerné</Label><Input placeholder="commande, facture…" value={form.object_type} onChange={(e) => setForm({ ...form, object_type: e.target.value })} /></div>
-              <div><Label>Référence objet</Label><Input value={form.object_id} onChange={(e) => setForm({ ...form, object_id: e.target.value })} /></div>
-            </div>
-            <div>
-              <Label>Vérifications à effectuer</Label>
-              {checks.map((c, i) => (
-                <div key={i} className="mt-1 flex gap-2">
-                  <Input value={c} onChange={(e) => setChecks(checks.map((x, j) => (j === i ? e.target.value : x)))} />
-                  <Button size="icon" variant="ghost" onClick={() => setChecks(checks.filter((_, j) => j !== i))}><X className="h-4 w-4" /></Button>
-                </div>
-              ))}
-              <Button size="sm" variant="ghost" className="mt-1" onClick={() => setChecks([...checks, ''])}><Plus className="mr-1 h-4 w-4" />Ajouter</Button>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div><Label>Responsable</Label>
-                <Select value={form.owner_id || 'none'} onValueChange={(v) => setForm({ ...form, owner_id: v === 'none' ? '' : v })}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Non assignée</SelectItem>
-                    {people.map((p) => <SelectItem key={p.id} value={p.id}>{nameOf(p.id)}</SelectItem>)}
-                  </SelectContent>
-                </Select></div>
-              <div><Label>Échéance</Label><Input type="datetime-local" value={form.due_at} onChange={(e) => setForm({ ...form, due_at: e.target.value })} /></div>
-              <div><Label>Rappel</Label><Input type="datetime-local" value={form.reminder_at} onChange={(e) => setForm({ ...form, reminder_at: e.target.value })} /></div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button disabled={!form.title || !form.type || create.isPending || (!!suggestion && !aiDecision)} onClick={submit}>Enregistrer</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Sheet open={!!current} onOpenChange={(o) => !o && setSelected(null)}>
-        <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-          {current && (
-            <>
-              <SheetHeader><SheetTitle>{current.title}</SheetTitle></SheetHeader>
-              <div className="mt-4 space-y-4 text-sm">
-                <div className="flex flex-wrap gap-2">
-                  {isOverdue(current) && <Badge variant="destructive">En retard</Badge>}
-                  <Badge variant={sevVariant(current.severity)}>{SEVERITY_LABELS[current.severity]}</Badge>
-                  <Badge variant="outline">{ANOMALY_STATUS_LABELS[current.status]}</Badge>
-                  <Badge variant="secondary">{ANOMALY_SOURCES[current.source]}</Badge>
-                  {current.category && <Badge variant="outline">{current.category}</Badge>}
-                </div>
-                <p className="text-muted-foreground">{current.reference} · {current.type}{current.object_type ? ` · ${current.object_type} ${current.object_id ?? ''}` : ''}</p>
-                {current.description && <p>{current.description}</p>}
-                {current.ai_suggestion && (
-                  <p className="text-xs text-muted-foreground">
-                    Suggestion IA {current.ai_decision === 'accepted' ? 'appliquée' : current.ai_decision === 'modified' ? 'appliquée puis corrigée' : 'écartée'} par {nameOf((current as any).ai_validated_by)}
-                    {current.ai_validated_at && ` le ${format(new Date(current.ai_validated_at), 'dd MMM HH:mm', { locale: fr })}`}.
-                  </p>
-                )}
-                {current.checks?.length > 0 && (
-                  <div><p className="mb-1 font-medium">Vérifications</p><ul className="list-disc pl-5">{current.checks.map((c, i) => <li key={i}>{c}</li>)}</ul></div>
-                )}
-
-                <div className="grid grid-cols-2 gap-3 rounded-md border p-3">
-                  <div className="col-span-2"><Label>Responsable</Label>
-                    <Select value={current.owner_id ?? 'none'} onValueChange={(v) => update.mutate({ id: current.id, patch: { owner_id: v === 'none' ? null : v } })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="none">Non assignée</SelectItem>
-                        {people.map((p) => <SelectItem key={p.id} value={p.id}>{nameOf(p.id)}</SelectItem>)}
-                      </SelectContent>
-                    </Select></div>
-                  <div><Label>Échéance</Label><Input type="datetime-local" defaultValue={toLocalInput(current.due_at)} key={`d${current.due_at}`}
-                    onBlur={(e) => { const v = fromLocalInput(e.target.value); if (v !== current.due_at) update.mutate({ id: current.id, patch: { due_at: v, last_reminded_at: null } }); }} /></div>
-                  <div><Label>Rappel</Label><Input type="datetime-local" defaultValue={toLocalInput(current.reminder_at)} key={`r${current.reminder_at}`}
-                    onBlur={(e) => { const v = fromLocalInput(e.target.value); if (v !== current.reminder_at) update.mutate({ id: current.id, patch: { reminder_at: v, last_reminded_at: null } }); }} /></div>
-                  {current.due_at && <p className="col-span-2 text-xs text-muted-foreground">
-                    Échéance {formatDistanceToNow(new Date(current.due_at), { addSuffix: true, locale: fr })}. Rappel automatique 24 h avant (ou à la date choisie), puis chaque jour en cas de retard.
-                  </p>}
-                </div>
-
-                <Textarea placeholder="Commentaire / motif" value={note} onChange={(e) => setNote(e.target.value)} />
-                <div className="flex flex-wrap gap-2">
-                  {ANOMALY_TRANSITIONS[current.status].map((s) => (
-                    <Button key={s} size="sm" variant={s === 'closed' ? 'outline' : 'default'} disabled={setStatus.isPending}
-                      onClick={() => setStatus.mutate({ id: current.id, status: s, comment: note || undefined }, { onSuccess: () => setNote('') })}>
-                      → {ANOMALY_STATUS_LABELS[s as AnomalyStatus]}
-                    </Button>
-                  ))}
-                  <Button size="sm" variant="secondary" disabled={!note || comment.isPending}
-                    onClick={() => comment.mutate({ id: current.id, message: note }, { onSuccess: () => setNote('') })}>Commenter</Button>
-                </div>
-
-                <div>
-                  <p className="mb-2 flex items-center gap-1 font-medium"><Bell className="h-4 w-4" />Notifications envoyées</p>
-                  {notifs.length === 0 ? <p className="text-xs text-muted-foreground">Aucune.</p> : (
-                    <ul className="space-y-1">
-                      {notifs.map((n) => (
-                        <li key={n.id} className="text-xs">
-                          <span className="text-muted-foreground">{format(new Date(n.sent_at), 'dd MMM HH:mm', { locale: fr })}</span> · {NOTIF_KIND_LABELS[n.kind] ?? n.kind} → {nameOf(n.recipient_id)}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-
-                <div>
-                  <p className="mb-2 font-medium">Historique</p>
-                  <ul className="space-y-2">
-                    {events.map((e) => (
-                      <li key={e.id} className="border-l-2 pl-3">
-                        <span className="text-xs text-muted-foreground">{format(new Date(e.created_at), 'dd MMM HH:mm', { locale: fr })}</span>
-                        <p>{e.kind === 'status'
-                          ? `${ANOMALY_STATUS_LABELS[e.from_status as AnomalyStatus] ?? ''} → ${ANOMALY_STATUS_LABELS[e.to_status as AnomalyStatus] ?? ''}`
-                          : e.kind === 'created' ? 'Création' : e.message}</p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </>
-          )}
-        </SheetContent>
-      </Sheet>
-    </div>
-  );
+ const { user } = useAuth();const { can } = usePermissions();const [params, setParams] = useSearchParams();const selectedId = params.get('anomaly');
+ const [view, setView] = useState('all');const [search, setSearch] = useState('');const [status, setStatus] = useState('active');const [source, setSource] = useState('all');const [team, setTeam] = useState('all');const [offset, setOffset] = useState(0);
+ const [editing, setEditing] = useState<Anomaly | null | undefined>();const [note, setNote] = useState('');const [decisionRevision, setDecisionRevision] = useState<number | null>(null);
+ useEffect(() => { setNote('');setDecisionRevision(null); }, [selectedId]);
+ const query = useAnomalies({ search: useDeferredValue(search), status, source, team, view: view === 'notifications' ? 'all' : view, offset });const stats = useAnomalyStats();const detail = useAnomaly(selectedId);const actions = useAnomalyActions();
+ const rows = query.data?.rows || [];const current = detail.data;const manager = can('ops.anomalies', 'validate');const mayUpdate = can('ops.anomalies', 'update');
+ const mutable = !!current && !current.archived_at && !['resolved','closed'].includes(current.status);
+ const owns = !!current && (manager || current.owner_id === user?.id || current.created_by === user?.id);
+ const mayEdit = mutable && owns && mayUpdate;const mayWork = mutable && mayUpdate && (manager || current.owner_id === user?.id);
+ const mayApprove = !!current && anomalyMayReview(current, user?.id, manager);const mayReturn = !!current && anomalyMayReview(current, user?.id, manager, 'return');const mayDismiss = !!current && anomalyMayReview(current, user?.id, manager, 'dismiss');const mayReopen = !!current && !current.archived_at && current.status === 'closed' && manager;
+ const busy = actions.update.isPending || actions.transition.isPending || detail.isFetching;
+ const select = (id: string | null) => { const next = new URLSearchParams(params);if (id) next.set('anomaly', id);else next.delete('anomaly');setParams(next, { replace: true }); };
+ const refresh = () => { void query.refetch();void stats.refetch();if (selectedId) void detail.refetch(); };
+ const run = (action: AnomalyAction) => current && actions.transition.mutate({ anomaly: { ...current, revision: decisionRevision ?? current.revision }, action, note }, { onSuccess: () => { setNote('');setDecisionRevision(null);if (action === 'archive') select(null); } });
+ const save = (fields: AnomalyFields) => editing ? actions.update.mutate({ id: editing.id, revision: editing.revision, patch: { ...fields, completed_checks: editing.completed_checks.filter(check => fields.checks.includes(check)) } }, { onSuccess: () => setEditing(undefined) }) : actions.create.mutate(fields, { onSuccess: () => setEditing(undefined) });
+ return <div className="space-y-5">
+  <div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-2xl font-semibold">Anomalies Ops</h1><p className="text-sm text-muted-foreground">Déclaration, vérifications, correction et validation indépendante.</p></div><div className="flex flex-wrap gap-2"><Button variant="outline" onClick={refresh} disabled={query.isFetching}>Actualiser</Button><ExportButtons filename="anomalies-ops" title="Anomalies Ops" poleName="Ops" columns={[{ header: 'Référence', accessor: 'reference' }, { header: 'Titre', accessor: 'title' }, { header: 'Équipe', accessor: 'team' }, { header: 'Statut', accessor: 'status' }, { header: 'Sévérité', accessor: 'severity' }, { header: 'Action corrective', accessor: 'corrective_action' }, { header: 'Échéance', accessor: 'due_at' }]} data={rows} /><Button disabled={!can('ops.anomalies', 'create')} onClick={() => setEditing(null)}><Plus className="mr-2 h-4 w-4" />Déclarer une anomalie</Button></div></div>
+  {stats.isError && <p role="alert">Indicateurs indisponibles. <Button variant="link" onClick={() => void stats.refetch()}>Réessayer</Button></p>}
+  <p className="text-xs text-muted-foreground">Indicateurs de tous les dossiers de cet environnement, hors archives et indépendamment des filtres.</p>
+  <div className="grid grid-cols-2 gap-3 lg:grid-cols-6">{([['Actives', stats.data?.active], ['En retard', stats.data?.overdue], ['Critiques actives', stats.data?.critical], ['À valider', stats.data?.awaiting_review], ['Clôturées', stats.data?.closed]] as const).map(([label, value]) => <div key={label} className="rounded border p-4"><p className="text-2xl font-semibold">{value ?? '—'}</p><p className="text-xs text-muted-foreground">{label}</p></div>)}<div className="rounded border p-4"><p className="text-lg font-semibold">{resolutionDuration(stats.data?.avg_resolution_hours)}</p><p className="text-xs text-muted-foreground">Délai de correction</p><p className="text-xs text-muted-foreground">{stats.data?.duration_samples ?? '—'} cas documenté(s)</p></div></div>
+  <Tabs value={view} onValueChange={value => { setView(value);setOffset(0); }}><TabsList className="flex h-auto flex-wrap justify-start"><TabsTrigger value="all">Toutes</TabsTrigger><TabsTrigger value="mine">Attribuées à moi</TabsTrigger><TabsTrigger value="overdue">En retard</TabsTrigger><TabsTrigger value="notifications">Notifications</TabsTrigger></TabsList></Tabs>
+  {view === 'notifications' ? <AnomalyNotifications /> : <>
+  <div className="flex flex-wrap gap-3"><Input className="min-w-52 flex-1" maxLength={200} aria-label="Rechercher une anomalie" placeholder="Référence, titre, catégorie…" value={search} onChange={event => { setSearch(event.target.value);setOffset(0); }} /><Select value={status} onValueChange={value => { setStatus(value);setOffset(0); }}><SelectTrigger className="w-48"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="active">Dossiers actifs</SelectItem><SelectItem value="all">Tous hors archives</SelectItem><SelectItem value="archived">Archives</SelectItem>{Object.entries(ANOMALY_STATUS_LABELS).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select><Select value={source} onValueChange={value => { setSource(value);setOffset(0); }}><SelectTrigger className="w-44"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toutes les sources</SelectItem>{Object.entries(ANOMALY_SOURCES).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select><Select value={team} onValueChange={value => { setTeam(value);setOffset(0); }}><SelectTrigger className="w-40"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toutes les équipes</SelectItem>{ANOMALY_TEAMS.map(value => <SelectItem key={value} value={value}>{value}</SelectItem>)}</SelectContent></Select></div>
+  <p className="text-xs text-muted-foreground">L’export reprend les fiches de la page affichée.</p>
+  {query.isLoading && <p role="status">Chargement…</p>}{query.isError && <p role="alert">Anomalies indisponibles. <Button variant="link" onClick={() => void query.refetch()}>Réessayer</Button></p>}{!query.isLoading && !query.isError && !rows.length && <p className="text-muted-foreground">Aucune anomalie dans cette vue.</p>}
+  <ul className="divide-y rounded border">{rows.map(anomaly => <li key={anomaly.id}><button className="flex w-full flex-wrap items-center justify-between gap-3 p-4 text-left hover:bg-muted/40" onClick={() => select(anomaly.id)}><span><span className="block font-medium">{anomaly.title}</span><span className="text-xs text-muted-foreground">{anomaly.reference} · {anomaly.team} · {ANOMALY_SOURCES[anomaly.source] || anomaly.source} · {anomaly.owner_name || (anomaly.owner_id ? 'Compte indisponible' : 'Non attribuée')}</span></span><span className="flex flex-wrap gap-2">{isOverdue(anomaly) && <Badge variant="destructive">En retard</Badge>}<Badge variant={['critical','high'].includes(anomaly.severity) ? 'destructive' : 'outline'}>{SEVERITY_LABELS[anomaly.severity]}</Badge><Badge variant="outline">{anomaly.archived_at ? 'Archivée' : ANOMALY_STATUS_LABELS[anomaly.status]}</Badge></span></button></li>)}</ul><div className="flex justify-end gap-2"><Button variant="outline" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 50))}>Précédent</Button><Button variant="outline" disabled={!query.data?.has_more} onClick={() => setOffset(offset + 50)}>Suivant</Button></div></>}
+  {editing !== undefined && <AnomalyEditor key={editing?.id || 'new'} original={editing || undefined} pending={actions.create.isPending || actions.update.isPending} close={() => setEditing(undefined)} save={save} />}
+  <Sheet open={!!selectedId} onOpenChange={open => !open && select(null)}><SheetContent className="w-full overflow-y-auto sm:max-w-2xl"><SheetHeader><SheetTitle>{current?.title || 'Anomalie Ops'}</SheetTitle></SheetHeader>{detail.isLoading && <p role="status" className="mt-6">Chargement…</p>}{detail.isError && <p role="alert" className="mt-6">Anomalie indisponible ou accès refusé.</p>}{current && <div className="mt-5 space-y-4 text-sm">
+  <div className="flex flex-wrap gap-2"><Badge variant="outline">{current.reference}</Badge><Badge variant="outline">{current.archived_at ? 'Archivée' : ANOMALY_STATUS_LABELS[current.status]}</Badge><Badge variant="secondary">{current.team}</Badge><Badge variant={['critical','high'].includes(current.severity) ? 'destructive' : 'outline'}>{SEVERITY_LABELS[current.severity]}</Badge></div>
+  <p>{ANOMALY_SOURCES[current.source] || current.source} · {current.type}{current.category ? ` · ${current.category}` : ''}</p><p className="whitespace-pre-wrap">{current.description}</p><p>Déclarée par {current.creator_name || 'Système'} · {anomalyDate(current.created_at)}</p><p>Responsable : {current.owner_name || (current.owner_id ? 'Compte indisponible' : 'Non attribuée')}</p>
+  {current.object_type && <p>Objet : {current.object_type} {current.object_id}</p>}{current.source === 'audits' && current.object_type === 'field_audit' && current.object_id && /^[0-9a-f-]{36}$/i.test(current.object_id) && can('audit.missions', 'read') && <Button variant="link" asChild className="px-0"><Link to={`/pole/audit/missions?mission=${current.object_id}`}>Voir la mission Audit</Link></Button>}
+  <div className="rounded border p-3"><p>Échéance : {anomalyDate(current.due_at)}</p><p>Rappel personnalisé : {current.reminder_at ? anomalyDate(current.reminder_at) : '24 h avant l’échéance, si définie'}</p><p className="text-xs text-muted-foreground">Les rappels effectivement traités figurent dans le journal des notifications.</p></div>
+  {current.checks.length > 0 && <fieldset className="space-y-2 rounded border p-3"><legend className="font-medium">Vérifications</legend>{current.checks.map((check, index) => <label key={index} className="flex items-start gap-2"><input type="checkbox" checked={current.completed_checks.includes(check)} disabled={!mayWork || busy} onChange={event => actions.update.mutate({ id: current.id, revision: current.revision, patch: { completed_checks: event.target.checked ? [...new Set([...current.completed_checks, check])] : current.completed_checks.filter(item => item !== check) } })} /><span>{check}</span></label>)}</fieldset>}
+  {current.corrective_action && <div><h2 className="font-medium">Action corrective</h2><p className="whitespace-pre-wrap">{current.corrective_action}</p></div>}{current.evidence && <div><h2 className="font-medium">Preuve et contrôle de la correction</h2><p className="whitespace-pre-wrap">{current.evidence}</p></div>}<DocumentLinks ids={current.document_ids} />
+  {current.resolution && <div className="rounded border p-3"><h2 className="font-medium">Résolution proposée</h2><p className="whitespace-pre-wrap">{current.resolution}</p><p className="mt-2 text-xs text-muted-foreground">{current.resolver_name || 'Compte indisponible'} · {anomalyDate(current.resolved_at)}</p></div>}{current.closed_by && <p>{current.closure_kind === 'dismissed' ? 'Classement sans suite' : 'Clôture validée'} par {current.closer_name || 'Compte indisponible'} · {anomalyDate(current.closed_at)}</p>}{current.legacy_record && current.status === 'closed' && !current.closed_by && <p className="text-muted-foreground">Clôture historique reprise ; les validations antérieures ne sont pas documentées.</p>}
+  <div className="flex flex-wrap gap-2">{mayEdit && <Button variant="outline" onClick={() => setEditing(current)}><Pencil className="mr-2 h-4 w-4" />Modifier le constat</Button>}{mutable && !current.owner_id && mayUpdate && <Button variant="outline" disabled={busy} onClick={() => actions.update.mutate({ id: current.id, revision: current.revision, patch: { owner_id: user!.id } })}>Me l’attribuer</Button>}</div>
+  {(mayWork || mayApprove || mayReturn || mayDismiss || mayReopen) && <div className="space-y-3 rounded border p-3"><Label htmlFor="anomaly-decision">Compte rendu ou motif de décision</Label>{decisionRevision != null && decisionRevision !== current.revision && <p role="alert">La fiche a été modifiée. Rouvrez-la pour reprendre avec la version actuelle.</p>}<Textarea id="anomaly-decision" rows={3} maxLength={5000} value={note} onChange={event => { setNote(event.target.value);setDecisionRevision(value => value ?? current.revision); }} /><p className="text-xs text-muted-foreground">La correction exige une action, une preuve et toutes les vérifications cochées. Une autre personne valide ensuite la clôture.</p><div className="flex flex-wrap gap-2">{mayWork && ['open','action_required'].includes(current.status) && <Button disabled={busy} onClick={() => run('investigate')}>Commencer l’investigation</Button>}{mayWork && current.status === 'investigating' && <Button variant="outline" disabled={busy || !note.trim()} onClick={() => run('require_action')}>Demander une action</Button>}{mayWork && ['investigating','action_required'].includes(current.status) && <Button disabled={busy || !note.trim() || !anomalyReadyForResolution(current)} onClick={() => run('resolve')}>Proposer la résolution</Button>}{mayApprove && <Button disabled={busy || !note.trim()} onClick={() => run('approve')}>Valider et clôturer</Button>}{mayReturn && <Button variant="outline" disabled={busy || !note.trim()} onClick={() => run('return')}>Demander une reprise</Button>}{mayDismiss && <Button variant="outline" disabled={busy || !note.trim()} onClick={() => run('dismiss')}>Classer sans suite</Button>}{mayReopen && <Button variant="outline" disabled={busy || !note.trim()} onClick={() => run('reopen')}>Rouvrir</Button>}</div></div>}
+  {current.status === 'resolved' && !current.resolved_by && <p className="text-muted-foreground">La résolution historique nécessite une reprise avant de recevoir une validation documentée.</p>}
+  {!current.archived_at && current.status === 'closed' && owns && can('ops.anomalies', 'delete') && <Button variant="outline" disabled={busy} onClick={() => { if (window.confirm('Archiver cette anomalie clôturée en conservant son historique ?')) run('archive'); }}><Archive className="mr-2 h-4 w-4" />Archiver</Button>}
+  <AnomalyNotifications key={`notifications-${current.id}`} id={current.id} /><AnomalyJournal key={current.id} id={current.id} canComment={!current.archived_at && current.status !== 'closed' && (mayUpdate || manager)} />
+  </div>}</SheetContent></Sheet>
+ </div>;
 }

@@ -62,7 +62,7 @@ export function useAuditors() {
 }
 export const useMissionActions = () => {
   const qc = useQueryClient(); const { user } = useAuth(); const keys = useRef(new Map<string, string>());
-  const done = () => { for (const key of ['field-audit-rows','audit-missions','audit-mission-events','anomalies','notifications','business-history']) void qc.invalidateQueries({ queryKey: [key] }); };
+  const done = () => { for (const key of ['field-audit-rows','audit-missions','audit-mission-events','anomalies','ops-anomaly','ops-anomaly-stats','direction-ops','notifications','business-history']) void qc.invalidateQueries({ queryKey: [key] }); };
   const onError = (error: Error) => toast.error('Mission d’audit', { description: error.message });
   const create = useMutation({ mutationFn: async (input: NewMission) => {
     const fingerprint = JSON.stringify([user?.id, input]); const key = keys.current.get(fingerprint) || crypto.randomUUID(); keys.current.set(fingerprint, key);

@@ -1,132 +1,49 @@
+import { useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from './useAuth';
+import { intranetRpc } from '@/lib/intranet';
+import { normalizeAnomaly, type Anomaly, type AnomalyFields, type AnomalyPatch, type AnomalyAction, type AnomalyFilters, type AnomalyStats, type AnomalyEvent, type AnomalyNotification, type OpsPage } from '@/lib/opsAnomalies';
 import { toast } from 'sonner';
-
-export type AnomalyStatus = 'open' | 'investigating' | 'action_required' | 'resolved' | 'closed';
-export type AnomalySeverity = 'low' | 'medium' | 'high' | 'critical';
-
-export const ANOMALY_STATUS_LABELS: Record<AnomalyStatus, string> = {
-  open: 'Ouverte', investigating: 'En investigation', action_required: 'Action requise',
-  resolved: 'Résolue', closed: 'Clôturée',
-};
-export const ANOMALY_TRANSITIONS: Record<AnomalyStatus, AnomalyStatus[]> = {
-  open: ['investigating', 'closed'],
-  investigating: ['action_required', 'resolved'],
-  action_required: ['investigating', 'resolved'],
-  resolved: ['closed', 'investigating'],
-  closed: [],
-};
-export const SEVERITY_LABELS: Record<AnomalySeverity, string> = {
-  low: 'Faible', medium: 'Moyenne', high: 'Élevée', critical: 'Critique',
-};
-export const ANOMALY_SOURCES: Record<string, string> = {
-  orders: 'Commandes', payments: 'Paiements', stripe: 'Stripe', invoices: 'Factures', stock: 'Stocks',
-  suppliers: 'Fournisseurs', audits: 'Audits', logistics: 'Logistique', tech: 'Tech', platform: 'B.I.B Platform',
-};
-
-export interface Anomaly {
-  id: string; reference: string; source: string; type: string; severity: AnomalySeverity;
-  status: AnomalyStatus; title: string; description: string | null; object_type: string | null;
-  object_id: string | null; owner_id: string | null; created_at: string; updated_at: string;
-  resolved_at: string | null; closed_at: string | null;
-  due_at: string | null; reminder_at: string | null; last_reminded_at: string | null;
-  category: string | null; checks: string[]; ai_suggestion: AiSuggestion | null;
-  ai_decision: 'accepted' | 'modified' | 'rejected' | null; ai_validated_at: string | null;
+export function useAnomalies(filters: AnomalyFilters) {
+ const { user, profile } = useAuth();
+ return useQuery({ queryKey: ['anomalies', user?.id, profile?.test_account === true, filters], enabled: !!user && !!profile,
+  queryFn: async () => { const result = await intranetRpc<OpsPage<Anomaly>>('list_ops_anomalies', { p_search: filters.search, p_status: filters.status, p_source: filters.source, p_team: filters.team, p_view: filters.view, p_offset: filters.offset });return { ...result, rows: result.rows.map(normalizeAnomaly) }; } });
 }
-export interface AiSuggestion {
-  source: string; category: string; severity: AnomalySeverity; title: string;
-  rationale: string; checks: string[]; model: string; generated_at: string;
+export function useAnomaly(id: string | null) {
+ const { user, profile } = useAuth();
+ return useQuery({ queryKey: ['ops-anomaly', user?.id, profile?.test_account === true, id], enabled: !!user && !!profile && !!id,
+  queryFn: async () => normalizeAnomaly(await intranetRpc<Anomaly>('get_ops_anomaly', { p_id: id })) });
 }
-export interface AnomalyNotification {
-  id: string; anomaly_id: string; recipient_id: string | null; kind: string; message: string | null; sent_at: string;
+export function useAnomalyStats(page = 'ops.anomalies') {
+ const { user, profile } = useAuth();
+ return useQuery({ queryKey: ['ops-anomaly-stats', user?.id, profile?.test_account === true, page], enabled: !!user && !!profile,
+  queryFn: () => intranetRpc<AnomalyStats>('get_ops_anomaly_stats', { p_page: page }) });
 }
-export const NOTIF_KIND_LABELS: Record<string, string> = {
-  assigned: 'Assignation', reminder: 'Rappel', overdue: 'Retard', due_changed: 'Échéance modifiée',
-};
-export const isOverdue = (a: Anomaly) => !!a.due_at && !['resolved', 'closed'].includes(a.status) && new Date(a.due_at) < new Date();
-export interface AnomalyEvent {
-  id: string; anomaly_id: string; kind: string; from_status: string | null; to_status: string | null;
-  message: string | null; performed_by: string | null; created_at: string;
+export function useAnomalyEvents(id: string, offset: number) {
+ const { user, profile } = useAuth();
+ return useQuery({ queryKey: ['anomaly-events', user?.id, profile?.test_account === true, id, offset], enabled: !!user && !!profile && !!id,
+  queryFn: () => intranetRpc<OpsPage<AnomalyEvent>>('list_ops_anomaly_events', { p_id: id, p_offset: offset }) });
 }
-
-const db = supabase as any;
-
-export const useAnomalies = () =>
-  useQuery({
-    queryKey: ['anomalies'],
-    queryFn: async () => {
-      const { data, error } = await db.from('anomalies').select('*').order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []) as Anomaly[];
-    },
-  });
-
-export const useAnomalyEvents = (id?: string) =>
-  useQuery({
-    queryKey: ['anomaly-events', id],
-    enabled: !!id,
-    queryFn: async () => {
-      const { data, error } = await db.from('anomaly_events').select('*').eq('anomaly_id', id).order('created_at');
-      if (error) throw error;
-      return (data || []) as AnomalyEvent[];
-    },
-  });
-
-export const useAnomalyNotifications = (id?: string) =>
-  useQuery({
-    queryKey: ['anomaly-notifications', id ?? 'all'],
-    queryFn: async () => {
-      let q = db.from('anomaly_notifications').select('*').order('sent_at', { ascending: false }).limit(200);
-      if (id) q = q.eq('anomaly_id', id);
-      const { data, error } = await q;
-      if (error) throw error;
-      return (data || []) as AnomalyNotification[];
-    },
-  });
-
-export const useAssignees = () =>
-  useQuery({
-    queryKey: ['anomaly-assignees'],
-    queryFn: async () => {
-      const { data, error } = await db.from('profiles').select('id, first_name, last_name, email').order('first_name');
-      if (error) throw error;
-      return (data || []) as { id: string; first_name: string | null; last_name: string | null; email: string }[];
-    },
-  });
-
-export const useAnomalyActions = () => {
-  const qc = useQueryClient();
-  const done = () => { qc.invalidateQueries({ queryKey: ['anomalies'] }); qc.invalidateQueries({ queryKey: ['anomaly-events'] }); };
-  const onError = (e: Error) => toast.error('Anomalie', { description: e.message });
-
-  const create = useMutation({
-    mutationFn: async (input: Partial<Anomaly>) => {
-      const { error } = await db.from('anomalies').insert(input);
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success('Anomalie déclarée'); done(); }, onError,
-  });
-  const setStatus = useMutation({
-    mutationFn: async ({ id, status, comment }: { id: string; status: AnomalyStatus; comment?: string }) => {
-      const { error } = await db.from('anomalies').update({ status }).eq('id', id);
-      if (error) throw error;
-      if (comment) await db.from('anomaly_events').insert({ anomaly_id: id, kind: 'comment', message: comment });
-    },
-    onSuccess: () => { toast.success('Statut mis à jour'); done(); }, onError,
-  });
-  const comment = useMutation({
-    mutationFn: async ({ id, message }: { id: string; message: string }) => {
-      const { error } = await db.from('anomaly_events').insert({ anomaly_id: id, kind: 'comment', message });
-      if (error) throw error;
-    },
-    onSuccess: done, onError,
-  });
-  const update = useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Partial<Anomaly> }) => {
-      const { error } = await db.from('anomalies').update(patch).eq('id', id);
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success('Anomalie mise à jour'); done(); qc.invalidateQueries({ queryKey: ['anomaly-notifications'] }); }, onError,
-  });
-  return { create, setStatus, comment, update };
-};
+export function useAnomalyNotifications(id: string | null, offset: number) {
+ const { user, profile } = useAuth();
+ return useQuery({ queryKey: ['anomaly-notifications', user?.id, profile?.test_account === true, id, offset], enabled: !!user && !!profile,
+  queryFn: () => intranetRpc<OpsPage<AnomalyNotification>>('list_ops_anomaly_notifications', { p_id: id, p_offset: offset }) });
+}
+export function useAssignees() {
+ const { user, profile } = useAuth();
+ return useQuery({ queryKey: ['anomaly-assignees', user?.id, profile?.test_account === true], enabled: !!user && !!profile,
+  queryFn: () => intranetRpc<{ id: string; name: string }[]>('list_ops_anomaly_people', {}) });
+}
+export function useAnomalyActions() {
+ const { user, profile } = useAuth();const qc = useQueryClient();const keys = useRef(new Map<string, string>());
+ const done = () => Promise.all(['anomalies','ops-anomaly','ops-anomaly-stats','anomaly-events','anomaly-notifications','direction-ops','dashboard_kpis_real','executive_critical_alerts','critical_notifications','notifications','drive-documents','business-history'].map(key => qc.invalidateQueries({ queryKey: [key] })));
+ const onError = (error: Error) => toast.error('Anomalie', { description: error.message });
+ const create = useMutation({ mutationFn: async (input: AnomalyFields) => {
+  const fingerprint = JSON.stringify([user?.id, profile?.test_account === true, input]);const key = keys.current.get(fingerprint) || crypto.randomUUID();keys.current.set(fingerprint, key);
+  const result = await intranetRpc<Anomaly>('create_ops_anomaly', { p_key: key, p_payload: input });keys.current.delete(fingerprint);return result;
+ }, onSuccess: () => { void done();toast.success('Anomalie déclarée'); }, onError });
+ const update = useMutation({ mutationFn: ({ id, revision, patch }: { id: string; revision: number; patch: AnomalyPatch }) => intranetRpc<Anomaly>('update_ops_anomaly', { p_id: id, p_revision: revision, p_patch: patch }), onSuccess: () => { void done();toast.success('Anomalie mise à jour'); }, onError });
+ const transition = useMutation({ mutationFn: ({ anomaly, action, note }: { anomaly: Anomaly; action: AnomalyAction; note: string }) => intranetRpc<Anomaly>('transition_ops_anomaly', { p_id: anomaly.id, p_revision: anomaly.revision, p_action: action, p_note: note }), onSuccess: () => { void done();toast.success('Décision enregistrée'); }, onError });
+ const comment = useMutation({ mutationFn: ({ id, message }: { id: string; message: string }) => intranetRpc<string>('add_ops_anomaly_comment', { p_id: id, p_message: message.trim() }), onSuccess: () => { void done();toast.success('Commentaire ajouté'); }, onError });
+ return { create, update, transition, comment };
+}

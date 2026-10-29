@@ -752,6 +752,22 @@ export type Database = {
       }
       anomalies: {
         Row: {
+          revision: number
+          test_account: boolean
+          legacy_record: boolean
+          team: string
+          corrective_action: string | null
+          evidence: string | null
+          resolution: string | null
+          document_ids: string[]
+          completed_checks: string[]
+          resolved_by: string | null
+          closed_by: string | null
+          closure_kind: string | null
+          archived_at: string | null
+          change_note: string | null
+          creation_key: string | null
+          creation_request: Json | null
           ai_decision: string | null
           ai_suggestion: Json | null
           ai_validated_at: string | null
@@ -779,6 +795,22 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          revision?: number
+          test_account?: boolean
+          legacy_record?: boolean
+          team?: string
+          corrective_action?: string | null
+          evidence?: string | null
+          resolution?: string | null
+          document_ids?: string[]
+          completed_checks?: string[]
+          resolved_by?: string | null
+          closed_by?: string | null
+          closure_kind?: string | null
+          archived_at?: string | null
+          change_note?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           ai_decision?: string | null
           ai_suggestion?: Json | null
           ai_validated_at?: string | null
@@ -806,6 +838,22 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          revision?: number
+          test_account?: boolean
+          legacy_record?: boolean
+          team?: string
+          corrective_action?: string | null
+          evidence?: string | null
+          resolution?: string | null
+          document_ids?: string[]
+          completed_checks?: string[]
+          resolved_by?: string | null
+          closed_by?: string | null
+          closure_kind?: string | null
+          archived_at?: string | null
+          change_note?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           ai_decision?: string | null
           ai_suggestion?: Json | null
           ai_validated_at?: string | null
@@ -836,6 +884,8 @@ export type Database = {
       }
       anomaly_events: {
         Row: {
+          before_state: Json | null
+          after_state: Json | null
           anomaly_id: string
           created_at: string
           from_status: string | null
@@ -846,6 +896,8 @@ export type Database = {
           to_status: string | null
         }
         Insert: {
+          before_state?: Json | null
+          after_state?: Json | null
           anomaly_id: string
           created_at?: string
           from_status?: string | null
@@ -856,6 +908,8 @@ export type Database = {
           to_status?: string | null
         }
         Update: {
+          before_state?: Json | null
+          after_state?: Json | null
           anomaly_id?: string
           created_at?: string
           from_status?: string | null
