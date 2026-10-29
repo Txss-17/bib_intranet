@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { resolutionDuration } from '@/lib/supportTickets';
 import { 
   Users, AlertTriangle, TrendingUp, Star,
   CreditCard, MessageSquare, Clock, Loader2
@@ -10,10 +10,10 @@ import { Link } from 'react-router-dom';
 import { useUserAccountStats, useAtRiskUsers, useSupportTicketStats, useSupportTickets } from '@/hooks/useLifecycle';
 
 const LifecycleDashboard = () => {
-  const { data: userStats, isLoading: userStatsLoading } = useUserAccountStats();
-  const { data: atRiskUsers, isLoading: atRiskLoading } = useAtRiskUsers();
-  const { data: ticketStats } = useSupportTicketStats();
-  const { data: recentTickets } = useSupportTickets({ limit: 3 });
+  const { data: userStats, isLoading: userStatsLoading, isError: userStatsError, refetch: refetchUsers } = useUserAccountStats();
+  const { data: atRiskUsers, isLoading: atRiskLoading, isError: atRiskError } = useAtRiskUsers();
+  const { data: ticketStats, isError: ticketStatsError, refetch: refetchStats } = useSupportTicketStats();
+  const { data: recentTickets, isError: recentTicketsError, refetch: refetchTickets } = useSupportTickets({ limit: 3 });
 
   const getSeverityColor = (severity: string | null) => {
     switch (severity) {
@@ -47,48 +47,50 @@ const LifecycleDashboard = () => {
         </div>
       </div>
 
+      {(userStatsError || atRiskError) && <p role="alert">Comptes indisponibles. <Button variant="link" onClick={() => void refetchUsers()}>Réessayer</Button></p>}
+      {(ticketStatsError || recentTicketsError) && <p role="alert">Suivi des tickets indisponible. <Button variant="link" onClick={() => { void refetchStats(); void refetchTickets(); }}>Réessayer</Button></p>}
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4">
             <Users className="h-5 w-5 text-blue-500 mb-2" />
-            <p className="text-2xl font-bold">{userStats?.totalUsers ?? 0}</p>
+            <p className="text-2xl font-bold">{userStats?.activeUsers ?? '—'}</p>
             <p className="text-xs text-muted-foreground">Utilisateurs actifs</p>
           </CardContent>
         </Card>
         <Card className={userStats?.atRiskUsers ? "border-destructive" : ""}>
           <CardContent className="p-4">
             <AlertTriangle className="h-5 w-5 text-destructive mb-2" />
-            <p className="text-2xl font-bold text-destructive">{userStats?.atRiskUsers ?? 0}</p>
+            <p className="text-2xl font-bold text-destructive">{userStats?.atRiskUsers ?? '—'}</p>
             <p className="text-xs text-muted-foreground">À risque</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <CreditCard className="h-5 w-5 text-orange-500 mb-2" />
-            <p className="text-2xl font-bold">{userStats?.unpaidUsers ?? 0}</p>
-            <p className="text-xs text-muted-foreground">Paiements en attente</p>
+            <p className="text-2xl font-bold">{userStats?.unpaidUsers ?? '—'}</p>
+            <p className="text-xs text-muted-foreground">Paiements en retard</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <Star className="h-5 w-5 text-yellow-500 mb-2" />
-            <p className="text-2xl font-bold">{userStats?.averageRating ?? 0}</p>
+            <p className="text-2xl font-bold">{userStats?.averageRating?.toFixed(1) ?? '—'}</p>
             <p className="text-xs text-muted-foreground">Note moyenne</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <MessageSquare className="h-5 w-5 text-purple-500 mb-2" />
-            <p className="text-2xl font-bold">{ticketStats?.openTickets ?? 0}</p>
-            <p className="text-xs text-muted-foreground">Tickets ouverts</p>
+            <p className="text-2xl font-bold">{ticketStats?.activeTickets ?? '—'}</p>
+            <p className="text-xs text-muted-foreground">Tickets à traiter</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <Clock className="h-5 w-5 text-emerald-500 mb-2" />
-            <p className="text-2xl font-bold">{ticketStats?.avgResponseTime ?? '0h'}</p>
-            <p className="text-xs text-muted-foreground">Temps réponse</p>
+            <p className="text-2xl font-bold">{resolutionDuration(ticketStats?.avgResolutionHours)}</p>
+            <p className="text-xs text-muted-foreground">Délai de résolution</p>
           </CardContent>
         </Card>
       </div>
@@ -115,13 +117,13 @@ const LifecycleDashboard = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {user.revenue && user.revenue > 0 && (
-                      <span className="text-sm font-medium">€{user.revenue.toLocaleString()}</span>
+                      <span className="text-sm font-medium">CA déclaré : {user.revenue.toLocaleString()}</span>
                     )}
                     <Badge className={getSeverityColor(user.risk_level)}>{user.risk_level}</Badge>
                   </div>
                 </div>
               ))}
-              {(!atRiskUsers || atRiskUsers.length === 0) && (
+              {!atRiskError && atRiskUsers?.length === 0 && (
                 <p className="text-muted-foreground text-center py-4">Aucun utilisateur à risque</p>
               )}
             </div>
@@ -146,7 +148,7 @@ const LifecycleDashboard = () => {
                   <div>
                     <p className="font-medium">{ticket.subject}</p>
                     <p className="text-sm text-muted-foreground">
-                      {(ticket.user_account as any)?.company_name || 'N/A'}
+                      {ticket.user_account?.company_name || 'Compte non renseigné'}
                     </p>
                   </div>
                   <Badge variant={ticket.status === 'open' ? 'default' : 'secondary'}>
@@ -154,7 +156,7 @@ const LifecycleDashboard = () => {
                   </Badge>
                 </div>
               ))}
-              {(!recentTickets || recentTickets.length === 0) && (
+              {!recentTicketsError && recentTickets?.length === 0 && (
                 <p className="text-muted-foreground text-center py-4">Aucun ticket récent</p>
               )}
             </div>

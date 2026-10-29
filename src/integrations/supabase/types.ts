@@ -6097,6 +6097,13 @@ export type Database = {
       }
       support_tickets: {
         Row: {
+          revision: number
+          test_account: boolean
+          archived_at: string | null
+          closed_at: string | null
+          change_note: string | null
+          creation_key: string | null
+          creation_request: Json | null
           assigned_to: string | null
           category: string | null
           created_at: string | null
@@ -6114,6 +6121,13 @@ export type Database = {
           user_account_id: string | null
         }
         Insert: {
+          revision?: number
+          test_account?: boolean
+          archived_at?: string | null
+          closed_at?: string | null
+          change_note?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           assigned_to?: string | null
           category?: string | null
           created_at?: string | null
@@ -6131,6 +6145,13 @@ export type Database = {
           user_account_id?: string | null
         }
         Update: {
+          revision?: number
+          test_account?: boolean
+          archived_at?: string | null
+          closed_at?: string | null
+          change_note?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           assigned_to?: string | null
           category?: string | null
           created_at?: string | null

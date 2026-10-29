@@ -1,11 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { customerSuccessStats } from '@/lib/customerSuccess';
 import type { Database } from '@/integrations/supabase/types';
 
 type UserAccount = Database['public']['Tables']['user_accounts']['Row'];
 type UserAccountInsert = Database['public']['Tables']['user_accounts']['Insert'];
-type SupportTicket = Database['public']['Tables']['support_tickets']['Row'];
-type SupportTicketInsert = Database['public']['Tables']['support_tickets']['Insert'];
 type Order = Database['public']['Tables']['orders']['Row'];
 
 // ============== USER ACCOUNTS ==============
@@ -17,84 +17,62 @@ export const useUserAccounts = (options?: {
   search?: string;
   limit?: number;
 }) => {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: ['user-accounts', options],
+    queryKey: ['user-accounts', user?.id, profile?.test_account === true, options],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      let query = supabase
-        .from('user_accounts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (options?.subscriptionStatus) {
-        query = query.eq('subscription_status', options.subscriptionStatus);
+      const rows: UserAccount[] = [];
+      let cursor: string | undefined;
+      for (;;) {
+        let query = supabase.from('user_accounts').select('*').order('id').limit(500);
+        if (options?.subscriptionStatus) query = query.eq('subscription_status', options.subscriptionStatus);
+        if (options?.riskLevel) query = query.eq('risk_level', options.riskLevel);
+        if (options?.paymentStatus === 'current') query = query.in('payment_status', ['ok', 'current']);
+        else if (options?.paymentStatus === 'overdue') query = query.in('payment_status', ['overdue', 'critical']);
+        else if (options?.paymentStatus) query = query.eq('payment_status', options.paymentStatus);
+        if (options?.search) {
+          const search = options.search.replace(/[,%()]/g, ' ').trim();
+          if (search) query = query.or(`company_name.ilike.%${search}%,contact_email.ilike.%${search}%`);
+        }
+        if (cursor) query = query.gt('id', cursor);
+        const { data, error } = await query;
+        if (error) throw error;
+        rows.push(...(data || []));
+        if (!data || data.length < 500) break;
+        cursor = data[data.length - 1].id;
       }
-      if (options?.riskLevel) {
-        query = query.eq('risk_level', options.riskLevel);
-      }
-      if (options?.paymentStatus) {
-        query = query.eq('payment_status', options.paymentStatus);
-      }
-      if (options?.search) {
-        query = query.or(`company_name.ilike.%${options.search}%,contact_email.ilike.%${options.search}%`);
-      }
-      if (options?.limit) {
-        query = query.limit(options.limit);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as UserAccount[];
+      rows.sort((a, b) => (b.created_at || '').localeCompare(a.created_at || '') || b.id.localeCompare(a.id));
+      return options?.limit ? rows.slice(0, options.limit) : rows;
     },
   });
 };
 
 export const useUserAccountStats = () => {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: ['user-account-stats'],
+    queryKey: ['user-account-stats', user?.id, profile?.test_account === true], enabled: !!user && !!profile,
     queryFn: async () => {
-      const { data: accounts, error } = await supabase
-        .from('user_accounts')
-        .select('*');
-
-      if (error) throw error;
-
-      const total = accounts?.length || 0;
-      const active = accounts?.filter(a => a.subscription_status === 'active') || [];
-      const atRisk = accounts?.filter(a => a.risk_level === 'high' || a.risk_level === 'critical') || [];
-      const unpaid = accounts?.filter(a => a.payment_status === 'overdue') || [];
-
-      const totalRevenue = accounts?.reduce((sum, a) => sum + (a.revenue || 0), 0) || 0;
-      const avgRating = accounts?.length 
-        ? accounts.reduce((sum, a) => sum + (a.trustpilot_rating || 0), 0) / accounts.length 
-        : 0;
-
-      return {
-        totalUsers: total,
-        activeUsers: active.length,
-        atRiskUsers: atRisk.length,
-        unpaidUsers: unpaid.length,
-        totalRevenue,
-        averageRating: Math.round(avgRating * 10) / 10,
-        mrr: totalRevenue / 12, // Simplified MRR calculation
-      };
+      type Account = Pick<UserAccount, 'id' | 'company_name' | 'subscription_status' | 'risk_level' | 'payment_status' | 'trustpilot_rating'>;
+      const accounts: Account[] = [];
+      let cursor: string | undefined;
+      for (;;) {
+        let query = supabase.from('user_accounts').select('id,company_name,subscription_status,risk_level,payment_status,trustpilot_rating').order('id').limit(500);
+        if (cursor) query = query.gt('id', cursor);
+        const { data, error } = await query;
+        if (error) throw error;
+        accounts.push(...(data || []));
+        if (!data || data.length < 500) break;
+        cursor = data[data.length - 1].id;
+      }
+      return customerSuccessStats(accounts);
     },
   });
 };
 
 export const useAtRiskUsers = () => {
-  return useQuery({
-    queryKey: ['at-risk-users'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('user_accounts')
-        .select('*')
-        .or('risk_level.eq.high,risk_level.eq.critical,payment_status.eq.overdue')
-        .order('risk_level', { ascending: false });
-
-      if (error) throw error;
-      return data as UserAccount[];
-    },
-  });
+  const accounts = useUserAccounts();
+  return { ...accounts, data: accounts.data?.filter(account => account.risk_level === 'high' || account.risk_level === 'critical' || ['late', 'overdue', 'critical'].includes(account.payment_status || '')) };
 };
 
 export const useUpdateUserAccount = () => {
@@ -119,126 +97,8 @@ export const useUpdateUserAccount = () => {
   });
 };
 
-// ============== SUPPORT TICKETS ==============
-
-export const useSupportTickets = (options?: {
-  status?: string;
-  priority?: string;
-  category?: string;
-  limit?: number;
-}) => {
-  return useQuery({
-    queryKey: ['support-tickets', options],
-    queryFn: async () => {
-      let query = supabase
-        .from('support_tickets')
-        .select(`
-          *,
-          user_account:user_account_id (
-            id,
-            company_name,
-            contact_email
-          )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (options?.status) {
-        query = query.eq('status', options.status);
-      }
-      if (options?.priority) {
-        query = query.eq('priority', options.priority);
-      }
-      if (options?.category) {
-        query = query.eq('category', options.category);
-      }
-      if (options?.limit) {
-        query = query.limit(options.limit);
-      }
-
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
-};
-
-export const useSupportTicketStats = () => {
-  return useQuery({
-    queryKey: ['support-ticket-stats'],
-    queryFn: async () => {
-      const { data: tickets, error } = await supabase
-        .from('support_tickets')
-        .select('*');
-
-      if (error) throw error;
-
-      const open = tickets?.filter(t => t.status === 'open') || [];
-      const pending = tickets?.filter(t => t.status === 'pending') || [];
-      const resolved = tickets?.filter(t => t.status === 'resolved') || [];
-      const highPriority = tickets?.filter(t => t.priority === 'high' || t.priority === 'critical') || [];
-
-      // Calculate average response time (simplified)
-      const resolvedWithTime = resolved.filter(t => t.created_at && t.resolved_at);
-      let avgResponseHours = 0;
-      if (resolvedWithTime.length > 0) {
-        const totalHours = resolvedWithTime.reduce((sum, t) => {
-          const created = new Date(t.created_at!);
-          const resolved = new Date(t.resolved_at!);
-          return sum + (resolved.getTime() - created.getTime()) / (1000 * 60 * 60);
-        }, 0);
-        avgResponseHours = totalHours / resolvedWithTime.length;
-      }
-
-      return {
-        totalTickets: tickets?.length || 0,
-        openTickets: open.length,
-        pendingTickets: pending.length,
-        resolvedTickets: resolved.length,
-        highPriorityTickets: highPriority.length,
-        avgResponseTime: `${Math.round(avgResponseHours)}h`,
-      };
-    },
-  });
-};
-
-export const useUpdateSupportTicket = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<SupportTicket> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
-      queryClient.invalidateQueries({ queryKey: ['support-ticket-stats'] });
-    },
-  });
-};
-
-export const useCreateSupportTicket = () => {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (ticket: SupportTicketInsert) => {
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .insert(ticket)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['support-tickets'] });
-      queryClient.invalidateQueries({ queryKey: ['support-ticket-stats'] });
-    },
-  });
-};
+// Support ticket mutations use their server workflow.
+export { useSupportTickets, useSupportTicketStats } from '@/hooks/useSupportTickets';
 
 // ============== ORDERS (for lifecycle context) ==============
 
@@ -309,7 +169,7 @@ export const useRiskAlerts = () => {
         let message = 'Risque détecté';
         let severity = 'medium';
 
-        if (account.payment_status === 'overdue') {
+        if (['late', 'overdue', 'critical'].includes(account.payment_status || '')) {
           alertType = 'payment';
           message = 'Paiement en retard';
           severity = account.risk_level === 'critical' ? 'critical' : 'high';
