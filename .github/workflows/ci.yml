@@ -93,6 +93,7 @@ jobs:
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/intranet/permissions.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/intranet/services.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/intranet/identity.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/intranet/gateway-replies.sql
 
       - name: Test Work module lifecycle and activity feed
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/work-module/workflow.sql

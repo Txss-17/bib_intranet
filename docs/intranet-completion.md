@@ -11,6 +11,7 @@ Les 14 pôles sont Direction, Finance, Opérations, Fournisseurs, Marketplace, S
 | Écrans métier déjà connectés | Conservation des tables et des politiques de ligne existantes ; ajout de contrôles de droits et d’un journal métier sur les tables recensées. |
 | Écrans auparavant de démonstration | Dossiers persistants avec schéma adapté au module, responsable, échéance, priorité, confidentialité, pièces Drive, recherche, commentaires et historique. |
 | Validation des dossiers | Brouillon → soumis → validé ; première revue puis seconde validation distincte pour Direction, Finance, Audit, Conformité et Sécurité. Auteur et responsable ne s’auto-valident pas. Refus et réouverture motivés, contrôle de révision et archivage conservant l’historique. |
+| Réputation | Notes réellement enregistrées sur les comptes accessibles, moyenne sans notes absentes, répartition corrigée et comptes à suivre. Aucun commentaire interne présenté comme un avis client ni statut de réponse inventé. |
 | Pilotage | Suppression des séries financières et techniques fabriquées. Totaux de trésorerie séparés par devise ; les vues Direction précisent leur fenêtre EUR. Une absence de données ne produit plus un score de performance fictif. |
 | Travail et notifications | Tâches collaboratives, projets, procédures publiées, validations attribuées et escalades résolues avec motif ; révisions, historique, archives, notifications d’attribution et fil d’activité paginé. Voir `docs/work-module.md`. |
 | Documents | Import Google Drive BIB, aperçu PDF filigrané, exports PDF/CSV/XLSX vers Drive, diffusion externe de PDF après validation distincte et journalisation. |
@@ -71,6 +72,7 @@ Les migrations du socle et du module Travail suivent cet ordre après 0038 :
 5. `0043_intranet_gateway_outbox.sql` : soumission, approbation, file et confirmations de transport.
 6. `0044_intranet_identity_and_test_isolation.sql` : identité documentaire, cloisonnement réel/test et configuration atomique des comptes de test.
 7. `0045_work_module_lifecycle.sql` : cycles de vie Travail, révisions, archives, événements et fil d’activité.
+8. `0046_intranet_gateway_replies.sql` : autorisation des réponses selon le périmètre de boîte et l’environnement, conservation du fil source et contrôle du sujet.
 
 Appliquer les migrations avec la procédure Drizzle habituelle après sauvegarde et revue sur une copie de préproduction. Ne pas les dupliquer dans le répertoire des anciennes migrations Supabase. Les fonctions concernées sont `intranet-drive`, `intranet-ethics`, `gateway-dispatch`, `provision-test-accounts`, les versions mises à jour de `send-transactional-email` et `process-email-queue`, ainsi que `anomaly-triage` qui refuse désormais la qualification automatique. Publier le frontend seulement après disponibilité des RPC.
 
