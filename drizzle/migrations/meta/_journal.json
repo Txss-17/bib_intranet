@@ -309,6 +309,20 @@
       "when": 1793271604000,
       "tag": "0043_intranet_gateway_outbox",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1793283000000,
+      "tag": "0044_intranet_identity_and_test_isolation",
+      "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1793286000000,
+      "tag": "0045_work_module_lifecycle",
+      "breakpoints": true
     }
   ]
 }

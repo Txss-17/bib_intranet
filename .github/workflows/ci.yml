@@ -92,9 +92,13 @@ jobs:
         run: |
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/intranet/permissions.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/intranet/services.sql
+          psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/intranet/identity.sql
 
-      - name: Typecheck Drive, ethics and Gateway boundaries
-        run: npx tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --lib ES2022,DOM --skipLibCheck --strictNullChecks --noImplicitAny false --allowImportingTsExtensions tests/intranet/edge-env.d.ts supabase/functions/intranet-drive/index.ts supabase/functions/intranet-ethics/index.ts supabase/functions/gateway-dispatch/index.ts supabase/functions/process-email-queue/index.ts
+      - name: Test Work module lifecycle and activity feed
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/work-module/workflow.sql
+
+      - name: Typecheck Drive, ethics, Gateway and test-account boundaries
+        run: npx tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --lib ES2022,DOM --skipLibCheck --strictNullChecks --noImplicitAny false --allowImportingTsExtensions tests/intranet/edge-env.d.ts supabase/functions/intranet-drive/index.ts supabase/functions/intranet-ethics/index.ts supabase/functions/gateway-dispatch/index.ts supabase/functions/process-email-queue/index.ts supabase/functions/provision-test-accounts/index.ts
 
       - name: Typecheck application
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}

@@ -29,7 +29,8 @@ export async function handleDriveRequest(request: Request) {
   if (body.action === 'status') {
    try { getDriveConfig(k => Deno.env.get(k)); return json({ configured: true }); } catch { return json({ configured: false, message: 'Google Workspace BIB attend sa configuration par l’administrateur.' }); }
   }
-  const config = getDriveConfig(k => Deno.env.get(k)); const email = workspaceEmail(profile.email, config.domain); const drive = new WorkspaceDrive(config);
+  if (!identity.user.email || !identity.user.email_confirmed_at || profile.email?.trim().toLowerCase() !== identity.user.email.trim().toLowerCase()) throw new DriveError('Adresse professionnelle authentifiée requise.', 403);
+  const config = getDriveConfig(k => Deno.env.get(k)); const email = workspaceEmail(identity.user.email, config.domain); const drive = new WorkspaceDrive(config);
   if (body.action === 'list') return json(await drive.list(email, typeof body.search === 'string' ? body.search : '', typeof body.page_token === 'string' ? body.page_token : undefined));
   if (body.action === 'preview') {
    const d = await call<Document>(caller, 'get_intranet_document_access', { p_id: uuid(body.document_id) });

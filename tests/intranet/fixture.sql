@@ -11,8 +11,8 @@ CREATE TYPE public.pole_id AS ENUM ('ops','finance','direction','rh','audit','co
 CREATE TABLE public.profiles(id uuid PRIMARY KEY,first_name text DEFAULT 'Prénom',last_name text DEFAULT 'Nom',email text DEFAULT 'staff@bib.test',position text,poles public.pole_id[],seniority text,test_account boolean DEFAULT false,hr_status text DEFAULT 'active',app_origin text DEFAULT 'connect');
 CREATE TABLE public.user_roles(user_id uuid,role text);
 CREATE FUNCTION public.has_role(u uuid,r text) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT EXISTS(SELECT 1 FROM public.user_roles WHERE user_id=u AND role=r) $$;
-CREATE FUNCTION public.is_leadership(u uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT public.has_role(u,'admin') OR EXISTS(SELECT 1 FROM public.profiles WHERE id=u AND 'direction'=ANY(poles)) $$;
-CREATE FUNCTION public.is_intranet_staff(u uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT EXISTS(SELECT 1 FROM public.profiles WHERE id=u AND cardinality(poles)>0 AND hr_status='active') $$;
+CREATE FUNCTION public.is_leadership(_user_id uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT public.has_role(_user_id,'admin') OR EXISTS(SELECT 1 FROM public.profiles WHERE id=_user_id AND 'direction'=ANY(poles)) $$;
+CREATE FUNCTION public.is_intranet_staff(_uid uuid) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT EXISTS(SELECT 1 FROM public.profiles WHERE id=_uid AND cardinality(poles)>0 AND hr_status='active') $$;
 CREATE TABLE public.access_roles(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),role_key text,status text DEFAULT 'active',read_only boolean DEFAULT false);
 CREATE TABLE public.access_assignments(employee_id uuid,role_id uuid,status text,starts_at timestamptz,ends_at timestamptz);
 CREATE TABLE public.access_interfaces(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),interface_key text,status text DEFAULT 'active');

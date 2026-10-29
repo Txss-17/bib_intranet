@@ -1,137 +1,16 @@
-import { useMemo, useState } from 'react';
-import { format } from 'date-fns';
-import { fr } from 'date-fns/locale';
-import { Activity, AlertOctagon, CheckCircle2, CheckSquare, FolderKanban, Search } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { useDeferredValue, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { Activity, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useWorkTasks } from '@/hooks/useWorkTasks';
-import { useWorkEscalations, useWorkProjects, useWorkValidations } from '@/hooks/useWorkModule';
-
-interface ActivityItem {
-  id: string;
-  kind: 'task' | 'project' | 'validation' | 'escalation';
-  label: string;
-  detail: string;
-  date: string;
-}
-
-const KIND_META = {
-  task: { label: 'Tâche', icon: CheckSquare },
-  project: { label: 'Projet', icon: FolderKanban },
-  validation: { label: 'Validation', icon: CheckCircle2 },
-  escalation: { label: 'Escalade', icon: AlertOctagon },
-} as const;
-
+import { useWorkActivity } from '@/hooks/useWorkModule';
+import { workEventLabel, workStatusLabel } from '@/lib/workModuleLabels';
+const kinds: Record<string, string> = { tasks: 'Tâches', projects: 'Projets', processes: 'Processus', validations: 'Validations', escalations: 'Escalades' };
 export default function WorkActivities() {
-  const { data: tasks = [], isLoading: l1 } = useWorkTasks();
-  const { data: projects = [], isLoading: l2 } = useWorkProjects();
-  const { data: validations = [], isLoading: l3 } = useWorkValidations();
-  const { data: escalations = [], isLoading: l4 } = useWorkEscalations();
-  const [q, setQ] = useState('');
-  const [kind, setKind] = useState<string>('all');
-
-  const items = useMemo<ActivityItem[]>(() => {
-    const all: ActivityItem[] = [
-      ...tasks.map((t) => ({
-        id: `task-${t.id}`,
-        kind: 'task' as const,
-        label: t.title,
-        detail: `${t.assignee_name ?? 'Non assignée'} · ${t.status}`,
-        date: t.created_at,
-      })),
-      ...projects.map((p) => ({
-        id: `project-${p.id}`,
-        kind: 'project' as const,
-        label: p.name,
-        detail: `${p.owner_name ?? 'Sans porteur'} · ${p.status}`,
-        date: p.created_at,
-      })),
-      ...validations.map((v) => ({
-        id: `validation-${v.id}`,
-        kind: 'validation' as const,
-        label: v.title,
-        detail: `${v.requester_name ?? '—'} → ${v.validator_name ?? '—'} · ${v.status}`,
-        date: v.created_at,
-      })),
-      ...escalations.map((e) => ({
-        id: `escalation-${e.id}`,
-        kind: 'escalation' as const,
-        label: e.title,
-        detail: `${e.raised_by_name ?? '—'} · ${e.severity} · ${e.status}`,
-        date: e.created_at,
-      })),
-    ];
-    return all.sort((a, b) => b.date.localeCompare(a.date));
-  }, [tasks, projects, validations, escalations]);
-
-  const filtered = items.filter(
-    (i) =>
-      (kind === 'all' || i.kind === kind) &&
-      (!q || `${i.label} ${i.detail}`.toLowerCase().includes(q.toLowerCase())),
-  );
-
-  const isLoading = l1 || l2 || l3 || l4;
-
-  return (
-    <div className="space-y-6 p-6">
-      <div>
-        <h1 className="flex items-center gap-2 text-2xl font-semibold">
-          <Activity className="h-5 w-5" />
-          Activités
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          Fil d'activité du module Travail : tâches, projets, validations et escalades récents.
-        </p>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
-        <div className="relative min-w-[220px] flex-1">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input className="pl-9" placeholder="Rechercher…" value={q} onChange={(e) => setQ(e.target.value)} />
-        </div>
-        <Select value={kind} onValueChange={setKind}>
-          <SelectTrigger className="w-52">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tout</SelectItem>
-            {Object.entries(KIND_META).map(([k, v]) => (
-              <SelectItem key={k} value={k}>{v.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <Card>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <p className="p-6 text-sm text-muted-foreground">Chargement…</p>
-          ) : filtered.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground">Aucune activité.</p>
-          ) : (
-            <ul className="divide-y">
-              {filtered.map((i) => {
-                const Icon = KIND_META[i.kind].icon;
-                return (
-                  <li key={i.id} className="flex items-center gap-3 p-4">
-                    <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-medium">{i.label}</span>
-                      <span className="text-xs text-muted-foreground">{i.detail}</span>
-                    </span>
-                    <Badge variant="outline">{KIND_META[i.kind].label}</Badge>
-                    <span className="shrink-0 text-xs text-muted-foreground">
-                      {format(new Date(i.date), 'dd MMM yyyy HH:mm', { locale: fr })}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </CardContent>
-      </Card>
-    </div>
-  );
+    const [search, setSearch] = useState('');
+    const [kind, setKind] = useState('all');
+    const [offset, setOffset] = useState(0);
+    const query = useWorkActivity(kind, useDeferredValue(search), offset);
+    return <div className="space-y-5"><h1 className="flex items-center gap-2 text-2xl font-semibold"><Activity className="h-5 w-5"/>Activités</h1><p className="text-sm text-muted-foreground">Créations, changements, décisions, commentaires et archivages dans votre périmètre.</p><div className="flex flex-wrap gap-3"><Input className="min-w-48 flex-1" aria-label="Rechercher une activité" placeholder="Rechercher…" maxLength={200} value={search} onChange={e => { setSearch(e.target.value); setOffset(0); }}/><Select value={kind} onValueChange={value => { setKind(value); setOffset(0); }}><SelectTrigger className="w-52"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Toutes les activités</SelectItem>{Object.entries(kinds).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div>{query.isLoading && <p role="status">Chargement…</p>}{query.isError && <p role="alert">Activités indisponibles. <Button variant="outline" onClick={() => void query.refetch()}>Réessayer</Button></p>}{query.data?.rows.length === 0 && <p className="text-muted-foreground">Aucune activité dans cette vue.</p>}<ul className="divide-y rounded border">{query.data?.rows.map(e => <li key={`${e.kind}-${e.id}`} className="p-4"><Link to={e.url} className="font-medium text-primary hover:underline">{e.title}</Link><p className="text-sm">{kinds[e.kind]} · {workEventLabel(e.action)}{e.before_status !== e.after_status ? ` · ${workStatusLabel(e.kind, e.before_status)} → ${workStatusLabel(e.kind, e.after_status)}` : ''}</p><p className="text-xs text-muted-foreground">{e.actor_name || 'Système'} · {new Date(e.created_at).toLocaleString('fr-FR')}</p>{e.note && <p className="mt-1 whitespace-pre-wrap text-sm">{e.note}</p>}</li>)}</ul><div className="flex justify-end gap-2"><Button variant="outline" disabled={!offset} onClick={() => setOffset(Math.max(0, offset - 50))}><ArrowLeft className="mr-1 h-4 w-4"/>Précédent</Button><Button variant="outline" disabled={!query.data?.has_more} onClick={() => setOffset(offset + 50)}>Suivant<ArrowRight className="ml-1 h-4 w-4"/></Button></div></div>;
 }
