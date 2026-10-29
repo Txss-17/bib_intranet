@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { useWorkTaskPermissions } from '@/hooks/useWorkTasks';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useViewAs } from '@/hooks/useViewAs';
 import { jobRoles, JobRole } from '@/data/jobRoles';
@@ -56,6 +57,7 @@ export interface UsePermissionsReturn {
 export const usePermissions = (): UsePermissionsReturn => {
   const { profile, user } = useAuth();
   const { isAdmin } = useUserRole();
+  const taskRights = useWorkTaskPermissions();
   const { role: simulatedRole } = useViewAs();
   const [tick, setTick] = useState(0);
 
@@ -180,6 +182,17 @@ export const usePermissions = (): UsePermissionsReturn => {
   const permissions = useCallback(
     (pageId: string): ActionSet => {
       if (!pageId) return { ...NO_ACCESS };
+      if (pageId === 'work.tasks') {
+        if (!profile?.id || profile.id !== user?.id) return { ...NO_ACCESS };
+        const preview = simulatedRole ? resolvePagePermissions(pageId, ctx) : undefined;
+        return {
+          ...NO_ACCESS,
+          read: taskRights.data?.read === true && (!preview || preview.read),
+          create: taskRights.data?.create === true && (!preview || preview.create),
+          update: taskRights.data?.update === true && (!preview || preview.update),
+          delete: taskRights.data?.delete === true && (!preview || preview.delete),
+        };
+      }
       if (pageId === 'rh.onboarding') {
         if (!profile?.id || profile.id !== user?.id) return { ...NO_ACCESS };
         const preview = simulatedRole ? resolvePagePermissions(pageId, ctx) : undefined;
@@ -191,7 +204,7 @@ export const usePermissions = (): UsePermissionsReturn => {
       }
       return resolvePagePermissions(pageId, ctx);
     },
-    [ctx, hrRights.data, onboardingRights.data, simulatedRole, profile?.id, user?.id],
+    [ctx, taskRights.data, hrRights.data, onboardingRights.data, simulatedRole, profile?.id, user?.id],
   );
 
   const can = useCallback(
@@ -224,3 +237,4 @@ export const usePermissions = (): UsePermissionsReturn => {
     permissions, can, canViewPage, canViewPath, canViewPole, visiblePoles,
   };
 };
+

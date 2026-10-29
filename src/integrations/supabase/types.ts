@@ -14,6 +14,120 @@ export type Database = {
   }
   public: {
     Tables: {
+      work_tasks: {
+        Row: {
+          id: string
+          title: string
+          description: string | null
+          objective: string | null
+          pole: string | null
+          task_poles: string[]
+          status: 'pending' | 'in_progress' | 'review' | 'completed'
+          priority: 'low' | 'medium' | 'high' | 'critical'
+          assignee_id: string | null
+          created_by: string | null
+          due_date: string | null
+          completed_at: string | null
+          created_at: string
+          updated_at: string
+          archived_at: string | null
+          test_account: boolean
+        }
+        Insert: {
+          id?: string
+          title?: string
+          description?: string | null
+          objective?: string | null
+          pole?: string | null
+          task_poles?: string[]
+          status?: 'pending' | 'in_progress' | 'review' | 'completed'
+          priority?: 'low' | 'medium' | 'high' | 'critical'
+          assignee_id?: string | null
+          created_by?: string | null
+          due_date?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+          archived_at?: string | null
+          test_account?: boolean
+        }
+        Update: {
+          id?: string
+          title?: string
+          description?: string | null
+          objective?: string | null
+          pole?: string | null
+          task_poles?: string[]
+          status?: 'pending' | 'in_progress' | 'review' | 'completed'
+          priority?: 'low' | 'medium' | 'high' | 'critical'
+          assignee_id?: string | null
+          created_by?: string | null
+          due_date?: string | null
+          completed_at?: string | null
+          created_at?: string
+          updated_at?: string
+          archived_at?: string | null
+          test_account?: boolean
+        }
+        Relationships: [{ foreignKeyName: "work_tasks_assignee_id_fkey"; columns: ["assignee_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }]
+      }
+
+      work_task_comments: {
+        Row: {
+          id: string
+          task_id: string
+          author_id: string
+          body: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          task_id?: string
+          author_id?: string
+          body?: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          author_id?: string
+          body?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+
+      work_task_history: {
+        Row: {
+          id: string
+          task_id: string
+          actor_id: string | null
+          action: string
+          before_state: Json | null
+          after_state: Json
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          task_id?: string
+          actor_id?: string | null
+          action?: string
+          before_state?: Json | null
+          after_state?: Json
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          actor_id?: string | null
+          action?: string
+          before_state?: Json | null
+          after_state?: Json
+          created_at?: string
+        }
+        Relationships: []
+      }
+
       access_actions: {
         Row: {
           action_key: string
@@ -4382,6 +4496,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          app_origin: string
           avatar_url: string | null
           collaborator_type: string
           created_at: string | null
@@ -4400,6 +4515,7 @@ export type Database = {
           work_mode: string | null
         }
         Insert: {
+          app_origin?: string
           avatar_url?: string | null
           collaborator_type?: string
           created_at?: string | null
@@ -4418,6 +4534,7 @@ export type Database = {
           work_mode?: string | null
         }
         Update: {
+          app_origin?: string
           avatar_url?: string | null
           collaborator_type?: string
           created_at?: string | null
@@ -6621,66 +6738,7 @@ export type Database = {
           },
         ]
       }
-      work_tasks: {
-        Row: {
-          assignee_id: string | null
-          completed_at: string | null
-          created_at: string
-          created_by: string | null
-          description: string | null
-          due_date: string | null
-          id: string
-          pole: string | null
-          priority: string
-          status: string
-          title: string
-          updated_at: string
-        }
-        Insert: {
-          assignee_id?: string | null
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          pole?: string | null
-          priority?: string
-          status?: string
-          title: string
-          updated_at?: string
-        }
-        Update: {
-          assignee_id?: string | null
-          completed_at?: string | null
-          created_at?: string
-          created_by?: string | null
-          description?: string | null
-          due_date?: string | null
-          id?: string
-          pole?: string | null
-          priority?: string
-          status?: string
-          title?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "work_tasks_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "work_tasks_created_by_fkey"
-            columns: ["created_by"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+
       work_validations: {
         Row: {
           created_at: string
@@ -6733,6 +6791,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_work_task_permissions: { Args: Record<PropertyKey, never>; Returns: Json }
       calculate_demand_forecast: { Args: never; Returns: number }
       can_access_anomalies: { Args: { _uid: string }; Returns: boolean }
       can_access_finance: { Args: { _uid: string }; Returns: boolean }
@@ -7037,3 +7096,4 @@ export const Constants = {
     },
   },
 } as const
+

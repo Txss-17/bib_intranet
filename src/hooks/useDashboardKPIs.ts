@@ -58,7 +58,7 @@ const moduleKPIs = async (): Promise<DashboardKPI[]> => {
     count('field_audits', (q) => q.in('workflow_status', ['non_compliant', 'corrective_action'])),
     count('products', (q) => q.in('lifecycle_status', ['review', 'audit_required', 'audit'])),
     count('work_escalations', (q) => q.neq('status', 'resolved')),
-    count('work_tasks', (q) => q.neq('status', 'completed')),
+    count('work_tasks', (q) => q.neq('status', 'completed').is('archived_at', null)),
     count('work_validations', (q) => q.eq('status', 'pending')),
     count('contracts', (q) => q.in('status', ['draft', 'pending', 'sent'])),
   ]);
@@ -631,3 +631,4 @@ export function useDashboardKPIs(enabled: boolean) {
     },
   });
 }
+
