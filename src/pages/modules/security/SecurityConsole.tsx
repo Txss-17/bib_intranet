@@ -1,2 +1,2 @@
-import ModuleWorkspace from '@/components/operations/ModuleWorkspace';
-export default function Page() { return <ModuleWorkspace pageId="security.console" />; }
+import SecurityControlWorkspace from '@/components/security/SecurityControlWorkspace';
+export default function SecurityConsole() { return <SecurityControlWorkspace kind="console" />; }
