@@ -187,13 +187,7 @@ export default function SecurityAccess() {
 
                         <TableCell>
                           <span className="text-sm text-muted-foreground">
-                            {access?.screens.includes('*')
-                              ? 'Tous les écrans'
-                              : `${access?.screens.length ?? 0} écran${
-                                  (access?.screens.length ?? 0) > 1
-                                    ? 's'
-                                    : ''
-                                }`}
+                            Consultation dans Rôles & Permissions
                           </span>
                         </TableCell>
                       </TableRow>
