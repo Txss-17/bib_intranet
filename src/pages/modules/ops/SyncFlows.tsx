@@ -30,6 +30,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useSyncEvents } from '@/hooks/useOpsControl';
 import { usePlatformSyncRuns } from '@/hooks/usePlatformSync';
+import { assessBridgeHealth } from '@/lib/bridgeHealth';
 
 type SyncStatus = 'success' | 'pending' | 'error' | 'timeout';
 
@@ -48,6 +49,7 @@ export default function SyncFlows() {
   } = useSyncEvents();
 
   const platform = usePlatformSyncRuns();
+  const bridgeHealth = useMemo(() => assessBridgeHealth(platform.data ?? [], Date.now()), [platform.data]);
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<
@@ -336,6 +338,15 @@ export default function SyncFlows() {
           </div>
         </CardHeader>
         <CardContent>
+          {!platform.isLoading && !platform.isError && (
+            <p role={bridgeHealth.level === 'critical' ? 'alert' : 'status'}
+               className={`mb-4 rounded border p-3 text-sm ${bridgeHealth.level === 'critical' ? 'text-destructive' : 'text-muted-foreground'}`}>
+              {bridgeHealth.message}
+              {bridgeHealth.lastPullAt && <span className="ml-2">
+                Dernière tentative : {new Date(bridgeHealth.lastPullAt).toLocaleString('fr-FR')}.
+              </span>}
+            </p>
+          )}
           {platform.isLoading ? (
             <p role="status" className="text-sm text-muted-foreground">Lecture du journal Platform…</p>
           ) : platform.isError ? (
