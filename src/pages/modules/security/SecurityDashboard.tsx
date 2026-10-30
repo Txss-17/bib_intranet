@@ -94,16 +94,16 @@ export default function SecurityDashboard() {
       desc: 'Déploiements, pipelines et rollback',
     },
     {
-      to: '/pole/product/documentation',
-      label: 'Documentation',
+      to: '/pole/security/documentation',
+      label: 'Documentation IT',
       icon: Code2,
-      desc: 'Documentation Produit & Engineering',
+      desc: 'Runbooks, revues et procédures contrôlées',
     },
     {
       to: '/pole/security/console',
-      label: 'Console Produit',
+      label: 'Interventions techniques',
       icon: Server,
-      desc: 'Outils techniques et opérations',
+      desc: 'Demandes d’intervention, autorisations et preuves',
     },
     {
       to: '/pole/security/security',
@@ -137,9 +137,9 @@ export default function SecurityDashboard() {
     },
     {
       to: '/pole/security/code',
-      label: 'Code & GitHub',
+      label: 'Revue de code',
       icon: Code2,
-      desc: 'Dépôts, branches et PR',
+      desc: 'Contrôles des changements, tests CI et sécurité',
     },
     {
       to: '/pole/security/supervision',
