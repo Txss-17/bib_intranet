@@ -142,8 +142,8 @@ CREATE POLICY kpi_catalog_domain_guard ON public.kpi_catalog
   AS RESTRICTIVE FOR SELECT TO authenticated
   USING (
     (coalesce(cardinality(pole_access),0)>0 AND EXISTS(
-      SELECT 1 FROM unnest(pole_access) allowed_pole
-      WHERE public.bib_data_domain_allowed(allowed_pole)
+      SELECT 1 FROM unnest(pole_access) AS allowed_pole(pole)
+      WHERE public.bib_data_domain_allowed(allowed_pole.pole)
     ))
     OR (coalesce(cardinality(pole_access),0)=0 AND owner_id=auth.uid())
   );
@@ -151,15 +151,15 @@ CREATE POLICY kpi_catalog_domain_write_guard ON public.kpi_catalog
   AS RESTRICTIVE FOR ALL TO authenticated
   USING (
     (coalesce(cardinality(pole_access),0)>0 AND EXISTS(
-      SELECT 1 FROM unnest(pole_access) allowed_pole
-      WHERE public.bib_data_domain_allowed(allowed_pole)
+      SELECT 1 FROM unnest(pole_access) AS allowed_pole(pole)
+      WHERE public.bib_data_domain_allowed(allowed_pole.pole)
     ))
     OR (coalesce(cardinality(pole_access),0)=0 AND owner_id=auth.uid())
   )
   WITH CHECK (
     coalesce(cardinality(pole_access),0)>0 AND NOT EXISTS(
-      SELECT 1 FROM unnest(pole_access) allowed_pole
-      WHERE NOT public.bib_data_domain_allowed(allowed_pole)
+      SELECT 1 FROM unnest(pole_access) AS allowed_pole(pole)
+      WHERE NOT public.bib_data_domain_allowed(allowed_pole.pole)
     )
   );
 
