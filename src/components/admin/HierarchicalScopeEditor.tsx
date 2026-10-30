@@ -29,8 +29,6 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
   const { toast } = useToast();
   const [draft, setDraft] = useState<HierarchicalScope>(initial);
   const [reason, setReason] = useState('');
-  const [regionInput, setRegionInput] = useState('');
-  const [portfolioInput, setPortfolioInput] = useState('');
   const [saving, setSaving] = useState(false);
   const org = useQuery({
     queryKey: ['scope-org', user?.id],
@@ -68,7 +66,8 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
     return allPoles.filter(p => values.has(p.id));
   }, [draft.subsidiaries, org.data]);
   const valid = !!roleId && draft.subsidiaries.length > 0 &&
-    draft.poles.every(pole => allowedPoles.some(item => item.id === pole));
+    draft.poles.every(pole => allowedPoles.some(item => item.id === pole)) &&
+    draft.regions.length === 0 && draft.portfolios.length === 0;
   const canEdit = isSuperAdmin && !!roleId && !saving && !org.isError && !stored.isError;
   const selectEntity = (entity: string, checked: boolean) => {
     const subsidiaries = toggle(draft.subsidiaries, entity, checked);
@@ -81,11 +80,6 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
       poles: current.poles.filter(pole => available.has(pole)),
       regions: [], portfolios: [],
     }));
-  };
-  const addValue = (kind: 'regions' | 'portfolios', raw: string) => {
-    const input = raw.trim();
-    if (!input || !draft.subsidiaries.length) return;
-    setDraft(current => ({ ...current, [kind]: unique([...current[kind], input]) }));
   };
   const save = async () => {
     if (!canEdit || !valid || reason.trim().length < 8) return;
@@ -147,38 +141,27 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
         </div>
         {draft.subsidiaries.length > 0 && !allowedPoles.length && <p className="text-xs text-destructive">Aucun pôle autorisable dans ces entités.</p>}
       </fieldset>
-      <fieldset disabled={!canEdit || !draft.subsidiaries.length} className="space-y-3 rounded-lg border p-4">
-        <legend className="px-2 text-sm font-semibold">3 — Régions et portefeuilles dépendants</legend>
-        <p className="text-xs text-muted-foreground">
-          Ces identifiants nécessitent une vérification métier avant activation.
-          Une liste vide signifie « Toutes dans le périmètre sélectionné », non toutes les régions ou portefeuilles de BIB.
+      <fieldset className="space-y-3 rounded-lg border p-4">
+        <legend className="px-2 text-sm font-semibold">3 — Régions et portefeuilles du périmètre</legend>
+        <p className="text-sm text-muted-foreground">
+          Le rattachement doit respecter à la fois l’entité BIB et le ou les pôles choisis.
+          La base ne fournit pas encore de relation filiale → région ou filiale → portefeuille
+          permettant une sélection fiable. Ces deux filtres sont donc indisponibles pour les nouvelles politiques.
         </p>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Régions (codes exacts)</label>
-            <div className="flex gap-2">
-              <Input value={regionInput} onChange={e => setRegionInput(e.target.value)} placeholder="Ex. FR" />
-              <Button type="button" variant="outline" onClick={() => { addValue('regions',regionInput); setRegionInput(''); }}>Ajouter</Button>
-            </div>
-            <div className="flex flex-wrap gap-2">{draft.regions.map(region =>
-              <Button type="button" variant="outline" size="sm" key={region}
-                onClick={() => setDraft(current => ({ ...current, regions: current.regions.filter(x => x !== region) }))}>
-                {region} ×
-              </Button>)}</div>
-          </div>
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Portefeuilles (références métier)</label>
-            <div className="flex gap-2">
-              <Input value={portfolioInput} onChange={e => setPortfolioInput(e.target.value)} placeholder="Identifiant portefeuille"/>
-              <Button type="button" variant="outline" onClick={() => { addValue('portfolios',portfolioInput); setPortfolioInput(''); }}>Ajouter</Button>
-            </div>
-            <div className="flex flex-wrap gap-2">{draft.portfolios.map(portfolio =>
-              <Button type="button" variant="outline" size="sm" key={portfolio}
-                onClick={() => setDraft(current => ({ ...current, portfolios: current.portfolios.filter(x => x !== portfolio) }))}>
-                {portfolio} ×
-              </Button>)}</div>
-          </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <label className="block space-y-2 text-sm">
+            <span>Régions de l’entité / du pôle</span>
+            <Input disabled value="" placeholder="Aucune région vérifiée pour cette sélection" />
+          </label>
+          <label className="block space-y-2 text-sm">
+            <span>Portefeuilles de l’entité / du pôle</span>
+            <Input disabled value="" placeholder="Rattachement aux filiales à compléter" />
+          </label>
         </div>
+        <p className="text-xs text-muted-foreground">
+          Dans cette préparation, « tous » désigne les régions et portefeuilles du parent sélectionné,
+          pas ceux des autres filiales ou pôles. Leur contrôle réel devra être appliqué par les APIs métier.
+        </p>
       </fieldset>
       <fieldset disabled={!canEdit || !draft.subsidiaries.length} className="rounded-lg border p-4">
         <legend className="px-2 text-sm font-semibold">4 — Propriété des enregistrements</legend>
