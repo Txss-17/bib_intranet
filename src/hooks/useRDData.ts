@@ -44,9 +44,9 @@ export interface SupplierPerformanceRow {
   name: string;
   country: string;
   products_count: number;
-  quality_score: number;
-  risk_score: number;
-  status: string;
+  quality_score: number | null;
+  risk_score: number | null;
+  status: string | null;
   last_audit_date: string | null;
   isMock: boolean;
 }
@@ -336,13 +336,13 @@ export const useProductSupplierData = () =>
             ] ?? 0,
 
           quality_score:
-            supplier.quality_score ?? 50,
+            supplier.quality_score,
 
           risk_score:
-            supplier.risk_score ?? 50,
+            supplier.risk_score,
 
           status:
-            supplier.status ?? 'active',
+            supplier.status,
 
           last_audit_date:
             supplier.last_audit_date,
