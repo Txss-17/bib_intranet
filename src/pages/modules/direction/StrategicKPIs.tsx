@@ -11,15 +11,16 @@ export default function StrategicKPIs() {
   }
 
   if(isError)return <p role="alert">Les indicateurs sont indisponibles ou hors de votre périmètre. <button onClick={()=>void refetch()}>Réessayer</button></p>;
+  const present = (n: number | null | undefined) => n == null || !Number.isFinite(n) ? '—' : n.toLocaleString('fr-FR');
   const kpis = [
-    { label: "Entrées EUR", value: (data?.recordedIncome ?? 0).toLocaleString('fr-FR'), unit: '€' },
-    { label: 'Solde des flux', value: (data?.cashBalance ?? 0).toLocaleString('fr-FR'), unit: '€' },
-    { label: 'Commandes', value: data?.totalOrders ?? 0, unit: '' },
-    { label: 'Fournisseurs actifs', value: data?.totalSuppliers ?? 0, unit: '' },
-    { label: 'Utilisateurs à risque', value: data?.atRiskUsers ?? 0, unit: '' },
-    { label: 'Incidents ouverts', value: data?.openIncidents ?? 0, unit: '' },
-    { label: 'Tickets ouverts', value: data?.openTickets ?? 0, unit: '' },
-    { label: 'Produits en attente', value: data?.pendingProducts ?? 0, unit: '' },
+    { label: "Entrées EUR", value: present(data?.recordedIncome), unit: '€' },
+    { label: 'Solde des flux', value: present(data?.cashBalance), unit: '€' },
+    { label: 'Commandes', value: present(data?.totalOrders), unit: '' },
+    { label: 'Fournisseurs actifs', value: present(data?.totalSuppliers), unit: '' },
+    { label: 'Utilisateurs à risque', value: present(data?.atRiskUsers), unit: '' },
+    { label: 'Incidents ouverts', value: present(data?.openIncidents), unit: '' },
+    { label: 'Tickets ouverts', value: present(data?.openTickets), unit: '' },
+    { label: 'Produits en attente', value: present(data?.pendingProducts), unit: '' },
   ];
 
   return (
@@ -50,7 +51,7 @@ export default function StrategicKPIs() {
       <Card>
         <CardHeader><CardTitle className="text-base">Qualité fournisseurs</CardTitle></CardHeader>
         <CardContent>
-          <Badge variant="outline">Score moyen : {data?.avgSupplierQuality ?? 0}%</Badge>
+          <Badge variant="outline">Score moyen : {data?.avgSupplierQuality == null ? 'Non évalué' : `${data.avgSupplierQuality}%`}</Badge>
         </CardContent>
       </Card>
     </div>
