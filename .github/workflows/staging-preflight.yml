@@ -1,0 +1,39 @@
+name: BIB Staging - Read-only deployment preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-stage:
+    name: Verify both BIB staging schemas
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      PLATFORM_DATABASE_URL: ${{ secrets.BIB_STAGING_PLATFORM_DATABASE_URL }}
+      INTRANET_DATABASE_URL: ${{ secrets.BIB_STAGING_INTRANET_DATABASE_URL }}
+      PGOPTIONS: "-c default_transaction_read_only=on -c statement_timeout=15000"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Require explicit staging-only database connections
+        run: |
+          set -euo pipefail
+          if [[ -z "${PLATFORM_DATABASE_URL}" || -z "${INTRANET_DATABASE_URL}" ]]; then
+            echo "Missing staging database URLs; configure both GitHub staging secrets before a manual run."
+            exit 1
+          fi
+
+      - name: Verify Platform staging schema without writes
+        run: psql "${PLATFORM_DATABASE_URL}" --no-psqlrc -v ON_ERROR_STOP=1 -f ops/release/platform-preflight.sql
+
+      - name: Verify Intranet staging schema without writes
+        run: psql "${INTRANET_DATABASE_URL}" --no-psqlrc -v ON_ERROR_STOP=1 -f ops/release/intranet-preflight.sql
+
+      - name: Mark scope of evidence
+        run: |
+          echo "STAGING_SCHEMA_CHECKS_PASSED: this proves only schema and minimum security prerequisites."
+          echo "It does NOT attest Edge Function deployment, secrets, scheduler, payment sandbox, or end-to-end journeys."
