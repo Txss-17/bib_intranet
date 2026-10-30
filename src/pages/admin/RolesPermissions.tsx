@@ -1037,9 +1037,16 @@ const RolesPermissions = () => {
                   </tbody>
                 </table>
               </div>
+              <div className="space-y-2 rounded-lg border p-3">
+                <h3 className="text-sm font-medium">Périmètres « Pôle » disponibles</h3>
+                <p className="text-xs text-muted-foreground">Ces 14 valeurs peuvent être créées et attribuées à un rôle dans l'onglet Configurer les périmètres.</p>
+                <div className="flex flex-wrap gap-2">
+                  {availablePoles.map((pole) => <Badge variant="secondary" key={pole.id}>{pole.name} ({pole.id})</Badge>)}
+                </div>
+              </div>
               <p className="text-xs text-muted-foreground">
-                Ne pas créer arbitrairement un nouveau type : les fonctions de contrôle serveur doivent
-                le connaître avant qu'il puisse limiter effectivement les données.
+                Les nouveaux types techniques nécessitent un contrôle serveur et une validation de sécurité ;
+                les valeurs concrètes des six types reconnus se configurent ici pour chaque rôle.
               </p>
               <Button type="button" onClick={() => setActiveTab('scopes')}>
                 <Plus className="mr-2 h-4 w-4" />Créer et attribuer un périmètre à un rôle
@@ -1068,10 +1075,15 @@ const RolesPermissions = () => {
                 </select>
               </label>
               {selectedRole && (
-                <div className="rounded-md border bg-muted/20 p-3 text-sm">
-                  <strong>Configuration enregistrée :</strong> {roleScopeLabels(selectedRole.id)}
+                <div className="rounded-md border bg-muted/20 p-3 text-sm space-y-1">
+                  <p><strong>Configuration enregistrée :</strong> {roleScopeLabels(selectedRole.id)}</p>
+                  <p><strong>Affectations actives du rôle :</strong> {roleAssignmentCounts[selectedRole.id] ?? 0}</p>
+                  <p className="text-xs text-muted-foreground">Pour donner ce rôle à un compte, utilisez <Link to="/pole/rh/access" className="underline">RH → Accès & habilitations</Link>.</p>
                 </div>
               )}
+              {!isSuperAdmin && <p role="alert" className="rounded-md border p-3 text-sm text-destructive">
+                L'édition des périmètres nécessite le rôle administrateur technique.
+              </p>}
               {scopeDraft.map((entry, index) => {
                 const selectedScope = scopes.find((item) => item.id === entry.scope_id);
                 const needsValue = !['global', 'own_records'].includes(selectedScope?.scope_key ?? '');
@@ -1107,13 +1119,13 @@ const RolesPermissions = () => {
                       )}
                     </label>
                     <Button type="button" variant="outline" className="self-end"
-                      disabled={savingScopes} onClick={() => setScopeDraft((current) => current.filter((_, i) => i !== index))}>
+                      disabled={savingScopes || !isSuperAdmin} onClick={() => setScopeDraft((current) => current.filter((_, i) => i !== index))}>
                       Retirer
                     </Button>
                   </div>
                 );
               })}
-              <Button variant="outline" disabled={!selectedRoleId || savingScopes || scopes.length === 0}
+              <Button variant="outline" disabled={!isSuperAdmin || !selectedRoleId || savingScopes || scopes.length === 0}
                 onClick={addScope}><Plus className="mr-2 h-4 w-4" />Ajouter un périmètre</Button>
               <label className="block space-y-2 text-sm font-medium">
                 <span>Motif de modification (journalisé)</span>
@@ -1128,7 +1140,7 @@ const RolesPermissions = () => {
                       .map((entry) => ({ scope_id: entry.scope_id, scope_value: entry.scope_value ?? '' })));
                     setScopeReason('');
                   }}>Annuler les modifications</Button>
-                <Button disabled={!selectedRoleId || savingScopes || loading || scopeReason.trim().length < 8}
+                <Button disabled={!isSuperAdmin || !selectedRoleId || savingScopes || loading || scopeReason.trim().length < 8}
                   onClick={() => void saveExistingRoleScopes()}>
                   {savingScopes && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Enregistrer les périmètres
