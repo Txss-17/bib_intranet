@@ -15,6 +15,9 @@ INSERT INTO public.sav_escalation_queue
  VALUES
  ('20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000011','20000000-0000-4000-8000-000000000021','20000000-0000-4000-8000-000000000031',now()-interval '49 hours',now()-interval '1 hour','live'),
  ('20000000-0000-4000-8000-000000000002','20000000-0000-4000-8000-000000000012','20000000-0000-4000-8000-000000000022','20000000-0000-4000-8000-000000000032',now()-interval '49 hours',now()-interval '1 hour','sandbox');
+-- Migration 0054 commits its own transaction. Start a new one so SET LOCAL
+-- ROLE and JWT settings remain effective throughout the RLS tests.
+BEGIN;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.role','authenticated',true);
 SELECT set_config('request.jwt.claim.sub','10000000-0000-4000-8000-000000000001',true);
