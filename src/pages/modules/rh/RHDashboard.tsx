@@ -187,9 +187,7 @@ export default function RHDashboard() {
 
           <CardContent>
             <div className="text-2xl font-bold">
-              {employeesLoading
-                ? '…'
-                : activeEmployees.length}
+              {employeesError ? '—' : employeesLoading ? '…' : activeEmployees.length}
             </div>
 
             <p className="text-xs text-muted-foreground">
@@ -209,9 +207,7 @@ export default function RHDashboard() {
 
           <CardContent>
             <div className="text-2xl font-bold">
-              {employeesLoading
-                ? '…'
-                : onboardingEmployees.length}
+              {employeesError ? '—' : employeesLoading ? '…' : onboardingEmployees.length}
             </div>
 
             <p className="text-xs text-muted-foreground">
@@ -231,9 +227,7 @@ export default function RHDashboard() {
 
           <CardContent>
             <div className="text-2xl font-bold">
-              {onboardingLoading
-                ? '…'
-                : pendingOnboardingRequests.length}
+              {onboardingError ? '—' : onboardingLoading ? '…' : pendingOnboardingRequests.length}
             </div>
 
             <p className="text-xs text-muted-foreground">
@@ -253,9 +247,7 @@ export default function RHDashboard() {
 
           <CardContent>
             <div className="text-2xl font-bold">
-              {employeesLoading
-                ? '…'
-                : employeesOnLeave.length}
+              {employeesError ? '—' : employeesLoading ? '…' : employeesOnLeave.length}
             </div>
 
             <p className="text-xs text-muted-foreground">
@@ -305,9 +297,7 @@ export default function RHDashboard() {
               </div>
 
               <p className="mt-1 text-2xl font-bold">
-                {onboardingLoading
-                  ? '…'
-                  : pendingOnboardingRequests.length}
+                {onboardingError ? '—' : onboardingLoading ? '…' : pendingOnboardingRequests.length}
               </p>
 
               <p className="text-xs text-muted-foreground">
@@ -325,9 +315,7 @@ export default function RHDashboard() {
               </div>
 
               <p className="mt-1 text-2xl font-bold">
-                {onboardingLoading
-                  ? '…'
-                  : validatedOnboardingRequests.length}
+                {onboardingError ? '—' : onboardingLoading ? '…' : validatedOnboardingRequests.length}
               </p>
 
               <p className="text-xs text-muted-foreground">
@@ -345,9 +333,7 @@ export default function RHDashboard() {
               </div>
 
               <p className="mt-1 text-2xl font-bold">
-                {onboardingLoading
-                  ? '…'
-                  : accountCreationRequests.length}
+                {onboardingError ? '—' : onboardingLoading ? '…' : accountCreationRequests.length}
               </p>
 
               <p className="text-xs text-muted-foreground">
@@ -365,9 +351,7 @@ export default function RHDashboard() {
               </div>
 
               <p className="mt-1 text-2xl font-bold">
-                {onboardingLoading
-                  ? '…'
-                  : completedOnboardingRequests.length}
+                {onboardingError ? '—' : onboardingLoading ? '…' : completedOnboardingRequests.length}
               </p>
 
               <p className="text-xs text-muted-foreground">
@@ -496,9 +480,7 @@ export default function RHDashboard() {
                 </div>
 
                 <span className="font-semibold">
-                  {employeesLoading
-                    ? '…'
-                    : employees.length}
+                  {employeesError ? '—' : employeesLoading ? '…' : employees.length}
                 </span>
               </div>
 
@@ -518,9 +500,7 @@ export default function RHDashboard() {
                 </div>
 
                 <span className="font-semibold">
-                  {onboardingLoading
-                    ? '…'
-                    : onboardingRequests.length}
+                  {onboardingError ? '—' : onboardingLoading ? '…' : onboardingRequests.length}
                 </span>
               </div>
 
@@ -540,9 +520,7 @@ export default function RHDashboard() {
                 </div>
 
                 <span className="font-semibold">
-                  {employeesLoading
-                    ? '…'
-                    : employeesOnLeave.length}
+                  {employeesError ? '—' : employeesLoading ? '…' : employeesOnLeave.length}
                 </span>
               </div>
 
