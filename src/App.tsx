@@ -220,6 +220,7 @@ import ESGReports from "./pages/modules/rse/ESGReports";
 
 import ProductEngineeringDashboard from "./pages/modules/product/ProductEngineeringDashboard";
 import ProductPlanningWorkspace from "./components/product/ProductPlanningWorkspace";
+import MarketingWorkflowPage from "./components/marketing/MarketingWorkflowPage";
 import ProductStudio from "./pages/modules/product/ProductStudio";
 import ProductIntegrations from "./pages/modules/product/ProductIntegrations";
 import ProductDocumentation from "./pages/modules/product/ProductDocumention";
@@ -668,15 +669,15 @@ const App = () => (
                 <Route path="/pole/marketing/analytics" element={<Analytics />} />
                 <Route
                   path="/pole/marketing/crm"
-                  element={<Navigate to="/pole/marketplace/customers" replace />}
+                  element={<MarketingWorkflowPage mode="crm" />}
                 />
                 <Route
                   path="/pole/marketing/journeys"
-                  element={<Navigate to="/pole/marketing/campaigns" replace />}
+                  element={<MarketingWorkflowPage mode="journeys" />}
                 />
                 <Route
                   path="/pole/marketing/reputation"
-                  element={<Navigate to="/pole/marketing/analytics" replace />}
+                  element={<MarketingWorkflowPage mode="reputation" />}
                 />
 
                 {/* ====================================================
