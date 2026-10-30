@@ -48,5 +48,4 @@ BEGIN
  VALUES(p_id,v_actor,p_status,nullif(trim(coalesce(p_note,'')),''),to_jsonb(v_old),to_jsonb(v_next));
  RETURN to_jsonb(v_next);
 END;
-$function$
-
+$function$;
