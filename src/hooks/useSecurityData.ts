@@ -289,6 +289,10 @@ export const useSecurityAccess = () => {
         .select(
           'id, first_name, last_name, email, position, poles, avatar_url',
         )
+        // Only actual collaborator identities belong in the access directory.
+        // BOS sandbox/seed accounts are retained in the database for testing,
+        // but must never inflate the operational headcount.
+        .eq('test_account', false)
         .order('created_at', {
           ascending: false,
         });
