@@ -271,6 +271,7 @@ import SecurityDocumentation from "./pages/modules/security/SecurityDocumentatio
 import SecuritySandbox from "./pages/modules/security/SecuritySandbox";
 import SecuritySupervision from "./pages/modules/security/SecuritySupervision";
 import SecurityDataFlow from "./pages/modules/security/SecurityDataFlow";
+import SecurityPlatform from "./pages/modules/security/SecurityPlatform";
 
 
 
@@ -931,6 +932,10 @@ const App = () => (
                 <Route
                   path="/pole/security/dataflow"
                   element={<SecurityDataFlow />}
+                />
+                <Route
+                  path="/pole/security/platform"
+                  element={<SecurityPlatform />}
                 />
 
                 {/* Security / Supabase supervision */}
