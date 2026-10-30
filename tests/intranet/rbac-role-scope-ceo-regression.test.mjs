@@ -55,3 +55,22 @@ test('server-side guard protects CEO and assigned role scope', () => {
   assert.match(trigger, /The requested scope is not configured for this role/);
   assert.match(trigger, /BEFORE INSERT OR UPDATE OR DELETE ON public\.access_assignments/);
 });
+
+test('role scopes can be composed from multiple verified BIB perimeters', () => {
+  const page = read('src/pages/admin/RolesPermissions.tsx');
+  assert.match(page, /Composer les périmètres métier/);
+  assert.match(page, /Pôles BIB — sélection multiple/);
+  assert.match(page, /Entités et filiales BIB — sélection multiple/);
+  assert.match(page, /businessSubsidiaries\.map/);
+  assert.match(page, /scopeSelected\('own_records', null\)/);
+  assert.match(page, /toggleScopeValue\('pole', pole\.id, event\.target\.checked\)/);
+  assert.match(page, /toggleScopeValue\('global', null, event\.target\.checked\)/);
+  assert.match(page, /\.eq\('test_account', false\)/);
+});
+
+test('catalog refresh cannot silently regrant removed role scope defaults', () => {
+  const sync = read('supabase/functions/sync-rbac-catalog/index.ts');
+  assert.match(sync, /configuredRoleIds/);
+  assert.match(sync, /!configuredRoleIds\.has\(row\.role_id\)/);
+  assert.doesNotMatch(sync, /existingScopeKeys/);
+});
