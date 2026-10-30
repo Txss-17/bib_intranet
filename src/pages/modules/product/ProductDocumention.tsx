@@ -1,2 +1,2 @@
-import ModuleWorkspace from '@/components/operations/ModuleWorkspace';
-export default function Page() { return <ModuleWorkspace pageId="product.documentation" />; }
+import ProductTechnicalReviewPage from '@/components/product/ProductTechnicalReviewPage';
+export default function Page() { return <ProductTechnicalReviewPage mode="documentation" />; }
