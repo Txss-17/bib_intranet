@@ -27,10 +27,17 @@ import {
 } from '@/hooks/useSecurityData';
 
 export default function SecurityDashboard() {
-  const { data: authLogs = [] } = useSecurityAuthLogs(20);
-  const { data: edgeLogs = [] } = useProductEdgeFunctionLogs(20);
-  const { data: vpn = [] } = useSecurityVpnAccess();
-  const { data: alerts = [] } = useSecurityAlerts();
+  const authQuery = useSecurityAuthLogs(20);
+  const edgeQuery = useProductEdgeFunctionLogs(20);
+  const vpnQuery = useSecurityVpnAccess();
+  const alertQuery = useSecurityAlerts();
+  const authLogs = authQuery.data ?? [];
+  const edgeLogs = edgeQuery.data ?? [];
+  const vpn = vpnQuery.data ?? [];
+  const alerts = alertQuery.data ?? [];
+  const missingSources = [authQuery, edgeQuery, vpnQuery, alertQuery].some(
+    (query) => query.isError || query.isLoading,
+  );
 
   const failedLogins = authLogs.filter(
     (log) => log.event_type === 'login_failure',
@@ -59,7 +66,7 @@ export default function SecurityDashboard() {
             edgeLogs.length) *
             100,
         )
-      : 0;
+      : null;
 
   const sections = [
     {
@@ -93,7 +100,7 @@ export default function SecurityDashboard() {
       desc: 'Documentation Produit & Engineering',
     },
     {
-      to: '/pole/product/console',
+      to: '/pole/security/console',
       label: 'Console Produit',
       icon: Server,
       desc: 'Outils techniques et opérations',
@@ -129,7 +136,7 @@ export default function SecurityDashboard() {
       desc: 'Services et connexions externes',
     },
     {
-      to: '/pole/product/code',
+      to: '/pole/security/code',
       label: 'Code & GitHub',
       icon: Code2,
       desc: 'Dépôts, branches et PR',
@@ -163,6 +170,12 @@ export default function SecurityDashboard() {
         </p>
       </div>
 
+      {missingSources && (
+        <div role="alert" className="rounded-lg border border-warning/40 p-3 text-sm">
+          Certaines sources de sécurité ne sont pas disponibles ou sont encore en cours de chargement.
+          Les indicateurs concernés ne doivent pas être interprétés comme des valeurs nulles.
+        </div>
+      )}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -181,7 +194,7 @@ export default function SecurityDashboard() {
                   : ''
               }`}
             >
-              {failedLogins}
+              {authQuery.isError || authQuery.isLoading ? '—' : failedLogins}
             </div>
 
             <p className="text-xs text-muted-foreground">
@@ -201,7 +214,7 @@ export default function SecurityDashboard() {
 
           <CardContent>
             <div className="text-2xl font-bold">
-              {activeVpn}
+              {vpnQuery.isError || vpnQuery.isLoading ? '—' : activeVpn}
             </div>
 
             <p className="text-xs text-muted-foreground">
@@ -229,11 +242,11 @@ export default function SecurityDashboard() {
                     : ''
               }`}
             >
-              {openAlerts}
+              {alertQuery.isError || alertQuery.isLoading ? '—' : openAlerts}
             </div>
 
             <p className="text-xs text-muted-foreground">
-              {criticalAlerts} critique
+              {alertQuery.isError || alertQuery.isLoading ? '—' : criticalAlerts} critique
               {criticalAlerts > 1 ? 's' : ''}
             </p>
           </CardContent>
@@ -251,12 +264,12 @@ export default function SecurityDashboard() {
           <CardContent>
             <div
               className={`text-2xl font-bold ${
-                errorRate > 5
+                errorRate != null && errorRate > 5
                   ? 'text-destructive'
                   : 'text-success'
               }`}
             >
-              {errorRate}%
+              {edgeQuery.isError || edgeQuery.isLoading || errorRate == null ? '—' : `${errorRate}%`}
             </div>
 
             <p className="text-xs text-muted-foreground">
@@ -307,7 +320,9 @@ export default function SecurityDashboard() {
           </CardHeader>
 
           <CardContent>
-            {authLogs.length === 0 ? (
+            {authQuery.isError || authQuery.isLoading ? (
+              <p role="status" className="text-sm text-muted-foreground">Journaux d’authentification indisponibles ou en chargement.</p>
+            ) : authLogs.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Aucune activité enregistrée.
               </p>
@@ -365,7 +380,9 @@ export default function SecurityDashboard() {
           </CardHeader>
 
           <CardContent>
-            {openSecurityAlerts.length === 0 ? (
+            {alertQuery.isError || alertQuery.isLoading ? (
+              <p role="status" className="text-sm text-muted-foreground">Alertes de sécurité indisponibles ou en chargement.</p>
+            ) : openSecurityAlerts.length === 0 ? (
               <p className="text-sm text-muted-foreground">
                 Aucune alerte ouverte.
               </p>
