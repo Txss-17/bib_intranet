@@ -94,10 +94,10 @@ export default function ProductEngineeringDashboard() {
 
     <div role="note" className="flex items-start gap-3 rounded-lg border p-4 text-sm text-muted-foreground">
       <TestTube2 className="mt-0.5 h-5 w-5 shrink-0" />
-      Les registres génériques de roadmap, backlog, engineering et intégrations dépendent
-      de fonctions de données qui ne sont pas encore confirmées opérationnelles.
-      Les statuts de compilation, de recette et de déploiement ne sont pas déduits de fiches administratives.
-      Les vraies exécutions devront être raccordées aux preuves CI/CD et aux environnements.
+      Les dossiers Produit, Roadmap, Backlog, Engineering et Intégrations sont reliés
+      à un registre serveur spécifique au pôle Produit, avec historique et validation.
+      Une fiche validée n'est toutefois pas une preuve d'exécution de tests ou de déploiement.
+      Les rapports CI/CD et les environnements réels doivent être vérifiés séparément.
     </div>
 
     {sections.map((section) => {
