@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { BarChart3, BookOpen, GitPullRequest, ListChecks, History, LineChart, ArrowRight, Database, GitBranch, ShieldCheck, Activity, FlaskConical, Workflow } from 'lucide-react';
+import { BarChart3, BookOpen, GitPullRequest, ListChecks, History, LineChart, ArrowRight, Database, GitBranch, ShieldCheck, Activity, Workflow } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useDataSources } from '@/hooks/useBI';
 import { useKpiCatalog, usePublicationRequests, useTechBacklog, usePublications } from '@/hooks/useDataQueries';
