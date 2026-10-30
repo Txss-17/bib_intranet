@@ -29,19 +29,26 @@ export default function Contracts() {
   const [editing, setEditing] = useState<Contract | undefined>();
 
   const { data: shops = [] } = useShops();
-  const { data: contracts = [], isLoading } = useContracts(search || undefined, shopFilter === ALL ? undefined : shopFilter);
+  const { data: contracts = [], isLoading, isError, refetch } = useContracts(search || undefined, shopFilter === ALL ? undefined : shopFilter);
   const create = useCreateContract();
   const update = useUpdateContract();
   const onErr = (e: Error) => toast.error('Erreur', { description: e.message });
 
-  const handleSubmit = (data: any) => {
-    if (editing) {
-      update.mutate({ id: editing.id, ...data }, { onSuccess: () => toast.success('Contrat modifié'), onError: onErr });
-    } else {
-      const num = `C-${new Date().getFullYear()}-${Date.now().toString(36).toUpperCase().slice(-5)}`;
-      create.mutate({ contract_number: num, ...data }, { onSuccess: () => toast.success('Contrat créé'), onError: onErr });
+  const handleSubmit = async (data: any) => {
+    try {
+      if (editing) {
+        await update.mutateAsync({ id: editing.id, ...data });
+        toast.success('Contrat modifié');
+      } else {
+        const num = `C-${new Date().getFullYear()}-${crypto.randomUUID().slice(0, 10).toUpperCase()}`;
+        await create.mutateAsync({ contract_number: num, ...data });
+        toast.success('Contrat créé');
+      }
+      setEditing(undefined);
+      setFormOpen(false);
+    } catch (error) {
+      onErr(error instanceof Error ? error : new Error('Enregistrement du contrat non confirmé'));
     }
-    setEditing(undefined);
   };
 
   const rows = contracts.map((c) => ({ ...c, shop_name: c.shop?.name ?? '' }));
@@ -51,15 +58,18 @@ export default function Contracts() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div><h1 className="text-2xl font-bold">Contrats</h1><p className="text-muted-foreground">Contrats et accords, rattachés aux boutiques</p></div>
         <div className="flex gap-2">
-          <ExportButtons filename="contrats" title="Liste des contrats" poleName="Compliance" columns={[
+          {!isLoading && !isError && <ExportButtons filename="contrats" title="Liste des contrats" poleName="Compliance" columns={[
             { header: 'N°', accessor: 'contract_number' }, { header: 'Titre', accessor: 'title' },
             { header: 'Boutique', accessor: 'shop_name' }, { header: 'Type', accessor: 'type' },
             { header: 'Début', accessor: 'start_date' }, { header: 'Fin', accessor: 'end_date' },
             { header: 'Valeur', accessor: 'value' }, { header: 'Statut', accessor: 'status' },
-          ]} data={rows} />
+           ]} data={rows} />}
           <Button onClick={() => { setEditing(undefined); setFormOpen(true); }}><Plus className="mr-2 h-4 w-4" />Nouveau contrat</Button>
         </div>
       </div>
+      {isError && <div role="alert" className="rounded border border-destructive/40 p-3 text-sm">
+        Contrats indisponibles. <Button size="sm" variant="outline" onClick={() => void refetch()}>Réessayer</Button>
+      </div>}
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center gap-4">
@@ -79,7 +89,7 @@ export default function Contracts() {
         <CardContent>
           {isLoading ? (
             <div className="flex h-32 items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-          ) : (
+          ) : isError ? <p className="p-6 text-sm text-destructive">La liste des contrats n’est pas confirmée.</p> : (
             <Table>
               <TableHeader><TableRow>
                 <TableHead>N°</TableHead><TableHead>Titre</TableHead><TableHead>Boutique</TableHead><TableHead>Type</TableHead>
