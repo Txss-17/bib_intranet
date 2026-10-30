@@ -109,16 +109,19 @@ export default function MarketplaceDashboard() {
   const {
     data: merchants = [],
     isLoading: merchantsLoading,
+    isError: merchantsError,
   } = useMarketplaceMerchants();
 
   const {
     data: shops = [],
     isLoading: shopsLoading,
+    isError: shopsError,
   } = useMarketplaceShops();
 
   const {
     data: products = [],
     isLoading: productsLoading,
+    isError: productsError,
   } = useMarketplaceProducts();
 
   /**
@@ -130,6 +133,7 @@ export default function MarketplaceDashboard() {
   const {
     data: syncRun,
     isLoading: syncLoading,
+    isError: syncError,
   } = useQuery({
     queryKey: [
       "marketplace",
@@ -175,6 +179,7 @@ export default function MarketplaceDashboard() {
     merchantsLoading ||
     shopsLoading ||
     productsLoading;
+  const incomplete = merchantsError || shopsError || productsError || syncError;
 
   const lastSyncLabel = syncRun?.finished_at
     ? new Intl.DateTimeFormat("fr-FR", {
@@ -221,13 +226,18 @@ export default function MarketplaceDashboard() {
           KPI PORTEFEUILLE
       ====================================================== */}
 
+      {incomplete && (
+        <div role="alert" className="rounded-lg border border-destructive/30 p-4 text-sm text-destructive">
+          Certaines données Marketplace ou la synchronisation Platform sont indisponibles.
+          Les indicateurs concernés ne sont pas confirmés.
+        </div>
+      )}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <KpiCard
           label="Marchands suivis"
           value={
-            loading
-              ? "…"
-              : merchants.length
+            merchantsError
+              ? "—" : merchantsLoading ? "…" : merchants.length
           }
           icon={UsersRound}
           href="/pole/marketplace/merchants"
@@ -236,9 +246,8 @@ export default function MarketplaceDashboard() {
         <KpiCard
           label="Boutiques"
           value={
-            loading
-              ? "…"
-              : shops.length
+            shopsError
+              ? "—" : shopsLoading ? "…" : shops.length
           }
           icon={Store}
           href="/pole/marketplace/stores"
@@ -247,9 +256,8 @@ export default function MarketplaceDashboard() {
         <KpiCard
           label="Boutiques actives"
           value={
-            loading
-              ? "…"
-              : activeShops
+            shopsError
+              ? "—" : shopsLoading ? "…" : activeShops
           }
           icon={BadgeCheck}
           href="/pole/marketplace/stores"
@@ -258,9 +266,8 @@ export default function MarketplaceDashboard() {
         <KpiCard
           label="Produits"
           value={
-            loading
-              ? "…"
-              : products.length
+            productsError
+              ? "—" : productsLoading ? "…" : products.length
           }
           icon={Package}
           href="/pole/marketplace/products"
@@ -289,7 +296,7 @@ export default function MarketplaceDashboard() {
                   </span>
 
                   <span className="text-sm font-semibold">
-                    {statusCounts[status] ?? 0}
+                    {shopsError || shopsLoading ? '—' : statusCounts[status] ?? 0}
                   </span>
                 </Link>
               ),
@@ -305,6 +312,10 @@ export default function MarketplaceDashboard() {
             <div className="text-sm text-muted-foreground">
               Chargement…
             </div>
+          ) : syncError ? (
+            <p role="alert" className="text-sm text-destructive">
+              Impossible de vérifier la dernière synchronisation Platform.
+            </p>
           ) : syncRun ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between gap-3">
@@ -339,7 +350,7 @@ export default function MarketplaceDashboard() {
                 </span>
 
                 <span className="text-sm font-medium">
-                  {syncRun.items_count ?? 0}
+                  {syncRun.items_count ?? 'Non renseigné'}
                 </span>
               </div>
             </div>
