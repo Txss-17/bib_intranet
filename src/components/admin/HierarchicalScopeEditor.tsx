@@ -138,7 +138,12 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
       </fieldset>
       <fieldset disabled={!canEdit || !draft.subsidiaries.length} className="space-y-3 rounded-lg border p-4">
         <legend className="px-2 text-sm font-semibold">2 — Pôles dans les entités sélectionnées</legend>
-        <p className="text-xs text-muted-foreground">Aucun pôle coché = tous les pôles disponibles dans la filiale sélectionnée. Plusieurs pôles cochés = uniquement ces pôles.</p>
+        <p className="text-xs text-muted-foreground">Sélectionner « Global dans la filiale » ou plusieurs pôles précis. Tous les choix restent limités aux entités BIB parentes.</p>
+        <label className="flex items-center gap-2 rounded-md border p-3 text-sm">
+          <input type="radio" name="hierarchy-poles" checked={draft.poles.length === 0}
+            onChange={() => setDraft(current => ({ ...current, poles: [], regions: [], portfolios: [] }))} />
+          <span><strong>Global dans la filiale</strong> — tous les pôles appartenant aux entités BIB sélectionnées</span>
+        </label>
         <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
           {allowedPoles.map(pole => <label key={pole.id} className="flex gap-2 rounded border p-2 text-sm">
             <input type="checkbox" checked={draft.poles.includes(pole.id)}
@@ -175,11 +180,18 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
       </fieldset>
       <fieldset disabled={!canEdit || !draft.subsidiaries.length} className="rounded-lg border p-4">
         <legend className="px-2 text-sm font-semibold">4 — Propriété des enregistrements</legend>
-        <label className="flex gap-3 text-sm"><input type="checkbox" checked={draft.ownRecords}
-          onChange={e => setDraft(current => ({ ...current, ownRecords: e.target.checked }))}/>
-          Limiter aux enregistrements appartenant au collaborateur, dans les entités/pôles/régions/portefeuilles sélectionnés.
-        </label>
-        <p className="mt-2 text-xs text-muted-foreground">Non coché = tous les enregistrements qui respectent les restrictions parentes (« Global » contextuel).</p>
+        <div className="space-y-3 text-sm">
+          <label className="flex items-center gap-3">
+            <input type="radio" name="record-range" checked={!draft.ownRecords}
+              onChange={() => setDraft(current => ({ ...current, ownRecords: false }))}/>
+            <span><strong>Global dans le périmètre actuel</strong> — tous les dossiers des filiales, pôles et sous-périmètres sélectionnés, selon les droits du rôle</span>
+          </label>
+          <label className="flex items-center gap-3">
+            <input type="radio" name="record-range" checked={draft.ownRecords}
+              onChange={() => setDraft(current => ({ ...current, ownRecords: true }))}/>
+            <span><strong>Mes enregistrements</strong> — uniquement les dossiers du collaborateur à l’intérieur du périmètre actuel</span>
+          </label>
+        </div>
       </fieldset>
       <div className="rounded-lg border bg-muted/30 p-4">
         <p className="text-sm font-medium">Prévisualisation logique (intersection)</p>
