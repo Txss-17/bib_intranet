@@ -78,8 +78,7 @@ type SortColumn =
   | 'category'
   | 'supplier_name'
   | 'adoption'
-  | 'orders_30d'
-  | 'revenue_30d';
+  | 'orders_30d';
 
 export default function ProductPerformance() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -230,11 +229,21 @@ export default function ProductPerformance() {
       )
     : 0;
 
-  const totalRevenue = rows.reduce(
-    (total, row) =>
-      total + row.revenue_30d,
-    0,
-  );
+  const grossByCurrency = rows.reduce<Record<string, number>>((total, product) => {
+    for (const [currency, amount] of Object.entries(product.gross_orders_by_currency ?? {})) {
+      total[currency] = (total[currency] ?? 0) + amount;
+    }
+    return total;
+  }, {});
+  const formattedGross = Object.entries(grossByCurrency)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([currency, amount]) => {
+      try {
+        return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount);
+      } catch {
+        return `${amount.toLocaleString('fr-FR')} ${currency}`;
+      }
+    }).join(' · ') || '—';
 
   const kpis = [
     {
@@ -259,12 +268,10 @@ export default function ProductPerformance() {
       icon: BarChart3,
     },
     {
-      label: 'CA sur 30 jours',
-      value: `${Math.round(
-        totalRevenue,
-      ).toLocaleString('fr-FR')} €`,
+      label: 'Commandes (montant brut, 30j)',
+      value: formattedGross,
       description:
-        'Chiffre d’affaires observé',
+        'Hors annulations et remboursements complets ; remboursements partiels non déduits',
       icon: AlertTriangle,
     },
   ];
@@ -338,7 +345,7 @@ export default function ProductPerformance() {
               },
               {
                 accessor: 'revenue_30d',
-                header: 'CA 30j',
+                header: 'Montant brut 30j (par devise)',
               },
             ]}
           />
@@ -540,14 +547,7 @@ export default function ProductPerformance() {
                         Cmd 30j
                       </SortableTableHead>
 
-                      <SortableTableHead
-                        column="revenue_30d"
-                        currentSort={sortColumn}
-                        direction={sortDirection}
-                        onSort={toggleSort}
-                      >
-                        CA 30j
-                      </SortableTableHead>
+                      <TableHead>Montant brut 30j (par devise)</TableHead>
 
                       <TableHead className="text-right">
                         Action
@@ -613,12 +613,15 @@ export default function ProductPerformance() {
                             </TableCell>
 
                             <TableCell className="font-medium">
-                              {Math.round(
-                                product.revenue_30d,
-                              ).toLocaleString(
-                                'fr-FR',
-                              )}{' '}
-                              €
+                              {Object.entries(product.gross_orders_by_currency ?? {})
+                                .sort(([a], [b]) => a.localeCompare(b))
+                                .map(([currency, amount]) => {
+                                  try {
+                                    return new Intl.NumberFormat('fr-FR', { style: 'currency', currency }).format(amount);
+                                  } catch {
+                                    return `${amount.toLocaleString('fr-FR')} ${currency}`;
+                                  }
+                                }).join(' · ') || '—'}
                             </TableCell>
 
                             <TableCell className="text-right">
