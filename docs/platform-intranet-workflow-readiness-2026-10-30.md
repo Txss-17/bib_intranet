@@ -34,9 +34,9 @@
 | Supervision de la liaison | Intranet | `platform_sync_runs` et journal logistique distinct | Vérifier droits de lecture et erreurs de synchronisation réelles |
 
 ## Bloquants avant lancement
-1. **Identités et accès collaborateurs** : PR Intranet n°20 toujours non fusionnée à la date de revue. Vérifier migrations et tests des deux comptes existants, ainsi que les révocations.
-2. **Régression typage** : PR Intranet n°21 restaure les champs de schéma supprimés lors d'une régénération Lovable ; fusion contrôlée avant les autres branches.
-3. **Spécialisation des pages** : PR Intranet n°22 introduit le premier lot de 14 définitions métier ; la correction doit préserver les dossiers historiques et la cohérence SQL.
+1. **Identités et accès collaborateurs** : PR Intranet n°20 fusionnée, mais l'application des migrations et la connexion des deux comptes réels restent à vérifier ; conserver les révocations.
+2. **Régression typage** : PR Intranet n°21 fusionnée ; contrôler les types lors de toute régénération Lovable et vérifier le typage de la nouvelle branche.
+3. **Spécialisation des pages** : PR Intranet n°22 a fusionné le premier lot de 14 pages. PR n°23 complète 14 pages supplémentaires (28 au total), corrige le registre JSON et conserve les dossiers historiques et la cohérence SQL.
 4. **Remboursements** : PR Platform n°7, validation Stripe→Platform→Intranet sur sandbox avant production.
 5. **Frontière sandbox/live Platform** : isolation côté serveur à confirmer ; aucun test ne doit pouvoir déclencher une opération logistique réelle.
 6. **Cycle de commande et encaissement marchand** : vérifier modèle de commande par boutique, reversement et frais réels, et scénario d'annulation.
