@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Plus, Database, Code, Zap, Package, FileDown, Sigma } from 'lucide-react';
 import { useDataSources, useCreateDataSource, BIDataSource } from '@/hooks/useBI';
+import { useAuth } from '@/hooks/useAuth';
+import { poles as businessPoles } from '@/data/poles';
 
 const TYPE_ICON: Record<string, any> = {
   kpi: Database, sql_view: Code, api: Zap, dataset: Package, export: FileDown, custom: Sigma,
@@ -19,17 +21,20 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export default function BIDataSources() {
+  const { profile } = useAuth();
   const sourcesQuery = useDataSources();
   const { data: sources = [], isLoading, isError, refetch } = sourcesQuery;
   const create = useCreateDataSource();
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<{ name: string; type: BIDataSource['type']; description: string }>({ name: '', type: 'kpi', description: '' });
+  const [form, setForm] = useState<{ name: string; type: BIDataSource['type']; description: string; business_pole: string }>({ name: '', type: 'kpi', description: '', business_pole: '' });
 
   const submit = async () => {
-    if (!form.name.trim()) return;
-    await create.mutateAsync(form);
-    setOpen(false);
-    setForm({ name: '', type: 'kpi', description: '' });
+    if (!form.name.trim() || !form.business_pole || !profile?.subsidiary || !(profile.poles ?? []).includes(form.business_pole as any)) return;
+    try {
+      await create.mutateAsync({ ...form, business_subsidiary: profile.subsidiary });
+      setOpen(false);
+      setForm({ name: '', type: 'kpi', description: '', business_pole: '' });
+    } catch { /* Error is surfaced by the data mutation; keep dialog open. */ }
   };
 
   return (
@@ -56,11 +61,22 @@ export default function BIDataSources() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1">
+                <Label>Domaine métier autorisé</Label>
+                <Select value={form.business_pole} onValueChange={business_pole => setForm(current => ({ ...current, business_pole }))}>
+                  <SelectTrigger><SelectValue placeholder="Choisir le pôle concerné" /></SelectTrigger>
+                  <SelectContent>
+                    {businessPoles.filter(item => (profile?.poles ?? []).includes(item.id as any))
+                      .map(item => <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">Entité : {profile?.subsidiary ?? 'Non définie'}. Ce choix est revalidé par le serveur.</p>
+              </div>
               <div><Label>Description</Label><Textarea rows={3} value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} /></div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-              <Button onClick={submit} disabled={create.isPending}>Créer</Button>
+              <Button onClick={submit} disabled={create.isPending || !form.business_pole || !profile?.subsidiary}>Créer</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
