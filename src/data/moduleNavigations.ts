@@ -97,6 +97,7 @@ export const moduleNavigations: Record<
         path: '/pole/direction/board-reports',
         icon: 'FileText',
       },
+          { id: 'global', label: 'Direction globale', path: '/pole/direction/global', icon: 'Building2' },
     ],
   },
 
@@ -160,6 +161,7 @@ export const moduleNavigations: Record<
         path: '/pole/finance/guarantee',
         icon: 'ShieldCheck',
       },
+          { id: 'salaries', label: 'Salaires & primes', path: '/pole/finance/salaries', icon: 'WalletCards' },
     ],
   },
 
@@ -259,7 +261,8 @@ export const moduleNavigations: Record<
     path: '/pole/ops/suppliers-lead-times',
     icon: 'Timer',
   },
-],
+      { id: 'audit-link', label: 'Liaison Audit & Ops', path: '/pole/ops/audit-link', icon: 'ShieldCheck' },
+    ],
   },
 
   supplier: {
@@ -322,6 +325,8 @@ export const moduleNavigations: Record<
         path: '/pole/supplier/restock-orders',
         icon: 'PackagePlus',
       },
+          { id: 'suppliers', label: 'Fiches fournisseurs', path: '/pole/supplier/suppliers', icon: 'Factory' },
+      { id: 'alerts', label: 'Alertes qualité', path: '/pole/supplier/alerts', icon: 'AlertTriangle' },
     ],
   },
 
@@ -379,7 +384,11 @@ marketplace: {
       path: '/pole/marketplace/products',
       icon: 'Package',
     },
-  ],
+        { id: 'customers', label: 'Clients', path: '/pole/marketplace/customers', icon: 'Users' },
+      { id: 'orders', label: 'Commandes Marketplace', path: '/pole/marketplace/orders', icon: 'ShoppingBag' },
+      { id: 'subscribers', label: 'Abonnés', path: '/pole/marketplace/subscribers', icon: 'UsersRound' },
+      { id: 'favorites', label: 'Favoris', path: '/pole/marketplace/favorites', icon: 'Heart' },
+    ],
 },
 
   support: {
@@ -418,6 +427,8 @@ marketplace: {
         path: '/pole/support/escalations',
         icon: 'ArrowUpCircle',
       },
+          { id: 'compliance', label: 'Conformité du support', path: '/pole/support/compliance', icon: 'ShieldCheck' },
+      { id: 'onboarding', label: 'Accompagnement client', path: '/pole/support/onboarding', icon: 'UserPlus' },
     ],
   },
 
@@ -469,6 +480,7 @@ marketplace: {
         path: '/pole/marketing/reputation',
         icon: 'Star',
       },
+          { id: 'podcasts', label: 'Podcasts', path: '/pole/marketing/podcasts', icon: 'Mic' },
     ],
   },
 
@@ -703,6 +715,7 @@ rh: {
         path: '/pole/rse/esg',
         icon: 'BarChart3',
       },
+          { id: 'points', label: 'Points clients', path: '/pole/rse/points', icon: 'Star' },
     ],
   },
 
@@ -835,6 +848,11 @@ rh: {
         path: '/pole/data/versions',
         icon: 'GitBranch',
       },
+          { id: 'backlog', label: 'Backlog Data', path: '/pole/data/backlog', icon: 'ListTodo' },
+      { id: 'bi-dashboards', label: 'Tableaux BI', path: '/pole/data/bi/dashboards', icon: 'LayoutDashboard' },
+      { id: 'bi-templates', label: 'Modèles BI', path: '/pole/data/bi/templates', icon: 'PanelsTopLeft' },
+      { id: 'bi-sources', label: 'Sources BI', path: '/pole/data/bi/sources', icon: 'Database' },
+      { id: 'bi-library', label: 'Bibliothèque BI', path: '/pole/data/bi/library', icon: 'Library' },
     ],
   },
 
@@ -886,6 +904,12 @@ rh: {
         path: '/pole/security/logs',
         icon: 'ScrollText',
       },
+          { id: 'code', label: 'Revue de code', path: '/pole/security/code', icon: 'Code2' },
+      { id: 'console', label: 'Interventions techniques', path: '/pole/security/console', icon: 'Terminal' },
+      { id: 'documentation', label: 'Documentation', path: '/pole/security/documentation', icon: 'BookOpen' },
+      { id: 'sandbox', label: 'Sandbox', path: '/pole/security/sandbox', icon: 'FlaskConical' },
+      { id: 'supervision', label: 'Supervision technique', path: '/pole/security/supervision', icon: 'Activity' },
+      { id: 'dataflow', label: 'Flux de données', path: '/pole/security/dataflow', icon: 'Network' },
     ],
   },
 };
