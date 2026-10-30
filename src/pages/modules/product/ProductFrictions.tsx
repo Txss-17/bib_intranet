@@ -236,7 +236,8 @@ export default function ProductFrictions() {
     : null;
 
   return (
-    <div className="space-y-6">\n      {sourceWarning && <p role="alert" className="rounded border p-3 text-sm">{sourceWarning}</p>}
+    <div className="space-y-6">
+      {sourceWarning && <p role="alert" className="rounded border p-3 text-sm">{sourceWarning}</p>}
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-3">
