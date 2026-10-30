@@ -155,6 +155,29 @@ export default function SecurityDashboard() {
     },
   ];
 
+  const workspaces = [
+    {
+      title: '1. Surveillance & incidents',
+      description: 'Détection, alertes, investigations, suivi des événements',
+      links: ['/pole/security/security','/pole/security/supervision','/pole/security/logs'],
+    },
+    {
+      title: '2. Identités & sécurité BIB Platform',
+      description: 'Personnel interne, comptes de test, marchands, clients, fournisseurs, logistique et RLS',
+      links: ['/pole/security/access','/pole/security/platform','/pole/security/vpn','/pole/security/test-accounts','/pole/security/dataflow'],
+    },
+    {
+      title: '3. Infrastructure & sécurité applicative',
+      description: 'Environnements, services, code, intégrations et essais isolés',
+      links: ['/pole/security/environments','/pole/security/code','/pole/security/sandbox','/pole/product/integrations'],
+    },
+    {
+      title: '4. Exploitation & gouvernance IT',
+      description: 'Continuité, intervention autorisée et procédures de reprise',
+      links: ['/pole/security/infrastructure','/pole/security/console','/pole/security/documentation'],
+    },
+  ] as const;
+
   const openSecurityAlerts = alerts
     .filter((alert) => alert.status === 'open')
     .slice(0, 6);
@@ -286,35 +309,33 @@ export default function SecurityDashboard() {
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {sections.map((section) => {
-          const Icon = section.icon;
-
-          return (
-            <Link
-              key={section.to}
-              to={section.to}
-            >
-              <Card className="h-full transition-colors hover:border-primary">
-                <CardContent className="flex items-start gap-3 p-4">
-                  <div className="rounded-md bg-primary/10 p-2">
-                    <Icon className="h-5 w-5 text-primary" />
-                  </div>
-
-                  <div>
-                    <p className="text-sm font-semibold">
-                      {section.label}
-                    </p>
-
-                    <p className="text-xs text-muted-foreground">
-                      {section.desc}
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </Link>
-          );
-        })}
+      <div className="space-y-6">
+        {workspaces.map((workspace) => <section key={workspace.title} className="space-y-3">
+          <div>
+            <h2 className="text-lg font-semibold">{workspace.title}</h2>
+            <p className="text-sm text-muted-foreground">{workspace.description}</p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            {workspace.links.map((to) => {
+              const section = sections.find(item => item.to === to);
+              if (!section) return null;
+              const Icon = section.icon;
+              return <Link key={to} to={to}>
+                <Card className="h-full transition-colors hover:border-primary">
+                  <CardContent className="flex items-start gap-3 p-4">
+                    <div className="rounded-md bg-primary/10 p-2">
+                      <Icon className="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold">{section.label}</p>
+                      <p className="text-xs text-muted-foreground">{section.desc}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>;
+            })}
+          </div>
+        </section>)}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
