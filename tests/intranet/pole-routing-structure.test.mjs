@@ -56,3 +56,10 @@ test('pages métier distinctes : aucune action financière ou technique exécut�
   assert.match(corrective, /list_quality_alerts|useQualityAlerts/);
   assert.match(corrective, /\/pole\/audit\/nonconformities\?alert=/);
 });
+
+test('Marketplace : la vue Mon portefeuille ne permet pas de basculer vers le portefeuille global', () => {
+  const page = read('src/pages/modules/marketplace/MerchantPortfolio.tsx');
+  assert.match(page, /isPortfolioView \? 'mine' : portfolioFilter/);
+  assert.match(page, /!isPortfolioView && <select/);
+  assert.match(page, /effectivePortfolioFilter/);
+});
