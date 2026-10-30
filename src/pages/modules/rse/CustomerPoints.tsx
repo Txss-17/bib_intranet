@@ -1,2 +1,2 @@
-import ModuleWorkspace from '@/components/operations/ModuleWorkspace';
-export default function Page() { return <ModuleWorkspace pageId="rse.points" />; }
+import RseEvidencePage from '@/components/rse/RseEvidencePage';
+export default function PointsPage() { return <RseEvidencePage mode="points" />; }
