@@ -78,7 +78,7 @@ export default function SyncFlows() {
 
     const averageDuration =
       durations.length === 0
-        ? 0
+        ? null
         : Math.round(
             durations.reduce(
               (total, duration) =>
@@ -89,7 +89,7 @@ export default function SyncFlows() {
 
     const successRate =
       total === 0
-        ? 100
+        ? null
         : Math.round((success / total) * 100);
 
     return {
@@ -204,12 +204,11 @@ export default function SyncFlows() {
 
           <div>
             <h1 className="text-3xl font-bold">
-              Flux & synchronisation
+              Synchronisations logistiques
             </h1>
 
             <p className="text-muted-foreground">
-              Surveillance des échanges entre BIB et les
-              partenaires logistiques.
+              Journal des 200 derniers échanges enregistrés avec les partenaires logistiques. Les synchronisations Platform–Intranet utilisent un registre distinct.
             </p>
           </div>
         </div>
@@ -224,7 +223,7 @@ export default function SyncFlows() {
             </p>
 
             <p className="mt-1 text-2xl font-bold">
-              {stats.total}
+              {isError ? '—' : stats.total}
             </p>
           </CardContent>
         </Card>
@@ -232,11 +231,11 @@ export default function SyncFlows() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">
-              Taux de succès
+              Taux de succès (échantillon)
             </p>
 
             <p className="mt-1 text-2xl font-bold">
-              {stats.successRate} %
+              {isError || stats.successRate === null ? '—' : `${stats.successRate} %`}
             </p>
           </CardContent>
         </Card>
@@ -248,7 +247,7 @@ export default function SyncFlows() {
             </p>
 
             <p className="mt-1 text-2xl font-bold">
-              {stats.errors}
+              {isError ? '—' : stats.errors}
             </p>
           </CardContent>
         </Card>
@@ -256,11 +255,11 @@ export default function SyncFlows() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">
-              Latence moyenne
+              Latence moyenne (mesurée)
             </p>
 
             <p className="mt-1 text-2xl font-bold">
-              {stats.averageDuration} ms
+              {isError || stats.averageDuration === null ? '—' : `${stats.averageDuration} ms`}
             </p>
           </CardContent>
         </Card>
@@ -278,7 +277,7 @@ export default function SyncFlows() {
               </p>
 
               <p className="text-xs text-muted-foreground">
-                {stats.success} événement(s)
+                {isError ? '—' : stats.success} événement(s)
               </p>
             </div>
           </CardContent>
@@ -294,7 +293,7 @@ export default function SyncFlows() {
               </p>
 
               <p className="text-xs text-muted-foreground">
-                {stats.errors} erreur(s) ou timeout(s)
+                {isError ? '—' : stats.errors} erreur(s) ou timeout(s)
               </p>
             </div>
           </CardContent>
@@ -310,7 +309,7 @@ export default function SyncFlows() {
               </p>
 
               <p className="text-xs text-muted-foreground">
-                {stats.pending} échange(s)
+                {isError ? '—' : stats.pending} échange(s)
               </p>
             </div>
           </CardContent>
