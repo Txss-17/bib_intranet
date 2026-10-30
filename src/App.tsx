@@ -220,6 +220,7 @@ import ESGReports from "./pages/modules/rse/ESGReports";
 
 import ProductEngineeringDashboard from "./pages/modules/product/ProductEngineeringDashboard";
 import ProductPlanningWorkspace from "./components/product/ProductPlanningWorkspace";
+import ProductFunctionWorkspace from "./components/product/ProductFunctionWorkspace";
 import MarketingWorkflowPage from "./components/marketing/MarketingWorkflowPage";
 import CorrectiveActions from "./pages/modules/audit/CorrectiveActions";
 import SupportCoordinationPage from "./components/support/SupportCoordinationPage";
@@ -789,7 +790,7 @@ const App = () => (
                 />
                 <Route
                   path="/pole/product/product"
-                  element={<ProductEngineeringDashboard />}
+                  element={<ProductFunctionWorkspace area="product" />}
                 />
                 <Route
                   path="/pole/product/roadmap"
@@ -801,7 +802,7 @@ const App = () => (
                 />
                 <Route
                   path="/pole/product/engineering"
-                  element={<ProductEngineeringDashboard />}
+                  element={<ProductFunctionWorkspace area="engineering" />}
                 />
                 <Route
                   path="/pole/product/studio"
