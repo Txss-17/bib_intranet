@@ -14,120 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      work_tasks: {
-        Row: {
-          id: string
-          title: string
-          description: string | null
-          objective: string | null
-          pole: string | null
-          task_poles: string[]
-          status: 'pending' | 'in_progress' | 'review' | 'completed'
-          priority: 'low' | 'medium' | 'high' | 'critical'
-          assignee_id: string | null
-          created_by: string | null
-          due_date: string | null
-          completed_at: string | null
-          created_at: string
-          updated_at: string
-          archived_at: string | null
-          test_account: boolean
-        }
-        Insert: {
-          id?: string
-          title?: string
-          description?: string | null
-          objective?: string | null
-          pole?: string | null
-          task_poles?: string[]
-          status?: 'pending' | 'in_progress' | 'review' | 'completed'
-          priority?: 'low' | 'medium' | 'high' | 'critical'
-          assignee_id?: string | null
-          created_by?: string | null
-          due_date?: string | null
-          completed_at?: string | null
-          created_at?: string
-          updated_at?: string
-          archived_at?: string | null
-          test_account?: boolean
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string | null
-          objective?: string | null
-          pole?: string | null
-          task_poles?: string[]
-          status?: 'pending' | 'in_progress' | 'review' | 'completed'
-          priority?: 'low' | 'medium' | 'high' | 'critical'
-          assignee_id?: string | null
-          created_by?: string | null
-          due_date?: string | null
-          completed_at?: string | null
-          created_at?: string
-          updated_at?: string
-          archived_at?: string | null
-          test_account?: boolean
-        }
-        Relationships: [{ foreignKeyName: "work_tasks_assignee_id_fkey"; columns: ["assignee_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }]
-      }
-
-      work_task_comments: {
-        Row: {
-          id: string
-          task_id: string
-          author_id: string
-          body: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          task_id?: string
-          author_id?: string
-          body?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          task_id?: string
-          author_id?: string
-          body?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-
-      work_task_history: {
-        Row: {
-          id: string
-          task_id: string
-          actor_id: string | null
-          action: string
-          before_state: Json | null
-          after_state: Json
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          task_id?: string
-          actor_id?: string | null
-          action?: string
-          before_state?: Json | null
-          after_state?: Json
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          task_id?: string
-          actor_id?: string | null
-          action?: string
-          before_state?: Json | null
-          after_state?: Json
-          created_at?: string
-        }
-        Relationships: []
-      }
-
       access_actions: {
         Row: {
           action_key: string
@@ -752,22 +638,6 @@ export type Database = {
       }
       anomalies: {
         Row: {
-          revision: number
-          test_account: boolean
-          legacy_record: boolean
-          team: string
-          corrective_action: string | null
-          evidence: string | null
-          resolution: string | null
-          document_ids: string[]
-          completed_checks: string[]
-          resolved_by: string | null
-          closed_by: string | null
-          closure_kind: string | null
-          archived_at: string | null
-          change_note: string | null
-          creation_key: string | null
-          creation_request: Json | null
           ai_decision: string | null
           ai_suggestion: Json | null
           ai_validated_at: string | null
@@ -795,22 +665,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          revision?: number
-          test_account?: boolean
-          legacy_record?: boolean
-          team?: string
-          corrective_action?: string | null
-          evidence?: string | null
-          resolution?: string | null
-          document_ids?: string[]
-          completed_checks?: string[]
-          resolved_by?: string | null
-          closed_by?: string | null
-          closure_kind?: string | null
-          archived_at?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           ai_decision?: string | null
           ai_suggestion?: Json | null
           ai_validated_at?: string | null
@@ -838,22 +692,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          revision?: number
-          test_account?: boolean
-          legacy_record?: boolean
-          team?: string
-          corrective_action?: string | null
-          evidence?: string | null
-          resolution?: string | null
-          document_ids?: string[]
-          completed_checks?: string[]
-          resolved_by?: string | null
-          closed_by?: string | null
-          closure_kind?: string | null
-          archived_at?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           ai_decision?: string | null
           ai_suggestion?: Json | null
           ai_validated_at?: string | null
@@ -884,8 +722,6 @@ export type Database = {
       }
       anomaly_events: {
         Row: {
-          before_state: Json | null
-          after_state: Json | null
           anomaly_id: string
           created_at: string
           from_status: string | null
@@ -896,8 +732,6 @@ export type Database = {
           to_status: string | null
         }
         Insert: {
-          before_state?: Json | null
-          after_state?: Json | null
           anomaly_id: string
           created_at?: string
           from_status?: string | null
@@ -908,8 +742,6 @@ export type Database = {
           to_status?: string | null
         }
         Update: {
-          before_state?: Json | null
-          after_state?: Json | null
           anomaly_id?: string
           created_at?: string
           from_status?: string | null
@@ -2432,15 +2264,6 @@ export type Database = {
       }
       field_audits: {
         Row: {
-          revision: number
-          created_by: string | null
-          test_account: boolean
-          decided_by: string | null
-          closed_by: string | null
-          correction_evidence: string | null
-          change_note: string | null
-          creation_key: string | null
-          creation_request: Json | null
           anomaly_id: string | null
           app_origin: string
           assigned_at: string | null
@@ -2469,15 +2292,6 @@ export type Database = {
           workflow_status: string
         }
         Insert: {
-          revision?: number
-          created_by?: string | null
-          test_account?: boolean
-          decided_by?: string | null
-          closed_by?: string | null
-          correction_evidence?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           anomaly_id?: string | null
           app_origin?: string
           assigned_at?: string | null
@@ -2506,15 +2320,6 @@ export type Database = {
           workflow_status?: string
         }
         Update: {
-          revision?: number
-          created_by?: string | null
-          test_account?: boolean
-          decided_by?: string | null
-          closed_by?: string | null
-          correction_evidence?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           anomaly_id?: string | null
           app_origin?: string
           assigned_at?: string | null
@@ -4577,7 +4382,6 @@ export type Database = {
       }
       profiles: {
         Row: {
-          app_origin: string
           avatar_url: string | null
           collaborator_type: string
           created_at: string | null
@@ -4596,7 +4400,6 @@ export type Database = {
           work_mode: string | null
         }
         Insert: {
-          app_origin?: string
           avatar_url?: string | null
           collaborator_type?: string
           created_at?: string | null
@@ -4615,7 +4418,6 @@ export type Database = {
           work_mode?: string | null
         }
         Update: {
-          app_origin?: string
           avatar_url?: string | null
           collaborator_type?: string
           created_at?: string | null
@@ -4808,25 +4610,6 @@ export type Database = {
       }
       quality_alerts: {
         Row: {
-          revision: number
-          test_account: boolean
-          is_nonconformity: boolean
-          approval_levels: number
-          legacy_record: boolean
-          origin_page: string | null
-          creation_key: string | null
-          creation_request: Json | null
-          corrective_action: string | null
-          corrective_due_date: string | null
-          evidence: string | null
-          document_ids: string[]
-          resolved_by: string | null
-          first_reviewer: string | null
-          reviewed_at: string | null
-          closed_by: string | null
-          closed_at: string | null
-          archived_at: string | null
-          change_note: string | null
           assigned_to: string | null
           created_at: string
           description: string
@@ -4842,25 +4625,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          revision?: number
-          test_account?: boolean
-          is_nonconformity?: boolean
-          approval_levels?: number
-          legacy_record?: boolean
-          origin_page?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
-          corrective_action?: string | null
-          corrective_due_date?: string | null
-          evidence?: string | null
-          document_ids?: string[]
-          resolved_by?: string | null
-          first_reviewer?: string | null
-          reviewed_at?: string | null
-          closed_by?: string | null
-          closed_at?: string | null
-          archived_at?: string | null
-          change_note?: string | null
           assigned_to?: string | null
           created_at?: string
           description: string
@@ -4876,25 +4640,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          revision?: number
-          test_account?: boolean
-          is_nonconformity?: boolean
-          approval_levels?: number
-          legacy_record?: boolean
-          origin_page?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
-          corrective_action?: string | null
-          corrective_due_date?: string | null
-          evidence?: string | null
-          document_ids?: string[]
-          resolved_by?: string | null
-          first_reviewer?: string | null
-          reviewed_at?: string | null
-          closed_by?: string | null
-          closed_at?: string | null
-          archived_at?: string | null
-          change_note?: string | null
           assigned_to?: string | null
           created_at?: string
           description?: string
@@ -6235,13 +5980,6 @@ export type Database = {
       }
       support_tickets: {
         Row: {
-          revision: number
-          test_account: boolean
-          archived_at: string | null
-          closed_at: string | null
-          change_note: string | null
-          creation_key: string | null
-          creation_request: Json | null
           assigned_to: string | null
           category: string | null
           created_at: string | null
@@ -6259,13 +5997,6 @@ export type Database = {
           user_account_id: string | null
         }
         Insert: {
-          revision?: number
-          test_account?: boolean
-          archived_at?: string | null
-          closed_at?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           assigned_to?: string | null
           category?: string | null
           created_at?: string | null
@@ -6283,13 +6014,6 @@ export type Database = {
           user_account_id?: string | null
         }
         Update: {
-          revision?: number
-          test_account?: boolean
-          archived_at?: string | null
-          closed_at?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           assigned_to?: string | null
           category?: string | null
           created_at?: string | null
@@ -6897,7 +6621,66 @@ export type Database = {
           },
         ]
       }
-
+      work_tasks: {
+        Row: {
+          assignee_id: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          pole: string | null
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          pole?: string | null
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          pole?: string | null
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_validations: {
         Row: {
           created_at: string
@@ -6950,7 +6733,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_work_task_permissions: { Args: Record<PropertyKey, never>; Returns: Json }
       calculate_demand_forecast: { Args: never; Returns: number }
       can_access_anomalies: { Args: { _uid: string }; Returns: boolean }
       can_access_finance: { Args: { _uid: string }; Returns: boolean }
@@ -7255,4 +7037,3 @@ export const Constants = {
     },
   },
 } as const
-
