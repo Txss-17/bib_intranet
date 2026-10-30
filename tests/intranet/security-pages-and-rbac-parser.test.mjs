@@ -10,15 +10,29 @@ test('RBAC: permission save emits matrix change event outside toast object', () 
   assert.match(s, /window\.dispatchEvent\(new Event\(MATRIX_EVENT\)\);\s*toast\(\{\s*title: 'Permissions enregistrées'/);
 });
 
-test('Security: six modules display different business layouts instead of identical cards', () => {
-  const s = read('src/components/security/SecurityControlWorkspace.tsx');
-  for (const name of ['InfrastructureView', 'EnvironmentView', 'VpnView', 'CodeView', 'ConsoleView', 'DocumentationView']) {
-    assert.match(s, new RegExp('function ' + name + '\\('));
-    assert.match(s, new RegExp('<' + name + ' rows=\\{rows\\}'));
+test('Security: Infrastructure, Environments and VPN have dedicated real-data modules', () => {
+  const infrastructure = read('src/pages/modules/security/SecurityInfrastructure.tsx');
+  const environments = read('src/pages/modules/security/SecurityEnvironments.tsx');
+  const vpn = read('src/pages/modules/security/SecurityVPN.tsx');
+  assert.match(infrastructure, /useSecurityFunctionObservations/);
+  assert.match(infrastructure, /useSecurityBridgeRuns/);
+  assert.match(infrastructure, /ModuleWorkspace pageId="security\.infrastructure"/);
+  assert.match(environments, /useSecurityDeployments/);
+  assert.match(environments, /useSecurityBridgeRuns/);
+  assert.match(environments, /ModuleWorkspace pageId="security\.environments"/);
+  assert.match(vpn, /useSecurityVpnAccess/);
+  assert.match(vpn, /ModuleWorkspace pageId="security\.vpn"/);
+  for (const page of [infrastructure, environments, vpn]) {
+    assert.doesNotMatch(page, /SecurityControlWorkspace/);
+    assert.match(page, /isError/);
   }
-  assert.match(s, /<Table>/);
-  assert.match(s, /Circuit d’autorisation d’intervention/);
-  assert.match(s, /Accès VPN & réseau/);
-  assert.match(s, /Bibliothèque de runbooks/);
-  assert.match(s, /ModuleWorkspace pageId=\{d\.page\}/);
+});
+
+test('Security: Code, Console and Documentation retain their differentiated reviews', () => {
+  const page = read('src/components/security/SecurityControlWorkspace.tsx');
+  for (const name of ['CodeView', 'ConsoleView', 'DocumentationView']) {
+    assert.match(page, new RegExp('function ' + name + '\\('));
+    assert.match(page, new RegExp('<' + name + ' rows=\\{rows\\}'));
+  }
+  assert.match(page, /canViewPage\(d\.page\)/);
 });
