@@ -48,7 +48,7 @@ test('server migrations reconstruct the frontend registry including domain schem
    operationalNote: unescapeSql(m[4]),
    recordLabel: unescapeSql(m[5]),
  }]));
- assert.equal(overrides.size,14,'migration must override all specialized pages');
+ assert.equal(overrides.size,28,'migration must override all specialized pages');
  const effective=seed.map(page=>{
    const afterDispute=page.id===dispute.id?dispute:page;
    return {...afterDispute,...(overrides.get(page.id)||{})};
