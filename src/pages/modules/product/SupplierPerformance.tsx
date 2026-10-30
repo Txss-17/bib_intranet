@@ -61,15 +61,17 @@ const statusLabel: Record<
   pending: 'En attente',
 };
 
-function riskLabel(score: number) {
+function riskLabel(score: number | null) {
+  if (score == null) return 'Non évalué';
   if (score >= 70) return 'Élevé';
   if (score >= 40) return 'Modéré';
   return 'Faible';
 }
 
 function riskVariant(
-  score: number,
+  score: number | null,
 ): 'destructive' | 'secondary' | 'default' {
+  if (score == null) return 'secondary';
   if (score >= 70) return 'destructive';
   if (score >= 40) return 'secondary';
   return 'default';
@@ -147,6 +149,7 @@ export default function SupplierPerformance() {
         ) {
           const risk =
             supplier.risk_score;
+          if (risk == null) return false;
 
           if (
             riskFilter === 'high' &&
@@ -246,19 +249,16 @@ export default function SupplierPerformance() {
   const atRiskCount =
     rows.filter(
       (row) =>
-        row.risk_score >= 70 ||
+        (row.risk_score != null && row.risk_score >= 70) ||
         row.status === 'at_risk',
     ).length;
 
-  const averageQuality = rows.length
-    ? Math.round(
-        rows.reduce(
-          (sum, row) =>
-            sum + row.quality_score,
-          0,
-        ) / rows.length,
-      )
-    : 0;
+  const knownQualityScores = rows
+    .map((row) => row.quality_score)
+    .filter((score): score is number => score != null && Number.isFinite(score));
+  const averageQuality = knownQualityScores.length
+    ? Math.round(knownQualityScores.reduce((total, score) => total + score, 0) / knownQualityScores.length)
+    : null;
 
   const auditedCount =
     rows.filter(
@@ -278,7 +278,7 @@ export default function SupplierPerformance() {
     },
     {
       label: 'Qualité moyenne',
-      value: `${averageQuality}%`,
+      value: averageQuality === null ? '—' : `${averageQuality}%`,
       icon: TrendingUp,
     },
     {
@@ -591,15 +591,15 @@ export default function SupplierPerformance() {
                             <div className="flex items-center gap-2">
                               <Progress
                                 value={
-                                  supplier.quality_score
+                                  supplier.quality_score ?? 0
                                 }
                                 className="h-2 w-16"
                               />
 
                               <span className="text-xs">
                                 {
-                                  supplier.quality_score
-                                }%
+                                  supplier.quality_score == null ? 'Non évalué' : `${supplier.quality_score}%`
+                                }
                               </span>
                             </div>
                           </TableCell>
@@ -642,7 +642,7 @@ export default function SupplierPerformance() {
                                   <Lightbulb className="h-4 w-4" />
                                 </Button>
                               }
-                              defaultDetail={`Fournisseur "${supplier.name}" — qualité ${supplier.quality_score}%, risque ${supplier.risk_score}%, ${supplier.products_count} produits.`}
+                              defaultDetail={`Fournisseur "${supplier.name}" — qualité ${supplier.quality_score == null ? 'non évaluée' : `${supplier.quality_score}%`}, risque ${supplier.risk_score == null ? 'non évalué' : `${supplier.risk_score}%`}, ${supplier.products_count} produits.`}
                               defaultCategory="supplier"
                               defaultPole="product"
                             />
