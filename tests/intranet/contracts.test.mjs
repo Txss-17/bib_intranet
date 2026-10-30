@@ -36,9 +36,24 @@ test('every concrete protected route and dynamic detail resolves to a real permi
  for(const p of ['/pole/finance/unknown','/pole/ops/orders/id/unknown','/admin/unknown','/documents/unknown','/pole/not-real'])assert.equal(intranet.resolveIntranetPage(p),undefined,p);
  assert.equal(intranet.resolveIntranetPage('/pole/security/edge-functions/id/logs').id,'security.logs');
 });
-test('server seed equals the frontend registry including aliases, restrictions and schemas',()=>{
+test('server migrations reconstruct the frontend registry including domain schemas',()=>{
  const seed=JSON.parse(read('drizzle/migrations/0039_intranet_modules.sql').match(/\$registry\$([\s\S]*?)\$registry\$/)[1]);
  const dispute=JSON.parse(read('drizzle/migrations/0051_compliance_dispute_workflow.sql').match(/\$dispute_definition\$([\s\S]*?)\$dispute_definition\$/)[1]);
+ const migration=read('drizzle/migrations/0053_specialize_intranet_workspaces.sql');
+ const row=/^\s*\('([^']+)', '((?:''|[^'])*)'::jsonb, '((?:''|[^'])*)', '((?:''|[^'])*)', '((?:''|[^'])*)'\),?\s*$/gm;
+ const unescapeSql=s=>s.replaceAll("''", "'");
+ const overrides=new Map([...migration.matchAll(row)].map(m=>[m[1],{
+   fields: JSON.parse(unescapeSql(m[2])),
+   description: unescapeSql(m[3]),
+   operationalNote: unescapeSql(m[4]),
+   recordLabel: unescapeSql(m[5]),
+ }]));
+ assert.equal(overrides.size,14,'migration must override all specialized pages');
+ const effective=seed.map(page=>{
+   const afterDispute=page.id===dispute.id?dispute:page;
+   return {...afterDispute,...(overrides.get(page.id)||{})};
+ });
+ assert.deepEqual(effective,registry);
  const marketplace=JSON.parse(read('drizzle/migrations/0052_restore_existing_account_access.sql').match(/\$marketplace_lead_pages\$([\s\S]*?)\$marketplace_lead_pages\$/)[1]);
  assert.deepEqual(seed.map(page=>page.id===dispute.id?dispute:marketplace.includes(page.id)?{...page,restrictedRoles:[...page.restrictedRoles,'directeur_marketplace']}:page),registry);
  for(const r of registry)for(const alias of r.permissionAliases||[])assert.equal(intranet.moduleById(alias).id,r.id);

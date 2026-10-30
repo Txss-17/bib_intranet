@@ -29,6 +29,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useSyncEvents } from '@/hooks/useOpsControl';
+import { usePlatformSyncRuns } from '@/hooks/usePlatformSync';
 
 type SyncStatus = 'success' | 'pending' | 'error' | 'timeout';
 
@@ -45,6 +46,8 @@ export default function SyncFlows() {
     isLoading,
     isError,
   } = useSyncEvents();
+
+  const platform = usePlatformSyncRuns();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<
@@ -78,7 +81,7 @@ export default function SyncFlows() {
 
     const averageDuration =
       durations.length === 0
-        ? 0
+        ? null
         : Math.round(
             durations.reduce(
               (total, duration) =>
@@ -89,7 +92,7 @@ export default function SyncFlows() {
 
     const successRate =
       total === 0
-        ? 100
+        ? null
         : Math.round((success / total) * 100);
 
     return {
@@ -204,12 +207,11 @@ export default function SyncFlows() {
 
           <div>
             <h1 className="text-3xl font-bold">
-              Flux & synchronisation
+              Synchronisations logistiques
             </h1>
 
             <p className="text-muted-foreground">
-              Surveillance des échanges entre BIB et les
-              partenaires logistiques.
+              Journal des 200 derniers échanges enregistrés avec les partenaires logistiques. Les synchronisations Platform–Intranet utilisent un registre distinct.
             </p>
           </div>
         </div>
@@ -224,7 +226,7 @@ export default function SyncFlows() {
             </p>
 
             <p className="mt-1 text-2xl font-bold">
-              {stats.total}
+              {isError ? '—' : stats.total}
             </p>
           </CardContent>
         </Card>
@@ -232,11 +234,11 @@ export default function SyncFlows() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">
-              Taux de succès
+              Taux de succès (échantillon)
             </p>
 
             <p className="mt-1 text-2xl font-bold">
-              {stats.successRate} %
+              {isError || stats.successRate === null ? '—' : `${stats.successRate} %`}
             </p>
           </CardContent>
         </Card>
@@ -248,7 +250,7 @@ export default function SyncFlows() {
             </p>
 
             <p className="mt-1 text-2xl font-bold">
-              {stats.errors}
+              {isError ? '—' : stats.errors}
             </p>
           </CardContent>
         </Card>
@@ -256,11 +258,11 @@ export default function SyncFlows() {
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-muted-foreground">
-              Latence moyenne
+              Latence moyenne (mesurée)
             </p>
 
             <p className="mt-1 text-2xl font-bold">
-              {stats.averageDuration} ms
+              {isError || stats.averageDuration === null ? '—' : `${stats.averageDuration} ms`}
             </p>
           </CardContent>
         </Card>
@@ -278,7 +280,7 @@ export default function SyncFlows() {
               </p>
 
               <p className="text-xs text-muted-foreground">
-                {stats.success} événement(s)
+                {isError ? '—' : stats.success} événement(s)
               </p>
             </div>
           </CardContent>
@@ -294,7 +296,7 @@ export default function SyncFlows() {
               </p>
 
               <p className="text-xs text-muted-foreground">
-                {stats.errors} erreur(s) ou timeout(s)
+                {isError ? '—' : stats.errors} erreur(s) ou timeout(s)
               </p>
             </div>
           </CardContent>
@@ -310,12 +312,81 @@ export default function SyncFlows() {
               </p>
 
               <p className="text-xs text-muted-foreground">
-                {stats.pending} échange(s)
+                {isError ? '—' : stats.pending} échange(s)
               </p>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Platform sync runs: separate from logistics partner events. */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle>Bridge BIB Platform ↔ Intranet</CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Les 20 dernières exécutions consignées dans le journal du bridge.
+                Les actions sur les partenaires logistiques figurent dans la section distincte ci-dessous.
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => void platform.refetch()} disabled={platform.isFetching}>
+              <RefreshCw className="mr-2 h-4 w-4" />Actualiser le bridge
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {platform.isLoading ? (
+            <p role="status" className="text-sm text-muted-foreground">Lecture du journal Platform…</p>
+          ) : platform.isError ? (
+            <p role="alert" className="text-sm text-destructive">
+              Impossible de consulter les synchronisations Platform. Vérifiez les permissions et la connexion serveur.
+            </p>
+          ) : !platform.data?.length ? (
+            <p className="text-sm text-muted-foreground">
+              Aucun historique de synchronisation Platform accessible. Cela ne prouve pas que la liaison fonctionne.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Démarrée le</TableHead>
+                    <TableHead>Opération</TableHead>
+                    <TableHead>Sens</TableHead>
+                    <TableHead>État</TableHead>
+                    <TableHead className="text-right">Éléments traités</TableHead>
+                    <TableHead>Terminée le</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {platform.data.map(run => (
+                    <TableRow key={run.id}>
+                      <TableCell className="whitespace-nowrap text-sm">
+                        {new Date(run.started_at).toLocaleString('fr-FR')}
+                      </TableCell>
+                      <TableCell>{run.action}</TableCell>
+                      <TableCell>{run.direction}</TableCell>
+                      <TableCell>
+                        <Badge variant={run.status === 'error' || run.status === 'partial' ? 'destructive' : 'outline'}>
+                          {run.status === 'success' ? 'Succès'
+                            : run.status === 'partial' ? 'Partiel'
+                            : run.status === 'error' ? 'Erreur'
+                            : run.status === 'running' ? 'En cours' : run.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">{run.items_count ?? '—'}</TableCell>
+                      <TableCell className="whitespace-nowrap text-sm">
+                        {run.finished_at ? new Date(run.finished_at).toLocaleString('fr-FR') : '—'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Filters + table */}
       <Card>
