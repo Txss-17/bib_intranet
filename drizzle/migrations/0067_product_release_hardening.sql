@@ -1,13 +1,23 @@
 -- Harden product release evidence: no synthetic staff reads and independent
 -- approval. Does not change existing releases or mark any deployment successful.
-ALTER TABLE public.product_release_tracking
-  ADD CONSTRAINT product_release_reviewer_independent
-  CHECK (reviewer_id IS NULL OR reviewer_id <> created_by);
+DO $migration$
+BEGIN
+ IF NOT EXISTS (SELECT 1 FROM pg_constraint
+   WHERE conrelid='public.product_release_tracking'::regclass
+     AND conname='product_release_reviewer_independent') THEN
+  ALTER TABLE public.product_release_tracking
+    ADD CONSTRAINT product_release_reviewer_independent
+    CHECK (reviewer_id IS NULL OR reviewer_id <> created_by);
+ END IF;
+END;
+$migration$;
 
+DROP POLICY IF EXISTS product_release_real_staff_guard ON public.product_release_tracking;
 CREATE POLICY product_release_real_staff_guard ON public.product_release_tracking
  AS RESTRICTIVE FOR SELECT TO authenticated
  USING(public.product_work_member());
 
+DROP POLICY IF EXISTS product_release_events_real_staff_guard ON public.product_release_tracking_events;
 CREATE POLICY product_release_events_real_staff_guard ON public.product_release_tracking_events
  AS RESTRICTIVE FOR SELECT TO authenticated
  USING(public.product_work_member());
