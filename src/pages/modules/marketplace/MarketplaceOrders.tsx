@@ -126,20 +126,21 @@ export default function MarketplaceOrders() {
       (order) => order.status === "cancelled",
     ).length;
 
-    const totalValue = orders
-      .filter((order) => order.status !== "cancelled")
-      .reduce(
-        (sum, order) =>
-          sum + Number(order.total_amount ?? 0),
-        0,
-      );
+    const valuesByCurrency: Record<string, number> = {};
+    for (const order of orders) {
+      if (order.status === 'cancelled') continue;
+      const currency = String(order.currency ?? '').toUpperCase();
+      const amount = Number(order.total_amount);
+      if (!/^[A-Z]{3}$/.test(currency) || !Number.isFinite(amount)) continue;
+      valuesByCurrency[currency] = (valuesByCurrency[currency] ?? 0) + amount;
+    }
 
     return {
       total,
       inProgress,
       delivered,
       cancelled,
-      totalValue,
+      valuesByCurrency,
     };
   }, [orders]);
 
@@ -168,7 +169,7 @@ export default function MarketplaceOrders() {
 
         <p className="mt-1 max-w-3xl text-sm text-muted-foreground">
           Vue commerciale des commandes Marketplace : activité,
-          valeur des commandes, boutiques concernées et état
+          montants bruts par devise (sans déduction des remboursements partiels), boutiques concernées et état
           d'avancement. Les opérations logistiques détaillées restent
           gérées par le pôle Ops.
         </p>
@@ -204,8 +205,8 @@ export default function MarketplaceOrders() {
         />
 
         <KpiCard
-          label="Valeur commerciale"
-          value={formatCurrency(stats.totalValue)}
+          label="Commandes brutes par devise"
+          value={Object.entries(stats.valuesByCurrency).map(([currency, amount]) => formatCurrency(amount, currency)).join(' · ') || '—'}
           icon={Package}
         />
       </div>
