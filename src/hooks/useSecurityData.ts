@@ -52,6 +52,13 @@ export interface EdgeFunctionLog {
 export interface VpnAccess {
   id: string;
   user_id: string | null;
+  user_name: string | null;
+  user_email: string | null;
+  device_name: string | null;
+  provider: string | null;
+  provider_device_id: string | null;
+  last_seen_at: string | null;
+  revoked_at: string | null;
   status: string | null;
   created_at: string;
   [key: string]: unknown;
