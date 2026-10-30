@@ -1037,6 +1037,38 @@ const RolesPermissions = () => {
                   </tbody>
                 </table>
               </div>
+              <div className="space-y-3">
+                <h3 className="text-sm font-medium">Périmètres déjà attribués aux rôles ({roleScopes.length})</h3>
+                <div className="overflow-x-auto rounded-lg border">
+                  <table className="w-full text-sm">
+                    <thead><tr className="border-b bg-muted/40">
+                      <th className="p-3 text-left">Rôle</th>
+                      <th className="p-3 text-left">Type</th>
+                      <th className="p-3 text-left">Valeur</th>
+                      <th className="p-3 text-left">Gestion</th>
+                    </tr></thead>
+                    <tbody>
+                      {roleScopes.map((entry, index) => {
+                        const role = roles.find((item) => item.id === entry.role_id);
+                        const scope = scopes.find((item) => item.id === entry.scope_id);
+                        return <tr key={`${entry.role_id}-${entry.scope_id}-${entry.scope_value ?? ''}-${index}`} className="border-b last:border-0">
+                          <td className="p-3">{role?.label ?? 'Rôle inconnu'} <span className="font-mono text-xs text-muted-foreground">({role?.role_key ?? '—'})</span></td>
+                          <td className="p-3">{scope?.label ?? 'Type inconnu'}</td>
+                          <td className="p-3 font-mono text-xs">{entry.scope_value ?? 'Sans valeur'}</td>
+                          <td className="p-3">
+                            <Button type="button" variant="outline" size="sm" onClick={() => { setSelectedRoleId(entry.role_id); setActiveTab('scopes'); }}>
+                              Modifier
+                            </Button>
+                          </td>
+                        </tr>;
+                      })}
+                      {roleScopes.length === 0 && <tr><td colSpan={4} className="p-5 text-center text-muted-foreground">
+                        Aucun périmètre de rôle enregistré. Choisissez un rôle pour créer sa première attribution.
+                      </td></tr>}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
               <div className="space-y-2 rounded-lg border p-3">
                 <h3 className="text-sm font-medium">Périmètres « Pôle » disponibles</h3>
                 <p className="text-xs text-muted-foreground">Ces 14 valeurs peuvent être créées et attribuées à un rôle dans l'onglet Configurer les périmètres.</p>
