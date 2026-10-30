@@ -7068,6 +7068,11 @@ export type Database = {
         | "marketing"
         | "risk"
         | "lifecycle"
+        | "marketplace"
+        | "support"
+        | "product"
+        | "data"
+        | "security"
       whistleblower_status:
         | "pending"
         | "under_review"
@@ -7244,6 +7249,11 @@ export const Constants = {
         "marketing",
         "risk",
         "lifecycle",
+        "marketplace",
+        "support",
+        "product",
+        "data",
+        "security",
       ],
       whistleblower_status: [
         "pending",
