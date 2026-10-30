@@ -411,19 +411,19 @@
     "fields": [
       {
         "key": "counterparty",
-        "label": "Tiers",
+        "label": "Tiers ou compte concerné",
         "type": "text",
         "required": true
       },
       {
         "key": "reference",
-        "label": "Référence justificative",
+        "label": "Référence de transaction",
         "type": "text",
         "required": true
       },
       {
         "key": "amount",
-        "label": "Montant",
+        "label": "Montant observé",
         "type": "number",
         "required": true
       },
@@ -435,17 +435,44 @@
       },
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période comptable",
         "type": "text",
         "required": false
       },
       {
         "key": "lines",
-        "label": "Lignes justificatives",
+        "label": "Écritures et justificatifs associés",
         "type": "lines",
         "required": false
+      },
+      {
+        "key": "booking_date",
+        "label": "Date de valeur",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "bank_reference",
+        "label": "Référence du prestataire de paiement",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reconciliation_state",
+        "label": "État du rapprochement",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "payment_proof",
+        "label": "Référence de la preuve de paiement",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Contrôle et rapprochement des mouvements financiers déjà enregistrés.",
+    "operationalNote": "Ce dossier complète le registre de transactions ; sa validation n'initie ni virement, ni remboursement, ni modification du solde bancaire.",
+    "recordLabel": "revue de transaction"
   },
   {
     "id": "finance.billing",
@@ -459,41 +486,68 @@
     "fields": [
       {
         "key": "counterparty",
-        "label": "Tiers",
+        "label": "Client ou marchand facturé",
         "type": "text",
         "required": true
       },
       {
         "key": "reference",
-        "label": "Référence justificative",
+        "label": "Contrat, commande ou devis de référence",
         "type": "text",
         "required": true
       },
       {
         "key": "amount",
-        "label": "Montant",
+        "label": "Montant de facturation",
         "type": "number",
         "required": true
       },
       {
         "key": "currency",
-        "label": "Devise",
+        "label": "Devise de la facture",
         "type": "text",
         "required": true
       },
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période facturée",
         "type": "text",
         "required": false
       },
       {
         "key": "lines",
-        "label": "Lignes justificatives",
+        "label": "Lignes et justificatifs de facturation",
         "type": "lines",
         "required": false
+      },
+      {
+        "key": "invoice_number",
+        "label": "Numéro de facture",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "invoice_date",
+        "label": "Date d'émission envisagée",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "due_date",
+        "label": "Échéance de paiement",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "vat_treatment",
+        "label": "TVA et traitement fiscal",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Préparation et contrôle des factures commerciales, références et échéances.",
+    "operationalNote": "Une fiche validée n'émet pas une facture fiscale, ne débite pas un client et ne crée aucun paiement Stripe. L'émission officielle nécessite un workflow dédié.",
+    "recordLabel": "contrôle de facturation"
   },
   {
     "id": "finance.payouts",
@@ -630,41 +684,68 @@
     "fields": [
       {
         "key": "counterparty",
-        "label": "Tiers",
+        "label": "Marchand ou titulaire",
         "type": "text",
         "required": true
       },
       {
         "key": "reference",
-        "label": "Référence justificative",
+        "label": "Référence de l'abonnement",
         "type": "text",
         "required": true
       },
       {
         "key": "amount",
-        "label": "Montant",
+        "label": "Montant contrôlé",
         "type": "number",
         "required": true
       },
       {
         "key": "currency",
-        "label": "Devise",
+        "label": "Devise facturée",
         "type": "text",
         "required": true
       },
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période d'abonnement",
         "type": "text",
         "required": false
       },
       {
         "key": "lines",
-        "label": "Lignes justificatives",
+        "label": "Contrôles et écarts constatés",
         "type": "lines",
         "required": false
+      },
+      {
+        "key": "stripe_subscription_id",
+        "label": "Identifiant Stripe",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "plan_name",
+        "label": "Forfait concerné",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "billing_status",
+        "label": "Statut de facturation constaté",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "discrepancy",
+        "label": "Écart à régulariser",
+        "type": "textarea",
+        "required": false
       }
-    ]
+    ],
+    "description": "Revue des abonnements et écarts de facturation, distincte du suivi Platform.",
+    "operationalNote": "Le dossier ne souscrit, ne renouvelle ni ne résilie un abonnement Stripe ; les webhooks Platform restent autoritatifs.",
+    "recordLabel": "contrôle d'abonnement"
   },
   {
     "id": "finance.cards",
@@ -744,41 +825,68 @@
     "fields": [
       {
         "key": "counterparty",
-        "label": "Tiers",
+        "label": "Bénéficiaire ou contrepartie",
         "type": "text",
         "required": true
       },
       {
         "key": "reference",
-        "label": "Référence justificative",
+        "label": "Référence du contrat de garantie",
         "type": "text",
         "required": true
       },
       {
         "key": "amount",
-        "label": "Montant",
+        "label": "Montant de l'engagement",
         "type": "number",
         "required": true
       },
       {
         "key": "currency",
-        "label": "Devise",
+        "label": "Devise de l'engagement",
         "type": "text",
         "required": true
       },
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période de couverture",
         "type": "text",
         "required": false
       },
       {
         "key": "lines",
-        "label": "Lignes justificatives",
+        "label": "Éléments d'exposition et justificatifs",
         "type": "lines",
         "required": false
+      },
+      {
+        "key": "coverage_terms",
+        "label": "Conditions et exclusions",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "claim_reference",
+        "label": "Référence d'une demande de garantie",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "eligibility_review",
+        "label": "Contrôle d'éligibilité",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "settlement_reference",
+        "label": "Preuve de décaissement externe",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Suivi des engagements de garantie, expositions et pièces justificatives.",
+    "operationalNote": "L'approbation d'un dossier de fonds de garantie ne provisionne pas un compte et ne déclenche aucun versement ou remboursement.",
+    "recordLabel": "engagement de garantie"
   },
   {
     "id": "ops.overview",
@@ -1801,8 +1909,7 @@
       "gestionnaire_vendeurs",
       "gestionnaire_commandes",
       "gestionnaire_litiges",
-      "gestionnaire_avis",
-      "directeur_marketplace"
+      "gestionnaire_avis"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -1852,8 +1959,7 @@
       "gestionnaire_vendeurs",
       "gestionnaire_commandes",
       "gestionnaire_litiges",
-      "gestionnaire_avis",
-      "directeur_marketplace"
+      "gestionnaire_avis"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -1900,8 +2006,7 @@
       "ceo",
       "responsable_marketplace",
       "gestionnaire_boutiques",
-      "gestionnaire_vendeurs",
-      "directeur_marketplace"
+      "gestionnaire_vendeurs"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -1948,8 +2053,7 @@
       "ceo",
       "responsable_marketplace",
       "gestionnaire_boutiques",
-      "gestionnaire_vendeurs",
-      "directeur_marketplace"
+      "gestionnaire_vendeurs"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -1996,8 +2100,7 @@
       "ceo",
       "responsable_marketplace",
       "gestionnaire_boutiques",
-      "gestionnaire_vendeurs",
-      "directeur_marketplace"
+      "gestionnaire_vendeurs"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -2047,8 +2150,7 @@
       "gestionnaire_vendeurs",
       "gestionnaire_commandes",
       "gestionnaire_litiges",
-      "gestionnaire_avis",
-      "directeur_marketplace"
+      "gestionnaire_avis"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -2095,8 +2197,7 @@
       "ceo",
       "responsable_marketplace",
       "gestionnaire_boutiques",
-      "gestionnaire_vendeurs",
-      "directeur_marketplace"
+      "gestionnaire_vendeurs"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -2143,8 +2244,7 @@
       "ceo",
       "responsable_marketplace",
       "gestionnaire_boutiques",
-      "gestionnaire_vendeurs",
-      "directeur_marketplace"
+      "gestionnaire_vendeurs"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -2511,47 +2611,74 @@
     "fields": [
       {
         "key": "channel",
-        "label": "Canal",
+        "label": "Canal de destination",
         "type": "text",
         "required": true
       },
       {
         "key": "audience",
-        "label": "Public cible",
+        "label": "Public visé",
         "type": "text",
         "required": true
       },
       {
         "key": "content",
-        "label": "Contenu",
+        "label": "Texte, scénario ou brief",
         "type": "textarea",
         "required": true
       },
       {
         "key": "publication_date",
-        "label": "Date de publication",
+        "label": "Date de publication prévue",
         "type": "date",
         "required": false
       },
       {
         "key": "budget",
-        "label": "Budget",
+        "label": "Budget prévu",
         "type": "number",
         "required": false
       },
       {
         "key": "result",
-        "label": "Résultat mesuré",
+        "label": "Résultat observé",
         "type": "number",
         "required": false
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Source de la mesure",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "format",
+        "label": "Format et déclinaisons",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "call_to_action",
+        "label": "Appel à l'action",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "rights_reference",
+        "label": "Droits et autorisations des médias",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "published_url",
+        "label": "Adresse de publication vérifiée",
         "type": "text",
         "required": false
       }
-    ]
+    ],
+    "description": "Production, revue et calendrier des contenus de communication.",
+    "operationalNote": "Un contenu validé reste interne tant qu'un outil de publication ne confirme pas explicitement sa mise en ligne.",
+    "recordLabel": "contenu éditorial"
   },
   {
     "id": "marketing.crm",
@@ -2673,47 +2800,74 @@
     "fields": [
       {
         "key": "indicator",
-        "label": "Indicateur",
+        "label": "Indicateur et définition",
         "type": "text",
         "required": true
       },
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période observée",
         "type": "text",
         "required": true
       },
       {
         "key": "channel",
-        "label": "Canal",
+        "label": "Canal ou campagne",
         "type": "text",
         "required": true
       },
       {
         "key": "value",
-        "label": "Valeur mesurée",
+        "label": "Valeur relevée",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité de mesure",
         "type": "text",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Source et date d'extraction",
         "type": "text",
         "required": true
       },
       {
         "key": "analysis",
-        "label": "Analyse",
+        "label": "Interprétation et limites",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "campaign_reference",
+        "label": "Référence campagne",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "attribution_window",
+        "label": "Fenêtre d'attribution",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "comparison_period",
+        "label": "Période de comparaison",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "action_recommended",
+        "label": "Action proposée",
         "type": "textarea",
         "required": false
       }
-    ]
+    ],
+    "description": "Mesures documentées de performance des canaux et campagnes.",
+    "operationalNote": "Les chiffres sont des saisies documentées. Ils ne constituent pas une synchronisation automatique avec les régies publicitaires.",
+    "recordLabel": "mesure marketing"
   },
   {
     "id": "marketing.reputation",
@@ -3656,35 +3810,62 @@
       },
       {
         "key": "reference",
-        "label": "Mission ou non-conformité",
+        "label": "Référence de mission",
         "type": "text",
         "required": false
       },
       {
         "key": "finding",
-        "label": "Constat",
+        "label": "Synthèse des constats",
         "type": "textarea",
         "required": true
       },
       {
         "key": "evidence",
-        "label": "Éléments de preuve",
+        "label": "Éléments probants",
         "type": "textarea",
         "required": false
       },
       {
         "key": "corrective_action",
-        "label": "Action corrective",
+        "label": "Recommandations",
         "type": "textarea",
         "required": true
       },
       {
         "key": "review_date",
-        "label": "Date de contrôle",
+        "label": "Date de validation envisagée",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "auditor",
+        "label": "Auditeur principal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "audit_scope",
+        "label": "Périmètre de mission",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "opinion",
+        "label": "Conclusion et réserves",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "corrective_plan_ref",
+        "label": "Référence du plan correctif",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Constitution de rapports d'audit et traçabilité des constats et preuves.",
+    "operationalNote": "Un rapport validé ne clôt pas automatiquement les non-conformités ni les actions correctives ; ces objets conservent leur cycle de vie.",
+    "recordLabel": "rapport d'audit"
   },
   {
     "id": "audit.nonconformities",
@@ -3818,41 +3999,68 @@
     "fields": [
       {
         "key": "entity",
-        "label": "Entité auditée",
+        "label": "Entité ou partenaire concerné",
         "type": "text",
         "required": true
       },
       {
         "key": "reference",
-        "label": "Mission ou non-conformité",
+        "label": "Référence du contrôle",
         "type": "text",
         "required": false
       },
       {
         "key": "finding",
-        "label": "Constat",
+        "label": "Faits et manquements constatés",
         "type": "textarea",
         "required": true
       },
       {
         "key": "evidence",
-        "label": "Éléments de preuve",
+        "label": "Pièces probantes",
         "type": "textarea",
         "required": false
       },
       {
         "key": "corrective_action",
-        "label": "Action corrective",
+        "label": "Mesure proposée et justification",
         "type": "textarea",
         "required": true
       },
       {
         "key": "review_date",
-        "label": "Date de contrôle",
+        "label": "Date de décision envisagée",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "legal_basis",
+        "label": "Fondement contractuel ou juridique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "proportionality",
+        "label": "Analyse de proportionnalité",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "appeal_process",
+        "label": "Procédure contradictoire et recours",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "decision_authority",
+        "label": "Autorité compétente",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Instruction documentée des propositions de sanction et contrôle de leur proportionnalité.",
+    "operationalNote": "Une approbation dans ce registre ne prononce aucune sanction contractuelle ou disciplinaire automatiquement ; la décision relève de l'autorité habilitée.",
+    "recordLabel": "proposition de sanction"
   },
   {
     "id": "compliance.overview",
@@ -3964,35 +4172,62 @@
     "fields": [
       {
         "key": "entity",
-        "label": "Entité ou périmètre",
+        "label": "Périmètre de la politique",
         "type": "text",
         "required": true
       },
       {
         "key": "requirement",
-        "label": "Obligation ou risque",
+        "label": "Objet et obligation",
         "type": "textarea",
         "required": true
       },
       {
         "key": "legal_reference",
-        "label": "Référence applicable",
+        "label": "Références juridiques",
         "type": "text",
         "required": false
       },
       {
         "key": "assessment",
-        "label": "Analyse",
+        "label": "Contenu et règles proposées",
         "type": "textarea",
         "required": true
       },
       {
         "key": "mitigation",
-        "label": "Mesure de traitement",
+        "label": "Plan de mise en œuvre",
         "type": "textarea",
         "required": false
+      },
+      {
+        "key": "policy_version",
+        "label": "Version documentaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "effective_date",
+        "label": "Date d'entrée en vigueur prévue",
+        "type": "date",
+        "required": false
+      },
+      {
+        "key": "target_audience",
+        "label": "Destinataires et équipes",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "publication_reference",
+        "label": "Référence du document approuvé",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Élaboration et révision contrôlées des politiques internes de conformité.",
+    "operationalNote": "La validation du dossier ne publie pas automatiquement une politique, ni ne lui confère une date d'entrée en vigueur.",
+    "recordLabel": "politique interne"
   },
   {
     "id": "compliance.disputes",
@@ -4122,35 +4357,62 @@
     "fields": [
       {
         "key": "entity",
-        "label": "Entité ou périmètre",
+        "label": "Activité ou entité exposée",
         "type": "text",
         "required": true
       },
       {
         "key": "requirement",
-        "label": "Obligation ou risque",
+        "label": "Scénario de risque",
         "type": "textarea",
         "required": true
       },
       {
         "key": "legal_reference",
-        "label": "Référence applicable",
+        "label": "Obligation ou norme concernée",
         "type": "text",
         "required": false
       },
       {
         "key": "assessment",
-        "label": "Analyse",
+        "label": "Analyse de l'exposition et de l'impact",
         "type": "textarea",
         "required": true
       },
       {
         "key": "mitigation",
-        "label": "Mesure de traitement",
+        "label": "Mesures de prévention et de traitement",
         "type": "textarea",
         "required": false
+      },
+      {
+        "key": "likelihood",
+        "label": "Probabilité évaluée",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "severity",
+        "label": "Gravité évaluée",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "residual_risk",
+        "label": "Risque résiduel estimé",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "control_owner",
+        "label": "Responsable du contrôle",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Évaluation des risques juridiques, réglementaires et contractuels avec actions de maîtrise.",
+    "operationalNote": "Une fiche de risque reste une évaluation interne ; elle ne certifie ni conformité réglementaire ni absence de risque.",
+    "recordLabel": "risque de conformité"
   },
   {
     "id": "rse.overview",
@@ -4212,41 +4474,68 @@
     "fields": [
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période de contrôle",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Famille d'emballages",
         "type": "text",
         "required": true
       },
       {
         "key": "quantity",
-        "label": "Quantité mesurée",
+        "label": "Quantité contrôlée",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité contrôlée",
         "type": "text",
         "required": true
       },
       {
         "key": "method",
-        "label": "Méthode et périmètre",
+        "label": "Critères de contrôle et échantillonnage",
         "type": "textarea",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Fiche technique ou preuve fournisseur",
         "type": "text",
         "required": true
+      },
+      {
+        "key": "material",
+        "label": "Composition et matériau",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "supplier_reference",
+        "label": "Fournisseur et référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "certification",
+        "label": "Norme ou certification vérifiée",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "decision_scope",
+        "label": "Limites de l'avis qualité",
+        "type": "textarea",
+        "required": false
       }
-    ]
+    ],
+    "description": "Qualification des matériaux, emballages et preuves de conformité avant leur usage.",
+    "operationalNote": "La validation d'une fiche n'homologue pas automatiquement l'emballage sur Platform et ne commande aucun stock.",
+    "recordLabel": "dossier emballage"
   },
   {
     "id": "rse.recycling",
@@ -4260,41 +4549,68 @@
     "fields": [
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période de collecte",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Matière et flux",
         "type": "text",
         "required": true
       },
       {
         "key": "quantity",
-        "label": "Quantité mesurée",
+        "label": "Masse ou volume collecté",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité de mesure",
         "type": "text",
         "required": true
       },
       {
         "key": "method",
-        "label": "Méthode et périmètre",
+        "label": "Méthode de pesée et périmètre",
         "type": "textarea",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Justificatif ou registre source",
         "type": "text",
         "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Collecteur ou partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "destination",
+        "label": "Filière de valorisation",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "receipt_reference",
+        "label": "Référence du bordereau",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "measurement_limits",
+        "label": "Limites et réserves",
+        "type": "textarea",
+        "required": false
       }
-    ]
+    ],
+    "description": "Suivi des flux réellement collectés, pesés et orientés vers une filière de traitement.",
+    "operationalNote": "Registre de mesures documentées : aucune collecte physique ni émission de certificat n'est déclenchée automatiquement.",
+    "recordLabel": "mesure de recyclage"
   },
   {
     "id": "rse.co2",
@@ -4308,41 +4624,68 @@
     "fields": [
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période de calcul",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Poste ou activité émettrice",
         "type": "text",
         "required": true
       },
       {
         "key": "quantity",
-        "label": "Quantité mesurée",
+        "label": "Valeur calculée",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité (kgCO₂e, tCO₂e…)",
         "type": "text",
         "required": true
       },
       {
         "key": "method",
-        "label": "Méthode et périmètre",
+        "label": "Méthode, périmètre et facteurs d'émission",
         "type": "textarea",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Origine du facteur d'émission",
         "type": "text",
         "required": true
+      },
+      {
+        "key": "scope",
+        "label": "Périmètre d'émission",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "baseline",
+        "label": "Scénario de référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "assumptions",
+        "label": "Hypothèses et exclusions",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "uncertainty",
+        "label": "Incertitudes du calcul",
+        "type": "textarea",
+        "required": false
       }
-    ]
+    ],
+    "description": "Traçabilité des estimations d'émissions et des hypothèses de calcul.",
+    "operationalNote": "Les valeurs sont déclarées avec leur méthode et leur source. Ce registre n'est pas une mesure automatique des émissions de Platform.",
+    "recordLabel": "calcul d'impact"
   },
   {
     "id": "rse.esg",
@@ -4356,41 +4699,68 @@
     "fields": [
       {
         "key": "period",
-        "label": "Période",
+        "label": "Exercice et période couverte",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Indicateur ESG",
         "type": "text",
         "required": true
       },
       {
         "key": "quantity",
-        "label": "Quantité mesurée",
+        "label": "Valeur rapportée",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité et base de mesure",
         "type": "text",
         "required": true
       },
       {
         "key": "method",
-        "label": "Méthode et périmètre",
+        "label": "Méthodologie de calcul",
         "type": "textarea",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Source primaire et traçabilité",
         "type": "text",
         "required": true
+      },
+      {
+        "key": "framework",
+        "label": "Référentiel de publication",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "coverage",
+        "label": "Entités ou opérations couvertes",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "data_quality",
+        "label": "Fiabilité et limites",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "external_audit",
+        "label": "Référence de revue externe",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Constitution et validation des indicateurs de reporting extra-financier.",
+    "operationalNote": "Les indicateurs ne deviennent pas des déclarations publiées ou auditées par leur simple validation interne.",
+    "recordLabel": "indicateur ESG"
   },
   {
     "id": "product.overview",
@@ -4676,41 +5046,68 @@
     "fields": [
       {
         "key": "area",
-        "label": "Produit ou parcours",
+        "label": "Projet ou produit conçu",
         "type": "text",
         "required": true
       },
       {
         "key": "problem",
-        "label": "Besoin ou problème",
+        "label": "Brief et besoin utilisateur",
         "type": "textarea",
         "required": true
       },
       {
         "key": "acceptance",
-        "label": "Critères d’acceptation",
+        "label": "Livrables et critères de validation",
         "type": "textarea",
         "required": true
       },
       {
         "key": "version",
-        "label": "Version",
+        "label": "Version de conception",
         "type": "text",
         "required": false
       },
       {
         "key": "dependency",
-        "label": "Dépendance",
+        "label": "Dépendances techniques ou fournisseurs",
         "type": "text",
         "required": false
       },
       {
         "key": "result",
-        "label": "Résultat du test",
+        "label": "Résultat de revue et tests",
         "type": "textarea",
         "required": false
+      },
+      {
+        "key": "prototype_reference",
+        "label": "Référence du prototype",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "supplier_constraints",
+        "label": "Contraintes de fabrication",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "design_review",
+        "label": "Décision de revue design",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "physical_sample",
+        "label": "Échantillon physique vérifié",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Dossiers de conception et coordination de projets créatifs distincts des demandes produit.",
+    "operationalNote": "Une validation de conception ne lance aucune fabrication ou commande fournisseur sans approbation opérationnelle distincte.",
+    "recordLabel": "dossier de conception"
   },
   {
     "id": "product.integrations",
@@ -4740,41 +5137,68 @@
     "fields": [
       {
         "key": "area",
-        "label": "Produit ou parcours",
+        "label": "Système ou parcours concerné",
         "type": "text",
         "required": true
       },
       {
         "key": "problem",
-        "label": "Besoin ou problème",
+        "label": "Besoin et événement déclencheur",
         "type": "textarea",
         "required": true
       },
       {
         "key": "acceptance",
-        "label": "Critères d’acceptation",
+        "label": "Contrats et critères d'acceptation",
         "type": "textarea",
         "required": true
       },
       {
         "key": "version",
-        "label": "Version",
+        "label": "Version d'API ou de schéma",
         "type": "text",
         "required": false
       },
       {
         "key": "dependency",
-        "label": "Dépendance",
+        "label": "Service et dépendances",
         "type": "text",
         "required": false
       },
       {
         "key": "result",
-        "label": "Résultat du test",
+        "label": "Résultat de recette vérifiable",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "source_system",
+        "label": "Système émetteur",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "target_system",
+        "label": "Système destinataire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "idempotency_key",
+        "label": "Stratégie d'idempotence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "retry_policy",
+        "label": "Échec, reprise et alerte",
         "type": "textarea",
         "required": false
       }
-    ]
+    ],
+    "description": "Contrats d'API, dépendances, qualité des échanges et tests des intégrations.",
+    "operationalNote": "Une fiche approuvée n'active aucune intégration. Les changements du bridge Platform/Intranet exigent leurs propres tests et validations.",
+    "recordLabel": "intégration technique"
   },
   {
     "id": "product.documentation",
@@ -4804,41 +5228,68 @@
     "fields": [
       {
         "key": "area",
-        "label": "Produit ou parcours",
+        "label": "Produit ou module documenté",
         "type": "text",
         "required": true
       },
       {
         "key": "problem",
-        "label": "Besoin ou problème",
+        "label": "Documentation nécessaire",
         "type": "textarea",
         "required": true
       },
       {
         "key": "acceptance",
-        "label": "Critères d’acceptation",
+        "label": "Critères de complétude et qualité",
         "type": "textarea",
         "required": true
       },
       {
         "key": "version",
-        "label": "Version",
+        "label": "Version couverte",
         "type": "text",
         "required": false
       },
       {
         "key": "dependency",
-        "label": "Dépendance",
+        "label": "Références techniques",
         "type": "text",
         "required": false
       },
       {
         "key": "result",
-        "label": "Résultat du test",
+        "label": "Résultat de la vérification",
         "type": "textarea",
         "required": false
+      },
+      {
+        "key": "document_url",
+        "label": "Référence du document source",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "document_owner",
+        "label": "Mainteneur documentaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "audience",
+        "label": "Public autorisé",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "review_cycle",
+        "label": "Périodicité de mise à jour",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Documentation produit versionnée, revue et maintenue dans son référentiel.",
+    "operationalNote": "La fiche documente une demande : elle ne remplace pas la version officielle, ni ne rend publique une documentation confidentielle.",
+    "recordLabel": "demande documentaire"
   },
   {
     "id": "product.innovation",
@@ -4868,41 +5319,68 @@
     "fields": [
       {
         "key": "area",
-        "label": "Produit ou parcours",
+        "label": "Opportunité ou domaine d'innovation",
         "type": "text",
         "required": true
       },
       {
         "key": "problem",
-        "label": "Besoin ou problème",
+        "label": "Problème utilisateur ou marché",
         "type": "textarea",
         "required": true
       },
       {
         "key": "acceptance",
-        "label": "Critères d’acceptation",
+        "label": "Hypothèse et seuil de succès",
         "type": "textarea",
         "required": true
       },
       {
         "key": "version",
-        "label": "Version",
+        "label": "Itération de recherche",
         "type": "text",
         "required": false
       },
       {
         "key": "dependency",
-        "label": "Dépendance",
+        "label": "Dépendances et ressources",
         "type": "text",
         "required": false
       },
       {
         "key": "result",
-        "label": "Résultat du test",
+        "label": "Résultats et enseignements",
         "type": "textarea",
         "required": false
+      },
+      {
+        "key": "research_method",
+        "label": "Méthodologie d'étude",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "test_population",
+        "label": "Population ou échantillon",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "risk_assessment",
+        "label": "Limites, coûts et risques",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "next_decision",
+        "label": "Décision recommandée",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Hypothèses d'innovation, expérimentations et évaluation des opportunités.",
+    "operationalNote": "L'approbation d'une étude de R&D ne modifie pas automatiquement la roadmap, le catalogue ou l'offre commerciale.",
+    "recordLabel": "expérimentation R&D"
   },
   {
     "id": "product.performance",
@@ -5579,41 +6057,68 @@
     "fields": [
       {
         "key": "asset",
-        "label": "Actif ou service",
+        "label": "Serveur, service ou équipement",
         "type": "text",
         "required": true
       },
       {
         "key": "environment",
-        "label": "Environnement",
+        "label": "Environnement concerné",
         "type": "text",
         "required": true
       },
       {
         "key": "finding",
-        "label": "Constat ou demande",
+        "label": "Constat technique ou vulnérabilité",
         "type": "textarea",
         "required": true
       },
       {
         "key": "action",
-        "label": "Action prévue",
+        "label": "Plan d'intervention ou de durcissement",
         "type": "textarea",
         "required": true
       },
       {
         "key": "verification",
-        "label": "Preuve de vérification",
+        "label": "Preuve de test ou de remédiation",
         "type": "textarea",
         "required": false
       },
       {
         "key": "review_date",
-        "label": "Prochaine revue",
+        "label": "Date de prochaine revue",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "provider",
+        "label": "Hébergeur ou prestataire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "service_owner",
+        "label": "Responsable technique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "backup_policy",
+        "label": "Sauvegarde et rétention",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "recovery_test",
+        "label": "Dernier test de restauration",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Inventaire des composants d'infrastructure et revues de continuité et de sécurité.",
+    "operationalNote": "L'approbation d'un dossier ne modifie pas l'infrastructure : intervention et preuve d'exécution doivent être réalisées dans l'outil technique autorisé.",
+    "recordLabel": "revue d'infrastructure"
   },
   {
     "id": "security.environments",
@@ -5640,41 +6145,68 @@
     "fields": [
       {
         "key": "asset",
-        "label": "Actif ou service",
+        "label": "Application ou composant",
         "type": "text",
         "required": true
       },
       {
         "key": "environment",
-        "label": "Environnement",
+        "label": "Environnement cible",
         "type": "text",
         "required": true
       },
       {
         "key": "finding",
-        "label": "Constat ou demande",
+        "label": "Changement ou risque constaté",
         "type": "textarea",
         "required": true
       },
       {
         "key": "action",
-        "label": "Action prévue",
+        "label": "Plan d'intervention",
         "type": "textarea",
         "required": true
       },
       {
         "key": "verification",
-        "label": "Preuve de vérification",
+        "label": "Preuves de tests et contrôle",
         "type": "textarea",
         "required": false
       },
       {
         "key": "review_date",
-        "label": "Prochaine revue",
+        "label": "Date de revue",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "release_reference",
+        "label": "Version ou commit ciblé",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "deployment_window",
+        "label": "Fenêtre d'intervention",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "rollback_plan",
+        "label": "Plan de retour arrière",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "execution_trace",
+        "label": "Lien vers le journal d'exécution",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Contrôles des environnements, changements et plans de retour arrière.",
+    "operationalNote": "La validation d'un dossier n'exécute ni déploiement, ni rollback. L'action technique doit être tracée par le système de déploiement.",
+    "recordLabel": "revue d'environnement"
   },
   {
     "id": "security.vpn",
@@ -5701,41 +6233,68 @@
     "fields": [
       {
         "key": "asset",
-        "label": "Actif ou service",
+        "label": "Ressource réseau demandée",
         "type": "text",
         "required": true
       },
       {
         "key": "environment",
-        "label": "Environnement",
+        "label": "Environnement concerné",
         "type": "text",
         "required": true
       },
       {
         "key": "finding",
-        "label": "Constat ou demande",
+        "label": "Justification de l'accès",
         "type": "textarea",
         "required": true
       },
       {
         "key": "action",
-        "label": "Action prévue",
+        "label": "Action et approbation requises",
         "type": "textarea",
         "required": true
       },
       {
         "key": "verification",
-        "label": "Preuve de vérification",
+        "label": "Preuve d'autorisation et de révocation",
         "type": "textarea",
         "required": false
       },
       {
         "key": "review_date",
-        "label": "Prochaine revue",
+        "label": "Date de réexamen",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "beneficiary",
+        "label": "Bénéficiaire identifié",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "access_duration",
+        "label": "Durée d'accès demandée",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ticket_reference",
+        "label": "Référence de demande IT",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "revocation_evidence",
+        "label": "Preuve de révocation",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Demandes et revues d'accès aux réseaux sécurisés.",
+    "operationalNote": "Ce module documente les demandes et les contrôles. La validation n'ouvre aucun VPN ni ne provisionne un compte réseau.",
+    "recordLabel": "revue d'accès VPN"
   },
   {
     "id": "security.logs",
@@ -6931,47 +7490,74 @@
     "fields": [
       {
         "key": "channel",
-        "label": "Canal",
+        "label": "Plateforme de diffusion envisagée",
         "type": "text",
         "required": true
       },
       {
         "key": "audience",
-        "label": "Public cible",
+        "label": "Audience ciblée",
         "type": "text",
         "required": true
       },
       {
         "key": "content",
-        "label": "Contenu",
+        "label": "Synopsis, conducteur et intervenants",
         "type": "textarea",
         "required": true
       },
       {
         "key": "publication_date",
-        "label": "Date de publication",
+        "label": "Date prévue de diffusion",
         "type": "date",
         "required": false
       },
       {
         "key": "budget",
-        "label": "Budget",
+        "label": "Budget de production",
         "type": "number",
         "required": false
       },
       {
         "key": "result",
-        "label": "Résultat mesuré",
+        "label": "Écoutes confirmées",
         "type": "number",
         "required": false
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Source des statistiques d'écoute",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "episode_number",
+        "label": "Numéro d'épisode",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "guest_consent",
+        "label": "Consentement et droits voix/image",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "audio_master",
+        "label": "Référence du fichier master",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "published_url",
+        "label": "Lien de diffusion confirmé",
         "type": "text",
         "required": false
       }
-    ]
+    ],
+    "description": "Préparation, validation éditoriale et suivi des épisodes audio.",
+    "operationalNote": "La validation du dossier n'enregistre, n'héberge et ne publie aucun épisode automatiquement.",
+    "recordLabel": "épisode podcast"
   },
   {
     "id": "rse.points",
@@ -6985,41 +7571,68 @@
     "fields": [
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période de simulation",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Action envisagée",
         "type": "text",
         "required": true
       },
       {
         "key": "quantity",
-        "label": "Quantité mesurée",
+        "label": "Volume simulé (non crédité)",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité de simulation",
         "type": "text",
         "required": true
       },
       {
         "key": "method",
-        "label": "Méthode et périmètre",
+        "label": "Règles de simulation et d'éligibilité",
         "type": "textarea",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Source des hypothèses",
         "type": "text",
         "required": true
+      },
+      {
+        "key": "pilot_stage",
+        "label": "Stade du pilote",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reward_policy",
+        "label": "Règles de récompense envisagées",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "fraud_controls",
+        "label": "Prévention des abus",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "platform_dependency",
+        "label": "Condition d'activation Platform",
+        "type": "textarea",
+        "required": false
       }
-    ]
+    ],
+    "description": "Conception et contrôle du futur programme de points circulaires.",
+    "operationalNote": "Programme non activé : aucune ligne de ce registre n'attribue des points à un client ou ne crédite un solde dans Platform.",
+    "recordLabel": "hypothèse de fidélité"
   },
   {
     "id": "security.code",
@@ -7033,41 +7646,68 @@
     "fields": [
       {
         "key": "asset",
-        "label": "Actif ou service",
+        "label": "Dépôt ou composant logiciel",
         "type": "text",
         "required": true
       },
       {
         "key": "environment",
-        "label": "Environnement",
+        "label": "Branche et environnement",
         "type": "text",
         "required": true
       },
       {
         "key": "finding",
-        "label": "Constat ou demande",
+        "label": "Changement ou risque constaté",
         "type": "textarea",
         "required": true
       },
       {
         "key": "action",
-        "label": "Action prévue",
+        "label": "Correction ou contrôle attendu",
         "type": "textarea",
         "required": true
       },
       {
         "key": "verification",
-        "label": "Preuve de vérification",
+        "label": "Résultat CI et revue de sécurité",
         "type": "textarea",
         "required": false
       },
       {
         "key": "review_date",
-        "label": "Prochaine revue",
+        "label": "Date de révision",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "commit_sha",
+        "label": "Référence de commit",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "pull_request_url",
+        "label": "Lien de pull request",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "secret_scanning",
+        "label": "Contrôle de secrets et dépendances",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "release_reference",
+        "label": "Version de livraison",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Contrôles des dépôts, changements de code et revues de sécurité applicative.",
+    "operationalNote": "La validation d'une fiche n'approuve pas une PR GitHub, ne fusionne pas de branche et ne déploie aucun code.",
+    "recordLabel": "revue de code"
   },
   {
     "id": "security.console",
@@ -7081,41 +7721,68 @@
     "fields": [
       {
         "key": "asset",
-        "label": "Actif ou service",
+        "label": "Ressource ciblée",
         "type": "text",
         "required": true
       },
       {
         "key": "environment",
-        "label": "Environnement",
+        "label": "Environnement d'intervention",
         "type": "text",
         "required": true
       },
       {
         "key": "finding",
-        "label": "Constat ou demande",
+        "label": "Justification et risque",
         "type": "textarea",
         "required": true
       },
       {
         "key": "action",
-        "label": "Action prévue",
+        "label": "Procédure d'intervention envisagée",
         "type": "textarea",
         "required": true
       },
       {
         "key": "verification",
-        "label": "Preuve de vérification",
+        "label": "Preuves d'exécution et de contrôle",
         "type": "textarea",
         "required": false
       },
       {
         "key": "review_date",
-        "label": "Prochaine revue",
+        "label": "Date d'intervention ou de revue",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "change_ticket",
+        "label": "Référence de changement",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "authorized_operator",
+        "label": "Intervenant habilité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "approval_reference",
+        "label": "Autorisation préalable",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "rollback_reference",
+        "label": "Procédure de retour arrière",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Suivi des opérations techniques sensibles et de leur autorisation préalable.",
+    "operationalNote": "Cette interface est un registre d'interventions ; elle n'exécute aucune commande serveur, suppression, rotation de clé ou déploiement.",
+    "recordLabel": "intervention technique"
   },
   {
     "id": "security.documentation",
@@ -7129,41 +7796,68 @@
     "fields": [
       {
         "key": "asset",
-        "label": "Actif ou service",
+        "label": "Application ou composant documenté",
         "type": "text",
         "required": true
       },
       {
         "key": "environment",
-        "label": "Environnement",
+        "label": "Version et environnement",
         "type": "text",
         "required": true
       },
       {
         "key": "finding",
-        "label": "Constat ou demande",
+        "label": "Objet, contexte et procédure",
         "type": "textarea",
         "required": true
       },
       {
         "key": "action",
-        "label": "Action prévue",
+        "label": "Mise à jour documentaire prévue",
         "type": "textarea",
         "required": true
       },
       {
         "key": "verification",
-        "label": "Preuve de vérification",
+        "label": "Preuve de revue technique",
         "type": "textarea",
         "required": false
       },
       {
         "key": "review_date",
-        "label": "Prochaine revue",
+        "label": "Prochaine révision",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "document_reference",
+        "label": "Référence Drive ou dépôt",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "technical_reviewer",
+        "label": "Relecteur technique",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "classification",
+        "label": "Niveau de confidentialité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "runbook_url",
+        "label": "Référence du runbook",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Documentation technique contrôlée, runbooks et traçabilité des révisions.",
+    "operationalNote": "Le dossier ne remplace pas le document versionné ni les autorisations Drive ; aucune documentation confidentielle n'est publiée automatiquement.",
+    "recordLabel": "document technique"
   },
   {
     "id": "support.compliance",
@@ -7183,29 +7877,56 @@
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Type de contrôle",
         "type": "text",
         "required": false
       },
       {
         "key": "issue",
-        "label": "Demande ou problème",
+        "label": "Écart ou document manquant",
         "type": "textarea",
         "required": true
       },
       {
         "key": "resolution",
-        "label": "Résolution proposée",
+        "label": "Action de régularisation",
         "type": "textarea",
         "required": false
       },
       {
         "key": "sla_date",
-        "label": "Échéance de réponse",
+        "label": "Date limite de suivi",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "compliance_reference",
+        "label": "Référence du dossier Conformité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "documents_requested",
+        "label": "Pièces demandées",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "handoff_team",
+        "label": "Pôle destinataire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "customer_update",
+        "label": "Information communiquée au client",
+        "type": "textarea",
+        "required": false
       }
-    ]
+    ],
+    "description": "Suivi Support des pièces et blocages de conformité, avec orientation vers le pôle compétent.",
+    "operationalNote": "Ce suivi ne rend pas de décision juridique ou KYC ; le pôle Conformité reste responsable des contrôles formels.",
+    "recordLabel": "suivi de conformité client"
   },
   {
     "id": "support.onboarding",
@@ -7219,35 +7940,62 @@
     "fields": [
       {
         "key": "account",
-        "label": "Compte concerné",
+        "label": "Compte ou organisation accompagnée",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Parcours partenaire",
         "type": "text",
         "required": false
       },
       {
         "key": "issue",
-        "label": "Demande ou problème",
+        "label": "Étape bloquante",
         "type": "textarea",
         "required": true
       },
       {
         "key": "resolution",
-        "label": "Résolution proposée",
+        "label": "Plan de résolution",
         "type": "textarea",
         "required": false
       },
       {
         "key": "sla_date",
-        "label": "Échéance de réponse",
+        "label": "Échéance de prise en charge",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "platform_reference",
+        "label": "Identifiant Platform",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "next_step",
+        "label": "Prochaine étape",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "contact_channel",
+        "label": "Canal de contact",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "completion_evidence",
+        "label": "Preuve de finalisation",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Suivi des étapes d'accompagnement et des blocages d'intégration des partenaires.",
+    "operationalNote": "Un dossier Support ne crée ni compte marchand ni fournisseur ; les identités restent contrôlées par Platform et les procédures RH concernées.",
+    "recordLabel": "suivi d'onboarding"
   },
   {
     "id": "direction.global",

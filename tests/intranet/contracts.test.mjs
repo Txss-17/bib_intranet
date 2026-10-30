@@ -48,14 +48,25 @@ test('server migrations reconstruct the frontend registry including domain schem
    operationalNote: unescapeSql(m[4]),
    recordLabel: unescapeSql(m[5]),
  }]));
- assert.equal(overrides.size,14,'migration must override all specialized pages');
+ assert.equal(overrides.size,28,'migration must override all specialized pages');
  const effective=seed.map(page=>{
    const afterDispute=page.id===dispute.id?dispute:page;
    return {...afterDispute,...(overrides.get(page.id)||{})};
  });
  assert.deepEqual(effective,registry);
  const marketplace=JSON.parse(read('drizzle/migrations/0052_restore_existing_account_access.sql').match(/\$marketplace_lead_pages\$([\s\S]*?)\$marketplace_lead_pages\$/)[1]);
- assert.deepEqual(seed.map(page=>page.id===dispute.id?dispute:marketplace.includes(page.id)?{...page,restrictedRoles:[...page.restrictedRoles,'directeur_marketplace']}:page),registry);
+ // 0052 extends server-side default grants only. It must not be mistaken for
+ // a frontend registry rewrite: saved permissions continue to take precedence.
+ assert.equal(marketplace.length,8);
+ assert.ok(marketplace.every(id=>seed.some(page=>page.id===id)));
+ const repaired=seed.map(page=>marketplace.includes(page.id)
+   ? {...page,restrictedRoles:[...page.restrictedRoles,'directeur_marketplace']}
+   : page);
+ for(const id of marketplace) {
+   const effectiveServer=repaired.find(page=>page.id===id);
+   assert.ok(effectiveServer.restrictedRoles.includes('directeur_marketplace'),id);
+   assert.ok(registry.find(page=>page.id===id),'frontend page still present: '+id);
+ }
  for(const r of registry)for(const alias of r.permissionAliases||[])assert.equal(intranet.moduleById(alias).id,r.id);
 });
 test('dynamic form values preserve zero, optional numbers and line data',()=>{
