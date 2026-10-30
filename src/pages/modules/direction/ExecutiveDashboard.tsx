@@ -21,8 +21,8 @@ import DirectionOpsPanel from '@/components/direction/DirectionOpsPanel';
 const ExecutiveDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const { data: kpis, isLoading: kpisLoading, isError:kpisError, refetch:retryKpis } = useExecutiveKPIs();
-  const { data: criticalAlerts = [], isLoading: alertsLoading } = useRecentCriticalAlerts();
-  const { data: polePerformance = [], isLoading: polesLoading } = usePolePerformance();
+  const { data: criticalAlerts = [], isLoading: alertsLoading, isError: alertsError, refetch: retryAlerts } = useRecentCriticalAlerts();
+  const { data: polePerformance = [], isLoading: polesLoading, isError: polesError, refetch: retryPoles } = usePolePerformance();
 
   const alertsTable = useTableInteractions({
     data: criticalAlerts,
@@ -154,6 +154,11 @@ const ExecutiveDashboard = () => {
               <CardContent>
                 {polesLoading ? (
                   <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+                ) : polesError ? (
+                  <div role="alert" className="space-y-2 text-sm text-destructive">
+                    <p>Performance des pôles indisponible.</p>
+                    <Button type="button" variant="outline" size="sm" onClick={() => void retryPoles()}>Réessayer</Button>
+                  </div>
                 ) : (
                   <div className="space-y-3">
                     {polePerformance.map(pole => (
@@ -260,6 +265,11 @@ const ExecutiveDashboard = () => {
             <CardContent>
               {alertsLoading ? (
                 <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+              ) : alertsError ? (
+                <div role="alert" className="space-y-2 text-sm text-destructive">
+                  <p>Alertes critiques indisponibles. L’absence de données ne signifie pas absence d’alerte.</p>
+                  <Button type="button" variant="outline" size="sm" onClick={() => void retryAlerts()}>Réessayer</Button>
+                </div>
               ) : (
                 <div className="space-y-3">
                   {alertsTable.processedData.map(alert => (
