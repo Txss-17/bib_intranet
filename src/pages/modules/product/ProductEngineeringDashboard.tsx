@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   ArrowUpRight, Boxes, ClipboardList, Code2, TestTube2, GitBranch,
   Activity, Cable, BookOpen, FlaskConical, AlertTriangle, FileText,
-  CalendarDays, GitPullRequest,
+  CalendarDays,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +39,7 @@ const sections: Array<{ title: string; description: string; links: ProductArea[]
     description: 'Coordonner les changements entre Platform, Intranet et Audit Hub, sans confondre validation et déploiement.',
     links: [
       { label: 'Intégrations et contrats', path: '/pole/product/integrations', pageId: 'product.integrations', icon: Cable, description: 'API, schémas, idempotence et reprises de synchronisation' },
-      { label: 'Performance produit', path: '/pole/product/performance', pageId: 'product.performance', icon: Activity, description: 'Signaux de performance et qualité de service, sous réserve des données disponibles' },
+      { label: 'Performance du catalogue produit', path: '/pole/product/performance', pageId: 'product.performance', icon: Activity, description: 'Analyse commerciale et adoption des produits ; ne mesure pas la disponibilité des applications' },
       { label: 'Rapports & recommandations', path: '/pole/product/reports', pageId: 'product.reports', icon: FileText, description: 'Bilans, arbitrages et actions correctives' },
     ],
   },
