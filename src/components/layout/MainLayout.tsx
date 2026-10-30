@@ -1,4 +1,3 @@
-import BusinessHistoryPanel from '@/components/operations/BusinessHistoryPanel';
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
@@ -158,7 +157,7 @@ export function MainLayout() {
         <ViewAsBanner />
 
         <div className="p-6">
-          <RouteAccessGate><Outlet /><BusinessHistoryPanel key={pathname} /></RouteAccessGate>
+          <RouteAccessGate><Outlet /></RouteAccessGate>
         </div>
       </main>
     </div>
