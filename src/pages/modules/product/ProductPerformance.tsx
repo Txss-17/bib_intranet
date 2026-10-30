@@ -315,7 +315,12 @@ export default function ProductPerformance() {
           )}
 
           <ExportButtons
-            data={filteredRows}
+            data={filteredRows.map(product => ({
+              ...product,
+              gross_orders_display: Object.entries(product.gross_orders_by_currency ?? {})
+                .map(([currency, amount]) => `${amount.toLocaleString('fr-FR')} ${currency}`)
+                .join(' · ') || '—',
+            }))}
             filename="bib-product-performance"
             title="Performance produit"
             columns={[
@@ -344,7 +349,7 @@ export default function ProductPerformance() {
                 header: 'Commandes 30j',
               },
               {
-                accessor: 'revenue_30d',
+                accessor: 'gross_orders_display',
                 header: 'Montant brut 30j (par devise)',
               },
             ]}
