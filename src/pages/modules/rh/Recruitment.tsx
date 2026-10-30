@@ -78,6 +78,12 @@ export default function Recruitment() {
           <p>Parcours : réception → présélection → entretien → validation des conditions de collaboration → demande d'intégration RH → accès Intranet sur invitation nominative et avec permissions limitées.</p>
           <p className="text-muted-foreground">Ne transmettez aucun accès Intranet à un candidat non retenu. Avant toute mission, définissez un statut et des conditions contractuelles adaptés ; le bénévolat dans une société commerciale n'est pas une option générale.</p>
           <Button variant="outline" asChild>
+            <a href="https://bib-talent.lovable.app/carrieres/talent" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="mr-2 h-4 w-4" />Voir la page publique BIB Talent
+            </a>
+          </Button>
+          {' '}
+          <Button variant="outline" asChild>
             <a href="https://docs.google.com/forms/d/e/1FAIpQLSemotUUORqFwUdM60S1BAW-79YzSm-5TiocRvm-wuTUiCevvg/viewform" target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />Consulter le formulaire public
             </a>
