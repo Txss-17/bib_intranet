@@ -56,6 +56,8 @@ import { toast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { Link } from 'react-router-dom';
+import { MATRIX_EVENT } from '@/data/permissionMatrix';
 
 
 /* ============================================================
@@ -250,6 +252,7 @@ const RHAccess = () => {
 
   const [selectedScopeId, setSelectedScopeId] =
     useState('none');
+  const [selectedScopeValue, setSelectedScopeValue] = useState('');
 
   const [selectedPortfolioId, setSelectedPortfolioId] =
     useState('');
@@ -320,6 +323,19 @@ const RHAccess = () => {
     },
   });
 
+
+  // Role-specific scope instances are the only scopes RH may assign.
+  // A generic scope type by itself is insufficient for poles, regions, etc.
+  const { data: roleScopes = [], isLoading: roleScopesLoading, isError: roleScopesError } = useQuery({
+    queryKey: ['rh-access-role-scopes'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('access_role_scopes')
+        .select('role_id, scope_id, scope_value');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   /* ==========================================================
      AFFECTATIONS RBAC
@@ -582,6 +598,10 @@ const RHAccess = () => {
      RÔLES DISPONIBLES POUR LE COLLABORATEUR
   ========================================================== */
 
+  const permittedScopeAssignments = roleScopes.filter((item) => item.role_id === selectedRoleId);
+  const selectedScope = scopes.find((item) => item.id === selectedScopeId);
+  const needsScopeValue = selectedScope != null && !['global', 'own_records'].includes(selectedScope.scope_key);
+
   const availableRoles = useMemo(() => {
     if (!selectedEmployee) {
       return [];
@@ -680,6 +700,7 @@ const RHAccess = () => {
     setSelectedScopeId(
       current?.scope_id ?? 'none',
     );
+    setSelectedScopeValue(current?.scope_value ?? '');
 
     setRoleDialogOpen(true);
   };
@@ -754,6 +775,25 @@ const RHAccess = () => {
       return;
     }
 
+    if (roleScopesError || roleScopesLoading) {
+      toast({ title: 'Périmètres indisponibles', description: 'Impossible de vérifier le périmètre autorisé de ce rôle.', variant: 'destructive' });
+      return;
+    }
+    const assignedScopeValue = selectedScopeValue.trim() || null;
+    const matching = permittedScopeAssignments.some((row) => row.scope_id === selectedScopeId && (row.scope_value ?? null) === assignedScopeValue);
+    if (permittedScopeAssignments.length > 0 && !matching) {
+      toast({ title: 'Périmètre non autorisé', description: 'Choisissez un périmètre effectivement défini pour ce rôle.', variant: 'destructive' });
+      return;
+    }
+    if (permittedScopeAssignments.length === 0 && selectedScopeId !== 'none') {
+      toast({ title: 'Périmètre non configuré', description: 'Créez d’abord le périmètre dans Rôles & Permissions.', variant: 'destructive' });
+      return;
+    }
+    if (needsScopeValue && !assignedScopeValue) {
+      toast({ title: 'Valeur requise', description: 'Le périmètre choisi exige une valeur.', variant: 'destructive' });
+      return;
+    }
+
     setSaving(true);
 
     try {
@@ -778,7 +818,7 @@ const RHAccess = () => {
             ? null
             : selectedScopeId,
 
-        scope_value: null,
+        scope_value: selectedScopeId === 'none' ? null : assignedScopeValue,
 
         status: 'active',
 
@@ -817,11 +857,9 @@ const RHAccess = () => {
         }
       }
 
-      await queryClient.invalidateQueries({
-        queryKey: [
-          'rh-access-assignments',
-        ],
-      });
+      await queryClient.invalidateQueries({ queryKey: ['rh-access-assignments'] });
+      await queryClient.invalidateQueries({ queryKey: ['intranet-permissions'] });
+      window.dispatchEvent(new Event(MATRIX_EVENT));
 
       toast({
         title:
@@ -1754,42 +1792,31 @@ const RHAccess = () => {
               </label>
 
               <Select
-                value={selectedScopeId}
-                onValueChange={
-                  setSelectedScopeId
-                }
-                disabled={
-                  !selectedEmployee ||
-                  !canReceiveNewAccess(
-                    selectedEmployee,
-                  )
-                }
+                value={selectedScopeId === 'none' ? 'none' : `${selectedScopeId}|${selectedScopeValue}`}
+                onValueChange={(value) => {
+                  if (value === 'none') { setSelectedScopeId('none'); setSelectedScopeValue(''); return; }
+                  const separator = value.indexOf('|');
+                  setSelectedScopeId(value.slice(0, separator));
+                  setSelectedScopeValue(value.slice(separator + 1));
+                }}
+                disabled={!selectedEmployee || !canReceiveNewAccess(selectedEmployee) || roleScopesLoading || roleScopesError}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un périmètre" />
-                </SelectTrigger>
-
+                <SelectTrigger><SelectValue placeholder="Périmètre défini pour ce rôle" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">
-                    Aucun périmètre spécifique
-                  </SelectItem>
-
-                  {scopes.map(
-                    (scope) => (
-                      <SelectItem
-                        key={scope.id}
-                        value={scope.id}
-                      >
-                        {scope.label}
-                      </SelectItem>
-                    ),
-                  )}
+                  {permittedScopeAssignments.length === 0 && <SelectItem value="none">Sans périmètre particulier configuré</SelectItem>}
+                  {permittedScopeAssignments.map((entry) => {
+                    const scope = scopes.find((item) => item.id === entry.scope_id);
+                    return <SelectItem key={`${entry.scope_id}:${entry.scope_value ?? ''}`} value={`${entry.scope_id}|${entry.scope_value ?? ''}`}>
+                      {scope?.label ?? 'Type inconnu'}{entry.scope_value ? ` — ${entry.scope_value}` : ''}
+                    </SelectItem>;
+                  })}
                 </SelectContent>
               </Select>
 
               <p className="text-xs text-muted-foreground">
-                Le périmètre définit la portée fonctionnelle du rôle.
+                Le choix reprend les périmètres associés au rôle dans le catalogue administrateur.
                 Les portefeuilles métier sont gérés séparément.
+                <Link to="/admin/roles-permissions" className="ml-2 underline">Consulter le catalogue</Link>
               </p>
             </div>
 
@@ -1848,6 +1875,8 @@ const RHAccess = () => {
               disabled={
                 saving ||
                 !selectedRoleId ||
+                roleScopesLoading || roleScopesError ||
+                (permittedScopeAssignments.length > 0 && selectedScopeId === 'none') ||
                 !user?.id ||
                 !selectedEmployee ||
                 !canReceiveNewAccess(
