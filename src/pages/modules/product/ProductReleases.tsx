@@ -47,7 +47,6 @@ export default function ProductReleases(){
  const [editing,setEditing]=useState<string|null>(null);
  const [form,setForm]=useState<Form>(newForm);
  const [filter,setFilter]=useState('all');
- const [note,setNote]=useState('');
  const releases=useQuery({
   queryKey:['product-release-tracking'],
   enabled:canViewPage('product.engineering'),
@@ -106,10 +105,10 @@ export default function ProductReleases(){
   </div>}
   <div className="grid gap-3 md:grid-cols-3">
    {[
-    ['Modifications documentées',releases.isLoading||releases.isError?'—':String(releases.data?.length??0),GitCommitHorizontal],
-    ['En revue',releases.isLoading||releases.isError?'—':String((releases.data??[]).filter(r=>r.status==='review').length),ClipboardCheck],
-    ['Livraisons déclarées',releases.isLoading||releases.isError?'—':String((releases.data??[]).filter(r=>r.status==='released').length),Rocket],
-   ].map(([label,value,Icon])=><Card key={label as string}><CardContent className="p-4"><div className="flex items-center gap-2 text-xs text-muted-foreground">{typeof Icon!=='string'&&<Icon className="h-4 w-4"/>}{label as string}</div><p className="mt-2 text-2xl font-semibold">{value as string}</p></CardContent></Card>)}
+    {label:'Modifications documentées',value:releases.isLoading||releases.isError?'—':String(releases.data?.length??0),icon:GitCommitHorizontal},
+    {label:'En revue',value:releases.isLoading||releases.isError?'—':String((releases.data??[]).filter(r=>r.status==='review').length),icon:ClipboardCheck},
+    {label:'Livraisons déclarées',value:releases.isLoading||releases.isError?'—':String((releases.data??[]).filter(r=>r.status==='released').length),icon:Rocket},
+   ].map(({label,value,icon:Icon})=><Card key={label}><CardContent className="p-4"><div className="flex items-center gap-2 text-xs text-muted-foreground"><Icon className="h-4 w-4"/>{label}</div><p className="mt-2 text-2xl font-semibold">{value}</p></CardContent></Card>)}
   </div>
   <div className="flex flex-wrap items-center justify-between gap-3">
    <div className="min-w-48"><Select value={filter} onValueChange={setFilter}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent><SelectItem value="all">Les trois applications</SelectItem>{appKeys.map(k=><SelectItem key={k} value={k}>{appLabels[k]}</SelectItem>)}</SelectContent></Select></div>
