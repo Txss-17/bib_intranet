@@ -578,36 +578,38 @@ const RolesPermissions = () => {
         ]),
       );
 
-      // Toutes les interfaces et toutes les actions sont sauvegardées,
-      // y compris celles qui ne sont pas visibles à cause des filtres.
+      // Only write changed permissions: this avoids overwriting the entire
+      // catalogue and limits the impact of concurrent admin sessions.
       const rows = interfaces.flatMap((interfaceItem) =>
-        actions.map((action) => {
+        actions.flatMap((action) => {
           const pairKey = `${interfaceItem.id}:${action.id}`;
-          const draftKey = permissionKey(
-            selectedRoleId,
-            interfaceItem.id,
-            action.id,
-          );
-
-          return {
+          const draftKey = permissionKey(selectedRoleId, interfaceItem.id, action.id);
+          const previous = existingByKey.get(pairKey) ?? false;
+          const allowed = draft[draftKey] ?? previous;
+          if (allowed === previous) return [];
+          return [{
             role_id: selectedRoleId,
             interface_id: interfaceItem.id,
             action_id: action.id,
-            allowed:
-              draft[draftKey] ??
-              existingByKey.get(pairKey) ??
-              false,
-          };
+            allowed,
+          }];
         }),
       );
 
-      if (rows.length > 0) {
+      if (!rows.length) {
+        toast({ title: 'Aucune modification', description: 'Les permissions de ce rôle sont déjà enregistrées.' });
+        return;
+      }
+
+      // Paginate writes to respect API payload limits; persistent server-side
+      // transactionality should eventually be handled by a single audited RPC.
+      const batchSize = 250;
+      for (let from = 0; from < rows.length; from += batchSize) {
         const { error } = await supabase
           .from('access_permissions')
-          .upsert(rows, {
+          .upsert(rows.slice(from, from + batchSize), {
             onConflict: 'role_id,interface_id,action_id',
           });
-
         if (error) throw error;
       }
 
@@ -617,7 +619,7 @@ const RolesPermissions = () => {
           actor_id: profile?.id ?? null,
           role_id: selectedRoleId,
           change_type: 'permission_matrix_update',
-          previous_value: existing,
+          previous_value: existing.filter((permission) => rows.some((row) => row.interface_id === permission.interface_id && row.action_id === permission.action_id)),
           new_value: rows,
           reason: 'Modification depuis Rôles & Permissions',
         });
@@ -633,7 +635,7 @@ const RolesPermissions = () => {
       window.dispatchEvent(new Event(MATRIX_EVENT));
       toast({
         title: 'Permissions enregistrées',
-        description: `${rows.length} combinaisons interface/action traitées pour « ${selectedRole?.label ?? selectedRoleId} ».`,
+        description: `${rows.length} permission(s) modifiée(s) pour « ${selectedRole?.label ?? selectedRoleId} ».`,
       });
 
       await loadCatalog();
