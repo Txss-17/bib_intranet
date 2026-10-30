@@ -1037,7 +1037,7 @@ const RolesPermissions = () => {
                             i === index ? { ...item, scope_value: event.target.value } : item
                           ))}>
                           <option value="">Choisir un pôle</option>
-                          {availablePoles.map((pole) => <option key={pole.id} value={pole.id}>{pole.label}</option>)}
+                          {availablePoles.map((pole) => <option key={pole.id} value={pole.id}>{pole.name}</option>)}
                         </select>
                       ) : (
                         <Input value={entry.scope_value} disabled={savingScopes || !needsValue}
