@@ -1,4 +1,3 @@
-[{"id":"direction.overview","path":"/pole/direction","label":"Vue d’ensemble","scope":"direction","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"objective","label":"Objectif stratégique","type":"textarea","required":true},{"key":"impact","label":"Impact attendu","type":"textarea","required":false},{"key":"indicator","label":"Indicateur","type":"text","required":false},{"key":"target","label":"Cible","type":"number","required":false},{"key":"period","label":"Période","type":"text","required":false}]},{"id":"direction.strategy","path":"/pole/direction/strategic-kpis","label":"Stratégie & KPIs","scope":"direction","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"objective","label":"Objectif stratégique","type":"textarea","required":true},{"key":"impact","label":"Impact attendu","type":"textarea","required":false},{"key":"indicator","label":"Indicateur","type":"text","required":false},{"key":"target","label":"Cible","type":"number","required":false},{"key":"period","label":"Période","type":"text","required":false}]},{"id":"direction.alerts","path":"/pole/direction/critical-alerts","label":"Alertes critiques","scope":"direction","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"objective","label":"Objectif stratégique","type":"textarea","required":true},{"key":"impact","label":"Impact attendu","type":"textarea","required":false},{"key":"indicator","label":"Indicateur","type":"text","required":false},{"key":"target","label":"Cible","type":"number","required":false},{"key":"period","label":"Période","type":"text","required":false}]},{"id":"direction.arbitrage","path":"/pole/direction/decision-arbitrage","label":"Arbitrages","scope":"direction","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"objective","label":"Objectif stratégique","type":"textarea","required":true},{"key":"impact","label":"Impact attendu","type":"textarea","required":false},{"key":"indicator","label":"Indicateur","type":"text","required":false},{"key":"target","label":"Cible","type":"number","required":false},{"key":"period","label":"Période","type":"text","required":false}]},{"id":"direction.roadmap","path":"/pole/direction/vision-roadmap","label":"Vision & Roadmap","scope":"direction","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"objective","label":"Objectif stratégique","type":"textarea","required":true},{"key":"impact","label":"Impact attendu","type":"textarea","required":false},{"key":"indicator","label":"Indicateur","type":"text","required":false},{"key":"target","label":"Cible","type":"number","required":false},{"key":"period","label":"Période","type":"text","required":false}]},{"id":"direction.governance","path":"/pole/direction/group-governance","label":"Gouvernance","scope":"direction","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"objective","label":"Objectif stratégique","type":"textarea","required":true},{"key":"impact","label":"Impact attendu","type":"textarea","required":false},{"key":"indicator","label":"Indicateur","type":"text","required":false},{"key":"target","label":"Cible","type":"number","required":false},{"key":"period","label":"Période","type":"text","required":false}]},{"id":"direction.reports","path":"/pole/direction/board-reports","label":"Rapports de direction","scope":"direction","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"objective","label":"Objectif stratégique","type":"textarea","required":true},{"key":"impact","label":"Impact attendu","type":"textarea","required":false},{"key":"indicator","label":"Indicateur","type":"text","required":false},{"key":"target","label":"Cible","type":"number","required":false},{"key":"period","label":"Période","type":"text","required":false}]},{"id":"finance.overview","path":"/pole/finance","label":"Vue d’ensemble","scope":"finance","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"counterparty","label":"Tiers","type":"text","required":true},{"key":"reference","label":"Référence justificative","type":"text","required":true},{"key":"amount","label":"Montant","type":"number","required":true},{"key":"currency","label":"Devise","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"lines","label":"Lignes justificatives","type":"lines","required":false}]},{"id":"finance.cashflow","path":"/pole/finance/cashflow","label":"Trésorerie","scope":"finance","transversal":false,"restrictedRoles":["ceo","cfo","comptable","controleur_gestion","analyste_financier","tresorier","gestionnaire_paiements","gestionnaire_facturation"],"public":false,"approvalLevels":2,"fields":[{"key":"counterparty","label":"Tiers","type":"text","required":true},{"key":"reference","label":"Référence justificative","type":"text","required":true},{"key":"amount","label":"Montant","type":"number","required":true},{"key":"currency","label":"Devise","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"lines","label":"Lignes justificatives","type":"lines","required":false}]},{"id":"finance.transactions","path":"/pole/finance/transactions","label":"Transactions","scope":"finance","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"counterparty","label":"Tiers","type":"text","required":true},{"key":"reference","label":"Référence justificative","type":"text","required":true},{"key":"amount","label":"Montant","type":"number","required":true},{"key":"currency","label":"Devise","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"lines","label":"Lignes justificatives","type":"lines","required":false}]},{"id":"finance.billing","path":"/pole/finance/billing","label":"Facturation","scope":"finance","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"counterparty","label":"Tiers","type":"text","required":true},{"key":"reference","label":"Référence justificative","type":"text","required":true},{"key":"amount","label":"Montant","type":"number","required":true},{"key":"currency","label":"Devise","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"lines","label":"Lignes justificatives","type":"lines","required":false}]},{"id":"finance.payouts","path":"/pole/finance/payouts","label":"Paiements partenaires","scope":"finance","transversal":false,"restrictedRoles":["ceo","cfo","comptable","controleur_gestion","analyste_financier","tresorier","gestionnaire_paiements","gestionnaire_facturation"],"public":false,"approvalLevels":2,"fields":[{"key":"counterparty","label":"Tiers","type":"text","required":true},{"key":"reference","label":"Référence justificative","type":"text","required":true},{"key":"amount","label":"Montant","type":"number","required":true},{"key":"currency","label":"Devise","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"lines","label":"Lignes justificatives","type":"lines","required":false}]},{"id":"finance.reconciliation","path":"/pole/finance/reconciliation","label":"Rapprochement","scope":"finance","transversal":false,"restrictedRoles":["ceo","cfo","comptable","controleur_gestion","analyste_financier","tresorier","gestionnaire_paiements","gestionnaire_facturation"],"public":false,"approvalLevels":2,"fields":[{"key":"counterparty","label":"Tiers","type":"text","required":true},{"key":"reference","label":"Référence justificative","type":"text","required":true},{"key":"amount","label":"Montant","type":"number","required":true},{"key":"currency","label":"Devise","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"lines","label":"Lignes justificatives","type":"lines","required":false}]},{"id":"finance.subscriptions","path":"/pole/finance/subscriptions","label":"Abonnements","scope":"finance","transversal":false,"restrictedRoles":["ceo","cfo","comptable","controleur_gestion","analyste_financier","tresorier","gestionnaire_paiements","gestionnaire_facturation"],"public":false,"approvalLevels":2,"fields":[{"key":"counterparty","label":"Tiers","type":"text","required":true},{"key":"reference","label":"Référence justificative","type":"text","required":true},{"key":"amount","label":"Montant","type":"number","required":true},{"key":"currency","label":"Devise","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"lines","label":"Lignes justificatives","type":"lines","required":false}]},{"id":"finance.cards","path":"/pole/finance/cards","label":"Cartes","scope":"finance","transversal":false,"restrictedRoles":["ceo","cfo","comptable","controleur_gestion","analyste_financier","tresorier","gestionnaire_paiements","gestionnaire_facturation"],"public":false,"approvalLevels":2,"fields":[{"key":"counterparty","label":"Tiers","type":"text","required":true},{"key":"reference","label":"Référence justificative","type":"text","required":true},{"key":"amount","label":"Montant","type":"number","required":true},{"key":"currency","label":"Devise","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"lines","label":"Lignes justificatives","type":"lines","required":false}]},{"id":"finance.guarantee","path":"/pole/finance/guarantee","label":"Fonds de garantie","scope":"finance","transversal":false,"restrictedRoles":["ceo","cfo","comptable","controleur_gestion","analyste_financier","tresorier","gestionnaire_paiements","gestionnaire_facturation"],"public":false,"approvalLevels":2,"fields":[{"key":"counterparty","label":"Tiers","type":"text","required":true},{"key":"reference","label":"Référence justificative","type":"text","required":true},{"key":"amount","label":"Montant","type":"number","required":true},{"key":"currency","label":"Devise","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"lines","label":"Lignes justificatives","type":"lines","required":false}]},{"id":"ops.overview","path":"/pole/ops","label":"Vue d’ensemble","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.shops","path":"/pole/ops/shops","label":"Boutiques & Marchands","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.catalog","path":"/pole/ops/catalog","label":"Référentiel produits","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.anomalies","path":"/pole/ops/anomalies","label":"Anomalies","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.orders","path":"/pole/ops/pipeline","label":"Commandes","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.product-lifecycle","path":"/pole/ops/product-lifecycle","label":"Cycle de vie produits","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.shipments","path":"/pole/ops/shipments","label":"Expéditions","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.stocks","path":"/pole/ops/stocks","label":"Stocks","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.partners","path":"/pole/ops/partners","label":"Partenaires logistiques","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.flows","path":"/pole/ops/flows","label":"Flux & synchronisations","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.incidents","path":"/pole/ops/incidents","label":"Incidents logistiques","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.thresholds","path":"/pole/ops/thresholds","label":"Seuils de stock","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.forecast","path":"/pole/ops/forecast","label":"Prévisions","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.replenishment","path":"/pole/ops/replenishment","label":"Réapprovisionnement","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"ops.supplier-lead-times","path":"/pole/ops/suppliers-lead-times","label":"Délais fournisseurs","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"supplier.overview","path":"/pole/supplier","label":"Vue d’ensemble","scope":"supplier","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"supplier","label":"Fournisseur","type":"text","required":true},{"key":"product","label":"Produit ou référence","type":"text","required":false},{"key":"requirement","label":"Exigence","type":"textarea","required":true},{"key":"assessment","label":"Évaluation","type":"textarea","required":false},{"key":"expiry","label":"Expiration","type":"date","required":false}]},{"id":"supplier.applications","path":"/pole/supplier/applications","label":"Candidatures","scope":"supplier","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"supplier","label":"Fournisseur","type":"text","required":true},{"key":"product","label":"Produit ou référence","type":"text","required":false},{"key":"requirement","label":"Exigence","type":"textarea","required":true},{"key":"assessment","label":"Évaluation","type":"textarea","required":false},{"key":"expiry","label":"Expiration","type":"date","required":false}]},{"id":"supplier.catalog-inbox","path":"/pole/supplier/catalog-inbox","label":"Catalogue à contrôler","scope":"supplier","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"supplier","label":"Fournisseur","type":"text","required":true},{"key":"product","label":"Produit ou référence","type":"text","required":false},{"key":"requirement","label":"Exigence","type":"textarea","required":true},{"key":"assessment","label":"Évaluation","type":"textarea","required":false},{"key":"expiry","label":"Expiration","type":"date","required":false}]},{"id":"supplier.pending-products","path":"/pole/supplier/pending","label":"Produits en attente","scope":"supplier","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"supplier","label":"Fournisseur","type":"text","required":true},{"key":"product","label":"Produit ou référence","type":"text","required":false},{"key":"requirement","label":"Exigence","type":"textarea","required":true},{"key":"assessment","label":"Évaluation","type":"textarea","required":false},{"key":"expiry","label":"Expiration","type":"date","required":false}]},{"id":"supplier.validated-products","path":"/pole/supplier/validated","label":"Produits validés","scope":"supplier","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"supplier","label":"Fournisseur","type":"text","required":true},{"key":"product","label":"Produit ou référence","type":"text","required":false},{"key":"requirement","label":"Exigence","type":"textarea","required":true},{"key":"assessment","label":"Évaluation","type":"textarea","required":false},{"key":"expiry","label":"Expiration","type":"date","required":false}]},{"id":"supplier.portfolios","path":"/pole/supplier/portfolios","label":"Portefeuilles","scope":"supplier","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"supplier","label":"Fournisseur","type":"text","required":true},{"key":"product","label":"Produit ou référence","type":"text","required":false},{"key":"requirement","label":"Exigence","type":"textarea","required":true},{"key":"assessment","label":"Évaluation","type":"textarea","required":false},{"key":"expiry","label":"Expiration","type":"date","required":false}]},{"id":"supplier.certifications","path":"/pole/supplier/certifications","label":"Certifications","scope":"supplier","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"supplier","label":"Fournisseur","type":"text","required":true},{"key":"product","label":"Produit ou référence","type":"text","required":false},{"key":"requirement","label":"Exigence","type":"textarea","required":true},{"key":"assessment","label":"Évaluation","type":"textarea","required":false},{"key":"expiry","label":"Expiration","type":"date","required":false}]},{"id":"supplier.decisions","path":"/pole/supplier/decisions","label":"Historique des décisions","scope":"supplier","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"supplier","label":"Fournisseur","type":"text","required":true},{"key":"product","label":"Produit ou référence","type":"text","required":false},{"key":"requirement","label":"Exigence","type":"textarea","required":true},{"key":"assessment","label":"Évaluation","type":"textarea","required":false},{"key":"expiry","label":"Expiration","type":"date","required":false}]},{"id":"supplier.restock","path":"/pole/supplier/restock-orders","label":"Réapprovisionnement","scope":"supplier","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"supplier","label":"Fournisseur","type":"text","required":true},{"key":"product","label":"Produit ou référence","type":"text","required":false},{"key":"requirement","label":"Exigence","type":"textarea","required":true},{"key":"assessment","label":"Évaluation","type":"textarea","required":false},{"key":"expiry","label":"Expiration","type":"date","required":false}]},{"id":"marketplace.overview","path":"/pole/marketplace","label":"Vue d’ensemble","scope":"marketplace","transversal":false,"restrictedRoles":["ceo","responsable_marketplace","gestionnaire_boutiques","gestionnaire_vendeurs","gestionnaire_commandes","gestionnaire_litiges","gestionnaire_avis"],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"marketplace.merchants","path":"/pole/marketplace/merchants","label":"Marchands & portefeuilles","scope":"marketplace","transversal":false,"restrictedRoles":["ceo","responsable_marketplace","gestionnaire_boutiques","gestionnaire_vendeurs","gestionnaire_commandes","gestionnaire_litiges","gestionnaire_avis"],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"marketplace.portfolio","path":"/pole/marketplace/portfolio","label":"Portefeuille","scope":"marketplace","transversal":false,"restrictedRoles":["ceo","responsable_marketplace","gestionnaire_boutiques","gestionnaire_vendeurs"],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"marketplace.stores","path":"/pole/marketplace/stores","label":"Boutiques","scope":"marketplace","transversal":false,"restrictedRoles":["ceo","responsable_marketplace","gestionnaire_boutiques","gestionnaire_vendeurs"],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"marketplace.opportunities","path":"/pole/marketplace/opportunities","label":"Opportunités & développement","scope":"marketplace","transversal":false,"restrictedRoles":["ceo","responsable_marketplace","gestionnaire_boutiques","gestionnaire_vendeurs"],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"marketplace.analytics","path":"/pole/marketplace/analytics","label":"Performance portefeuille","scope":"marketplace","transversal":false,"restrictedRoles":["ceo","responsable_marketplace","gestionnaire_boutiques","gestionnaire_vendeurs","gestionnaire_commandes","gestionnaire_litiges","gestionnaire_avis"],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"marketplace.subscriptions","path":"/pole/marketplace/subscriptions","label":"Abonnements & add-ons marchands","scope":"marketplace","transversal":false,"restrictedRoles":["ceo","responsable_marketplace","gestionnaire_boutiques","gestionnaire_vendeurs"],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"marketplace.products","path":"/pole/marketplace/products","label":"Produits","scope":"marketplace","transversal":false,"restrictedRoles":["ceo","responsable_marketplace","gestionnaire_boutiques","gestionnaire_vendeurs"],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"support.overview","path":"/pole/support","label":"Vue d’ensemble","scope":"support","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"account","label":"Compte concerné","type":"text","required":true},{"key":"category","label":"Catégorie","type":"text","required":false},{"key":"issue","label":"Demande ou problème","type":"textarea","required":true},{"key":"resolution","label":"Résolution proposée","type":"textarea","required":false},{"key":"sla_date","label":"Échéance de réponse","type":"date","required":false}]},{"id":"support.tickets","path":"/pole/support/tickets","label":"Tickets","scope":"support","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"account","label":"Compte concerné","type":"text","required":true},{"key":"category","label":"Catégorie","type":"text","required":false},{"key":"issue","label":"Demande ou problème","type":"textarea","required":true},{"key":"resolution","label":"Résolution proposée","type":"textarea","required":false},{"key":"sla_date","label":"Échéance de réponse","type":"date","required":false}]},{"id":"support.customer-success","path":"/pole/support/customer-success","label":"Customer Success","scope":"support","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"account","label":"Compte concerné","type":"text","required":true},{"key":"category","label":"Catégorie","type":"text","required":false},{"key":"issue","label":"Demande ou problème","type":"textarea","required":true},{"key":"resolution","label":"Résolution proposée","type":"textarea","required":false},{"key":"sla_date","label":"Échéance de réponse","type":"date","required":false}]},{"id":"support.monitoring","path":"/pole/support/monitoring","label":"Suivi clients","scope":"support","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"account","label":"Compte concerné","type":"text","required":true},{"key":"category","label":"Catégorie","type":"text","required":false},{"key":"issue","label":"Demande ou problème","type":"textarea","required":true},{"key":"resolution","label":"Résolution proposée","type":"textarea","required":false},{"key":"sla_date","label":"Échéance de réponse","type":"date","required":false}]},{"id":"support.escalations","path":"/pole/support/escalations","label":"Escalades","scope":"support","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"account","label":"Compte concerné","type":"text","required":true},{"key":"category","label":"Catégorie","type":"text","required":false},{"key":"issue","label":"Demande ou problème","type":"textarea","required":true},{"key":"resolution","label":"Résolution proposée","type":"textarea","required":false},{"key":"sla_date","label":"Échéance de réponse","type":"date","required":false}]},{"id":"marketing.overview","path":"/pole/marketing","label":"Vue d’ensemble","scope":"marketing","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"channel","label":"Canal","type":"text","required":true},{"key":"audience","label":"Public cible","type":"text","required":true},{"key":"content","label":"Contenu","type":"textarea","required":true},{"key":"publication_date","label":"Date de publication","type":"date","required":false},{"key":"budget","label":"Budget","type":"number","required":false},{"key":"result","label":"Résultat mesuré","type":"number","required":false},{"key":"source","label":"Source de mesure","type":"text","required":false}]},{"id":"marketing.campaigns","path":"/pole/marketing/campaigns","label":"Campagnes","scope":"marketing","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"channel","label":"Canal","type":"text","required":true},{"key":"audience","label":"Public cible","type":"text","required":true},{"key":"content","label":"Contenu","type":"textarea","required":true},{"key":"publication_date","label":"Date de publication","type":"date","required":false},{"key":"budget","label":"Budget","type":"number","required":false},{"key":"result","label":"Résultat mesuré","type":"number","required":false},{"key":"source","label":"Source de mesure","type":"text","required":false}]},{"id":"marketing.content","path":"/pole/marketing/content","label":"Contenus","scope":"marketing","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"channel","label":"Canal de destination","type":"text","required":true},{"key":"audience","label":"Public visé","type":"text","required":true},{"key":"content","label":"Texte, scénario ou brief","type":"textarea","required":true},{"key":"publication_date","label":"Date de publication prévue","type":"date","required":false},{"key":"budget","label":"Budget prévu","type":"number","required":false},{"key":"result","label":"Résultat observé","type":"number","required":false},{"key":"source","label":"Source de la mesure","type":"text","required":false},{"key":"format","label":"Format et déclinaisons","type":"text","required":false},{"key":"call_to_action","label":"Appel à l'action","type":"text","required":false},{"key":"rights_reference","label":"Droits et autorisations des médias","type":"text","required":false},{"key":"published_url","label":"Adresse de publication vérifiée","type":"text","required":false}],"description":"Production, revue et calendrier des contenus de communication.","operationalNote":"Un contenu validé reste interne tant qu'un outil de publication ne confirme pas explicitement sa mise en ligne.","recordLabel":"contenu éditorial"},{"id":"marketing.crm","path":"/pole/marketing/crm","label":"CRM","scope":"marketing","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"channel","label":"Canal","type":"text","required":true},{"key":"audience","label":"Public cible","type":"text","required":true},{"key":"content","label":"Contenu","type":"textarea","required":true},{"key":"publication_date","label":"Date de publication","type":"date","required":false},{"key":"budget","label":"Budget","type":"number","required":false},{"key":"result","label":"Résultat mesuré","type":"number","required":false},{"key":"source","label":"Source de mesure","type":"text","required":false}]},{"id":"marketing.journeys","path":"/pole/marketing/journeys","label":"Parcours & automatisations","scope":"marketing","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"channel","label":"Canal","type":"text","required":true},{"key":"audience","label":"Public cible","type":"text","required":true},{"key":"content","label":"Contenu","type":"textarea","required":true},{"key":"publication_date","label":"Date de publication","type":"date","required":false},{"key":"budget","label":"Budget","type":"number","required":false},{"key":"result","label":"Résultat mesuré","type":"number","required":false},{"key":"source","label":"Source de mesure","type":"text","required":false}]},{"id":"marketing.analytics","path":"/pole/marketing/analytics","label":"Analytics","scope":"marketing","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur et définition","type":"text","required":true},{"key":"period","label":"Période observée","type":"text","required":true},{"key":"channel","label":"Canal ou campagne","type":"text","required":true},{"key":"value","label":"Valeur relevée","type":"number","required":true},{"key":"unit","label":"Unité de mesure","type":"text","required":true},{"key":"source","label":"Source et date d'extraction","type":"text","required":true},{"key":"analysis","label":"Interprétation et limites","type":"textarea","required":false},{"key":"campaign_reference","label":"Référence campagne","type":"text","required":false},{"key":"attribution_window","label":"Fenêtre d'attribution","type":"text","required":false},{"key":"comparison_period","label":"Période de comparaison","type":"text","required":false},{"key":"action_recommended","label":"Action proposée","type":"textarea","required":false}],"description":"Mesures documentées de performance des canaux et campagnes.","operationalNote":"Les chiffres sont des saisies documentées. Ils ne constituent pas une synchronisation automatique avec les régies publicitaires.","recordLabel":"mesure marketing"},{"id":"marketing.reputation","path":"/pole/marketing/reputation","label":"Réputation","scope":"marketing","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"channel","label":"Canal","type":"text","required":true},{"key":"audience","label":"Public cible","type":"text","required":true},{"key":"content","label":"Contenu","type":"textarea","required":true},{"key":"publication_date","label":"Date de publication","type":"date","required":false},{"key":"budget","label":"Budget","type":"number","required":false},{"key":"result","label":"Résultat mesuré","type":"number","required":false},{"key":"source","label":"Source de mesure","type":"text","required":false}]},{"id":"rh.overview","path":"/pole/rh","label":"Vue d’ensemble","scope":"rh","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.employees","path":"/pole/rh/employees","label":"Collaborateurs","scope":"rh","transversal":false,"restrictedRoles":["ceo","directeur_rh","responsable_rh","gestionnaire_paie","gestionnaire_admin_rh","charge_recrutement"],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.recruitment","path":"/pole/rh/recruitment","label":"Recrutement","scope":"rh","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.files","path":"/pole/rh/files","label":"Dossiers collaborateurs","scope":"rh","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.onboarding","path":"/pole/rh/onboarding","label":"Onboarding RH — intégration collaborateur","scope":"rh","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.attendance","path":"/pole/rh/attendance","label":"Présences","scope":"rh","transversal":false,"restrictedRoles":["ceo","directeur_rh","responsable_rh","gestionnaire_paie","gestionnaire_admin_rh","charge_recrutement"],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.leave","path":"/pole/rh/leave","label":"Congés","scope":"rh","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.training","path":"/pole/rh/training","label":"Formation","scope":"rh","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.trips","path":"/pole/rh/trips","label":"Déplacements","scope":"rh","transversal":false,"restrictedRoles":["ceo","directeur_rh","responsable_rh","gestionnaire_paie","gestionnaire_admin_rh","charge_recrutement","ceo","cfo"],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.publications","path":"/pole/rh/publications","label":"Publications internes","scope":"rh","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.alerts","path":"/pole/rh/alerts","label":"Alertes RH","scope":"rh","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.portfolio","path":"/pole/rh/portfolio","label":"Portefeuille","scope":"rh","transversal":false,"restrictedRoles":["ceo","directeur_rh","responsable_rh","gestionnaire_paie","gestionnaire_admin_rh","charge_recrutement"],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.organization","path":"/pole/rh/organization","label":"Organisation","scope":"rh","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}]},{"id":"rh.access","path":"/pole/rh/access","label":"Accès & permissions","scope":"rh","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"employee","label":"Collaborateur","type":"text","required":true},{"key":"category","label":"Type de dossier","type":"text","required":true},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"effective_date","label":"Date d’effet","type":"date","required":false},{"key":"manager","label":"Responsable hiérarchique","type":"text","required":false}],"permissionAliases":["direction.access-permissions"]},{"id":"audit.overview","path":"/pole/audit","label":"Vue d’ensemble","scope":"audit","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité auditée","type":"text","required":true},{"key":"reference","label":"Mission ou non-conformité","type":"text","required":false},{"key":"finding","label":"Constat","type":"textarea","required":true},{"key":"evidence","label":"Éléments de preuve","type":"textarea","required":false},{"key":"corrective_action","label":"Action corrective","type":"textarea","required":true},{"key":"review_date","label":"Date de contrôle","type":"date","required":false}]},{"id":"audit.field","path":"/pole/audit/field","label":"Audits terrain","scope":"audit","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité auditée","type":"text","required":true},{"key":"reference","label":"Mission ou non-conformité","type":"text","required":false},{"key":"finding","label":"Constat","type":"textarea","required":true},{"key":"evidence","label":"Éléments de preuve","type":"textarea","required":false},{"key":"corrective_action","label":"Action corrective","type":"textarea","required":true},{"key":"review_date","label":"Date de contrôle","type":"date","required":false}]},{"id":"audit.missions","path":"/pole/audit/missions","label":"Suivi des missions","scope":"audit","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité auditée","type":"text","required":true},{"key":"reference","label":"Mission ou non-conformité","type":"text","required":false},{"key":"finding","label":"Constat","type":"textarea","required":true},{"key":"evidence","label":"Éléments de preuve","type":"textarea","required":false},{"key":"corrective_action","label":"Action corrective","type":"textarea","required":true},{"key":"review_date","label":"Date de contrôle","type":"date","required":false}]},{"id":"audit.supplier","path":"/pole/audit/supplier","label":"Audits fournisseurs","scope":"audit","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité auditée","type":"text","required":true},{"key":"reference","label":"Mission ou non-conformité","type":"text","required":false},{"key":"finding","label":"Constat","type":"textarea","required":true},{"key":"evidence","label":"Éléments de preuve","type":"textarea","required":false},{"key":"corrective_action","label":"Action corrective","type":"textarea","required":true},{"key":"review_date","label":"Date de contrôle","type":"date","required":false}]},{"id":"audit.operations","path":"/pole/audit/ops","label":"Audits opérations","scope":"audit","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité auditée","type":"text","required":true},{"key":"reference","label":"Mission ou non-conformité","type":"text","required":false},{"key":"finding","label":"Constat","type":"textarea","required":true},{"key":"evidence","label":"Éléments de preuve","type":"textarea","required":false},{"key":"corrective_action","label":"Action corrective","type":"textarea","required":true},{"key":"review_date","label":"Date de contrôle","type":"date","required":false}]},{"id":"audit.reports","path":"/pole/audit/reports","label":"Rapports","scope":"audit","transversal":false,"restrictedRoles":["ceo","directeur_qualite","responsable_qualite","auditeur_qualite","auditeur_terrain","responsable_conformite","conformite_juridique"],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité auditée","type":"text","required":true},{"key":"reference","label":"Référence de mission","type":"text","required":false},{"key":"finding","label":"Synthèse des constats","type":"textarea","required":true},{"key":"evidence","label":"Éléments probants","type":"textarea","required":false},{"key":"corrective_action","label":"Recommandations","type":"textarea","required":true},{"key":"review_date","label":"Date de validation envisagée","type":"date","required":false},{"key":"auditor","label":"Auditeur principal","type":"text","required":false},{"key":"audit_scope","label":"Périmètre de mission","type":"textarea","required":false},{"key":"opinion","label":"Conclusion et réserves","type":"textarea","required":false},{"key":"corrective_plan_ref","label":"Référence du plan correctif","type":"text","required":false}],"description":"Constitution de rapports d'audit et traçabilité des constats et preuves.","operationalNote":"Un rapport validé ne clôt pas automatiquement les non-conformités ni les actions correctives ; ces objets conservent leur cycle de vie.","recordLabel":"rapport d'audit"},{"id":"audit.nonconformities","path":"/pole/audit/nonconformities","label":"Non-conformités","scope":"audit","transversal":false,"restrictedRoles":["ceo","directeur_qualite","responsable_qualite","auditeur_qualite","auditeur_terrain","responsable_conformite","conformite_juridique"],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité auditée","type":"text","required":true},{"key":"reference","label":"Mission ou non-conformité","type":"text","required":false},{"key":"finding","label":"Constat","type":"textarea","required":true},{"key":"evidence","label":"Éléments de preuve","type":"textarea","required":false},{"key":"corrective_action","label":"Action corrective","type":"textarea","required":true},{"key":"review_date","label":"Date de contrôle","type":"date","required":false}]},{"id":"audit.corrective-actions","path":"/pole/audit/corrective-actions","label":"Actions correctives","scope":"audit","transversal":false,"restrictedRoles":["ceo","directeur_qualite","responsable_qualite","auditeur_qualite","auditeur_terrain","responsable_conformite","conformite_juridique"],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité auditée","type":"text","required":true},{"key":"reference","label":"Mission ou non-conformité","type":"text","required":false},{"key":"finding","label":"Constat","type":"textarea","required":true},{"key":"evidence","label":"Éléments de preuve","type":"textarea","required":false},{"key":"corrective_action","label":"Action corrective","type":"textarea","required":true},{"key":"review_date","label":"Date de contrôle","type":"date","required":false}]},{"id":"audit.sanctions","path":"/pole/audit/sanctions","label":"Sanctions","scope":"audit","transversal":false,"restrictedRoles":["ceo","directeur_qualite","responsable_qualite","auditeur_qualite","auditeur_terrain","responsable_conformite","conformite_juridique"],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité auditée","type":"text","required":true},{"key":"reference","label":"Mission ou non-conformité","type":"text","required":false},{"key":"finding","label":"Constat","type":"textarea","required":true},{"key":"evidence","label":"Éléments de preuve","type":"textarea","required":false},{"key":"corrective_action","label":"Action corrective","type":"textarea","required":true},{"key":"review_date","label":"Date de contrôle","type":"date","required":false}]},{"id":"compliance.overview","path":"/pole/compliance","label":"Vue d’ensemble","scope":"compliance","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité ou périmètre","type":"text","required":true},{"key":"requirement","label":"Obligation ou risque","type":"textarea","required":true},{"key":"legal_reference","label":"Référence applicable","type":"text","required":false},{"key":"assessment","label":"Analyse","type":"textarea","required":true},{"key":"mitigation","label":"Mesure de traitement","type":"textarea","required":false}]},{"id":"compliance.contracts","path":"/pole/compliance/contracts","label":"Contrats","scope":"compliance","transversal":false,"restrictedRoles":["ceo","juriste","conformite_juridique","responsable_conformite","analyste_rgpd","gestionnaire_contrats"],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité ou périmètre","type":"text","required":true},{"key":"requirement","label":"Obligation ou risque","type":"textarea","required":true},{"key":"legal_reference","label":"Référence applicable","type":"text","required":false},{"key":"assessment","label":"Analyse","type":"textarea","required":true},{"key":"mitigation","label":"Mesure de traitement","type":"textarea","required":false}]},{"id":"compliance.policies","path":"/pole/compliance/policies","label":"Politiques","scope":"compliance","transversal":false,"restrictedRoles":["ceo","juriste","conformite_juridique","responsable_conformite","analyste_rgpd","gestionnaire_contrats"],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité ou périmètre","type":"text","required":true},{"key":"requirement","label":"Obligation ou risque","type":"textarea","required":true},{"key":"legal_reference","label":"Référence applicable","type":"text","required":false},{"key":"assessment","label":"Analyse","type":"textarea","required":true},{"key":"mitigation","label":"Mesure de traitement","type":"textarea","required":false}]},{"id":"compliance.disputes","path":"/pole/compliance/disputes","label":"Litiges","scope":"compliance","transversal":false,"restrictedRoles":["ceo","juriste","conformite_juridique","responsable_conformite","analyste_rgpd","gestionnaire_contrats"],"public":false,"approvalLevels":2,"fields":[{"key":"party","label":"Partie concernée","type":"text","required":true},{"key":"type","label":"Type de litige","type":"text","required":true},{"key":"description","label":"Constat","type":"textarea","required":true},{"key":"stage","label":"Étape de traitement","type":"text","required":false},{"key":"amount","label":"Montant contesté","type":"text","required":false},{"key":"currency","label":"Devise","type":"text","required":false},{"key":"legal_reference","label":"Référence applicable","type":"text","required":false},{"key":"assessment","label":"Analyse interne","type":"textarea","required":false},{"key":"proposal","label":"Proposition de traitement","type":"textarea","required":false},{"key":"evidence","label":"Justification et vérification","type":"textarea","required":false},{"key":"outcome","label":"Issue proposée","type":"text","required":false},{"key":"entity","label":"Périmètre historique","type":"text","required":false},{"key":"requirement","label":"Constat historique","type":"textarea","required":false},{"key":"mitigation","label":"Traitement historique","type":"textarea","required":false},{"key":"amount_raw","label":"Montant historique non structuré","type":"text","required":false}]},{"id":"compliance.risks","path":"/pole/compliance/risks","label":"Registre des risques","scope":"compliance","transversal":false,"restrictedRoles":["ceo","juriste","conformite_juridique","responsable_conformite","analyste_rgpd","gestionnaire_contrats"],"public":false,"approvalLevels":2,"fields":[{"key":"entity","label":"Entité ou périmètre","type":"text","required":true},{"key":"requirement","label":"Obligation ou risque","type":"textarea","required":true},{"key":"legal_reference","label":"Référence applicable","type":"text","required":false},{"key":"assessment","label":"Analyse","type":"textarea","required":true},{"key":"mitigation","label":"Mesure de traitement","type":"textarea","required":false}]},{"id":"rse.overview","path":"/pole/rse","label":"Vue d’ensemble","scope":"rse","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"period","label":"Période","type":"text","required":true},{"key":"category","label":"Catégorie","type":"text","required":true},{"key":"quantity","label":"Quantité mesurée","type":"number","required":true},{"key":"unit","label":"Unité","type":"text","required":true},{"key":"method","label":"Méthode et périmètre","type":"textarea","required":true},{"key":"source","label":"Source de mesure","type":"text","required":true}]},{"id":"rse.packaging","path":"/pole/rse/packaging","label":"Emballages","scope":"rse","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"period","label":"Période de contrôle","type":"text","required":true},{"key":"category","label":"Famille d'emballages","type":"text","required":true},{"key":"quantity","label":"Quantité contrôlée","type":"number","required":true},{"key":"unit","label":"Unité contrôlée","type":"text","required":true},{"key":"method","label":"Critères de contrôle et échantillonnage","type":"textarea","required":true},{"key":"source","label":"Fiche technique ou preuve fournisseur","type":"text","required":true},{"key":"material","label":"Composition et matériau","type":"text","required":false},{"key":"supplier_reference","label":"Fournisseur et référence","type":"text","required":false},{"key":"certification","label":"Norme ou certification vérifiée","type":"text","required":false},{"key":"decision_scope","label":"Limites de l'avis qualité","type":"textarea","required":false}],"description":"Qualification des matériaux, emballages et preuves de conformité avant leur usage.","operationalNote":"La validation d'une fiche n'homologue pas automatiquement l'emballage sur Platform et ne commande aucun stock.","recordLabel":"dossier emballage"},{"id":"rse.recycling","path":"/pole/rse/recycling","label":"Recyclage","scope":"rse","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"period","label":"Période de collecte","type":"text","required":true},{"key":"category","label":"Matière et flux","type":"text","required":true},{"key":"quantity","label":"Masse ou volume collecté","type":"number","required":true},{"key":"unit","label":"Unité de mesure","type":"text","required":true},{"key":"method","label":"Méthode de pesée et périmètre","type":"textarea","required":true},{"key":"source","label":"Justificatif ou registre source","type":"text","required":true},{"key":"partner","label":"Collecteur ou partenaire","type":"text","required":false},{"key":"destination","label":"Filière de valorisation","type":"text","required":false},{"key":"receipt_reference","label":"Référence du bordereau","type":"text","required":false},{"key":"measurement_limits","label":"Limites et réserves","type":"textarea","required":false}],"description":"Suivi des flux réellement collectés, pesés et orientés vers une filière de traitement.","operationalNote":"Registre de mesures documentées : aucune collecte physique ni émission de certificat n'est déclenchée automatiquement.","recordLabel":"mesure de recyclage"},{"id":"rse.co2","path":"/pole/rse/co2","label":"Impact CO₂","scope":"rse","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"period","label":"Période de calcul","type":"text","required":true},{"key":"category","label":"Poste ou activité émettrice","type":"text","required":true},{"key":"quantity","label":"Valeur calculée","type":"number","required":true},{"key":"unit","label":"Unité (kgCO₂e, tCO₂e…)","type":"text","required":true},{"key":"method","label":"Méthode, périmètre et facteurs d'émission","type":"textarea","required":true},{"key":"source","label":"Origine du facteur d'émission","type":"text","required":true},{"key":"scope","label":"Périmètre d'émission","type":"text","required":false},{"key":"baseline","label":"Scénario de référence","type":"text","required":false},{"key":"assumptions","label":"Hypothèses et exclusions","type":"textarea","required":false},{"key":"uncertainty","label":"Incertitudes du calcul","type":"textarea","required":false}],"description":"Traçabilité des estimations d'émissions et des hypothèses de calcul.","operationalNote":"Les valeurs sont déclarées avec leur méthode et leur source. Ce registre n'est pas une mesure automatique des émissions de Platform.","recordLabel":"calcul d'impact"},{"id":"rse.esg","path":"/pole/rse/esg","label":"Reporting ESG","scope":"rse","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"period","label":"Exercice et période couverte","type":"text","required":true},{"key":"category","label":"Indicateur ESG","type":"text","required":true},{"key":"quantity","label":"Valeur rapportée","type":"number","required":true},{"key":"unit","label":"Unité et base de mesure","type":"text","required":true},{"key":"method","label":"Méthodologie de calcul","type":"textarea","required":true},{"key":"source","label":"Source primaire et traçabilité","type":"text","required":true},{"key":"framework","label":"Référentiel de publication","type":"text","required":false},{"key":"coverage","label":"Entités ou opérations couvertes","type":"text","required":false},{"key":"data_quality","label":"Fiabilité et limites","type":"textarea","required":false},{"key":"external_audit","label":"Référence de revue externe","type":"text","required":false}],"description":"Constitution et validation des indicateurs de reporting extra-financier.","operationalNote":"Les indicateurs ne deviennent pas des déclarations publiées ou auditées par leur simple validation interne.","recordLabel":"indicateur ESG"},{"id":"product.overview","path":"/pole/product","label":"Vue d’ensemble","scope":"product","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"product.product","path":"/pole/product/product","label":"Produit","scope":"product","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"product.roadmap","path":"/pole/product/roadmap","label":"Roadmap produit","scope":"product","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"product.backlog","path":"/pole/product/backlog","label":"Backlog","scope":"product","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"product.engineering","path":"/pole/product/engineering","label":"Engineering","scope":"product","transversal":false,"restrictedRoles":["ceo","cto","responsable_tech","product_manager","product_owner","devops_engineer","sre","admin_systeme","dba","architecte_logiciel","architecte_cloud","dev_backend","dev_fullstack","rssi","ingenieur_cybersecurite"],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"product.studio","path":"/pole/product/studio","label":"Studio","scope":"product","transversal":false,"restrictedRoles":["ceo","cto","responsable_tech","product_manager","product_owner","devops_engineer","sre","admin_systeme","dba","architecte_logiciel","architecte_cloud","dev_backend","dev_fullstack","rssi","ingenieur_cybersecurite"],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"product.integrations","path":"/pole/product/integrations","label":"Intégrations","scope":"product","transversal":false,"restrictedRoles":["ceo","cto","responsable_tech","product_manager","product_owner","devops_engineer","sre","admin_systeme","dba","architecte_logiciel","architecte_cloud","dev_backend","dev_fullstack","rssi","ingenieur_cybersecurite"],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Système ou parcours concerné","type":"text","required":true},{"key":"problem","label":"Besoin et événement déclencheur","type":"textarea","required":true},{"key":"acceptance","label":"Contrats et critères d'acceptation","type":"textarea","required":true},{"key":"version","label":"Version d'API ou de schéma","type":"text","required":false},{"key":"dependency","label":"Service et dépendances","type":"text","required":false},{"key":"result","label":"Résultat de recette vérifiable","type":"textarea","required":false},{"key":"source_system","label":"Système émetteur","type":"text","required":false},{"key":"target_system","label":"Système destinataire","type":"text","required":false},{"key":"idempotency_key","label":"Stratégie d'idempotence","type":"text","required":false},{"key":"retry_policy","label":"Échec, reprise et alerte","type":"textarea","required":false}],"description":"Contrats d'API, dépendances, qualité des échanges et tests des intégrations.","operationalNote":"Une fiche approuvée n'active aucune intégration. Les changements du bridge Platform/Intranet exigent leurs propres tests et validations.","recordLabel":"intégration technique"},{"id":"product.documentation","path":"/pole/product/documentation","label":"Documentation","scope":"product","transversal":false,"restrictedRoles":["ceo","cto","responsable_tech","product_manager","product_owner","devops_engineer","sre","admin_systeme","dba","architecte_logiciel","architecte_cloud","dev_backend","dev_fullstack","rssi","ingenieur_cybersecurite"],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"product.innovation","path":"/pole/product/innovation","label":"Innovation & R&D","scope":"product","transversal":false,"restrictedRoles":["ceo","cto","responsable_tech","product_manager","product_owner","devops_engineer","sre","admin_systeme","dba","architecte_logiciel","architecte_cloud","dev_backend","dev_fullstack","rssi","ingenieur_cybersecurite"],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"product.performance","path":"/pole/product/performance","label":"Performance produit","scope":"product","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"product.supplier-performance","path":"/pole/product/supplier-performance","label":"Performance fournisseurs","scope":"product","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"product.frictions","path":"/pole/product/frictions","label":"Frictions produit","scope":"product","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"product.reports","path":"/pole/product/reports","label":"Rapports & recommandations","scope":"product","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"area","label":"Produit ou parcours","type":"text","required":true},{"key":"problem","label":"Besoin ou problème","type":"textarea","required":true},{"key":"acceptance","label":"Critères d’acceptation","type":"textarea","required":true},{"key":"version","label":"Version","type":"text","required":false},{"key":"dependency","label":"Dépendance","type":"text","required":false},{"key":"result","label":"Résultat du test","type":"textarea","required":false}]},{"id":"data.overview","path":"/pole/data","label":"Vue d’ensemble","scope":"data","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur ou jeu de données","type":"text","required":true},{"key":"definition","label":"Définition","type":"textarea","required":true},{"key":"source","label":"Source","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"value","label":"Valeur","type":"number","required":false},{"key":"quality","label":"Contrôle qualité","type":"textarea","required":false}]},{"id":"data.kpi","path":"/pole/data/kpi","label":"Catalogue KPI","scope":"data","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur ou jeu de données","type":"text","required":true},{"key":"definition","label":"Définition","type":"textarea","required":true},{"key":"source","label":"Source","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"value","label":"Valeur","type":"number","required":false},{"key":"quality","label":"Contrôle qualité","type":"textarea","required":false}]},{"id":"data.reports","path":"/pole/data/reports","label":"Rapports","scope":"data","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur ou jeu de données","type":"text","required":true},{"key":"definition","label":"Définition","type":"textarea","required":true},{"key":"source","label":"Source","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"value","label":"Valeur","type":"number","required":false},{"key":"quality","label":"Contrôle qualité","type":"textarea","required":false}]},{"id":"data.bi","path":"/pole/data/bi","label":"Business Intelligence","scope":"data","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur ou jeu de données","type":"text","required":true},{"key":"definition","label":"Définition","type":"textarea","required":true},{"key":"source","label":"Source","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"value","label":"Valeur","type":"number","required":false},{"key":"quality","label":"Contrôle qualité","type":"textarea","required":false}]},{"id":"data.requests","path":"/pole/data/requests","label":"Demandes Data","scope":"data","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur ou jeu de données","type":"text","required":true},{"key":"definition","label":"Définition","type":"textarea","required":true},{"key":"source","label":"Source","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"value","label":"Valeur","type":"number","required":false},{"key":"quality","label":"Contrôle qualité","type":"textarea","required":false}]},{"id":"data.versions","path":"/pole/data/versions","label":"Versions & gouvernance","scope":"data","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur ou jeu de données","type":"text","required":true},{"key":"definition","label":"Définition","type":"textarea","required":true},{"key":"source","label":"Source","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"value","label":"Valeur","type":"number","required":false},{"key":"quality","label":"Contrôle qualité","type":"textarea","required":false}]},{"id":"security.overview","path":"/pole/security","label":"Vue d’ensemble","scope":"security","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"asset","label":"Actif ou service","type":"text","required":true},{"key":"environment","label":"Environnement","type":"text","required":true},{"key":"finding","label":"Constat ou demande","type":"textarea","required":true},{"key":"action","label":"Action prévue","type":"textarea","required":true},{"key":"verification","label":"Preuve de vérification","type":"textarea","required":false},{"key":"review_date","label":"Prochaine revue","type":"date","required":false}]},{"id":"security.access","path":"/pole/security/access","label":"Accès & identités","scope":"security","transversal":false,"restrictedRoles":["ceo","cto","responsable_tech","rssi","ingenieur_cybersecurite","analyste_cyber","gestionnaire_iam","admin_systeme","devops_engineer","sre","architecte_cloud","dba"],"public":false,"approvalLevels":2,"fields":[{"key":"asset","label":"Actif ou service","type":"text","required":true},{"key":"environment","label":"Environnement","type":"text","required":true},{"key":"finding","label":"Constat ou demande","type":"textarea","required":true},{"key":"action","label":"Action prévue","type":"textarea","required":true},{"key":"verification","label":"Preuve de vérification","type":"textarea","required":false},{"key":"review_date","label":"Prochaine revue","type":"date","required":false}]},{"id":"security.security","path":"/pole/security/security","label":"Sécurité","scope":"security","transversal":false,"restrictedRoles":["ceo","cto","responsable_tech","rssi","ingenieur_cybersecurite","analyste_cyber","gestionnaire_iam","admin_systeme","devops_engineer","sre","architecte_cloud","dba"],"public":false,"approvalLevels":2,"fields":[{"key":"asset","label":"Actif ou service","type":"text","required":true},{"key":"environment","label":"Environnement","type":"text","required":true},{"key":"finding","label":"Constat ou demande","type":"textarea","required":true},{"key":"action","label":"Action prévue","type":"textarea","required":true},{"key":"verification","label":"Preuve de vérification","type":"textarea","required":false},{"key":"review_date","label":"Prochaine revue","type":"date","required":false}]},{"id":"security.infrastructure","path":"/pole/security/infrastructure","label":"Infrastructure","scope":"security","transversal":false,"restrictedRoles":["ceo","cto","responsable_tech","rssi","ingenieur_cybersecurite","analyste_cyber","gestionnaire_iam","admin_systeme","devops_engineer","sre","architecte_cloud","dba"],"public":false,"approvalLevels":2,"fields":[{"key":"asset","label":"Actif ou service","type":"text","required":true},{"key":"environment","label":"Environnement","type":"text","required":true},{"key":"finding","label":"Constat ou demande","type":"textarea","required":true},{"key":"action","label":"Action prévue","type":"textarea","required":true},{"key":"verification","label":"Preuve de vérification","type":"textarea","required":false},{"key":"review_date","label":"Prochaine revue","type":"date","required":false}]},{"id":"security.environments","path":"/pole/security/environments","label":"Environnements","scope":"security","transversal":false,"restrictedRoles":["ceo","cto","responsable_tech","rssi","ingenieur_cybersecurite","analyste_cyber","gestionnaire_iam","admin_systeme","devops_engineer","sre","architecte_cloud","dba"],"public":false,"approvalLevels":2,"fields":[{"key":"asset","label":"Application ou composant","type":"text","required":true},{"key":"environment","label":"Environnement cible","type":"text","required":true},{"key":"finding","label":"Changement ou risque constaté","type":"textarea","required":true},{"key":"action","label":"Plan d'intervention","type":"textarea","required":true},{"key":"verification","label":"Preuves de tests et contrôle","type":"textarea","required":false},{"key":"review_date","label":"Date de revue","type":"date","required":false},{"key":"release_reference","label":"Version ou commit ciblé","type":"text","required":false},{"key":"deployment_window","label":"Fenêtre d'intervention","type":"text","required":false},{"key":"rollback_plan","label":"Plan de retour arrière","type":"textarea","required":false},{"key":"execution_trace","label":"Lien vers le journal d'exécution","type":"text","required":false}],"description":"Contrôles des environnements, changements et plans de retour arrière.","operationalNote":"La validation d'un dossier n'exécute ni déploiement, ni rollback. L'action technique doit être tracée par le système de déploiement.","recordLabel":"revue d'environnement"},{"id":"security.vpn","path":"/pole/security/vpn","label":"VPN","scope":"security","transversal":false,"restrictedRoles":["ceo","cto","responsable_tech","rssi","ingenieur_cybersecurite","analyste_cyber","gestionnaire_iam","admin_systeme","devops_engineer","sre","architecte_cloud","dba"],"public":false,"approvalLevels":2,"fields":[{"key":"asset","label":"Ressource réseau demandée","type":"text","required":true},{"key":"environment","label":"Environnement concerné","type":"text","required":true},{"key":"finding","label":"Justification de l'accès","type":"textarea","required":true},{"key":"action","label":"Action et approbation requises","type":"textarea","required":true},{"key":"verification","label":"Preuve d'autorisation et de révocation","type":"textarea","required":false},{"key":"review_date","label":"Date de réexamen","type":"date","required":false},{"key":"beneficiary","label":"Bénéficiaire identifié","type":"text","required":false},{"key":"access_duration","label":"Durée d'accès demandée","type":"text","required":false},{"key":"ticket_reference","label":"Référence de demande IT","type":"text","required":false},{"key":"revocation_evidence","label":"Preuve de révocation","type":"text","required":false}],"description":"Demandes et revues d'accès aux réseaux sécurisés.","operationalNote":"Ce module documente les demandes et les contrôles. La validation n'ouvre aucun VPN ni ne provisionne un compte réseau.","recordLabel":"revue d'accès VPN"},{"id":"security.logs","path":"/pole/security/logs","label":"Logs & supervision","scope":"security","transversal":false,"restrictedRoles":["ceo","cto","responsable_tech","rssi","ingenieur_cybersecurite","analyste_cyber","gestionnaire_iam","admin_systeme","devops_engineer","sre","architecte_cloud","dba"],"public":false,"approvalLevels":2,"fields":[{"key":"asset","label":"Actif ou service","type":"text","required":true},{"key":"environment","label":"Environnement","type":"text","required":true},{"key":"finding","label":"Constat ou demande","type":"textarea","required":true},{"key":"action","label":"Action prévue","type":"textarea","required":true},{"key":"verification","label":"Preuve de vérification","type":"textarea","required":false},{"key":"review_date","label":"Prochaine revue","type":"date","required":false}]},{"id":"work.tasks","path":"/work/tasks","label":"Tâches","scope":"work","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"objective","label":"Objectif","type":"textarea","required":true},{"key":"deliverable","label":"Livrable","type":"textarea","required":true},{"key":"dependencies","label":"Dépendances","type":"textarea","required":false},{"key":"steps","label":"Étapes","type":"lines","required":false}]},{"id":"work.projects","path":"/work/projects","label":"Projets","scope":"work","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"objective","label":"Objectif","type":"textarea","required":true},{"key":"deliverable","label":"Livrable","type":"textarea","required":true},{"key":"dependencies","label":"Dépendances","type":"textarea","required":false},{"key":"steps","label":"Étapes","type":"lines","required":false}]},{"id":"work.processes","path":"/work/processes","label":"Processus","scope":"work","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"objective","label":"Objectif","type":"textarea","required":true},{"key":"deliverable","label":"Livrable","type":"textarea","required":true},{"key":"dependencies","label":"Dépendances","type":"textarea","required":false},{"key":"steps","label":"Étapes","type":"lines","required":false}]},{"id":"work.validations","path":"/work/validations","label":"Validations","scope":"work","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"objective","label":"Objectif","type":"textarea","required":true},{"key":"deliverable","label":"Livrable","type":"textarea","required":true},{"key":"dependencies","label":"Dépendances","type":"textarea","required":false},{"key":"steps","label":"Étapes","type":"lines","required":false}]},{"id":"work.escalations","path":"/work/escalations","label":"Escalades","scope":"work","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"objective","label":"Objectif","type":"textarea","required":true},{"key":"deliverable","label":"Livrable","type":"textarea","required":true},{"key":"dependencies","label":"Dépendances","type":"textarea","required":false},{"key":"steps","label":"Étapes","type":"lines","required":false}]},{"id":"work.activities","path":"/work/activities","label":"Activités","scope":"work","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"objective","label":"Objectif","type":"textarea","required":true},{"key":"deliverable","label":"Livrable","type":"textarea","required":true},{"key":"dependencies","label":"Dépendances","type":"textarea","required":false},{"key":"steps","label":"Étapes","type":"lines","required":false}]},{"id":"notifications.all","path":"/notifications","label":"Toutes les notifications","scope":"notifications","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}]},{"id":"gateway.overview","path":"/modules/gateway","label":"Vue d’ensemble","scope":"gateway","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"recipient","label":"Destinataire","type":"email","required":true},{"key":"subject","label":"Objet","type":"text","required":true},{"key":"message","label":"Message","type":"textarea","required":true},{"key":"channel","label":"Canal","type":"text","required":false}]},{"id":"gateway.inbox","path":"/modules/gateway/inbox","label":"Boîte de réception","scope":"gateway","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"recipient","label":"Destinataire","type":"email","required":true},{"key":"subject","label":"Objet","type":"text","required":true},{"key":"message","label":"Message","type":"textarea","required":true},{"key":"channel","label":"Canal","type":"text","required":false}]},{"id":"gateway.routing","path":"/modules/gateway/routing","label":"Routage","scope":"gateway","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"recipient","label":"Destinataire","type":"email","required":true},{"key":"subject","label":"Objet","type":"text","required":true},{"key":"message","label":"Message","type":"textarea","required":true},{"key":"channel","label":"Canal","type":"text","required":false}]},{"id":"gateway.validation","path":"/modules/gateway/validation","label":"Validations","scope":"gateway","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"recipient","label":"Destinataire","type":"email","required":true},{"key":"subject","label":"Objet","type":"text","required":true},{"key":"message","label":"Message","type":"textarea","required":true},{"key":"channel","label":"Canal","type":"text","required":false}]},{"id":"gateway.responses","path":"/modules/gateway/responses","label":"Réponses","scope":"gateway","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"recipient","label":"Destinataire","type":"email","required":true},{"key":"subject","label":"Objet","type":"text","required":true},{"key":"message","label":"Message","type":"textarea","required":true},{"key":"channel","label":"Canal","type":"text","required":false}]},{"id":"gateway.journal","path":"/modules/gateway/journal","label":"Journal","scope":"gateway","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"recipient","label":"Destinataire","type":"email","required":true},{"key":"subject","label":"Objet","type":"text","required":true},{"key":"message","label":"Message","type":"textarea","required":true},{"key":"channel","label":"Canal","type":"text","required":false}]},{"id":"documents.imports","path":"/documents/imports","label":"Imports depuis Google Drive","scope":"documents","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}]},{"id":"documents.exports","path":"/documents/exports","label":"Exports vers Google Drive","scope":"documents","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}]},{"id":"documents.journal","path":"/documents/journal","label":"Journal documentaire","scope":"documents","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}]},{"id":"ethics.overview","path":"/modules/ethics","label":"Vue d’ensemble","scope":"ethics","transversal":true,"restrictedRoles":["ceo","directeur_qualite","responsable_qualite","auditeur_qualite","auditeur_terrain","responsable_conformite","conformite_juridique","rssi","directeur_rh"],"public":false,"approvalLevels":1,"fields":[{"key":"category","label":"Catégorie","type":"text","required":true},{"key":"facts","label":"Faits","type":"textarea","required":true},{"key":"date","label":"Date des faits","type":"date","required":false},{"key":"location","label":"Lieu","type":"text","required":false}]},{"id":"ethics.report","path":"/modules/ethics/report","label":"Nouveau signalement","scope":"ethics","transversal":true,"restrictedRoles":[],"public":true,"approvalLevels":1,"fields":[{"key":"category","label":"Catégorie","type":"text","required":true},{"key":"facts","label":"Faits","type":"textarea","required":true},{"key":"date","label":"Date des faits","type":"date","required":false},{"key":"location","label":"Lieu","type":"text","required":false}]},{"id":"ethics.received","path":"/modules/ethics/received","label":"Signalements reçus","scope":"ethics","transversal":true,"restrictedRoles":["ceo","directeur_qualite","responsable_qualite","auditeur_qualite","auditeur_terrain","responsable_conformite","conformite_juridique","rssi","directeur_rh"],"public":false,"approvalLevels":1,"fields":[{"key":"category","label":"Catégorie","type":"text","required":true},{"key":"facts","label":"Faits","type":"textarea","required":true},{"key":"date","label":"Date des faits","type":"date","required":false},{"key":"location","label":"Lieu","type":"text","required":false}]},{"id":"ethics.ongoing","path":"/modules/ethics/ongoing","label":"En cours","scope":"ethics","transversal":true,"restrictedRoles":["ceo","directeur_qualite","responsable_qualite","auditeur_qualite","auditeur_terrain","responsable_conformite","conformite_juridique","rssi","directeur_rh"],"public":false,"approvalLevels":1,"fields":[{"key":"category","label":"Catégorie","type":"text","required":true},{"key":"facts","label":"Faits","type":"textarea","required":true},{"key":"date","label":"Date des faits","type":"date","required":false},{"key":"location","label":"Lieu","type":"text","required":false}]},{"id":"ethics.closed","path":"/modules/ethics/closed","label":"Clôturés","scope":"ethics","transversal":true,"restrictedRoles":["ceo","directeur_qualite","responsable_qualite","auditeur_qualite","auditeur_terrain","responsable_conformite","conformite_juridique","rssi","directeur_rh"],"public":false,"approvalLevels":1,"fields":[{"key":"category","label":"Catégorie","type":"text","required":true},{"key":"facts","label":"Faits","type":"textarea","required":true},{"key":"date","label":"Date des faits","type":"date","required":false},{"key":"location","label":"Lieu","type":"text","required":false}]},{"id":"ethics.stats","path":"/modules/ethics/stats","label":"Statistiques","scope":"ethics","transversal":true,"restrictedRoles":["ceo","directeur_qualite","responsable_qualite","auditeur_qualite","auditeur_terrain","responsable_conformite","conformite_juridique","rssi","directeur_rh"],"public":false,"approvalLevels":1,"fields":[{"key":"category","label":"Catégorie","type":"text","required":true},{"key":"facts","label":"Faits","type":"textarea","required":true},{"key":"date","label":"Date des faits","type":"date","required":false},{"key":"location","label":"Lieu","type":"text","required":false}]},{"id":"independentAudit.overview","path":"/modules/independent-audit","label":"Vue d’ensemble","scope":"independentAudit","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"entity","label":"Périmètre audité","type":"text","required":true},{"key":"incident","label":"Constat","type":"textarea","required":true},{"key":"risk","label":"Risque","type":"textarea","required":true},{"key":"resolution","label":"Plan de résolution","type":"textarea","required":false}]},{"id":"independentAudit.incident","path":"/modules/independent-audit/incident","label":"Déclarer un incident","scope":"independentAudit","transversal":true,"restrictedRoles":[],"public":true,"approvalLevels":1,"fields":[{"key":"entity","label":"Périmètre audité","type":"text","required":true},{"key":"incident","label":"Constat","type":"textarea","required":true},{"key":"risk","label":"Risque","type":"textarea","required":true},{"key":"resolution","label":"Plan de résolution","type":"textarea","required":false}]},{"id":"independentAudit.resolution","path":"/modules/independent-audit/resolution","label":"Suivi des résolutions","scope":"independentAudit","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"entity","label":"Périmètre audité","type":"text","required":true},{"key":"incident","label":"Constat","type":"textarea","required":true},{"key":"risk","label":"Risque","type":"textarea","required":true},{"key":"resolution","label":"Plan de résolution","type":"textarea","required":false}]},{"id":"app.dashboard","path":"/","label":"Tableau de bord","scope":"app","transversal":true,"restrictedRoles":[],"public":true,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}]},{"id":"app.feed","path":"/feed","label":"Internal Feed","scope":"app","transversal":true,"restrictedRoles":[],"public":true,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}],"permissionAliases":["feed.all"]},{"id":"app.documents","path":"/documents","label":"Documents","scope":"app","transversal":true,"restrictedRoles":[],"public":true,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}],"permissionAliases":["documents.all"]},{"id":"app.compliance-audit","path":"/compliance-audit","label":"Conformité & Audit","scope":"app","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}]},{"id":"app.settings","path":"/settings","label":"Paramètres","scope":"app","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}]},{"id":"admin.roles","path":"/admin/roles-permissions","label":"Rôles & Permissions","scope":"admin","transversal":true,"restrictedRoles":["ceo","cto","responsable_tech","admin_systeme","rssi","directeur_rh","responsable_rh","gestionnaire_admin_rh"],"public":false,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}],"permissionAliases":["permissions.roles"]},{"id":"admin.test-accounts","path":"/admin/test-accounts","label":"Comptes de test / Visualiser comme","scope":"admin","transversal":true,"restrictedRoles":["ceo","cto","responsable_tech","admin_systeme","rssi","directeur_rh","responsable_rh","gestionnaire_admin_rh"],"public":false,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}]},{"id":"app.profile","path":"/profile","label":"Mon profil","scope":"app","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"description","label":"Description","type":"textarea","required":true},{"key":"reference","label":"Référence","type":"text","required":false}]},{"id":"marketing.podcasts","path":"/pole/marketing/podcasts","label":"Podcasts","scope":"marketing","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"channel","label":"Plateforme de diffusion envisagée","type":"text","required":true},{"key":"audience","label":"Audience ciblée","type":"text","required":true},{"key":"content","label":"Synopsis, conducteur et intervenants","type":"textarea","required":true},{"key":"publication_date","label":"Date prévue de diffusion","type":"date","required":false},{"key":"budget","label":"Budget de production","type":"number","required":false},{"key":"result","label":"Écoutes confirmées","type":"number","required":false},{"key":"source","label":"Source des statistiques d'écoute","type":"text","required":false},{"key":"episode_number","label":"Numéro d'épisode","type":"text","required":false},{"key":"guest_consent","label":"Consentement et droits voix/image","type":"text","required":false},{"key":"audio_master","label":"Référence du fichier master","type":"text","required":false},{"key":"published_url","label":"Lien de diffusion confirmé","type":"text","required":false}],"description":"Préparation, validation éditoriale et suivi des épisodes audio.","operationalNote":"La validation du dossier n'enregistre, n'héberge et ne publie aucun épisode automatiquement.","recordLabel":"épisode podcast"},{"id":"rse.points","path":"/pole/rse/points","label":"Points clients","scope":"rse","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"period","label":"Période de simulation","type":"text","required":true},{"key":"category","label":"Action envisagée","type":"text","required":true},{"key":"quantity","label":"Volume simulé (non crédité)","type":"number","required":true},{"key":"unit","label":"Unité de simulation","type":"text","required":true},{"key":"method","label":"Règles de simulation et d'éligibilité","type":"textarea","required":true},{"key":"source","label":"Source des hypothèses","type":"text","required":true},{"key":"pilot_stage","label":"Stade du pilote","type":"text","required":false},{"key":"reward_policy","label":"Règles de récompense envisagées","type":"textarea","required":false},{"key":"fraud_controls","label":"Prévention des abus","type":"textarea","required":false},{"key":"platform_dependency","label":"Condition d'activation Platform","type":"textarea","required":false}],"description":"Conception et contrôle du futur programme de points circulaires.","operationalNote":"Programme non activé : aucune ligne de ce registre n'attribue des points à un client ou ne crédite un solde dans Platform.","recordLabel":"hypothèse de fidélité"},{"id":"security.code","path":"/pole/security/code","label":"Référentiel du code","scope":"security","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"asset","label":"Actif ou service","type":"text","required":true},{"key":"environment","label":"Environnement","type":"text","required":true},{"key":"finding","label":"Constat ou demande","type":"textarea","required":true},{"key":"action","label":"Action prévue","type":"textarea","required":true},{"key":"verification","label":"Preuve de vérification","type":"textarea","required":false},{"key":"review_date","label":"Prochaine revue","type":"date","required":false}]},{"id":"security.console","path":"/pole/security/console","label":"Opérations techniques","scope":"security","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"asset","label":"Actif ou service","type":"text","required":true},{"key":"environment","label":"Environnement","type":"text","required":true},{"key":"finding","label":"Constat ou demande","type":"textarea","required":true},{"key":"action","label":"Action prévue","type":"textarea","required":true},{"key":"verification","label":"Preuve de vérification","type":"textarea","required":false},{"key":"review_date","label":"Prochaine revue","type":"date","required":false}]},{"id":"security.documentation","path":"/pole/security/documentation","label":"Documentation technique","scope":"security","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"asset","label":"Actif ou service","type":"text","required":true},{"key":"environment","label":"Environnement","type":"text","required":true},{"key":"finding","label":"Constat ou demande","type":"textarea","required":true},{"key":"action","label":"Action prévue","type":"textarea","required":true},{"key":"verification","label":"Preuve de vérification","type":"textarea","required":false},{"key":"review_date","label":"Prochaine revue","type":"date","required":false}]},{"id":"support.compliance","path":"/pole/support/compliance","label":"Conformité des comptes","scope":"support","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"account","label":"Compte concerné","type":"text","required":true},{"key":"category","label":"Type de contrôle","type":"text","required":false},{"key":"issue","label":"Écart ou document manquant","type":"textarea","required":true},{"key":"resolution","label":"Action de régularisation","type":"textarea","required":false},{"key":"sla_date","label":"Date limite de suivi","type":"date","required":false},{"key":"compliance_reference","label":"Référence du dossier Conformité","type":"text","required":false},{"key":"documents_requested","label":"Pièces demandées","type":"textarea","required":false},{"key":"handoff_team","label":"Pôle destinataire","type":"text","required":false},{"key":"customer_update","label":"Information communiquée au client","type":"textarea","required":false}],"description":"Suivi Support des pièces et blocages de conformité, avec orientation vers le pôle compétent.","operationalNote":"Ce suivi ne rend pas de décision juridique ou KYC ; le pôle Conformité reste responsable des contrôles formels.","recordLabel":"suivi de conformité client"},{"id":"support.onboarding","path":"/pole/support/onboarding","label":"Parcours d’intégration","scope":"support","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"account","label":"Compte ou organisation accompagnée","type":"text","required":true},{"key":"category","label":"Parcours partenaire","type":"text","required":false},{"key":"issue","label":"Étape bloquante","type":"textarea","required":true},{"key":"resolution","label":"Plan de résolution","type":"textarea","required":false},{"key":"sla_date","label":"Échéance de prise en charge","type":"date","required":false},{"key":"platform_reference","label":"Identifiant Platform","type":"text","required":false},{"key":"next_step","label":"Prochaine étape","type":"text","required":false},{"key":"contact_channel","label":"Canal de contact","type":"text","required":false},{"key":"completion_evidence","label":"Preuve de finalisation","type":"text","required":false}],"description":"Suivi des étapes d'accompagnement et des blocages d'intégration des partenaires.","operationalNote":"Un dossier Support ne crée ni compte marchand ni fournisseur ; les identités restent contrôlées par Platform et les procédures RH concernées.","recordLabel":"suivi d'onboarding"},{"id":"direction.global","path":"/pole/direction/global","label":"Pilotage global","scope":"direction","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"objective","label":"Objectif stratégique","type":"textarea","required":true},{"key":"impact","label":"Impact attendu","type":"textarea","required":false},{"key":"indicator","label":"Indicateur","type":"text","required":false},{"key":"target","label":"Cible","type":"number","required":false},{"key":"period","label":"Période","type":"text","required":false}]},{"id":"finance.salaries","path":"/pole/finance/salaries","label":"Salaires et primes","scope":"finance","transversal":false,"restrictedRoles":["ceo","directeur_rh","responsable_rh","gestionnaire_paie","gestionnaire_admin_rh","charge_recrutement","ceo","cfo"],"public":false,"approvalLevels":2,"fields":[{"key":"counterparty","label":"Tiers","type":"text","required":true},{"key":"reference","label":"Référence justificative","type":"text","required":true},{"key":"amount","label":"Montant","type":"number","required":true},{"key":"currency","label":"Devise","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"lines","label":"Lignes justificatives","type":"lines","required":false}]},{"id":"ops.audit-link","path":"/pole/ops/audit-link","label":"Liaison avec l’audit","scope":"ops","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"reference","label":"Commande ou expédition","type":"text","required":true},{"key":"partner","label":"Partenaire","type":"text","required":false},{"key":"location","label":"Lieu","type":"text","required":false},{"key":"quantity","label":"Quantité","type":"number","required":false},{"key":"incident","label":"Constat et action","type":"textarea","required":true}]},{"id":"supplier.suppliers","path":"/pole/supplier/suppliers","label":"Dossiers fournisseurs","scope":"supplier","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"supplier","label":"Fournisseur","type":"text","required":true},{"key":"product","label":"Produit ou référence","type":"text","required":false},{"key":"requirement","label":"Exigence","type":"textarea","required":true},{"key":"assessment","label":"Évaluation","type":"textarea","required":false},{"key":"expiry","label":"Expiration","type":"date","required":false}]},{"id":"supplier.alerts","path":"/pole/supplier/alerts","label":"Alertes qualité","scope":"supplier","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"supplier","label":"Fournisseur","type":"text","required":true},{"key":"product","label":"Produit ou référence","type":"text","required":false},{"key":"requirement","label":"Exigence","type":"textarea","required":true},{"key":"assessment","label":"Évaluation","type":"textarea","required":false},{"key":"expiry","label":"Expiration","type":"date","required":false}]},{"id":"marketplace.customers","path":"/pole/marketplace/customers","label":"Clients","scope":"marketplace","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"marketplace.orders","path":"/pole/marketplace/orders","label":"Commandes","scope":"marketplace","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"marketplace.subscribers","path":"/pole/marketplace/subscribers","label":"Abonnés","scope":"marketplace","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"marketplace.favorites","path":"/pole/marketplace/favorites","label":"Favoris clients","scope":"marketplace","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"merchant","label":"Marchand","type":"text","required":true},{"key":"shop","label":"Boutique","type":"text","required":false},{"key":"reference","label":"Référence","type":"text","required":false},{"key":"request","label":"Demande","type":"textarea","required":true},{"key":"outcome","label":"Résultat attendu","type":"textarea","required":false}]},{"id":"data.backlog","path":"/pole/data/backlog","label":"Backlog Data","scope":"data","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur ou jeu de données","type":"text","required":true},{"key":"definition","label":"Définition","type":"textarea","required":true},{"key":"source","label":"Source","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"value","label":"Valeur","type":"number","required":false},{"key":"quality","label":"Contrôle qualité","type":"textarea","required":false}]},{"id":"data.bi-dashboards","path":"/pole/data/bi/dashboards","label":"Tableaux de bord BI","scope":"data","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur ou jeu de données","type":"text","required":true},{"key":"definition","label":"Définition","type":"textarea","required":true},{"key":"source","label":"Source","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"value","label":"Valeur","type":"number","required":false},{"key":"quality","label":"Contrôle qualité","type":"textarea","required":false}]},{"id":"data.bi-templates","path":"/pole/data/bi/templates","label":"Modèles BI","scope":"data","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur ou jeu de données","type":"text","required":true},{"key":"definition","label":"Définition","type":"textarea","required":true},{"key":"source","label":"Source","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"value","label":"Valeur","type":"number","required":false},{"key":"quality","label":"Contrôle qualité","type":"textarea","required":false}]},{"id":"data.bi-sources","path":"/pole/data/bi/sources","label":"Sources BI","scope":"data","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur ou jeu de données","type":"text","required":true},{"key":"definition","label":"Définition","type":"textarea","required":true},{"key":"source","label":"Source","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"value","label":"Valeur","type":"number","required":false},{"key":"quality","label":"Contrôle qualité","type":"textarea","required":false}]},{"id":"data.bi-library","path":"/pole/data/bi/library","label":"Bibliothèque BI","scope":"data","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"indicator","label":"Indicateur ou jeu de données","type":"text","required":true},{"key":"definition","label":"Définition","type":"textarea","required":true},{"key":"source","label":"Source","type":"text","required":true},{"key":"period","label":"Période","type":"text","required":false},{"key":"value","label":"Valeur","type":"number","required":false},{"key":"quality","label":"Contrôle qualité","type":"textarea","required":false}]},{"id":"security.sandbox","path":"/pole/security/sandbox","label":"Bac à sable","scope":"security","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"asset","label":"Actif ou service","type":"text","required":true},{"key":"environment","label":"Environnement","type":"text","required":true},{"key":"finding","label":"Constat ou demande","type":"textarea","required":true},{"key":"action","label":"Action prévue","type":"textarea","required":true},{"key":"verification","label":"Preuve de vérification","type":"textarea","required":false},{"key":"review_date","label":"Prochaine revue","type":"date","required":false}]},{"id":"security.supervision","path":"/pole/security/supervision","label":"Supervision technique","scope":"security","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"asset","label":"Actif ou service","type":"text","required":true},{"key":"environment","label":"Environnement","type":"text","required":true},{"key":"finding","label":"Constat ou demande","type":"textarea","required":true},{"key":"action","label":"Action prévue","type":"textarea","required":true},{"key":"verification","label":"Preuve de vérification","type":"textarea","required":false},{"key":"review_date","label":"Prochaine revue","type":"date","required":false}]},{"id":"security.dataflow","path":"/pole/security/dataflow","label":"Flux de données","scope":"security","transversal":false,"restrictedRoles":[],"public":false,"approvalLevels":2,"fields":[{"key":"asset","label":"Actif ou service","type":"text","required":true},{"key":"environment","label":"Environnement","type":"text","required":true},{"key":"finding","label":"Constat ou demande","type":"textarea","required":true},{"key":"action","label":"Action prévue","type":"textarea","required":true},{"key":"verification","label":"Preuve de vérification","type":"textarea","required":false},{"key":"review_date","label":"Prochaine revue","type":"date","required":false}]},{"id":"gateway.compose","path":"/modules/gateway/compose","label":"Nouveau message","scope":"gateway","transversal":true,"restrictedRoles":[],"public":false,"approvalLevels":1,"fields":[{"key":"recipient","label":"Destinataire","type":"email","required":true},{"key":"subject","label":"Objet","type":"text","required":true},{"key":"message","label":"Message","type":"textarea","required":true},{"key":"channel","label":"Canal","type":"text","required":false}]}]
 [
   {
     "id": "direction.overview",
@@ -1801,8 +1800,7 @@
       "gestionnaire_vendeurs",
       "gestionnaire_commandes",
       "gestionnaire_litiges",
-      "gestionnaire_avis",
-      "directeur_marketplace"
+      "gestionnaire_avis"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -1852,8 +1850,7 @@
       "gestionnaire_vendeurs",
       "gestionnaire_commandes",
       "gestionnaire_litiges",
-      "gestionnaire_avis",
-      "directeur_marketplace"
+      "gestionnaire_avis"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -1900,8 +1897,7 @@
       "ceo",
       "responsable_marketplace",
       "gestionnaire_boutiques",
-      "gestionnaire_vendeurs",
-      "directeur_marketplace"
+      "gestionnaire_vendeurs"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -1948,8 +1944,7 @@
       "ceo",
       "responsable_marketplace",
       "gestionnaire_boutiques",
-      "gestionnaire_vendeurs",
-      "directeur_marketplace"
+      "gestionnaire_vendeurs"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -1996,8 +1991,7 @@
       "ceo",
       "responsable_marketplace",
       "gestionnaire_boutiques",
-      "gestionnaire_vendeurs",
-      "directeur_marketplace"
+      "gestionnaire_vendeurs"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -2047,8 +2041,7 @@
       "gestionnaire_vendeurs",
       "gestionnaire_commandes",
       "gestionnaire_litiges",
-      "gestionnaire_avis",
-      "directeur_marketplace"
+      "gestionnaire_avis"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -2095,8 +2088,7 @@
       "ceo",
       "responsable_marketplace",
       "gestionnaire_boutiques",
-      "gestionnaire_vendeurs",
-      "directeur_marketplace"
+      "gestionnaire_vendeurs"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -2143,8 +2135,7 @@
       "ceo",
       "responsable_marketplace",
       "gestionnaire_boutiques",
-      "gestionnaire_vendeurs",
-      "directeur_marketplace"
+      "gestionnaire_vendeurs"
     ],
     "public": false,
     "approvalLevels": 1,
@@ -2511,47 +2502,74 @@
     "fields": [
       {
         "key": "channel",
-        "label": "Canal",
+        "label": "Canal de destination",
         "type": "text",
         "required": true
       },
       {
         "key": "audience",
-        "label": "Public cible",
+        "label": "Public visé",
         "type": "text",
         "required": true
       },
       {
         "key": "content",
-        "label": "Contenu",
+        "label": "Texte, scénario ou brief",
         "type": "textarea",
         "required": true
       },
       {
         "key": "publication_date",
-        "label": "Date de publication",
+        "label": "Date de publication prévue",
         "type": "date",
         "required": false
       },
       {
         "key": "budget",
-        "label": "Budget",
+        "label": "Budget prévu",
         "type": "number",
         "required": false
       },
       {
         "key": "result",
-        "label": "Résultat mesuré",
+        "label": "Résultat observé",
         "type": "number",
         "required": false
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Source de la mesure",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "format",
+        "label": "Format et déclinaisons",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "call_to_action",
+        "label": "Appel à l'action",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "rights_reference",
+        "label": "Droits et autorisations des médias",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "published_url",
+        "label": "Adresse de publication vérifiée",
         "type": "text",
         "required": false
       }
-    ]
+    ],
+    "description": "Production, revue et calendrier des contenus de communication.",
+    "operationalNote": "Un contenu validé reste interne tant qu'un outil de publication ne confirme pas explicitement sa mise en ligne.",
+    "recordLabel": "contenu éditorial"
   },
   {
     "id": "marketing.crm",
@@ -2673,47 +2691,74 @@
     "fields": [
       {
         "key": "indicator",
-        "label": "Indicateur",
+        "label": "Indicateur et définition",
         "type": "text",
         "required": true
       },
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période observée",
         "type": "text",
         "required": true
       },
       {
         "key": "channel",
-        "label": "Canal",
+        "label": "Canal ou campagne",
         "type": "text",
         "required": true
       },
       {
         "key": "value",
-        "label": "Valeur mesurée",
+        "label": "Valeur relevée",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité de mesure",
         "type": "text",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Source et date d'extraction",
         "type": "text",
         "required": true
       },
       {
         "key": "analysis",
-        "label": "Analyse",
+        "label": "Interprétation et limites",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "campaign_reference",
+        "label": "Référence campagne",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "attribution_window",
+        "label": "Fenêtre d'attribution",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "comparison_period",
+        "label": "Période de comparaison",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "action_recommended",
+        "label": "Action proposée",
         "type": "textarea",
         "required": false
       }
-    ]
+    ],
+    "description": "Mesures documentées de performance des canaux et campagnes.",
+    "operationalNote": "Les chiffres sont des saisies documentées. Ils ne constituent pas une synchronisation automatique avec les régies publicitaires.",
+    "recordLabel": "mesure marketing"
   },
   {
     "id": "marketing.reputation",
@@ -3656,35 +3701,62 @@
       },
       {
         "key": "reference",
-        "label": "Mission ou non-conformité",
+        "label": "Référence de mission",
         "type": "text",
         "required": false
       },
       {
         "key": "finding",
-        "label": "Constat",
+        "label": "Synthèse des constats",
         "type": "textarea",
         "required": true
       },
       {
         "key": "evidence",
-        "label": "Éléments de preuve",
+        "label": "Éléments probants",
         "type": "textarea",
         "required": false
       },
       {
         "key": "corrective_action",
-        "label": "Action corrective",
+        "label": "Recommandations",
         "type": "textarea",
         "required": true
       },
       {
         "key": "review_date",
-        "label": "Date de contrôle",
+        "label": "Date de validation envisagée",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "auditor",
+        "label": "Auditeur principal",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "audit_scope",
+        "label": "Périmètre de mission",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "opinion",
+        "label": "Conclusion et réserves",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "corrective_plan_ref",
+        "label": "Référence du plan correctif",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Constitution de rapports d'audit et traçabilité des constats et preuves.",
+    "operationalNote": "Un rapport validé ne clôt pas automatiquement les non-conformités ni les actions correctives ; ces objets conservent leur cycle de vie.",
+    "recordLabel": "rapport d'audit"
   },
   {
     "id": "audit.nonconformities",
@@ -4212,41 +4284,68 @@
     "fields": [
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période de contrôle",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Famille d'emballages",
         "type": "text",
         "required": true
       },
       {
         "key": "quantity",
-        "label": "Quantité mesurée",
+        "label": "Quantité contrôlée",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité contrôlée",
         "type": "text",
         "required": true
       },
       {
         "key": "method",
-        "label": "Méthode et périmètre",
+        "label": "Critères de contrôle et échantillonnage",
         "type": "textarea",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Fiche technique ou preuve fournisseur",
         "type": "text",
         "required": true
+      },
+      {
+        "key": "material",
+        "label": "Composition et matériau",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "supplier_reference",
+        "label": "Fournisseur et référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "certification",
+        "label": "Norme ou certification vérifiée",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "decision_scope",
+        "label": "Limites de l'avis qualité",
+        "type": "textarea",
+        "required": false
       }
-    ]
+    ],
+    "description": "Qualification des matériaux, emballages et preuves de conformité avant leur usage.",
+    "operationalNote": "La validation d'une fiche n'homologue pas automatiquement l'emballage sur Platform et ne commande aucun stock.",
+    "recordLabel": "dossier emballage"
   },
   {
     "id": "rse.recycling",
@@ -4260,41 +4359,68 @@
     "fields": [
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période de collecte",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Matière et flux",
         "type": "text",
         "required": true
       },
       {
         "key": "quantity",
-        "label": "Quantité mesurée",
+        "label": "Masse ou volume collecté",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité de mesure",
         "type": "text",
         "required": true
       },
       {
         "key": "method",
-        "label": "Méthode et périmètre",
+        "label": "Méthode de pesée et périmètre",
         "type": "textarea",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Justificatif ou registre source",
         "type": "text",
         "required": true
+      },
+      {
+        "key": "partner",
+        "label": "Collecteur ou partenaire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "destination",
+        "label": "Filière de valorisation",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "receipt_reference",
+        "label": "Référence du bordereau",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "measurement_limits",
+        "label": "Limites et réserves",
+        "type": "textarea",
+        "required": false
       }
-    ]
+    ],
+    "description": "Suivi des flux réellement collectés, pesés et orientés vers une filière de traitement.",
+    "operationalNote": "Registre de mesures documentées : aucune collecte physique ni émission de certificat n'est déclenchée automatiquement.",
+    "recordLabel": "mesure de recyclage"
   },
   {
     "id": "rse.co2",
@@ -4308,41 +4434,68 @@
     "fields": [
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période de calcul",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Poste ou activité émettrice",
         "type": "text",
         "required": true
       },
       {
         "key": "quantity",
-        "label": "Quantité mesurée",
+        "label": "Valeur calculée",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité (kgCO₂e, tCO₂e…)",
         "type": "text",
         "required": true
       },
       {
         "key": "method",
-        "label": "Méthode et périmètre",
+        "label": "Méthode, périmètre et facteurs d'émission",
         "type": "textarea",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Origine du facteur d'émission",
         "type": "text",
         "required": true
+      },
+      {
+        "key": "scope",
+        "label": "Périmètre d'émission",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "baseline",
+        "label": "Scénario de référence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "assumptions",
+        "label": "Hypothèses et exclusions",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "uncertainty",
+        "label": "Incertitudes du calcul",
+        "type": "textarea",
+        "required": false
       }
-    ]
+    ],
+    "description": "Traçabilité des estimations d'émissions et des hypothèses de calcul.",
+    "operationalNote": "Les valeurs sont déclarées avec leur méthode et leur source. Ce registre n'est pas une mesure automatique des émissions de Platform.",
+    "recordLabel": "calcul d'impact"
   },
   {
     "id": "rse.esg",
@@ -4356,41 +4509,68 @@
     "fields": [
       {
         "key": "period",
-        "label": "Période",
+        "label": "Exercice et période couverte",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Indicateur ESG",
         "type": "text",
         "required": true
       },
       {
         "key": "quantity",
-        "label": "Quantité mesurée",
+        "label": "Valeur rapportée",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité et base de mesure",
         "type": "text",
         "required": true
       },
       {
         "key": "method",
-        "label": "Méthode et périmètre",
+        "label": "Méthodologie de calcul",
         "type": "textarea",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Source primaire et traçabilité",
         "type": "text",
         "required": true
+      },
+      {
+        "key": "framework",
+        "label": "Référentiel de publication",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "coverage",
+        "label": "Entités ou opérations couvertes",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "data_quality",
+        "label": "Fiabilité et limites",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "external_audit",
+        "label": "Référence de revue externe",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Constitution et validation des indicateurs de reporting extra-financier.",
+    "operationalNote": "Les indicateurs ne deviennent pas des déclarations publiées ou auditées par leur simple validation interne.",
+    "recordLabel": "indicateur ESG"
   },
   {
     "id": "product.overview",
@@ -4740,41 +4920,68 @@
     "fields": [
       {
         "key": "area",
-        "label": "Produit ou parcours",
+        "label": "Système ou parcours concerné",
         "type": "text",
         "required": true
       },
       {
         "key": "problem",
-        "label": "Besoin ou problème",
+        "label": "Besoin et événement déclencheur",
         "type": "textarea",
         "required": true
       },
       {
         "key": "acceptance",
-        "label": "Critères d’acceptation",
+        "label": "Contrats et critères d'acceptation",
         "type": "textarea",
         "required": true
       },
       {
         "key": "version",
-        "label": "Version",
+        "label": "Version d'API ou de schéma",
         "type": "text",
         "required": false
       },
       {
         "key": "dependency",
-        "label": "Dépendance",
+        "label": "Service et dépendances",
         "type": "text",
         "required": false
       },
       {
         "key": "result",
-        "label": "Résultat du test",
+        "label": "Résultat de recette vérifiable",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "source_system",
+        "label": "Système émetteur",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "target_system",
+        "label": "Système destinataire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "idempotency_key",
+        "label": "Stratégie d'idempotence",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "retry_policy",
+        "label": "Échec, reprise et alerte",
         "type": "textarea",
         "required": false
       }
-    ]
+    ],
+    "description": "Contrats d'API, dépendances, qualité des échanges et tests des intégrations.",
+    "operationalNote": "Une fiche approuvée n'active aucune intégration. Les changements du bridge Platform/Intranet exigent leurs propres tests et validations.",
+    "recordLabel": "intégration technique"
   },
   {
     "id": "product.documentation",
@@ -5640,41 +5847,68 @@
     "fields": [
       {
         "key": "asset",
-        "label": "Actif ou service",
+        "label": "Application ou composant",
         "type": "text",
         "required": true
       },
       {
         "key": "environment",
-        "label": "Environnement",
+        "label": "Environnement cible",
         "type": "text",
         "required": true
       },
       {
         "key": "finding",
-        "label": "Constat ou demande",
+        "label": "Changement ou risque constaté",
         "type": "textarea",
         "required": true
       },
       {
         "key": "action",
-        "label": "Action prévue",
+        "label": "Plan d'intervention",
         "type": "textarea",
         "required": true
       },
       {
         "key": "verification",
-        "label": "Preuve de vérification",
+        "label": "Preuves de tests et contrôle",
         "type": "textarea",
         "required": false
       },
       {
         "key": "review_date",
-        "label": "Prochaine revue",
+        "label": "Date de revue",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "release_reference",
+        "label": "Version ou commit ciblé",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "deployment_window",
+        "label": "Fenêtre d'intervention",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "rollback_plan",
+        "label": "Plan de retour arrière",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "execution_trace",
+        "label": "Lien vers le journal d'exécution",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Contrôles des environnements, changements et plans de retour arrière.",
+    "operationalNote": "La validation d'un dossier n'exécute ni déploiement, ni rollback. L'action technique doit être tracée par le système de déploiement.",
+    "recordLabel": "revue d'environnement"
   },
   {
     "id": "security.vpn",
@@ -5701,41 +5935,68 @@
     "fields": [
       {
         "key": "asset",
-        "label": "Actif ou service",
+        "label": "Ressource réseau demandée",
         "type": "text",
         "required": true
       },
       {
         "key": "environment",
-        "label": "Environnement",
+        "label": "Environnement concerné",
         "type": "text",
         "required": true
       },
       {
         "key": "finding",
-        "label": "Constat ou demande",
+        "label": "Justification de l'accès",
         "type": "textarea",
         "required": true
       },
       {
         "key": "action",
-        "label": "Action prévue",
+        "label": "Action et approbation requises",
         "type": "textarea",
         "required": true
       },
       {
         "key": "verification",
-        "label": "Preuve de vérification",
+        "label": "Preuve d'autorisation et de révocation",
         "type": "textarea",
         "required": false
       },
       {
         "key": "review_date",
-        "label": "Prochaine revue",
+        "label": "Date de réexamen",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "beneficiary",
+        "label": "Bénéficiaire identifié",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "access_duration",
+        "label": "Durée d'accès demandée",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "ticket_reference",
+        "label": "Référence de demande IT",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "revocation_evidence",
+        "label": "Preuve de révocation",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Demandes et revues d'accès aux réseaux sécurisés.",
+    "operationalNote": "Ce module documente les demandes et les contrôles. La validation n'ouvre aucun VPN ni ne provisionne un compte réseau.",
+    "recordLabel": "revue d'accès VPN"
   },
   {
     "id": "security.logs",
@@ -6931,47 +7192,74 @@
     "fields": [
       {
         "key": "channel",
-        "label": "Canal",
+        "label": "Plateforme de diffusion envisagée",
         "type": "text",
         "required": true
       },
       {
         "key": "audience",
-        "label": "Public cible",
+        "label": "Audience ciblée",
         "type": "text",
         "required": true
       },
       {
         "key": "content",
-        "label": "Contenu",
+        "label": "Synopsis, conducteur et intervenants",
         "type": "textarea",
         "required": true
       },
       {
         "key": "publication_date",
-        "label": "Date de publication",
+        "label": "Date prévue de diffusion",
         "type": "date",
         "required": false
       },
       {
         "key": "budget",
-        "label": "Budget",
+        "label": "Budget de production",
         "type": "number",
         "required": false
       },
       {
         "key": "result",
-        "label": "Résultat mesuré",
+        "label": "Écoutes confirmées",
         "type": "number",
         "required": false
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Source des statistiques d'écoute",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "episode_number",
+        "label": "Numéro d'épisode",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "guest_consent",
+        "label": "Consentement et droits voix/image",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "audio_master",
+        "label": "Référence du fichier master",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "published_url",
+        "label": "Lien de diffusion confirmé",
         "type": "text",
         "required": false
       }
-    ]
+    ],
+    "description": "Préparation, validation éditoriale et suivi des épisodes audio.",
+    "operationalNote": "La validation du dossier n'enregistre, n'héberge et ne publie aucun épisode automatiquement.",
+    "recordLabel": "épisode podcast"
   },
   {
     "id": "rse.points",
@@ -6985,41 +7273,68 @@
     "fields": [
       {
         "key": "period",
-        "label": "Période",
+        "label": "Période de simulation",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Action envisagée",
         "type": "text",
         "required": true
       },
       {
         "key": "quantity",
-        "label": "Quantité mesurée",
+        "label": "Volume simulé (non crédité)",
         "type": "number",
         "required": true
       },
       {
         "key": "unit",
-        "label": "Unité",
+        "label": "Unité de simulation",
         "type": "text",
         "required": true
       },
       {
         "key": "method",
-        "label": "Méthode et périmètre",
+        "label": "Règles de simulation et d'éligibilité",
         "type": "textarea",
         "required": true
       },
       {
         "key": "source",
-        "label": "Source de mesure",
+        "label": "Source des hypothèses",
         "type": "text",
         "required": true
+      },
+      {
+        "key": "pilot_stage",
+        "label": "Stade du pilote",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "reward_policy",
+        "label": "Règles de récompense envisagées",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "fraud_controls",
+        "label": "Prévention des abus",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "platform_dependency",
+        "label": "Condition d'activation Platform",
+        "type": "textarea",
+        "required": false
       }
-    ]
+    ],
+    "description": "Conception et contrôle du futur programme de points circulaires.",
+    "operationalNote": "Programme non activé : aucune ligne de ce registre n'attribue des points à un client ou ne crédite un solde dans Platform.",
+    "recordLabel": "hypothèse de fidélité"
   },
   {
     "id": "security.code",
@@ -7183,29 +7498,56 @@
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Type de contrôle",
         "type": "text",
         "required": false
       },
       {
         "key": "issue",
-        "label": "Demande ou problème",
+        "label": "Écart ou document manquant",
         "type": "textarea",
         "required": true
       },
       {
         "key": "resolution",
-        "label": "Résolution proposée",
+        "label": "Action de régularisation",
         "type": "textarea",
         "required": false
       },
       {
         "key": "sla_date",
-        "label": "Échéance de réponse",
+        "label": "Date limite de suivi",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "compliance_reference",
+        "label": "Référence du dossier Conformité",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "documents_requested",
+        "label": "Pièces demandées",
+        "type": "textarea",
+        "required": false
+      },
+      {
+        "key": "handoff_team",
+        "label": "Pôle destinataire",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "customer_update",
+        "label": "Information communiquée au client",
+        "type": "textarea",
+        "required": false
       }
-    ]
+    ],
+    "description": "Suivi Support des pièces et blocages de conformité, avec orientation vers le pôle compétent.",
+    "operationalNote": "Ce suivi ne rend pas de décision juridique ou KYC ; le pôle Conformité reste responsable des contrôles formels.",
+    "recordLabel": "suivi de conformité client"
   },
   {
     "id": "support.onboarding",
@@ -7219,35 +7561,62 @@
     "fields": [
       {
         "key": "account",
-        "label": "Compte concerné",
+        "label": "Compte ou organisation accompagnée",
         "type": "text",
         "required": true
       },
       {
         "key": "category",
-        "label": "Catégorie",
+        "label": "Parcours partenaire",
         "type": "text",
         "required": false
       },
       {
         "key": "issue",
-        "label": "Demande ou problème",
+        "label": "Étape bloquante",
         "type": "textarea",
         "required": true
       },
       {
         "key": "resolution",
-        "label": "Résolution proposée",
+        "label": "Plan de résolution",
         "type": "textarea",
         "required": false
       },
       {
         "key": "sla_date",
-        "label": "Échéance de réponse",
+        "label": "Échéance de prise en charge",
         "type": "date",
         "required": false
+      },
+      {
+        "key": "platform_reference",
+        "label": "Identifiant Platform",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "next_step",
+        "label": "Prochaine étape",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "contact_channel",
+        "label": "Canal de contact",
+        "type": "text",
+        "required": false
+      },
+      {
+        "key": "completion_evidence",
+        "label": "Preuve de finalisation",
+        "type": "text",
+        "required": false
       }
-    ]
+    ],
+    "description": "Suivi des étapes d'accompagnement et des blocages d'intégration des partenaires.",
+    "operationalNote": "Un dossier Support ne crée ni compte marchand ni fournisseur ; les identités restent contrôlées par Platform et les procédures RH concernées.",
+    "recordLabel": "suivi d'onboarding"
   },
   {
     "id": "direction.global",
