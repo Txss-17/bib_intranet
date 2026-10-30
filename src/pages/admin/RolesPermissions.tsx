@@ -173,7 +173,7 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 };
 
 const RolesPermissions = () => {
-  const { profile } = useAuth();
+  const { profile, refreshProfile } = useAuth();
   const { isSuperAdmin } = usePermissions();
 
   const [roles, setRoles] = useState<AccessRole[]>([]);
@@ -943,6 +943,16 @@ const RolesPermissions = () => {
         </div>
 
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            onClick={() => void (async () => {
+              await refreshProfile();
+              window.dispatchEvent(new Event(MATRIX_EVENT));
+            })()}
+          >
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Recharger mes droits
+          </Button>
           <Button
             variant="outline"
             onClick={() => void loadCatalog()}
