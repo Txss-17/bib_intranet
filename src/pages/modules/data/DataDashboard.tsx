@@ -6,10 +6,17 @@ import { BarChart3, BookOpen, GitPullRequest, ListChecks, History, LineChart, Ar
 import { useKpiCatalog, usePublicationRequests, useTechBacklog, usePublications } from '@/hooks/useDataQueries';
 
 export default function DataDashboard() {
-  const { data: kpis = [] } = useKpiCatalog();
-  const { data: requests = [] } = usePublicationRequests();
-  const { data: backlog = [] } = useTechBacklog();
-  const { data: pubs = [] } = usePublications();
+  const kpiQuery = useKpiCatalog();
+  const requestsQuery = usePublicationRequests();
+  const backlogQuery = useTechBacklog();
+  const pubsQuery = usePublications();
+  const kpis = kpiQuery.data ?? [];
+  const requests = requestsQuery.data ?? [];
+  const backlog = backlogQuery.data ?? [];
+  const pubs = pubsQuery.data ?? [];
+  const dataIncomplete = [kpiQuery, requestsQuery, backlogQuery, pubsQuery].some(
+    (query) => query.isError || query.isLoading,
+  );
 
   const activeKpis = kpis.filter((k) => k.status === 'active').length;
   const draftKpis = kpis.filter((k) => k.status === 'draft').length;
@@ -22,10 +29,10 @@ export default function DataDashboard() {
   const pubsPublished = pubs.filter((p) => p.status === 'published').length;
 
   const tiles = [
-    { label: 'KPI actifs', value: activeKpis, hint: `${draftKpis} en brouillon`, icon: BookOpen },
-    { label: 'Demandes en cours', value: inFlight, hint: `${deployed30d} déployées (30j)`, icon: GitPullRequest },
-    { label: 'Backlog Tech ouvert', value: backlogOpen, hint: `${backlog.length} au total`, icon: ListChecks },
-    { label: 'Publications publiées', value: pubsPublished, hint: `${pubs.length} au total`, icon: LineChart },
+    { label: 'KPI actifs', value: kpiQuery.isError || kpiQuery.isLoading ? '—' : activeKpis, hint: kpiQuery.isError ? 'Source indisponible' : `${draftKpis} en brouillon`, icon: BookOpen },
+    { label: 'Demandes en cours', value: requestsQuery.isError || requestsQuery.isLoading ? '—' : inFlight, hint: requestsQuery.isError ? 'Source indisponible' : `${deployed30d} déployées (30j)`, icon: GitPullRequest },
+    { label: 'Backlog Tech ouvert', value: backlogQuery.isError || backlogQuery.isLoading ? '—' : backlogOpen, hint: backlogQuery.isError ? 'Source indisponible' : `${backlog.length} au total`, icon: ListChecks },
+    { label: 'Publications publiées', value: pubsQuery.isError || pubsQuery.isLoading ? '—' : pubsPublished, hint: pubsQuery.isError ? 'Source indisponible' : `${pubs.length} au total`, icon: LineChart },
   ];
 
   const quickLinks = [
@@ -49,6 +56,16 @@ export default function DataDashboard() {
         </div>
       </header>
 
+      {dataIncomplete && (
+        <div role="alert" className="rounded-lg border p-3 text-sm text-muted-foreground">
+          Une ou plusieurs sources Data sont indisponibles ou en cours de chargement.
+          Les chiffres correspondants ne sont pas confirmés.
+          <Button type="button" variant="outline" className="ml-3"
+            onClick={() => { void kpiQuery.refetch(); void requestsQuery.refetch(); void backlogQuery.refetch(); void pubsQuery.refetch(); }}>
+            Actualiser les sources
+          </Button>
+        </div>
+      )}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {tiles.map((t) => {
           const Icon = t.icon;
