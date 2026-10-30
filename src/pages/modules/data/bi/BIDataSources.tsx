@@ -19,7 +19,8 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export default function BIDataSources() {
-  const { data: sources = [] } = useDataSources();
+  const sourcesQuery = useDataSources();
+  const { data: sources = [], isLoading, isError, refetch } = sourcesQuery;
   const create = useCreateDataSource();
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<{ name: string; type: BIDataSource['type']; description: string }>({ name: '', type: 'kpi', description: '' });
@@ -65,11 +66,19 @@ export default function BIDataSources() {
         </Dialog>
       </div>
 
+      <p className="rounded-md border p-3 text-xs text-muted-foreground">
+        Un enregistrement dans le catalogue indique une source configurée, et non une connexion testée, un pipeline exécuté ou une fraîcheur garantie.
+        Pour qualifier une source en production, documenter propriétaire, contrat, schéma, fréquence, contrôles et preuves d’exécution.
+      </p>
+      {isLoading && <p role="status" className="text-sm text-muted-foreground">Chargement des sources…</p>}
+      {isError && <div role="alert" className="rounded-md border border-destructive/40 p-3 text-sm text-destructive">
+        Catalogue des sources indisponible. <Button size="sm" variant="outline" className="ml-2" onClick={() => void refetch()}>Réessayer</Button>
+      </div>}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {sources.length === 0 && (
+        {!isLoading && !isError && sources.length === 0 && (
           <Card className="col-span-full"><CardContent className="py-12 text-center text-muted-foreground">Aucune source configurée. Le catalogue KPI est disponible par défaut dans le Designer.</CardContent></Card>
         )}
-        {sources.map(s => {
+        {!isError && !isLoading && sources.map(s => {
           const Icon = TYPE_ICON[s.type] ?? Database;
           return (
             <Card key={s.id}>
