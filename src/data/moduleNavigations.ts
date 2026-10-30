@@ -756,6 +756,12 @@ rh: {
         icon: 'Code2',
       },
       {
+        id: 'releases',
+        label: 'Livraisons & recettes',
+        path: '/pole/product/releases',
+        icon: 'Rocket',
+      },
+      {
         id: 'studio',
         label: 'Studio',
         path: '/pole/product/studio',
