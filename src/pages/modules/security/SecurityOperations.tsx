@@ -29,6 +29,7 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { useSecurityAlerts } from "@/hooks/useSecurityData";
+import { usePermissions } from "@/hooks/usePermissions";
 
 type SecurityAlertStatus =
   | "open"
@@ -95,7 +96,9 @@ function getStatusVariant(
 }
 
 export default function SecurityOperations() {
-  const { data = [], isLoading, update } = useSecurityAlerts();
+  const { data = [], isLoading, isError, refetch, update } = useSecurityAlerts();
+  const { can } = usePermissions();
+  const mayChange = can('security.security', 'update');
 
   const [statusFilter, setStatusFilter] =
     useState<SecurityAlertStatus | "all">("open");
@@ -167,9 +170,15 @@ export default function SecurityOperations() {
     id: string,
     status: SecurityAlertStatus
   ) => {
+    if (!mayChange) { toast.error('Modification non autorisée.'); return; }
+    const current = alerts.find((alert) => alert.id === id);
+    if (!current || !['open', 'investigating'].includes(current.status)) {
+      toast.error('Alerte déjà clôturée ou indisponible.'); return;
+    }
     try {
       await update.mutateAsync({
         id,
+        expectedStatus: current.status,
         status,
         ...(status === "resolved"
           ? {
@@ -422,6 +431,11 @@ export default function SecurityOperations() {
             <div className="py-10 text-center text-sm text-muted-foreground">
               Chargement des alertes...
             </div>
+          ) : isError ? (
+            <div role="alert" className="space-y-2 p-4 text-sm text-destructive">
+              <p>Alertes de sécurité indisponibles.</p>
+              <Button variant="outline" onClick={() => void refetch()}>Réessayer</Button>
+            </div>
           ) : filteredAlerts.length === 0 ? (
             <div className="rounded-lg border border-dashed p-10 text-center">
               <ShieldAlert className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
@@ -515,6 +529,7 @@ export default function SecurityOperations() {
                             <Button
                               size="sm"
                               variant="ghost"
+                              disabled={!mayChange || update.isPending}
                               onClick={() =>
                                 updateStatus(
                                   alert.id,
@@ -532,6 +547,7 @@ export default function SecurityOperations() {
                             <Button
                               size="sm"
                               variant="ghost"
+                              disabled={!mayChange || update.isPending}
                               onClick={() =>
                                 updateStatus(
                                   alert.id,
