@@ -245,22 +245,20 @@ export const useSecurityAlerts = () => {
   const update = useMutation({
     mutationFn: async ({
       id,
+      expectedStatus,
       ...payload
     }: {
       id: string;
+      expectedStatus?: string;
       [key: string]: unknown;
     }): Promise<SecurityAlert> => {
-      const { data, error } = await db
-        .from('security_alerts')
-        .update(payload)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
+      let query = db.from('security_alerts').update(payload).eq('id', id);
+      if (expectedStatus) query = query.eq('status', expectedStatus);
+      const { data, error } = await query.select().maybeSingle();
+      if (error) throw error;
+      if (!data) throw new Error(
+        'Cette alerte a déjà changé de statut ou vous ne pouvez pas la modifier. Actualisez la liste.',
+      );
       return data as SecurityAlert;
     },
 
