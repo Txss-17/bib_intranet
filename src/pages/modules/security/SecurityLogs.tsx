@@ -554,7 +554,7 @@ export default function SecurityLogs() {
                           <TableCell>
                             <Badge
                               variant={
-                                log.http_status ?? 0 >=
+                                (log.http_status ?? 0) >=
                                 400
                                   ? 'destructive'
                                   : 'default'
