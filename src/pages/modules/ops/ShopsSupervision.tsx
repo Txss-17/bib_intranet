@@ -498,9 +498,14 @@ export default function ShopsSupervision() {
                         <td className="px-5 py-4">
                           <div>
                             <p className="text-sm font-medium">
-                              {shop.merchant_name ||
-                                '—'}
+                              {shop.merchant_name || 'Identité non renseignée'}
                             </p>
+
+                            {!shop.merchant_name && (
+                              <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                                Vérifier le rattachement à son marchand
+                              </p>
+                            )}
 
                             {shop.merchant_email && (
                               <p className="mt-1 text-xs text-muted-foreground">
