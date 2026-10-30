@@ -30,7 +30,7 @@ const Shipments = () => {
   const [formOpen, setFormOpen] = useState(false);
   const [editingShipment, setEditingShipment] = useState<any>(null);
 
-  const { data: shipments = [], isLoading } = useShipmentRecords({ status: statusFilter });
+  const { data: shipments = [], isLoading, isError, refetch } = useShipmentRecords({ status: statusFilter });
   const createShipment = useCreateShipment();
   const updateShipment = useUpdateShipment();
 
@@ -39,19 +39,31 @@ const Shipments = () => {
     s.destination_address?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmit = (data: any) => {
-    if (editingShipment) {
-      updateShipment.mutate({ id: editingShipment.id, ...data }, { onSuccess: () => toast.success('Expédition modifiée') });
-    } else {
-      createShipment.mutate(data, { onSuccess: () => toast.success('Expédition créée') });
+  const handleSubmit = async (data: any) => {
+    try {
+      if (editingShipment) {
+        await updateShipment.mutateAsync({ id: editingShipment.id, ...data });
+        toast.success('Expédition modifiée');
+      } else {
+        await createShipment.mutateAsync(data);
+        toast.success('Expédition créée');
+      }
+      setEditingShipment(null);
+      setFormOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Enregistrement de l’expédition non confirmé.');
     }
-    setEditingShipment(null);
   };
 
   const handleEdit = (s: any) => { setEditingShipment(s); setFormOpen(true); };
   const handleNew = () => { setEditingShipment(null); setFormOpen(true); };
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  if (isError) return <div role="alert" className="space-y-3 rounded-lg border p-6">
+    <p className="text-destructive">Les expéditions sont indisponibles. Aucune livraison n’est confirmée.</p>
+    <Button variant="outline" onClick={() => void refetch()}>Réessayer</Button>
+  </div>;
 
   return (
     <div className="space-y-6">
