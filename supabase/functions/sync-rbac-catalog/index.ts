@@ -525,21 +525,15 @@ Deno.serve(async (request) => {
       );
     }
 
-    const existingScopeKeys = new Set(
-      (existingScopeRows ?? []).map((row) =>
-        `${row.role_id}|${row.scope_id}|${row.scope_value ?? ''}`,
-      ),
+    // Once a role has scope assignments, its configuration is authoritative.
+    // A catalogue refresh must not restore old defaults and broaden access.
+    // Only brand-new, unconfigured roles receive initial scope entries.
+    const configuredRoleIds = new Set(
+      (existingScopeRows ?? []).map((row) => row.role_id),
     );
-
-    const missingRoleScopeRows = roleScopeRows.filter((row) => {
-      const key =
-        `${row.role_id}|${row.scope_id}|${row.scope_value ?? ''}`;
-
-      if (existingScopeKeys.has(key)) return false;
-
-      existingScopeKeys.add(key);
-      return true;
-    });
+    const missingRoleScopeRows = roleScopeRows.filter(
+      (row) => !configuredRoleIds.has(row.role_id),
+    );
 
     if (missingRoleScopeRows.length > 0) {
       const { error: insertError } = await adminClient
