@@ -219,6 +219,7 @@ import ESGReports from "./pages/modules/rse/ESGReports";
    ============================================================ */
 
 import ProductEngineeringDashboard from "./pages/modules/product/ProductEngineeringDashboard";
+import ProductPlanningWorkspace from "./components/product/ProductPlanningWorkspace";
 import ProductStudio from "./pages/modules/product/ProductStudio";
 import ProductIntegrations from "./pages/modules/product/ProductIntegrations";
 import ProductDocumentation from "./pages/modules/product/ProductDocumention";
@@ -787,11 +788,11 @@ const App = () => (
                 />
                 <Route
                   path="/pole/product/roadmap"
-                  element={<Navigate to="/pole/product/innovation" replace />}
+                  element={<ProductPlanningWorkspace mode="roadmap" />}
                 />
                 <Route
                   path="/pole/product/backlog"
-                  element={<Navigate to="/pole/product/performance" replace />}
+                  element={<ProductPlanningWorkspace mode="backlog" />}
                 />
                 <Route
                   path="/pole/product/engineering"
