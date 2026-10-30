@@ -22,7 +22,7 @@ function statusColor(s: string) {
 }
 
 export default function SupplierCatalogInbox() {
-  const { data: uploads = [], isLoading } = useSupplierCatalogUploads();
+  const { data: uploads = [], isLoading, error, refetch } = useSupplierCatalogUploads();
   const review = useReviewCatalogUpload();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
@@ -41,8 +41,12 @@ export default function SupplierCatalogInbox() {
 
   const submit = async () => {
     if (!active || !decision) return;
-    await review.mutateAsync({ id: active.id, status: decision, notes: notes.trim() || undefined, supplierId: active.supplier_id });
-    setActive(null); setDecision(null); setNotes('');
+    try {
+      await review.mutateAsync({ id: active.id, status: decision, notes: notes.trim() || undefined, supplierId: active.supplier_id, expectedStatus: active.status as 'pending' | 'reviewing' });
+      setActive(null); setDecision(null); setNotes('');
+    } catch {
+      // Mutation hook reports the error; retain the decision for review.
+    }
   };
 
   return (
@@ -71,7 +75,12 @@ export default function SupplierCatalogInbox() {
           <CardHeader><CardTitle>Uploads ({filtered.length})</CardTitle></CardHeader>
           <CardContent>
             {isLoading ? <p className="text-muted-foreground py-8 text-center">Chargement...</p> :
-            filtered.length === 0 ? <p className="text-muted-foreground py-8 text-center">Aucun catalogue</p> : (
+            error ? (
+              <div role="alert" className="space-y-3 py-8 text-center">
+                <p className="text-destructive">Impossible de récupérer les catalogues fournisseurs.</p>
+                <Button type="button" variant="outline" onClick={() => refetch()}>Réessayer</Button>
+              </div>
+            ) : filtered.length === 0 ? <p className="text-muted-foreground py-8 text-center">Aucun catalogue</p> : (
               <Table>
                 <TableHeader><TableRow>
                   <TableHead>Fichier</TableHead><TableHead>Version</TableHead><TableHead>Soumis par</TableHead>
@@ -112,7 +121,7 @@ export default function SupplierCatalogInbox() {
           </CardContent>
         </Card>
 
-        <Dialog open={!!active && !!decision} onOpenChange={(o) => { if (!o) { setActive(null); setDecision(null); setNotes(''); } }}>
+        <Dialog open={!!active && !!decision} onOpenChange={(o) => { if (!o && !review.isPending) { setActive(null); setDecision(null); setNotes(''); } }}>
           <DialogContent>
             <DialogHeader><DialogTitle>{decision === 'approved' ? 'Approuver' : 'Refuser'} le catalogue</DialogTitle></DialogHeader>
             <div className="space-y-3">
@@ -123,7 +132,7 @@ export default function SupplierCatalogInbox() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => { setActive(null); setDecision(null); }}>Annuler</Button>
+              <Button variant="outline" disabled={review.isPending} onClick={() => { setActive(null); setDecision(null); setNotes(''); }}>Annuler</Button>
               <Button onClick={submit} disabled={review.isPending || (decision === 'rejected' && !notes.trim())}>Confirmer</Button>
             </DialogFooter>
           </DialogContent>
