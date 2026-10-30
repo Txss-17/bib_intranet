@@ -224,6 +224,7 @@ import ProductFunctionWorkspace from "./components/product/ProductFunctionWorksp
 import MarketingWorkflowPage from "./components/marketing/MarketingWorkflowPage";
 import CorrectiveActions from "./pages/modules/audit/CorrectiveActions";
 import SupportCoordinationPage from "./components/support/SupportCoordinationPage";
+import PartnerPayouts from "./pages/modules/finance/PartnerPayouts";
 import ProductStudio from "./pages/modules/product/ProductStudio";
 import ProductIntegrations from "./pages/modules/product/ProductIntegrations";
 import ProductDocumentation from "./pages/modules/product/ProductDocumention";
@@ -424,7 +425,7 @@ const App = () => (
                 />
                 <Route
                   path="/pole/finance/payouts"
-                  element={<Navigate to="/pole/finance/supplier-payments" replace />}
+                  element={<PartnerPayouts />}
                 />
                 <Route
                   path="/pole/finance/reconciliation"
