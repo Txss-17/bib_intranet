@@ -4,7 +4,7 @@ import { History } from 'lucide-react';
 import { useKpiVersions } from '@/hooks/useDataQueries';
 
 export default function KPIVersions() {
-  const { data: versions = [], isLoading } = useKpiVersions();
+  const { data: versions = [], isLoading, isError, refetch } = useKpiVersions();
   return (
     <div className="space-y-6 p-6">
       <header>
@@ -15,11 +15,12 @@ export default function KPIVersions() {
         <p className="text-sm text-muted-foreground mt-1">Traçabilité des évolutions du catalogue KPI.</p>
       </header>
       <Card>
-        <CardHeader><CardTitle className="text-base">{versions.length} entrées</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">{isError || isLoading ? '—' : versions.length} entrées</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           {isLoading && <p className="text-sm text-muted-foreground">Chargement…</p>}
-          {!isLoading && versions.length === 0 && <p className="text-sm text-muted-foreground">Aucune version enregistrée.</p>}
-          {versions.map((v: any) => (
+          {isError && <p role="alert" className="text-sm text-destructive">Historique KPI indisponible. <button className="underline" onClick={() => void refetch()}>Réessayer</button></p>}
+          {!isError && !isLoading && versions.length === 0 && <p className="text-sm text-muted-foreground">Aucune version enregistrée.</p>}
+          {!isError && !isLoading && versions.map((v: any) => (
             <div key={v.id} className="flex items-center justify-between border-b pb-2">
               <div>
                 <div className="font-medium text-sm">KPI {v.kpi_id?.slice(0, 8)}</div>
