@@ -5,7 +5,7 @@ import { LayoutDashboard, FileText, ShieldCheck, Archive, Puzzle, CalendarClock,
 import { useDashboards } from '@/hooks/useBI';
 
 export default function BIOverview() {
-  const { data: dashboards = [] } = useDashboards();
+  const { data: dashboards = [], isLoading, isError, refetch } = useDashboards();
   const counts = {
     published: dashboards.filter(d => d.status === 'published').length,
     draft: dashboards.filter(d => d.status === 'draft').length,
@@ -14,13 +14,14 @@ export default function BIOverview() {
   };
   const scheduled = dashboards.filter(d => d.publish_at && new Date(d.publish_at) > new Date()).length;
 
+  const metric = (value: number) => isLoading || isError ? '—' : value;
   const tiles = [
-    { label: 'Publiés', value: counts.published, icon: ShieldCheck, hint: 'Actifs' },
-    { label: 'Brouillons', value: counts.draft, icon: FileText, hint: 'En cours de conception' },
-    { label: 'En validation', value: counts.validation, icon: Eye, hint: 'Revue Data' },
-    { label: 'Archivés', value: counts.archived, icon: Archive, hint: 'Historique' },
+    { label: 'Publiés', value: metric(counts.published), icon: ShieldCheck, hint: 'Actifs' },
+    { label: 'Brouillons', value: metric(counts.draft), icon: FileText, hint: 'En cours de conception' },
+    { label: 'En validation', value: metric(counts.validation), icon: Eye, hint: 'Revue Data' },
+    { label: 'Archivés', value: metric(counts.archived), icon: Archive, hint: 'Historique' },
     { label: 'Widgets personnalisés', value: '—', icon: Puzzle, hint: 'Bibliothèque' },
-    { label: 'Déploiements prévus', value: scheduled, icon: CalendarClock, hint: 'Planifiés' },
+    { label: 'Déploiements prévus', value: metric(scheduled), icon: CalendarClock, hint: 'Planifiés' },
   ];
 
   const quick = [
@@ -49,6 +50,12 @@ export default function BIOverview() {
         </Button>
       </header>
 
+      {(isLoading || isError) && (
+        <div role="alert" className="rounded-lg border p-3 text-sm text-muted-foreground">
+          {isError ? 'Les tableaux BI sont indisponibles ; aucun total ne peut être confirmé.' : 'Chargement des tableaux BI…'}
+          {isError && <Button size="sm" variant="outline" className="ml-2" onClick={() => void refetch()}>Réessayer</Button>}
+        </div>
+      )}
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
         {tiles.map(t => {
           const Icon = t.icon;
