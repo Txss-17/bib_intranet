@@ -1831,9 +1831,10 @@ const RHAccess = () => {
               </Select>
 
               <p className="text-xs text-muted-foreground">
-                Le choix reprend les périmètres associés au rôle dans le catalogue administrateur.
-                Les portefeuilles métier sont gérés séparément.
-                <Link to="/admin/roles-permissions" className="ml-2 underline">Consulter le catalogue</Link>
+                Ce choix applique uniquement les périmètres simples déjà validés pour ce rôle.
+                Les combinaisons hiérarchiques (filiale → pôle → région → portefeuille → dossiers)
+                enregistrées en brouillon ne sont pas des permissions effectives et ne sont pas encore attribuables par RH.
+                <Link to="/admin/roles-permissions" className="ml-2 underline">Consulter les politiques et les droits</Link>
               </p>
             </div>
 
