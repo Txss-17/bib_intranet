@@ -40,7 +40,7 @@ export default function SecurityDashboard() {
   );
 
   const failedLogins = authLogs.filter(
-    (log) => log.event_type === 'login_failure',
+    (log) => log.app_origin === 'connect' && log.event_type === 'login_failure',
   ).length;
 
   const activeVpn = vpn.filter(
@@ -198,7 +198,7 @@ export default function SecurityDashboard() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              20 dernières tentatives
+              Sur les 20 derniers événements, hors données BOS
             </p>
           </CardContent>
         </Card>
@@ -206,7 +206,7 @@ export default function SecurityDashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Accès VPN actifs
+              Accès VPN déclarés actifs
             </CardTitle>
 
             <Wifi className="h-4 w-4 text-muted-foreground" />
@@ -218,7 +218,7 @@ export default function SecurityDashboard() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              {vpn.length} accès enregistrés
+              {vpnQuery.isError || vpnQuery.isLoading ? '—' : vpn.length} entrées enregistrées
             </p>
           </CardContent>
         </Card>
@@ -264,7 +264,7 @@ export default function SecurityDashboard() {
           <CardContent>
             <div
               className={`text-2xl font-bold ${
-                errorRate != null && errorRate > 5
+                errorRate == null ? 'text-muted-foreground' : errorRate > 5
                   ? 'text-destructive'
                   : 'text-success'
               }`}
@@ -273,8 +273,8 @@ export default function SecurityDashboard() {
             </div>
 
             <p className="text-xs text-muted-foreground">
-              {edgeLogs.length} requête
-              {edgeLogs.length > 1 ? 's' : ''} récentes
+              {edgeQuery.isError || edgeQuery.isLoading ? '—' : edgeLogs.length} événement
+              {edgeLogs.length > 1 ? 's' : ''} sur les 20 derniers journaux
             </p>
           </CardContent>
         </Card>
