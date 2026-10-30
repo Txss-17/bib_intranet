@@ -39,3 +39,9 @@ test('les tableaux fournisseurs n’inventent pas de scores ni de statut actif',
   assert.doesNotMatch(hook, /supplier\.risk_score \?\? 50/);
   assert.doesNotMatch(hook, /supplier\.status \?\? 'active'/);
 });
+
+test('le panneau Accès ne présente pas de groupes Workspace présumés', () => {
+  const page = read('src/components/settings/AccessTab.tsx');
+  assert.doesNotMatch(page, /WORKSPACE_GROUPS/);
+  assert.match(page, /isSuperAdmin/);
+});
