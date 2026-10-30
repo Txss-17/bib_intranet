@@ -26,6 +26,7 @@ export default function FieldAudits() {
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('all');
   const { data: rows = [], isLoading, isError, refetch } = useFieldAuditRows();
   const { can } = usePermissions();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -37,7 +38,8 @@ export default function FieldAudits() {
       a.type.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'all' || a.auditType === typeFilter;
     const matchesSource = sourceFilter === 'all' || a.app_origin === sourceFilter;
-    return matchesSearch && matchesType && matchesSource;
+    const matchesStatus = statusFilter === 'all' || a.status === statusFilter;
+    return matchesSearch && matchesType && matchesSource && matchesStatus;
   });
 
   const getStatusBadge = (status: string) => {
@@ -77,12 +79,18 @@ export default function FieldAudits() {
               { header: 'Statut', accessor: 'status' },
               { header: 'Score', accessor: 'score' },
             ]}
-            data={filteredAudits}
+            data={isError ? [] : filteredAudits}
           />
         </div>
       </div>
 
-      {isError && <p role="alert">Audits indisponibles. <Button variant="link" onClick={() => void refetch()}>Réessayer</Button></p>}
+      {isError && (
+        <div role="alert" className="rounded-lg border border-destructive/30 p-4">
+          <p className="font-medium text-destructive">Impossible de récupérer les audits terrain.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Les indicateurs et les résultats ne sont pas confirmés.</p>
+          <Button variant="outline" className="mt-3" onClick={() => void refetch()}>Réessayer</Button>
+        </div>
+      )}
       <p className="text-xs text-muted-foreground">Indicateurs de tous les audits accessibles, indépendamment des filtres ci-dessous. {metrics.samples} score(s) renseigné(s) sur les audits terminés.</p>
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -132,6 +140,17 @@ export default function FieldAudits() {
             {Object.entries(AUDIT_TYPES).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[180px]" aria-label="Filtrer par statut d'audit">
+            <SelectValue placeholder="Statut" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tous les statuts</SelectItem>
+            <SelectItem value="scheduled">Planifiés</SelectItem>
+            <SelectItem value="in_progress">En cours</SelectItem>
+            <SelectItem value="completed">Terminés</SelectItem>
+          </SelectContent>
+        </Select>
         <SourceFilter value={sourceFilter} onChange={setSourceFilter} />
       </div>
 
@@ -154,7 +173,9 @@ export default function FieldAudits() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredAudits.length === 0 ? (
+              {isError ? (
+                <TableRow><TableCell colSpan={8} className="py-8 text-center text-destructive">Chargement impossible. Réessayez pour consulter les audits.</TableCell></TableRow>
+              ) : filteredAudits.length === 0 ? (
                 <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucun audit trouvé</TableCell></TableRow>
               ) : (
                 filteredAudits.map((audit) => (
@@ -175,8 +196,8 @@ export default function FieldAudits() {
                     <TableCell>{audit.scheduledDate ? new Date(audit.scheduledDate).toLocaleDateString('fr-FR') : '—'}</TableCell>
                     <TableCell>{getStatusBadge(audit.status)}</TableCell>
                     <TableCell>
-                      {audit.score !== null ? (
-                        <span className={audit.score >= 80 ? 'text-green-500 font-bold' : 'text-yellow-500 font-bold'}>
+                      {audit.score != null && Number.isFinite(Number(audit.score)) && Number(audit.score) >= 0 && Number(audit.score) <= 100 ? (
+                        <span className={Number(audit.score) >= 80 ? 'text-green-500 font-bold' : 'text-yellow-500 font-bold'}>
                           {audit.score}%
                         </span>
                       ) : '—'}
