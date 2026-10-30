@@ -195,6 +195,9 @@ const RolesPermissions = () => {
 
   const [draft, setDraft] = useState<Record<string, boolean>>({});
   const [roleForm, setRoleForm] = useState({ ...INITIAL_ROLE_FORM });
+  const [scopeDraft, setScopeDraft] = useState<Array<{ scope_id: string; scope_value: string }>>([]);
+  const [scopeReason, setScopeReason] = useState('');
+  const [savingScopes, setSavingScopes] = useState(false);
 
   const loadCatalog = useCallback(async () => {
     setLoading(true);
@@ -318,6 +321,79 @@ const RolesPermissions = () => {
   useEffect(() => {
     void loadCatalog();
   }, [loadCatalog]);
+
+  // Editing pre-existing scopes is separate from creating roles or changing the
+  // permission matrix. Never infer a role's scopes from its display label.
+  useEffect(() => {
+    setScopeDraft(
+      roleScopes
+        .filter((entry) => entry.role_id === selectedRoleId)
+        .map((entry) => ({
+          scope_id: entry.scope_id,
+          scope_value: entry.scope_value ?? '',
+        })),
+    );
+    setScopeReason('');
+  }, [roleScopes, selectedRoleId]);
+
+  const addScope = () => {
+    const scope = scopes.find((item) => item.scope_key === 'pole') ?? scopes[0];
+    if (!scope) return;
+    setScopeDraft((current) => [...current, { scope_id: scope.id, scope_value: '' }]);
+  };
+
+  const saveExistingRoleScopes = async () => {
+    if (!isSuperAdmin || !selectedRoleId || savingScopes) return;
+    if (scopeReason.trim().length < 8) {
+      toast({ title: 'Motif obligatoire', description: 'Précisez le motif de cette modification (8 caractères minimum).', variant: 'destructive' });
+      return;
+    }
+    if (scopeDraft.length === 0) {
+      toast({ title: 'Périmètre requis', description: 'Conservez au moins un périmètre par rôle.', variant: 'destructive' });
+      return;
+    }
+
+    const expected = roleScopes
+      .filter((entry) => entry.role_id === selectedRoleId)
+      .map((entry) => ({ scope_id: entry.scope_id, scope_value: entry.scope_value }));
+    const next = scopeDraft.map((entry) => ({
+      scope_id: entry.scope_id,
+      scope_value: entry.scope_value.trim() || null,
+    }));
+    const key = (entry: { scope_id: string; scope_value: string | null }) =>
+      `${entry.scope_id}:${entry.scope_value ?? ''}`;
+    if (new Set(next.map(key)).size !== next.length) {
+      toast({ title: 'Doublon', description: 'Ce périmètre est attribué plusieurs fois au même rôle.', variant: 'destructive' });
+      return;
+    }
+    const chosen = next.map((entry) => ({ ...entry, scope: scopes.find((scope) => scope.id === entry.scope_id) }));
+    if (chosen.some((entry) =>
+      !entry.scope ||
+      (['global', 'own_records'].includes(entry.scope.scope_key) ? entry.scope_value !== null : !entry.scope_value)
+    ) || (chosen.some((entry) => entry.scope?.scope_key === 'global') && chosen.length > 1)) {
+      toast({ title: 'Périmètres invalides', description: 'Renseignez les valeurs nécessaires et ne combinez pas Global avec des restrictions.', variant: 'destructive' });
+      return;
+    }
+
+    setSavingScopes(true);
+    try {
+      // The RPC enforces admin rights and updates the role scopes and audit
+      // history atomically; no client-side delete/insert sequence.
+      const { error } = await (supabase as any).rpc('replace_access_role_scopes', {
+        p_role_id: selectedRoleId,
+        p_expected: expected,
+        p_next: next,
+        p_reason: scopeReason.trim(),
+      });
+      if (error) throw error;
+      await loadCatalog();
+      toast({ title: 'Périmètres enregistrés', description: 'Le rôle existant a été mis à jour sans modifier sa matrice de permissions.' });
+    } catch (error) {
+      toast({ title: 'Modification impossible', description: getErrorMessage(error, 'Recharger la page et vérifier la fonction de gestion des périmètres.'), variant: 'destructive' });
+    } finally {
+      setSavingScopes(false);
+    }
+  };
 
   const selectedRole = useMemo(
     () => roles.find((role) => role.id === selectedRoleId) ?? null,
@@ -907,9 +983,101 @@ const RolesPermissions = () => {
         <TabsList className="flex h-auto flex-wrap justify-start">
           <TabsTrigger value="permissions">Matrice des permissions</TabsTrigger>
           <TabsTrigger value="roles">Catalogue des rôles</TabsTrigger>
+          <TabsTrigger value="scopes">Configurer les périmètres</TabsTrigger>
           <TabsTrigger value="create">Créer un rôle</TabsTrigger>
           <TabsTrigger value="actions">Catalogue des actions</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="scopes" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Modifier les périmètres d’un rôle existant</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Les périmètres limitent les données accessibles. Leur modification ne change
+                ni les utilisateurs, ni les affectations, ni les autorisations par interface.
+                Les contrôles d'accès effectifs restent appliqués par le serveur.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <label className="block space-y-2 text-sm font-medium">
+                <span>Rôle existant</span>
+                <select value={selectedRoleId} onChange={(event) => setSelectedRoleId(event.target.value)}
+                  disabled={loading || savingScopes || saving}
+                  className="h-10 w-full rounded-md border bg-background px-3">
+                  <option value="">Choisir un rôle</option>
+                  {roles.map((role) => <option key={role.id} value={role.id}>{role.label} ({role.role_key})</option>)}
+                </select>
+              </label>
+              {selectedRole && (
+                <div className="rounded-md border bg-muted/20 p-3 text-sm">
+                  <strong>Configuration enregistrée :</strong> {roleScopeLabels(selectedRole.id)}
+                </div>
+              )}
+              {scopeDraft.map((entry, index) => {
+                const selectedScope = scopes.find((item) => item.id === entry.scope_id);
+                const needsValue = !['global', 'own_records'].includes(selectedScope?.scope_key ?? '');
+                return (
+                  <div className="grid gap-3 rounded-lg border p-3 md:grid-cols-[1fr_1fr_auto]" key={index}>
+                    <label className="space-y-1 text-sm">
+                      <span>Type de périmètre</span>
+                      <select value={entry.scope_id} disabled={savingScopes}
+                        className="h-10 w-full rounded-md border bg-background px-3"
+                        onChange={(event) => setScopeDraft((current) => current.map((item, i) =>
+                          i === index ? { scope_id: event.target.value, scope_value: '' } : item
+                        ))}>
+                        {scopes.map((scope) => <option key={scope.id} value={scope.id}>{scope.label}</option>)}
+                      </select>
+                    </label>
+                    <label className="space-y-1 text-sm">
+                      <span>Valeur autorisée</span>
+                      {selectedScope?.scope_key === 'pole' ? (
+                        <select value={entry.scope_value} disabled={savingScopes}
+                          className="h-10 w-full rounded-md border bg-background px-3"
+                          onChange={(event) => setScopeDraft((current) => current.map((item, i) =>
+                            i === index ? { ...item, scope_value: event.target.value } : item
+                          ))}>
+                          <option value="">Choisir un pôle</option>
+                          {availablePoles.map((pole) => <option key={pole.id} value={pole.id}>{pole.label}</option>)}
+                        </select>
+                      ) : (
+                        <Input value={entry.scope_value} disabled={savingScopes || !needsValue}
+                          placeholder={needsValue ? 'Identifiant de portefeuille, région ou filiale' : 'Sans valeur'}
+                          onChange={(event) => setScopeDraft((current) => current.map((item, i) =>
+                            i === index ? { ...item, scope_value: event.target.value } : item
+                          ))} />
+                      )}
+                    </label>
+                    <Button type="button" variant="outline" className="self-end"
+                      disabled={savingScopes} onClick={() => setScopeDraft((current) => current.filter((_, i) => i !== index))}>
+                      Retirer
+                    </Button>
+                  </div>
+                );
+              })}
+              <Button variant="outline" disabled={!selectedRoleId || savingScopes || scopes.length === 0}
+                onClick={addScope}><Plus className="mr-2 h-4 w-4" />Ajouter un périmètre</Button>
+              <label className="block space-y-2 text-sm font-medium">
+                <span>Motif de modification (journalisé)</span>
+                <Input value={scopeReason} disabled={savingScopes} maxLength={500}
+                  placeholder="Ex. Modification de périmètre validée par la direction"
+                  onChange={(event) => setScopeReason(event.target.value)} />
+              </label>
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button variant="outline" disabled={savingScopes}
+                  onClick={() => {
+                    setScopeDraft(roleScopes.filter((entry) => entry.role_id === selectedRoleId)
+                      .map((entry) => ({ scope_id: entry.scope_id, scope_value: entry.scope_value ?? '' })));
+                    setScopeReason('');
+                  }}>Annuler les modifications</Button>
+                <Button disabled={!selectedRoleId || savingScopes || loading || scopeReason.trim().length < 8}
+                  onClick={() => void saveExistingRoleScopes()}>
+                  {savingScopes && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Enregistrer les périmètres
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="permissions" className="mt-4 space-y-4">
           <Card>
