@@ -618,10 +618,9 @@ export default function SupplierPerformance() {
 
                           <TableCell>
                             <Badge variant="outline">
-                              {statusLabel[
-                                supplier.status
-                              ] ??
-                                supplier.status}
+                              {supplier.status
+                                ? (statusLabel[supplier.status] ?? supplier.status)
+                                : 'Non renseigné'}
                             </Badge>
                           </TableCell>
 
