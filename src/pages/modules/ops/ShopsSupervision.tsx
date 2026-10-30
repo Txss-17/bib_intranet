@@ -16,6 +16,7 @@ import {
   type Shop,
   type ShopStatus,
   useShopOrderSummaries,
+  useShopEvents,
   useShops,
 } from '@/hooks/useShops';
 
@@ -61,10 +62,10 @@ function formatDate(value: string | null | undefined) {
   }).format(date);
 }
 
-function formatCurrency(value: number) {
+function formatCurrency(value: number, currency: string) {
   return new Intl.NumberFormat('fr-FR', {
     style: 'currency',
-    currency: 'EUR',
+    currency,
     maximumFractionDigits: 2,
   }).format(value);
 }
@@ -87,6 +88,9 @@ export default function ShopsSupervision() {
     useShopOrderSummaries();
 
   const [search, setSearch] = useState('');
+  const [historyShop, setHistoryShop] = useState<Shop | null>(null);
+  const { data: historyEvents = [], isLoading: historyLoading, error: historyError } =
+    useShopEvents(historyShop?.id);
   const [statusFilter, setStatusFilter] =
     useState<'all' | ShopStatus>('all');
 
@@ -127,13 +131,14 @@ export default function ShopsSupervision() {
     [shops],
   );
 
-  const totalRevenue = useMemo(() => {
-    return Array.from(
-      orderSummaries?.values() ?? [],
-    ).reduce(
-      (total, summary) => total + summary.revenue,
-      0,
-    );
+  const grossByCurrency = useMemo(() => {
+    const totals: Record<string, number> = {};
+    for (const summary of orderSummaries?.values() ?? []) {
+      for (const [currency, amount] of Object.entries(summary.grossOrdersByCurrency)) {
+        totals[currency] = (totals[currency] ?? 0) + amount;
+      }
+    }
+    return Object.entries(totals).sort(([a], [b]) => a.localeCompare(b));
   }, [orderSummaries]);
 
   const totalOrders = useMemo(() => {
@@ -252,7 +257,9 @@ export default function ShopsSupervision() {
           </p>
 
           <p className="mt-1 text-xs text-muted-foreground">
-            CA cumulé : {formatCurrency(totalRevenue)}
+            Volume brut hors annulations, avant remboursements :{' '}
+            {grossByCurrency.length ? grossByCurrency.map(([currency, amount]) =>
+              formatCurrency(amount, currency)).join(' · ') : '—'}
           </p>
         </div>
       </div>
@@ -429,7 +436,7 @@ export default function ShopsSupervision() {
                     </th>
 
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      CA
+                      Volume brut (avant remboursements)
                     </th>
 
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -452,8 +459,8 @@ export default function ShopsSupervision() {
                     const orderCount =
                       summary?.orders ?? 0;
 
-                    const revenue =
-                      summary?.revenue ?? 0;
+                    const gross = Object.entries(summary?.grossOrdersByCurrency ?? {})
+                      .sort(([a], [b]) => a.localeCompare(b));
 
                     return (
                       <tr
@@ -538,7 +545,8 @@ export default function ShopsSupervision() {
 
                         {/* CA */}
                         <td className="px-5 py-4 text-sm">
-                          {formatCurrency(revenue)}
+                          {gross.length ? gross.map(([currency, amount]) =>
+                            formatCurrency(amount, currency)).join(' · ') : '—'}
                         </td>
 
                         {/* Création */}
@@ -567,6 +575,8 @@ export default function ShopsSupervision() {
                               type="button"
                               className="inline-flex h-8 w-8 items-center justify-center rounded-md border transition hover:bg-muted"
                               title="Voir le cycle de vie"
+                              aria-label={`Voir l'historique de ${shop.name}`}
+                              onClick={() => setHistoryShop(shop)}
                             >
                               <History className="h-4 w-4" />
                             </button>
@@ -597,6 +607,55 @@ export default function ShopsSupervision() {
             </div>
           </div>
         )}
+      {historyShop && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          role="presentation" onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setHistoryShop(null);
+          }}>
+          <section role="dialog" aria-modal="true" aria-labelledby="shop-history-title"
+            className="w-full max-w-2xl rounded-xl border bg-background p-6 shadow-2xl">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 id="shop-history-title" className="text-lg font-semibold">
+                  Historique de la boutique
+                </h2>
+                <p className="text-sm text-muted-foreground">{historyShop.name}</p>
+              </div>
+              <button type="button" className="rounded-md border px-3 py-2 text-sm"
+                onClick={() => setHistoryShop(null)}>Fermer</button>
+            </div>
+            <div className="max-h-[60vh] overflow-y-auto">
+              {historyLoading ? (
+                <p className="text-sm text-muted-foreground">Chargement de l'historique…</p>
+              ) : historyError ? (
+                <p role="alert" className="text-sm text-destructive">
+                  Impossible de consulter l'historique de cette boutique.
+                </p>
+              ) : historyEvents.length === 0 ? (
+                <p className="text-sm text-muted-foreground">Aucun changement de statut enregistré.</p>
+              ) : (
+                <ol className="space-y-3">
+                  {historyEvents.map((event) => (
+                    <li key={event.id} className="rounded-lg border p-3">
+                      <div className="flex flex-wrap justify-between gap-2">
+                        <span className="font-medium">
+                          {event.from_status ? (SHOP_STATUS_LABELS[event.from_status as ShopStatus] ?? event.from_status) : 'Création'}
+                          {' → '}
+                          {SHOP_STATUS_LABELS[event.to_status as ShopStatus] ?? event.to_status}
+                        </span>
+                        <time className="text-xs text-muted-foreground" dateTime={event.performed_at}>
+                          {formatDate(event.performed_at)}
+                        </time>
+                      </div>
+                      {event.reason && <p className="mt-2 text-sm">{event.reason}</p>}
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }
