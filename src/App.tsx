@@ -222,6 +222,7 @@ import ProductEngineeringDashboard from "./pages/modules/product/ProductEngineer
 import ProductPlanningWorkspace from "./components/product/ProductPlanningWorkspace";
 import MarketingWorkflowPage from "./components/marketing/MarketingWorkflowPage";
 import CorrectiveActions from "./pages/modules/audit/CorrectiveActions";
+import SupportCoordinationPage from "./components/support/SupportCoordinationPage";
 import ProductStudio from "./pages/modules/product/ProductStudio";
 import ProductIntegrations from "./pages/modules/product/ProductIntegrations";
 import ProductDocumentation from "./pages/modules/product/ProductDocumention";
@@ -655,6 +656,8 @@ const App = () => (
                   path="/pole/support/escalations"
                   element={<SupportEscalations />}
                 />
+                <Route path="/pole/support/compliance" element={<SupportCoordinationPage mode="compliance" />} />
+                <Route path="/pole/support/onboarding" element={<SupportCoordinationPage mode="onboarding" />} />
 
                 {/* ====================================================
                     7. MARKETING & COMMUNICATION
