@@ -20,7 +20,7 @@ test('product and engineering hub organizes work as a delivery cycle', () => {
 test('product hub cannot claim operational CI or service health from record approvals', () => {
   const home = read('src/pages/modules/product/ProductEngineeringDashboard.tsx');
   assert.match(home, /Dossiers ≠ tests exécutés ≠ versions déployées/);
-  assert.match(home, /Les vraies exécutions devront être raccordées aux preuves CI\/CD/);
+  assert.match(home, /Les rapports CI\/CD et les environnements réels doivent être vérifiés séparément/);
   assert.match(home, /ne mesure pas la disponibilité des applications/);
   const plan = read('src/components/product/ProductPlanningWorkspace.tsx');
   assert.match(plan, /Une fiche validée ne publie ni version, ni fonctionnalité/);
