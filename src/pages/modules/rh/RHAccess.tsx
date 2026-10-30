@@ -805,6 +805,7 @@ const RHAccess = () => {
             assignment.status ===
               'active',
         );
+      // Updating an existing assignment is not a grant outside the allowed role scopes.
 
       const payload = {
         employee_id:
@@ -1739,8 +1740,10 @@ const RHAccess = () => {
 
               <Select
                 value={selectedRoleId}
-                onValueChange={
-                  setSelectedRoleId
+                onValueChange={(roleId) => {
+                  setSelectedRoleId(roleId);
+                  setSelectedScopeId('none');
+                  setSelectedScopeValue('');
                 }
                 disabled={
                   !selectedEmployee ||
