@@ -13,18 +13,10 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { positionAccess } from '@/data/positionAccess';
 import { useSecurityAccess } from '@/hooks/useSecurityData';
 
-type Position = keyof typeof positionAccess;
-
-const isKnownPosition = (
-  position: string,
-): position is Position =>
-  Object.prototype.hasOwnProperty.call(positionAccess, position);
-
 export default function SecurityAccess() {
-  const { data: users = [], isLoading } = useSecurityAccess();
+  const { data: users = [], isLoading, isError, refetch } = useSecurityAccess();
   const [query, setQuery] = useState('');
 
   const filteredUsers = useMemo(() => {
@@ -80,8 +72,8 @@ export default function SecurityAccess() {
             </CardTitle>
 
             <p className="mt-1 text-sm text-muted-foreground">
-              Habilitations calculées selon le poste et les périmètres
-              autorisés.
+              Pôles déclarés dans les profils. Les habilitations effectives dépendent des rôles,
+              des périmètres et des contrôles serveur, et ne peuvent pas être déduites du poste seul.
             </p>
           </div>
 
@@ -104,6 +96,11 @@ export default function SecurityAccess() {
                 Chargement des utilisateurs…
               </p>
             </div>
+          ) : isError ? (
+            <div role="alert" className="space-y-3 p-6 text-center">
+              <p className="text-destructive">Impossible de charger l’annuaire des accès.</p>
+              <button className="rounded-md border px-3 py-2 text-sm" onClick={() => void refetch()}>Réessayer</button>
+            </div>
           ) : filteredUsers.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-center">
               <Users className="mb-3 h-8 w-8 text-muted-foreground" />
@@ -123,17 +120,14 @@ export default function SecurityAccess() {
                   <TableRow>
                     <TableHead>Utilisateur</TableHead>
                     <TableHead>Poste</TableHead>
-                    <TableHead>Pôles accessibles</TableHead>
-                    <TableHead>Écrans</TableHead>
+                    <TableHead>Pôles déclarés</TableHead>
+                    <TableHead>Permissions effectives</TableHead>
                   </TableRow>
                 </TableHeader>
 
                 <TableBody>
                   {filteredUsers.map((user) => {
-                    const access = user.position && isKnownPosition(user.position)
-                      ? positionAccess[user.position]
-                      : null;
-
+                    const declaredPoles = user.poles ?? [];
                     return (
                       <TableRow key={user.id}>
                         <TableCell>
@@ -164,7 +158,7 @@ export default function SecurityAccess() {
 
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
-                            {access?.poles.slice(0, 4).map((pole) => (
+                            {declaredPoles.slice(0, 4).map((pole) => (
                               <Badge
                                 key={pole}
                                 variant="secondary"
@@ -174,18 +168,18 @@ export default function SecurityAccess() {
                               </Badge>
                             ))}
 
-                            {access && access.poles.length > 4 && (
+                            {declaredPoles.length > 4 && (
                               <Badge
                                 variant="outline"
                                 className="text-xs"
                               >
-                                +{access.poles.length - 4}
+                                +{declaredPoles.length - 4}
                               </Badge>
                             )}
 
-                            {!access && (
+                            {declaredPoles.length === 0 && (
                               <span className="text-xs text-muted-foreground">
-                                Aucun périmètre défini
+                                Aucun pôle déclaré
                               </span>
                             )}
                           </div>
