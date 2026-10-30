@@ -28,7 +28,8 @@ export default function Campaigns() {
   });
   const [formFiles, setFormFiles] = useState<{ name: string; url: string; type: string; size: number }[]>([]);
 
-  const { data: campaigns = [], isLoading } = useCampaigns(search || undefined);
+  const { data: campaigns = [], isLoading, isError, refetch } = useCampaigns(search || undefined);
+  const [submitting, setSubmitting] = useState(false);
   const createCampaign = useCreateCampaign();
   const updateCampaign = useUpdateCampaign();
   const { data: allAttachments = [] } = useMediaAttachments('campaign');
@@ -55,24 +56,49 @@ export default function Campaigns() {
     setFormOpen(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingId) {
-      updateCampaign.mutate({ id: editingId, ...formData }, { onSuccess: () => toast.success('Campagne modifiée') });
-      saveAttachments.mutate({ entityType: 'campaign', entityId: editingId, files: formFiles });
-    } else {
-      const num = `CMP-${crypto.randomUUID().slice(0,8).toUpperCase()}`;
-      createCampaign.mutate({ campaign_number: num, spent: '0 €', ...formData }, {
-        onSuccess: (data: any) => {
-          toast.success('Campagne créée');
-          if (data?.id) saveAttachments.mutate({ entityType: 'campaign', entityId: data.id, files: formFiles });
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      let campaignId = editingId;
+      if (editingId) {
+        await updateCampaign.mutateAsync({ id: editingId, ...formData });
+        toast.success('Campagne modifiée');
+      } else {
+        const num = `CMP-${crypto.randomUUID().slice(0, 8).toUpperCase()}`;
+        const created = await createCampaign.mutateAsync({ campaign_number: num, spent: '0 €', ...formData });
+        campaignId = created?.id ?? null;
+        if (!campaignId) throw new Error('La campagne a été enregistrée sans identifiant confirmé.');
+        toast.success('Campagne créée');
+      }
+
+      // Campaign persistence is confirmed before closing the editor.
+      setFormOpen(false);
+      if (campaignId) {
+        try {
+          await saveAttachments.mutateAsync({
+            entityType: 'campaign', entityId: campaignId, files: formFiles,
+          });
+        } catch {
+          toast.error('Campagne enregistrée, mais pièces jointes non confirmées. Vérifier les documents dans Drive BIB.');
         }
-      });
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Impossible d’enregistrer la campagne.');
+    } finally {
+      setSubmitting(false);
     }
-    setFormOpen(false);
   };
 
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  if (isError) return (
+    <div role="alert" className="space-y-3 rounded-lg border p-6">
+      <p className="text-destructive">Impossible de récupérer les campagnes marketing.</p>
+      <Button type="button" variant="outline" onClick={() => void refetch()}>Réessayer</Button>
+    </div>
+  );
 
   return (
     <div className="space-y-6">
