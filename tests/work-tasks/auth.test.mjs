@@ -6,24 +6,28 @@ import ts from 'typescript';
 const compile = path => ts.transpileModule(fs.readFileSync(new URL(path, import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,jsx:ts.JsxEmit.React}}).outputText;
 const deferred = () => { let resolve,reject; const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject}; };
 function providerHarness() {
+ const timers=new Map();let timerId=0,locked=false;const cleanups=[];
  const state=[],refs=[],effects=[],requests=[]; let cursor=0, refCursor=0, started=false, listener;
- const calls={cleared:0,cancelled:0,selected:''};
+ const calls={cleared:0,cancelled:0,selected:'',readsInsideAuth:0,unsubscribed:false};
  const react={createContext:()=>({Provider:'provider'}),useContext:()=>{},
   useState:initial=>{const i=cursor++;if(!(i in state))state[i]=initial;return [state[i],v=>{state[i]=typeof v==='function'?v(state[i]):v;}];},
   useRef:initial=>{const i=refCursor++;return refs[i]??=( {current:initial} );},useCallback:f=>f,
   useEffect:f=>{if(!started)effects.push(f);},createElement:(type,props)=>({type,props})};
- const supabase={from:()=>({select:s=>{calls.selected=s;return {eq:(_,id)=>({single:()=>{const d=deferred();requests.push({id,...d});return d.promise;}})};}}),
-  auth:{onAuthStateChange:fn=>{listener=fn;return {data:{subscription:{unsubscribe(){}}}};},signOut:async()=>({error:null})}};
- const exports={};vm.runInNewContext(compile('../../src/hooks/useAuth.tsx'),{exports,React:react,queueMicrotask,require:name=>name==='react'?react:name==='@tanstack/react-query'?{useQueryClient:()=>({clear:()=>calls.cleared++,cancelQueries:async()=>calls.cancelled++})}:{supabase}});
+ const supabase={from:()=>{if(locked)calls.readsInsideAuth++;return {select:s=>{calls.selected=s;return {eq:(_,id)=>({abortSignal(signal){this.signal=signal;return this;},single(){const d=deferred();requests.push({id,signal:this.signal,...d});return d.promise;}})};}};},
+  auth:{onAuthStateChange:fn=>{listener=fn;return {data:{subscription:{unsubscribe(){calls.unsubscribed=true;}}}};},signOut:async()=>({error:null})}};
+ const exports={};vm.runInNewContext(compile('../../src/hooks/useAuth.tsx'),{exports,React:react,queueMicrotask,AbortController,setTimeout:(fn,delay)=>{const id=++timerId;timers.set(id,{fn,delay});return id;},clearTimeout:id=>timers.delete(id),require:name=>name==='react'?react:name==='@tanstack/react-query'?{useQueryClient:()=>({clear:()=>calls.cleared++,cancelQueries:async()=>calls.cancelled++})}:{supabase}});
  const render=()=>{cursor=0;refCursor=0;return exports.AuthProvider({children:null}).props.value;};
- render();effects.forEach(f=>f());started=true;
- return {render,requests,calls,emit:async id=>{listener('SIGNED_IN',id?{user:{id}}:null);await Promise.resolve();},flush:async()=>{await Promise.resolve();await Promise.resolve();},cleanup:()=>effects.forEach(()=>{})};
+ render();effects.forEach(f=>cleanups.push(f()));started=true;
+ const runTimers=delay=>{for(const [id,timer]of [...timers])if(timer.delay===delay){timers.delete(id);timer.fn();}};
+ const flush=async()=>{for(let i=0;i<8;i++)await Promise.resolve();};
+ return {render,requests,calls,emit:async(id,event='SIGNED_IN')=>{locked=true;listener(event,id?{user:{id}}:null);await flush();locked=false;runTimers(0);await flush();},flush,
+  timeout:async()=>{runTimers(15000);await flush();},cleanup:()=>cleanups.forEach(fn=>fn?.())};
 }
 test('loads the real app origin and waits for the matching profile',async()=>{
  const h=providerHarness();await h.emit('a');assert.equal(h.render().loading,true);assert.equal(h.render().profile,null);
  assert.match(h.calls.selected,/app_origin/);
  h.requests[0].resolve({data:{id:'a',app_origin:'connect',test_account:false},error:null});await h.flush();
- assert.equal(h.render().loading,false);assert.equal(h.render().profile.id,'a');
+ assert.equal(h.render().loading,false);assert.equal(h.render().profile.id,'a');assert.equal(h.calls.readsInsideAuth,0);
 });
 test('late profile from the previous account cannot replace the current identity',async()=>{
  const h=providerHarness();await h.emit('a');await h.emit('b');
@@ -41,6 +45,24 @@ test('a failed profile request fails closed and supports retry',async()=>{
  assert.equal(h.render().loading,false);assert.equal(h.render().profile,null);assert.ok(h.render().profileError);
  const retry=h.render().refreshProfile();h.requests[1].resolve({data:{id:'a',app_origin:'connect'},error:null});await retry;
  assert.equal(h.render().profileError,null);assert.equal(h.render().profile.id,'a');
+});
+test('restoring an existing session reads the profile after the Auth callback completes',async()=>{
+ const h=providerHarness();await h.emit('existing','INITIAL_SESSION');
+ assert.equal(h.calls.readsInsideAuth,0);assert.equal(h.requests.length,1);
+ h.requests[0].resolve({data:{id:'existing',app_origin:'connect',hr_status:'active'},error:null});await h.flush();
+ assert.equal(h.render().loading,false);assert.equal(h.render().profile.id,'existing');h.cleanup();
+});
+test('a stalled profile read offers retry and cannot overwrite the recovered profile later',async()=>{
+ const h=providerHarness();await h.emit('a');await h.timeout();
+ assert.equal(h.requests[0].signal.aborted,true);assert.equal(h.render().loading,false);assert.ok(h.render().profileError);
+ const retry=h.render().refreshProfile();h.requests[1].resolve({data:{id:'a',app_origin:'connect',first_name:'Recovered'},error:null});await retry;
+ h.requests[0].resolve({data:{id:'a',app_origin:'bos',first_name:'Late'},error:null});await h.flush();
+ assert.equal(h.render().profile.first_name,'Recovered');assert.equal(h.render().profileError,null);h.cleanup();
+});
+test('unmount cancels scheduled identity work and ignores reads still in flight',async()=>{
+ const h=providerHarness();await h.emit('a');h.cleanup();
+ h.requests[0].resolve({data:{id:'a',app_origin:'connect'},error:null});await h.flush();
+ assert.equal(h.calls.unsubscribed,true);assert.equal(h.render().profile,null);
 });
 function guard(auth) {
  const react={createElement:(type,props,...children)=>({type,props,children}),Fragment:'fragment'};const exports={};

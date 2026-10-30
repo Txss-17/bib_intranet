@@ -254,6 +254,7 @@ const AUDIT_OWNERS = [
 const MARKETPLACE_OWNERS = [
   'ceo',
   'responsable_marketplace',
+  'directeur_marketplace',
   'gestionnaire_boutiques',
   'gestionnaire_vendeurs',
   'gestionnaire_commandes',
@@ -333,18 +334,21 @@ export const RESTRICTED_PAGES: Record<string, string[]> = {
   'marketplace.portfolio': [
     'ceo',
     'responsable_marketplace',
+    'directeur_marketplace',
     'gestionnaire_boutiques',
     'gestionnaire_vendeurs',
   ],
   'marketplace.stores': [
     'ceo',
     'responsable_marketplace',
+    'directeur_marketplace',
     'gestionnaire_boutiques',
     'gestionnaire_vendeurs',
   ],
   'marketplace.opportunities': [
     'ceo',
     'responsable_marketplace',
+    'directeur_marketplace',
     'gestionnaire_boutiques',
     'gestionnaire_vendeurs',
   ],
@@ -352,12 +356,14 @@ export const RESTRICTED_PAGES: Record<string, string[]> = {
   'marketplace.subscriptions': [
     'ceo',
     'responsable_marketplace',
+    'directeur_marketplace',
     'gestionnaire_boutiques',
     'gestionnaire_vendeurs',
   ],
   'marketplace.products': [
     'ceo',
     'responsable_marketplace',
+    'directeur_marketplace',
     'gestionnaire_boutiques',
     'gestionnaire_vendeurs',
   ],
