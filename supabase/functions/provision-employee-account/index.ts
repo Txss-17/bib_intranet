@@ -611,7 +611,7 @@ Deno.serve(
         'https://workspace.brand-in-a-box.space',
       ]);
       const inviteOrigin = (Deno.env.get('BIB_INTRANET_PUBLIC_URL') ??
-        'https://bib-intranet.lovable.app').trim().replace(/\\/+$/, '');
+        'https://bib-intranet.lovable.app').trim().replace(/[/]+$/, '');
       if (!inviteOrigins.has(inviteOrigin))
         return json({ error: 'Origine d\'invitation RH non autorisée.' }, 503);
 
