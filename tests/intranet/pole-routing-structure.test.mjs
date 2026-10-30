@@ -23,17 +23,20 @@ test('les principales sous-pages autrefois redirigées disposent de leurs propre
   }
 });
 
-test('les contrôles de sécurité utilisent des écrans contextualisés et des registres indépendants', () => {
+test('les sous-pages sécurité utilisent les sources et composants propres à leur fonction', () => {
+  for (const [page, marker] of [
+    ['SecurityInfrastructure', 'useSecurityFunctionObservations'],
+    ['SecurityEnvironments', 'useSecurityDeployments'],
+    ['SecurityVPN', 'useSecurityVpnAccess'],
+  ]) assert.match(read(`src/pages/modules/security/${page}.tsx`), new RegExp(marker));
   for (const [page, kind] of [
-    ['SecurityInfrastructure', 'infrastructure'], ['SecurityEnvironments', 'environments'],
-    ['SecurityVPN', 'vpn'], ['SecurityCode', 'code'],
-    ['SecurityConsole', 'console'], ['SecurityDocumentation', 'documentation'],
-  ]) {
-    assert.match(read(`src/pages/modules/security/${page}.tsx`), new RegExp(`kind="${kind}"`));
-  }
+    ['SecurityCode', 'code'],
+    ['SecurityConsole', 'console'],
+    ['SecurityDocumentation', 'documentation'],
+  ]) assert.match(read(`src/pages/modules/security/${page}.tsx`), new RegExp(`kind="${kind}"`));
   const component = read('src/components/security/SecurityControlWorkspace.tsx');
-  assert.match(component, /ModuleWorkspace pageId={d.pageId}/);
-  assert.match(component, /canViewPage\(d.pageId\)/);
+  assert.match(component, /ModuleWorkspace pageId=\{d\.page\}/);
+  assert.match(component, /canViewPage\(d\.page\)/);
 });
 
 test('les sous-pages répertoriées ont un accès de navigation ou un routage dédié', () => {
