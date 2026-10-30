@@ -95,6 +95,9 @@ jobs:
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/intranet/identity.sql
           psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/intranet/gateway-replies.sql
 
+      - name: Test existing account access repair and preserved revocations
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/intranet/existing-accounts.sql
+
       - name: Test Support workflow, customer context and resolution metrics
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/support-tickets/workflow.sql
 

@@ -54,6 +54,8 @@ test('server migrations reconstruct the frontend registry including domain schem
    return {...afterDispute,...(overrides.get(page.id)||{})};
  });
  assert.deepEqual(effective,registry);
+ const marketplace=JSON.parse(read('drizzle/migrations/0052_restore_existing_account_access.sql').match(/\$marketplace_lead_pages\$([\s\S]*?)\$marketplace_lead_pages\$/)[1]);
+ assert.deepEqual(seed.map(page=>page.id===dispute.id?dispute:marketplace.includes(page.id)?{...page,restrictedRoles:[...page.restrictedRoles,'directeur_marketplace']}:page),registry);
  for(const r of registry)for(const alias of r.permissionAliases||[])assert.equal(intranet.moduleById(alias).id,r.id);
 });
 test('dynamic form values preserve zero, optional numbers and line data',()=>{

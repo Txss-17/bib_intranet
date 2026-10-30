@@ -7,7 +7,7 @@ CREATE SCHEMA auth;
 CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
 CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $$ SELECT nullif(current_setting('request.jwt.claim.role',true),'') $$;
 GRANT USAGE ON SCHEMA public,auth TO authenticated,service_role;
-CREATE TYPE public.pole_id AS ENUM ('ops','finance','direction','rh','audit','compliance','marketing','rse','security','product','data','supplier','support','marketplace');
+CREATE TYPE public.pole_id AS ENUM ('ops','finance','direction','rh','audit','compliance','marketing','rse','security','product','data','supplier','support','marketplace','tech','lifecycle','risk');
 CREATE TABLE public.profiles(id uuid PRIMARY KEY,first_name text DEFAULT 'Prénom',last_name text DEFAULT 'Nom',email text DEFAULT 'staff@bib.test',position text,poles public.pole_id[],seniority text,test_account boolean DEFAULT false,hr_status text DEFAULT 'active',app_origin text DEFAULT 'connect');
 CREATE TABLE public.user_roles(user_id uuid,role text);
 CREATE FUNCTION public.has_role(u uuid,r text) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT EXISTS(SELECT 1 FROM public.user_roles WHERE user_id=u AND role=r) $$;
