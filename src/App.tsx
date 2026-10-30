@@ -221,6 +221,7 @@ import ESGReports from "./pages/modules/rse/ESGReports";
 import ProductEngineeringDashboard from "./pages/modules/product/ProductEngineeringDashboard";
 import ProductPlanningWorkspace from "./components/product/ProductPlanningWorkspace";
 import MarketingWorkflowPage from "./components/marketing/MarketingWorkflowPage";
+import CorrectiveActions from "./pages/modules/audit/CorrectiveActions";
 import ProductStudio from "./pages/modules/product/ProductStudio";
 import ProductIntegrations from "./pages/modules/product/ProductIntegrations";
 import ProductDocumentation from "./pages/modules/product/ProductDocumention";
@@ -732,7 +733,7 @@ const App = () => (
                 <Route path="/pole/audit/sanctions" element={<Sanctions />} />
                 <Route
                   path="/pole/audit/corrective-actions"
-                  element={<Navigate to="/pole/audit/nonconformities" replace />}
+                  element={<CorrectiveActions />}
                 />
 
                 {/* ====================================================
