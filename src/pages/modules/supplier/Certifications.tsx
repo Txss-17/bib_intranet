@@ -42,7 +42,7 @@ export default function Certifications() {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const { data: certifications = [], isLoading } = useCertifications();
+  const { data: certifications = [], isLoading, isError, refetch } = useCertifications();
 
   const filteredCertifications = certifications.filter((cert) => {
     const supplierName = cert.suppliers?.name || '';
@@ -68,7 +68,7 @@ export default function Certifications() {
   };
 
   const getExpiryInfo = (expiryDate: string | null) => {
-    if (!expiryDate) return { text: 'Pas de date', color: 'text-muted-foreground', progress: 50 };
+    if (!expiryDate) return { text: 'Pas de date', color: 'text-muted-foreground', progress: 0 };
     const days = differenceInDays(new Date(expiryDate), new Date());
     if (days < 0) return { text: `Expiré depuis ${Math.abs(days)} jours`, color: 'text-destructive', progress: 0 };
     if (days <= 30) return { text: `Expire dans ${days} jours`, color: 'text-destructive', progress: 10 };
@@ -88,6 +88,11 @@ export default function Certifications() {
     return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
   }
 
+  if (isError) return <div role="alert" className="space-y-3 rounded-lg border p-6">
+    <p className="text-destructive">Le registre des certifications est indisponible ; aucune validité n’est confirmée.</p>
+    <Button variant="outline" onClick={() => void refetch()}>Réessayer</Button>
+  </div>;
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-start justify-between">
@@ -95,7 +100,7 @@ export default function Certifications() {
           <h1 className="text-xl font-semibold text-foreground">Certifications</h1>
           <p className="text-sm text-muted-foreground mt-1">Suivi des certifications fournisseurs et produits</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />Ajouter certification</Button>
+        <p className="text-xs text-muted-foreground">Toute nouvelle certification doit être enregistrée avec preuve dans le circuit fournisseur autorisé.</p>
       </div>
 
       {(expiringCount > 0 || expiredCount > 0) && (
@@ -188,7 +193,7 @@ export default function Certifications() {
                 <div className="flex flex-col items-end gap-2">
                   <p className={cn('text-xs', expiryInfo.color)}>{expiryInfo.text}</p>
                   <div className="w-24"><Progress value={expiryInfo.progress} className="h-1" /></div>
-                  <Button variant="ghost" size="sm"><ExternalLink className="h-3 w-3 mr-1" />Voir</Button>
+                  <span className="text-xs text-muted-foreground">Preuve et validité à vérifier dans le dossier fournisseur</span>
                 </div>
               </div>
             </div>
