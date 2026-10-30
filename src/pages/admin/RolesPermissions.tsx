@@ -1233,9 +1233,18 @@ const RolesPermissions = () => {
                           <option value="">Choisir un pôle</option>
                           {availablePoles.map((pole) => <option key={pole.id} value={pole.id}>{pole.name}</option>)}
                         </select>
+                      ) : selectedScope?.scope_key === 'subsidiary' ? (
+                        <select value={entry.scope_value} disabled={savingScopes || !isSuperAdmin || businessSubsidiaries.length === 0}
+                          className="h-10 w-full rounded-md border bg-background px-3"
+                          onChange={(event) => setScopeDraft((current) => current.map((item, i) =>
+                            i === index ? { ...item, scope_value: event.target.value } : item
+                          ))}>
+                          <option value="">Choisir une entité BIB vérifiée</option>
+                          {businessSubsidiaries.map((entity) => <option key={entity} value={entity}>{entity}</option>)}
+                        </select>
                       ) : (
                         <Input value={entry.scope_value} disabled={savingScopes || !needsValue}
-                          placeholder={needsValue ? 'Identifiant de portefeuille, région ou filiale' : 'Sans valeur'}
+                          placeholder={needsValue ? 'Identifiant de portefeuille ou région' : 'Sans valeur'}
                           onChange={(event) => setScopeDraft((current) => current.map((item, i) =>
                             i === index ? { ...item, scope_value: event.target.value } : item
                           ))} />
