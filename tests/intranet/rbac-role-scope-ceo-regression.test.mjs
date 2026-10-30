@@ -1,0 +1,57 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+const read = path => readFileSync(new URL('../../' + path, import.meta.url), 'utf8');
+
+test('role configuration buttons change the active tab', () => {
+  const page = read('src/pages/admin/RolesPermissions.tsx');
+  assert.match(page, /<Tabs value=\{activeTab\} onValueChange=\{setActiveTab\}>/);
+  assert.match(page, /setSelectedRoleId\(role\.id\); setActiveTab\('permissions'\)/);
+  assert.match(page, /setSelectedRoleId\(role\.id\); setActiveTab\('scopes'\)/);
+});
+
+test('scope catalogue includes existing assignments and canonical pole options', () => {
+  const page = read('src/pages/admin/RolesPermissions.tsx');
+  assert.match(page, /Catalogue des types de périmètre/);
+  assert.match(page, /Périmètres déjà attribués aux rôles/);
+  assert.match(page, /availablePoles\.map\(\(pole\) => <Badge/);
+  assert.match(page, /replace_access_role_scopes/);
+  assert.match(page, /!isSuperAdmin \|\| !selectedRoleId/);
+});
+
+test('HR uses a role-bound scope/value and will not grant unrestricted CEO', () => {
+  const page = read('src/pages/modules/rh/RHAccess.tsx');
+  assert.match(page, /\.from\('access_role_scopes'\)/);
+  assert.match(page, /permittedScopeAssignments\.some/);
+  assert.match(page, /scope_value: selectedScopeId === 'none' \? null : assignedScopeValue/);
+  assert.match(page, /role\.role_key === 'ceo'/);
+  assert.match(page, /selectedRole\.role_key === 'ceo'/);
+  assert.match(page, /setSelectedScopeValue\(''\)/);
+});
+
+test('CEO migration preserves audit history and fixes its assigned role', () => {
+  const migration = read('drizzle/migrations/0056_ceo_canonical_assignment.sql');
+  assert.match(migration, /role_key='cei'/);
+  assert.match(migration, /role_key='ceo'/);
+  assert.match(migration, /ceo_role_canonicalisation/);
+  assert.match(read('drizzle/migrations/0057_archive_duplicate_ceo_role.sql'), /legacy_role_deactivation/);
+});
+
+test('all 14 poles are available to the canonical CEO, with additive enum migration', () => {
+  const schema = read('drizzle/migrations/0058_ceo_canonical_poles.sql');
+  const profile = read('drizzle/migrations/0059_ceo_profile_poles.sql');
+  const types = read('src/integrations/supabase/types.ts');
+  for (const pole of ['marketplace','support','product','data','security']) {
+    assert.ok(schema.includes("'" + pole + "'"));
+    assert.ok(profile.includes("'" + pole + "'"));
+    assert.ok(types.includes('"' + pole + '"'));
+  }
+  assert.match(profile, /ceo_pole_catalogue_alignment/);
+});
+
+test('server-side guard protects CEO and assigned role scope', () => {
+  const trigger = read('drizzle/migrations/0060_guard_access_assignment_scopes.sql');
+  assert.match(trigger, /Only a technical administrator may modify the CEO assignment/);
+  assert.match(trigger, /The requested scope is not configured for this role/);
+  assert.match(trigger, /BEFORE INSERT OR UPDATE OR DELETE ON public\.access_assignments/);
+});
