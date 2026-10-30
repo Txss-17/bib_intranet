@@ -52,6 +52,24 @@ jobs:
         id: dependencies
         run: npm ci
 
+      - name: Prove release preflights fail closed on an empty PostgreSQL
+        run: |
+          set -euo pipefail
+          for target in platform intranet; do
+            output="$(mktemp)"
+            if psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "ops/release/${target}-preflight.sql" > "$output" 2>&1; then
+              cat "$output"
+              echo "Preflight ${target} unexpectedly approved the empty CI database"
+              exit 1
+            fi
+            if ! grep -q "BIB_${target^^}_STAGING_NOT_READY" "$output"; then
+              cat "$output"
+              echo "Preflight ${target} failed without its expected missing-schema message"
+              exit 1
+            fi
+            rm -f "$output"
+          done
+
       - name: Test restock contract
         run: npm run test:restock
 
