@@ -1,5 +1,6 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Activity,
   AlertCircle,
@@ -183,6 +184,8 @@ const RolesPermissions = () => {
   const [roleScopes, setRoleScopes] = useState<RoleScopeRow[]>([]);
 
   const [selectedRoleId, setSelectedRoleId] = useState('');
+  const [activeTab, setActiveTab] = useState('permissions');
+  const [roleAssignmentCounts, setRoleAssignmentCounts] = useState<Record<string, number>>({});
   const [search, setSearch] = useState('');
   const [moduleFilter, setModuleFilter] = useState('all');
   const [poleFilter, setPoleFilter] = useState('all');
@@ -211,6 +214,7 @@ const RolesPermissions = () => {
         permissionsResult,
         roleScopesResult,
         scopesResult,
+        assignmentsResult,
       ] = await Promise.all([
         supabase
           .from('access_roles')
@@ -254,6 +258,8 @@ const RolesPermissions = () => {
           .from('access_scopes')
           .select('id, scope_key, label, scope_type')
           .order('label'),
+
+        supabase.from('access_assignments').select('role_id, status').eq('status', 'active'),
       ]);
 
       const error =
@@ -262,7 +268,8 @@ const RolesPermissions = () => {
         actionsResult.error ||
         permissionsResult.error ||
         roleScopesResult.error ||
-        scopesResult.error;
+        scopesResult.error ||
+        assignmentsResult.error;
 
       if (error) throw error;
 
@@ -283,6 +290,11 @@ const RolesPermissions = () => {
       setPermissions(nextPermissions);
       setRoleScopes((roleScopesResult.data ?? []) as RoleScopeRow[]);
       setScopes((scopesResult.data ?? []) as ScopeRow[]);
+      const counts: Record<string, number> = {};
+      for (const assignment of assignmentsResult.data ?? []) {
+        counts[assignment.role_id] = (counts[assignment.role_id] ?? 0) + 1;
+      }
+      setRoleAssignmentCounts(counts);
 
       setSelectedRoleId((current) =>
         current && nextRoles.some((role) => role.id === current)
@@ -338,7 +350,7 @@ const RolesPermissions = () => {
   }, [roleScopes, selectedRoleId]);
 
   const addScope = () => {
-    const scope = scopes.find((item) => item.scope_key === 'pole') ?? scopes[0];
+    const scope = scopes.find((item) => item.scope_key === 'pole') ?? scopes.find((item) => item.scope_key === 'global');
     if (!scope) return;
     setScopeDraft((current) => [...current, { scope_id: scope.id, scope_value: '' }]);
   };
@@ -984,15 +996,57 @@ const RolesPermissions = () => {
         </Card>
       </div>
 
-      <Tabs defaultValue="permissions">
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="flex h-auto flex-wrap justify-start">
           <TabsTrigger value="permissions">Matrice des permissions</TabsTrigger>
           <TabsTrigger value="roles">Catalogue des rôles</TabsTrigger>
           <TabsTrigger value="scopes">Configurer les périmètres</TabsTrigger>
+          <TabsTrigger value="scope-catalog">Catalogue des périmètres</TabsTrigger>
           <TabsTrigger value="create">Créer un rôle</TabsTrigger>
           <TabsTrigger value="actions">Catalogue des actions</TabsTrigger>
         </TabsList>
 
+        <TabsContent value="scope-catalog" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Catalogue des types de périmètre</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Un type de périmètre est une règle de portée. Pour créer un périmètre concret,
+                choisissez le type, sa valeur et le rôle destinataire dans « Configurer les périmètres ».
+                RH ne peut attribuer que les périmètres autorisés pour le rôle.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="overflow-x-auto rounded-lg border">
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b bg-muted/40">
+                    <th className="p-3 text-left">Type</th><th className="p-3 text-left">Code</th><th className="p-3 text-left">Utilisation</th>
+                  </tr></thead>
+                  <tbody>
+                    {scopes.map((scope) => <tr key={scope.id} className="border-b last:border-0">
+                      <td className="p-3 font-medium">{scope.label}</td>
+                      <td className="p-3 font-mono text-xs">{scope.scope_key}</td>
+                      <td className="p-3">{scope.scope_key === 'pole' ? 'Choisir un des 14 pôles BIB' :
+                        scope.scope_key === 'global' ? 'Tous les enregistrements autorisés par le rôle' :
+                        scope.scope_key === 'own_records' ? 'Uniquement les dossiers du collaborateur' :
+                        scope.scope_key === 'portfolio' ? 'Identifiant de portefeuille autorisé' :
+                        scope.scope_key === 'region' ? 'Code région' :
+                        scope.scope_key === 'subsidiary' ? 'Identifiant de filiale' :
+                        'Type historique non pris en charge par l’éditeur : revue technique nécessaire'}</td>
+                    </tr>)}
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Ne pas créer arbitrairement un nouveau type : les fonctions de contrôle serveur doivent
+                le connaître avant qu'il puisse limiter effectivement les données.
+              </p>
+              <Button type="button" onClick={() => setActiveTab('scopes')}>
+                <Plus className="mr-2 h-4 w-4" />Créer et attribuer un périmètre à un rôle
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
         <TabsContent value="scopes" className="mt-4 space-y-4">
           <Card>
             <CardHeader>
@@ -1030,7 +1084,7 @@ const RolesPermissions = () => {
                         onChange={(event) => setScopeDraft((current) => current.map((item, i) =>
                           i === index ? { scope_id: event.target.value, scope_value: '' } : item
                         ))}>
-                        {scopes.map((scope) => <option key={scope.id} value={scope.id}>{scope.label}</option>)}
+                        {scopes.filter(scope => ['global', 'pole', 'portfolio', 'region', 'own_records', 'subsidiary'].includes(scope.scope_key)).map((scope) => <option key={scope.id} value={scope.id}>{scope.label}</option>)}
                       </select>
                     </label>
                     <label className="space-y-1 text-sm">
@@ -1403,6 +1457,7 @@ const RolesPermissions = () => {
           <Card>
             <CardHeader>
               <CardTitle>Catalogue des rôles</CardTitle>
+              <p className="text-xs text-muted-foreground">Le rôle ne donne aucun accès tant qu'il n'est pas effectivement attribué à un compte actif via RH.</p>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -1419,6 +1474,7 @@ const RolesPermissions = () => {
                         <th className="p-3 text-left">Périmètre</th>
                         <th className="p-3 text-left">Séniorité</th>
                         <th className="p-3 text-left">Statut</th>
+                        <th className="p-3 text-left">Affectations actives</th>
                         <th className="p-3 text-left">Action</th>
                       </tr>
                     </thead>
@@ -1450,21 +1506,23 @@ const RolesPermissions = () => {
                               {role.status}
                             </Badge>
                           </td>
+                          <td className="p-3"><span className={roleAssignmentCounts[role.id] ? '' : 'text-destructive'}>{roleAssignmentCounts[role.id] ?? 0}</span></td>
                           <td className="p-3">
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => setSelectedRoleId(role.id)}
+                              onClick={() => { setSelectedRoleId(role.id); setActiveTab('permissions'); }}
                             >
                               Configurer les droits
                             </Button>
+                            <Button variant="ghost" size="sm" onClick={() => { setSelectedRoleId(role.id); setActiveTab('scopes'); }}>Périmètres</Button>
                           </td>
                         </tr>
                       ))}
                       {roles.length === 0 && (
                         <tr>
                           <td
-                            colSpan={6}
+                            colSpan={7}
                             className="p-8 text-center text-muted-foreground"
                           >
                             Aucun rôle dans le catalogue. Synchronisez le
