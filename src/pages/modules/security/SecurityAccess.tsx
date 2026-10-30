@@ -51,8 +51,8 @@ export default function SecurityAccess() {
           </div>
 
           <p className="mt-1 text-muted-foreground">
-            Security & IT — utilisateurs internes, habilitations et
-            périmètres d'accès.
+            Security & IT — comptes collaborateurs réels et suivi des accès.
+            Les comptes de test restent exclus de cette liste.
           </p>
         </div>
 
@@ -66,14 +66,13 @@ export default function SecurityAccess() {
         <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-4">
           <div>
             <CardTitle>
-              {users.length} utilisateur
-              {users.length > 1 ? 's' : ''} interne
-              {users.length > 1 ? 's' : ''}
+              {isLoading || isError ? '—' : users.length} compte{users.length > 1 ? 's' : ''} collaborateur{users.length > 1 ? 's' : ''} réel{users.length > 1 ? 's' : ''}
             </CardTitle>
 
             <p className="mt-1 text-sm text-muted-foreground">
-              Pôles déclarés dans les profils. Les habilitations effectives dépendent des rôles,
-              des périmètres et des contrôles serveur, et ne peuvent pas être déduites du poste seul.
+              Annuaire opérationnel, hors comptes de test et données de démonstration.
+              Les pôles affichés sont déclaratifs ; les droits réels dépendent des rôles,
+              des périmètres et des contrôles côté serveur.
             </p>
           </div>
 
