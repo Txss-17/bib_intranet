@@ -20,7 +20,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export default function KPICatalog() {
-  const { data: kpis = [], isLoading } = useKpiCatalog();
+  const { data: kpis = [], isLoading, isError, refetch } = useKpiCatalog();
   const createKpi = useCreateKpi();
   const createRequest = useCreateRequest();
   const [search, setSearch] = useState('');
@@ -44,30 +44,47 @@ export default function KPICatalog() {
       toast({ title: 'Nom requis', variant: 'destructive' });
       return;
     }
-    await createKpi.mutateAsync({
-      name: form.name,
-      description: form.description || null,
-      formula: form.formula || null,
-      source: form.source || null,
-      frequency: form.frequency as any,
-      status: 'draft',
-      tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : null,
-      pole_access: ['data'],
-    });
-    setOpen(false);
-    setForm({ name: '', description: '', formula: '', source: '', frequency: 'daily', tags: '' });
+    try {
+      await createKpi.mutateAsync({
+        name: form.name.trim(),
+        description: form.description || null,
+        formula: form.formula || null,
+        source: form.source || null,
+        frequency: form.frequency as any,
+        status: 'draft',
+        tags: form.tags ? form.tags.split(',').map((t) => t.trim()).filter(Boolean) : null,
+        pole_access: ['data'],
+      });
+      setOpen(false);
+      setForm({ name: '', description: '', formula: '', source: '', frequency: 'daily', tags: '' });
+      toast({ title: 'KPI créé', description: 'La définition a été enregistrée comme brouillon.' });
+    } catch (error) {
+      toast({ title: 'Création non confirmée', description: error instanceof Error ? error.message : 'Impossible de créer le KPI.', variant: 'destructive' });
+    }
   };
 
   const requestPublication = async (id: string, name: string) => {
-    await createRequest.mutateAsync({
-      title: `Publier KPI: ${name}`,
-      description: 'Demande de publication depuis le catalogue.',
-      request_type: 'kpi',
-      related_kpi_id: id,
-      status: 'draft',
-      priority: 'medium',
-    });
+    try {
+      await createRequest.mutateAsync({
+        title: `Publier KPI: ${name}`,
+        description: 'Demande de publication depuis le catalogue.',
+        request_type: 'kpi',
+        related_kpi_id: id,
+        status: 'draft',
+        priority: 'medium',
+      });
+      toast({ title: 'Demande créée', description: 'La demande de publication a été enregistrée en brouillon.' });
+    } catch (error) {
+      toast({ title: 'Demande non confirmée', description: error instanceof Error ? error.message : 'Enregistrement impossible.', variant: 'destructive' });
+    }
   };
+
+  if (isError) return (
+    <div role="alert" className="space-y-3 rounded-lg border p-6">
+      <p className="text-destructive">Le catalogue KPI est indisponible.</p>
+      <Button type="button" variant="outline" onClick={() => void refetch()}>Réessayer</Button>
+    </div>
+  );
 
   return (
     <div className="space-y-6 p-6">
@@ -81,7 +98,7 @@ export default function KPICatalog() {
             Bibliothèque officielle : définition, formule, source, responsable et version.
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <Dialog open={open} onOpenChange={(value) => { if (!createKpi.isPending) setOpen(value); }}>
           <DialogTrigger asChild>
             <Button><Plus className="h-4 w-4 mr-2" /> Nouveau KPI</Button>
           </DialogTrigger>
@@ -128,7 +145,7 @@ export default function KPICatalog() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="ghost" onClick={() => setOpen(false)}>Annuler</Button>
+              <Button variant="ghost" disabled={createKpi.isPending} onClick={() => setOpen(false)}>Annuler</Button>
               <Button onClick={submit} disabled={createKpi.isPending}>Créer</Button>
             </DialogFooter>
           </DialogContent>
