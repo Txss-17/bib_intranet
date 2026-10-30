@@ -2,8 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { BarChart3, BookOpen, GitPullRequest, ListChecks, History, LineChart, ArrowRight, Database, GitBranch, ShieldCheck, Activity, Workflow } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { BarChart3, BookOpen, GitPullRequest, ListChecks, History, LineChart, ArrowRight, Database, GitBranch, ShieldCheck, Workflow } from 'lucide-react';
 import { useDataSources } from '@/hooks/useBI';
 import { useKpiCatalog, usePublicationRequests, useTechBacklog, usePublications } from '@/hooks/useDataQueries';
 
@@ -38,20 +37,16 @@ export default function DataDashboard() {
     { label: 'Publications publiées', value: pubsQuery.isError || pubsQuery.isLoading ? '—' : pubsPublished, hint: pubsQuery.isError ? 'Source indisponible' : `${pubs.length} au total`, icon: LineChart },
   ];
 
-  const roles = {
-    analyst: [
-      { title: 'Explorer les indicateurs', desc: 'Définitions, formules, fréquences, propriétaires et séries à valider', href: '/pole/data/kpi', icon: BookOpen },
-      { title: 'Analyser et visualiser', desc: 'Créer des vues et tableaux de bord BI pour les décisions métier', href: '/pole/data/bi', icon: BarChart3 },
-      { title: 'Rapporter les résultats', desc: 'Comparer les indicateurs et consulter les publications validées', href: '/pole/data/reports', icon: LineChart },
-      { title: 'Demander une publication', desc: 'Transmettre les résultats validés au circuit de recette technique', href: '/pole/data/requests', icon: GitPullRequest },
-    ],
-    engineer: [
-      { title: 'Cartographier les sources', desc: 'Inventorier les origines KPI, API, vues SQL et jeux de données', href: '/pole/data/bi/sources', icon: Database },
-      { title: 'Contrôler les contrats et versions', desc: 'Traçabilité des schémas, versions et mises à jour des indicateurs', href: '/pole/data/versions', icon: GitBranch },
-      { title: 'Suivre les anomalies Data', desc: 'Besoins de fiabilité, correction ou évolution dans le backlog', href: '/pole/data/backlog', icon: ListChecks },
-      { title: 'Coordonner les intégrations', desc: 'Contrats de flux et tests d’intégration avec Produit & Engineering', href: '/pole/product/integrations', icon: Workflow },
-    ],
-  };
+  const domains = [
+    { title: 'Catalogue des données', desc: 'Sources, définitions, propriétaires et classification des actifs Data', href: '/pole/data/bi/sources', icon: Database },
+    { title: 'Intégrations & pipelines', desc: 'Contrats de flux et évolution des traitements avec Engineering', href: '/pole/product/integrations', icon: Workflow },
+    { title: 'Qualité des données', desc: 'Anomalies, traçabilité, contrôles et demandes de correction', href: '/pole/data/backlog', icon: ShieldCheck },
+    { title: 'Catalogue KPI', desc: 'Définitions communes, calculs, fréquences, versions et propriétaires', href: '/pole/data/kpi', icon: BookOpen },
+    { title: 'Business Intelligence', desc: 'Tableaux de bord et outils de visualisation soumis aux habilitations', href: '/pole/data/bi', icon: BarChart3 },
+    { title: 'Rapports & publications', desc: 'Productions validées, historisation et diffusion contrôlée', href: '/pole/data/reports', icon: LineChart },
+    { title: 'Demandes & évolutions', desc: 'Traitement transversal des besoins métiers et publication', href: '/pole/data/requests', icon: GitPullRequest },
+    { title: 'Versions & gouvernance', desc: 'Traçabilité des modifications et revue des définitions', href: '/pole/data/versions', icon: GitBranch },
+  ];
 
   const quickLinks = [
     { title: 'Catalogue KPI', desc: 'Bibliothèque officielle des indicateurs', href: '/pole/data/kpi', icon: BookOpen },
@@ -69,7 +64,7 @@ export default function DataDashboard() {
           </div>
           <h1 className="text-2xl font-semibold">Data & BI — espace de travail</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Deux métiers complémentaires : analyse décisionnelle et ingénierie des données, avec un catalogue et une gouvernance communs.
+            Pôle transversal : qualité, sources, gouvernance, KPI et services BI communs. Les analyses métier restent dans les pôles autorisés.
           </p>
         </div>
       </header>
@@ -102,56 +97,37 @@ export default function DataDashboard() {
         })}
       </div>
 
-      <Tabs defaultValue="analyst" className="space-y-4">
-        <TabsList className="flex h-auto flex-wrap">
-          <TabsTrigger value="analyst">Espace Data Analyst</TabsTrigger>
-          <TabsTrigger value="engineer">Espace Data Engineer</TabsTrigger>
-          <TabsTrigger value="quality">Qualité & gouvernance</TabsTrigger>
-        </TabsList>
-        {(['analyst', 'engineer'] as const).map((role) => (
-          <TabsContent key={role} value={role} className="space-y-4">
-            <div className="rounded-lg border p-4">
-              <h2 className="font-semibold">{role === 'analyst' ? 'Analyse, visualisation et recommandations' : 'Fiabilité, alimentation et transformation des données'}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {role === 'analyst'
-                  ? 'Le Data Analyst part d’une question métier, choisit les KPI, explore les données, analyse les écarts et produit un rapport validable.'
-                  : 'Le Data Engineer documente les sources, contrôle les contrats de données et les anomalies, puis coordonne les correctifs techniques avec Engineering.'}
-              </p>
-            </div>
-            <div className="grid gap-3 md:grid-cols-2">
-              {roles[role].map((item) => {
-                const Icon = item.icon;
-                return <Card key={item.href}>
-                  <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><Icon className="h-4 w-4"/>{item.title}</CardTitle></CardHeader>
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                    <Button asChild variant="outline" size="sm"><Link to={item.href}>Ouvrir <ArrowRight className="ml-2 h-4 w-4"/></Link></Button>
-                  </CardContent>
-                </Card>;
-              })}
-            </div>
-          </TabsContent>
-        ))}
-        <TabsContent value="quality" className="space-y-4">
-          <div className="rounded-lg border p-4 text-sm">
-            <h2 className="font-semibold">Contrôles de qualité et de gouvernance</h2>
-            <p className="mt-1 text-muted-foreground">Avant toute publication : définition, source, fraîcheur, complétude, unicité, cohérence des agrégations, confidentialité et traçabilité des changements.</p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Card><CardContent className="p-4"><Database className="mb-2 h-5 w-5"/><p className="text-sm font-medium">Sources BI recensées</p><p className="mt-1 text-xl font-semibold">{sourcesQuery.isLoading || sourcesQuery.isError ? '—' : (sourcesQuery.data ?? []).length}</p><p className="text-xs text-muted-foreground">{sourcesQuery.isError ? 'Source indisponible' : 'Inventaire, pas preuve de connexion active'}</p></CardContent></Card>
-            <Card><CardContent className="p-4"><Activity className="mb-2 h-5 w-5"/><p className="text-sm font-medium">Fraîcheur et exécutions de pipelines</p><p className="mt-1 text-xl font-semibold">Non mesurées</p><p className="text-xs text-muted-foreground">Aucune métrique réelle d’orchestration raccordée à cette page.</p></CardContent></Card>
-            <Card><CardContent className="p-4"><ShieldCheck className="mb-2 h-5 w-5"/><p className="text-sm font-medium">Tests qualité automatisés</p><p className="mt-1 text-xl font-semibold">Non confirmés</p><p className="text-xs text-muted-foreground">Contrats et preuves d’exécution requis avant tout statut « réussi ».</p></CardContent></Card>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            La définition des contrôles et des KPI relève de Data ; leur exécution dans les pipelines et leur déploiement relèvent de Data Engineering avec Produit & Engineering. Sécurité & IT valide les accès.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <Button asChild variant="outline"><Link to="/pole/data/bi/sources">Catalogue des sources</Link></Button>
-            <Button asChild variant="outline"><Link to="/pole/data/requests">Demandes et validations</Link></Button>
-            <Button asChild variant="outline"><Link to="/pole/product/engineering">Recette technique Engineering</Link></Button>
-          </div>
-        </TabsContent>
-      </Tabs>
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold">Fonctions du pôle Data & BI</h2>
+        <p className="text-sm text-muted-foreground">
+          Les outils sont organisés par fonctions, jamais par intitulé de poste.
+          La visibilité des données financières, Marketplace ou d’un autre domaine dépend
+          des droits et périmètres effectifs contrôlés côté serveur.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {domains.map((item) => {
+            const Icon = item.icon;
+            return <Card key={item.href} className="flex flex-col">
+              <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-base"><Icon className="h-4 w-4" />{item.title}</CardTitle></CardHeader>
+              <CardContent className="flex flex-1 flex-col justify-between gap-3">
+                <p className="text-sm text-muted-foreground">{item.desc}</p>
+                <Button asChild variant="outline" size="sm" className="self-start">
+                  <Link to={item.href}>Ouvrir <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                </Button>
+              </CardContent>
+            </Card>;
+          })}
+        </div>
+      </div>
+
+      <Card>
+        <CardHeader><CardTitle className="text-base">Qualité et observations réelles</CardTitle></CardHeader>
+        <CardContent className="grid gap-4 md:grid-cols-3">
+          <div><p className="text-xs text-muted-foreground">Sources BI recensées</p><p className="text-xl font-semibold">{sourcesQuery.isLoading || sourcesQuery.isError ? '—' : (sourcesQuery.data ?? []).length}</p><p className="text-xs text-muted-foreground">Inventaire, pas disponibilité garantie</p></div>
+          <div><p className="text-xs text-muted-foreground">Pipelines mesurés</p><p className="font-medium">Non raccordés</p><p className="text-xs text-muted-foreground">Aucun taux de réussite simulé</p></div>
+          <div><p className="text-xs text-muted-foreground">Tests automatisés Data</p><p className="font-medium">Non confirmés</p><p className="text-xs text-muted-foreground">Preuves d’exécution requises</p></div>
+        </CardContent>
+      </Card>
 
       <h2 className="text-lg font-semibold">Accès rapides transversaux</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
