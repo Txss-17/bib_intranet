@@ -65,7 +65,7 @@ type EdgeFunctionLog = {
   created_at: string;
   function_name: string;
   method: string;
-  status_code: number;
+  http_status: number | null;
   duration_ms?: number | null;
   error_message?: string | null;
 };
@@ -127,17 +127,14 @@ const formatAuthEvent = (
 };
 
 export default function SecurityLogs() {
-  const {
-    data: authLogs = [],
-  } = useSecurityAuthLogs(200);
+  const authQuery = useSecurityAuthLogs(200);
+  const authLogs = authQuery.data ?? [];
 
-  const {
-    data: edgeLogs = [],
-  } = useProductEdgeFunctionLogs(200);
+  const edgeQuery = useProductEdgeFunctionLogs(200);
+  const edgeLogs = edgeQuery.data ?? [];
 
-  const {
-    data: auditLogs = [],
-  } = useAuditLogs();
+  const auditQuery = useAuditLogs();
+  const auditLogs = auditQuery.data ?? [];
 
   const [query, setQuery] =
     useState('');
@@ -194,6 +191,14 @@ export default function SecurityLogs() {
         </p>
       </div>
 
+      {(authQuery.isError || edgeQuery.isError || auditQuery.isError) && (
+        <div role="alert" className="rounded border border-destructive/40 p-3 text-sm">
+          Une ou plusieurs sources de journaux sont indisponibles. Aucun chiffre partiel ne constitue un total confirmé.
+          <button className="ml-2 underline" type="button" onClick={() => {
+            void authQuery.refetch(); void edgeQuery.refetch(); void auditQuery.refetch();
+          }}>Réessayer</button>
+        </div>
+      )}
       <Tabs defaultValue="auth">
         <TabsList>
           <TabsTrigger value="auth">
@@ -549,13 +554,13 @@ export default function SecurityLogs() {
                           <TableCell>
                             <Badge
                               variant={
-                                log.status_code >=
+                                log.http_status ?? 0 >=
                                 400
                                   ? 'destructive'
                                   : 'default'
                               }
                             >
-                              {log.status_code}
+                              {log.http_status ?? 0}
                             </Badge>
                           </TableCell>
 
