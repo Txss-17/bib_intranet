@@ -101,9 +101,6 @@ jobs:
       - name: Test Support workflow, customer context and resolution metrics
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/support-tickets/workflow.sql
 
-      - name: Test insured SAV intake, independent rights and audit history
-        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/sav-intake/workflow.sql
-
       - name: Test quality findings, independent validation and audit mission authority
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/quality/workflow.sql
 
@@ -115,6 +112,9 @@ jobs:
 
       - name: Test Work module lifecycle and activity feed
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/work-module/workflow.sql
+
+      - name: Test insured SAV intake, independent rights and audit history
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/sav-intake/workflow.sql
 
       - name: Typecheck Drive, ethics, Gateway and test-account boundaries
         run: npx tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --lib ES2022,DOM --skipLibCheck --strictNullChecks --noImplicitAny false --allowImportingTsExtensions tests/intranet/edge-env.d.ts supabase/functions/intranet-drive/index.ts supabase/functions/intranet-ethics/index.ts supabase/functions/gateway-dispatch/index.ts supabase/functions/process-email-queue/index.ts supabase/functions/provision-test-accounts/index.ts
