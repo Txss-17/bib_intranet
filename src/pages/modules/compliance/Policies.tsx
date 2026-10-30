@@ -1,2 +1,2 @@
-import ModuleWorkspace from '@/components/operations/ModuleWorkspace';
-export default function Page() { return <ModuleWorkspace pageId="compliance.policies" />; }
+import ComplianceGovernancePage from '@/components/compliance/ComplianceGovernancePage';
+export default function Page() { return <ComplianceGovernancePage mode="policies" />; }
