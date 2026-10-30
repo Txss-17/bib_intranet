@@ -20,6 +20,17 @@ const OwnershipSnapshot = z.object({
   }).passthrough()),
 });
 
+const SavHandoff = z.object({
+ issue_id: z.string().uuid(),
+ order_id: z.string().uuid(),
+ boutique_id: z.string().uuid(),
+ merchant_id: z.string().uuid(),
+ due_at: z.string().datetime({ offset: true }),
+ escalated_at: z.string().datetime({ offset: true }),
+ environment: z.enum(["sandbox","live"]),
+ reason: z.literal("merchant_silence_48h"),
+});
+
 class BridgeError extends Error {
   constructor(message: string, public status = 502) { super(message); }
 }
@@ -744,6 +755,55 @@ Deno.serve(async (req) => {
         } else {
           count++;
         }
+      }
+
+      // ====================================================
+      // 5b. SAV ASSURÉ — TRANSFERT OPÉRATIONNEL APRÈS 48 H
+      // ====================================================
+      // The seller remains legally responsible; only a private handoff is
+      // recorded. ignoreDuplicates preserves assignment and closed decisions.
+      const ownerByBoutique = new Map(
+        ownership.data.boutiques.map((shop) => [shop.id, shop.user_id]),
+      );
+      for (const raw of data.sav_escalations ?? []) {
+        const parsed = SavHandoff.safeParse(raw);
+        if (!parsed.success) {
+          errors.push("Transfert SAV rejeté : format source invalide");
+          continue;
+        }
+        const handoff = parsed.data;
+        if (ownerByBoutique.get(handoff.boutique_id) !== handoff.merchant_id
+          || !merchantIds.has(handoff.merchant_id)
+          || Date.parse(handoff.due_at) > Date.parse(handoff.escalated_at)) {
+          errors.push("Transfert SAV rejeté : boutique, vendeur ou échéance incohérents");
+          continue;
+        }
+        const { data: inserted, error: saveError } = await admin
+          .from("sav_escalation_queue")
+          .upsert({
+            issue_id: handoff.issue_id,
+            platform_order_id: handoff.order_id,
+            platform_boutique_id: handoff.boutique_id,
+            platform_merchant_id: handoff.merchant_id,
+            due_at: handoff.due_at,
+            escalated_at: handoff.escalated_at,
+            environment: handoff.environment,
+            reason: handoff.reason,
+          }, { onConflict: "issue_id", ignoreDuplicates: true })
+          .select("issue_id");
+        if (saveError) {
+          errors.push(`Transfert SAV ${handoff.issue_id} : ${saveError.message}`);
+          continue;
+        }
+        if ((inserted ?? []).length > 0) {
+          notify(
+            "support",
+            "SAV assuré : prise en charge BIB nécessaire",
+            "Le marchand n'a pas répondu dans le délai de 48 heures. Vérifiez l'escalade et attribuez-la.",
+            `/pole/support/escalations?issue=${handoff.issue_id}`,
+          );
+        }
+        count++;
       }
 
       // ====================================================
