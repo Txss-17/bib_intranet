@@ -97,6 +97,8 @@ export interface ShopOrderSummary {
   orders: number;
   revenue: number;
   inProgress: number;
+  /** Volume brut des commandes hors annulations, ventilé par devise ; pas un CA encaissé. */
+  grossOrdersByCurrency: Record<string, number>;
 }
 
 const SHOP_SELECT = `
@@ -178,39 +180,53 @@ export const useShopOrderSummaries = () =>
   useQuery({
     queryKey: ['shops', 'order-summaries'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('shop_id, total_amount, status')
-        .not('shop_id', 'is', null);
-
-      if (error) throw error;
-
       const map = new Map<string, ShopOrderSummary>();
+      const pageSize = 500;
+      let offset = 0;
 
-      for (const row of data ?? []) {
-        const shopId = row.shop_id as string;
+      // Supabase/PostgREST returns a capped page, not necessarily every order.
+      // Iterate rather than silently displaying partial totals as complete.
+      while (true) {
+        const { data, error } = await supabase
+          .from('orders')
+          .select('shop_id, total_amount, status, currency')
+          .not('shop_id', 'is', null)
+          .order('id', { ascending: true })
+          .range(offset, offset + pageSize - 1);
+        if (error) throw error;
 
-        const entry = map.get(shopId) ?? {
-          shop_id: shopId,
-          orders: 0,
-          revenue: 0,
-          inProgress: 0,
-        };
+        for (const row of data ?? []) {
+          if (!row.shop_id) continue;
+          const shopId = String(row.shop_id);
+          const entry = map.get(shopId) ?? {
+            shop_id: shopId,
+            orders: 0,
+            revenue: 0,
+            inProgress: 0,
+            grossOrdersByCurrency: {},
+          };
 
-        entry.orders += 1;
-        entry.revenue += Number(row.total_amount ?? 0);
+          entry.orders += 1;
+          const status = (row.status ?? '').toLowerCase();
+          if (!['delivered', 'cancelled', 'refunded'].includes(status)) {
+            entry.inProgress += 1;
+          }
 
-        if (
-          !['delivered', 'cancelled', 'refunded'].includes(
-            row.status ?? '',
-          )
-        ) {
-          entry.inProgress += 1;
+          // Never pretend gross order values are settled revenue or subtract
+          // refunds without a verified payments/refunds reconciliation.
+          if (!['cancelled', 'refunded'].includes(status)) {
+            const amount = Number(row.total_amount);
+            const currency = String(row.currency ?? '').toUpperCase();
+            if (Number.isFinite(amount) && /^[A-Z]{3}$/.test(currency)) {
+              entry.grossOrdersByCurrency[currency] =
+                (entry.grossOrdersByCurrency[currency] ?? 0) + amount;
+            }
+          }
+          map.set(shopId, entry);
         }
-
-        map.set(shopId, entry);
+        if (!data || data.length < pageSize) break;
+        offset += pageSize;
       }
-
       return map;
     },
   });
