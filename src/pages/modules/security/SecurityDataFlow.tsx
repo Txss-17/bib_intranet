@@ -5,6 +5,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useSecurityBridgeRuns, readableDate } from '@/hooks/useSecurityOperations';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   ArrowRight,
   Server,
@@ -87,8 +90,29 @@ const SECURITY_CONTROLS = [
 ];
 
 export default function SecurityDataFlow() {
+  const { canViewPage } = usePermissions();
+  const bridge = useSecurityBridgeRuns();
+  if (!canViewPage('security.dataflow')) return <p role="alert">Accès aux flux de données non autorisé.</p>;
   return (
     <div className="space-y-6">
+      <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm">
+        <strong>Architecture cible, non certification de déploiement.</strong>
+        <p className="mt-1 text-muted-foreground">Ce schéma décrit les frontières de confiance attendues entre BIB Platform, BIB Intranet et Audit Hub. Les liaisons, politiques RLS et sauvegardes doivent être vérifiées avec des tests d'intégration et les journaux d'exécution.</p>
+      </div>
+      <div className="rounded-lg border p-4 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-medium">Échanges Platform enregistrés</h2>
+          <Button variant="outline" size="sm" onClick={() => void bridge.refetch()} disabled={bridge.isFetching}>Actualiser</Button>
+        </div>
+        {bridge.isLoading && <p role="status" className="mt-2 text-muted-foreground">Chargement des échanges…</p>}
+        {bridge.isError && <p role="alert" className="mt-2 text-destructive">Source de synchronisation indisponible.</p>}
+        {!bridge.isLoading && !bridge.isError && <div className="mt-2 flex flex-wrap gap-4">
+          <p>{bridge.data?.length ?? 0} exécution(s) enregistrée(s) dans la fenêtre de 100</p>
+          <p>En erreur : {(bridge.data ?? []).filter(row => ['error', 'failed', 'failure'].includes(row.status.toLowerCase())).length}</p>
+          <p>Dernière exécution : {readableDate(bridge.data?.[0]?.started_at)}</p>
+        </div>}
+        <p className="mt-2 text-xs text-muted-foreground">Les journaux n'établissent ni l'exhaustivité de la synchronisation ni l'exactitude du contrat d'API.</p>
+      </div>
       <div>
         <div className="flex items-center gap-2">
           <Network className="h-7 w-7" />
