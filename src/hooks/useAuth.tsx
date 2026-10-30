@@ -43,19 +43,27 @@ const AuthContext = createContext<AuthContextType>({
 export const useAuth = () => useContext(AuthContext);
 
 const fetchProfile = async (userId: string): Promise<ProfileData | null> => {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('id, first_name, last_name, position, avatar_url, email, poles, seniority, work_mode, subsidiary, manager_id, app_origin, hr_status, test_account')
-    .eq('id', userId)
-    .single();
-  if (error) throw error;
-  if (!data) return null;
-  // app_origin may not exist in types yet but exists in DB after migration
-  return {
-    ...data,
-    app_origin: data.app_origin ?? null,
-    test_account: data.test_account === true,
-  };
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout>;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error('profile_timeout'));
+    }, 15_000);
+  });
+  try {
+    const { data, error } = await Promise.race([supabase
+      .from('profiles')
+      .select('id, first_name, last_name, position, avatar_url, email, poles, seniority, work_mode, subsidiary, manager_id, app_origin, hr_status, test_account')
+      .eq('id', userId)
+      .abortSignal(controller.signal)
+      .single(), timeout]);
+    if (error) throw error;
+    if (!data) return null;
+    return { ...data, app_origin: data.app_origin ?? null, test_account: data.test_account === true };
+  } finally {
+    clearTimeout(timer!);
+  }
 };
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -86,9 +94,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let disposed = false;
+    let scheduled: ReturnType<typeof setTimeout> | undefined;
     // Supabase emits INITIAL_SESSION. A second getSession request can race with
     // a more recent sign-in/sign-out and must not overwrite that event.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, next) => {
+      clearTimeout(scheduled);
       const id = next?.user.id ?? null;
       const changed = id !== currentUserId.current;
       if (changed) {
@@ -108,13 +118,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
       if (changed || _event === 'INITIAL_SESSION') setLoading(true);
-      // Do not run another Supabase call inside its auth callback/lock.
-      queueMicrotask(() => {
+      // A microtask can run before Auth releases its exclusive lock. Wait for
+      // the next event-loop task before a profile read asks Auth for a token.
+      scheduled = setTimeout(() => {
         if (!disposed && request === generation.current) void loadProfile(id, request);
-      });
+      }, 0);
     });
     return () => {
       disposed = true;
+      clearTimeout(scheduled);
       // Invalidate pending requests; this ref is a request sequence, not a DOM ref.
       // eslint-disable-next-line react-hooks/exhaustive-deps
       generation.current++;

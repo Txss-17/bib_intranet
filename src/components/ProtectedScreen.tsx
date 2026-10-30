@@ -1,10 +1,11 @@
 import React from 'react';
 import { usePosition } from '@/hooks/usePosition';
-import { Shield, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { usePermissions } from '@/hooks/usePermissions';
 import { resolveIntranetPage, moduleById } from '@/lib/intranet';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { AccessStatus } from '@/components/operations/AccessStatus';
 
 interface ProtectedScreenProps {
   screenId: string;
@@ -47,18 +48,11 @@ export const ProtectedScreen: React.FC<ProtectedScreenProps> = ({
   children,
   fallback
 }) => {
-  const { canViewPage } = usePermissions();
+  const { canViewPage, accessState, retryAccess } = usePermissions();
   const location = useLocation();
   const page = moduleById(screenId) || resolveIntranetPage(location.pathname);
-  const isLoading = false;
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <Shield className="h-8 w-8 animate-pulse text-muted-foreground" />
-      </div>
-    );
-  }
+  const state = page ? accessState(page.id) : 'ready';
+  if (state !== 'ready') return <AccessStatus state={state} retry={() => retryAccess(page!.id)} />;
 
   if (!page || !canViewPage(page.id)) {
     return fallback ? <>{fallback}</> : <AccessDenied />;

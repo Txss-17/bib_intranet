@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { intranetRpc, moduleById } from '@/lib/intranet';
+import { moduleById } from '@/lib/intranet';
+import { permissionQueryState, readIntranetPermissions, type AccessState } from '@/lib/permissionReadiness';
 import { useWorkTaskPermissions } from '@/hooks/useWorkTasks';
 import { useUserRole } from '@/hooks/useUserRole';
 import { useViewAs } from '@/hooks/useViewAs';
@@ -53,6 +54,8 @@ export interface UsePermissionsReturn {
   canViewPath: (path: string) => boolean;
   canViewPole: (poleId: string) => boolean;
   visiblePoles: string[];
+  accessState: (pageId: string) => AccessState;
+  retryAccess: (pageId: string) => void;
 }
 
 export const usePermissions = (): UsePermissionsReturn => {
@@ -65,7 +68,8 @@ export const usePermissions = (): UsePermissionsReturn => {
     queryKey: ['intranet-permissions', user?.id, tick],
     enabled: !!user?.id && profile?.id === user.id,
     staleTime: 30000, refetchInterval: 60000,
-    queryFn: () => intranetRpc<Record<string, ActionSet>>('get_intranet_permissions'),
+    retry: 1,
+    queryFn: ({ signal }) => readIntranetPermissions(signal),
   });
 
 
@@ -242,11 +246,22 @@ export const usePermissions = (): UsePermissionsReturn => {
 
   const canViewPole = useCallback((poleId: string) => visiblePoles.includes(poleId), [visiblePoles]);
 
+  const accessState = (pageId: string): AccessState => {
+    pageId = moduleById(pageId)?.id || pageId;
+    return permissionQueryState(pageId === 'work.tasks' ? taskRights
+      : pageId === 'rh.onboarding' ? onboardingRights : pageId === 'rh.publications' ? hrRights : serverRights);
+  };
+  const retryAccess = (pageId: string) => {
+    pageId = moduleById(pageId)?.id || pageId;
+    void (pageId === 'work.tasks' ? taskRights : pageId === 'rh.onboarding' ? onboardingRights
+      : pageId === 'rh.publications' ? hrRights : serverRights).refetch();
+  };
+
   return {
     role, poles, seniority, enforced, isSuperAdmin,
     isSimulating: !!simulatedRole,
     scope: getDataScope(role),
-    permissions, can, canViewPage, canViewPath, canViewPole, visiblePoles,
+    permissions, can, canViewPage, canViewPath, canViewPole, visiblePoles, accessState, retryAccess,
   };
 };
 
