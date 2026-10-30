@@ -13,7 +13,7 @@ test('environnements : historique réel et statuts inconnus explicités', () => 
   assert.match(source, /useSecurityBridgeRuns/);
   assert.match(source, /Disponibilité actuelle/);
   assert.match(source, /Non mesurée/);
-  assert.match(source, /ne déploie aucun changement/);
+  assert.match(source, /sans déploiement ni rollback depuis l’interface/);
   assert.match(source, /ModuleWorkspace pageId="security\.environments"/);
 });
 
