@@ -64,18 +64,18 @@ GRANT EXECUTE ON FUNCTION public.bib_data_domain_allowed(text,text) TO authentic
 CREATE POLICY bi_dashboards_domain_guard ON public.bi_dashboards
   AS RESTRICTIVE FOR SELECT TO authenticated
   USING (
-    (pole_id IS NOT NULL AND public.bib_data_domain_allowed(pole_id,target_filiale))
-    OR (pole_id IS NULL AND owner_id=auth.uid())
+    (pole_id IS NOT NULL AND target_filiale IS NOT NULL AND public.bib_data_domain_allowed(pole_id,target_filiale))
+    OR ((pole_id IS NULL OR target_filiale IS NULL) AND owner_id=auth.uid())
   );
 
 CREATE POLICY bi_dashboards_domain_write_guard ON public.bi_dashboards
   AS RESTRICTIVE FOR ALL TO authenticated
   USING (
-    (pole_id IS NOT NULL AND public.bib_data_domain_allowed(pole_id,target_filiale))
+    (pole_id IS NOT NULL AND target_filiale IS NOT NULL AND public.bib_data_domain_allowed(pole_id,target_filiale))
     OR (pole_id IS NULL AND owner_id=auth.uid())
   )
   WITH CHECK (
-    (pole_id IS NOT NULL AND public.bib_data_domain_allowed(pole_id,target_filiale))
+    (pole_id IS NOT NULL AND target_filiale IS NOT NULL AND public.bib_data_domain_allowed(pole_id,target_filiale))
     OR (pole_id IS NULL AND owner_id=auth.uid())
   );
 
@@ -87,8 +87,8 @@ CREATE POLICY bi_widgets_domain_guard ON public.bi_dashboard_widgets
       SELECT 1 FROM public.bi_dashboards d
       WHERE d.id=bi_dashboard_widgets.dashboard_id
         AND (
-          (d.pole_id IS NOT NULL AND public.bib_data_domain_allowed(d.pole_id,d.target_filiale))
-          OR (d.pole_id IS NULL AND d.owner_id=auth.uid())
+          (d.pole_id IS NOT NULL AND d.target_filiale IS NOT NULL AND public.bib_data_domain_allowed(d.pole_id,d.target_filiale))
+          OR ((d.pole_id IS NULL OR d.target_filiale IS NULL) AND d.owner_id=auth.uid())
         )
     )
   );
@@ -99,7 +99,7 @@ CREATE POLICY bi_widgets_domain_write_guard ON public.bi_dashboard_widgets
       SELECT 1 FROM public.bi_dashboards d
       WHERE d.id=bi_dashboard_widgets.dashboard_id
         AND (
-          (d.pole_id IS NOT NULL AND public.bib_data_domain_allowed(d.pole_id,d.target_filiale))
+          (d.pole_id IS NOT NULL AND d.target_filiale IS NOT NULL AND public.bib_data_domain_allowed(d.pole_id,d.target_filiale))
           OR (d.pole_id IS NULL AND d.owner_id=auth.uid())
         )
     )
@@ -109,7 +109,7 @@ CREATE POLICY bi_widgets_domain_write_guard ON public.bi_dashboard_widgets
       SELECT 1 FROM public.bi_dashboards d
       WHERE d.id=bi_dashboard_widgets.dashboard_id
         AND (
-          (d.pole_id IS NOT NULL AND public.bib_data_domain_allowed(d.pole_id,d.target_filiale))
+          (d.pole_id IS NOT NULL AND d.target_filiale IS NOT NULL AND public.bib_data_domain_allowed(d.pole_id,d.target_filiale))
           OR (d.pole_id IS NULL AND d.owner_id=auth.uid())
         )
     )
