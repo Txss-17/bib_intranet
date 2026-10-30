@@ -20,6 +20,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from '@/hooks/use-toast';
 import { poles as availablePoles } from '@/data/poles';
 import { MATRIX_EVENT } from '@/data/permissionMatrix';
+import HierarchicalScopeEditor from '@/components/admin/HierarchicalScopeEditor';
 import {
   syncAccessCatalog,
   type AccessRolePayload,
@@ -1040,7 +1041,8 @@ const RolesPermissions = () => {
         <TabsList className="flex h-auto flex-wrap justify-start">
           <TabsTrigger value="permissions">Matrice des permissions</TabsTrigger>
           <TabsTrigger value="roles">Catalogue des rôles</TabsTrigger>
-          <TabsTrigger value="scopes">Périmètres des rôles</TabsTrigger>
+          <TabsTrigger value="scopes">Périmètres hiérarchiques</TabsTrigger>
+          <TabsTrigger value="flat-scopes">Périmètres simples (historiques)</TabsTrigger>
           <TabsTrigger value="scope-catalog">Catalogue des périmètres</TabsTrigger>
           <TabsTrigger value="create">Créer un rôle</TabsTrigger>
           <TabsTrigger value="actions">Catalogue des actions</TabsTrigger>
@@ -1127,6 +1129,29 @@ const RolesPermissions = () => {
           </Card>
         </TabsContent>
         <TabsContent value="scopes" className="mt-4 space-y-4">
+          <div className="rounded-md border p-3 text-sm text-muted-foreground">
+            <strong>Périmètres interdépendants :</strong> filiale BIB → pôle(s) de cette filiale →
+            région(s) et portefeuille(s) → propriété des enregistrements.
+            Chaque niveau restreint le précédent ; « Tous » signifie tout dans le parent.
+          </div>
+          <label className="block space-y-2 text-sm">
+            <span className="font-medium">Rôle à préparer</span>
+            <select value={selectedRoleId} disabled={loading}
+              onChange={event => setSelectedRoleId(event.target.value)}
+              className="h-10 w-full rounded-md border bg-background px-3">
+              <option value="">Choisir un rôle</option>
+              {roles.filter(role => role.status === 'active').map(role =>
+                <option key={role.id} value={role.id}>{role.label} ({role.role_key})</option>)}
+            </select>
+          </label>
+          <HierarchicalScopeEditor roleId={selectedRoleId} />
+        </TabsContent>
+        <TabsContent value="flat-scopes" className="mt-4 space-y-4">
+          <p role="note" className="rounded-lg border p-3 text-sm text-muted-foreground">
+            Éditeur historique : chaque ligne est indépendante. Il ne représente pas une chaîne de restrictions
+            filiale → pôle → région → portefeuille. Pour les politiques imbriquées, utilisez
+            « Périmètres hiérarchiques ». Ne modifiez ici que les droits simples dont l'application serveur est vérifiée.
+          </p>
           <Card>
             <CardHeader>
               <CardTitle>Modifier les périmètres d’un rôle existant</CardTitle>
