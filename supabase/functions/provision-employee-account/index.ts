@@ -604,6 +604,17 @@ Deno.serve(
 
       // Existing unconfirmed Auth users retain their metadata in the invite endpoint.
       // A fresh attempt nonce proves this response created this identity, including races.
+      // Only approved BIB-owned origins can receive account invitation tokens.
+      // Supabase Auth must also allowlist the selected /reset-password redirect.
+      const inviteOrigins = new Set([
+        'https://bib-intranet.lovable.app',
+        'https://workspace.brand-in-a-box.space',
+      ]);
+      const inviteOrigin = (Deno.env.get('BIB_INTRANET_PUBLIC_URL') ??
+        'https://bib-intranet.lovable.app').trim().replace(/[/]+$/, '');
+      if (!inviteOrigins.has(inviteOrigin))
+        return json({ error: 'Origine d\'invitation RH non autorisée.' }, 503);
+
       const onboardingAttemptNonce = crypto.randomUUID();
       const { data: invitationReserved, error: invitationReservationError } = await caller.rpc(
         'reserve_hr_onboarding_invitation',
@@ -633,7 +644,7 @@ Deno.serve(
                 hr_onboarding_attempt_nonce: onboardingAttemptNonce,
               },
               redirectTo:
-                'https://workspace.brand-in-a-box.space/reset-password',
+                `${inviteOrigin}/reset-password`,
             },
           );
 
@@ -752,6 +763,9 @@ Deno.serve(
         await admin
           .from('profiles')
           .update({
+            // Server-owned origin is mandatory for invited Talent accounts.
+            // The Auth invitation nonce and request authorization were verified.
+            app_origin: 'connect',
             first_name:
               request.first_name,
             last_name:

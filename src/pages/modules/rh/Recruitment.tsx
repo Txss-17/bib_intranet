@@ -77,6 +77,19 @@ export default function Recruitment() {
           <p>Les candidats déposent leur dossier via le formulaire BIB Talent. Ce formulaire Google n'est pas encore connecté automatiquement à la base RH : les candidatures doivent être examinées puis saisies dans le pipeline ci-dessous par un membre RH habilité.</p>
           <p>Parcours : réception → présélection → entretien → validation des conditions de collaboration → demande d'intégration RH → accès Intranet sur invitation nominative et avec permissions limitées.</p>
           <p className="text-muted-foreground">Ne transmettez aucun accès Intranet à un candidat non retenu. Avant toute mission, définissez un statut et des conditions contractuelles adaptés ; le bénévolat dans une société commerciale n'est pas une option générale.</p>
+          <p className="text-muted-foreground">Le Google Sheets « BIB TALENT CRM » centralise les réponses du formulaire. Son ouverture nécessite un partage nominatif accordé par le propriétaire Drive ; l'Intranet n'importe pas automatiquement ces données personnelles.</p>
+          <Button variant="outline" asChild>
+            <a href="https://docs.google.com/spreadsheets/d/1-9SEhNpSKduFxMUuhqGXFL-Jy0tn8eR0D-LmOg_4Swc/edit" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="mr-2 h-4 w-4" />Consulter le CRM Talent (accès Drive requis)
+            </a>
+          </Button>
+          {' '}
+          <Button variant="outline" asChild>
+            <a href="https://bib-talent.lovable.app/carrieres/talent" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="mr-2 h-4 w-4" />Voir la page publique BIB Talent
+            </a>
+          </Button>
+          {' '}
           <Button variant="outline" asChild>
             <a href="https://docs.google.com/forms/d/e/1FAIpQLSemotUUORqFwUdM60S1BAW-79YzSm-5TiocRvm-wuTUiCevvg/viewform" target="_blank" rel="noopener noreferrer">
               <ExternalLink className="mr-2 h-4 w-4" />Consulter le formulaire public
