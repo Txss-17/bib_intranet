@@ -36,23 +36,19 @@ const Login = () => {
 
 
 
-  const isAllowedEmail = (value: string) => {
-    const email = value.toLowerCase().trim();
-  
-    return (
-      email.endsWith('@brand-in-a-box.space') ||
-      email === 'tgliyeta@gmail.com' ||
-      email === 'gliyetat@gmail.com'
-    );
-  };
+  // Authentication and role assignment happen on the server. Do not impose
+  // an email-domain allowlist here: RH may provision invited external profiles
+  // while company Workspace addresses are being issued.
+  const isValidEmail = (value: string) =>
+    /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value.trim());
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!isAllowedEmail(email)) {
+    if (!isValidEmail(email)) {
       toast({
-        title: 'Domaine non autorisé',
-        description: 'Seules les adresses @brand-in-a-box.space peuvent se connecter à l\'intranet.',
+        title: 'Adresse email invalide',
+        description: 'Vérifiez le format de votre adresse email.',
         variant: 'destructive',
       });
       return;
@@ -74,14 +70,20 @@ const Login = () => {
     } else {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('position')
+          .select('id,position,app_origin,hr_status')
           .eq('id', user.id)
           .single();
-        const position = profile?.position as EmployeePosition | null;
-        const route = position ? positionDefaultRoute[position] || '/' : '/';
-        navigate(route);
+        if (profileError || !profile || profile.id !== user.id ||
+            profile.app_origin !== 'connect' || profile.hr_status !== 'active') {
+          await supabase.auth.signOut();
+          toast({ title: 'Accès non activé', description: 'Votre invitation BIB Intranet doit être validée par les RH avant toute connexion.', variant: 'destructive' });
+          setLoading(false);
+          return;
+        }
+        const position = profile.position as EmployeePosition | null;
+        navigate(position ? positionDefaultRoute[position] || '/' : '/');
       } else {
         navigate('/');
       }
@@ -96,8 +98,8 @@ const Login = () => {
       toast({ title: 'Erreur', description: 'Veuillez saisir votre adresse email.', variant: 'destructive' });
       return;
     }
-    if (!isAllowedEmail(email)) {
-      toast({ title: 'Domaine non autorisé', description: 'Seules les adresses @brand-in-a-box.space sont autorisées.', variant: 'destructive' });
+    if (!isValidEmail(email)) {
+      toast({ title: 'Adresse email invalide', description: 'Vérifiez le format de votre adresse email.', variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -149,7 +151,7 @@ const Login = () => {
                   <p className="text-sm text-muted-foreground">Saisissez votre adresse email pour recevoir un lien de réinitialisation.</p>
                   <div className="space-y-2">
                     <Label htmlFor="reset-email">Adresse email</Label>
-                    <Input id="reset-email" type="email" placeholder="prenom@brand-in-a-box.space" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+                    <Input id="reset-email" type="email" placeholder="adresse utilisée pour votre invitation" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? 'Envoi...' : 'Envoyer le lien'}
@@ -170,7 +172,7 @@ const Login = () => {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">Adresse email</Label>
-                  <Input id="email" type="email" placeholder="prenom@brand-in-a-box.space" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+                  <Input id="email" type="email" placeholder="adresse utilisée pour votre invitation" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
                 </div>
 
                 <div className="space-y-2">
@@ -204,7 +206,7 @@ const Login = () => {
         </div>
 
         <p className="text-center text-xs text-muted-foreground">
-          Accès réservé aux collaborateurs LINKSY Group.
+          Accès réservé aux collaborateurs BIB dont le compte a été validé.
           <br />Toute connexion est journalisée.
         </p>
       </div>
