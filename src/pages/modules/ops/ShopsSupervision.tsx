@@ -257,7 +257,7 @@ export default function ShopsSupervision() {
           </p>
 
           <p className="mt-1 text-xs text-muted-foreground">
-            Volume brut hors annulations, avant remboursements :{' '}
+            Volume brut hors annulations et remboursements complets, avant remboursements partiels :{' '}
             {grossByCurrency.length ? grossByCurrency.map(([currency, amount]) =>
               formatCurrency(amount, currency)).join(' · ') : '—'}
           </p>
@@ -436,7 +436,7 @@ export default function ShopsSupervision() {
                     </th>
 
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                      Volume brut (avant remboursements)
+                      Volume brut (avant remb. partiels)
                     </th>
 
                     <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
