@@ -182,6 +182,7 @@ const RolesPermissions = () => {
   const [permissions, setPermissions] = useState<AccessPermission[]>([]);
   const [scopes, setScopes] = useState<ScopeRow[]>([]);
   const [roleScopes, setRoleScopes] = useState<RoleScopeRow[]>([]);
+  const [businessSubsidiaries, setBusinessSubsidiaries] = useState<string[]>([]);
 
   const [selectedRoleId, setSelectedRoleId] = useState('');
   const [activeTab, setActiveTab] = useState('permissions');
@@ -215,6 +216,7 @@ const RolesPermissions = () => {
         roleScopesResult,
         scopesResult,
         assignmentsResult,
+        subsidiariesResult,
       ] = await Promise.all([
         supabase
           .from('access_roles')
@@ -260,6 +262,7 @@ const RolesPermissions = () => {
           .order('label'),
 
         supabase.from('access_assignments').select('role_id, status').eq('status', 'active'),
+        supabase.from('profiles').select('subsidiary').eq('test_account', false).not('subsidiary', 'is', null),
       ]);
 
       const error =
@@ -290,6 +293,13 @@ const RolesPermissions = () => {
       setPermissions(nextPermissions);
       setRoleScopes((roleScopesResult.data ?? []) as RoleScopeRow[]);
       setScopes((scopesResult.data ?? []) as ScopeRow[]);
+      if (!subsidiariesResult.error) {
+        setBusinessSubsidiaries(Array.from(new Set((subsidiariesResult.data ?? [])
+          .map((item) => item.subsidiary?.trim())
+          .filter((value): value is string => Boolean(value)))).sort());
+      } else {
+        setBusinessSubsidiaries([]);
+      }
       const counts: Record<string, number> = {};
       for (const assignment of assignmentsResult.data ?? []) {
         counts[assignment.role_id] = (counts[assignment.role_id] ?? 0) + 1;
@@ -349,10 +359,30 @@ const RolesPermissions = () => {
     setScopeReason('');
   }, [roleScopes, selectedRoleId]);
 
+  const toggleScopeValue = (scopeKey: ScopeKind, scopeValue: string | null, selected: boolean) => {
+    const definition = scopes.find((item) => item.scope_key === scopeKey);
+    if (!definition || !isSuperAdmin || savingScopes) return;
+    setScopeDraft((current) => {
+      const withoutGlobal = current.filter((item) => scopes.find((s) => s.id === item.scope_id)?.scope_key !== 'global');
+      if (scopeKey === 'global') {
+        return selected ? [{ scope_id: definition.id, scope_value: '' }] : [];
+      }
+      const next = withoutGlobal.filter((item) => !(item.scope_id === definition.id && item.scope_value === (scopeValue ?? '')));
+      return selected ? [...next, { scope_id: definition.id, scope_value: scopeValue ?? '' }] : next;
+    });
+  };
+
+  const scopeSelected = (scopeKey: ScopeKind, scopeValue: string | null) => {
+    const definition = scopes.find((item) => item.scope_key === scopeKey);
+    return !!definition && scopeDraft.some((item) => item.scope_id === definition.id && item.scope_value === (scopeValue ?? ''));
+  };
+
   const addScope = () => {
     const scope = scopes.find((item) => item.scope_key === 'pole') ?? scopes.find((item) => item.scope_key === 'global');
     if (!scope) return;
-    setScopeDraft((current) => [...current, { scope_id: scope.id, scope_value: '' }]);
+    setScopeDraft((current) => current.some((item) => scopes.find((s) => s.id === item.scope_id)?.scope_key === 'global')
+      ? [{ scope_id: scope.id, scope_value: '' }]
+      : [...current, { scope_id: scope.id, scope_value: '' }]);
   };
 
   const saveExistingRoleScopes = async () => {
@@ -1010,7 +1040,7 @@ const RolesPermissions = () => {
         <TabsList className="flex h-auto flex-wrap justify-start">
           <TabsTrigger value="permissions">Matrice des permissions</TabsTrigger>
           <TabsTrigger value="roles">Catalogue des rôles</TabsTrigger>
-          <TabsTrigger value="scopes">Configurer les périmètres</TabsTrigger>
+          <TabsTrigger value="scopes">Périmètres des rôles</TabsTrigger>
           <TabsTrigger value="scope-catalog">Catalogue des périmètres</TabsTrigger>
           <TabsTrigger value="create">Créer un rôle</TabsTrigger>
           <TabsTrigger value="actions">Catalogue des actions</TabsTrigger>
@@ -1126,6 +1156,57 @@ const RolesPermissions = () => {
               {!isSuperAdmin && <p role="alert" className="rounded-md border p-3 text-sm text-destructive">
                 L'édition des périmètres nécessite le rôle administrateur technique.
               </p>}
+              <div className="space-y-4 rounded-lg border p-4">
+                <div>
+                  <h3 className="text-sm font-semibold">Composer les périmètres métier</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Sélection multiple : plusieurs pôles ou entités BIB peuvent être associés au même rôle.
+                    « Mes enregistrements » peut être ajouté aux restrictions métier.
+                    Global représente une portée sans restriction supplémentaire et ne se combine pas avec les autres.
+                  </p>
+                </div>
+                <label className="flex items-center gap-2 rounded-md border p-3 text-sm">
+                  <input type="checkbox" disabled={!isSuperAdmin || savingScopes}
+                    checked={scopeSelected('global', null)}
+                    onChange={(event) => toggleScopeValue('global', null, event.target.checked)} />
+                  <span><strong>Global</strong> — portée générale du rôle (uniquement avec ses droits d'interface)</span>
+                </label>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Pôles BIB — sélection multiple</h4>
+                  <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                    {availablePoles.map((pole) => <label key={pole.id} className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                      <input type="checkbox" disabled={!isSuperAdmin || savingScopes}
+                        checked={scopeSelected('pole', pole.id)}
+                        onChange={(event) => toggleScopeValue('pole', pole.id, event.target.checked)} />
+                      <span>{pole.name}</span>
+                    </label>)}
+                  </div>
+                </div>
+                <label className="flex items-center gap-2 rounded-md border p-3 text-sm">
+                  <input type="checkbox" disabled={!isSuperAdmin || savingScopes}
+                    checked={scopeSelected('own_records', null)}
+                    onChange={(event) => toggleScopeValue('own_records', null, event.target.checked)} />
+                  <span><strong>Mes enregistrements</strong> — appliquer une restriction aux dossiers du collaborateur</span>
+                </label>
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium">Filiales BIB — sélection multiple</h4>
+                  {businessSubsidiaries.length ? (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {businessSubsidiaries.map((value) => <label key={value} className="flex items-center gap-2 rounded-md border p-2 text-sm">
+                        <input type="checkbox" disabled={!isSuperAdmin || savingScopes}
+                          checked={scopeSelected('subsidiary', value)}
+                          onChange={(event) => toggleScopeValue('subsidiary', value, event.target.checked)} />
+                        <span>{value}</span>
+                      </label>)}
+                    </div>
+                  ) : <p className="text-xs text-muted-foreground">Aucune filiale BIB vérifiée accessible. Aucune entité fictive n'est créée.</p>}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Régions et portefeuilles peuvent être ajoutés dans l'éditeur avancé ci-dessous.
+                  Les périmètres configurés restent soumis aux vérifications RLS des ressources concernées.
+                </p>
+              </div>
+              <h3 className="text-sm font-medium">Périmètres sélectionnés — édition avancée</h3>
               {scopeDraft.map((entry, index) => {
                 const selectedScope = scopes.find((item) => item.id === entry.scope_id);
                 const needsValue = !['global', 'own_records'].includes(selectedScope?.scope_key ?? '');
