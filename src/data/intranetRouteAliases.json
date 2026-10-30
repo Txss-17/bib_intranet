@@ -259,5 +259,7 @@
   "/pole/rd/tickets/:id": "product.backlog",
   "/pole/data/bi/designer/:id": "data.bi-dashboards",
   "/pole/data/bi/history/:id": "data.bi-dashboards",
-  "/modules/gateway/message/:messageId": "gateway.inbox"
+  "/modules/gateway/message/:messageId": "gateway.inbox",
+  "/pole/product/releases": "product.engineering",
+  "/pole/security/platform": "security.security"
 }
