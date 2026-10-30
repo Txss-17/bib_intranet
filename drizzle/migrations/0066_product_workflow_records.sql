@@ -62,9 +62,11 @@ ALTER TABLE public.product_work_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_work_events ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.product_work_records,public.product_work_events FROM PUBLIC,anon,authenticated;
 GRANT SELECT ON public.product_work_records,public.product_work_events TO authenticated;
+DROP POLICY IF EXISTS product_work_read ON public.product_work_records;
 CREATE POLICY product_work_read ON public.product_work_records
  FOR SELECT TO authenticated
  USING(public.product_record_visible(created_by,owner_id,visibility));
+DROP POLICY IF EXISTS product_work_events_read ON public.product_work_events;
 CREATE POLICY product_work_events_read ON public.product_work_events
  FOR SELECT TO authenticated USING(EXISTS(
  SELECT 1 FROM public.product_work_records r WHERE r.id=record_id
