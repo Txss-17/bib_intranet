@@ -45,7 +45,7 @@ export interface HrRecordsConfig {
   dateKey?: string;
 }
 
-const POLES = ['direction','finance','ops','tech','rh','supplier','audit','compliance','rse','marketing','risk','lifecycle'];
+const POLES = ['direction', 'finance', 'ops', 'supplier', 'marketplace', 'support', 'marketing', 'rh', 'audit', 'compliance', 'rse', 'product', 'data', 'security'];
 
 export function useIsHr() {
   const { user } = useAuth();
