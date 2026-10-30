@@ -230,8 +230,13 @@ export default function ProductFrictions() {
         row.status === 'closed',
     ).length;
 
+  // Data provenance remains visible: recommendations must not treat mock records as incidents.
+  const sourceWarning = isMock
+    ? 'Données de démonstration : ces frictions ne sont pas des incidents confirmés sur BIB Platform.'
+    : null;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6">\n      {sourceWarning && <p role="alert" className="rounded border p-3 text-sm">{sourceWarning}</p>}
       <section className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-3">
