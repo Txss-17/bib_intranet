@@ -1,2 +1,2 @@
-import ModuleWorkspace from '@/components/operations/ModuleWorkspace';
-export default function Page() { return <ModuleWorkspace pageId="security.infrastructure" />; }
+import SecurityControlWorkspace from '@/components/security/SecurityControlWorkspace';
+export default function SecurityInfrastructure() { return <SecurityControlWorkspace kind="infrastructure" />; }
