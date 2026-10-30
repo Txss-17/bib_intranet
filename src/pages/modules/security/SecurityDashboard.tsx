@@ -118,6 +118,12 @@ export default function SecurityDashboard() {
       desc: 'Flux entre services et environnements',
     },
     {
+      to: '/pole/security/platform',
+      label: 'Sécurité BIB Platform & RLS',
+      icon: Shield,
+      desc: 'Marchands, clients, fournisseurs, logistique et politiques RLS',
+    },
+    {
       to: '/pole/security/sandbox',
       label: 'Sandbox',
       icon: FlaskConical,
@@ -165,8 +171,8 @@ export default function SecurityDashboard() {
         </div>
 
         <p className="mt-1 text-muted-foreground">
-          Accès, infrastructure, sécurité, environnements et
-          supervision technique.
+          Sécurité interne BIB, identités, infrastructure, supervision et
+          contrôles des données de BIB Platform.
         </p>
       </div>
 
