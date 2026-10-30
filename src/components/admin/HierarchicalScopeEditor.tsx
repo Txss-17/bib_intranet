@@ -56,24 +56,34 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
   }, [stored.data, roleId]);
   const entities = useMemo(() => unique((org.data ?? [])
     .map(p => p.subsidiary ?? '').filter(Boolean)), [org.data]);
+  const permittedPoles = (subsidiaries: string[]) => {
+    if (!subsidiaries.length) return new Set<string>();
+    // A role covering multiple subsidiaries can select only poles verified
+    // in EACH subsidiary; otherwise one branch would silently be unverified.
+    const perSubsidiary = subsidiaries.map(entity => new Set(
+      (org.data ?? []).filter(profile => profile.subsidiary === entity)
+        .flatMap(profile => profile.poles ?? []),
+    ));
+    return new Set([...perSubsidiary[0]].filter(pole =>
+      perSubsidiary.every(values => values.has(pole)),
+    ));
+  };
   const allowedPoles = useMemo(() => {
-    const values = new Set<string>();
-    for (const profile of org.data ?? []) {
-      if (profile.subsidiary && draft.subsidiaries.includes(profile.subsidiary)) {
-        for (const pole of profile.poles ?? []) values.add(pole);
-      }
-    }
-    return allPoles.filter(p => values.has(p.id));
+    if (!draft.subsidiaries.length) return [];
+    const permitted = draft.subsidiaries.map(entity => new Set(
+      (org.data ?? []).filter(profile => profile.subsidiary === entity)
+        .flatMap(profile => profile.poles ?? []),
+    ));
+    return allPoles.filter(pole => permitted.every(values => values.has(pole.id)));
   }, [draft.subsidiaries, org.data]);
   const valid = !!roleId && draft.subsidiaries.length > 0 &&
     draft.poles.every(pole => allowedPoles.some(item => item.id === pole)) &&
     draft.regions.length === 0 && draft.portfolios.length === 0;
-  const canEdit = isSuperAdmin && !!roleId && !saving && !org.isError && !stored.isError;
+  const canEdit = isSuperAdmin && !!roleId && !saving &&
+    !org.isError && !stored.isError && !org.isLoading && !stored.isLoading;
   const selectEntity = (entity: string, checked: boolean) => {
     const subsidiaries = toggle(draft.subsidiaries, entity, checked);
-    const available = new Set((org.data ?? [])
-      .filter(p => p.subsidiary && subsidiaries.includes(p.subsidiary))
-      .flatMap(p => p.poles ?? []));
+    const available = permittedPoles(subsidiaries);
     setDraft(current => ({
       ...current,
       subsidiaries,
