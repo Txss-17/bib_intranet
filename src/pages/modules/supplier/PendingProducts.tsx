@@ -32,6 +32,8 @@ type Product = Omit<
 export default function PendingProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [savingDecision, setSavingDecision] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [activeTab, setActiveTab] = useState('pending');
@@ -55,6 +57,7 @@ export default function PendingProducts() {
   const computedMargin = MARGIN_RATE * 100;
 
   const fetchProducts = useCallback(async () => {
+    setLoading(true);
     const { data, error } = await supabase
       .from('products')
       .select('*, suppliers(name)')
@@ -62,10 +65,11 @@ export default function PendingProducts() {
       .order('created_at', { ascending: false });
 
     if (error) {
-      toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
+      setLoadError(error.message);
       setLoading(false);
       return;
     }
+    setLoadError(null);
 
     setProducts((data || []).map((p) => ({
       ...p,
@@ -140,22 +144,54 @@ export default function PendingProducts() {
     }
   };
 
-  const handleValidate = async () => {
-    if (!selectedProduct) return;
-    const { error } = await supabase.from('products').update({ status: 'validated', validated_at: new Date().toISOString() }).eq('id', selectedProduct.id);
-    if (error) toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
-    else toast({ title: 'Produit validé', description: selectedProduct.name });
-    setActionDialog(null);
+  const decideProduct = async (nextStatus: 'validated' | 'rejected') => {
+    if (!selectedProduct || savingDecision) return;
+    const product = selectedProduct;
+    if (product.status !== 'pending' && product.status !== 'review') {
+      toast({ title: 'Décision impossible', description: 'Le produit n’est plus en revue.', variant: 'destructive' });
+      return;
+    }
+    const reason = rejectionReason.trim();
+    if (nextStatus === 'rejected' && !reason) {
+      toast({ title: 'Motif obligatoire', description: 'Veuillez préciser la raison du refus.', variant: 'destructive' });
+      return;
+    }
+
+    setSavingDecision(true);
+    try {
+      // Only apply the decision if the product is still at the status opened
+      // by the reviewer. RLS and server-side policies remain authoritative.
+      const patch = nextStatus === 'validated'
+        ? { status: 'validated' as const, validated_at: new Date().toISOString(), rejection_reason: null }
+        : { status: 'rejected' as const, rejection_reason: reason, validated_at: null };
+      const { data, error } = await supabase
+        .from('products')
+        .update(patch)
+        .eq('id', product.id)
+        .eq('status', product.status)
+        .select('id');
+      if (error) throw error;
+      if (!data?.length) {
+        throw new Error('Ce produit a déjà changé de statut, ou vous ne disposez pas du droit de le modifier. Actualisez la liste.');
+      }
+      toast({ title: nextStatus === 'validated' ? 'Produit validé' : 'Produit refusé', description: product.name });
+      setActionDialog(null);
+      setSelectedProduct(null);
+      setRejectionReason('');
+      await fetchProducts();
+    } catch (error) {
+      toast({
+        title: 'Décision non confirmée',
+        description: error instanceof Error ? error.message : 'Une erreur est survenue.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingDecision(false);
+    }
   };
 
-  const handleReject = async () => {
-    if (!selectedProduct) return;
-    const { error } = await supabase.from('products').update({ status: 'rejected', rejection_reason: rejectionReason }).eq('id', selectedProduct.id);
-    if (error) toast({ title: 'Erreur', description: error.message, variant: 'destructive' });
-    else toast({ title: 'Produit refusé', description: selectedProduct.name });
-    setActionDialog(null);
-    setRejectionReason('');
-  };
+  const handleValidate = () => decideProduct('validated');
+  const handleReject = () => decideProduct('rejected');
 
   const filtered = products.filter(p => {
     const matchSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) || (p.supplier_name || '').toLowerCase().includes(searchQuery.toLowerCase());
@@ -171,6 +207,13 @@ export default function PendingProducts() {
   const categories = [...new Set(products.map(p => p.category).filter(Boolean))];
 
   if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loadError) return (
+    <div role="alert" className="space-y-3 rounded-lg border p-6">
+      <p className="font-medium text-destructive">Impossible de charger les produits en revue.</p>
+      <p className="text-sm text-muted-foreground">{loadError}</p>
+      <Button type="button" variant="outline" onClick={() => void fetchProducts()}>Réessayer</Button>
+    </div>
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -388,7 +431,7 @@ export default function PendingProducts() {
       </Dialog>
 
       {/* Validate Dialog */}
-      <Dialog open={actionDialog === 'validate'} onOpenChange={() => setActionDialog(null)}>
+      <Dialog open={actionDialog === 'validate'} onOpenChange={open => { if (!open && !savingDecision) setActionDialog(null); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Valider le produit</DialogTitle>
@@ -403,14 +446,14 @@ export default function PendingProducts() {
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setActionDialog(null)}>Annuler</Button>
-            <Button onClick={handleValidate} className="bg-primary hover:bg-primary/90">Confirmer</Button>
+            <Button variant="outline" disabled={savingDecision} onClick={() => setActionDialog(null)}>Annuler</Button>
+            <Button onClick={handleValidate} disabled={savingDecision} className="bg-primary hover:bg-primary/90">{savingDecision ? 'Enregistrement…' : 'Confirmer'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Reject Dialog */}
-      <Dialog open={actionDialog === 'reject'} onOpenChange={() => setActionDialog(null)}>
+      <Dialog open={actionDialog === 'reject'} onOpenChange={open => { if (!open && !savingDecision) setActionDialog(null); }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Refuser le produit</DialogTitle>
@@ -418,8 +461,8 @@ export default function PendingProducts() {
           </DialogHeader>
           <Textarea placeholder="Raison du refus..." value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} rows={4} />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setActionDialog(null)}>Annuler</Button>
-            <Button variant="destructive" onClick={handleReject} disabled={!rejectionReason.trim()}>Confirmer le refus</Button>
+            <Button variant="outline" disabled={savingDecision} onClick={() => setActionDialog(null)}>Annuler</Button>
+            <Button variant="destructive" onClick={handleReject} disabled={savingDecision || !rejectionReason.trim()}>{savingDecision ? 'Enregistrement…' : 'Confirmer le refus'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
