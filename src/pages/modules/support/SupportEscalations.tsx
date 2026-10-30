@@ -47,7 +47,7 @@ export default function SupportEscalations() {
       <CardTitle className="flex items-center gap-2"><AlertTriangle className="h-5 w-5" />SAV assuré — reprises après 48 h</CardTitle>
       <p className="mt-2 text-sm text-muted-foreground">
        File des dossiers pour lesquels Platform a confirmé l'absence de réponse du marchand
-       et l'éligibilité à l'assurance BIB. BIB coordonne la suite ; le marchand demeure le vendeur juridique.
+       et l'éligibilité à l'assurance BIB. BIB coordonne la suite si le profil dispose de l’add-on assurance ; le marchand demeure le vendeur juridique et conserve ses obligations légales.
       </p>
      </div>
      <Button variant="outline" disabled={queue.isFetching} onClick={() => void queue.refetch()}>
@@ -112,7 +112,7 @@ export default function SupportEscalations() {
       </p>}
      <h4 className="text-sm font-medium">Historique des décisions</h4>
      {events.isLoading && <p className="text-xs text-muted-foreground">Chargement de l'historique…</p>}
-     {events.isError && <p role="alert" className="text-xs text-destructive">Historique indisponible.</p>}
+     {events.isError && <p role="alert" className="text-xs text-destructive">Historique indisponible. <Button variant="link" onClick={() => void events.refetch()}>Réessayer</Button></p>}
      {events.data?.length === 0 && <p className="text-xs text-muted-foreground">Aucune action interne enregistrée.</p>}
      {events.data?.map(event => <p key={event.id} className="text-xs text-muted-foreground">
       {when(event.created_at)} · {event.action} {event.note ? `· ${event.note}` : ''}
