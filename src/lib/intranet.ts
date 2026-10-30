@@ -2,7 +2,7 @@ import definitions from '@/data/intranetRegistry.json';
 import aliases from '@/data/intranetRouteAliases.json';
 import { supabase } from '@/integrations/supabase/client';
 export type ModuleField = { key: string; label: string; type: string; required: boolean };
-export type ModuleDefinition = { id: string; path: string; label: string; scope: string; transversal: boolean; approvalLevels: number; fields: ModuleField[]; permissionAliases?: string[]; public?: boolean; restrictedRoles?: string[] };
+export type ModuleDefinition = { id: string; path: string; label: string; scope: string; transversal: boolean; approvalLevels: number; fields: ModuleField[]; description?: string; operationalNote?: string; recordLabel?: string; permissionAliases?: string[]; public?: boolean; restrictedRoles?: string[] };
 export const intranetModules = definitions as ModuleDefinition[];
 export const moduleById = (id: string) => intranetModules.find(p => p.id === id || p.permissionAliases?.includes(id));
 export const resolveIntranetPage = (pathname: string): ModuleDefinition | undefined => {
