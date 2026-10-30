@@ -53,8 +53,9 @@ export function useIsHr() {
     queryKey: ['is-hr', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await db.rpc('can_access_rh_profiles', { _uid: user!.id });
-      return !!data;
+      const { data, error } = await db.rpc('can_access_rh_profiles', { _uid: user!.id });
+      if (error) throw error;
+      return data === true;
     },
   });
 }
@@ -88,7 +89,8 @@ export function HrRecordsPage({ config }: { config: HrRecordsConfig }) {
     queryKey: ['hr-employee-options'],
     enabled: needsEmployees,
     queryFn: async () => {
-      const { data } = await db.from('profiles').select('id, first_name, last_name, email').eq('test_account', false).order('first_name');
+      const { data, error } = await db.from('profiles').select('id, first_name, last_name, email').eq('test_account', false).order('first_name');
+      if (error) throw error;
       return (data ?? []) as { id: string; first_name: string; last_name: string; email: string }[];
     },
   });
