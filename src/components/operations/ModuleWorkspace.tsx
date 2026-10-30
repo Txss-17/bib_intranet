@@ -30,11 +30,11 @@ function Workspace({ definition: d }: { definition: ModuleDefinition }) {
  const [search, setSearch] = useState(''); const [status, setStatus] = useState('open'); const [offset, setOffset] = useState(0);
  const [params, setParams] = useSearchParams(); const selectedId = params.get('record');
  const query = useIntranetRecords(d.id, search, status, offset); const rows = query.data?.rows || [];
- const { data: people = [] } = useIntranetPeople(); const actions = useIntranetRecordActions(d.id);
+ const { data: people = [] } = useIntranetPeople(d.scope); const actions = useIntranetRecordActions(d.id);
  const [editing, setEditing] = useState<ModuleRecord | null | undefined>(undefined);
  const [note, setNote] = useState(''); const [comment, setComment] = useState('');
- const selectedQuery = useIntranetRecord(selectedId);
- const selected = rows.find(r => r.id === selectedId) || (selectedQuery.data?.page_id === d.id ? selectedQuery.data : undefined); const events = useIntranetRecordEvents(selected?.id);
+ const selectedQuery = useIntranetRecord(selectedId,d.scope);
+ const selected = rows.find(r => r.id === selectedId) || (selectedQuery.data?.page_id === d.id ? selectedQuery.data : undefined); const events = useIntranetRecordEvents(selected?.id,d.scope);
  const owns = (r: ModuleRecord) => r.created_by === user?.id || r.owner_id === user?.id || can(d.id, 'validate');
  const name = (id: string | null) => people.find(p => p.id === id)?.name || 'Collaborateur';
  const select = (id: string | null) => { const next = new URLSearchParams(params); if (id) next.set('record', id); else next.delete('record'); setParams(next, { replace: true }); setNote(''); setComment(''); };
