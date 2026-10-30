@@ -2,7 +2,9 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { Link } from 'react-router-dom';
+import { ExternalLink } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { HrRecordsPage, HrRecordsConfig } from '@/components/rh/HrRecordsPage';
 
@@ -68,13 +70,28 @@ const candidates: HrRecordsConfig = {
 
 export default function Recruitment() {
   return (
-    <Tabs defaultValue="needs" className="space-y-4">
+    <div className="space-y-5">
+      <Card>
+        <CardHeader><CardTitle>Pré-lancement · BIB Talent</CardTitle></CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p>Les candidats déposent leur dossier via le formulaire BIB Talent. Ce formulaire Google n'est pas encore connecté automatiquement à la base RH : les candidatures doivent être examinées puis saisies dans le pipeline ci-dessous par un membre RH habilité.</p>
+          <p>Parcours : réception → présélection → entretien → validation des conditions de collaboration → demande d'intégration RH → accès Intranet sur invitation nominative et avec permissions limitées.</p>
+          <p className="text-muted-foreground">Ne transmettez aucun accès Intranet à un candidat non retenu. Avant toute mission, définissez un statut et des conditions contractuelles adaptés ; le bénévolat dans une société commerciale n'est pas une option générale.</p>
+          <Button variant="outline" asChild>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLSemotUUORqFwUdM60S1BAW-79YzSm-5TiocRvm-wuTUiCevvg/viewform" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="mr-2 h-4 w-4" />Consulter le formulaire public
+            </a>
+          </Button>
+        </CardContent>
+      </Card>
+      <Tabs defaultValue="candidates" className="space-y-4">
       <TabsList>
         <TabsTrigger value="needs">Besoins</TabsTrigger>
         <TabsTrigger value="candidates">Candidatures & pipeline</TabsTrigger>
       </TabsList>
       <TabsContent value="needs"><HrRecordsPage config={needs} /></TabsContent>
       <TabsContent value="candidates"><HrRecordsPage config={candidates} /></TabsContent>
-    </Tabs>
+      </Tabs>
+    </div>
   );
 }
