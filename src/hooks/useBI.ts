@@ -57,6 +57,8 @@ export interface BIDataSource {
   description: string | null;
   config: any;
   owner_id: string | null;
+  business_pole: string | null;
+  business_subsidiary: string | null;
 }
 
 export interface BIVersion {
