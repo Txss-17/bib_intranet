@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 
 import { useSecurityAlerts } from '@/hooks/useSecurityData';
+import { usePermissions } from '@/hooks/usePermissions';
 
 type SecurityAlertSeverity =
   | 'critical'
@@ -119,8 +120,12 @@ export default function Security() {
   const {
     data = [],
     isLoading,
+    isError,
+    refetch,
     update,
   } = useSecurityAlerts();
+  const { can } = usePermissions();
+  const mayChange = can('security.security', 'update');
 
   const alerts =
     data as unknown as SecurityAlert[];
@@ -192,9 +197,19 @@ export default function Security() {
     id: string,
     status: SecurityAlertStatus,
   ) => {
+    if (!mayChange) {
+      toast.error('Vous ne disposez pas du droit de modifier cette alerte.');
+      return;
+    }
+    const original = alerts.find((alert) => alert.id === id);
+    if (!original || !['open', 'investigating'].includes(original.status)) {
+      toast.error('Cette alerte ne peut pas être modifiée depuis son état actuel.');
+      return;
+    }
     try {
       await update.mutateAsync({
         id,
+        expectedStatus: original.status,
         status,
         ...(status ===
         'resolved'
@@ -374,6 +389,11 @@ export default function Security() {
             <p className="text-sm text-muted-foreground">
               Chargement…
             </p>
+          ) : isError ? (
+            <div role="alert" className="space-y-2 p-4">
+              <p className="text-destructive">Impossible de charger les alertes de sécurité.</p>
+              <Button type="button" variant="outline" onClick={() => void refetch()}>Réessayer</Button>
+            </div>
           ) : filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Aucune alerte correspondant
@@ -472,7 +492,7 @@ export default function Security() {
                               size="sm"
                               variant="ghost"
                               disabled={
-                                update.isPending
+                                update.isPending || !mayChange
                               }
                               onClick={() =>
                                 setStatus(
@@ -488,7 +508,7 @@ export default function Security() {
                               size="sm"
                               variant="ghost"
                               disabled={
-                                update.isPending
+                                update.isPending || !mayChange
                               }
                               onClick={() =>
                                 setStatus(
