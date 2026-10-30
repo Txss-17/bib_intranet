@@ -37,9 +37,15 @@ export const useSaveMediaAttachments = () => {
       entityId: string;
       files: { name: string; url: string; type: string; size: number }[];
     }) => {
-      // Delete existing attachments for this entity
-      await from('media_attachments').delete().eq('entity_type', entityType).eq('entity_id', entityId);
-      
+      // Do not insert a new attachment set when deletion was rejected by
+      // permissions, otherwise the user may see duplicate or stale documents.
+      // A fully atomic replacement still requires a server-side transaction.
+      const { error: deleteError } = await from('media_attachments')
+        .delete()
+        .eq('entity_type', entityType)
+        .eq('entity_id', entityId);
+      if (deleteError) throw deleteError;
+
       if (files.length === 0) return [];
       
       const rows = files.map(f => ({
