@@ -94,9 +94,10 @@ export default function MerchantPortfolio() {
   const [search, setSearch] = useState('');
 
   const [portfolioFilter, setPortfolioFilter] =
-    useState<PortfolioFilter>(
-      isPortfolioView ? 'mine' : 'all',
-    );
+    useState<PortfolioFilter>('all');
+  // The personal portfolio route must never fall back to the global list
+  // because of a filter change or a route transition.
+  const effectivePortfolioFilter: PortfolioFilter = isPortfolioView ? 'mine' : portfolioFilter;
 
   const {
     data: merchants = [],
@@ -398,7 +399,7 @@ export default function MerchantPortfolio() {
           null;
 
         if (
-          portfolioFilter ===
+          effectivePortfolioFilter ===
           'unassigned'
         ) {
           if (
@@ -407,7 +408,7 @@ export default function MerchantPortfolio() {
             return false;
           }
         } else if (
-          portfolioFilter ===
+          effectivePortfolioFilter ===
           'mine'
         ) {
           /*
@@ -435,10 +436,10 @@ export default function MerchantPortfolio() {
             return false;
           }
         } else if (
-          portfolioFilter !==
+          effectivePortfolioFilter !==
             'all' &&
           portfolioId !==
-            portfolioFilter
+            effectivePortfolioFilter
         ) {
           return false;
         }
@@ -449,7 +450,7 @@ export default function MerchantPortfolio() {
   }, [
     merchants,
     assignmentByMerchant,
-    portfolioFilter,
+    effectivePortfolioFilter,
     myMerchantPortfolioIds,
   ]);
 
@@ -532,20 +533,19 @@ export default function MerchantPortfolio() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold">
-            Marchands & portefeuilles
+            {isPortfolioView ? 'Mon portefeuille marchand' : 'Marchands & portefeuilles'}
           </h1>
 
           <p className="text-sm text-muted-foreground">
-            Pilotage du marchand comme unité de
-            gestion Marketplace, avec l’ensemble
-            de ses boutiques et son portefeuille
-            attribué.
+            {isPortfolioView
+              ? 'Marchands et boutiques appartenant aux portefeuilles métier réellement attribués à votre compte.'
+              : 'Vue globale de supervision des marchands, boutiques et affectations Marketplace.'}
           </p>
         </div>
 
         <Badge variant="outline">
-          {portfolios.length} portefeuille
-          {portfolios.length > 1
+          {isPortfolioView ? myMerchantPortfolioIds.size : portfolios.length} portefeuille
+          {(isPortfolioView ? myMerchantPortfolioIds.size : portfolios.length) > 1
             ? 's'
             : ''}
         </Badge>
@@ -562,7 +562,7 @@ export default function MerchantPortfolio() {
 
             <div>
               <p className="text-2xl font-semibold">
-                {merchants.length}
+                {isPortfolioView ? filteredMerchants.length : merchants.length}
               </p>
 
               <p className="text-xs text-muted-foreground">
@@ -578,7 +578,9 @@ export default function MerchantPortfolio() {
 
             <div>
               <p className="text-2xl font-semibold">
-                {shops.length}
+                {isPortfolioView
+                  ? filteredMerchants.reduce((sum, merchant) => sum + (shopCountByMerchant.get(merchant.id) ?? 0), 0)
+                  : shops.length}
               </p>
 
               <p className="text-xs text-muted-foreground">
@@ -594,7 +596,7 @@ export default function MerchantPortfolio() {
 
             <div>
               <p className="text-2xl font-semibold">
-                {activePortfolioCount}
+                {isPortfolioView ? myMerchantPortfolioIds.size : activePortfolioCount}
               </p>
 
               <p className="text-xs text-muted-foreground">
@@ -610,7 +612,7 @@ export default function MerchantPortfolio() {
 
             <div>
               <p className="text-2xl font-semibold">
-                {unassignedMerchantCount}
+                {isPortfolioView ? '—' : unassignedMerchantCount}
               </p>
 
               <p className="text-xs text-muted-foreground">
@@ -705,7 +707,7 @@ export default function MerchantPortfolio() {
               />
             </div>
 
-            <select
+            {!isPortfolioView && <select
               value={
                 portfolioFilter
               }
@@ -742,7 +744,7 @@ export default function MerchantPortfolio() {
                   </option>
                 ),
               )}
-            </select>
+            </select>}
           </div>
         </CardHeader>
 
