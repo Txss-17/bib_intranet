@@ -13,20 +13,16 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [checkingLink, setCheckingLink] = useState(true);
 
   useEffect(() => {
-    // Check for recovery token in URL hash
-    const hash = window.location.hash;
-    if (hash.includes('type=recovery')) {
-      setIsRecovery(true);
-    }
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
-        setIsRecovery(true);
-      }
+    // Supabase verifies both password-recovery and RH invitation tokens.
+    // Never accept an unverified URL hash as authorization to set a password.
+    // PASSWORD_RECOVERY, SIGNED_IN and INITIAL_SESSION all carry a session.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsRecovery(Boolean(session));
+      setCheckingLink(false);
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -53,13 +49,19 @@ export default function ResetPassword() {
     setLoading(false);
   };
 
+  if (checkingLink) {
+    return <div className="flex min-h-screen items-center justify-center p-6" role="status">
+      Vérification sécurisée de votre invitation ou lien de réinitialisation…
+    </div>;
+  }
+
   if (!isRecovery) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="w-full max-w-md text-center space-y-4">
           <Shield className="h-12 w-12 mx-auto text-muted-foreground" />
           <h1 className="text-xl font-semibold text-foreground">Lien invalide</h1>
-          <p className="text-sm text-muted-foreground">Ce lien de réinitialisation est invalide ou a expiré.</p>
+          <p className="text-sm text-muted-foreground">Votre invitation ou lien de réinitialisation est invalide ou a expiré.</p>
           <Button onClick={() => navigate('/login')}>Retour à la connexion</Button>
         </div>
       </div>
