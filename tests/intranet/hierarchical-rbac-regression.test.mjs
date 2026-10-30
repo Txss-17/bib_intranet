@@ -41,3 +41,24 @@ test('hierarchical editor is the principal role-scoping tab', () => {
   assert.match(page, /<HierarchicalScopeEditor roleId=\{selectedRoleId\} \/>/);
   assert.match(page, /<TabsTrigger value="flat-scopes">Périmètres simples \(historiques\)<\/TabsTrigger>/);
 });
+
+test('region and portfolio selection uses only verified subsidiary/pole mapping', () => {
+  const editor = read('src/components/admin/HierarchicalScopeEditor.tsx');
+  assert.match(editor, /\.from\('access_scope_regions'\)/);
+  assert.match(editor, /\.from\('access_scope_portfolios'\)/);
+  assert.match(editor, /selectedPairs\.every\(pair =>/);
+  assert.match(editor, /configure_verified_scope_dimension/);
+  assert.match(editor, /p_subsidiary:mappingSubsidiary,p_pole:mappingPole/);
+  assert.match(editor, /draft\.regions\.every\(value => regionChoices\.includes\(value\)\)/);
+  assert.match(editor, /draft\.portfolios\.every\(value => portfolioChoices\.includes\(value\)\)/);
+  const sql = read('drizzle/migrations/0063_verified_scope_dimension_catalog.sql');
+  assert.match(sql, /Subsidiary\/pole relationship not verified/);
+  assert.match(sql, /Region not verified for subsidiary\/pole/);
+  assert.match(sql, /Portfolio not verified for subsidiary\/pole/);
+});
+
+test('HR does not claim draft policies are effective role grants', () => {
+  const rh = read('src/pages/modules/rh/RHAccess.tsx');
+  assert.match(rh, /enregistrées en brouillon ne sont pas des permissions effectives/);
+  assert.match(rh, /permittedScopeAssignments/);
+});
