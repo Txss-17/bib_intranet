@@ -18,6 +18,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { toast } from '@/hooks/use-toast';
 import { poles as availablePoles } from '@/data/poles';
+import { MATRIX_EVENT } from '@/data/permissionMatrix';
 import {
   syncAccessCatalog,
   type AccessRolePayload,
@@ -387,6 +388,7 @@ const RolesPermissions = () => {
       });
       if (error) throw error;
       await loadCatalog();
+      window.dispatchEvent(new Event(MATRIX_EVENT));
       toast({ title: 'Périmètres enregistrés', description: 'Le rôle existant a été mis à jour sans modifier sa matrice de permissions.' });
     } catch (error) {
       toast({ title: 'Modification impossible', description: getErrorMessage(error, 'Recharger la page et vérifier la fonction de gestion des périmètres.'), variant: 'destructive' });
@@ -627,6 +629,8 @@ const RolesPermissions = () => {
         );
       }
 
+      toast({
+      window.dispatchEvent(new Event(MATRIX_EVENT));
       toast({
         title: 'Permissions enregistrées',
         description: `${rows.length} combinaisons interface/action traitées pour « ${selectedRole?.label ?? selectedRoleId} ».`,
