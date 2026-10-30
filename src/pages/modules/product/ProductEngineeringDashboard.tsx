@@ -31,6 +31,7 @@ const sections: Array<{ title: string; description: string; links: ProductArea[]
     description: 'Préparer les développements, organiser les vérifications et conserver les preuves de recette.',
     links: [
       { label: 'Engineering', path: '/pole/product/engineering', pageId: 'product.engineering', icon: Code2, description: 'Implémentations, dépendances et dossier de livraison' },
+      { label: 'Livraisons & recettes', path: '/pole/product/releases', pageId: 'product.engineering', icon: TestTube2, description: 'Références de changements, tests, décisions et plans de retour arrière' },
       { label: 'Frictions & anomalies', path: '/pole/product/frictions', pageId: 'product.frictions', icon: AlertTriangle, description: 'Signaux utilisateurs et anomalies à qualifier' },
     ],
   },
