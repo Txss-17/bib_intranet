@@ -50,8 +50,8 @@ export function useReviewCatalogUpload() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async ({ id, status, notes, supplierId }: {
-      id: string; status: 'reviewing' | 'approved' | 'rejected'; notes?: string; supplierId: string;
+    mutationFn: async ({ id, status, notes, supplierId, expectedStatus }: {
+      id: string; status: 'reviewing' | 'approved' | 'rejected'; notes?: string; supplierId: string; expectedStatus: 'pending' | 'reviewing';
     }) => {
       const patch: any = { status, review_notes: notes ?? null };
       if (status === 'approved' || status === 'rejected') {
@@ -65,7 +65,7 @@ export function useReviewCatalogUpload() {
         .from('supplier_catalog_uploads')
         .update(patch)
         .eq('id', id)
-        .in('status', ['pending', 'reviewing'])
+        .eq('status', expectedStatus)
         .select('id');
       if (error) throw error;
       if (!changed?.length) {
