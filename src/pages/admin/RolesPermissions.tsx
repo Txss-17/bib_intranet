@@ -1063,15 +1063,15 @@ const RolesPermissions = () => {
                     <th className="p-3 text-left">Type</th><th className="p-3 text-left">Code</th><th className="p-3 text-left">Utilisation</th>
                   </tr></thead>
                   <tbody>
-                    {scopes.map((scope) => <tr key={scope.id} className="border-b last:border-0">
-                      <td className="p-3 font-medium">{scope.label}</td>
+                    {scopes.filter((scope) => ['global', 'pole', 'portfolio', 'region', 'own_records', 'subsidiary'].includes(scope.scope_key)).map((scope) => <tr key={scope.id} className="border-b last:border-0">
+                      <td className="p-3 font-medium">{scope.scope_key === 'subsidiary' ? 'Filiales BIB' : scope.scope_key === 'own_records' ? 'Dossiers dont je suis responsable' : scope.label}</td>
                       <td className="p-3 font-mono text-xs">{scope.scope_key}</td>
                       <td className="p-3">{scope.scope_key === 'pole' ? 'Choisir un des 14 pôles BIB' :
                         scope.scope_key === 'global' ? 'Tous les enregistrements autorisés par le rôle' :
                         scope.scope_key === 'own_records' ? 'Uniquement les dossiers du collaborateur' :
                         scope.scope_key === 'portfolio' ? 'Identifiant de portefeuille autorisé' :
                         scope.scope_key === 'region' ? 'Code région' :
-                        scope.scope_key === 'subsidiary' ? 'Identifiant de filiale' :
+                        scope.scope_key === 'subsidiary' ? 'Entité BIB réellement enregistrée, avec une valeur exacte' :
                         'Type historique non pris en charge par l’éditeur : revue technique nécessaire'}</td>
                     </tr>)}
                   </tbody>
@@ -1189,7 +1189,7 @@ const RolesPermissions = () => {
                   <span><strong>Mes enregistrements</strong> — appliquer une restriction aux dossiers du collaborateur</span>
                 </label>
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Filiales BIB — sélection multiple</h4>
+                  <h4 className="text-sm font-medium">Entités et filiales BIB — sélection multiple</h4>
                   {businessSubsidiaries.length ? (
                     <div className="grid gap-2 sm:grid-cols-2">
                       {businessSubsidiaries.map((value) => <label key={value} className="flex items-center gap-2 rounded-md border p-2 text-sm">
@@ -1219,7 +1219,7 @@ const RolesPermissions = () => {
                         onChange={(event) => setScopeDraft((current) => current.map((item, i) =>
                           i === index ? { scope_id: event.target.value, scope_value: '' } : item
                         ))}>
-                        {scopes.filter(scope => ['global', 'pole', 'portfolio', 'region', 'own_records', 'subsidiary'].includes(scope.scope_key)).map((scope) => <option key={scope.id} value={scope.id}>{scope.label}</option>)}
+                        {scopes.filter(scope => ['global', 'pole', 'portfolio', 'region', 'own_records', 'subsidiary'].includes(scope.scope_key)).map((scope) => <option key={scope.id} value={scope.id}>{scope.scope_key === 'subsidiary' ? 'Filiales BIB' : scope.scope_key === 'own_records' ? 'Mes dossiers' : scope.label}</option>)}
                       </select>
                     </label>
                     <label className="space-y-1 text-sm">
