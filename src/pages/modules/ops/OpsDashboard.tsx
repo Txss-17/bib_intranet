@@ -27,8 +27,8 @@ const OpsDashboard = () => {
   const k = useOpsControlKPIs();
   const { can } = usePermissions();
   const anomalies = useAnomalyStats('ops.overview');
-  const { data: sync = [], isLoading: syncLoading } = useSyncEvents();
-  const { data: repl = [], isLoading: replLoading } = useReplenishment();
+  const { data: sync = [], isLoading: syncLoading, isError: syncError, refetch: reloadSync } = useSyncEvents();
+  const { data: repl = [], isLoading: replLoading, isError: replError, refetch: reloadRepl } = useReplenishment();
 
   const isLoading = k.isLoading || syncLoading || replLoading;
 
@@ -76,7 +76,7 @@ const OpsDashboard = () => {
       label: 'Réappro',
       to: '/pole/ops/replenishment',
       icon: Sparkles,
-      value: `${pendingRepl} suggestions`,
+      value: replError ? '—' : `${pendingRepl} suggestions`,
       alert: pendingRepl > 0,
     },
     {
@@ -108,6 +108,14 @@ const OpsDashboard = () => {
   return (
     <div className="space-y-6 p-6">
       {anomalies.isError && can('ops.anomalies', 'read') && <p role="alert">Indicateurs des anomalies indisponibles.</p>}
+      {(syncError || replError) && (
+        <div role="alert" className="rounded-lg border border-destructive/30 p-3 text-sm">
+          Certaines données de synchronisation ou de réapprovisionnement sont indisponibles.
+          Les indicateurs concernés ne sont pas confirmés.
+          <button type="button" className="ml-2 underline"
+            onClick={() => { void reloadSync(); void reloadRepl(); }}>Réessayer</button>
+        </div>
+      )}
       {/* Header */}
       <div>
         <div className="flex items-center gap-3">
