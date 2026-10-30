@@ -42,6 +42,7 @@ ALTER TABLE public.product_release_tracking ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.product_release_tracking_events ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.product_release_tracking,public.product_release_tracking_events FROM PUBLIC,anon,authenticated;
 GRANT SELECT ON public.product_release_tracking,public.product_release_tracking_events TO authenticated;
+DROP POLICY IF EXISTS product_release_read ON public.product_release_tracking;
 CREATE POLICY product_release_read ON public.product_release_tracking FOR SELECT TO authenticated
 USING (
  public.has_pole(auth.uid(),'product')
@@ -49,6 +50,7 @@ USING (
  OR public.has_role(auth.uid(),'admin'::public.app_role)
  OR EXISTS(SELECT 1 FROM public.tech_requests t WHERE t.id=request_id AND t.requester_id=auth.uid())
 );
+DROP POLICY IF EXISTS product_release_events_read ON public.product_release_tracking_events;
 CREATE POLICY product_release_events_read ON public.product_release_tracking_events FOR SELECT TO authenticated
 USING (EXISTS (SELECT 1 FROM public.product_release_tracking r WHERE r.id=release_id));
 
