@@ -55,6 +55,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { useEmployees } from '@/hooks/useEmployees';
 import { useAuth } from '@/hooks/useAuth';
+import { useUserRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { MATRIX_EVENT } from '@/data/permissionMatrix';
@@ -150,6 +151,10 @@ const roleMatchesEmployee = (
   role: AccessRole,
   employee: any,
 ) => {
+  // The CEO role can never be used as a generic Direction role.
+  if (role.role_key === 'ceo') {
+    return employee?.position === 'ceo' && employeeHasPole(employee, 'direction');
+  }
   /*
    * Un rôle sans business_pole est considéré comme transversal.
    */
@@ -224,6 +229,7 @@ const portfolioMatchesEmployee = (
 const RHAccess = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
 
   const {
     data: employees = [],
@@ -608,12 +614,10 @@ const RHAccess = () => {
     }
 
     return roles.filter((role) =>
-      roleMatchesEmployee(
-        role,
-        selectedEmployee,
-      ),
+      (role.role_key !== 'ceo' || isAdmin) &&
+      roleMatchesEmployee(role, selectedEmployee),
     );
-  }, [roles, selectedEmployee]);
+  }, [roles, selectedEmployee, isAdmin]);
 
 
   /* ==========================================================
@@ -760,6 +764,12 @@ const RHAccess = () => {
         variant: 'destructive',
       });
 
+      return;
+    }
+
+    const currentActive = selectedEmployeeAssignments.find(a => a.status === 'active');
+    if ((selectedRole.role_key === 'ceo' || currentActive?.role?.role_key === 'ceo') && !isAdmin) {
+      toast({ title: 'Administration requise', description: 'Le rôle CEO ne peut être attribué ou modifié que par un administrateur technique.', variant: 'destructive' });
       return;
     }
 
@@ -1085,6 +1095,10 @@ const RHAccess = () => {
   const revokeRole = async (
     assignment: AccessAssignment,
   ) => {
+    if (assignment.role?.role_key === 'ceo' && !isAdmin) {
+      toast({ title: 'Révocation non autorisée', description: 'La modification du rôle CEO nécessite un administrateur technique.', variant: 'destructive' });
+      return;
+    }
     try {
       const { error } =
         await supabase
