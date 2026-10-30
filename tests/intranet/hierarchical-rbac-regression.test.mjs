@@ -15,12 +15,12 @@ test('hierarchy means intersection of each dimension and contextual global', () 
 
 test('admin hierarchical editor cascades entity to its poles', () => {
   const source = read('src/components/admin/HierarchicalScopeEditor.tsx');
-  assert.match(source, /profile\.subsidiary && draft\.subsidiaries\.includes\(profile\.subsidiary\)/);
+  assert.match(source, /profile\.subsidiary === entity/);
   assert.match(source, /poles: current\.poles\.filter\(pole => available\.has\(pole\)\)/);
   assert.match(source, /regions: \[\], portfolios: \[\]/);
   assert.match(source, /selectEntity\(entity, e\.target\.checked\)/);
   assert.match(source, /tous les pôles disponibles dans la filiale sélectionnée/);
-  assert.match(source, /scope\.ownRecords/);
+  assert.match(source, /draft\.ownRecords/);
 });
 
 test('hierarchical policy is an audited server-side draft, not an RLS grant', () => {
