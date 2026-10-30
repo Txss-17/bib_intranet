@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { LayoutGrid, Users, ShieldCheck, ExternalLink, KeyRound } from 'lucide-react';
+import { LayoutGrid, Users, ShieldCheck, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/hooks/useAuth';
@@ -7,23 +7,20 @@ import { usePosition } from '@/hooks/usePosition';
 import { poles } from '@/data/poles';
 import { positionInfos, EmployeePosition } from '@/types/positions';
 import { usePermissionRules } from '@/hooks/usePermissionRules';
-
-const WORKSPACE_GROUPS = [
-  { name: 'linksy-all@brand-in-a-box.space', role: 'Membre' },
-  { name: 'intranet-users@brand-in-a-box.space', role: 'Membre' },
-];
+import { usePermissions } from '@/hooks/usePermissions';
 
 export function AccessTab() {
   const { profile } = useAuth();
   const { accessiblePoles, positionInfo } = usePosition();
   const rights = usePermissionRules();
+  const { isSuperAdmin } = usePermissions();
   const position = profile?.position as EmployeePosition | null;
   const posInfo = position ? positionInfos[position] : null;
 
   const activeRights: { label: string; on: boolean }[] = [
     { label: 'Consultation données sensibles', on: rights.can_view_sensitive },
     { label: 'Journal d\'audit complet', on: rights.can_view_audit_log },
-    { label: 'Configuration des permissions', on: rights.can_configure_permissions },
+    { label: 'Configuration des permissions', on: isSuperAdmin },
   ];
 
   return (
@@ -73,7 +70,7 @@ export function AccessTab() {
             </div>
           ))}
         </div>
-        {rights.can_configure_permissions && (
+        {isSuperAdmin && (
           <div className="mt-4">
             <Button asChild variant="outline" size="sm">
               <Link to="/admin/roles-permissions">
@@ -88,19 +85,11 @@ export function AccessTab() {
         <h3 className="text-lg font-medium text-foreground mb-4 flex items-center gap-2">
           <Users className="h-4 w-4" /> Groupes Workspace
         </h3>
-        <div className="space-y-2">
-          {WORKSPACE_GROUPS.map((g) => (
-            <div key={g.name} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
-              <div>
-                <p className="text-sm font-medium text-foreground">{g.name}</p>
-                <p className="text-xs text-muted-foreground">{g.role}</p>
-              </div>
-              <Button variant="ghost" size="sm">
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Les groupes Google Workspace et leurs appartenances doivent être confirmés
+          par une synchronisation administrateur. Aucun groupe n'est présenté
+          comme attribué tant que cette vérification n'est pas disponible.
+        </p>
       </div>
 
       <div className="enterprise-card p-6">
