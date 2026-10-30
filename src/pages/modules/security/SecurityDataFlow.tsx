@@ -26,72 +26,63 @@ interface DataFlow {
 const FLOWS: DataFlow[] = [
   {
     from: 'BIB Platform',
-    to: 'Backend partagé',
-    via: 'app_origin: platform',
-    description:
-      'Échanges entre les interfaces publiques de la plateforme et les services backend.',
+    to: 'Base Supabase Platform',
+    via: 'Authentification et RLS Platform',
+    description: 'Marchands, boutiques, clients, produits et commandes : Platform reste la source de vérité.',
     icon: Globe,
   },
   {
-    from: 'BIB Intranet',
-    to: 'Backend partagé',
-    via: 'app_origin: connect',
-    description:
-      'Accès interne aux services métier et aux données opérationnelles.',
-    icon: Lock,
-  },
-  {
-    from: 'Edge Functions',
-    to: 'Tables Supabase',
-    via: 'service_role + contrôles serveur',
-    description:
-      'Traitement serveur contrôlé avec vérification explicite des permissions avant les opérations privilégiées.',
+    from: 'Base Supabase Platform',
+    to: 'Bridge serveur privé',
+    via: 'intranet-export / intranet-import',
+    description: 'Échange des projections autorisées par des fonctions serveur, sans accès direct du navigateur aux données privées.',
     icon: Server,
   },
   {
-    from: 'Site public',
-    to: 'Services externes',
-    via: 'API Gateway',
-    description:
-      'Transmission contrôlée des données issues des formulaires et intégrations publiques.',
-    icon: Globe,
+    from: 'Bridge serveur privé',
+    to: 'Base Supabase Intranet',
+    via: 'platform-bridge',
+    description: 'Rapprochement des identifiants, versions, contrôles métier et journalisation des synchronisations.',
+    icon: Database,
+  },
+  {
+    from: 'Base Supabase Intranet',
+    to: 'BIB Intranet',
+    via: 'Autorisations Connect et RLS',
+    description: 'Consultation et actions internes selon les habilitations et les responsabilités de chaque pôle.',
+    icon: Lock,
   },
 ];
 
 const PUBLIC_ZONE = [
-  'Site public et pages marketing',
-  'BIB Platform',
-  'Interfaces destinées aux clients, boutiques et fournisseurs',
-  'API Gateway pour les échanges publics',
+  'BIB Platform et ses espaces marchands, clients et partenaires',
+  'Authentification et permissions propres à Platform',
+  'Données commerciales stockées dans la base Supabase Platform',
 ];
 
 const INTERNAL_ZONE = [
-  'BIB Intranet',
-  'Services backend internes',
-  'Edge Functions à privilèges contrôlés',
-  'Accès aux données sensibles selon les droits attribués',
+  'BIB Intranet et ses collaborateurs autorisés',
+  'Base Supabase Intranet distincte de la base Platform',
+  'Fonctions serveur du bridge avec secrets non exposés',
+  'Dossiers, documents et opérations sensibles par droits de pôle',
 ];
 
 const SECURITY_CONTROLS = [
   {
     title: 'RLS',
-    description:
-      'Les politiques Row Level Security limitent l’accès aux données selon le contexte autorisé.',
+    description: 'Les politiques de chaque base limitent les lectures et écritures au périmètre métier autorisé.',
   },
   {
-    title: 'Origine applicative',
-    description:
-      'Les flux peuvent être distingués selon leur origine applicative afin de séparer les usages publics et internes.',
+    title: 'Deux bases distinctes',
+    description: 'Les données Platform et Intranet sont stockées séparément ; le bridge échange des projections contrôlées.',
   },
   {
-    title: 'Contrôle des privilèges',
-    description:
-      'Les opérations sensibles sont exécutées côté serveur avec des privilèges explicitement contrôlés.',
+    title: 'Secret serveur',
+    description: 'Les transferts privilégiés passent par les fonctions serveur. Aucun secret du bridge ne doit être exposé au navigateur.',
   },
   {
-    title: 'Segmentation',
-    description:
-      'Les zones publiques, internes et les services backend sont traités comme des périmètres distincts.',
+    title: 'Intégrité et reprise',
+    description: 'Le rapprochement repose sur les UUID, les versions, la gestion des conflits et la journalisation des exécutions.',
   },
 ];
 
@@ -108,8 +99,7 @@ export default function SecurityDataFlow() {
         </div>
 
         <p className="mt-1 text-muted-foreground">
-          Supervision des échanges entre BIB Platform, BIB Intranet,
-          les services backend et les zones externes.
+          Cartographie technique entre deux bases distinctes. Cette page décrit l'architecture ; elle n'est pas une surveillance en temps réel.
         </p>
       </div>
 
