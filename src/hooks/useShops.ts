@@ -95,6 +95,7 @@ export interface ShopStatusEvent {
 export interface ShopOrderSummary {
   shop_id: string;
   orders: number;
+  /** Legacy aggregate, kept for older callers. Do not present as collected revenue. */
   revenue: number;
   inProgress: number;
   /** Volume brut des commandes hors annulations, ventilé par devise ; pas un CA encaissé. */
@@ -207,6 +208,8 @@ export const useShopOrderSummaries = () =>
           };
 
           entry.orders += 1;
+          const legacyAmount = Number(row.total_amount);
+          if (Number.isFinite(legacyAmount)) entry.revenue += legacyAmount;
           const status = (row.status ?? '').toLowerCase();
           if (!['delivered', 'cancelled', 'refunded'].includes(status)) {
             entry.inProgress += 1;
