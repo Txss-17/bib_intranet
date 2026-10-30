@@ -19,6 +19,13 @@
 8. **Démarrer le travail** : donner accès aux tâches du seul pôle et au Google Drive professionnel ; documenter une mission courte, livrables, échéance et responsable, journaliser les exports et restrictions de confidentialité, permettre la révocation immédiate. Éviter les secrets et documents sensibles dans le parcours d'accueil.
 9. **Évaluer et révoquer** : revues des premières missions et décisions de poursuite documentées. En fin de mission : suspendre droits, retirer accès Drive, sessions et tokens selon processus, conserver seulement les preuves nécessaires.
 
+## Préparer l'invitation nominative (avant la première embauche)
+
+- Sur la fonction serveur `provision-employee-account`, définir si nécessaire le secret `BIB_INTRANET_PUBLIC_URL` à `https://bib-intranet.lovable.app` ou `https://workspace.brand-in-a-box.space`. Toute autre origine sera refusée jusqu'à validation et modification explicite du code.
+- Dans Supabase Auth, autoriser précisément l'URL `https://bib-intranet.lovable.app/reset-password` dans les URL de redirection. Vérifier la version effectivement déployée de la fonction serveur et les migrations de preuve d'invitation, dont `hr_account_email_exists` et `reserve_hr_onboarding_invitation` : tant qu'elles sont absentes, **ne pas tenter de provisionner**.
+- Le lien d'invitation authentifie via Supabase ; la page `/reset-password` n'affiche la création de mot de passe qu'après session Supabase vérifiée. Un simple paramètre `type=invite` ou `type=recovery` ne suffit pas.
+- Le service serveur doit marquer `app_origin='connect'` uniquement après vérification du nonce RH, puis attribuer les droits issus du dossier approuvé. Une première connexion de recette avec un compte réellement invité est obligatoire ; aucun compte de démonstration ne remplace cette preuve.
+
 ## Points bloquants à lever
 
 - Le schéma Intranet vérifié avant lancement ne comportait pas les RPC `get_hr_onboarding_permissions()`, `list_hr_mutation_targets(...)` ou les modules génériques récents. La connexion CEO/RH fonctionne, **mais aucun nouvel invité n'a été prouvé de bout en bout**.
