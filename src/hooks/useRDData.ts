@@ -35,6 +35,8 @@ export interface ProductPerformanceRow {
   status: 'dormant' | 'declining' | 'active' | string;
   orders_30d: number;
   revenue_30d: number;
+  /** Volume de commandes brut, ventilé par devise, hors annulations et remboursements complets. */
+  gross_orders_by_currency: Record<string, number>;
   adoption: number;
   isMock: boolean;
 }
@@ -139,51 +141,32 @@ export const useProductPerformanceData = () =>
         Date.now() - 30 * 24 * 60 * 60 * 1000,
       ).toISOString();
 
-      const { data: orders, error: ordersError } =
-        await db
+      const ordersByProduct: Record<string, { count: number; revenue: number; byCurrency: Record<string, number> }> = {};
+      const orderPageSize = 500;
+      for (let offset = 0; ; offset += orderPageSize) {
+        const { data: orders, error: ordersError } = await db
           .from('orders')
-          .select(
-            'catalog_id, total_amount, created_at',
-          )
+          .select('id, catalog_id, total_amount, currency, status, created_at')
           .gte('created_at', since)
-          .limit(1000);
+          .order('id', { ascending: true })
+          .range(offset, offset + orderPageSize - 1);
 
-      if (ordersError) {
-        throw ordersError;
-      }
-
-      const ordersByProduct: Record<
-        string,
-        {
-          count: number;
-          revenue: number;
+        if (ordersError) throw ordersError;
+        for (const order of orders ?? []) {
+          if (!order.catalog_id) continue;
+          const record = ordersByProduct[order.catalog_id] ??= { count: 0, revenue: 0, byCurrency: {} };
+          const status = String(order.status ?? '').toLowerCase();
+          if (status === 'cancelled' || status === 'refunded') continue;
+          record.count += 1;
+          const currency = String(order.currency ?? '').toUpperCase();
+          const amount = Number(order.total_amount);
+          if (/^[A-Z]{3}$/.test(currency) && Number.isFinite(amount)) {
+            record.revenue += amount; // Legacy numeric field only; never render as multi-currency revenue.
+            record.byCurrency[currency] = (record.byCurrency[currency] ?? 0) + amount;
+          }
         }
-      > = {};
-
-      (orders ?? []).forEach(
-        (order: {
-          catalog_id: string | null;
-          total_amount: number | string | null;
-        }) => {
-          if (!order.catalog_id) {
-            return;
-          }
-
-          const key = order.catalog_id;
-
-          if (!ordersByProduct[key]) {
-            ordersByProduct[key] = {
-              count: 0,
-              revenue: 0,
-            };
-          }
-
-          ordersByProduct[key].count += 1;
-          ordersByProduct[key].revenue += Number(
-            order.total_amount ?? 0,
-          );
-        },
-      );
+        if (!orders || orders.length < orderPageSize) break;
+      }
 
       const maxCount = Math.max(
         1,
@@ -203,6 +186,7 @@ export const useProductPerformanceData = () =>
             ordersByProduct[product.id] ?? {
               count: 0,
               revenue: 0,
+              byCurrency: {},
             };
 
           const adoption = Math.round(
@@ -228,6 +212,7 @@ export const useProductPerformanceData = () =>
             status,
             orders_30d: orderStats.count,
             revenue_30d: orderStats.revenue,
+            gross_orders_by_currency: orderStats.byCurrency,
             adoption,
             isMock: false,
           };
