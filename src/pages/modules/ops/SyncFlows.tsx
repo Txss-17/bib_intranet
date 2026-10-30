@@ -29,6 +29,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useSyncEvents } from '@/hooks/useOpsControl';
+import { usePlatformSyncRuns } from '@/hooks/usePlatformSync';
 
 type SyncStatus = 'success' | 'pending' | 'error' | 'timeout';
 
@@ -45,6 +46,8 @@ export default function SyncFlows() {
     isLoading,
     isError,
   } = useSyncEvents();
+
+  const platform = usePlatformSyncRuns();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<
@@ -315,6 +318,75 @@ export default function SyncFlows() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Platform sync runs: separate from logistics partner events. */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <CardTitle>Bridge BIB Platform ↔ Intranet</CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Les 20 dernières exécutions consignées dans le journal du bridge.
+                Les actions sur les partenaires logistiques figurent dans la section distincte ci-dessous.
+              </p>
+            </div>
+            <Button variant="outline" onClick={() => void platform.refetch()} disabled={platform.isFetching}>
+              <RefreshCw className="mr-2 h-4 w-4" />Actualiser le bridge
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {platform.isLoading ? (
+            <p role="status" className="text-sm text-muted-foreground">Lecture du journal Platform…</p>
+          ) : platform.isError ? (
+            <p role="alert" className="text-sm text-destructive">
+              Impossible de consulter les synchronisations Platform. Vérifiez les permissions et la connexion serveur.
+            </p>
+          ) : !platform.data?.length ? (
+            <p className="text-sm text-muted-foreground">
+              Aucun historique de synchronisation Platform accessible. Cela ne prouve pas que la liaison fonctionne.
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Démarrée le</TableHead>
+                    <TableHead>Opération</TableHead>
+                    <TableHead>Sens</TableHead>
+                    <TableHead>État</TableHead>
+                    <TableHead className="text-right">Éléments traités</TableHead>
+                    <TableHead>Terminée le</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {platform.data.map(run => (
+                    <TableRow key={run.id}>
+                      <TableCell className="whitespace-nowrap text-sm">
+                        {new Date(run.started_at).toLocaleString('fr-FR')}
+                      </TableCell>
+                      <TableCell>{run.action}</TableCell>
+                      <TableCell>{run.direction}</TableCell>
+                      <TableCell>
+                        <Badge variant={run.status === 'error' || run.status === 'partial' ? 'destructive' : 'outline'}>
+                          {run.status === 'success' ? 'Succès'
+                            : run.status === 'partial' ? 'Partiel'
+                            : run.status === 'error' ? 'Erreur'
+                            : run.status === 'running' ? 'En cours' : run.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">{run.items_count ?? '—'}</TableCell>
+                      <TableCell className="whitespace-nowrap text-sm">
+                        {run.finished_at ? new Date(run.finished_at).toLocaleString('fr-FR') : '—'}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Filters + table */}
       <Card>
