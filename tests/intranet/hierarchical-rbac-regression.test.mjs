@@ -19,7 +19,8 @@ test('admin hierarchical editor cascades entity to its poles', () => {
   assert.match(source, /poles: current\.poles\.filter\(pole => available\.has\(pole\)\)/);
   assert.match(source, /regions: \[\], portfolios: \[\]/);
   assert.match(source, /selectEntity\(entity, e\.target\.checked\)/);
-  assert.match(source, /tous les pôles disponibles dans la filiale sélectionnée/);
+  assert.match(source, /Global dans la filiale/);
+  assert.match(source, /Global dans le périmètre actuel/);
   assert.match(source, /draft\.ownRecords/);
 });
 
