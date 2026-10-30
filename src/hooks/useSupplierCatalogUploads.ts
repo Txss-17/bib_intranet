@@ -25,12 +25,23 @@ export function useSupplierCatalogUploads() {
   return useQuery({
     queryKey: ['supplier_catalog_uploads'],
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('supplier_catalog_uploads')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return (data || []) as SupplierCatalogUpload[];
+      const pageSize = 500;
+      const all: SupplierCatalogUpload[] = [];
+      let offset = 0;
+      while (true) {
+        const { data, error } = await (supabase as any)
+          .from('supplier_catalog_uploads')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .order('id', { ascending: false })
+          .range(offset, offset + pageSize - 1);
+        if (error) throw error;
+        const page = (data ?? []) as SupplierCatalogUpload[];
+        all.push(...page);
+        if (page.length < pageSize) break;
+        offset += pageSize;
+      }
+      return all;
     },
   });
 }
@@ -47,23 +58,43 @@ export function useReviewCatalogUpload() {
         patch.reviewed_at = new Date().toISOString();
         patch.reviewed_by = user?.id;
       }
-      const { error } = await (supabase as any).from('supplier_catalog_uploads').update(patch).eq('id', id);
+      // A decision must not silently replace a concurrent decision.
+      // RLS remains the authoritative access control; this only adds a
+      // compare-and-set guard for eligible catalogue statuses.
+      const { data: changed, error } = await (supabase as any)
+        .from('supplier_catalog_uploads')
+        .update(patch)
+        .eq('id', id)
+        .in('status', ['pending', 'reviewing'])
+        .select('id');
       if (error) throw error;
-
-      // Notify supplier portal
-      if (status === 'approved' || status === 'rejected') {
-        await (supabase as any).from('supplier_portal_notifications').insert({
-          supplier_id: supplierId,
-          type: 'catalog_review',
-          title: status === 'approved' ? 'Catalogue approuvé' : 'Catalogue refusé',
-          body: notes ?? null,
-          reference_table: 'supplier_catalog_uploads',
-          reference_id: id,
-        });
+      if (!changed?.length) {
+        throw new Error('Ce catalogue a déjà été traité ou vous ne pouvez pas le modifier. Actualisez la liste.');
       }
+
+      // The catalogue decision is committed before notification. A failed
+      // notification must be visible without encouraging a duplicate decision.
+      if (status === 'approved' || status === 'rejected') {
+        const { error: notificationError } = await (supabase as any)
+          .from('supplier_portal_notifications')
+          .insert({
+            supplier_id: supplierId,
+            type: 'catalog_review',
+            title: status === 'approved' ? 'Catalogue approuvé' : 'Catalogue refusé',
+            body: notes ?? null,
+            reference_table: 'supplier_catalog_uploads',
+            reference_id: id,
+          });
+        return { notificationDelivered: !notificationError };
+      }
+      return { notificationDelivered: true };
     },
-    onSuccess: () => {
-      toast.success('Décision enregistrée');
+    onSuccess: (result) => {
+      if (result.notificationDelivered) {
+        toast.success('Décision enregistrée');
+      } else {
+        toast.warning('Décision enregistrée, mais notification fournisseur non transmise. Vérification nécessaire.');
+      }
       qc.invalidateQueries({ queryKey: ['supplier_catalog_uploads'] });
     },
     onError: (e: any) => toast.error('Erreur', { description: e.message }),
