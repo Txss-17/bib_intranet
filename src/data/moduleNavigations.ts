@@ -881,6 +881,12 @@ rh: {
         icon: 'ShieldCheck',
       },
       {
+        id: 'platform',
+        label: 'Sécurité BIB Platform & RLS',
+        path: '/pole/security/platform',
+        icon: 'Database',
+      },
+      {
         id: 'infrastructure',
         label: 'Infrastructure',
         path: '/pole/security/infrastructure',
