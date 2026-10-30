@@ -631,7 +631,6 @@ const RolesPermissions = () => {
         );
       }
 
-      toast({
       window.dispatchEvent(new Event(MATRIX_EVENT));
       toast({
         title: 'Permissions enregistrées',
