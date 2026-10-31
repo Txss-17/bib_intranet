@@ -325,7 +325,7 @@ export const moduleNavigations: Record<
         path: '/pole/supplier/restock-orders',
         icon: 'PackagePlus',
       },
-          { id: 'suppliers', label: 'Fiches fournisseurs', path: '/pole/supplier/suppliers', icon: 'Factory' },
+          { id: 'suppliers', label: 'Fournisseurs validés & dossiers', path: '/pole/supplier/suppliers', icon: 'Factory' },
       { id: 'alerts', label: 'Alertes qualité', path: '/pole/supplier/alerts', icon: 'AlertTriangle' },
     ],
   },
