@@ -1,9 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 export function useExecutiveKPIs() {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: ['executive_kpis'],
+    queryKey: ['executive_kpis', user?.id],
+    enabled: !!user,
 
     queryFn: async () => {
       const sourceResults = await Promise.all([
