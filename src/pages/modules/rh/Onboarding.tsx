@@ -396,10 +396,7 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
   const valid =
     form.first_name.trim().length > 0 &&
     form.last_name.trim().length > 0 &&
-    Boolean(
-      form.work_email.trim() ||
-      form.personal_email.trim()
-    ) &&
+    (mutation || /^[a-z0-9][a-z0-9._+-]*@brand-in-a-box\.space$/i.test(form.work_email.trim())) &&
     Boolean(primaryPole) &&
     Boolean(form.position) &&
     poles.length > 0 &&
@@ -595,8 +592,9 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
                         event.target.value,
                     }))
                   }
-                  placeholder="prenom.nom@brand-in-a-box.space or prenom.nom@gmail.com"
+                  placeholder="prenom.nom@brand-in-a-box.space"
                 />
+                {!mutation && <p className="mt-1 text-xs text-muted-foreground">Obligatoire pour tout nouveau compte. Les deux comptes historiques conservent leur adresse existante ; aucune nouvelle exception n'est autorisée.</p>}
               </div>
             </div>
           </section>
