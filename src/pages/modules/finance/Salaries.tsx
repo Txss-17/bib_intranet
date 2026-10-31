@@ -3,11 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users, Wallet, CheckCircle, Clock, TrendingUp, Loader2 } from "lucide-react";
-import { ExportButtons } from '@/components/ExportButtons';
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useSalaries, useSalaryStats } from "@/hooks/useFinance";
+import { useSalaries } from "@/hooks/useFinance";
 
 const Salaries = () => {
   const currentDate = new Date();
@@ -20,7 +19,6 @@ const Salaries = () => {
     month: selectedMonth,
     status: statusFilter !== 'all' ? statusFilter : undefined,
   });
-  const { data: stats } = useSalaryStats(selectedYear);
 
   const { data: salaryYear = [], isError: salaryHistoryError } = useSalaries({ year: selectedYear });
   const salaryHistory = Array.from({ length: 12 }, (_, month) => ({
@@ -29,11 +27,12 @@ const Salaries = () => {
     net: salaryYear.filter(s => s.period_month === month + 1).reduce((sum, s) => sum + s.net_amount, 0),
   }));
 
+  const fullPeriod = salaryYear.filter(s => s.period_month === selectedMonth);
   const totalGross = salaries?.reduce((sum, s) => sum + s.gross_amount, 0) || 0;
   const totalNet = salaries?.reduce((sum, s) => sum + s.net_amount, 0) || 0;
   const totalBonuses = salaries?.reduce((sum, s) => sum + (s.bonuses || 0), 0) || 0;
-  const paidCount = salaries?.filter(s => s.status === 'paid').length || 0;
-  const pendingCount = salaries?.filter(s => s.status === 'pending').length || 0;
+  const paidCount = fullPeriod.filter(s => s.status === 'paid').length;
+  const pendingCount = fullPeriod.filter(s => s.status === 'pending').length;
 
 
   if (isLoading) {
@@ -75,25 +74,15 @@ const Salaries = () => {
               {Array.from({ length: 24 }, (_, i) => { const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1); return <SelectItem key={i} value={`${date.getMonth() + 1}-${date.getFullYear()}`}>{date.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}</SelectItem>; })}
             </SelectContent>
           </Select>
-          <ExportButtons
-            filename={`salaires-${selectedMonth}-${selectedYear}`}
-            title={`Salaires ${new Date(selectedYear, selectedMonth - 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}`}
-            columns={[
-              { header: 'Employé', accessor: 'employeeName' },
-              { header: 'Brut', accessor: 'gross_amount' },
-              { header: 'Net', accessor: 'net_amount' },
-              { header: 'Primes', accessor: 'bonuses' },
-              { header: 'Statut', accessor: 'status' },
-              { header: 'Date paiement', accessor: 'paid_date' },
-            ]}
-            data={(salaries || []).map(s => ({
-              ...s,
-              employeeName: `${s.employee?.first_name || ''} ${s.employee?.last_name || ''}`.trim() || 'N/A',
-            }))}
-          />
+
         </div>
       </div>
 
+      <p className="text-xs text-muted-foreground">
+        Les montants présentés correspondent aux enregistrements internes. Le statut « payé » est déclaratif et doit être rapproché des justificatifs bancaires.
+        Les synthèses de montants suivent le filtre de statut ; les compteurs de paiement portent sur l'ensemble de la période.
+        Les données nominatives ne sont pas exportées depuis cet écran sans workflow documentaire confidentiel.
+      </p>
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
@@ -103,7 +92,7 @@ const Salaries = () => {
                 <Users className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Effectif</p>
+                <p className="text-sm text-muted-foreground">Enregistrements filtrés</p>
                 <p className="text-xl font-bold">{salaries?.length || 0}</p>
               </div>
             </div>
@@ -145,8 +134,8 @@ const Salaries = () => {
                 <CheckCircle className="h-5 w-5 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Payés</p>
-                <p className="text-xl font-bold">{paidCount}/{salaries?.length || 0}</p>
+                <p className="text-sm text-muted-foreground">Payés sur la période</p>
+                <p className="text-xl font-bold">{salaryHistoryError ? '—' : `${paidCount}/${fullPeriod.length}`}</p>
               </div>
             </div>
           </CardContent>
@@ -159,8 +148,8 @@ const Salaries = () => {
                 <Clock className="h-5 w-5 text-yellow-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">En attente</p>
-                <p className="text-xl font-bold">{pendingCount}</p>
+                <p className="text-sm text-muted-foreground">En attente sur la période</p>
+                <p className="text-xl font-bold">{salaryHistoryError ? '—' : pendingCount}</p>
               </div>
             </div>
           </CardContent>
@@ -171,7 +160,7 @@ const Salaries = () => {
       {/* Chart */}
       <Card>
         <CardHeader>
-          <CardTitle>Évolution Masse Salariale (6 mois)</CardTitle>
+          <CardTitle>Évolution de la masse salariale (12 mois)</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="h-[280px]">
@@ -256,7 +245,7 @@ const Salaries = () => {
                       {salary.paid_date || '-'}
                     </TableCell>
                     <TableCell>
-                      <span className="text-xs text-muted-foreground">Suivi uniquement</span>
+                      <span className="text-xs text-muted-foreground">Lecture seule</span>
                     </TableCell>
                   </TableRow>
                 );
@@ -274,7 +263,7 @@ const Salaries = () => {
           {/* Total Row */}
           {salaries && salaries.length > 0 && (
             <div className="mt-4 pt-4 border-t flex justify-between items-center">
-              <span className="font-semibold">Total</span>
+              <span className="font-semibold">Total des lignes affichées</span>
               <div className="flex gap-8">
                 <div>
                   <span className="text-sm text-muted-foreground mr-2">Brut:</span>
