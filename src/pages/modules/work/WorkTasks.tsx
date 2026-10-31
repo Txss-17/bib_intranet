@@ -14,12 +14,13 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import {
   TaskPriority, TaskStatus, TASK_PRIORITY_LABELS, TASK_STATUS_LABELS, WorkTask,
-  useTaskAssignees, useWorkTaskActions, useWorkTasks, useWorkTaskPermissions, useWorkTaskDiscussion,
+  useWorkTaskActions, useWorkTasks, useWorkTaskPermissions, useWorkTaskDiscussion,
 } from '@/hooks/useWorkTasks';
 
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { poles } from '@/data/poles';
+import { usePoleCollaborators, collaboratorName } from '@/hooks/usePoleCollaborators';
 import { matchesTaskView } from '@/lib/workTasks';
 
 const statusVariant = (s: TaskStatus) =>
@@ -45,7 +46,10 @@ export default function WorkTasks() {
   const allowed = (action: 'create' | 'update' | 'delete') => rights?.[action] === true && can('work.tasks', action);
   const [scope, setScope] = useState('mine');
   const [poleFilter, setPoleFilter] = useState('all');
-  const { data: people = [] } = useTaskAssignees();
+  const [assigneePole, setAssigneePole] = useState<string>(() => profile?.poles?.[0] || 'direction');
+  const { data: people = [], isError: peopleError } = usePoleCollaborators(
+    assigneePole, 'work.tasks', 'read',
+  );
   const { create, update, remove } = useWorkTaskActions();
   const [q, setQ] = useState('');
   const [status, setStatus] = useState<string>('open');
@@ -218,16 +222,22 @@ export default function WorkTasks() {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
+                <Label>Pôle du responsable</Label>
+                <Select value={assigneePole} onValueChange={v => { setAssigneePole(v); setForm(f => ({ ...f, assignee_id: '' })); }}>
+                  <SelectTrigger aria-label="Pôle des collaborateurs"><SelectValue /></SelectTrigger>
+                  <SelectContent>{selectablePoles.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
+                </Select>
                 <Label>Responsable</Label>
                 <Select value={form.assignee_id} onValueChange={(v) => setForm({ ...form, assignee_id: v })}>
                   <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Non assignée</SelectItem>
-                    {people.map((p) => (
-                      <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>
+                    {people.filter(p => p.eligible).map((p) => (
+                      <SelectItem key={p.id} value={p.id}>{collaboratorName(p)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+                {peopleError && <p role="alert" className="text-xs text-destructive">Annuaire indisponible. Vérifiez les permissions et la migration 0074.</p>}
               </div>
               <div>
                 <Label>Échéance</Label>
@@ -305,8 +315,8 @@ export default function WorkTasks() {
                       <SelectTrigger><SelectValue placeholder="Choisir" /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="none">Non assignée</SelectItem>
-                    {people.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>
+                    {people.filter(p => p.eligible).map((p) => (
+                          <SelectItem key={p.id} value={p.id}>{collaboratorName(p)}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
