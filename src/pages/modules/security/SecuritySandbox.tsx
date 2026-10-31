@@ -1,7 +1,6 @@
 import {
   Copy,
   Database,
-  Download,
   FlaskConical,
   Play,
   RotateCcw,
@@ -142,47 +141,6 @@ export default function SecuritySandbox() {
       `Scénario dupliqué — ${scenario.name}`,
       'Une copie de simulation a été préparée dans l’environnement Sandbox.',
     );
-  };
-
-  const exportLog = () => {
-    const content =
-      events.length > 0
-        ? events
-            .map(
-              (event) =>
-                `${new Date(event.at).toISOString()} | ${event.label}${
-                  event.detail
-                    ? ` | ${event.detail}`
-                    : ''
-                }`,
-            )
-            .join('\n')
-        : 'Aucun évènement';
-
-    const blob = new Blob(
-      [content],
-      {
-        type: 'text/plain;charset=utf-8',
-      },
-    );
-
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-
-    anchor.href = url;
-    anchor.download = `sandbox-journal-${new Date()
-      .toISOString()
-      .slice(0, 10)}.txt`;
-
-    anchor.click();
-
-    URL.revokeObjectURL(url);
-
-    toast({
-      title: 'Journal exporté',
-      description:
-        'Journal des actions de simulation téléchargé.',
-    });
   };
 
   const handleSandboxToggle = (
@@ -350,13 +308,10 @@ export default function SecuritySandbox() {
             </Link>
           </Button>
 
-          <Button
-            variant="outline"
-            onClick={exportLog}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Exporter le journal
-          </Button>
+          <p role="note" className="max-w-xs rounded-md border p-3 text-xs text-muted-foreground">
+            Export du journal Sandbox suspendu : aucun téléchargement local ni envoi de données simulées
+            vers le Drive de production. Un espace Google Workspace de test isolé sera requis.
+          </p>
 
           <Button
             variant="destructive"
