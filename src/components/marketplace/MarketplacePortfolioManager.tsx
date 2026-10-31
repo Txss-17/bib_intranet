@@ -3,12 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
+import { usePoleCollaborators, collaboratorName } from '@/hooks/usePoleCollaborators';
 import { useMarketplaceMerchants, useMarketplacePortfolios, useMarketplaceShops } from '@/hooks/useMarketplace';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-
-type Colleague = { id: string; first_name: string | null; last_name: string | null; email: string | null };
 
 export default function MarketplacePortfolioManager() {
   const { can } = usePermissions();
@@ -27,17 +26,9 @@ export default function MarketplacePortfolioManager() {
   const merchantIds = new Set(shops.map(shop => shop.merchant_id).filter(Boolean));
   const eligibleMerchants = merchants.filter(merchant => merchantIds.has(merchant.id));
   const { data: portfolios = [] } = useMarketplacePortfolios();
-  const { data: colleagues = [], isError: colleaguesError } = useQuery({
-    queryKey: ['marketplace', 'portfolio-colleagues'],
-    enabled: canManage,
-    queryFn: async () => {
-      const { data, error } = await supabase.from('profiles')
-        .select('id,first_name,last_name,email')
-        .eq('test_account', false).order('last_name');
-      if (error) throw error;
-      return (data ?? []) as Colleague[];
-    },
-  });
+  const { data: colleagues = [], isError: colleaguesError } = usePoleCollaborators(
+    'marketplace', 'marketplace.merchants', 'update', canManage,
+  );
 
   const create = useMutation({
     mutationFn: async () => {
@@ -103,7 +94,7 @@ export default function MarketplacePortfolioManager() {
             <option value="">Non attribué — géré par la direction</option>
             {colleagues.map((person) => (
               <option key={person.id} value={person.id}>
-                {[person.first_name, person.last_name].filter(Boolean).join(' ') || person.email || person.id}
+                {collaboratorName(person)}
               </option>
             ))}
           </select>
@@ -153,7 +144,7 @@ export default function MarketplacePortfolioManager() {
               className="h-10 rounded-md border bg-background px-3 text-sm">
               <option value="">Non attribué — direction</option>
               {colleagues.map(p => <option key={p.id} value={p.id}>
-                {[p.first_name,p.last_name].filter(Boolean).join(' ') || p.email || p.id}
+                {collaboratorName(p)}
               </option>)}
             </select>
             <Input placeholder="Motif du transfert" aria-label="Motif du transfert"
