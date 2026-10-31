@@ -33,3 +33,13 @@ test('task member selections are constrained to a chosen pole', () => {
  assert.match(page,/setAssigneePole/);
  assert.match(page,/assigneePole, 'work\.tasks'/);
 });
+
+test('quality, audit and support render pole memberships but keep specialized assignment validation', () => {
+ const quality=read('src/components/forms/QualityAlertEditor.tsx');
+ const support=read('src/components/forms/SupportTicketForm.tsx');
+ assert.match(quality,/usePoleCollaborators\(pole, page, 'update'\)/);
+ assert.match(quality,/page === 'audit\.nonconformities' \? 'audit' : 'supplier'/);
+ assert.match(quality,/eligibleIds\.has\(person\.id\)/);
+ assert.match(support,/usePoleCollaborators\('support', 'support\.tickets', 'update'\)/);
+ assert.match(support,/eligibleIds\.has\(person\.id\)/);
+});
