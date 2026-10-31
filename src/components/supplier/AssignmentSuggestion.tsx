@@ -338,81 +338,13 @@ export function AssignmentSuggestion({
          * Vérifie s'il existe déjà une
          * affectation active pour ce fournisseur.
          */
-        const {
-          data: existingAssignments,
-          error: existingError,
-        } = await (supabase as any)
-          .from(
-            'portfolio_assignments',
-          )
-          .select(
-            'id, supplier_id, portfolio_id, assigned_to_id, assigned_to_name',
-          )
-          .eq(
-            'supplier_id',
-            supplierId,
-          );
-
-        if (existingError) {
-          throw existingError;
-        }
-
-        const existing =
-          existingAssignments?.find(
-            (assignment: any) =>
-              assignment.portfolio_id ===
-              portfolioId,
-          );
-
-        if (existing) {
-          const {
-            error: updateError,
-          } = await (supabase as any)
-            .from(
-              'portfolio_assignments',
-            )
-            .update({
-              assigned_to_id:
-                employee.id,
-              assigned_to_name:
-                employee.name,
-              assigned_at:
-                new Date().toISOString(),
-            })
-            .eq(
-              'id',
-              existing.id,
-            );
-
-          if (updateError) {
-            throw updateError;
-          }
-
-          return employee;
-        }
-
-        const {
-          error: insertError,
-        } = await (supabase as any)
-          .from(
-            'portfolio_assignments',
-          )
-          .insert({
-            supplier_id:
-              supplierId,
-            portfolio_id:
-              portfolioId,
-            assigned_to_id:
-              employee.id,
-            assigned_to_name:
-              employee.name,
-            assigned_at:
-              new Date().toISOString(),
-          });
-
-        if (insertError) {
-          throw insertError;
-        }
+        const { error } = await supabase.rpc('assign_validated_supplier_dossier' as never, {
+          p_supplier_id: supplierId,
+          p_portfolio_id: portfolioId,
+          p_employee_id: employee.id,
+          p_reason: 'Affectation depuis le portefeuille Fournisseurs',
+        } as never);
+        if (error) throw error;
 
         return employee;
       },
@@ -434,6 +366,12 @@ export function AssignmentSuggestion({
           queryKey: [
             'supplier_org_chart',
           ],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['supplier-dossier-assignment', supplierId],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ['supplier-dossier-assignment-history', supplierId],
         });
 
         toast.success(
