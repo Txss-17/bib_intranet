@@ -37,27 +37,27 @@ export default function PartnerPayouts() {
       const start = page * PAGE_SIZE;
       if (source === 'merchant') {
         const { data, error } = await supabase.from('merchant_payouts')
-          .select('id, shop_id, order_id, amount, currency, status, stripe_payout_id, paid_at, created_at')
+          .select('id, shop_id, order_id, amount, currency, status, stripe_payout_id, paid_at, created_at, shops(name)')
           .order('created_at', { ascending: false })
           .range(start, start + PAGE_SIZE);
         if (error) throw error;
         const rows = data ?? [];
         return { hasMore: rows.length > PAGE_SIZE, rows: rows.slice(0, PAGE_SIZE).map(row => ({
           id: row.id, reference: row.stripe_payout_id || row.order_id || row.id,
-          party: row.shop_id || 'Boutique non renseignée', amount: Number(row.amount || 0),
+          party: row.shops?.name || row.shop_id || 'Boutique non renseignée', amount: Number(row.amount || 0),
           currency: String(row.currency || '').toUpperCase(), status: row.status || 'inconnu',
           paidAt: row.paid_at, source: 'merchant',
         })) };
       }
       const { data, error } = await supabase.from('supplier_payments')
-        .select('id, supplier_id, invoice_number, amount, currency, status, due_date, paid_date, created_at')
+        .select('id, supplier_id, invoice_number, amount, currency, status, due_date, paid_date, created_at, suppliers(name)')
         .order('created_at', { ascending: false })
         .range(start, start + PAGE_SIZE);
       if (error) throw error;
       const rows = data ?? [];
       return { hasMore: rows.length > PAGE_SIZE, rows: rows.slice(0, PAGE_SIZE).map(row => ({
         id: row.id, reference: row.invoice_number || row.id,
-        party: row.supplier_id || 'Fournisseur non renseigné', amount: Number(row.amount || 0),
+        party: row.suppliers?.name || row.supplier_id || 'Fournisseur non renseigné', amount: Number(row.amount || 0),
         currency: String(row.currency || '').toUpperCase(), status: row.status || 'inconnu',
         paidAt: row.paid_date, source: 'supplier',
       })) };
@@ -103,8 +103,8 @@ export default function PartnerPayouts() {
         </div>}
         <div className="flex items-center justify-end gap-2">
           <span className="text-xs text-muted-foreground">Page {page + 1} · {PAGE_SIZE} mouvements maximum par page</span>
-          <Button variant="outline" size="sm" disabled={page === 0 || query.isLoading} onClick={() => setPage(value => Math.max(0, value - 1))}>Précédent</Button>
-          <Button variant="outline" size="sm" disabled={!query.data?.hasMore || query.isLoading} onClick={() => setPage(value => value + 1)}>Suivant</Button>
+          <Button variant="outline" size="sm" disabled={page === 0 || query.isLoading || query.isError} onClick={() => setPage(value => Math.max(0, value - 1))}>Précédent</Button>
+          <Button variant="outline" size="sm" disabled={!query.data?.hasMore || query.isLoading || query.isError} onClick={() => setPage(value => value + 1)}>Suivant</Button>
         </div>
       </TabsContent>
     </Tabs>
