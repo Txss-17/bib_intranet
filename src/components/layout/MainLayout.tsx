@@ -21,9 +21,10 @@ import { PoleId } from "@/types";
 // ModuleNavigation.tsx.
 // ---------------------------------------------------------------------------
 
-type TransversalModule = "ethics" | "gateway" | "independent-audit";
+type TransversalModule = "work" | "ethics" | "gateway" | "independent-audit";
 
 const TRANSVERSAL_MODULES: TransversalModule[] = [
+  "work",
   "ethics",
   "gateway",
   "independent-audit",
@@ -42,6 +43,8 @@ const getPoleIdFromPath = (pathname: string): PoleId | undefined => {
 const getTransversalModuleFromPath = (
   pathname: string,
 ): TransversalModule | undefined => {
+  // Work is a transversal workspace, but its URLs are /work/* (not /modules/work/*).
+  if (pathname === "/work" || pathname.startsWith("/work/")) return "work";
   const match = pathname.match(/^\/modules\/([^/]+)/);
 
   const moduleId = match?.[1];
@@ -94,7 +97,7 @@ export function MainLayout() {
   // modulaire existe réellement.
   //
   // Cela évite d'avoir une barre vide sur :
-  //   /work/*
+  //   /work/* uses the Work module tabs below.
   //   /notifications
   //   /documents
   //   /feed
