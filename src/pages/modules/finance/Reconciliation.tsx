@@ -101,7 +101,7 @@ export default function Reconciliation() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="flex items-center gap-2 text-2xl font-semibold"><GitCompare className="h-5 w-5" />Rapprochement</h1>
-          <p className="text-sm text-muted-foreground">Commande B.I.B ↔ paiement Stripe ↔ facture ↔ reversement marchand. La commande B.I.B fait foi.</p>
+          <p className="text-sm text-muted-foreground">Commande BIB Platform ↔ encaissement et remboursement Stripe ↔ facture/avoir ↔ reversement marchand. La commande est la référence commerciale ; le statut de paiement doit être confirmé par les données Stripe synchronisées, et le règlement par sa preuve effective.</p>
         </div>
         <Button onClick={() => run.mutate()} disabled={run.isPending || isLoading}><RefreshCw className={`mr-2 h-4 w-4 ${run.isPending ? 'animate-spin' : ''}`} />Recalculer</Button>
       </div>
@@ -151,7 +151,7 @@ export default function Reconciliation() {
         <CardContent className="overflow-x-auto p-0">
           {isLoading ? <p className="p-6 text-sm text-muted-foreground">Chargement…</p> : isError ? <p role="alert" className="p-6 text-sm text-destructive">Données indisponibles.</p> : filtered.length === 0 ? (
             <p className="p-6 text-sm text-muted-foreground">
-              {items.length === 0 ? 'Aucune donnée : cliquez sur « Recalculer » une fois les commandes, paiements et factures reçus.' : 'Aucun écart pour ces filtres.'}
+              {items.length === 0 ? 'Aucune donnée rapprochable reçue. Vérifiez d'abord la synchronisation des commandes, événements Stripe, factures et reversements, puis cliquez sur « Recalculer ».' : 'Aucun écart pour ces filtres.'}
             </p>
           ) : (
             <table className="w-full text-sm">
