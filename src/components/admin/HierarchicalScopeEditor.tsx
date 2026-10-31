@@ -60,8 +60,7 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
     setDraft(stored.data ?? emptyHierarchicalScope());
     setReason('');
   }, [stored.data, roleId]);
-  const entities = useMemo(() => unique((org.data ?? [])
-    .map(p => p.subsidiary ?? '').filter(Boolean)), [org.data]);
+
   const permittedPoles = (subsidiaries: string[]) => {
     if (!subsidiaries.length) return new Set<string>();
     // A role covering multiple subsidiaries can select only poles verified
@@ -70,6 +69,11 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
       (org.data ?? []).filter(profile => profile.subsidiary === entity)
         .flatMap(profile => profile.poles ?? []),
     ));
+    // When no employee has yet joined a subsidiary, its future pole scope
+    // can still be prepared. This remains an unapplied draft, not an access grant.
+    if (perSubsidiary.some(values => values.size === 0)) {
+      return new Set(allPoles.map(pole => pole.id));
+    }
     return new Set([...perSubsidiary[0]].filter(pole =>
       perSubsidiary.every(values => values.has(pole)),
     ));
@@ -80,6 +84,9 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
       (org.data ?? []).filter(profile => profile.subsidiary === entity)
         .flatMap(profile => profile.poles ?? []),
     ));
+    // Do not hide the official pole catalog just because no collaborator is
+    // assigned yet. Actual data access remains subject to server-side RLS.
+    if (permitted.some(values => values.size === 0)) return allPoles;
     return allPoles.filter(pole => permitted.every(values => values.has(pole.id)));
   }, [draft.subsidiaries, org.data]);
   const mapped = useQuery({
@@ -102,6 +109,13 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
       };
     },
   });
+  // The scope editor configures future roles, not only roles of existing employees.
+  // Keep the subsidiary catalog based on verified organisation and mapping records.
+  const entities = useMemo(() => unique([
+    ...(org.data ?? []).map(p => p.subsidiary ?? ''),
+    ...(mapped.data?.regions ?? []).map(item => item.subsidiary),
+    ...(mapped.data?.portfolios ?? []).map(item => item.subsidiary),
+  ].filter(Boolean)), [org.data, mapped.data]);
   // A choice is available only when it is recorded in EVERY selected
   // subsidiary/pole pair. No cross-entity, cross-pole join is inferred.
   const selectedPairs = useMemo(() => draft.subsidiaries.flatMap(subsidiary =>
@@ -199,7 +213,7 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
       </fieldset>
       <fieldset disabled={!canEdit || !draft.subsidiaries.length} className="space-y-3 rounded-lg border p-4">
         <legend className="px-2 text-sm font-semibold">2 — Pôles dans les entités sélectionnées</legend>
-        <p className="text-xs text-muted-foreground">Sélectionner « Global dans la filiale » ou plusieurs pôles précis. Tous les choix restent limités aux entités BIB parentes.</p>
+        <p className="text-xs text-muted-foreground">Sélectionner « Global dans la filiale » ou plusieurs pôles précis. Les 14 pôles du catalogue peuvent être préparés même avant le recrutement. Cette sélection reste un brouillon sans ouverture de droits.</p>
         <label className="flex items-center gap-2 rounded-md border p-3 text-sm">
           <input type="radio" name="hierarchy-poles" checked={draft.poles.length === 0}
             onChange={() => setDraft(current => ({ ...current, poles: [], regions: [], portfolios: [] }))} />
