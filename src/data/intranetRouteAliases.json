@@ -114,6 +114,7 @@
   "/pole/product/roadmap": "product.roadmap",
   "/pole/product/backlog": "product.backlog",
   "/pole/product/engineering": "product.engineering",
+  "/pole/product/testing": "product.engineering",
   "/pole/product/studio": "product.studio",
   "/pole/product/integrations": "product.integrations",
   "/pole/product/documentation": "product.documentation",
