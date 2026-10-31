@@ -17,6 +17,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useUserRole } from '@/hooks/useUserRole';
 import { toast } from '@/hooks/use-toast';
 import { poles as availablePoles } from '@/data/poles';
 import { MATRIX_EVENT } from '@/data/permissionMatrix';
@@ -175,7 +176,8 @@ const getErrorMessage = (error: unknown, fallback: string) => {
 
 const RolesPermissions = () => {
   const { profile, refreshProfile } = useAuth();
-  const { isSuperAdmin } = usePermissions();
+  const { isSuperAdmin, isSimulating } = usePermissions();
+  const technicalRole = useUserRole();
 
   const [roles, setRoles] = useState<AccessRole[]>([]);
   const [interfaces, setInterfaces] = useState<AccessInterface[]>([]);
@@ -310,7 +312,7 @@ const RolesPermissions = () => {
       setSelectedRoleId((current) =>
         current && nextRoles.some((role) => role.id === current)
           ? current
-          : nextRoles[0]?.id ?? '',
+          : nextRoles.find((role) => role.role_key === 'ceo' && role.status === 'active')?.id ?? nextRoles[0]?.id ?? '',
       );
 
       const nextDraft: Record<string, boolean> = {};
@@ -945,11 +947,18 @@ const RolesPermissions = () => {
             <div>
               <h1 className="text-lg font-semibold">Rôles & Permissions</h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                Cette page est réservée aux administrateurs globaux. Le rôle
-                métier CEO ne remplace pas automatiquement le rôle technique
-                admin.
+                Cette page exige une habilitation technique administrateur effective.
+                La configuration du rôle métier CEO ne remplace pas automatiquement
+                ce contrôle. {isSimulating ? 'Désactivez le mode « Visualiser comme » pour administrer les vrais rôles.' :
+                  technicalRole.isLoading ? 'Vérification de votre habilitation en cours.' :
+                  technicalRole.isError ? 'La vérification du rôle technique a échoué : aucun droit administratif n’est accordé par défaut.' :
+                  'Si vous disposez du rôle technique admin, rechargez vos droits et vérifiez votre session.'}
               </p>
             </div>
+            <Button variant="outline" className="mt-4" disabled={technicalRole.isLoading}
+              onClick={() => void technicalRole.refetch()}>
+              <RefreshCw className="mr-2 h-4 w-4"/>Revérifier mon rôle technique
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -1329,6 +1338,13 @@ const RolesPermissions = () => {
                       </option>
                     ))}
                   </select>
+                  {roles.some((role) => role.role_key === 'ceo' && role.status === 'active') && (
+                    <Button type="button" size="sm" variant="outline"
+                      disabled={loading || saving}
+                      onClick={() => setSelectedRoleId(roles.find((role) => role.role_key === 'ceo' && role.status === 'active')?.id ?? '')}>
+                      Sélectionner le CEO
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -1361,6 +1377,15 @@ const RolesPermissions = () => {
                 </div>
               </div>
 
+              {selectedRole?.role_key === 'ceo' && (
+                <div role="note" className="rounded-lg border p-3 text-sm">
+                  <strong>CEO — administration de démarrage :</strong> le rôle peut être défini sur toutes
+                  les interfaces et tous les pôles, avec un périmètre global. Ces droits restent soumis
+                  à l’authentification réelle, aux règles RLS et aux approbations indépendantes :
+                  une permission ne garantit pas que le module serveur est déployé.
+                  {roleScopeLabels(selectedRole.id).includes('Global') ? ' Périmètre global enregistré.' : ' Vérifiez le périmètre global enregistré.'}
+                </div>
+              )}
               {selectedRole && (
                 <div className="rounded-lg border p-3">
                   <p className="text-sm font-medium">Périmètres configurés</p>
