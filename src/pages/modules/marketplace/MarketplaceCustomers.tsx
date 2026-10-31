@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { useMarketplaceCustomers } from "@/hooks/useMarketplace";
+import CasePortfolioManager from "@/components/operations/CasePortfolioManager";
 
 type CustomerFilter = "all" | "active" | "high_value";
 
@@ -176,6 +177,8 @@ Bien cordialement,
           </p>
         </div>
       </div>
+
+      <CasePortfolioManager pole="marketplace" title="Clients Marketplace" entities={customers.map(c => ({ id: c.id, label: c.contact_name || c.contact_email || c.id }))} />
 
       {/* KPIs */}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
