@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { readAllPages } from '@/lib/operationsMetrics';
 
 export interface MediaAttachment {
   id: string;
@@ -15,17 +17,19 @@ export interface MediaAttachment {
 const from = (table: string) => (supabase as any).from(table);
 
 export const useMediaAttachments = (entityType: string, entityId?: string) => {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: ['media_attachments', entityType, entityId],
+    queryKey: ['media_attachments', user?.id, profile?.test_account === true, entityType, entityId],
     queryFn: async () => {
-      let query = from('media_attachments').select('*').eq('entity_type', entityType);
-      if (entityId) query = query.eq('entity_id', entityId);
-      query = query.order('created_at', { ascending: false });
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as MediaAttachment[];
+      const rows = await readAllPages<MediaAttachment>(cursor => {
+        let query = from('media_attachments').select('*').eq('entity_type', entityType).order('id').limit(500);
+        if (entityId) query = query.eq('entity_id', entityId);
+        if (cursor) query = query.gt('id', cursor);
+        return query;
+      });
+      return rows.sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''));
     },
-    enabled: !!entityType,
+    enabled: !!user && !!profile && !!entityType,
   });
 };
 

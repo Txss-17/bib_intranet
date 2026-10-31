@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { BarChart3, CalendarDays, ArrowUpRight, Mic2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,10 +29,19 @@ const show = (value: unknown) => value == null || value === '' ? 'Non renseigné
 export default function MarketingEvidencePage({ mode }: { mode: Mode }) {
   const d = config[mode];
   const { canViewPage } = usePermissions();
+  const allowed = canViewPage(d.id);
+  const [params, setParams] = useSearchParams();
+  const [tab, setTab] = useState(params.get('record') ? 'records' : 'view');
+  const openRecord = (id: string) => {
+    const next = new URLSearchParams(params);
+    next.set('record', id);
+    setParams(next, { replace: true });
+    setTab('records');
+  };
   const [search, setSearch] = useState('');
   const [offset, setOffset] = useState(0);
-  const query = useIntranetRecords(d.id, search, 'all', offset);
-  if (!canViewPage(d.id)) return <p role="alert">Accès non autorisé à cette section Marketing.</p>;
+  const query = useIntranetRecords(d.id, search, 'all', offset, allowed);
+  if (!allowed) return <p role="alert">Accès non autorisé à cette section Marketing.</p>;
   const rows = query.data?.rows ?? [];
   const Icon = mode === 'analytics' ? BarChart3 : Mic2;
   return <div className="space-y-6">
@@ -41,7 +50,7 @@ export default function MarketingEvidencePage({ mode }: { mode: Mode }) {
       <p className="text-sm text-muted-foreground">{d.description}</p>
       <Link to={d.next} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">{d.nextLabel}<ArrowUpRight className="h-4 w-4" /></Link>
     </header>
-    <Tabs defaultValue="view">
+    <Tabs value={tab} onValueChange={setTab}>
       <TabsList>
         <TabsTrigger value="view">{mode === 'analytics' ? 'Mesures et sources' : 'Calendrier des épisodes'}</TabsTrigger>
         <TabsTrigger value="records">{mode === 'analytics' ? 'Validation des mesures' : 'Préproduction et droits'}</TabsTrigger>
@@ -77,14 +86,15 @@ export default function MarketingEvidencePage({ mode }: { mode: Mode }) {
                 <p><strong>Diffusion vérifiée :</strong> {show(row.payload.published_url)}</p>
                 <p className="text-xs text-muted-foreground">L'enregistrement du dossier ne déclenche ni diffusion ni hébergement audio.</p>
               </>}
+              <Button size="sm" variant="outline" onClick={() => openRecord(row.id)}>Ouvrir la fiche et ses validations</Button>
             </CardContent>
           </Card>)}
           {!rows.length && <p className="text-sm text-muted-foreground">Aucun dossier documenté dans cette vue.</p>}
         </div>}
         <div className="flex items-center justify-end gap-2 text-xs text-muted-foreground">
           <span>Page {Math.floor(offset / 50) + 1}</span>
-          <Button size="sm" variant="outline" disabled={!offset || query.isLoading} onClick={() => setOffset(Math.max(0, offset - 50))}>Précédent</Button>
-          <Button size="sm" variant="outline" disabled={!query.data?.has_more || query.isLoading} onClick={() => setOffset(offset + 50)}>Suivant</Button>
+          <Button size="sm" variant="outline" disabled={!offset || query.isFetching || query.isError} onClick={() => setOffset(Math.max(0, offset - 50))}>Précédent</Button>
+          <Button size="sm" variant="outline" disabled={!query.data?.has_more || query.isFetching || query.isError} onClick={() => setOffset(offset + 50)}>Suivant</Button>
         </div>
       </TabsContent>
       <TabsContent value="records"><ModuleWorkspace pageId={d.id} /></TabsContent>

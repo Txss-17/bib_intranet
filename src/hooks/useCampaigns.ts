@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { readAllPages } from '@/lib/operationsMetrics';
 
 export interface Campaign {
   id: string;
@@ -21,16 +23,18 @@ export interface Campaign {
 const from = (table: string) => (supabase as any).from(table);
 
 export const useCampaigns = (search?: string) => {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: ['campaigns', search],
+    queryKey: ['campaigns', user?.id, profile?.test_account === true, search],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      let query = from('campaigns').select('*').order('created_at', { ascending: false });
-      if (search) {
-        query = query.or(`name.ilike.%${search}%,type.ilike.%${search}%`);
-      }
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as Campaign[];
+      const rows = await readAllPages<Campaign>(cursor => {
+        let query = from('campaigns').select('*').order('id').limit(500);
+        if (search) query = query.or(`name.ilike.%${search}%,type.ilike.%${search}%`);
+        if (cursor) query = query.gt('id', cursor);
+        return query;
+      });
+      return rows.sort((a, b) => (b.created_at ?? '').localeCompare(a.created_at ?? ''));
     },
   });
 };
