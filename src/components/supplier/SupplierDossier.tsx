@@ -75,13 +75,19 @@ export default function SupplierDossier({ supplierId }: { supplierId: string }) 
       return (data ?? []) as Product[];
     },
   });
+  const productIds = (products.data ?? []).map(product => product.id);
   const certificates = useQuery({
-    queryKey: ['supplier-dossier-certifications', supplierId],
+    queryKey: ['supplier-dossier-certifications', supplierId, productIds.join(',')],
+    enabled: products.isSuccess,
     queryFn: async () => {
-      // Certifications can link directly to the supplier or indirectly to its products.
-      const { data, error } = await supabase.from('certifications')
-        .select('id,name,type,issuer,certificate_number,status,expiry_date,product_id,supplier_id')
-        .eq('supplier_id', supplierId).order('name');
+      // Direct supplier certificates and product-only certificates are both included.
+      // Values come from UUID columns of this supplier's records, not free text.
+      const base = supabase.from('certifications')
+        .select('id,name,type,issuer,certificate_number,status,expiry_date,product_id,supplier_id');
+      const query = productIds.length
+        ? base.or(`supplier_id.eq.${supplierId},product_id.in.(${productIds.join(',')})`)
+        : base.eq('supplier_id', supplierId);
+      const { data, error } = await query.order('name');
       if (error) throw error;
       return (data ?? []) as (Certification & { supplier_id: string | null })[];
     },
@@ -160,7 +166,7 @@ export default function SupplierDossier({ supplierId }: { supplierId: string }) 
       {certificates.isLoading && <p role="status">Chargement des certifications…</p>}
       {certificates.isError && <p role="alert" className="text-destructive">Certifications indisponibles. <Button variant="outline" onClick={() => void certificates.refetch()}>Réessayer</Button></p>}
       {!certificates.isLoading && !certificates.isError && <>
-        <p className="text-sm text-muted-foreground">{certificates.data?.length ?? 0} certification(s) directement rattachée(s) à ce fournisseur.</p>
+        <p className="text-sm text-muted-foreground">{certificates.data?.length ?? 0} certification(s) fournisseur ou produit rattachée(s) à ce dossier.</p>
         {(certificates.data ?? []).length === 0 && <p className="text-sm">Aucune certification fournisseur enregistrée.</p>}
         <ul className="max-h-72 space-y-2 overflow-y-auto">
           {(certificates.data ?? []).map(cert => <li key={cert.id} className="rounded-md border p-3 text-sm">
