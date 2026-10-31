@@ -274,9 +274,11 @@ export const useApproveTransaction = () => {
           approved_at: new Date().toISOString(),
           approved_by: user.user?.id,
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('approval_status', 'pending')
+        .neq('user_id', user.user?.id || '')
+        .select('id').single();
       if (error) throw error;
-      await logApproval('card_transaction', id, 'approved', comment);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['card_transactions'] });
@@ -299,9 +301,11 @@ export const useRejectTransaction = () => {
           rejected_by: user.user?.id,
           rejection_reason: reason,
         })
-        .eq('id', id);
+        .eq('id', id)
+        .eq('approval_status', 'pending')
+        .neq('user_id', user.user?.id || '')
+        .select('id').single();
       if (error) throw error;
-      await logApproval('card_transaction', id, 'rejected', reason);
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['card_transactions'] });
