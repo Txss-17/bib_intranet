@@ -1416,6 +1416,15 @@ const RolesPermissions = () => {
               {permissionsLoading && <p role="status" className="text-sm text-muted-foreground">
                 Chargement des autorisations du rôle sélectionné…
               </p>}
+              {rolePermissionsReady && selectedRole && (
+                <div role="status" className="rounded-md border p-3 text-sm">
+                  <strong>Configuration du rôle chargée :</strong> {countAllowed} autorisation(s)
+                  sur {interfaces.length * actions.length} combinaisons du catalogue.
+                  {selectedRole.role_key === 'ceo' && countAllowed === interfaces.length * actions.length
+                    ? ' Le rôle CEO possède toutes les permissions du catalogue courant.'
+                    : ' Les autres permissions restent refusées tant qu’elles ne sont pas accordées.'}
+                </div>
+              )}
               {selectedRole?.role_key === 'ceo' && (
                 <div role="note" className="rounded-lg border p-3 text-sm">
                   <strong>CEO — administration de démarrage :</strong> le rôle peut être défini sur toutes
