@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CheckCircle2, ClipboardCheck, ExternalLink, FlaskConical, LockKeyhole, ShieldAlert, TestTube2 } from 'lucide-react';
+import { CheckCircle2, ClipboardCheck, ExternalLink, FlaskConical, LockKeyhole, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
