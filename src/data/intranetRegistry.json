@@ -8140,7 +8140,7 @@
   {
     "id": "supplier.suppliers",
     "path": "/pole/supplier/suppliers",
-    "label": "Dossiers fournisseurs",
+    "label": "Fournisseurs validés & dossiers",
     "scope": "supplier",
     "transversal": false,
     "restrictedRoles": [],
