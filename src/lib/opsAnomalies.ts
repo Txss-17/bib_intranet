@@ -8,7 +8,7 @@ export const ANOMALY_SOURCES: Record<string, string> = { orders: 'Commandes', pa
 export const ANOMALY_TEAMS = ['Ops', 'Qualité', 'Finance'] as const;
 export const NOTIF_KIND_LABELS: Record<string, string> = { assigned: 'Attribution', reminder: 'Rappel', overdue: 'Retard', due_changed: 'Échéance modifiée' };
 type AnomalyRow = Database['public']['Tables']['anomalies']['Row'];
-export type Anomaly = Omit<AnomalyRow, 'checks' | 'status' | 'severity'> & { checks: string[]; status: AnomalyStatus; severity: AnomalySeverity; owner_name?: string; creator_name?: string; resolver_name?: string; closer_name?: string };
+export type Anomaly = Omit<AnomalyRow, 'checks' | 'status' | 'severity'> & { checks: string[]; status: AnomalyStatus; severity: AnomalySeverity; owner_name?: string; creator_name?: string; resolver_name?: string; closer_name?: string; team?: string | null; corrective_action?: string | null; evidence?: string | null };
 export function normalizeAnomaly(row: AnomalyRow): Anomaly {
  return { ...row, checks: Array.isArray(row.checks) ? row.checks.filter((check): check is string => typeof check === 'string') : [], status: row.status as AnomalyStatus, severity: row.severity as AnomalySeverity };
 }
