@@ -678,35 +678,27 @@ const RolesPermissions = () => {
         return;
       }
 
-      // Paginate writes to respect API payload limits; persistent server-side
-      // transactionality should eventually be handled by a single audited RPC.
-      const batchSize = 250;
-      for (let from = 0; from < rows.length; from += batchSize) {
-        const { error } = await supabase
-          .from('access_permissions')
-          .upsert(rows.slice(from, from + batchSize), {
-            onConflict: 'role_id,interface_id,action_id',
-          });
-        if (error) throw error;
-      }
-
-      const historyResult = await supabase
-        .from('access_change_history')
-        .insert({
-          actor_id: profile?.id ?? null,
-          role_id: selectedRoleId,
-          change_type: 'permission_matrix_update',
-          previous_value: existing.filter((permission) => rows.some((row) => row.interface_id === permission.interface_id && row.action_id === permission.action_id)),
-          new_value: rows,
-          reason: 'Modification depuis Rôles & Permissions',
-        });
-
-      if (historyResult.error) {
-        console.warn(
-          'RBAC history write failed:',
-          historyResult.error.message,
+      // One server-side transaction updates the selected role and records its
+      // audit trail. Expected values detect concurrent edits; partial saves
+      // must never be reported as success.
+      const changes = rows.map((row) => {
+        const previous = existing.find((permission) =>
+          permission.interface_id === row.interface_id &&
+          permission.action_id === row.action_id,
         );
-      }
+        return {
+          interface_id: row.interface_id,
+          action_id: row.action_id,
+          expected: previous ? previous.allowed : null,
+          allowed: row.allowed,
+        };
+      });
+      const { error } = await (supabase as any).rpc('replace_access_permission_changes', {
+        p_role_id: selectedRoleId,
+        p_changes: changes,
+        p_reason: 'Modification depuis Rôles & Permissions',
+      });
+      if (error) throw error;
 
       window.dispatchEvent(new Event(MATRIX_EVENT));
       toast({
