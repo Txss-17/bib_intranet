@@ -148,6 +148,26 @@ export function useWorkModulePeople(kind: WorkModuleKind) { const { user } = use
         first_name: string;
         last_name: string;
     }[]>('list_work_module_people', { p_kind: kind }) }); }
+export interface WorkPoleMember {
+    id: string;
+    first_name: string;
+    last_name: string;
+    poles: string[];
+    eligible: boolean;
+}
+
+/** Directory: membership is not equivalent to workflow assignment permission. */
+export function useWorkPoleMembers(kind: WorkModuleKind, pole: string | null) {
+    const { user } = useAuth();
+    return useQuery({
+        queryKey: ['work-pole-members', user?.id, kind, pole],
+        enabled: !!user,
+        queryFn: () => intranetRpc<WorkPoleMember[]>('list_work_pole_members', {
+            p_kind: kind,
+            p_pole: pole,
+        }),
+    });
+}
 export function useWorkModuleActions(kind: WorkModuleKind) {
     const qc = useQueryClient();
     const { user } = useAuth();
