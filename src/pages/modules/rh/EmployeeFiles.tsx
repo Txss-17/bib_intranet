@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Search,
@@ -295,6 +295,8 @@ export default function EmployeeFiles() {
 
   const [documents, setDocuments] =
     useState<EmployeeDocument[]>([]);
+  // Ignore document responses from a previously selected employee.
+  const documentRequestId = useRef(0);
 
   const [isLoadingDocuments, setIsLoadingDocuments] =
     useState(false);
@@ -367,6 +369,7 @@ export default function EmployeeFiles() {
     if (
       selectedEmployeeId &&
       !isLoadingEmployees &&
+      !isEmployeesError &&
       !selectedEmployee
     ) {
       setSearchParams({});
@@ -377,6 +380,7 @@ export default function EmployeeFiles() {
     selectedEmployeeId,
     selectedEmployee,
     isLoadingEmployees,
+    isEmployeesError,
     setSearchParams,
   ]);
 
@@ -386,6 +390,7 @@ export default function EmployeeFiles() {
   // ==========================================================
 
   const loadDocuments = async () => {
+    const requestId = ++documentRequestId.current;
     /*
      * Never query the document table unless the selected employee
      * belongs to the real RH directory.
@@ -401,6 +406,8 @@ export default function EmployeeFiles() {
       return;
     }
 
+    // Clear the previous person's documents before loading a new file.
+    setDocuments([]);
     setIsLoadingDocuments(true);
     setDocumentsError(null);
 
@@ -432,11 +439,13 @@ export default function EmployeeFiles() {
       if (error) {
         throw error;
       }
+      if (requestId !== documentRequestId.current) return;
 
       setDocuments(
         (data ?? []) as EmployeeDocument[],
       );
     } catch (error: any) {
+      if (requestId !== documentRequestId.current) return;
       const message =
         error?.message ||
         'Impossible de charger le dossier documentaire.';
@@ -446,7 +455,7 @@ export default function EmployeeFiles() {
 
       toast.error(message);
     } finally {
-      setIsLoadingDocuments(false);
+      if (requestId === documentRequestId.current) setIsLoadingDocuments(false);
     }
   };
 
