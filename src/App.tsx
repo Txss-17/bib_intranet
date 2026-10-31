@@ -220,6 +220,7 @@ import ESGReports from "./pages/modules/rse/ESGReports";
 
 import ProductEngineeringDashboard from "./pages/modules/product/ProductEngineeringDashboard";
 import ProductReleases from "./pages/modules/product/ProductReleases";
+import ProductTestingCenter from "./pages/modules/product/ProductTestingCenter";
 import ProductPlanningWorkspace from "./components/product/ProductPlanningWorkspace";
 import ProductFunctionWorkspace from "./components/product/ProductFunctionWorkspace";
 import MarketingWorkflowPage from "./components/marketing/MarketingWorkflowPage";
@@ -810,6 +811,10 @@ const App = () => (
                 <Route
                   path="/pole/product/releases"
                   element={<ProductReleases />}
+                />
+                <Route
+                  path="/pole/product/testing"
+                  element={<ProductTestingCenter />}
                 />
                 <Route
                   path="/pole/product/studio"
