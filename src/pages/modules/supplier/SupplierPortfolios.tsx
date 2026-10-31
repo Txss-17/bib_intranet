@@ -261,10 +261,18 @@ function useSupplierPortfolioData(
           return;
         }
 
-        assignmentBySupplier.set(
-          assignment.supplier_id,
-          assignment as PortfolioAssignment,
-        );
+        // Historical duplicates may exist in this legacy table. Display the
+        // latest assignment, consistently with the audited dossier RPC.
+        const prior = assignmentBySupplier.get(assignment.supplier_id);
+        const priorTime = prior?.assigned_at ?? '';
+        const nextTime = assignment.assigned_at ?? '';
+        if (!prior || nextTime > priorTime ||
+          (nextTime === priorTime && assignment.id > prior.id)) {
+          assignmentBySupplier.set(
+            assignment.supplier_id,
+            assignment as PortfolioAssignment,
+          );
+        }
       });
 
       const alertsBySupplier: Record<
