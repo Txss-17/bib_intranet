@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useSupportAssignees } from '@/hooks/useSupportTickets';
+import { usePoleCollaborators, collaboratorName } from '@/hooks/usePoleCollaborators';
 import { useUserAccounts } from '@/hooks/useLifecycle';
 import { SUPPORT_CATEGORY, SUPPORT_PRIORITY, SupportTicket, SupportTicketFields } from '@/lib/supportTickets';
 
@@ -23,6 +24,8 @@ export default function SupportTicketForm({ open, onOpenChange, ticket, pending,
     category: ticket?.category || 'general', assigned_to: ticket?.assigned_to || null, user_account_id: ticket?.user_account_id || null,
   });
   const people = useSupportAssignees();
+  const directory = usePoleCollaborators('support', 'support.tickets', 'update');
+  const eligibleIds = new Set((people.data || []).map(p => p.id));
   const accounts = useUserAccounts();
   const set = (key: keyof SupportTicketFields, value: string | null) => setForm(current => ({ ...current, [key]: value }));
   return (
@@ -41,11 +44,11 @@ export default function SupportTicketForm({ open, onOpenChange, ticket, pending,
           </div>
           <div className="space-y-2">
             <Label>Responsable</Label>
-            <Select value={form.assigned_to || 'none'} disabled={pending || people.isLoading || people.isError} onValueChange={value => set('assigned_to', value === 'none' ? null : value)}>
+            <Select value={form.assigned_to || 'none'} disabled={pending || people.isLoading || people.isError || directory.isLoading || directory.isError} onValueChange={value => set('assigned_to', value === 'none' ? null : value)}>
               <SelectTrigger><SelectValue placeholder="Choisir un agent" /></SelectTrigger>
-              <SelectContent><SelectItem value="none">Non attribué</SelectItem>{people.data?.map(person => <SelectItem key={person.id} value={person.id}>{person.name}</SelectItem>)}</SelectContent>
+              <SelectContent><SelectItem value="none">Non attribué</SelectItem>{directory.data?.map(person => <SelectItem key={person.id} value={person.id} disabled={!eligibleIds.has(person.id)}>{collaboratorName(person)}{eligibleIds.has(person.id) ? '' : ' — droits insuffisants'}</SelectItem>)}</SelectContent>
             </Select>
-            {people.isError && <p role="alert" className="text-sm">Responsables indisponibles. <Button type="button" variant="link" onClick={() => void people.refetch()}>Réessayer</Button></p>}
+            {(people.isError || directory.isError) && <p role="alert" className="text-sm">Membres Support indisponibles. Vérifiez les permissions et la migration 0074. <Button type="button" variant="link" onClick={() => { void people.refetch(); void directory.refetch(); }}>Réessayer</Button></p>}
           </div>
           <div className="space-y-2">
             <Label>Compte client</Label>
