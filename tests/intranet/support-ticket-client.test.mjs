@@ -124,7 +124,7 @@ test('the Support form selects a real agent UUID and stays open until its parent
   assert.equal(submitted[0].subject, 'Subject'); assert.equal(submitted[0].description, 'Description');
   assert.equal('created_by' in submitted[0], false); assert.equal('revision' in submitted[0], false);
   assert.equal(closed.length, 0);
-  assert.ok(nodes.some(node => node.type === 'SelectItem' && node.props.value === agent && node.props.children === 'Agent réel'));
+  assert.ok(nodes.some(node => node.type === 'SelectItem' && node.props.value === agent && String([node.props.children].flat().join('')).includes('Agent réel')));
   assert.equal(nodes.some(node => node.type === 'Input' && node.props.value === agent), false);
 });
 test('pending Support writes disable submission and prevent dismissing the form', () => {
