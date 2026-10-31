@@ -269,9 +269,11 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
               value={mappingPole} onChange={e=>setMappingPole(e.target.value)}
               disabled={!mappingSubsidiary||!isSuperAdmin||mappingSaving}>
               <option value="">Pôle rattaché</option>
-              {allPoles.filter(pole=>(org.data??[]).some(profile =>
-                profile.subsidiary===mappingSubsidiary && (profile.poles??[]).includes(pole.id)))
-                .map(pole=><option key={pole.id} value={pole.id}>{pole.name}</option>)}
+              {allPoles.filter(pole => {
+                const assigned = (org.data ?? []).filter(profile => profile.subsidiary === mappingSubsidiary)
+                  .flatMap(profile => profile.poles ?? []);
+                return assigned.length === 0 || assigned.includes(pole.id);
+              }).map(pole=><option key={pole.id} value={pole.id}>{pole.name}</option>)}
             </select>
           </div>
           <Input aria-label="Motif de rattachement" value={mappingReason}
