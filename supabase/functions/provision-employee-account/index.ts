@@ -339,6 +339,16 @@ Deno.serve(
         );
       }
 
+      // Only the two already-existing identities may retain a legacy address.
+      // No new employee invitation can create another exception by matching
+      // an external domain: the onboarding identity must be a BIB work account.
+      // Existing-account mutations return above without creating Auth users.
+      if (!/^[a-z0-9][a-z0-9._+-]*@brand-in-a-box\.space$/.test(email)) {
+        return json({
+          error: 'Les nouveaux comptes doivent utiliser une adresse professionnelle @brand-in-a-box.space. Les comptes historiques restent inchangés.',
+        }, 400);
+      }
+
 
       if (
         !(request.position_key ?? request.position)
