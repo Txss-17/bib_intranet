@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { usePoleCollaborators, collaboratorName } from '@/hooks/usePoleCollaborators';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,7 +13,6 @@ type Kind = 'customer' | 'logistics_partner' | 'employee';
 type EntityOption = { id: string; label: string };
 type Portfolio = { id: string; name: string; owner_id: string | null; status: string };
 type Assignment = { portfolio_id: string; entity_kind: string; entity_id: string; ended_at: string | null };
-type Colleague = { id: string; first_name: string | null; last_name: string | null; email: string | null };
 
 const pageForPole: Record<Pole, string> = {
   marketplace: 'marketplace.customers', ops: 'ops.partners', rh: 'rh.portfolio',
@@ -61,17 +61,9 @@ export default function CasePortfolioManager({
       return (data ?? []) as Assignment[];
     },
   });
-  const { data: colleagues = [], isError: colleaguesError } = useQuery({
-    queryKey: ['case-portfolio-colleagues', pole],
-    enabled: canManage,
-    queryFn: async () => {
-      const { data, error } = await supabase.from('profiles')
-        .select('id,first_name,last_name,email')
-        .eq('test_account',false).eq('hr_status','active').order('last_name');
-      if (error) throw error;
-      return (data ?? []) as Colleague[];
-    },
-  });
+  const { data: colleagues = [], isError: colleaguesError } = usePoleCollaborators(
+    pole, page, 'update', canManage,
+  );
   const create = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.rpc('bib_create_case_portfolio' as never, {
@@ -144,7 +136,7 @@ export default function CasePortfolioManager({
                 className="h-10 w-full rounded-md border bg-background px-3 text-sm">
                 <option value="">Sans responsable — direction</option>
                 {colleagues.map(p => <option key={p.id} value={p.id}>
-                  {[p.first_name,p.last_name].filter(Boolean).join(' ') || p.email || p.id}
+                  {collaboratorName(p)}
                 </option>)}
               </select>
               {colleaguesError && <p className="text-sm text-destructive">Collaborateurs indisponibles.</p>}
@@ -189,7 +181,7 @@ export default function CasePortfolioManager({
               className="h-10 rounded-md border bg-background px-3 text-sm">
               <option value="">Sans responsable — direction</option>
               {colleagues.map(p => <option key={p.id} value={p.id}>
-                {[p.first_name,p.last_name].filter(Boolean).join(' ') || p.email || p.id}
+                {collaboratorName(p)}
               </option>)}
             </select>
             <Input aria-label="Motif du changement de responsable" placeholder="Motif du transfert"
