@@ -1,0 +1,50 @@
+name: BIB Platform ↔ Intranet contracts
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  bridge-contracts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout current Intranet revision
+        uses: actions/checkout@v4
+        with:
+          path: bib_intranet
+
+      - name: Checkout Platform main
+        uses: actions/checkout@v4
+        with:
+          repository: Txss-17/bib_platform
+          ref: main
+          path: bib_platform
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: bib_platform/package-lock.json
+
+      - name: Install Platform dependencies
+        working-directory: bib_platform
+        run: npm ci --legacy-peer-deps --no-audit --no-fund
+
+      - name: Verify Platform ↔ Intranet contract tests
+        working-directory: bib_platform
+        run: npm run test:bridge
+
+      - name: Check bridge types
+        working-directory: bib_platform
+        run: npm run check:bridge
+
+      - name: Verify Intranet portfolio contracts
+        run: node --test bib_intranet/tests/intranet/portfolio-management-regression.test.mjs
