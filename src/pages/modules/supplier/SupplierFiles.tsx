@@ -22,6 +22,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { useSupplierAudits } from '@/hooks/useAudits';
+import SupplierDossier from '@/components/supplier/SupplierDossier';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery } from '@tanstack/react-query';
 import type { Tables } from '@/integrations/supabase/types';
@@ -126,9 +127,9 @@ function AuditConformitySection({ supplierName }: { supplierName: string }) {
 export default function SupplierFiles() {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [statusFilter, setStatusFilter] = useState('validated');
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-  const { data: suppliers = [], isLoading } = useSuppliers();
+  const { data: suppliers = [], isLoading, isError, refetch } = useSuppliers();
 
   const filteredSuppliers = suppliers.filter((supplier) => {
     const matchesSearch = supplier.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -166,14 +167,21 @@ export default function SupplierFiles() {
     );
   }
 
+  if (isError) {
+    return <div role="alert" className="space-y-3 rounded-md border p-6">
+      <p>Impossible de charger le registre des fournisseurs.</p>
+      <Button variant="outline" onClick={() => void refetch()}>Réessayer</Button>
+    </div>;
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-foreground">Fiches fournisseurs</h1>
-          <p className="text-sm text-muted-foreground mt-1">{filteredSuppliers.length} fournisseur(s)</p>
+          <h1 className="text-xl font-semibold text-foreground">Fournisseurs validés & dossiers BIB</h1>
+          <p className="text-sm text-muted-foreground mt-1">{filteredSuppliers.length} fournisseur(s) · dossier, produits, certifications, portefeuille et affectation</p>
         </div>
-        <Button><Plus className="h-4 w-4 mr-2" />Nouveau fournisseur</Button>
+        <Button variant="outline" onClick={() => navigate('/pole/supplier/applications')}><Plus className="h-4 w-4 mr-2" />Candidatures fournisseurs</Button>
         <ExportButtons
           filename="fournisseurs" title="Liste des fournisseurs"
           columns={[
@@ -220,10 +228,8 @@ export default function SupplierFiles() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem><Eye className="h-4 w-4 mr-2" />Voir fiche</DropdownMenuItem>
-                  <DropdownMenuItem><Edit className="h-4 w-4 mr-2" />Modifier</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem><Mail className="h-4 w-4 mr-2" />Contacter</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => setSelectedSupplier(supplier)}><Eye className="h-4 w-4 mr-2" />Ouvrir le dossier</DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => navigate('/pole/supplier/portfolios')}><Edit className="h-4 w-4 mr-2" />Gérer les portefeuilles</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -245,7 +251,7 @@ export default function SupplierFiles() {
       </div>
 
       <Dialog open={!!selectedSupplier} onOpenChange={() => setSelectedSupplier(null)}>
-        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-3"><Building2 className="h-5 w-5" />{selectedSupplier?.name}</DialogTitle>
           </DialogHeader>
@@ -257,9 +263,10 @@ export default function SupplierFiles() {
               </div>
 
               <Tabs defaultValue="info" className="w-full">
-                <TabsList className="w-full">
+                <TabsList className="w-full h-auto flex-wrap">
                   <TabsTrigger value="info" className="flex-1">Informations</TabsTrigger>
-                  <TabsTrigger value="audit" className="flex-1">Audit & Conformité</TabsTrigger>
+                  <TabsTrigger value="dossier" className="flex-1">Produits, certifications & affectations</TabsTrigger>
+                  <TabsTrigger value="audit" className="flex-1">Audit & conformité</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="info" className="space-y-6 mt-4">
@@ -279,6 +286,9 @@ export default function SupplierFiles() {
                   </div>
                 </TabsContent>
 
+                <TabsContent value="dossier" className="mt-4">
+                  <SupplierDossier supplierId={selectedSupplier.id} />
+                </TabsContent>
                 <TabsContent value="audit" className="mt-4">
                   <AuditConformitySection supplierName={selectedSupplier.name} />
                 </TabsContent>
