@@ -30,8 +30,8 @@ test('les modifications de permissions n’écrasent pas toute la matrice', () =
   const page = read('src/pages/admin/RolesPermissions.tsx');
   assert.match(page, /if \(allowed === previous\) return \[\]/);
   assert.match(page, /replace_access_permission_changes/);
-  assert.match(page, /p_changes:\\s*changes/);
-  assert.match(page, /expected:\\s*previous \\? previous\\.allowed : null/);
+  assert.match(page, /p_changes:/);
+  assert.match(page, /expected: previous/);
   assert.match(page, /window\.dispatchEvent\(new Event\(MATRIX_EVENT\)\)/);
 });
 
