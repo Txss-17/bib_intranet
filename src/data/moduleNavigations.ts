@@ -762,6 +762,12 @@ rh: {
         icon: 'Rocket',
       },
       {
+        id: 'testing',
+        label: 'Tests & boutiques pilotes',
+        path: '/pole/product/testing',
+        icon: 'FlaskConical',
+      },
+      {
         id: 'studio',
         label: 'Studio',
         path: '/pole/product/studio',
