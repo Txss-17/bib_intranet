@@ -2,12 +2,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users, Wallet, CheckCircle, Clock, Calendar, TrendingUp, Loader2 } from "lucide-react";
+import { Users, Wallet, CheckCircle, Clock, TrendingUp, Loader2 } from "lucide-react";
 import { ExportButtons } from '@/components/ExportButtons';
 import { useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useSalaries, useSalaryStats, useUpdateSalary } from "@/hooks/useFinance";
+import { useSalaries, useSalaryStats } from "@/hooks/useFinance";
 
 const Salaries = () => {
   const currentDate = new Date();
@@ -15,15 +15,14 @@ const Salaries = () => {
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
   const [statusFilter, setStatusFilter] = useState('all');
 
-  const { data: salaries, isLoading } = useSalaries({
+  const { data: salaries, isLoading, isError, refetch } = useSalaries({
     year: selectedYear,
     month: selectedMonth,
     status: statusFilter !== 'all' ? statusFilter : undefined,
   });
   const { data: stats } = useSalaryStats(selectedYear);
-  const updateSalary = useUpdateSalary();
 
-  const { data: salaryYear = [] } = useSalaries({ year: selectedYear });
+  const { data: salaryYear = [], isError: salaryHistoryError } = useSalaries({ year: selectedYear });
   const salaryHistory = Array.from({ length: 12 }, (_, month) => ({
     month: new Date(selectedYear, month, 1).toLocaleDateString('fr-FR', { month: 'short' }),
     gross: salaryYear.filter(s => s.period_month === month + 1).reduce((sum, s) => sum + s.gross_amount, 0),
@@ -36,13 +35,6 @@ const Salaries = () => {
   const paidCount = salaries?.filter(s => s.status === 'paid').length || 0;
   const pendingCount = salaries?.filter(s => s.status === 'pending').length || 0;
 
-  const handleMarkAsPaid = (id: string) => {
-    updateSalary.mutate({
-      id,
-      status: 'paid',
-      paid_date: new Date().toISOString().split('T')[0],
-    });
-  };
 
   if (isLoading) {
     return (
@@ -52,13 +44,20 @@ const Salaries = () => {
     );
   }
 
+  if (isError) {
+    return <div role="alert" className="rounded-md border p-6 space-y-3">
+      <p>Le suivi des salaires est indisponible. Aucun montant ni statut ne peut être confirmé.</p>
+      <Button variant="outline" onClick={() => void refetch()}>Réessayer</Button>
+    </div>;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Salaires & Primes</h1>
-          <p className="text-muted-foreground mt-1">Gestion de la masse salariale mensuelle</p>
+          <p className="text-muted-foreground mt-1">Suivi administratif des salaires, primes et règlements déclarés. Aucun paiement n’est exécuté ici.</p>
         </div>
         <div className="flex gap-2">
           <Select 
@@ -92,10 +91,6 @@ const Salaries = () => {
               employeeName: `${s.employee?.first_name || ''} ${s.employee?.last_name || ''}`.trim() || 'N/A',
             }))}
           />
-          <Button>
-            <Calendar className="h-4 w-4 mr-2" />
-            Traiter paie
-          </Button>
         </div>
       </div>
 
@@ -172,6 +167,7 @@ const Salaries = () => {
         </Card>
       </div>
 
+      {salaryHistoryError && <p role="alert" className="text-sm text-destructive">Historique annuel indisponible : graphique non fiable.</p>}
       {/* Chart */}
       <Card>
         <CardHeader>
@@ -179,7 +175,7 @@ const Salaries = () => {
         </CardHeader>
         <CardContent>
           <div className="h-[280px]">
-            <ResponsiveContainer width="100%" height="100%">
+            {!salaryHistoryError && <ResponsiveContainer width="100%" height="100%">
               <BarChart data={salaryHistory}>
                 <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                 <XAxis dataKey="month" className="text-xs" />
@@ -195,7 +191,7 @@ const Salaries = () => {
                 <Bar dataKey="gross" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Brut" />
                 <Bar dataKey="net" fill="hsl(var(--primary)/0.5)" radius={[4, 4, 0, 0]} name="Net" />
               </BarChart>
-            </ResponsiveContainer>
+            </ResponsiveContainer>}
           </div>
         </CardContent>
       </Card>
@@ -226,7 +222,7 @@ const Salaries = () => {
                 <TableHead className="text-right">Primes</TableHead>
                 <TableHead>Statut</TableHead>
                 <TableHead>Date paiement</TableHead>
-                <TableHead></TableHead>
+                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -260,16 +256,7 @@ const Salaries = () => {
                       {salary.paid_date || '-'}
                     </TableCell>
                     <TableCell>
-                      {salary.status !== 'paid' && (
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => handleMarkAsPaid(salary.id)}
-                          disabled={updateSalary.isPending}
-                        >
-                          Payer
-                        </Button>
-                      )}
+                      <span className="text-xs text-muted-foreground">Suivi uniquement</span>
                     </TableCell>
                   </TableRow>
                 );
