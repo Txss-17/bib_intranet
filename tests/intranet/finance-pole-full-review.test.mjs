@@ -30,3 +30,13 @@ test('finance card approvals enforce server separation of duties and audit histo
  assert.match(sql,/can_intranet_action\('finance\.cards','validate'\)/);
  assert.match(sql,/CREATE TRIGGER audit_finance_card_decision AFTER UPDATE/);
 });
+
+test('finance home is not a duplicate cashflow ledger and respects page-specific permissions',()=>{
+ const home=read('src/pages/modules/finance/FinanceDashboard.tsx');
+ assert.match(home,/Pilotage financier BIB/);
+ assert.match(home,/FINANCE_SECTIONS\.filter\(section => canViewPage\(section\.page\)\)/);
+ assert.match(home,/useCashflows\(\{ limit: 8, enabled: canReadCashflows \}\)/);
+ for(const id of ['finance.cashflow','finance.transactions','finance.billing','finance.payouts','finance.reconciliation','finance.subscriptions','finance.cards','finance.guarantee','finance.salaries'])
+   assert.ok(home.includes(id),id);
+ assert.match(home,/Aucun total multi-devises/);
+});
