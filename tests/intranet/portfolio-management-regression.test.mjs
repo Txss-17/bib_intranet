@@ -51,3 +51,19 @@ test('the existing supplier portfolios permit management without active staff', 
   assert.match(page, /responsible\?\.id \?\? null/);
   assert.doesNotMatch(page, /Responsable obligatoire/);
 });
+
+test('Work Tasks uses canonical active CEO rule before saved permission cells', () => {
+  const sql = read('drizzle/migrations/0072_ceo_tasks_and_merchant_portfolio_read_scope.sql');
+  assert.match(sql, /CREATE OR REPLACE FUNCTION public\.is_canonical_bib_ceo/);
+  assert.match(sql, /p\.test_account IS FALSE/);
+  assert.match(sql, /ar\.role_key='ceo'/);
+  const work = sql.slice(sql.indexOf('CREATE OR REPLACE FUNCTION public.can_work_task_action'));
+  assert.ok(work.indexOf('public.is_canonical_bib_ceo(actor)') < work.indexOf('IF saved_count>0 THEN RETURN saved_allow'));
+});
+test('merchant portfolio reads cannot escape Marketplace management or portfolio owner scope', () => {
+  const sql = read('drizzle/migrations/0072_ceo_tasks_and_merchant_portfolio_read_scope.sql');
+  assert.match(sql, /merchant_portfolios_read_scope_20261031/);
+  assert.match(sql, /merchant_portfolio_assignments_read_scope_20261031/);
+  assert.match(sql, /AS RESTRICTIVE FOR SELECT TO authenticated/g);
+  assert.match(sql, /owner_id=auth\.uid\(\)/);
+});
