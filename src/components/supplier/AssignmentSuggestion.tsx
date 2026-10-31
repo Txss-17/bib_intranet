@@ -78,11 +78,11 @@ function useCandidates(
         assignmentsResult,
         portfoliosResult,
       ] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select(
-            'id, first_name, last_name, position, poles',
-          ),
+        supabase.rpc('list_pole_collaborators' as never, {
+          p_pole: 'supplier',
+          p_page: 'supplier.suppliers',
+          p_action: 'update',
+        } as never),
 
         supabase
           .from('portfolio_assignments' as any)
@@ -109,18 +109,8 @@ function useCandidates(
         throw portfoliosResult.error;
       }
 
-      const supplierProfiles = (
-        profilesResult.data ?? []
-      ).filter((profile: any) => {
-        const poles = Array.isArray(profile.poles)
-          ? profile.poles
-          : [];
-
-        return (
-          poles.includes('supplier') ||
-          profile.position === 'supplier_manager'
-        );
-      });
+      const supplierProfiles = ((profilesResult.data ?? []) as any[])
+        .filter(profile => profile.eligible === true);
 
       const assignmentCounts: Record<
         string,
@@ -259,9 +249,7 @@ function useCandidates(
               name:
                 name ||
                 'Collaborateur sans nom',
-              role:
-                profile.position ||
-                'supplier_manager',
+              role: 'Pôle Fournisseurs',
               supplierCount,
               maxCapacity:
                 MAX_CAPACITY,
