@@ -151,7 +151,8 @@ function isSupplierCollaborator(
 
   return (
     poles.includes('supplier') ||
-    profile.position === 'supplier_manager'
+    profile.position === 'supplier_manager' ||
+    profile.position === 'ceo'
   );
 }
 
@@ -754,16 +755,7 @@ export default function SupplierPortfolios() {
         return;
       }
 
-      if (!responsibleId) {
-        toast.error(
-          'Responsable obligatoire',
-          {
-            description:
-              'Chaque portefeuille fournisseur doit avoir un responsable.',
-          },
-        );
-        return;
-      }
+      // A portfolio may remain unassigned while the CEO runs the team alone.
 
       if (
         backupId &&
@@ -794,7 +786,7 @@ export default function SupplierPortfolios() {
           )
         : null;
 
-      if (!responsible) {
+      if (responsibleId && !responsible) {
         toast.error(
           'Responsable invalide',
           {
@@ -846,11 +838,9 @@ export default function SupplierPortfolios() {
             .update({
               category,
               responsible_id:
-                responsible.id,
+                responsible?.id ?? null,
               responsible_name:
-                getProfileName(
-                  responsible,
-                ),
+                responsible ? getProfileName(responsible) : '',
               backup_id:
                 backup?.id ?? null,
               backup_name:
@@ -884,11 +874,9 @@ export default function SupplierPortfolios() {
             .insert({
               category,
               responsible_id:
-                responsible.id,
+                responsible?.id ?? null,
               responsible_name:
-                getProfileName(
-                  responsible,
-                ),
+                responsible ? getProfileName(responsible) : '',
               backup_id:
                 backup?.id ?? null,
               backup_name:
@@ -977,7 +965,7 @@ export default function SupplierPortfolios() {
 
         await synchronizePortfolioAccess(
           savedPortfolio,
-          responsible.id,
+          responsible?.id ?? '',
           backup?.id ?? '',
           assignedBy,
         );
