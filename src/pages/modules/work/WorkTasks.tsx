@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -47,6 +47,12 @@ export default function WorkTasks() {
   const [scope, setScope] = useState('mine');
   const [poleFilter, setPoleFilter] = useState('all');
   const [assigneePole, setAssigneePole] = useState<string>(() => profile?.poles?.[0] || 'direction');
+  useEffect(() => {
+    // Profile may arrive after the first render; avoid querying another pole.
+    if (profile?.poles?.length && !isSuperAdmin && !profile.poles.includes(assigneePole)) {
+      setAssigneePole(profile.poles[0]);
+    }
+  }, [profile?.poles, isSuperAdmin, assigneePole]);
   const { data: people = [], isError: peopleError } = usePoleCollaborators(
     assigneePole, 'work.tasks', 'read',
   );
