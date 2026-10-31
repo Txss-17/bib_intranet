@@ -31,7 +31,7 @@ export function ModuleNavigation({
   sidebarCollapsed,
 }: ModuleNavigationProps) {
   const location = useLocation();
-  const { canViewPage } = usePermissions();
+  const { canViewPath } = usePermissions();
 
   const scope = poleId ?? transversalModule;
 
@@ -41,10 +41,10 @@ export function ModuleNavigation({
       ? transversalNavigations[transversalModule]?.items ?? []
       : [];
 
+  // Resolve permissions against the canonical route registry, not a generated
+  // scope/item key: some navigation entries deliberately route to another scope.
   const navItems = scope
-    ? allItems.filter((item) =>
-        canViewPage(`${scope}.${item.id}`),
-      )
+    ? allItems.filter((item) => canViewPath(item.path))
     : allItems;
 
   if (navItems.length === 0) {
