@@ -8,6 +8,7 @@ const config: HrRecordsConfig = {
   orderBy: 'created_at',
   employeeKey: 'employee_id',
   dateKey: 'start_date',
+  dateRange: { start: 'start_date', end: 'due_date' },
   searchKeys: ['title', 'provider', 'employee_id'],
   fields: [
     { key: 'title', label: 'Intitulé', type: 'text', required: true },

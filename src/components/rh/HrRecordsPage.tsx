@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Plus, Search, AlertCircle, Inbox } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import { readAllPages } from '@/lib/operationsMetrics';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -43,6 +44,8 @@ export interface HrRecordsConfig {
   selfService?: boolean;
   employeeKey?: string;
   dateKey?: string;
+  /** Date range validated before sending a new record. */
+  dateRange?: { start: string; end: string };
 }
 
 const POLES = ['direction', 'finance', 'ops', 'supplier', 'marketplace', 'support', 'marketing', 'rh', 'audit', 'compliance', 'rse', 'product', 'data', 'security'];
@@ -61,10 +64,10 @@ export function useIsHr() {
 }
 
 export function HrRecordsPage({ config }: { config: HrRecordsConfig }) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const { data: isHr = false } = useIsHr();
+  const { data: isHr = false, isLoading: hrLoading, isError: hrError } = useIsHr();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [employeeFilter, setEmployeeFilter] = useState('all');
@@ -73,21 +76,28 @@ export function HrRecordsPage({ config }: { config: HrRecordsConfig }) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({});
 
-  const key = ['hr-records', config.table];
+  const key = ['hr-records', user?.id, profile?.test_account === true, config.table];
 
   const records = useQuery({
     queryKey: key,
+    enabled: !!user && !!profile && !hrLoading && !hrError,
     queryFn: async () => {
-      const { data, error } = await db.from(config.table).select('*').order(config.orderBy, { ascending: false }).limit(500);
-      if (error) throw error;
-      return (data ?? []) as Record<string, any>[];
+      const rows = await readAllPages<{ id: string; [key: string]: any }>(cursor => {
+        let query = db.from(config.table).select('*').order('id').limit(500);
+        if (cursor) query = query.gt('id', cursor);
+        return query;
+      });
+      return rows.sort((a, b) =>
+        String(b[config.orderBy] ?? '').localeCompare(String(a[config.orderBy] ?? '')) ||
+        String(b.id).localeCompare(String(a.id))
+      );
     },
   });
 
   const needsEmployees = config.fields.some((f) => f.type === 'employee');
   const employees = useQuery({
-    queryKey: ['hr-employee-options'],
-    enabled: needsEmployees,
+    queryKey: ['hr-employee-options', user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile && needsEmployees && !hrLoading && !hrError,
     queryFn: async () => {
       const { data, error } = await db.from('profiles').select('id, first_name, last_name, email').eq('test_account', false).order('first_name');
       if (error) throw error;
@@ -95,10 +105,11 @@ export function HrRecordsPage({ config }: { config: HrRecordsConfig }) {
     },
   });
   const positions = useQuery({
-    queryKey: ['hr-position-options'],
-    enabled: config.fields.some((f) => f.type === 'position'),
+    queryKey: ['hr-position-options', user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile && config.fields.some((f) => f.type === 'position') && !hrLoading && !hrError,
     queryFn: async () => {
-      const { data } = await db.from('rh_position_catalog').select('position_key, label').eq('active', true).order('label');
+      const { data, error } = await db.from('rh_position_catalog').select('position_key, label').eq('active', true).order('label');
+      if (error) throw error;
       return (data ?? []) as { position_key: string; label: string }[];
     },
   });
@@ -140,11 +151,14 @@ export function HrRecordsPage({ config }: { config: HrRecordsConfig }) {
 
   const create = useMutation({
     mutationFn: async () => {
+      if (!user?.id || hrLoading || hrError || !(isHr || config.selfService)) throw new Error('Habilitation RH indisponible.');
+      if (records.isError || records.isLoading || (needsEmployees && isHr && (employees.isError || employees.isLoading)) || (config.fields.some(f => f.type === 'position') && (positions.isError || positions.isLoading))) throw new Error('Référentiel RH indisponible : enregistrement suspendu.');
       const payload: Record<string, any> = {};
       config.fields.forEach((f) => { if (form[f.key]) payload[f.key] = form[f.key]; });
       if (config.employeeKey && !isHr) payload[config.employeeKey] = user?.id;
       const missing = config.fields.find((f) => f.required && (!f.hrOnly || isHr) && !payload[f.key]);
       if (missing) throw new Error(`Le champ « ${missing.label} » est obligatoire.`);
+      if (config.dateRange && payload[config.dateRange.start] && payload[config.dateRange.end] && payload[config.dateRange.end] < payload[config.dateRange.start]) throw new Error('La date de fin ne peut pas précéder la date de début.');
       const { error } = await db.from(config.table).insert(payload);
       if (error) throw error;
     },
@@ -158,6 +172,9 @@ export function HrRecordsPage({ config }: { config: HrRecordsConfig }) {
 
   const setStatusMut = useMutation({
     mutationFn: async ({ id, next }: { id: string; next: string }) => {
+      if (!isHr || hrLoading || hrError || records.isError) throw new Error('Autorisation RH non confirmée.');
+      const current = records.data?.find(row => row.id === id);
+      if (!current || !config.transitions?.[current.status]?.includes(next)) throw new Error('Transition de statut non autorisée.');
       const { error } = await db.from(config.table).update({ status: next }).eq('id', id);
       if (error) throw error;
     },
@@ -165,7 +182,7 @@ export function HrRecordsPage({ config }: { config: HrRecordsConfig }) {
     onError: (e: Error) => toast({ title: 'Action refusée', description: e.message, variant: 'destructive' }),
   });
 
-  const canCreate = isHr || config.selfService;
+  const canCreate = !!user && !!profile && !hrLoading && !hrError && (isHr || config.selfService === true);
   const tableFields = config.fields.filter((f) => f.inTable !== false);
   const formFields = config.fields.filter((f) => !f.hrOnly || isHr);
 
@@ -201,9 +218,10 @@ export function HrRecordsPage({ config }: { config: HrRecordsConfig }) {
           <h1 className="text-3xl font-bold">{config.title}</h1>
           {config.description && <p className="text-muted-foreground">{config.description}</p>}
         </div>
-        {canCreate && <Button onClick={openCreate}><Plus className="mr-2 h-4 w-4" />Nouveau</Button>}
+        {canCreate && <Button disabled={records.isLoading || records.isError || (needsEmployees && isHr && (employees.isLoading || employees.isError)) || (config.fields.some(f => f.type === 'position') && (positions.isLoading || positions.isError))} onClick={openCreate}><Plus className="mr-2 h-4 w-4" />Nouveau</Button>}
       </div>
 
+      {hrError && <div role="alert" className="rounded border p-3 text-sm text-destructive">Vérification des droits RH indisponible. Les modifications sont désactivées.</div>}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {config.statuses.slice(0, 4).map((s) => (
           <Card key={s.value} className="cursor-pointer" onClick={() => setStatus(status === s.value ? 'all' : s.value)}>
@@ -246,10 +264,10 @@ export function HrRecordsPage({ config }: { config: HrRecordsConfig }) {
 
       <Card>
         <CardContent className="p-0">
-          {records.isLoading ? (
+          {hrLoading || records.isLoading ? (
             <div className="flex items-center justify-center gap-2 p-10 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Chargement…</div>
-          ) : records.error ? (
-            <div className="flex items-center justify-center gap-2 p-10 text-destructive"><AlertCircle className="h-4 w-4" />{(records.error as Error).message}</div>
+          ) : hrError || records.error ? (
+            <div role="alert" className="flex flex-wrap items-center justify-center gap-2 p-10 text-destructive"><AlertCircle className="h-4 w-4" />{records.error instanceof Error ? records.error.message : 'Droits RH indisponibles.'}<Button variant="outline" size="sm" onClick={() => { void records.refetch(); }}>Réessayer</Button></div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center gap-2 p-10 text-center text-muted-foreground">
               <Inbox className="h-6 w-6" />
@@ -275,7 +293,7 @@ export function HrRecordsPage({ config }: { config: HrRecordsConfig }) {
                       {isHr && config.transitions && (
                         <TableCell className="space-x-1 text-right">
                           {nexts.map((n) => (
-                            <Button key={n} size="sm" variant="outline" disabled={setStatusMut.isPending}
+                            <Button key={n} size="sm" variant="outline" disabled={setStatusMut.isPending || records.isFetching || hrLoading || hrError}
                               onClick={() => setStatusMut.mutate({ id: r.id, next: n })}>
                               {statusDef(n)?.label ?? n}
                             </Button>
@@ -304,7 +322,7 @@ export function HrRecordsPage({ config }: { config: HrRecordsConfig }) {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-            <Button onClick={() => create.mutate()} disabled={create.isPending}>
+            <Button onClick={() => create.mutate()} disabled={create.isPending || !canCreate || records.isLoading || records.isError || (needsEmployees && isHr && (employees.isLoading || employees.isError)) || (config.fields.some(f => f.type === 'position') && (positions.isLoading || positions.isError))}>
               {create.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Enregistrer
             </Button>
           </DialogFooter>

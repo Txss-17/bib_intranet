@@ -8,6 +8,7 @@ const config: HrRecordsConfig = {
   orderBy: 'start_date',
   employeeKey: 'employee_id',
   dateKey: 'start_date',
+  dateRange: { start: 'start_date', end: 'end_date' },
   selfService: true,
   searchKeys: ['employee_id', 'leave_type', 'reason'],
   fields: [
