@@ -35,6 +35,7 @@ import {
 } from '@/hooks/useMarketplace';
 
 import { supabase } from '@/integrations/supabase/client';
+import MarketplacePortfolioManager from '@/components/marketplace/MarketplacePortfolioManager';
 
 type PortfolioFilter =
   | 'all'
@@ -550,6 +551,8 @@ export default function MerchantPortfolio() {
             : ''}
         </Badge>
       </div>
+
+      {!isPortfolioView && <MarketplacePortfolioManager />}
 
       {/* ============================================================
           KPIs
