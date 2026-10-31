@@ -214,8 +214,10 @@ export function useExecutiveKPIs() {
 }
 
 export function useRecentCriticalAlerts() {
+  const { user } = useAuth();
   return useQuery({
-    queryKey: ['executive_critical_alerts'],
+    queryKey: ['executive_critical_alerts', user?.id],
+    enabled: !!user,
 
     queryFn: async () => {
       const sourceResults = await Promise.all([
