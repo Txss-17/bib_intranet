@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useShops } from '@/hooks/useShops';
+import FileUploadZone from '@/components/FileUploadZone';
+import { managedDocumentId } from '@/lib/driveDocuments';
 import { CONTRACT_STATUS_LABELS, type Contract, type ContractInput } from '@/hooks/useContracts';
 
 interface ContractFormProps {
@@ -103,8 +105,29 @@ export default function ContractForm({ open, onOpenChange, contract, defaultShop
             <Input id="value" value={f.value} onChange={(e) => setF({ ...f, value: e.target.value })} />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="doc">Lien du document signé</Label>
-            <Input id="doc" type="url" value={f.document_url} onChange={(e) => setF({ ...f, document_url: e.target.value })} placeholder="https://" />
+            <Label>Document contractuel — Drive BIB</Label>
+            {f.document_url && !managedDocumentId(f.document_url) && (
+              <p role="note" className="rounded-md border p-2 text-xs text-muted-foreground">
+                L'ancien lien du contrat est conservé, mais n'est pas un document géré par BIB.
+                Pour le remplacer, importez-le depuis votre Google Drive professionnel.
+              </p>
+            )}
+            <FileUploadZone bucket="managed-drive" folder="contracts" multiple={false}
+              files={managedDocumentId(f.document_url) ? [{
+                name: 'Document contractuel importé',
+                url: f.document_url,
+                type: 'application/octet-stream',
+                size: 0,
+              }] : []}
+              onFilesChange={(files) => setF(current => ({
+                ...current,
+                document_url: files[0]?.url ?? '',
+              }))}
+            />
+            <p className="text-xs text-muted-foreground">
+              L'import référence un document dans l'espace professionnel BIB.
+              La signature et les autorisations d'accès sont contrôlées séparément.
+            </p>
           </div>
           <div className="space-y-2">
             <Label htmlFor="notes">Notes</Label>
