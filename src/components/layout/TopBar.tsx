@@ -54,6 +54,7 @@ function useNotifications() {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
+        .eq('user_id', profile!.id)
         .order('created_at', { ascending: false })
         .limit(10);
       if (error) throw error;
@@ -161,7 +162,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
                   const pole = notification.pole_id ? getPoleById(notification.pole_id as PoleId) : null;
                   return (
                     <DropdownMenuItem key={notification.id} onClick={async () => {
-                      const { error } = await supabase.from('notifications').update({ read: true }).eq('id', notification.id);
+                      const { error } = await supabase.from('notifications').update({ read: true }).eq('id', notification.id).eq('user_id', profile!.id);
                       if (error) { toast.error('Impossible de marquer cette notification comme lue.'); return; }
                       void qc.invalidateQueries({ queryKey: ['notifications'] });
                       void qc.invalidateQueries({ queryKey: ['critical_notifications'] });
