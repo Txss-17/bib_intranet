@@ -169,6 +169,7 @@ import Employees from "./pages/modules/rh/Employees";
 import EmployeeFiles from "./pages/modules/rh/EmployeeFiles";
 import HRAlerts from "./pages/modules/rh/HRAlerts";
 import RHOnboarding from "./pages/modules/rh/Onboarding";
+import Billing from "./pages/modules/finance/Billing";
 import Attendance from "./pages/modules/rh/Attendance";
 import Leave from "./pages/modules/rh/Leave";
 import Training from "./pages/modules/rh/Training";
@@ -424,7 +425,7 @@ const App = () => (
                 <Route path="/pole/finance/guarantee" element={<GuaranteeFund />} />
                 <Route
                   path="/pole/finance/billing"
-                  element={<ModuleWorkspace pageId="finance.billing" />}
+                  element={<Billing />}
                 />
                 <Route
                   path="/pole/finance/payouts"
