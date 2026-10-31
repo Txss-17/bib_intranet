@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { useCashflows, useCreateCashflow } from '@/hooks/useFinance';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -35,7 +35,7 @@ export default function FinancialOverview({ title = 'Pilotage financier', mode =
     reference: '',
     description: '',
   });
-  const submitEntry = async (event: React.FormEvent<HTMLFormElement>) => {
+  const submitEntry = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const amount = Number(entry.amount);
     if (!user || !mayCreate || !entry.category.trim() || !entry.description.trim()
