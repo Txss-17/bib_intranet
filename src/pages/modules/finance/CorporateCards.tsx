@@ -13,7 +13,6 @@ import {
   useCorporateCards, useCardTransactions, useCreateCardTransaction,
   useApproveTransaction, useRejectTransaction,
 } from '@/hooks/usePhase4';
-import { useUserRole } from '@/hooks/useUserRole';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -30,9 +29,9 @@ export default function CorporateCards() {
   const create = useCreateCardTransaction();
   const approve = useApproveTransaction();
   const reject = useRejectTransaction();
-  const { isAdmin, isManager } = useUserRole();
   const { can } = usePermissions();
   const canApprove = can('finance.cards', 'validate');
+  const canCreate = can('finance.cards', 'create');
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({ card_id: '', amount: '', merchant: '', category: 'travel', description: '' });
@@ -41,7 +40,7 @@ export default function CorporateCards() {
   const [reason, setReason] = useState('');
 
   const submit = () => {
-    if (!form.card_id || !form.amount || !form.merchant) return;
+    if (!canCreate || !form.card_id || !Number.isFinite(Number(form.amount)) || Number(form.amount) <= 0 || !form.merchant.trim()) return;
     create.mutate({
       card_id: form.card_id,
       amount: Number(form.amount),
@@ -63,7 +62,7 @@ export default function CorporateCards() {
   }, [transactions, tab]);
 
   const totalMonth = transactions
-    .filter(t => new Date(t.transaction_date).getMonth() === new Date().getMonth() && t.approval_status !== 'rejected')
+    .filter(t => new Date(t.transaction_date).getMonth() === new Date().getMonth() && new Date(t.transaction_date).getFullYear() === new Date().getFullYear() && t.approval_status !== 'rejected')
     .reduce((s, t) => s + Number(t.amount), 0);
 
   const pendingCount = transactions.filter(t => t.approval_status === 'pending').length;
@@ -84,7 +83,7 @@ export default function CorporateCards() {
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button disabled={cards.length === 0}><Plus className="h-4 w-4 mr-1" /> Nouvelle dépense</Button>
+            <Button disabled={cards.length === 0 || !canCreate}><Plus className="h-4 w-4 mr-1" /> Nouvelle dépense</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Soumettre une dépense</DialogTitle></DialogHeader>
@@ -112,7 +111,7 @@ export default function CorporateCards() {
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-              <Button onClick={submit} disabled={create.isPending}>Soumettre pour approbation</Button>
+              <Button onClick={submit} disabled={create.isPending || !canCreate || !form.card_id || !form.merchant.trim() || !Number.isFinite(Number(form.amount)) || Number(form.amount) <= 0}>Soumettre pour approbation</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
