@@ -67,6 +67,7 @@ export function useCriticalAlerts() {
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
+        .eq('user_id', user!.id)
         .in('type', ['critical', 'warning'])
         .order('created_at', { ascending: false })
         .limit(50);
@@ -78,109 +79,48 @@ export function useCriticalAlerts() {
 
   // Realtime subscription for notifications
   useEffect(() => {
+    if (!user?.id) return;
     const channel = supabase
-      .channel('critical-notifications-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+      .channel(`critical-notifications-realtime-${user?.id || 'anonymous'}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `user_id=eq.${user?.id}` }, () => {
         qc.invalidateQueries({ queryKey: ['critical_notifications'] });
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [qc]);
+  }, [qc, user?.id]);
 
-  // Also fetch from other sources: quality_alerts, logistics_incidents, supplier_audits
-  const { data: qualityAlerts = [] } = useQuery({
-    queryKey: ['critical_quality_alerts', user?.id, profile?.test_account === true, qualityPage],
-    enabled: !!user && !!profile && can(qualityPage, 'read'),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('quality_alerts')
-        .select('*')
-        .in('status', ['open', 'investigating', 'resolved', 'reviewed'])
-        .is('archived_at', null)
-        .in('severity', ['critical', 'high'])
-        .order('created_at', { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return data || [];
-    },
-    refetchInterval: 60000,
-  });
-
-  const { data: logisticsIncidents = [] } = useQuery({
-    queryKey: ['critical_logistics', user?.id, profile?.test_account === true],
-    enabled: !!user && !!profile,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('logistics_incidents')
-        .select('*')
-        .in('status', ['open', 'investigating'])
-        .in('severity', ['critical', 'high'])
-        .order('created_at', { ascending: false })
-        .limit(10);
-      if (error) throw error;
-      return data || [];
-    },
-    refetchInterval: 60000,
-  });
-
-  // Merge all sources into alerts
-  const alerts: CriticalAlert[] = (() => {
-    const fromDb: CriticalAlert[] = dbNotifications
-      .map(mapNotificationToAlert)
-      .filter((a): a is CriticalAlert => a !== null);
-
-    const fromQuality: CriticalAlert[] = qualityAlerts.map((qa) => ({
-      id: `qa-${qa.id}`,
-      module: 'supplier' as AlertModule,
-      severity: qa.severity === 'critical' ? 'critical' as AlertSeverity : 'high' as AlertSeverity,
-      title: `Alerte qualité: ${qa.title}`,
-      description: qa.description,
-      timestamp: qa.created_at,
-      read: qa.status === 'resolved',
-      actionUrl: `${qualityPage === 'supplier.alerts' ? '/pole/supplier/alerts' : '/pole/audit/nonconformities'}?alert=${qa.id}`,
-    }));
-
-    const fromLogistics: CriticalAlert[] = logisticsIncidents.map((li) => ({
-      id: `li-${li.id}`,
-      module: 'performance' as AlertModule,
-      severity: li.severity === 'critical' ? 'critical' as AlertSeverity : 'high' as AlertSeverity,
-      title: `Incident logistique: ${li.incident_type}`,
-      description: li.description,
-      timestamp: li.created_at,
-      read: false,
-      actionUrl: '/pole/ops/incidents',
-    }));
-
-    const merged = [...fromDb, ...fromQuality, ...fromLogistics, ...localAlerts];
-    
-    // If no real data, use fallbacks
-    if (merged.length === 0) return [];
-
-    // Sort by timestamp desc
-    return merged.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  })();
+  // Operational quality/logistics incidents belong to their permissioned pole
+  // dashboards. The personal critical-alert drawer only uses recipient-owned
+  // notifications (plus ephemeral alerts created by this mounted session).
+  const alerts: CriticalAlert[] = [
+    ...dbNotifications.map(mapNotificationToAlert).filter((a): a is CriticalAlert => a !== null),
+    ...localAlerts,
+  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   const markAsRead = useCallback((id: string) => {
+    if (!user?.id) return;
     // If it's a DB notification, update in DB
     if (!id.startsWith('ca-') && !id.startsWith('qa-') && !id.startsWith('li-')) {
-      supabase.from('notifications').update({ read: true }).eq('id', id).then(() => {
+      supabase.from('notifications').update({ read: true }).eq('id', id).eq('user_id', user!.id).then(() => {
         qc.invalidateQueries({ queryKey: ['critical_notifications'] });
       });
     }
     setLocalAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
-  }, [qc]);
+  }, [qc, user?.id]);
 
   const markAllAsRead = useCallback(() => {
+    if (!user?.id) return;
     // Mark all DB notifications as read
     supabase.from('notifications')
       .update({ read: true })
       .in('type', ['critical', 'warning'])
       .eq('read', false)
+      .eq('user_id', user!.id)
       .then(() => {
         qc.invalidateQueries({ queryKey: ['critical_notifications'] });
       });
     setLocalAlerts(prev => prev.map(a => ({ ...a, read: true })));
-  }, [qc]);
+  }, [qc, user?.id]);
 
   const dismissLastAlert = useCallback(() => {
     setLastAlert(null);
