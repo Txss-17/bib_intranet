@@ -10,9 +10,9 @@ export type Merchant = {
   company_name: string | null;
   contact_name: string | null;
   contact_email: string | null;
-  contact_phone: string | null;
+  contact_phone?: string | null;
   subscription_status: string | null;
-  subscription_plan: string | null;
+  subscription_plan?: string | null;
   payment_status: string | null;
   risk_level: string | null;
   revenue: number | null;
