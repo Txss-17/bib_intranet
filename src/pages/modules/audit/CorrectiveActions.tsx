@@ -32,6 +32,7 @@ export default function CorrectiveActions() {
         Les décisions sont prises dans la fiche du constat d’origine, sans créer un second dossier concurrent.
       </p>
     </header>
+    <p className="text-xs text-muted-foreground">Les indicateurs portent uniquement sur les constats affichés sur cette page, hors archives ; les autres pages ne sont pas incluses.</p>
     {query.isError && <p role="alert" className="rounded border p-3 text-sm text-destructive">
       Les actions correctives sont indisponibles. <Button size="sm" variant="outline" onClick={() => void query.refetch()}>Réessayer</Button>
     </p>}
@@ -69,13 +70,13 @@ export default function CorrectiveActions() {
           </Button></div>
         </CardContent>
       </Card>)}
-      {!actions.length && <p className="text-sm text-muted-foreground">Aucune correction documentée sur cette page.</p>}
+      {!actions.length && <p className="text-sm text-muted-foreground">Aucune correction documentée sur cette page{query.data?.has_more ? ' ; d’autres constats sont disponibles sur les pages suivantes.' : '.'}</p>}
     </div>}
     <div className="flex items-center justify-between gap-3 text-xs text-muted-foreground">
       <span>La liste est paginée : les chiffres représentent uniquement les dossiers chargés sur cette page.</span>
       <div className="flex gap-2">
-        <Button size="sm" variant="outline" disabled={!offset || query.isLoading} onClick={() => setOffset(Math.max(0, offset - 50))}>Précédent</Button>
-        <Button size="sm" variant="outline" disabled={!query.data?.has_more || query.isLoading} onClick={() => setOffset(offset + 50)}>Suivant</Button>
+        <Button size="sm" variant="outline" disabled={!offset || query.isFetching || query.isError} onClick={() => setOffset(Math.max(0, offset - 50))}>Précédent</Button>
+        <Button size="sm" variant="outline" disabled={!query.data?.has_more || query.isFetching || query.isError} onClick={() => setOffset(offset + 50)}>Suivant</Button>
       </div>
     </div>
   </div>;

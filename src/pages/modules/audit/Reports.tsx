@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ClipboardCheck, FileCheck2, ShieldAlert } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,10 +14,19 @@ import ModuleWorkspace from '@/components/operations/ModuleWorkspace';
 const show = (v: unknown) => v == null || v === '' ? 'Non renseigné' : String(v);
 export default function AuditReports() {
   const { canViewPage } = usePermissions();
+  const allowed = canViewPage('audit.reports');
+  const [params, setParams] = useSearchParams();
+  const [tab, setTab] = useState(params.get('record') ? 'drafts' : 'reports');
+  const openReport = (id: string) => {
+    const next = new URLSearchParams(params);
+    next.set('record', id);
+    setParams(next, { replace: true });
+    setTab('drafts');
+  };
   const [search, setSearch] = useState('');
   const [offset, setOffset] = useState(0);
-  const query = useIntranetRecords('audit.reports', search, 'all', offset);
-  if (!canViewPage('audit.reports')) return <p role="alert">Accès aux rapports d’audit non autorisé.</p>;
+  const query = useIntranetRecords('audit.reports', search, 'all', offset, allowed);
+  if (!allowed) return <p role="alert">Accès aux rapports d’audit non autorisé.</p>;
   const rows = query.data?.rows ?? [];
   return <div className="space-y-6">
     <header>
@@ -31,7 +40,7 @@ export default function AuditReports() {
       <Card><CardHeader><CardTitle className="flex items-center gap-2 text-base"><ShieldAlert className="h-4 w-4" />Suivi des conclusions</CardTitle></CardHeader>
         <CardContent className="text-sm text-muted-foreground">Les écarts et actions correctives sont suivis dans <Link className="underline" to="/pole/audit/corrective-actions">Actions correctives</Link> ; leurs décisions restent distinctes.</CardContent></Card>
     </div>
-    <Tabs defaultValue="reports">
+    <Tabs value={tab} onValueChange={setTab}>
       <TabsList><TabsTrigger value="reports">Rapports et opinions</TabsTrigger><TabsTrigger value="drafts">Édition et validations</TabsTrigger></TabsList>
       <TabsContent value="reports" className="space-y-4">
         <Input className="max-w-xl" aria-label="Rechercher les rapports d'audit" value={search}
@@ -53,14 +62,17 @@ export default function AuditReports() {
               <p><strong>Opinion :</strong> {show(row.payload.opinion)}</p>
               <p><strong>Plan correctif :</strong> {show(row.payload.corrective_plan_ref)}</p>
               <p className="md:col-span-2"><strong>Faits et preuves :</strong> {show(row.payload.finding)} · {show(row.payload.evidence)}</p>
+              <div className="md:col-span-2">
+                <Button variant="outline" size="sm" onClick={() => openReport(row.id)}>Ouvrir la fiche et les validations</Button>
+              </div>
             </CardContent>
           </Card>)}
           {!rows.length && <p className="text-sm text-muted-foreground">Aucun rapport documenté sur cette page.</p>}
         </div>}
         <div className="flex justify-end gap-2 text-xs">
           <span className="self-center text-muted-foreground">Page {Math.floor(offset / 50) + 1}</span>
-          <Button size="sm" variant="outline" disabled={!offset || query.isLoading} onClick={() => setOffset(Math.max(0, offset - 50))}>Précédent</Button>
-          <Button size="sm" variant="outline" disabled={!query.data?.has_more || query.isLoading} onClick={() => setOffset(v => v + 50)}>Suivant</Button>
+          <Button size="sm" variant="outline" disabled={!offset || query.isFetching || query.isError} onClick={() => setOffset(Math.max(0, offset - 50))}>Précédent</Button>
+          <Button size="sm" variant="outline" disabled={!query.data?.has_more || query.isFetching || query.isError} onClick={() => setOffset(v => v + 50)}>Suivant</Button>
         </div>
       </TabsContent>
       <TabsContent value="drafts"><ModuleWorkspace pageId="audit.reports" /></TabsContent>

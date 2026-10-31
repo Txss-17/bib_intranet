@@ -7,9 +7,9 @@ export function useIntranetPeople(scope?: string) {
  const { user } = useAuth();
  return useQuery({ queryKey: ['intranet-people', user?.id, scope], enabled: !!user, queryFn: () => intranetRpc<Person[]>(scope === 'product' ? 'product_people' : 'list_intranet_people'), staleTime: 60000 });
 }
-export function useIntranetRecords(page: string, search: string, status: string, offset: number) {
- const { user } = useAuth();
- return useQuery({ queryKey: ['intranet-records', user?.id, page, search, status, offset], enabled: !!user && !!page, queryFn: () => intranetRpc<ModuleList>(productRoute(page) ? 'product_list_records' : 'list_intranet_records', { p_page: page, p_search: search, p_status: status, p_offset: offset }) });
+export function useIntranetRecords(page: string, search: string, status: string, offset: number, allowed = true) {
+ const { user, profile } = useAuth();
+ return useQuery({ queryKey: ['intranet-records', user?.id, profile?.test_account === true, page, search, status, offset], enabled: !!user && !!profile && !!page && allowed, queryFn: () => intranetRpc<ModuleList>(productRoute(page) ? 'product_list_records' : 'list_intranet_records', { p_page: page, p_search: search, p_status: status, p_offset: offset }) });
 }
 export function useIntranetRecordEvents(recordId: string | undefined, scope?: string) {
  const { user } = useAuth();
