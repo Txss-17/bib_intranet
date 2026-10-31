@@ -12,7 +12,7 @@ import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@
 import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { poles as allPoles } from '@/data/poles';
-import { useWorkModuleRows, useWorkModuleActions, useWorkModulePeople, WorkModuleKind, WorkVersion, PROJECT_STATUS_LABELS, PROCESS_STATUS_LABELS, VALIDATION_STATUS_LABELS, ESCALATION_STATUS_LABELS, ESCALATION_SEVERITY_LABELS } from '@/hooks/useWorkModule';
+import { useWorkModuleRows, useWorkModuleActions, useWorkModulePeople, useWorkPoleMembers, WorkModuleKind, WorkVersion, PROJECT_STATUS_LABELS, PROCESS_STATUS_LABELS, VALIDATION_STATUS_LABELS, ESCALATION_STATUS_LABELS, ESCALATION_SEVERITY_LABELS } from '@/hooks/useWorkModule';
 import WorkHistoryCard from './WorkHistoryCard';
 const definitions = { projects: { title: 'Projets', one: 'Projet', description: 'Responsables, échéances et avancement des projets.', statuses: PROJECT_STATUS_LABELS }, processes: { title: 'Processus', one: 'Processus', description: 'Procédures, étapes et versions publiées.', statuses: PROCESS_STATUS_LABELS }, validations: { title: 'Validations', one: 'Demande', description: 'Demandes, validateurs distincts et décisions motivées.', statuses: VALIDATION_STATUS_LABELS }, escalations: { title: 'Escalades', one: 'Escalade', description: 'Blocages, prise en charge et résolution documentée.', statuses: ESCALATION_STATUS_LABELS } };
 export interface WorkRow extends WorkVersion {
@@ -101,14 +101,24 @@ function WorkEditor({ kind, row, defaultPole, pending, close, save }: {
     save: (input: Record<string, unknown>, base?: WorkRow) => void;
 }) {
     const [base] = useState(row);
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const { poles, isSuperAdmin } = usePermissions();
     const people = useWorkModulePeople(kind);
+    const isCeo = profile?.position === 'ceo' && profile?.test_account !== true;
+    const [memberPole, setMemberPole] = useState<string>(
+        row?.pole || defaultPole || (isCeo ? 'all' : poles[0] || '')
+    );
+    const directory = useWorkPoleMembers(kind, memberPole === 'all' ? null : memberPole || null);
     const poleOptions = allPoles.filter(p => isSuperAdmin || poles.includes(p.id));
     const personColumn = kind === 'validations' ? 'validator_id' : kind === 'escalations' ? 'assigned_to' : 'owner_id';
     const [form, setForm] = useState({ title: row ? name(row) : '', description: row?.description || '', pole: row?.pole || defaultPole || '', person: row?.owner_id || row?.validator_id || row?.assigned_to || 'none', due: row?.due_date || '', steps: (row?.steps || []).map(s => s.label).join('\n'), severity: row?.severity || 'medium', resolution: row?.resolution_note || '' });
     const change = (key: keyof typeof form, value: string) => setForm({ ...form, [key]: value });
-    const availablePeople = (people.data || []).filter(p => kind !== 'validations' || p.id !== (base?.requester_id || user?.id));
+    const assignedToPole = (p: { id: string }) =>
+        memberPole === 'all' || !!directory.data?.some(m => m.id === p.id);
+    const availablePeople = (people.data || []).filter(p =>
+        assignedToPole(p) && (kind !== 'validations' || p.id !== (base?.requester_id || user?.id))
+    );
+    const members = directory.data || [];
     const submit = () => { if (base && kind === 'validations') {
         save({ validator_id: form.person }, base);
         return;
@@ -120,7 +130,32 @@ function WorkEditor({ kind, row, defaultPole, pending, close, save }: {
             input.resolution_note = form.resolution.trim() || null;
     } save(input, base); };
     return <Dialog open onOpenChange={open => !open && !pending && close()}><DialogContent className="max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{base ? 'Modifier' : 'Créer'} · {definitions[kind].one}</DialogTitle></DialogHeader><form className="space-y-4" onSubmit={e => { e.preventDefault(); submit(); }}>{!(base && kind === 'validations') && <><div><Label htmlFor="work-title">{kind === 'projects' || kind === 'processes' ? 'Nom' : 'Titre'}</Label><Input id="work-title" required maxLength={255} value={form.title} onChange={e => change('title', e.target.value)}/></div><div><Label htmlFor="work-description">Description</Label><Textarea id="work-description" maxLength={20000} value={form.description} onChange={e => change('description', e.target.value)}/></div><div><Label>Pôle</Label><Select value={form.pole || 'none'} onValueChange={value => change('pole', value === 'none' ? '' : value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Sans pôle défini</SelectItem>{poleOptions.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent></Select></div></>}
- <div><Label>{kind === 'validations' ? 'Validateur distinct du demandeur' : 'Responsable'}</Label><Select value={form.person} onValueChange={value => change('person', value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{kind !== 'validations' && <SelectItem value="none">Non attribué</SelectItem>}{availablePeople.map(p => <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>)}</SelectContent></Select>{people.isError && <p role="alert" className="text-sm">Liste des responsables indisponible.</p>}</div>
+ <div className="space-y-2 rounded-md border p-3">
+   <Label>Membres du pôle</Label>
+   <Select value={memberPole} onValueChange={setMemberPole}>
+     <SelectTrigger aria-label="Filtrer les membres par pôle"><SelectValue placeholder="Choisir un pôle"/></SelectTrigger>
+     <SelectContent>
+       {isCeo && <SelectItem value="all">Tous les pôles</SelectItem>}
+       {poleOptions.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}
+     </SelectContent>
+   </Select>
+   {directory.isLoading ? <p role="status" className="text-xs text-muted-foreground">Chargement des membres…</p> :
+    directory.isError ? <p role="alert" className="text-xs text-destructive">Annuaire indisponible ou accès non autorisé : vérifiez la migration 0073 et les permissions.</p> :
+    <p className="text-xs text-muted-foreground">
+      {members.length} membre(s) du pôle · {members.filter(p => p.eligible).length} autorisé(s) à recevoir ce dossier.
+    </p>}
+   {!directory.isError && !directory.isLoading && members.length > 0 &&
+      <div className="max-h-32 overflow-y-auto text-xs">
+       {members.map(p => <div key={p.id} className="flex justify-between gap-2 border-b py-1">
+         <span>{[p.first_name,p.last_name].filter(Boolean).join(' ') || p.id}</span>
+         <span className={p.eligible ? 'text-muted-foreground' : 'text-amber-600'}>
+           {p.eligible ? 'Affectable' : 'Droits insuffisants'}
+         </span>
+       </div>)}
+      </div>}
+   <p className="text-xs text-muted-foreground">Le pôle recense ses membres actifs. L'affectation exige en plus les droits métier vérifiés côté serveur.</p>
+ </div>
+ <div><Label>{kind === 'validations' ? 'Validateur distinct du demandeur' : 'Responsable'}</Label><Select value={form.person} onValueChange={value => change('person', value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{kind !== 'validations' && <SelectItem value="none">Non attribué</SelectItem>}{availablePeople.map(p => <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>)}</SelectContent></Select>{people.isError && <p role="alert" className="text-sm">Liste des responsables autorisés indisponible.</p>}</div>
  {kind === 'projects' && <div><Label htmlFor="work-due">Échéance</Label><Input id="work-due" type="date" value={form.due} onChange={e => change('due', e.target.value)}/></div>}{kind === 'processes' && <div><Label htmlFor="work-steps">Étapes, une par ligne</Label><Textarea id="work-steps" rows={6} maxLength={50000} value={form.steps} onChange={e => change('steps', e.target.value)}/></div>}{kind === 'escalations' && <><div><Label>Gravité</Label><Select value={form.severity} onValueChange={v => change('severity', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(ESCALATION_SEVERITY_LABELS).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div>{base && <div><Label htmlFor="work-resolution">Éléments de résolution en préparation</Label><Textarea id="work-resolution" maxLength={5000} value={form.resolution} onChange={e => change('resolution', e.target.value)}/></div>}</>}
  <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={pending} onClick={close}>Annuler</Button><Button disabled={pending || !form.title.trim() || kind === 'validations' && form.person === 'none'}>{pending ? 'Enregistrement…' : base ? 'Enregistrer' : 'Créer'}</Button></div></form></DialogContent></Dialog>;
 }
