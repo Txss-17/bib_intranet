@@ -67,6 +67,7 @@ export function useExecutiveKPIs() {
         supabase
           .from('notifications')
           .select('*')
+          .eq('user_id', user!.id)
           .eq('type', 'critical')
           .eq('read', false)
           .limit(10),
@@ -244,6 +245,7 @@ export function useRecentCriticalAlerts() {
           .select(
             'id, title, message, type, pole_id, created_at',
           )
+          .eq('user_id', user!.id)
           .eq('type', 'critical')
           .eq('read', false)
           .order('created_at', {
