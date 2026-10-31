@@ -1,4 +1,7 @@
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import {
   ArrowUpRight, Boxes, ClipboardList, Code2, TestTube2, GitBranch,
   Activity, Cable, BookOpen, FlaskConical, AlertTriangle, FileText,
@@ -15,6 +18,15 @@ type ProductArea = {
   label: string; path: string; pageId: string;
   icon: LucideIcon; description: string;
 };
+const products = [
+  { key: 'bib_platform', title: 'BIB Platform' },
+  { key: 'bib_intranet', title: 'BIB Intranet' },
+  { key: 'bib_audit_hub', title: 'BIB Audit Hub' },
+] as const;
+
+type ReleaseStatus = 'planning'|'development'|'testing'|'review'|'approved'|'released'|'rolled_back';
+type ReleaseSummary = { id:string; app_key:string; status:ReleaseStatus; version:string; environment:string; updated_at:string; };
+
 const sections: Array<{ title: string; description: string; links: ProductArea[] }> = [
   {
     title: '1. Stratégie, conception & planification',
@@ -56,6 +68,20 @@ const sections: Array<{ title: string; description: string; links: ProductArea[]
 
 export default function ProductEngineeringDashboard() {
   const { canViewPage } = usePermissions();
+  const { user } = useAuth();
+  const releaseQuery = useQuery({
+    queryKey: ['product-release-overview', user?.id],
+    enabled: !!user?.id && canViewPage('product.engineering'),
+    queryFn: async (): Promise<ReleaseSummary[]> => {
+      const { data, error } = await supabase
+        .from('product_release_tracking' as any)
+        .select('id,app_key,status,version,environment,updated_at')
+        .order('updated_at',{ascending:false})
+        .limit(250);
+      if (error) throw error;
+      return (data ?? []) as unknown as ReleaseSummary[];
+    },
+  });
   const requestsQuery = useProductRequests();
   const requests = requestsQuery.data ?? [];
   const openRequests = requests.filter((request) =>
@@ -76,6 +102,37 @@ export default function ProductEngineeringDashboard() {
         <Badge variant="secondary">Dossiers ≠ tests exécutés ≠ versions déployées</Badge>
       </div>
     </header>
+
+    {canViewPage('product.engineering') && <section className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-semibold">Portefeuille des trois applications</h2>
+          <p className="text-sm text-muted-foreground">Derniers enregistrements de livraison autorisés, sans interprétation automatique du statut CI/CD.</p>
+        </div>
+        <Button asChild variant="outline" size="sm"><Link to="/pole/product/releases">
+          Registre des livraisons <ArrowUpRight className="ml-2 h-4 w-4"/>
+        </Link></Button>
+      </div>
+      {releaseQuery.isError && <div role="alert" className="rounded-md border border-destructive/40 p-3 text-sm text-destructive">
+        Registre des livraisons indisponible. <Button variant="outline" size="sm" className="ml-2" onClick={() => void releaseQuery.refetch()}>Réessayer</Button>
+      </div>}
+      <div className="grid gap-3 md:grid-cols-3">
+        {products.map(product => {
+          const releases = (releaseQuery.data ?? []).filter(item => item.app_key === product.key);
+          const pending = releases.filter(item => !['released','rolled_back'].includes(item.status));
+          const last = releases[0];
+          return <Card key={product.key}>
+            <CardHeader className="pb-2"><CardTitle className="text-base">{product.title}</CardTitle></CardHeader>
+            <CardContent className="space-y-2 text-sm">
+              <p className="text-xs text-muted-foreground">Livraisons en préparation</p>
+              <p className="text-2xl font-semibold">{releaseQuery.isLoading || releaseQuery.isError ? '—' : pending.length}</p>
+              <p className="text-xs text-muted-foreground">Dernière fiche : {releaseQuery.isLoading || releaseQuery.isError ? 'Non confirmée' : last ? `${last.version} · ${last.status} · ${last.environment}` : 'Aucune'}</p>
+              <p className="text-xs text-muted-foreground">Fiches renseignées uniquement, aucune mesure d'exécution CI.</p>
+            </CardContent>
+          </Card>;
+        })}
+      </div>
+    </section>}
 
     {canViewPage('product.studio') && <Card>
       <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
