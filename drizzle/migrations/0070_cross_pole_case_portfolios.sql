@@ -65,6 +65,7 @@ BEGIN
  IF p_owner_id IS NOT NULL AND NOT EXISTS (
   SELECT 1 FROM public.profiles
   WHERE id=p_owner_id AND app_origin='connect' AND hr_status='active' AND test_account IS FALSE
+    AND (position='ceo' OR p_pole=ANY(poles::text[]))
  ) THEN RAISE EXCEPTION 'Owner must be an active BIB employee' USING ERRCODE='23503';END IF;
  INSERT INTO public.bib_case_portfolios (pole,name,owner_id,created_by)
  VALUES (p_pole,btrim(p_name),p_owner_id,v_actor) RETURNING id INTO v_id;
@@ -113,3 +114,46 @@ REVOKE ALL ON FUNCTION public.bib_create_case_portfolio(text,text,uuid) FROM PUB
 REVOKE ALL ON FUNCTION public.bib_assign_case_entity(uuid,text,uuid,text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.bib_create_case_portfolio(text,text,uuid) TO authenticated;
 GRANT EXECUTE ON FUNCTION public.bib_assign_case_entity(uuid,text,uuid,text) TO authenticated;
+
+-- Reassign the responsible employee without losing ownership history.
+CREATE TABLE IF NOT EXISTS public.bib_case_portfolio_owner_events (
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ portfolio_id uuid NOT NULL REFERENCES public.bib_case_portfolios(id),
+ previous_owner_id uuid,
+ new_owner_id uuid,
+ changed_by uuid NOT NULL,
+ reason text,
+ changed_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.bib_case_portfolio_owner_events ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.bib_case_portfolio_owner_events FROM PUBLIC,anon;
+GRANT SELECT ON public.bib_case_portfolio_owner_events TO authenticated;
+CREATE POLICY bib_case_portfolio_owner_events_read ON public.bib_case_portfolio_owner_events
+ FOR SELECT TO authenticated USING (EXISTS (
+ SELECT 1 FROM public.bib_case_portfolios p
+ WHERE p.id=portfolio_id AND public.bib_portfolio_permission(p.pole,'read')));
+
+CREATE OR REPLACE FUNCTION public.bib_change_case_portfolio_owner(
+ p_portfolio_id uuid,p_new_owner uuid,p_reason text DEFAULT NULL
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
+DECLARE v_pole text;v_previous uuid;v_actor uuid:=auth.uid();
+BEGIN
+ SELECT pole,owner_id INTO v_pole,v_previous FROM public.bib_case_portfolios
+ WHERE id=p_portfolio_id FOR UPDATE;
+ IF v_pole IS NULL OR v_actor IS NULL OR NOT public.bib_portfolio_permission(v_pole,'update') THEN
+  RAISE EXCEPTION 'Portfolio transfer denied' USING ERRCODE='42501';
+ END IF;
+ IF p_new_owner IS NOT NULL AND NOT EXISTS (
+ SELECT 1 FROM public.profiles WHERE id=p_new_owner AND app_origin='connect'
+ AND hr_status='active' AND test_account IS FALSE
+ AND (position='ceo' OR v_pole=ANY(poles::text[]))
+ ) THEN RAISE EXCEPTION 'New owner is not an eligible collaborator' USING ERRCODE='23503'; END IF;
+ IF v_previous IS NOT DISTINCT FROM p_new_owner THEN RETURN; END IF;
+ UPDATE public.bib_case_portfolios SET owner_id=p_new_owner,updated_at=now()
+ WHERE id=p_portfolio_id;
+ INSERT INTO public.bib_case_portfolio_owner_events
+ (portfolio_id,previous_owner_id,new_owner_id,changed_by,reason)
+ VALUES(p_portfolio_id,v_previous,p_new_owner,v_actor,nullif(btrim(p_reason),''));
+END; $$;
+REVOKE ALL ON FUNCTION public.bib_change_case_portfolio_owner(uuid,uuid,text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.bib_change_case_portfolio_owner(uuid,uuid,text) TO authenticated;
