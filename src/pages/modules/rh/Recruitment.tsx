@@ -10,7 +10,7 @@ import { HrRecordsPage, HrRecordsConfig } from '@/components/rh/HrRecordsPage';
 
 const needs: HrRecordsConfig = {
   table: 'hr_recruitment_needs',
-  title: 'Besoins de recrutement',
+  title: 'Postes à pourvoir',
   itemLabel: 'Besoin de recrutement',
   orderBy: 'created_at',
   dateKey: 'desired_date',
@@ -23,7 +23,6 @@ const needs: HrRecordsConfig = {
       { value: 'alternance', label: 'Alternance' }, { value: 'stage', label: 'Stage' } ] },
     { key: 'priority', label: 'Priorité', type: 'select', defaultValue: 'medium', options: [
       { value: 'low', label: 'Basse' }, { value: 'medium', label: 'Moyenne' }, { value: 'high', label: 'Haute' }, { value: 'critical', label: 'Critique' } ] },
-    { key: 'recruiter_id', label: 'Responsable', type: 'employee' },
     { key: 'desired_date', label: 'Date souhaitée', type: 'date' },
     { key: 'notes', label: 'Notes', type: 'textarea', inTable: false },
   ],
@@ -38,18 +37,17 @@ const needs: HrRecordsConfig = {
 
 const candidates: HrRecordsConfig = {
   table: 'hr_candidates',
-  title: 'Candidatures',
+  title: 'Candidats externes et candidatures',
   itemLabel: 'Candidature',
   orderBy: 'created_at',
   searchKeys: ['full_name', 'email', 'position_key', 'source'],
   fields: [
-    { key: 'full_name', label: 'Candidat', type: 'text', required: true },
+    { key: 'full_name', label: 'Nom complet du candidat (nouvelle personne)', type: 'text', required: true },
     { key: 'email', label: 'Email', type: 'text' },
     { key: 'position_key', label: 'Poste', type: 'position', required: true },
     { key: 'source', label: 'Source', type: 'select', options: [
       { value: 'linkedin', label: 'LinkedIn' }, { value: 'referral', label: 'Cooptation' }, { value: 'website', label: 'Site BIB' },
       { value: 'school', label: 'École' }, { value: 'other', label: 'Autre' } ] },
-    { key: 'owner_id', label: 'Responsable', type: 'employee' },
     { key: 'next_step', label: 'Prochaine étape', type: 'text' },
   ],
   statuses: [
@@ -95,6 +93,13 @@ export default function Recruitment() {
               <ExternalLink className="mr-2 h-4 w-4" />Consulter le formulaire public
             </a>
           </Button>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="space-y-2 p-4 text-sm">
+          <p className="font-semibold">Recruter une nouvelle personne</p>
+          <p>Dans « Candidatures & pipeline », cliquez sur « Nouveau » puis saisissez le nom et les coordonnées du candidat. Il n'a pas besoin de posséder un compte BIB ni de figurer dans la liste des collaborateurs.</p>
+          <p className="text-muted-foreground">La sélection d'un collaborateur existant concerne uniquement l'attribution interne d'un dossier ou une mutation RH, pas l'inscription d'un candidat. Un compte intranet n'est créé qu'après acceptation et validation RH, depuis l'Onboarding.</p>
         </CardContent>
       </Card>
       <Tabs defaultValue="candidates" className="space-y-4">
