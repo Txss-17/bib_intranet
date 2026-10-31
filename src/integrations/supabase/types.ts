@@ -14,120 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      work_tasks: {
-        Row: {
-          id: string
-          title: string
-          description: string | null
-          objective: string | null
-          pole: string | null
-          task_poles: string[]
-          status: 'pending' | 'in_progress' | 'review' | 'completed'
-          priority: 'low' | 'medium' | 'high' | 'critical'
-          assignee_id: string | null
-          created_by: string | null
-          due_date: string | null
-          completed_at: string | null
-          created_at: string
-          updated_at: string
-          archived_at: string | null
-          test_account: boolean
-        }
-        Insert: {
-          id?: string
-          title?: string
-          description?: string | null
-          objective?: string | null
-          pole?: string | null
-          task_poles?: string[]
-          status?: 'pending' | 'in_progress' | 'review' | 'completed'
-          priority?: 'low' | 'medium' | 'high' | 'critical'
-          assignee_id?: string | null
-          created_by?: string | null
-          due_date?: string | null
-          completed_at?: string | null
-          created_at?: string
-          updated_at?: string
-          archived_at?: string | null
-          test_account?: boolean
-        }
-        Update: {
-          id?: string
-          title?: string
-          description?: string | null
-          objective?: string | null
-          pole?: string | null
-          task_poles?: string[]
-          status?: 'pending' | 'in_progress' | 'review' | 'completed'
-          priority?: 'low' | 'medium' | 'high' | 'critical'
-          assignee_id?: string | null
-          created_by?: string | null
-          due_date?: string | null
-          completed_at?: string | null
-          created_at?: string
-          updated_at?: string
-          archived_at?: string | null
-          test_account?: boolean
-        }
-        Relationships: [{ foreignKeyName: "work_tasks_assignee_id_fkey"; columns: ["assignee_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] }]
-      }
-
-      work_task_comments: {
-        Row: {
-          id: string
-          task_id: string
-          author_id: string
-          body: string
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          task_id?: string
-          author_id?: string
-          body?: string
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          task_id?: string
-          author_id?: string
-          body?: string
-          created_at?: string
-        }
-        Relationships: []
-      }
-
-      work_task_history: {
-        Row: {
-          id: string
-          task_id: string
-          actor_id: string | null
-          action: string
-          before_state: Json | null
-          after_state: Json
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          task_id?: string
-          actor_id?: string | null
-          action?: string
-          before_state?: Json | null
-          after_state?: Json
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          task_id?: string
-          actor_id?: string | null
-          action?: string
-          before_state?: Json | null
-          after_state?: Json
-          created_at?: string
-        }
-        Relationships: []
-      }
-
       access_actions: {
         Row: {
           action_key: string
@@ -458,6 +344,38 @@ export type Database = {
         }
         Relationships: []
       }
+      access_role_scope_policy_drafts: {
+        Row: {
+          policy: Json
+          role_id: string
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          policy: Json
+          role_id: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          policy?: Json
+          role_id?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_role_scope_policy_drafts_role_id_fkey"
+            columns: ["role_id"]
+            isOneToOne: true
+            referencedRelation: "access_roles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       access_role_scopes: {
         Row: {
           created_at: string
@@ -752,22 +670,6 @@ export type Database = {
       }
       anomalies: {
         Row: {
-          revision: number
-          test_account: boolean
-          legacy_record: boolean
-          team: string
-          corrective_action: string | null
-          evidence: string | null
-          resolution: string | null
-          document_ids: string[]
-          completed_checks: string[]
-          resolved_by: string | null
-          closed_by: string | null
-          closure_kind: string | null
-          archived_at: string | null
-          change_note: string | null
-          creation_key: string | null
-          creation_request: Json | null
           ai_decision: string | null
           ai_suggestion: Json | null
           ai_validated_at: string | null
@@ -795,22 +697,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          revision?: number
-          test_account?: boolean
-          legacy_record?: boolean
-          team?: string
-          corrective_action?: string | null
-          evidence?: string | null
-          resolution?: string | null
-          document_ids?: string[]
-          completed_checks?: string[]
-          resolved_by?: string | null
-          closed_by?: string | null
-          closure_kind?: string | null
-          archived_at?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           ai_decision?: string | null
           ai_suggestion?: Json | null
           ai_validated_at?: string | null
@@ -838,22 +724,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          revision?: number
-          test_account?: boolean
-          legacy_record?: boolean
-          team?: string
-          corrective_action?: string | null
-          evidence?: string | null
-          resolution?: string | null
-          document_ids?: string[]
-          completed_checks?: string[]
-          resolved_by?: string | null
-          closed_by?: string | null
-          closure_kind?: string | null
-          archived_at?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           ai_decision?: string | null
           ai_suggestion?: Json | null
           ai_validated_at?: string | null
@@ -884,8 +754,6 @@ export type Database = {
       }
       anomaly_events: {
         Row: {
-          before_state: Json | null
-          after_state: Json | null
           anomaly_id: string
           created_at: string
           from_status: string | null
@@ -896,8 +764,6 @@ export type Database = {
           to_status: string | null
         }
         Insert: {
-          before_state?: Json | null
-          after_state?: Json | null
           anomaly_id: string
           created_at?: string
           from_status?: string | null
@@ -908,8 +774,6 @@ export type Database = {
           to_status?: string | null
         }
         Update: {
-          before_state?: Json | null
-          after_state?: Json | null
           anomaly_id?: string
           created_at?: string
           from_status?: string | null
@@ -2432,15 +2296,6 @@ export type Database = {
       }
       field_audits: {
         Row: {
-          revision: number
-          created_by: string | null
-          test_account: boolean
-          decided_by: string | null
-          closed_by: string | null
-          correction_evidence: string | null
-          change_note: string | null
-          creation_key: string | null
-          creation_request: Json | null
           anomaly_id: string | null
           app_origin: string
           assigned_at: string | null
@@ -2469,15 +2324,6 @@ export type Database = {
           workflow_status: string
         }
         Insert: {
-          revision?: number
-          created_by?: string | null
-          test_account?: boolean
-          decided_by?: string | null
-          closed_by?: string | null
-          correction_evidence?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           anomaly_id?: string | null
           app_origin?: string
           assigned_at?: string | null
@@ -2506,15 +2352,6 @@ export type Database = {
           workflow_status?: string
         }
         Update: {
-          revision?: number
-          created_by?: string | null
-          test_account?: boolean
-          decided_by?: string | null
-          closed_by?: string | null
-          correction_evidence?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           anomaly_id?: string | null
           app_origin?: string
           assigned_at?: string | null
@@ -4456,6 +4293,213 @@ export type Database = {
           },
         ]
       }
+      product_release_tracking: {
+        Row: {
+          app_key: string
+          change_reference: string | null
+          created_at: string
+          created_by: string
+          deployed_at: string | null
+          environment: string
+          id: string
+          request_id: string
+          reviewed_at: string | null
+          reviewer_id: string | null
+          rollback_reference: string | null
+          security_reference: string | null
+          status: string
+          test_reference: string | null
+          updated_at: string
+          updated_by: string
+          version: string
+        }
+        Insert: {
+          app_key: string
+          change_reference?: string | null
+          created_at?: string
+          created_by: string
+          deployed_at?: string | null
+          environment: string
+          id?: string
+          request_id: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          rollback_reference?: string | null
+          security_reference?: string | null
+          status?: string
+          test_reference?: string | null
+          updated_at?: string
+          updated_by: string
+          version: string
+        }
+        Update: {
+          app_key?: string
+          change_reference?: string | null
+          created_at?: string
+          created_by?: string
+          deployed_at?: string | null
+          environment?: string
+          id?: string
+          request_id?: string
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          rollback_reference?: string | null
+          security_reference?: string | null
+          status?: string
+          test_reference?: string | null
+          updated_at?: string
+          updated_by?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_release_tracking_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "tech_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_release_tracking_events: {
+        Row: {
+          actor_id: string
+          at: string
+          id: string
+          new_status: string
+          note: string
+          old_status: string | null
+          release_id: string
+        }
+        Insert: {
+          actor_id: string
+          at?: string
+          id?: string
+          new_status: string
+          note: string
+          old_status?: string | null
+          release_id: string
+        }
+        Update: {
+          actor_id?: string
+          at?: string
+          id?: string
+          new_status?: string
+          note?: string
+          old_status?: string | null
+          release_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_release_tracking_events_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "product_release_tracking"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_work_events: {
+        Row: {
+          actor_id: string
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string
+          id: string
+          kind: string
+          note: string | null
+          record_id: string
+        }
+        Insert: {
+          actor_id: string
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          kind: string
+          note?: string | null
+          record_id: string
+        }
+        Update: {
+          actor_id?: string
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_work_events_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "product_work_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_work_records: {
+        Row: {
+          approved_by: string | null
+          client_key: string
+          created_at: string
+          created_by: string
+          document_ids: string[]
+          due_date: string | null
+          first_reviewer: string | null
+          id: string
+          owner_id: string | null
+          page_id: string
+          payload: Json
+          priority: string
+          revision: number
+          status: string
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          approved_by?: string | null
+          client_key: string
+          created_at?: string
+          created_by: string
+          document_ids?: string[]
+          due_date?: string | null
+          first_reviewer?: string | null
+          id?: string
+          owner_id?: string | null
+          page_id: string
+          payload?: Json
+          priority?: string
+          revision?: number
+          status?: string
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          approved_by?: string | null
+          client_key?: string
+          created_at?: string
+          created_by?: string
+          document_ids?: string[]
+          due_date?: string | null
+          first_reviewer?: string | null
+          id?: string
+          owner_id?: string | null
+          page_id?: string
+          payload?: Json
+          priority?: string
+          revision?: number
+          status?: string
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           barcode: string | null
@@ -4808,25 +4852,6 @@ export type Database = {
       }
       quality_alerts: {
         Row: {
-          revision: number
-          test_account: boolean
-          is_nonconformity: boolean
-          approval_levels: number
-          legacy_record: boolean
-          origin_page: string | null
-          creation_key: string | null
-          creation_request: Json | null
-          corrective_action: string | null
-          corrective_due_date: string | null
-          evidence: string | null
-          document_ids: string[]
-          resolved_by: string | null
-          first_reviewer: string | null
-          reviewed_at: string | null
-          closed_by: string | null
-          closed_at: string | null
-          archived_at: string | null
-          change_note: string | null
           assigned_to: string | null
           created_at: string
           description: string
@@ -4842,25 +4867,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          revision?: number
-          test_account?: boolean
-          is_nonconformity?: boolean
-          approval_levels?: number
-          legacy_record?: boolean
-          origin_page?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
-          corrective_action?: string | null
-          corrective_due_date?: string | null
-          evidence?: string | null
-          document_ids?: string[]
-          resolved_by?: string | null
-          first_reviewer?: string | null
-          reviewed_at?: string | null
-          closed_by?: string | null
-          closed_at?: string | null
-          archived_at?: string | null
-          change_note?: string | null
           assigned_to?: string | null
           created_at?: string
           description: string
@@ -4876,25 +4882,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          revision?: number
-          test_account?: boolean
-          is_nonconformity?: boolean
-          approval_levels?: number
-          legacy_record?: boolean
-          origin_page?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
-          corrective_action?: string | null
-          corrective_due_date?: string | null
-          evidence?: string | null
-          document_ids?: string[]
-          resolved_by?: string | null
-          first_reviewer?: string | null
-          reviewed_at?: string | null
-          closed_by?: string | null
-          closed_at?: string | null
-          archived_at?: string | null
-          change_note?: string | null
           assigned_to?: string | null
           created_at?: string
           description?: string
@@ -6235,13 +6222,6 @@ export type Database = {
       }
       support_tickets: {
         Row: {
-          revision: number
-          test_account: boolean
-          archived_at: string | null
-          closed_at: string | null
-          change_note: string | null
-          creation_key: string | null
-          creation_request: Json | null
           assigned_to: string | null
           category: string | null
           created_at: string | null
@@ -6259,13 +6239,6 @@ export type Database = {
           user_account_id: string | null
         }
         Insert: {
-          revision?: number
-          test_account?: boolean
-          archived_at?: string | null
-          closed_at?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           assigned_to?: string | null
           category?: string | null
           created_at?: string | null
@@ -6283,13 +6256,6 @@ export type Database = {
           user_account_id?: string | null
         }
         Update: {
-          revision?: number
-          test_account?: boolean
-          archived_at?: string | null
-          closed_at?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           assigned_to?: string | null
           category?: string | null
           created_at?: string | null
@@ -6897,7 +6863,66 @@ export type Database = {
           },
         ]
       }
-
+      work_tasks: {
+        Row: {
+          assignee_id: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          pole: string | null
+          priority: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          pole?: string | null
+          priority?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          pole?: string | null
+          priority?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_validations: {
         Row: {
           created_at: string
@@ -6950,7 +6975,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_work_task_permissions: { Args: Record<PropertyKey, never>; Returns: Json }
       calculate_demand_forecast: { Args: never; Returns: number }
       can_access_anomalies: { Args: { _uid: string }; Returns: boolean }
       can_access_finance: { Args: { _uid: string }; Returns: boolean }
@@ -6979,6 +7003,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      get_intranet_permissions: { Args: never; Returns: Json }
       has_any_pole: {
         Args: { _poles: string[]; _user_id: string }
         Returns: boolean
@@ -7012,6 +7037,53 @@ export type Database = {
         }
         Returns: undefined
       }
+      product_comment_record: {
+        Args: { p_id: string; p_note: string }
+        Returns: string
+      }
+      product_get_record: { Args: { p_id: string }; Returns: Json }
+      product_list_records: {
+        Args: {
+          p_offset?: number
+          p_page: string
+          p_search?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
+      product_module_summary: { Args: { p_scope: string }; Returns: Json }
+      product_people: { Args: never; Returns: Json }
+      product_record_events: { Args: { p_id: string }; Returns: Json }
+      product_record_visible: {
+        Args: { p_author: string; p_owner: string; p_visibility: string }
+        Returns: boolean
+      }
+      product_save_record: {
+        Args: {
+          p_documents: string[]
+          p_due: string
+          p_expected_revision: number
+          p_id: string
+          p_key: string
+          p_owner: string
+          p_page: string
+          p_payload: Json
+          p_priority: string
+          p_title: string
+          p_visibility: string
+        }
+        Returns: Json
+      }
+      product_transition_record: {
+        Args: {
+          p_expected_revision: number
+          p_id: string
+          p_note: string
+          p_status: string
+        }
+        Returns: Json
+      }
+      product_work_member: { Args: never; Returns: boolean }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -7020,11 +7092,40 @@ export type Database = {
           read_ct: number
         }[]
       }
+      replace_access_role_scopes: {
+        Args: {
+          p_expected: Json
+          p_next: Json
+          p_reason: string
+          p_role_id: string
+        }
+        Returns: undefined
+      }
       rh_can_assign_employee_portfolio: {
         Args: { p_employee_id: string; p_portfolio_id: string }
         Returns: boolean
       }
       run_reconciliation: { Args: never; Returns: number }
+      save_hierarchical_scope_policy_draft: {
+        Args: { p_policy: Json; p_reason: string; p_role_id: string }
+        Returns: undefined
+      }
+      save_product_release_tracking: {
+        Args: {
+          p_app_key: string
+          p_change_reference: string
+          p_environment: string
+          p_id: string
+          p_note: string
+          p_request_id: string
+          p_rollback_reference: string
+          p_security_reference: string
+          p_status: string
+          p_test_reference: string
+          p_version: string
+        }
+        Returns: string
+      }
       send_anomaly_reminders: { Args: never; Returns: number }
     }
     Enums: {
@@ -7265,4 +7366,3 @@ export const Constants = {
     },
   },
 } as const
-

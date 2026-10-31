@@ -1758,7 +1758,7 @@ const RHAccess = () => {
                   setSelectedRoleId(roleId);
                   setSelectedScopeId('none');
                   setSelectedScopeValue('');
-                }
+                }}
                 disabled={
                   !selectedEmployee ||
                   !canReceiveNewAccess(
