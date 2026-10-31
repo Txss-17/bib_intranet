@@ -6,10 +6,10 @@ import { Button } from '@/components/ui/button';
 
 const FINANCE_SECTIONS = [
   { page: 'finance.cashflow', path: '/pole/finance/cashflow', name: 'Trésorerie', detail: 'Entrées, sorties et soldes par devise du registre interne' },
-  { page: 'finance.transactions', path: '/pole/finance/transactions', name: 'Transactions', detail: 'Mouvements et dossiers de contrôle financier' },
+  { page: 'finance.transactions', path: '/pole/finance/transactions', name: 'Transactions plateforme', detail: 'Registre des écritures et orientation vers les contrôles de paiement Stripe' },
   { page: 'finance.billing', path: '/pole/finance/billing', name: 'Facturation', detail: 'Factures et vérifications documentaires' },
   { page: 'finance.payouts', path: '/pole/finance/payouts', name: 'Paiements partenaires', detail: 'Versements marchands et règlements fournisseurs' },
-  { page: 'finance.reconciliation', path: '/pole/finance/reconciliation', name: 'Rapprochement', detail: 'Comparaison commandes, paiements, factures et reversements' },
+  { page: 'finance.reconciliation', path: '/pole/finance/reconciliation', name: 'Rapprochement BIB ↔ Stripe', detail: 'Contrôle par commande : paiement, frais, factures et reversements' },
   { page: 'finance.subscriptions', path: '/pole/finance/subscriptions', name: 'Abonnements', detail: 'Contrôles financiers des abonnements Marketplace' },
   { page: 'finance.cards', path: '/pole/finance/cards', name: 'Cartes entreprise', detail: 'Suivi des dépenses, demandes et décisions autorisées' },
   { page: 'finance.guarantee', path: '/pole/finance/guarantee', name: 'Fonds de garantie', detail: 'Mouvements enregistrés et justificatifs de contrôle' },
@@ -27,8 +27,8 @@ export default function FinanceDashboard() {
     <header>
       <h1 className="text-2xl font-semibold">Pilotage financier BIB</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Accès centralisé aux registres Finance, aux vérifications et aux dossiers de suivi.
-        Les montants affichés proviennent des écritures internes ; aucun virement n'est exécuté par ce tableau de bord.
+        Les ventes et abonnements sont créés sur BIB Platform ; les paiements associés sont traités par Stripe.
+        Les montants de cet aperçu proviennent uniquement des écritures disponibles dans l’Intranet, pas d’une interrogation directe de Stripe. Aucun virement n’est exécuté ici.
       </p>
     </header>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -43,7 +43,7 @@ export default function FinanceDashboard() {
     {visible.length === 0 && <p role="alert">Aucune rubrique financière n'est accessible avec les permissions de ce compte.</p>}
     {canReadCashflows && <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-lg font-semibold">Derniers mouvements du registre</h2>
+        <h2 className="text-lg font-semibold">Dernières écritures disponibles dans l’Intranet</h2>
         <Button variant="outline" size="sm" asChild><Link to="/pole/finance/cashflow">Consulter la trésorerie</Link></Button>
       </div>
       {movements.isLoading && <p role="status">Chargement des mouvements…</p>}
