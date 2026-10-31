@@ -1,6 +1,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   Activity,
   AlertCircle,
@@ -210,6 +211,34 @@ const RolesPermissions = () => {
   const [scopeDraft, setScopeDraft] = useState<Array<{ scope_id: string; scope_value: string }>>([]);
   const [scopeReason, setScopeReason] = useState('');
   const [savingScopes, setSavingScopes] = useState(false);
+
+  // Verified values only: no free-form names or arbitrary portfolio IDs in role creation.
+  const scopeChoices = useQuery({
+    queryKey: ['access-scope-verified-options'],
+    enabled: isSuperAdmin,
+    queryFn: async () => {
+      const [regions, portfolios, businesses] = await Promise.all([
+        (supabase as any).from('access_scope_regions').select('region_code,status').eq('status','active'),
+        (supabase as any).from('access_scope_portfolios').select('portfolio_id,status').eq('status','active'),
+        supabase.from('access_business_portfolios').select('id,label_snapshot,status').eq('status','active'),
+      ]);
+      if (regions.error || portfolios.error || businesses.error)
+        throw regions.error || portfolios.error || businesses.error;
+      const verified = new Set<string>((portfolios.data ?? []).map((x: { portfolio_id: string }) => x.portfolio_id));
+      const named = (businesses.data ?? []).filter(x => verified.has(x.id))
+        .map(x => ({ id: x.id, label: x.label_snapshot || x.id }));
+      return {
+        regions: [...new Set<string>((regions.data ?? []).map((x: { region_code: string }) => x.region_code))].sort(),
+        portfolios: named.sort((a,b) => a.label.localeCompare(b.label)),
+      };
+    },
+  });
+  const selectedScopeChoices = roleForm.scope_kind === 'portfolio'
+    ? (scopeChoices.data?.portfolios ?? []).map(p => ({value:p.id,label:p.label}))
+    : roleForm.scope_kind === 'region'
+      ? (scopeChoices.data?.regions ?? []).map(value => ({value,label:value}))
+      : businessSubsidiaries.map(value => ({value,label:value}));
+
 
   const loadCatalog = useCallback(async () => {
     setLoading(true);
@@ -825,11 +854,11 @@ const RolesPermissions = () => {
 
     if (
       ['portfolio', 'region', 'subsidiary'].includes(roleForm.scope_kind) &&
-      !roleForm.scope_value.trim()
+      (!roleForm.scope_value || !selectedScopeChoices.some(option => option.value === roleForm.scope_value))
     ) {
       toast({
-        title: 'Périmètre incomplet',
-        description: 'Saisissez la valeur du périmètre choisi.',
+        title: 'Périmètre non vérifié',
+        description: 'Sélectionnez un périmètre existant dans la liste officielle BIB.',
         variant: 'destructive',
       });
       return;
@@ -1966,31 +1995,29 @@ const RolesPermissions = () => {
                   </div>
                 )}
 
-                {['portfolio', 'region', 'subsidiary'].includes(
-                  roleForm.scope_kind,
-                ) && (
+                {['portfolio', 'region', 'subsidiary'].includes(roleForm.scope_kind) && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">
-                      {roleForm.scope_kind === 'portfolio'
-                        ? 'Nom ou identifiant du portefeuille'
-                        : roleForm.scope_kind === 'region'
-                          ? 'Code de région'
-                          : 'Nom ou identifiant de la filiale'}
+                    <label htmlFor="role-verified-scope" className="text-sm font-medium">
+                      {roleForm.scope_kind === 'portfolio' ? 'Portefeuille BIB vérifié'
+                        : roleForm.scope_kind === 'region' ? 'Région vérifiée'
+                        : 'Filiale BIB vérifiée'}
                     </label>
-                    <Input
+                    <select id="role-verified-scope" aria-label="Sélection de la valeur du périmètre"
+                      className="h-10 w-full rounded-md border bg-background px-3 text-sm"
                       value={roleForm.scope_value}
-                      placeholder={
-                        roleForm.scope_kind === 'region'
-                          ? 'Ex. FR'
-                          : 'Saisir une valeur de périmètre'
-                      }
-                      onChange={(event) =>
-                        setRoleForm((current) => ({
-                          ...current,
-                          scope_value: event.target.value,
-                        }))
-                      }
-                    />
+                      disabled={!isSuperAdmin || creatingRole ||
+                        (roleForm.scope_kind !== 'subsidiary' && (scopeChoices.isLoading || scopeChoices.isError)) ||
+                        selectedScopeChoices.length === 0}
+                      onChange={(event) => setRoleForm(current => ({...current,scope_value:event.target.value}))}>
+                      <option value="">Choisir un périmètre existant…</option>
+                      {selectedScopeChoices.map(option =>
+                        <option key={option.value} value={option.value}>{option.label}</option>)}
+                    </select>
+                    {scopeChoices.isError && roleForm.scope_kind !== 'subsidiary' &&
+                      <p role="alert" className="text-xs text-destructive">Catalogue des périmètres indisponible : aucune valeur libre n'est autorisée.</p>}
+                    {!selectedScopeChoices.length && <p className="text-xs text-muted-foreground">
+                      Aucun périmètre vérifié disponible pour ce type. Configurez d'abord les rattachements métier.
+                    </p>}
                   </div>
                 )}
               </div>
