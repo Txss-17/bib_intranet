@@ -6,20 +6,21 @@ const read = path => readFileSync(new URL('../../' + path, import.meta.url),'utf
 
 test('work editor distinguishes pole membership and assignable people', () => {
  const page=read('src/components/operations/WorkModulePage.tsx');
- assert.match(page,/useWorkPoleMembers/);
+ assert.match(page,/usePoleCollaborators/);
+ assert.match(page,/migration 0074/);
  assert.match(page,/Membres du pôle/);
  assert.match(page,/Droits insuffisants/);
  assert.match(page,/Filtrer les membres par pôle/);
  assert.match(page,/people\.data/);
 });
 test('work member directory only reads active colleagues in actor scope and test environment', () => {
- const sql=read('drizzle/migrations/0073_work_pole_directory.sql');
+ const sql=read('drizzle/migrations/0074_cross_pole_collaborator_directory.sql');
  assert.match(sql,/SECURITY DEFINER/);
- assert.match(sql,/can_intranet_action\('work\.'\|\|p_kind,'read'\)/);
+ assert.match(sql,/can_intranet_action\(p_page,'read'\)/);
  assert.match(sql,/is_canonical_bib_ceo/);
  assert.match(sql,/p\.app_origin='connect' AND p\.hr_status='active'/);
  assert.match(sql,/coalesce\(p\.test_account,false\)=public\.intranet_is_test_mode\(\)/);
  assert.match(sql,/p_pole=ANY\(coalesce\(p\.poles::text\[\]/);
- assert.match(sql,/can_intranet_action_for\(p\.id,'work\.'\|\|p_kind/);
- assert.match(sql,/REVOKE ALL ON FUNCTION public\.list_work_pole_members/);
+ assert.match(sql,/can_intranet_action_for\(p\.id,p_page/);
+ assert.match(sql,/REVOKE ALL ON FUNCTION public\.list_pole_collaborators/);
 });
