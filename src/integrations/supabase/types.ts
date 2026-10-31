@@ -7022,6 +7022,90 @@ export type Database = {
           },
         ]
       }
+      work_task_comments: {
+        Row: {
+          id: string
+          task_id: string
+          author_id: string
+          body: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          author_id?: string
+          body: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          author_id?: string
+          body?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_task_comments_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "work_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_task_comments_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      work_task_history: {
+        Row: {
+          id: string
+          task_id: string
+          actor_id: string | null
+          action: string
+          before_state: Json | null
+          after_state: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          task_id: string
+          actor_id?: string | null
+          action: string
+          before_state?: Json | null
+          after_state?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          task_id?: string
+          actor_id?: string | null
+          action?: string
+          before_state?: Json | null
+          after_state?: Json | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_task_history_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "work_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "work_task_history_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_tasks: {
         Row: {
           task_poles: string[]
@@ -7175,6 +7259,7 @@ export type Database = {
         Returns: number
       }
       get_intranet_permissions: { Args: never; Returns: Json }
+      get_work_task_permissions: { Args: never; Returns: Json }
       has_any_pole: {
         Args: { _poles: string[]; _user_id: string }
         Returns: boolean
