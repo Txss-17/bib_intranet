@@ -56,6 +56,21 @@ export const resolveCatalogPagePermissions = (
     return noAccess;
   }
 
+  // CEO is the canonical business-wide role, not a generic Direction role.
+  // This is the reference catalogue only: effective access still depends on
+  // verified server-side assignments, RLS and specialised workflow policies.
+  if (role.id === 'ceo' && !role.readOnly) {
+    return {
+      read: true,
+      create: true,
+      update: true,
+      delete: true,
+      publish: true,
+      validate: true,
+      administer: true,
+    };
+  }
+
   // ------------------------------------------------------------
   // NIVEAU 1 — PÔLE
   // ------------------------------------------------------------

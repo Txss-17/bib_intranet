@@ -803,6 +803,13 @@ const RHAccess = () => {
       toast({ title: 'Valeur requise', description: 'Le périmètre choisi exige une valeur.', variant: 'destructive' });
       return;
     }
+    // The canonical CEO must never receive a partial or unscoped assignment.
+    // The database trigger remains the final authority for this rule.
+    if (selectedRole.role_key === 'ceo' &&
+        (selectedScope?.scope_key !== 'global' || assignedScopeValue !== null)) {
+      toast({ title: 'Périmètre CEO invalide', description: 'Sélectionnez le périmètre Global pour le compte CEO.', variant: 'destructive' });
+      return;
+    }
 
     setSaving(true);
 

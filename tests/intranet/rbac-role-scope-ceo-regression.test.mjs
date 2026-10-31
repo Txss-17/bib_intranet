@@ -74,3 +74,21 @@ test('catalog refresh cannot silently regrant removed role scope defaults', () =
   assert.match(sync, /!configuredRoleIds\.has\(row\.role_id\)/);
   assert.doesNotMatch(sync, /existingScopeKeys/);
 });
+
+test('CEO reference catalogue covers all actions while the UI respects server permissions', () => {
+  const catalog = read('src/lib/accessPermissionCatalog.ts');
+  assert.match(catalog, /role\.id === 'ceo' && !role\.readOnly/);
+  assert.match(catalog, /administer: true/);
+  const permissions = read('src/hooks/usePermissions.ts');
+  assert.doesNotMatch(permissions, /if \(!enforced \|\| isSuperAdmin\) return scopes/);
+  assert.match(permissions, /permissions\(p\.id\)\.read/);
+});
+
+test('CEO flat scopes and HR assignment require Global', () => {
+  const admin = read('src/pages/admin/RolesPermissions.tsx');
+  const hr = read('src/pages/modules/rh/RHAccess.tsx');
+  assert.match(admin, /selectedRole\?\.role_key === 'ceo'/);
+  assert.match(admin, /chosen\[0\]\.scope\?\.scope_key !== 'global'/);
+  assert.match(hr, /selectedRole\.role_key === 'ceo'/);
+  assert.match(hr, /selectedScope\?\.scope_key !== 'global'/);
+});

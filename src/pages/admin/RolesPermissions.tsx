@@ -439,6 +439,13 @@ const RolesPermissions = () => {
       return;
     }
     const chosen = next.map((entry) => ({ ...entry, scope: scopes.find((scope) => scope.id === entry.scope_id) }));
+    // The canonical CEO is deliberately global. Never let the flat-scope
+    // editor silently turn this account into a restricted Direction role.
+    if (selectedRole?.role_key === 'ceo' &&
+        (chosen.length !== 1 || chosen[0].scope?.scope_key !== 'global')) {
+      toast({ title: 'CEO : périmètre global requis', description: 'Le rôle CEO doit conserver exactement le périmètre Global.', variant: 'destructive' });
+      return;
+    }
     if (chosen.some((entry) =>
       !entry.scope ||
       (['global', 'own_records'].includes(entry.scope.scope_key) ? entry.scope_value !== null : !entry.scope_value)

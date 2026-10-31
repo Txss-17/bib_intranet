@@ -240,9 +240,10 @@ export const usePermissions = (): UsePermissionsReturn => {
 
   const visiblePoles = useMemo(() => {
     const scopes = Array.from(new Set(pageRegistry.filter((p) => !p.transversal).map((p) => p.scope)));
-    if (!enforced || isSuperAdmin) return scopes;
+    // Never advertise an unrestricted pole simply because the browser sees
+    // a technical admin role: page access is derived from live server rights.
     return scopes.filter((s) => pageRegistry.some((p) => p.scope === s && permissions(p.id).read));
-  }, [enforced, isSuperAdmin, permissions]);
+  }, [permissions]);
 
   const canViewPole = useCallback((poleId: string) => visiblePoles.includes(poleId), [visiblePoles]);
 
