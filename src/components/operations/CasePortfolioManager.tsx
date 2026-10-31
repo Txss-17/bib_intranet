@@ -34,6 +34,9 @@ export default function CasePortfolioManager({
   const [entityId, setEntityId] = useState('');
   const [portfolioId, setPortfolioId] = useState('');
   const [reason, setReason] = useState('');
+  const [transferPortfolioId, setTransferPortfolioId] = useState('');
+  const [transferOwnerId, setTransferOwnerId] = useState('');
+  const [transferReason, setTransferReason] = useState('');
 
   const { data: portfolios = [], isError: portfoliosError } = useQuery({
     queryKey: ['case-portfolios', pole],
@@ -98,6 +101,22 @@ export default function CasePortfolioManager({
     },
     onError: (error: Error) => toast.error(error.message),
   });
+  const transfer = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc('bib_change_case_portfolio_owner' as never, {
+        p_portfolio_id: transferPortfolioId,
+        p_new_owner: transferOwnerId || null,
+        p_reason: transferReason.trim() || null,
+      } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setTransferPortfolioId(''); setTransferOwnerId(''); setTransferReason('');
+      void qc.invalidateQueries({ queryKey: ['case-portfolios',pole] });
+      toast.success('Responsable modifié. Historique conservé.');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
   if (!canRead) return null;
   const active = portfolios.filter(p => p.status === 'active');
   const current = new Map(assignments.map(a => [a.entity_id, a.portfolio_id]));
@@ -154,6 +173,31 @@ export default function CasePortfolioManager({
               </Button>
             </form>
           </div>
+        )}
+        {canManage && active.length > 0 && (
+          <form className="grid gap-3 rounded-md border p-3 md:grid-cols-3"
+            onSubmit={e => {e.preventDefault(); transfer.mutate();}}>
+            <div className="md:col-span-3 font-medium">Transférer la responsabilité d'un portefeuille</div>
+            <select required value={transferPortfolioId} aria-label="Portefeuille à transférer"
+              onChange={e => setTransferPortfolioId(e.target.value)}
+              className="h-10 rounded-md border bg-background px-3 text-sm">
+              <option value="">Choisir un portefeuille</option>
+              {active.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            <select value={transferOwnerId} aria-label="Nouveau responsable"
+              onChange={e => setTransferOwnerId(e.target.value)}
+              className="h-10 rounded-md border bg-background px-3 text-sm">
+              <option value="">Sans responsable — direction</option>
+              {colleagues.map(p => <option key={p.id} value={p.id}>
+                {[p.first_name,p.last_name].filter(Boolean).join(' ') || p.email || p.id}
+              </option>)}
+            </select>
+            <Input aria-label="Motif du changement de responsable" placeholder="Motif du transfert"
+              value={transferReason} onChange={e => setTransferReason(e.target.value)}/>
+            <div className="md:col-span-3"><Button type="submit" disabled={!transferPortfolioId || transfer.isPending}>
+              {transfer.isPending ? 'Transfert…' : 'Changer le responsable'}
+            </Button></div>
+          </form>
         )}
         <div className="space-y-1 text-sm">
           {entities.length === 0 ? <p className="text-muted-foreground">Aucune entité disponible.</p> :
