@@ -45,10 +45,11 @@ ALTER TABLE public.bib_case_portfolio_members ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.bib_case_portfolios, public.bib_case_portfolio_members FROM PUBLIC,anon;
 GRANT SELECT ON public.bib_case_portfolios,public.bib_case_portfolio_members TO authenticated;
 CREATE POLICY bib_case_portfolios_read ON public.bib_case_portfolios FOR SELECT TO authenticated
- USING (public.bib_portfolio_permission(pole,'read'));
+ USING (public.bib_portfolio_permission(pole,'update') OR (owner_id=auth.uid() AND public.bib_portfolio_permission(pole,'read')));
 CREATE POLICY bib_case_portfolio_members_read ON public.bib_case_portfolio_members FOR SELECT TO authenticated
  USING (EXISTS (SELECT 1 FROM public.bib_case_portfolios p
- WHERE p.id=portfolio_id AND public.bib_portfolio_permission(p.pole,'read')));
+ WHERE p.id=portfolio_id AND (public.bib_portfolio_permission(p.pole,'update')
+ OR (p.owner_id=auth.uid() AND public.bib_portfolio_permission(p.pole,'read')))));
 
 CREATE OR REPLACE FUNCTION public.bib_create_case_portfolio(
  p_pole text,p_name text,p_owner_id uuid DEFAULT NULL
@@ -131,7 +132,8 @@ GRANT SELECT ON public.bib_case_portfolio_owner_events TO authenticated;
 CREATE POLICY bib_case_portfolio_owner_events_read ON public.bib_case_portfolio_owner_events
  FOR SELECT TO authenticated USING (EXISTS (
  SELECT 1 FROM public.bib_case_portfolios p
- WHERE p.id=portfolio_id AND public.bib_portfolio_permission(p.pole,'read')));
+ WHERE p.id=portfolio_id AND (public.bib_portfolio_permission(p.pole,'update')
+ OR (p.owner_id=auth.uid() AND public.bib_portfolio_permission(p.pole,'read')))));
 
 CREATE OR REPLACE FUNCTION public.bib_change_case_portfolio_owner(
  p_portfolio_id uuid,p_new_owner uuid,p_reason text DEFAULT NULL
