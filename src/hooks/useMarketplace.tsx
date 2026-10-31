@@ -318,36 +318,15 @@ export function useAssignMerchantPortfolio() {
 
   return useMutation({
     mutationFn: async ({
-      merchantId,
-      portfolioId,
-      reason,
-    }: {
-      merchantId: string;
-      portfolioId: string;
-      reason?: string;
-    }) => {
-      const { data: user } = await supabase.auth.getUser();
-
-      const { error: closeError } = await (supabase as any)
-        .from('merchant_portfolio_assignments')
-        .update({
-          ended_at: new Date().toISOString(),
-          reason: reason || 'Réaffectation du portefeuille',
-        })
-        .eq('merchant_id', merchantId)
-        .is('ended_at', null);
-
-      if (closeError) throw closeError;
-
-      const { error } = await (supabase as any)
-        .from('merchant_portfolio_assignments')
-        .insert({
-          merchant_id: merchantId,
-          portfolio_id: portfolioId,
-          assigned_by: user.user?.id ?? null,
-          reason: reason || null,
-        });
-
+      merchantId, portfolioId, reason,
+    }: { merchantId: string; portfolioId: string; reason?: string }) => {
+      // Keep the reassignment atomic and enforce the saved RBAC rights on
+      // the server; client-side close+insert could lose the old assignment.
+      const { error } = await supabase.rpc('marketplace_assign_merchant' as never, {
+        p_merchant_id: merchantId,
+        p_portfolio_id: portfolioId,
+        p_reason: reason?.trim() || null,
+      } as never);
       if (error) throw error;
     },
 
