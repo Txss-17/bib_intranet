@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { readAllPages } from '@/lib/operationsMetrics';
 
 export interface OpsAudit {
   id: string;
@@ -35,15 +37,19 @@ export interface SupplierAudit {
 const from = (table: string) => (supabase as any).from(table);
 
 export const useOpsAudits = (search?: string, source?: string) => {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: ['ops-audits', search, source],
+    queryKey: ['ops-audits', user?.id, profile?.test_account === true, search, source],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      let query = from('ops_audits').select('*').order('date', { ascending: false });
-      if (search) query = query.or(`process.ilike.%${search}%,scope.ilike.%${search}%`);
-      if (source && source !== 'all') query = query.eq('app_origin', source);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as OpsAudit[];
+      const rows = await readAllPages<OpsAudit>(cursor => {
+        let query = from('ops_audits').select('*').order('id').limit(500);
+        if (cursor) query = query.gt('id', cursor);
+        if (search) query = query.or(`process.ilike.%${search}%,scope.ilike.%${search}%`);
+        if (source && source !== 'all') query = query.eq('app_origin', source);
+        return query;
+      });
+      return rows.sort((a, b) => b.date.localeCompare(a.date));
     },
   });
 };
@@ -73,15 +79,19 @@ export const useUpdateOpsAudit = () => {
 };
 
 export const useSupplierAudits = (search?: string, source?: string) => {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: ['supplier-audits', search, source],
+    queryKey: ['supplier-audits', user?.id, profile?.test_account === true, search, source],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      let query = from('supplier_audits').select('*').order('date', { ascending: false });
-      if (search) query = query.or(`supplier.ilike.%${search}%,category.ilike.%${search}%`);
-      if (source && source !== 'all') query = query.eq('app_origin', source);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data || []) as SupplierAudit[];
+      const rows = await readAllPages<SupplierAudit>(cursor => {
+        let query = from('supplier_audits').select('*').order('id').limit(500);
+        if (cursor) query = query.gt('id', cursor);
+        if (search) query = query.or(`supplier.ilike.%${search}%,category.ilike.%${search}%`);
+        if (source && source !== 'all') query = query.eq('app_origin', source);
+        return query;
+      });
+      return rows.sort((a, b) => b.date.localeCompare(a.date));
     },
   });
 };

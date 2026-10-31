@@ -11,6 +11,7 @@ import AuditForm from '@/components/forms/AuditForm';
 import { useSupplierAudits, useCreateSupplierAudit, useUpdateSupplierAudit } from '@/hooks/useAudits';
 import { useAuditSupplierLiaison } from '@/hooks/useAuditSupplierLiaison';
 import { SourceBadge, SourceFilter } from '@/components/audit/SourceBadge';
+import { measuredAverage } from '@/lib/operationsMetrics';
 
 export default function SupplierAudits() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -18,7 +19,7 @@ export default function SupplierAudits() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingAudit, setEditingAudit] = useState<any>(null);
 
-  const { data: audits = [], isLoading } = useSupplierAudits(searchTerm || undefined, sourceFilter);
+  const { data: audits = [], isLoading, isError, refetch } = useSupplierAudits(searchTerm || undefined, sourceFilter);
   const createAudit = useCreateSupplierAudit();
   const updateAudit = useUpdateSupplierAudit();
   const { syncSupplierAfterAudit } = useAuditSupplierLiaison();
@@ -82,7 +83,7 @@ export default function SupplierAudits() {
   if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   const completed = audits.filter(a => a.status === 'completed');
-  const avgScore = completed.length ? Math.round(completed.reduce((s, a) => s + (a.score || 0), 0) / completed.length) : 0;
+  const { average: avgScore, samples: scoredAudits } = measuredAverage(completed.map(a => a.score));
 
   return (
     <div className="space-y-6">
@@ -102,12 +103,14 @@ export default function SupplierAudits() {
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Fournisseurs audités</CardTitle><Building className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{completed.length}</div><p className="text-xs text-muted-foreground">Ce trimestre</p></CardContent></Card>
+      {isError && <div role="alert" className="rounded-md border p-3 text-sm text-destructive">Audits indisponibles. <Button size="sm" variant="outline" onClick={() => void refetch()}>Réessayer</Button></div>}
+      {!isError && <p className="text-xs text-muted-foreground">Indicateurs des audits accessibles correspondant aux filtres. {scoredAudits} audit(s) terminé(s) avec score valide ; un score absent ne vaut pas zéro.</p>}
+      {!isError && <div className="grid gap-4 md:grid-cols-4">
+        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Fournisseurs audités</CardTitle><Building className="h-4 w-4 text-muted-foreground" /></CardHeader><CardContent><div className="text-2xl font-bold">{completed.length}</div><p className="text-xs text-muted-foreground">Toutes dates (filtres actifs)</p></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">En cours</CardTitle><Calendar className="h-4 w-4 text-blue-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-blue-500">{audits.filter(a => a.status === 'in_progress').length}</div></CardContent></Card>
-        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Score moyen</CardTitle><FileText className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-green-500">{avgScore}%</div></CardContent></Card>
+        <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Score moyen</CardTitle><FileText className="h-4 w-4 text-green-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-green-500">{avgScore === null ? "—" : `${avgScore.toFixed(1)}%`}</div></CardContent></Card>
         <Card><CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Non-conformités</CardTitle><FileText className="h-4 w-4 text-yellow-500" /></CardHeader><CardContent><div className="text-2xl font-bold text-yellow-500">{audits.reduce((s, a) => s + (a.findings || 0), 0)}</div></CardContent></Card>
-      </div>
+      </div>}
 
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">
@@ -117,7 +120,7 @@ export default function SupplierAudits() {
         <SourceFilter value={sourceFilter} onChange={setSourceFilter} />
       </div>
 
-      <Card>
+      {!isError && <Card>
         <CardHeader><CardTitle>Audits fournisseurs ({audits.length})</CardTitle></CardHeader>
         <CardContent>
           <Table>
@@ -153,7 +156,7 @@ export default function SupplierAudits() {
             </TableBody>
           </Table>
         </CardContent>
-      </Card>
+      </Card>}
 
       <AuditForm open={formOpen} onOpenChange={setFormOpen} audit={editingAudit} onSubmit={handleSubmit} type="supplier" />
     </div>
