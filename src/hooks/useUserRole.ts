@@ -6,7 +6,7 @@ export type AppRole = 'admin' | 'manager' | 'viewer';
 
 export const useUserRole = () => {
   const { user } = useAuth();
-  const { data: roles = [], isLoading } = useQuery({
+  const { data: roles = [], isLoading, isError, error, refetch } = useQuery({
     queryKey: ['user-roles', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
@@ -14,7 +14,7 @@ export const useUserRole = () => {
         .from('user_roles')
         .select('role')
         .eq('user_id', user!.id);
-      if (error) return [];
+      if (error) throw error;
       return (data || []).map((r: any) => r.role as AppRole);
     },
   });
@@ -24,5 +24,5 @@ export const useUserRole = () => {
   const canViewSensitive = isAdmin || isManager;
   const canExportAudit = isAdmin || isManager;
 
-  return { roles, isAdmin, isManager, canViewSensitive, canExportAudit, isLoading };
+  return { roles, isAdmin, isManager, canViewSensitive, canExportAudit, isLoading, isError, error, refetch };
 };
