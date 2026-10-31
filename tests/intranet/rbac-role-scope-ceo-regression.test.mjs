@@ -92,3 +92,15 @@ test('CEO flat scopes and HR assignment require Global', () => {
   assert.match(hr, /selectedRole\.role_key === 'ceo'/);
   assert.match(hr, /selectedScope\?\.scope_key !== 'global'/);
 });
+
+test('new role scope is selected from BIB verified choices instead of free input', () => {
+  const page = read('src/pages/admin/RolesPermissions.tsx');
+  assert.match(page, /queryKey: \['access-scope-verified-options'\]/);
+  assert.match(page, /access_scope_regions/);
+  assert.match(page, /access_scope_portfolios/);
+  assert.match(page, /access_business_portfolios/);
+  assert.match(page, /businessSubsidiaries\.map\(value => \(\{value,label:value\}\)\)/);
+  assert.match(page, /aria-label="Sélection de la valeur du périmètre"/);
+  assert.match(page, /selectedScopeChoices\.some\(option => option\.value === roleForm\.scope_value\)/);
+  assert.doesNotMatch(page, /Saisir une valeur de périmètre/);
+});
