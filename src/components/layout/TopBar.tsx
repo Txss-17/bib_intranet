@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Bell, MessageSquare, CheckSquare, Search, Menu, Sun, Moon, ChevronDown,
-  LogOut, User, Settings, Circle, ShieldAlert,
+  LogOut, User, Settings, Circle, ShieldAlert, FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { useCriticalAlerts } from '@/hooks/useCriticalAlerts';
 import { CriticalAlertsPanel } from '@/components/notifications/CriticalAlertsPanel';
 import { CriticalAlertToast } from '@/components/notifications/CriticalAlertToast';
 import { useAuth } from '@/hooks/useAuth';
+import MyPayslipsDialog from '@/components/rh/MyPayslipsDialog';
 import { positionInfos } from '@/types/positions';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -75,6 +76,7 @@ const getNotificationIcon = (type: string) => {
 
 export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDarkMode, activePoleId }: TopBarProps) {
   const [searchFocused, setSearchFocused] = useState(false);
+  const [payslipsOpen, setPayslipsOpen] = useState(false);
   const { alerts, unreadCount, criticalCount, lastAlert, markAsRead, markAllAsRead, dismissLastAlert } = useCriticalAlerts();
   const { profile, signOut } = useAuth();
   const navigate = useNavigate();
@@ -215,6 +217,9 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
               <p className="text-xs text-accent mt-1">{roleTitle}</p>
             </div>
             <DropdownMenuItem asChild><Link to="/profile" className="flex items-center gap-2 cursor-pointer"><User className="h-4 w-4" /><span>Mon profil</span></Link></DropdownMenuItem>
+            <DropdownMenuItem onSelect={() => setPayslipsOpen(true)} className="flex items-center gap-2 cursor-pointer">
+              <FileText className="h-4 w-4" /><span>Mes bulletins de paie</span>
+            </DropdownMenuItem>
             <DropdownMenuItem asChild><Link to="/settings" className="flex items-center gap-2 cursor-pointer"><Settings className="h-4 w-4" /><span>Paramètres</span></Link></DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem className="flex items-center gap-2 text-destructive cursor-pointer" onClick={async () => { await signOut(); navigate('/login'); }}>
@@ -224,6 +229,7 @@ export function TopBar({ onToggleSidebar, sidebarCollapsed, darkMode, onToggleDa
         </DropdownMenu>
       </div>
     </header>
+    <MyPayslipsDialog open={payslipsOpen} onOpenChange={setPayslipsOpen} />
     {lastAlert && <CriticalAlertToast alert={lastAlert} onDismiss={dismissLastAlert} onMarkAsRead={markAsRead} />}
     </>
   );
