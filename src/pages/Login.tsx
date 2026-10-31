@@ -40,7 +40,7 @@ const Login = () => {
   // an email-domain allowlist here: RH may provision invited external profiles
   // while company Workspace addresses are being issued.
   const isValidEmail = (value: string) =>
-    /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(value.trim());
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
   
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,10 +75,18 @@ const Login = () => {
           .select('id,position,app_origin,hr_status')
           .eq('id', user.id)
           .single();
-        if (profileError || !profile || profile.id !== user.id ||
+        if (profileError) {
+          // Do not erase a valid Auth session when the profile request fails.
+          // The protected application screens will retry and enforce server permissions.
+          toast({ title: 'Profil momentanément indisponible', description: 'Connexion authentifiée, mais le profil n’a pas pu être vérifié. Réessayez depuis l’écran d’accès.', variant: 'destructive' });
+          navigate('/');
+          setLoading(false);
+          return;
+        }
+        if (!profile || profile.id !== user.id ||
             profile.app_origin !== 'connect' || profile.hr_status !== 'active') {
           await supabase.auth.signOut();
-          toast({ title: 'Accès non activé', description: 'Votre invitation BIB Intranet doit être validée par les RH avant toute connexion.', variant: 'destructive' });
+          toast({ title: 'Accès non activé', description: 'Le profil BIB Intranet doit être actif et validé par les RH. Les comptes historiques peuvent nécessiter la migration de restauration 0052.', variant: 'destructive' });
           setLoading(false);
           return;
         }
