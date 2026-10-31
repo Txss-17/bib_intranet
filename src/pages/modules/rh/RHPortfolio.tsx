@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
+import CasePortfolioManager from '@/components/operations/CasePortfolioManager';
 
 type Profile = {
   id: string;
@@ -585,6 +586,8 @@ export default function RHPortfolio() {
           restent rattachés à leur pôle propriétaire.
         </p>
       </div>
+
+      <CasePortfolioManager pole="rh" title="Suivi des collaborateurs" entities={profiles.map(p => ({ id: p.id, label: getProfileName(p) }))} />
 
       {/* KPIs */}
 
