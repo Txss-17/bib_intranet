@@ -27,6 +27,6 @@ export default function CashflowRealtime() {
         <Button variant="outline" asChild><Link to="/pole/finance/transactions">Écritures de la plateforme</Link></Button>
       </div>
     </CardContent></Card>
-    <FinancialOverview title="Registre des mouvements de trésorerie" />
+    <FinancialOverview title="Registre des mouvements de trésorerie" mode="treasury" />
   </div>;
 }
