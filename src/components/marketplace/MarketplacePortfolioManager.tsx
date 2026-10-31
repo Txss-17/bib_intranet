@@ -19,6 +19,9 @@ export default function MarketplacePortfolioManager() {
   const [merchantId, setMerchantId] = useState('');
   const [portfolioId, setPortfolioId] = useState('');
   const [reason, setReason] = useState('');
+  const [transferPortfolioId, setTransferPortfolioId] = useState('');
+  const [transferOwnerId, setTransferOwnerId] = useState('');
+  const [transferReason, setTransferReason] = useState('');
   const { data: merchants = [] } = useMarketplaceMerchants();
   const { data: portfolios = [] } = useMarketplacePortfolios();
   const { data: colleagues = [], isError: colleaguesError } = useQuery({
@@ -65,6 +68,22 @@ export default function MarketplacePortfolioManager() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const transfer = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.rpc('marketplace_change_portfolio_owner' as never, {
+        p_portfolio_id: transferPortfolioId,
+        p_new_owner: transferOwnerId || null,
+        p_reason: transferReason.trim() || null,
+      } as never);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      setTransferPortfolioId(''); setTransferOwnerId(''); setTransferReason('');
+      void queryClient.invalidateQueries({ queryKey: ['marketplace','portfolios'] });
+      toast.success('Responsable modifié. Historique conservé.');
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
   if (!canManage) return null;
   return (
     <Card>
@@ -115,6 +134,30 @@ export default function MarketplacePortfolioManager() {
           <p className="text-xs text-muted-foreground">
             Une réaffectation clôt l'affectation précédente sans effacer son historique.
           </p>
+        </form>
+        <form className="space-y-3 lg:col-span-2" onSubmit={event => {event.preventDefault(); transfer.mutate();}}>
+          <h3 className="font-medium">Changer le responsable d'un portefeuille</h3>
+          <div className="grid gap-3 md:grid-cols-3">
+            <select required value={transferPortfolioId} aria-label="Portefeuille à transférer"
+              onChange={e => setTransferPortfolioId(e.target.value)}
+              className="h-10 rounded-md border bg-background px-3 text-sm">
+              <option value="">Portefeuille</option>
+              {portfolios.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            <select value={transferOwnerId} aria-label="Nouveau responsable"
+              onChange={e => setTransferOwnerId(e.target.value)}
+              className="h-10 rounded-md border bg-background px-3 text-sm">
+              <option value="">Non attribué — direction</option>
+              {colleagues.map(p => <option key={p.id} value={p.id}>
+                {[p.first_name,p.last_name].filter(Boolean).join(' ') || p.email || p.id}
+              </option>)}
+            </select>
+            <Input placeholder="Motif du transfert" aria-label="Motif du transfert"
+              value={transferReason} onChange={e => setTransferReason(e.target.value)}/>
+          </div>
+          <Button type="submit" disabled={!transferPortfolioId || transfer.isPending}>
+            {transfer.isPending ? 'Transfert…' : 'Transférer la responsabilité'}
+          </Button>
         </form>
       </CardContent>
     </Card>
