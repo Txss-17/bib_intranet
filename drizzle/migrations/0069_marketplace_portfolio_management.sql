@@ -14,8 +14,7 @@ DECLARE
 BEGIN
   IF v_actor IS NULL OR NOT (
     coalesce(public.has_role(v_actor, 'admin'::public.app_role), false)
-    OR coalesce(public.has_pole(v_actor, 'marketplace'::public.pole_id), false)
-    OR coalesce(public.has_pole(v_actor, 'direction'::public.pole_id), false)
+    OR coalesce(public.can_intranet_action('marketplace.merchants', 'update'), false)
   ) THEN
     RAISE EXCEPTION 'Marketplace portfolio assignment denied' USING ERRCODE = '42501';
   END IF;
@@ -63,8 +62,7 @@ DECLARE
 BEGIN
  IF v_actor IS NULL OR NOT (
    coalesce(public.has_role(v_actor, 'admin'::public.app_role), false)
-   OR coalesce(public.has_pole(v_actor, 'marketplace'::public.pole_id), false)
-   OR coalesce(public.has_pole(v_actor, 'direction'::public.pole_id), false)
+   OR coalesce(public.can_intranet_action('marketplace.merchants', 'update'), false)
  ) THEN
    RAISE EXCEPTION 'Marketplace portfolio creation denied' USING ERRCODE='42501';
  END IF;
