@@ -19,7 +19,7 @@ const FINANCE_SECTIONS = [
 export default function FinanceDashboard() {
   const { canViewPage } = usePermissions();
   const canReadCashflows = canViewPage('finance.cashflow');
-  const movements = useCashflows({ limit: 8 });
+  const movements = useCashflows({ limit: 8, enabled: canReadCashflows });
   const visible = FINANCE_SECTIONS.filter(section => canViewPage(section.page));
   const recent = canReadCashflows && !movements.isError ? movements.data || [] : [];
 
