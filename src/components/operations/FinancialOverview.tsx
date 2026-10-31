@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useCashflows } from '@/hooks/useFinance';
+import { useCashflows, useCreateCashflow } from '@/hooks/useFinance';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,6 +21,44 @@ export default function FinancialOverview({ title = 'Pilotage financier', mode =
   const [end, setEnd] = useState('');
   const [search, setSearch] = useState('');
   const [source, setSource] = useState<SourceFilter>(mode === 'transactions' ? 'platform' : 'all');
+  const { can } = usePermissions();
+  const { user } = useAuth();
+  const create = useCreateCashflow();
+  const mayCreate = can('finance.cashflow', 'create') || can('finance.transactions', 'create');
+  const [entryOpen, setEntryOpen] = useState(false);
+  const [entry, setEntry] = useState({
+    type: 'expense' as 'income' | 'expense',
+    category: '',
+    amount: '',
+    currency: 'EUR',
+    transaction_date: new Date().toISOString().slice(0, 10),
+    reference: '',
+    description: '',
+  });
+  const submitEntry = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const amount = Number(entry.amount);
+    if (!user || !mayCreate || !entry.category.trim() || !entry.description.trim()
+      || !entry.reference.trim() || !entry.transaction_date
+      || !Number.isFinite(amount) || amount <= 0 || !/^[A-Z]{3}$/.test(entry.currency)) {
+      toast.error('Complétez les champs obligatoires avec un montant strictement positif.');
+      return;
+    }
+    try {
+      await create.mutateAsync({
+        type: entry.type, category: entry.category.trim(), amount,
+        currency: entry.currency, transaction_date: entry.transaction_date,
+        reference: entry.reference.trim(), description: entry.description.trim(),
+        source: 'manual', recorded_by: user.id,
+      });
+      setEntryOpen(false);
+      setSource('internal');
+      setEntry(previous => ({ ...previous, amount: '', reference: '', description: '' }));
+      toast.success('Écriture manuelle enregistrée');
+    } catch (error) {
+      toast.error('Enregistrement impossible', { description: error instanceof Error ? error.message : 'Vérifiez les permissions Finance.' });
+    }
+  };
   const query = useCashflows({ startDate: start || undefined, endDate: end || undefined });
   const rows = useMemo(() => (query.data ?? []).filter(r => {
     if (source === 'platform' && r.source !== 'platform') return false;
@@ -62,8 +103,27 @@ export default function FinancialOverview({ title = 'Pilotage financier', mode =
             : 'Registre des mouvements financiers par devise. Le net affiché est une somme d’écritures, pas un solde bancaire ou un montant mobilisable.'}
         </p>
       </div>
-      {!query.isLoading && !query.isError && <ExportButtons filename={mode === 'transactions' ? 'transactions-bib' : 'flux-tresorerie-bib'} title={title} columns={columns} data={rows}/>}
+      <div className="flex flex-wrap gap-2">
+        {mayCreate && <Button type="button" onClick={() => setEntryOpen(open => !open)}>{entryOpen ? 'Fermer la saisie' : 'Nouvelle entrée / sortie manuelle'}</Button>}
+        {!query.isLoading && !query.isError && <ExportButtons filename={mode === 'transactions' ? 'transactions-bib' : 'flux-tresorerie-bib'} title={title} columns={columns} data={rows}/>}
+      </div>
     </div>
+
+    {entryOpen && mayCreate && <form onSubmit={submitEntry} className="space-y-4 rounded-lg border p-4">
+      <div><h3 className="font-semibold">Enregistrer une opération hors plateforme</h3>
+        <p className="text-xs text-muted-foreground">Saisie interne uniquement : ne recopiez pas une opération déjà importée de Stripe ou BIB Platform. Un justificatif et une vérification comptable restent nécessaires.</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div><Label htmlFor="manual-type">Nature *</Label><select id="manual-type" className="h-10 w-full rounded-md border bg-background px-3" value={entry.type} onChange={event => setEntry(p => ({ ...p, type: event.target.value as 'income' | 'expense' }))}><option value="income">Entrée d’argent</option><option value="expense">Sortie d’argent</option></select></div>
+        <div><Label htmlFor="manual-amount">Montant *</Label><Input id="manual-amount" type="number" step="0.01" min="0.01" required value={entry.amount} onChange={event => setEntry(p => ({ ...p, amount: event.target.value }))}/></div>
+        <div><Label htmlFor="manual-currency">Devise *</Label><select id="manual-currency" className="h-10 w-full rounded-md border bg-background px-3" value={entry.currency} onChange={event => setEntry(p => ({ ...p, currency: event.target.value }))}><option value="EUR">EUR</option><option value="XAF">XAF</option><option value="USD">USD</option><option value="GBP">GBP</option></select></div>
+        <div><Label htmlFor="manual-date">Date de l’opération *</Label><Input id="manual-date" type="date" required value={entry.transaction_date} onChange={event => setEntry(p => ({ ...p, transaction_date: event.target.value }))}/></div>
+        <div><Label htmlFor="manual-category">Catégorie *</Label><Input id="manual-category" required maxLength={100} placeholder="Ex. loyer, apport, remboursement de frais" value={entry.category} onChange={event => setEntry(p => ({ ...p, category: event.target.value }))}/></div>
+        <div><Label htmlFor="manual-reference">Référence justificative *</Label><Input id="manual-reference" required maxLength={150} placeholder="Ex. facture, virement, reçu" value={entry.reference} onChange={event => setEntry(p => ({ ...p, reference: event.target.value }))}/></div>
+      </div>
+      <div><Label htmlFor="manual-description">Motif / description *</Label><Input id="manual-description" required maxLength={500} value={entry.description} onChange={event => setEntry(p => ({ ...p, description: event.target.value }))}/></div>
+      <Button type="submit" disabled={create.isPending || !user}>{create.isPending ? 'Enregistrement…' : 'Enregistrer l’opération manuelle'}</Button>
+    </form>}
 
     <div className="flex flex-wrap items-end gap-3">
       <div><Label htmlFor={`${mode}-start`}>Du</Label><Input id={`${mode}-start`} type="date" value={start} onChange={e => setStart(e.target.value)}/></div>
