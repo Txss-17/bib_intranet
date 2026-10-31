@@ -27,7 +27,7 @@ function statusColor(s: string) {
 }
 
 export default function SupplierApplications() {
-  const { data: apps = [], isLoading } = useSupplierApplications();
+  const { data: apps = [], isLoading, isError, refetch } = useSupplierApplications();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>('all');
   const [priority, setPriority] = useState<string>('all');
@@ -72,14 +72,14 @@ export default function SupplierApplications() {
             <h1 className="text-2xl font-semibold flex items-center gap-2"><Inbox className="h-6 w-6" /> Candidatures fournisseurs</h1>
             <p className="text-sm text-muted-foreground">Réception et traitement des candidatures issues du formulaire b.i.b platform</p>
           </div>
-          <ExportButtons data={exportRows} columns={exportColumns} filename="candidatures-fournisseurs" title="Candidatures fournisseurs" />
+          {!isLoading && !isError && <ExportButtons data={exportRows} columns={exportColumns} filename="candidatures-fournisseurs" title="Candidatures fournisseurs" />}
         </div>
 
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <Card><CardContent className="pt-6"><div className="text-xs text-muted-foreground">Nouvelles</div><div className="text-2xl font-semibold mt-1">{counts.new}</div></CardContent></Card>
-            <Card><CardContent className="pt-6"><div className="text-xs text-muted-foreground">À traiter</div><div className="text-2xl font-semibold mt-1">{counts.toProcess}</div></CardContent></Card>
-            <Card><CardContent className="pt-6"><div className="text-xs text-muted-foreground flex items-center gap-1"><Flame className="h-3 w-3" /> Priorité haute</div><div className="text-2xl font-semibold mt-1">{counts.high}</div></CardContent></Card>
+            <Card><CardContent className="pt-6"><div className="text-xs text-muted-foreground">Nouvelles</div><div className="text-2xl font-semibold mt-1">{isError ? "—" : counts.new}</div></CardContent></Card>
+            <Card><CardContent className="pt-6"><div className="text-xs text-muted-foreground">À traiter</div><div className="text-2xl font-semibold mt-1">{isError ? "—" : counts.toProcess}</div></CardContent></Card>
+            <Card><CardContent className="pt-6"><div className="text-xs text-muted-foreground flex items-center gap-1"><Flame className="h-3 w-3" /> Priorité haute</div><div className="text-2xl font-semibold mt-1">{isError ? "—" : counts.high}</div></CardContent></Card>
           </div>
 
           <Card>
@@ -130,8 +130,9 @@ export default function SupplierApplications() {
                 </TableHeader>
                 <TableBody>
                   {isLoading && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Chargement…</TableCell></TableRow>}
-                  {!isLoading && filtered.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Aucune candidature</TableCell></TableRow>}
-                  {filtered.map(a => (
+                  {isError && <TableRow><TableCell colSpan={9}><div role="alert" className="p-4 text-sm text-destructive">Candidatures indisponibles. <Button size="sm" variant="outline" onClick={() => void refetch()}>Réessayer</Button></div></TableCell></TableRow>}
+                  {!isLoading && !isError && filtered.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Aucune candidature</TableCell></TableRow>}
+                  {!isError && !isLoading && filtered.map(a => (
                     <TableRow key={a.id}>
                       <TableCell>
                         <div className="font-medium">{a.company_name}</div>

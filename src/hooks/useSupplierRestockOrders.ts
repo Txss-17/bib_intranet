@@ -5,6 +5,7 @@ import { supabase as typedSupabase } from '@/integrations/supabase/client';
 const supabase = typedSupabase as any;
 
 import { useAuth } from '@/hooks/useAuth';
+import { readAllPages } from '@/lib/operationsMetrics';
 import { toast } from 'sonner';
 
 export interface SupplierRestockOrder {
@@ -29,15 +30,17 @@ export interface SupplierRestockOrder {
 }
 
 export function useSupplierRestockOrders() {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: ['supplier_restock_orders'],
+    queryKey: ['supplier_restock_orders', user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('supplier_restock_orders')
-        .select('*')
-        .order('created_at', { ascending: false });
-      if (error) throw error;
-      return data || [];
+      const rows = await readAllPages<SupplierRestockOrder>(cursor => {
+        let query = supabase.from('supplier_restock_orders').select('*').order('id').limit(500);
+        if (cursor) query = query.gt('id', cursor);
+        return query;
+      });
+      return rows.sort((left, right) => right.created_at.localeCompare(left.created_at));
     },
   });
 }

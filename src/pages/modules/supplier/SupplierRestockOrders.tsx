@@ -162,7 +162,7 @@ function NewOrderDialog() {
 }
 
 export default function SupplierRestockOrders() {
-  const { data: orders = [], isLoading } = useSupplierRestockOrders();
+  const { data: orders = [], isLoading, isError, refetch } = useSupplierRestockOrders();
   const update = useUpdateRestockOrder();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
@@ -216,14 +216,15 @@ export default function SupplierRestockOrders() {
                 <SelectItem value="low">⚪ Faible</SelectItem>
               </SelectContent>
             </Select>
-            <ExportButtons data={exportRows} columns={exportColumns} filename="restock-orders" title="Ordres de restock" />
+            {!isLoading && !isError && <ExportButtons data={exportRows} columns={exportColumns} filename="restock-orders" title="Ordres de restock" />}
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Ordres ({filtered.length})</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Ordres ({isError ? "—" : filtered.length})</CardTitle></CardHeader>
           <CardContent>
             {isLoading ? <p className="text-muted-foreground py-8 text-center">Chargement...</p> :
+            isError ? <div role="alert" className="p-4 text-sm text-destructive">Ordres indisponibles. <Button size="sm" variant="outline" onClick={() => void refetch()}>Réessayer</Button></div> :
             filtered.length === 0 ? <p className="text-muted-foreground py-8 text-center">Aucun ordre</p> : (
               <Table>
                 <TableHeader><TableRow>
