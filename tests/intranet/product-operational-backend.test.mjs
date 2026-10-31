@@ -45,3 +45,13 @@ test('Release workflow is evidence-backed but never claims to execute CI or depl
  assert.match(app,/path="\/pole\/product\/releases"/);
  assert.match(nav,/Livraisons & recettes/);
 });
+
+test('Product home reads release evidence from its restricted backend and splits all three applications',()=>{
+ const page=read('src/pages/modules/product/ProductEngineeringDashboard.tsx');
+ for(const key of ['bib_platform','bib_intranet','bib_audit_hub']) assert.ok(page.includes(key),key);
+ assert.match(page,/product-release-overview/);
+ assert.match(page,/canViewPage\('product\.engineering'\)/);
+ assert.match(page,/\.from\('product_release_tracking' as any\)/);
+ assert.match(page,/Registre des livraisons indisponible/);
+ assert.match(page,/aucune mesure d.exécution CI/);
+});
