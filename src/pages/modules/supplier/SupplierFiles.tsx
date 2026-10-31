@@ -238,7 +238,7 @@ export default function SupplierFiles() {
               {supplier.phone && <div className="flex items-center gap-2 text-xs text-muted-foreground"><Phone className="h-3 w-3" /><span>{supplier.phone}</span></div>}
             </div>
             <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
-              <div className="flex items-center gap-2">{getStatusBadge(supplier.status)}{getRiskBadge(supplier.risk_score)}</div>
+              <div className="flex items-center gap-2">{getStatusBadge(supplier.status)}{getRiskBadge(supplier.risk_score)}<Badge variant="secondary">{supplier.platform_id ? 'Synchronisé BIB Platform' : 'Référencé BIB'}</Badge></div>
             </div>
           </div>
         ))}
@@ -260,6 +260,7 @@ export default function SupplierFiles() {
               <div className="flex items-center gap-3">
                 {getStatusBadge(selectedSupplier.status)}
                 {getRiskBadge(selectedSupplier.risk_score)}
+                <Badge variant="secondary">{selectedSupplier.platform_id ? 'BIB Platform' : 'BIB Intranet'}</Badge>
               </div>
 
               <Tabs defaultValue="info" className="w-full">
@@ -287,7 +288,7 @@ export default function SupplierFiles() {
                 </TabsContent>
 
                 <TabsContent value="dossier" className="mt-4">
-                  <SupplierDossier supplierId={selectedSupplier.id} />
+                  <SupplierDossier supplierId={selectedSupplier.id} supplierStatus={selectedSupplier.status} />
                 </TabsContent>
                 <TabsContent value="audit" className="mt-4">
                   <AuditConformitySection supplierName={selectedSupplier.name} />
