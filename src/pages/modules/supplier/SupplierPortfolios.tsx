@@ -61,6 +61,7 @@ import { useTableInteractions } from '@/hooks/useTableInteractions';
 import { SortableTableHead } from '@/components/ui/sortable-table-head';
 
 import { supabase } from '@/integrations/supabase/client';
+import { usePoleCollaborators } from '@/hooks/usePoleCollaborators';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { AssignmentSuggestion } from '@/components/supplier/AssignmentSuggestion';
@@ -176,38 +177,7 @@ function useSupplierPortfolios() {
 }
 
 function useSupplierCollaborators() {
-  return useQuery({
-    queryKey: ['supplier-portfolio-collaborators'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select(
-          `
-            id,
-            first_name,
-            last_name,
-            email,
-            poles,
-            position
-          `,
-        )
-        .order('last_name')
-        .order('first_name');
-
-      if (error) {
-        throw error;
-      }
-
-      return ((data ?? []) as SupplierProfile[])
-        .filter(isSupplierCollaborator)
-        .sort((a, b) =>
-          getProfileName(a).localeCompare(
-            getProfileName(b),
-            'fr',
-          ),
-        );
-    },
-  });
+  return usePoleCollaborators('supplier', 'supplier.portfolios', 'update');
 }
 
 function useSupplierPortfolioData(
@@ -989,7 +959,7 @@ export default function SupplierPortfolios() {
         await queryClient.invalidateQueries(
           {
             queryKey: [
-              'supplier-portfolio-collaborators',
+              'pole-collaborators',
             ],
           },
         );
