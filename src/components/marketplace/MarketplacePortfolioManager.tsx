@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useMarketplaceMerchants, useMarketplacePortfolios } from '@/hooks/useMarketplace';
+import { useMarketplaceMerchants, useMarketplacePortfolios, useMarketplaceShops } from '@/hooks/useMarketplace';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,9 @@ export default function MarketplacePortfolioManager() {
   const [transferOwnerId, setTransferOwnerId] = useState('');
   const [transferReason, setTransferReason] = useState('');
   const { data: merchants = [] } = useMarketplaceMerchants();
+  const { data: shops = [] } = useMarketplaceShops();
+  const merchantIds = new Set(shops.map(shop => shop.merchant_id).filter(Boolean));
+  const eligibleMerchants = merchants.filter(merchant => merchantIds.has(merchant.id));
   const { data: portfolios = [] } = useMarketplacePortfolios();
   const { data: colleagues = [], isError: colleaguesError } = useQuery({
     queryKey: ['marketplace', 'portfolio-colleagues'],
@@ -63,6 +66,7 @@ export default function MarketplacePortfolioManager() {
     onSuccess: () => {
       setMerchantId(''); setReason('');
       void queryClient.invalidateQueries({ queryKey: ['marketplace', 'merchant-portfolio-assignments'] });
+      void queryClient.invalidateQueries({ queryKey: ['marketplace', 'portfolio-assignment', merchantId] });
       toast.success('Marchand affecté. Historique conservé.');
     },
     onError: (error: Error) => toast.error(error.message),
@@ -113,7 +117,7 @@ export default function MarketplacePortfolioManager() {
           <select className="h-10 w-full rounded-md border bg-background px-3 text-sm"
             aria-label="Marchand" value={merchantId} required onChange={(event) => setMerchantId(event.target.value)}>
             <option value="">Sélectionner un marchand</option>
-            {merchants.map((merchant) => (
+            {eligibleMerchants.map((merchant) => (
               <option key={merchant.id} value={merchant.id}>
                 {merchant.company_name || merchant.contact_email || merchant.id}
               </option>
