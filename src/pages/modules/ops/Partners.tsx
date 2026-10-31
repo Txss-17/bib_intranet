@@ -28,6 +28,7 @@ import {
   Activity,
 } from 'lucide-react';
 import { useOpsPartners } from '@/hooks/useOpsControl';
+import CasePortfolioManager from '@/components/operations/CasePortfolioManager';
 
 interface Partner {
   id: string;
@@ -292,6 +293,8 @@ const Partners = () => {
           </div>
         </div>
       </div>
+
+      <CasePortfolioManager pole="ops" title="Partenaires logistiques" entities={partners.map(p => ({ id: p.id, label: p.name }))} />
 
       {/* KPI */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
