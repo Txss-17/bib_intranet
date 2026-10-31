@@ -95,6 +95,7 @@ function form(pending = false) {
   const mocks = {
     react: { useState: value => [value, () => {}] },
     '@/hooks/useSupportTickets': { useSupportAssignees: () => ({ data: [{ id: agent, name: 'Agent réel' }] }) },
+    '@/hooks/usePoleCollaborators': { usePoleCollaborators: () => ({ data: [{ id: agent, first_name: 'Agent', last_name: 'réel', eligible: true }], isLoading: false, isError: false }), collaboratorName: p => p.first_name + ' ' + p.last_name },
     '@/hooks/useLifecycle': { useUserAccounts: () => ({ data: [] }) },
   };
   for (const [file, names] of Object.entries({
