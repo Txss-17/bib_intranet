@@ -183,6 +183,10 @@ const RolesPermissions = () => {
   const [interfaces, setInterfaces] = useState<AccessInterface[]>([]);
   const [actions, setActions] = useState<AccessAction[]>([]);
   const [permissions, setPermissions] = useState<AccessPermission[]>([]);
+  const [permissionsRoleId, setPermissionsRoleId] = useState('');
+  const [permissionsLoading, setPermissionsLoading] = useState(false);
+  const [permissionsError, setPermissionsError] = useState('');
+  const [permissionsReloadToken, setPermissionsReloadToken] = useState(0);
   const [scopes, setScopes] = useState<ScopeRow[]>([]);
   const [roleScopes, setRoleScopes] = useState<RoleScopeRow[]>([]);
   const [businessSubsidiaries, setBusinessSubsidiaries] = useState<string[]>([]);
@@ -215,7 +219,6 @@ const RolesPermissions = () => {
         rolesResult,
         interfacesResult,
         actionsResult,
-        permissionsResult,
         roleScopesResult,
         scopesResult,
         assignmentsResult,
@@ -239,22 +242,6 @@ const RolesPermissions = () => {
           .select('id, action_key, label, description')
           .order('label'),
 
-        // La table dépasse la limite de 1000 lignes par requête : on pagine.
-        (async () => {
-          const all: AccessPermission[] = [];
-          const PAGE_SIZE = 1000;
-          for (let from = 0; ; from += PAGE_SIZE) {
-            const { data, error } = await supabase
-              .from('access_permissions')
-              .select('id, role_id, interface_id, action_id, allowed')
-              .range(from, from + PAGE_SIZE - 1);
-            if (error) return { data: null, error };
-            all.push(...((data ?? []) as AccessPermission[]));
-            if (!data || data.length < PAGE_SIZE) break;
-          }
-          return { data: all, error: null };
-        })(),
-
         supabase
           .from('access_role_scopes')
           .select('role_id, scope_id, scope_value'),
@@ -272,7 +259,6 @@ const RolesPermissions = () => {
         rolesResult.error ||
         interfacesResult.error ||
         actionsResult.error ||
-        permissionsResult.error ||
         roleScopesResult.error ||
         scopesResult.error ||
         assignmentsResult.error;
@@ -282,7 +268,6 @@ const RolesPermissions = () => {
       const nextRoles = (rolesResult.data ?? []) as AccessRole[];
       const nextInterfaces = (interfacesResult.data ?? []) as AccessInterface[];
       const nextActions = (actionsResult.data ?? []) as AccessAction[];
-      const nextPermissions = (permissionsResult.data ?? []) as AccessPermission[];
 
       setRoles(nextRoles);
       setInterfaces(nextInterfaces);
@@ -293,7 +278,6 @@ const RolesPermissions = () => {
           return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi);
         }),
       );
-      setPermissions(nextPermissions);
       setRoleScopes((roleScopesResult.data ?? []) as RoleScopeRow[]);
       setScopes((scopesResult.data ?? []) as ScopeRow[]);
       if (!subsidiariesResult.error) {
@@ -315,19 +299,8 @@ const RolesPermissions = () => {
           : nextRoles.find((role) => role.role_key === 'ceo' && role.status === 'active')?.id ?? nextRoles[0]?.id ?? '',
       );
 
-      const nextDraft: Record<string, boolean> = {};
-
-      nextPermissions.forEach((permission) => {
-        nextDraft[
-          permissionKey(
-            permission.role_id,
-            permission.interface_id,
-            permission.action_id,
-          )
-        ] = permission.allowed;
-      });
-
-      setDraft(nextDraft);
+      // Refresh only the currently selected role's matrix; never download the whole 23k+ row catalog.
+      setPermissionsReloadToken((current) => current + 1);
     } catch (error) {
       console.error('RBAC catalog loading error:', error);
 
@@ -347,6 +320,59 @@ const RolesPermissions = () => {
   useEffect(() => {
     void loadCatalog();
   }, [loadCatalog]);
+
+  // Load only the selected role: with 100+ roles, downloading every permission
+  // serially used to block the CEO selector behind tens of thousands of rows.
+  useEffect(() => {
+    let cancelled = false;
+    setPermissions([]);
+    setDraft({});
+    setPermissionsRoleId('');
+    setPermissionsError('');
+    if (!selectedRoleId) {
+      setPermissionsLoading(false);
+      return;
+    }
+    setPermissionsLoading(true);
+    const loadRolePermissions = async () => {
+      try {
+        const all: AccessPermission[] = [];
+        const pageSize = 1000;
+        for (let offset = 0; ; offset += pageSize) {
+          const { data, error } = await supabase
+            .from('access_permissions')
+            .select('id, role_id, interface_id, action_id, allowed')
+            .eq('role_id', selectedRoleId)
+            .order('interface_id')
+            .order('action_id')
+            .range(offset, offset + pageSize - 1);
+          if (error) throw error;
+          if (cancelled) return;
+          all.push(...((data ?? []) as AccessPermission[]));
+          if (!data || data.length < pageSize) break;
+        }
+        if (cancelled) return;
+        setPermissions(all);
+        setDraft(Object.fromEntries(all.map((permission) => [
+          permissionKey(permission.role_id, permission.interface_id, permission.action_id),
+          permission.allowed,
+        ])));
+        setPermissionsRoleId(selectedRoleId);
+      } catch (error) {
+        if (!cancelled) {
+          setPermissionsError(getErrorMessage(error, 'Impossible de charger les permissions de ce rôle.'));
+          setPermissionsRoleId('');
+        }
+      } finally {
+        if (!cancelled) setPermissionsLoading(false);
+      }
+    };
+    void loadRolePermissions();
+    return () => { cancelled = true; };
+  }, [selectedRoleId, permissionsReloadToken]);
+
+  const rolePermissionsReady = !permissionsLoading &&
+    !permissionsError && !!selectedRoleId && permissionsRoleId === selectedRoleId;
 
   // Editing pre-existing scopes is separate from creating roles or changing the
   // permission matrix. Never infer a role's scopes from its display label.
@@ -531,6 +557,7 @@ const RolesPermissions = () => {
     (interfaceId: string, actionId: string) => {
       const key = permissionKey(selectedRoleId, interfaceId, actionId);
 
+      if (!rolePermissionsReady) return false;
       if (Object.prototype.hasOwnProperty.call(draft, key)) {
         return draft[key];
       }
@@ -544,7 +571,7 @@ const RolesPermissions = () => {
         )?.allowed ?? false
       );
     },
-    [draft, permissions, selectedRoleId],
+    [draft, permissions, selectedRoleId, rolePermissionsReady],
   );
 
   const togglePermission = (
@@ -552,6 +579,7 @@ const RolesPermissions = () => {
     actionId: string,
     allowed: boolean,
   ) => {
+    if (!rolePermissionsReady) return;
     const key = permissionKey(selectedRoleId, interfaceId, actionId);
 
     setDraft((current) => ({ ...current, [key]: allowed }));
@@ -561,7 +589,7 @@ const RolesPermissions = () => {
     interfaceId: string,
     allowed: boolean,
   ) => {
-    if (!selectedRoleId) return;
+    if (!rolePermissionsReady) return;
 
     setDraft((current) => {
       const next = { ...current };
@@ -575,7 +603,7 @@ const RolesPermissions = () => {
   };
 
   const toggleAllVisible = (allowed: boolean) => {
-    if (!selectedRoleId) return;
+    if (!rolePermissionsReady) return;
 
     setDraft((current) => {
       const next = { ...current };
@@ -591,6 +619,10 @@ const RolesPermissions = () => {
   };
 
   const savePermissions = async () => {
+    if (!rolePermissionsReady) {
+      toast({ title: 'Matrice non disponible', description: 'Attendez le chargement sécurisé de ce rôle puis réessayez.', variant: 'destructive' });
+      return;
+    }
     if (!selectedRoleId) {
       toast({
         title: 'Aucun rôle sélectionné',
@@ -926,7 +958,7 @@ const RolesPermissions = () => {
   };
 
   const countAllowed = useMemo(() => {
-    if (!selectedRoleId) return 0;
+    if (!rolePermissionsReady) return 0;
 
     return interfaces.reduce(
       (total, interfaceItem) =>
@@ -936,7 +968,7 @@ const RolesPermissions = () => {
         ).length,
       0,
     );
-  }, [interfaces, actions, isAllowed, selectedRoleId]);
+  }, [interfaces, actions, isAllowed, selectedRoleId, rolePermissionsReady]);
 
   if (!isSuperAdmin) {
     return (
@@ -1377,6 +1409,13 @@ const RolesPermissions = () => {
                 </div>
               </div>
 
+              {permissionsError && <div role="alert" className="rounded-md border border-destructive/40 p-3 text-sm text-destructive">
+                Le chargement des droits de ce rôle a échoué : {permissionsError}
+                <Button variant="outline" size="sm" className="ml-2" onClick={() => setPermissionsReloadToken(t => t + 1)}>Réessayer</Button>
+              </div>}
+              {permissionsLoading && <p role="status" className="text-sm text-muted-foreground">
+                Chargement des autorisations du rôle sélectionné…
+              </p>}
               {selectedRole?.role_key === 'ceo' && (
                 <div role="note" className="rounded-lg border p-3 text-sm">
                   <strong>CEO — administration de démarrage :</strong> le rôle peut être défini sur toutes
@@ -1400,7 +1439,7 @@ const RolesPermissions = () => {
                   <Button
                     variant="outline"
                     onClick={() => toggleAllVisible(true)}
-                    disabled={!selectedRoleId || saving || visibleInterfaces.length === 0}
+                    disabled={!rolePermissionsReady || saving || visibleInterfaces.length === 0}
                   >
                     <Check className="mr-2 h-4 w-4" />
                     Autoriser les interfaces affichées
@@ -1408,7 +1447,7 @@ const RolesPermissions = () => {
                   <Button
                     variant="outline"
                     onClick={() => toggleAllVisible(false)}
-                    disabled={!selectedRoleId || saving || visibleInterfaces.length === 0}
+                    disabled={!rolePermissionsReady || saving || visibleInterfaces.length === 0}
                   >
                     <X className="mr-2 h-4 w-4" />
                     Retirer les droits affichés
@@ -1417,7 +1456,7 @@ const RolesPermissions = () => {
 
                 <Button
                   onClick={() => void savePermissions()}
-                  disabled={!selectedRoleId || saving || loading}
+                  disabled={!rolePermissionsReady || saving || loading}
                 >
                   {saving ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1595,7 +1634,7 @@ const RolesPermissions = () => {
                                   onCheckedChange={(value) =>
                                     togglePermission(item.id, action.id, value)
                                   }
-                                  disabled={!selectedRoleId || saving}
+                                  disabled={!rolePermissionsReady || saving}
                                   aria-label={`${item.label} — ${action.label}`}
                                 />
                               </div>
@@ -1614,7 +1653,7 @@ const RolesPermissions = () => {
                                 onCheckedChange={(value) =>
                                   toggleInterfaceActions(item.id, value)
                                 }
-                                disabled={!selectedRoleId || saving}
+                                disabled={!rolePermissionsReady || saving}
                                 aria-label={`Toutes les actions — ${item.label}`}
                               />
                             </div>
