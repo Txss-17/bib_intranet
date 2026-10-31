@@ -70,7 +70,7 @@ export const moduleNavigations: Record<
       {
         id: 'access-permissions',
         label: 'Accès & permissions',
-        path: '/pole/rh/access',
+        path: '/pole/direction/access',
         icon: 'ShieldCheck',
       },
       {
