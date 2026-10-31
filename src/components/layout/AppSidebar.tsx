@@ -78,10 +78,10 @@ const iconMap: Record<
 const transversalModules = [
   {
     id: 'work',
-    name: 'Travail',
+    name: 'Projets & Travail',
     icon: ListTodo,
-    path: '/work/tasks',
-    permissionPath: '/work/tasks',
+    path: '/work/projects',
+    permissionPath: '/work/projects',
   },
   {
     id: 'notifications',
@@ -205,7 +205,7 @@ export function AppSidebar({
   const isModuleActive = (
     path: string,
   ) => {
-    if (path === '/work/tasks') {
+    if (path === '/work/projects') {
       return location.pathname.startsWith('/work/');
     }
 
@@ -248,9 +248,16 @@ export function AppSidebar({
   const visibleModules =
     transversalModules.filter(
       (module) =>
-        canViewPath(
-          module.permissionPath,
-        ),
+        module.id === 'work'
+          ? [
+              '/work/projects',
+              '/work/tasks',
+              '/work/processes',
+              '/work/validations',
+              '/work/escalations',
+              '/work/activities',
+            ].some((path) => canViewPath(path))
+          : canViewPath(module.permissionPath),
     );
 
   return (
@@ -383,7 +390,7 @@ export function AppSidebar({
 
                       {!collapsed && (
                         <span className="truncate">
-                          {pole.shortName}
+                          {pole.name}
                         </span>
                       )}
 
