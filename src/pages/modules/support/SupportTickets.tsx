@@ -65,7 +65,7 @@ export default function SupportTickets() {
     <div className="space-y-6 p-6">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div><h1 className="flex items-center gap-3 text-3xl font-bold"><MessageSquare className="h-7 w-7 text-primary" />Support client</h1><p className="mt-1 text-sm text-muted-foreground">Attribution des tickets, suivi interne et résolutions documentées.</p></div>
-        <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={query.isFetching} onClick={() => { void query.refetch(); void stats.refetch(); void people.refetch(); }}>Actualiser</Button><ExportButtons filename="tickets-support" title="Tickets Support" columns={[{ header: 'ID', accessor: 'id' }, { header: 'Sujet', accessor: 'subject' }, { header: 'Statut', accessor: 'status' }, { header: 'Priorité', accessor: 'priority' }, { header: 'Création', accessor: 'created_at' }]} data={visible} /><Button disabled={!can('support.tickets', 'create')} onClick={() => setEditing(null)}><Plus className="mr-2 h-4 w-4" />Nouveau ticket</Button></div>
+        <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={query.isFetching} onClick={() => { void query.refetch(); void stats.refetch(); void people.refetch(); }}>Actualiser</Button><ExportButtons filename="tickets-support" title="Tickets Support" columns={[{ header: 'ID', accessor: 'id' }, { header: 'Sujet', accessor: 'subject' }, { header: 'Statut', accessor: 'status' }, { header: 'Priorité', accessor: 'priority' }, { header: 'Création', accessor: 'created_at' }]} data={query.isError || query.isLoading ? [] : visible} /><Button disabled={!can('support.tickets', 'create') || query.isError || query.isLoading} onClick={() => setEditing(null)}><Plus className="mr-2 h-4 w-4" />Nouveau ticket</Button></div>
       </div>
       {stats.isError && <p role="alert">Indicateurs indisponibles. <Button variant="link" onClick={() => void stats.refetch()}>Réessayer</Button></p>}
       <p className="text-xs text-muted-foreground">Indicateurs de tous les tickets accessibles non archivés.</p>
@@ -82,9 +82,9 @@ export default function SupportTickets() {
       {query.isLoading && <p role="status">Chargement…</p>}
       {query.isError && <p role="alert">Tickets indisponibles. <Button variant="outline" onClick={() => void query.refetch()}>Réessayer</Button></p>}
       {!query.isLoading && !query.isError && visible.length === 0 && <p className="py-6 text-muted-foreground">Aucun ticket dans cette vue.</p>}
-      <ul className="divide-y rounded border">
+      {!query.isError && !query.isLoading && <ul className="divide-y rounded border">
         {visible.map(ticket => <li key={ticket.id}><button className="flex w-full flex-wrap items-center justify-between gap-3 p-4 text-left hover:bg-muted/40" onClick={() => select(ticket.id)}><span><span className="block font-medium">{ticket.subject}</span><span className="text-xs text-muted-foreground">{ticket.user_account?.company_name || (ticket.user_account_id ? 'Compte inaccessible' : 'Compte non rattaché')} · {assignee(ticket.assigned_to)}</span></span><span className="flex gap-2"><Badge variant={ticket.priority === 'critical' ? 'destructive' : 'outline'}>{SUPPORT_PRIORITY[ticket.priority as keyof typeof SUPPORT_PRIORITY] || ticket.priority || 'Priorité non renseignée'}</Badge><Badge variant="outline">{ticket.archived_at ? 'Archivé' : SUPPORT_STATUS[ticket.status as SupportStatus] || ticket.status || 'Statut non renseigné'}</Badge></span></button></li>)}
-      </ul>
+      </ul>}
       {editing !== undefined && <SupportTicketForm key={editing?.id || 'new'} open ticket={editing} pending={actions.create.isPending || actions.update.isPending} onOpenChange={open => !open && setEditing(undefined)} onSubmit={save} />}
       <Sheet open={!!selectedId} onOpenChange={open => !open && select(null)}>
         <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">

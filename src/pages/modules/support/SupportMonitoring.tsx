@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 import {
   Card,
@@ -41,8 +42,10 @@ interface ActivityData {
 }
 
 function useSupportActivityMonitoring() {
+  const { user, profile } = useAuth();
   return useQuery<ActivityData>({
-    queryKey: ['support_activity_monitoring'],
+    queryKey: ['support_activity_monitoring', user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile,
     queryFn: async () => {
       const [accountsResult, eventsResult] = await Promise.all([
         supabase
@@ -114,7 +117,7 @@ const SupportMonitoring = () => {
         </h1>
 
         <p className="mt-1 text-muted-foreground">
-          Activité récente des comptes et événements utiles au suivi Support & Customer Success.
+          Activité récente des comptes et événements utiles au suivi Support & Customer Success. Les indicateurs se limitent aux 20 comptes et aux 15 événements récents accessibles, et ne constituent pas des totaux globaux.
         </p>
       </div>
 
@@ -125,7 +128,7 @@ const SupportMonitoring = () => {
 
             <div>
               <p className="text-2xl font-bold">
-                {data?.accounts.length ?? 0}
+                {data?.accounts.length ?? '—'}
               </p>
               <p className="text-sm text-muted-foreground">
                 Comptes observés
@@ -140,7 +143,7 @@ const SupportMonitoring = () => {
 
             <div>
               <p className="text-2xl font-bold">
-                {data?.events.length ?? 0}
+                {data?.events.length ?? '—'}
               </p>
               <p className="text-sm text-muted-foreground">
                 Événements récents
@@ -159,7 +162,7 @@ const SupportMonitoring = () => {
                   (account) =>
                     account.risk_level === 'high' ||
                     account.risk_level === 'critical',
-                ).length ?? 0}
+                ).length ?? '—'}
               </p>
               <p className="text-sm text-muted-foreground">
                 Comptes à surveiller

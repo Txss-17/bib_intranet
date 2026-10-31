@@ -77,7 +77,7 @@ const UserAccounts = () => {
           </h1>
           <p className="text-muted-foreground mt-1">CA, stock engagé, historique paiements</p>
         </div>
-        <ExportButtons
+        {!isError && !isLoading && <ExportButtons
           filename="comptes-utilisateurs"
           title="Comptes Utilisateurs"
           poleName="Lifecycle"
@@ -92,17 +92,18 @@ const UserAccounts = () => {
             { header: 'Dernière commande', accessor: 'last_order_date' },
           ]}
           data={accounts || []}
-        />
+        />}
       </div>
 
       {(isError || statsError) && <p role="alert">Comptes ou indicateurs indisponibles. <Button variant="link" onClick={() => { void refetch(); void refetchStats(); }}>Réessayer</Button></p>}
+      <p className="text-xs text-muted-foreground">L’export reprend uniquement les comptes de la recherche affichée. Les indicateurs globaux sont indépendants des filtres.</p>
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-4">
             <Building2 className="h-8 w-8 text-blue-500" />
             <div>
-              <p className="text-2xl font-bold">{stats?.totalUsers ?? '—'}</p>
+              <p className="text-2xl font-bold">{statsError ? '—' : stats?.totalUsers ?? '—'}</p>
               <p className="text-sm text-muted-foreground">Comptes suivis</p>
             </div>
           </CardContent>
@@ -111,7 +112,7 @@ const UserAccounts = () => {
           <CardContent className="p-4 flex items-center gap-4">
             <Activity className="h-8 w-8 text-emerald-500" />
             <div>
-              <p className="text-2xl font-bold">{stats?.activeUsers ?? '—'}</p>
+              <p className="text-2xl font-bold">{statsError ? '—' : stats?.activeUsers ?? '—'}</p>
               <p className="text-sm text-muted-foreground">Abonnements actifs</p>
             </div>
           </CardContent>
@@ -120,7 +121,7 @@ const UserAccounts = () => {
           <CardContent className="p-4 flex items-center gap-4">
             <AlertTriangle className="h-8 w-8 text-purple-500" />
             <div>
-              <p className="text-2xl font-bold">{stats?.atRiskUsers ?? '—'}</p>
+              <p className="text-2xl font-bold">{statsError ? '—' : stats?.atRiskUsers ?? '—'}</p>
               <p className="text-sm text-muted-foreground">Comptes à risque</p>
             </div>
           </CardContent>
@@ -129,7 +130,7 @@ const UserAccounts = () => {
           <CardContent className="p-4 flex items-center gap-4">
             <CreditCard className="h-8 w-8 text-orange-500" />
             <div>
-              <p className="text-2xl font-bold">{stats?.unpaidUsers ?? '—'}</p>
+              <p className="text-2xl font-bold">{statsError ? '—' : stats?.unpaidUsers ?? '—'}</p>
               <p className="text-sm text-muted-foreground">Paiements à surveiller</p>
             </div>
           </CardContent>
@@ -177,7 +178,7 @@ const UserAccounts = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {accounts?.map(account => (
+            {!isError && accounts?.map(account => (
               <TableRow key={account.id}>
                 <TableCell className="font-medium">{account.company_name}</TableCell>
                 <TableCell>
