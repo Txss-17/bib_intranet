@@ -103,6 +103,8 @@ export default function Organization() {
   const {
     data: employees = [],
     isLoading,
+    isError,
+    refetch,
   } = useEmployees({
     search: search || undefined,
     hrStatus: 'active',
@@ -298,7 +300,7 @@ export default function Organization() {
         </CardContent>
       </Card>
 
-      {isLoading ? (
+      {isError ? <div role="alert" className="rounded border p-4 text-sm text-destructive">Organigramme indisponible : les effectifs ne sont pas confirmés. <Button variant="outline" size="sm" onClick={() => void refetch()}>Réessayer</Button></div> : isLoading ? (
         <Card>
           <CardContent className="flex items-center justify-center py-12">
             <Loader2 className="h-5 w-5 animate-spin" />

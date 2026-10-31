@@ -32,7 +32,7 @@ export default function BusinessTrips() {
   const { user } = useAuth();
   const { isAdmin, isManager } = useUserRole();
   const canApprove = isAdmin || isManager;
-  const { data: trips = [], isLoading } = useBusinessTrips();
+  const { data: trips = [], isLoading, isError, refetch } = useBusinessTrips();
   const create = useCreateBusinessTrip();
   const submit = useSubmitTrip();
   const approve = useApproveTrip();
@@ -60,7 +60,7 @@ export default function BusinessTrips() {
   }), [trips]);
 
   const doCreate = (asSubmit: boolean) => {
-    if (!form.purpose || !form.destination || !form.start_date || !form.end_date) return;
+    if (create.isPending || isError || !form.purpose.trim() || !form.destination.trim() || !form.start_date || !form.end_date || form.end_date < form.start_date || (form.estimated_budget !== '' && (!Number.isFinite(Number(form.estimated_budget)) || Number(form.estimated_budget) < 0))) return;
     create.mutate({
       purpose: form.purpose,
       destination: form.destination,
@@ -168,7 +168,7 @@ export default function BusinessTrips() {
         </TabsList>
       </Tabs>
 
-      {isLoading ? (
+      {isError ? <div role="alert" className="rounded-md border p-4 text-sm text-destructive">Déplacements indisponibles : aucune liste fiable ne peut être affichée. <Button variant="outline" size="sm" onClick={() => void refetch()}>Réessayer</Button></div> : isLoading ? (
         <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
       ) : filtered.length === 0 ? (
         <Card><CardContent className="py-12 text-center text-muted-foreground">Aucune demande dans cette catégorie.</CardContent></Card>

@@ -3,6 +3,9 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, Bell, Inbox, Loader2, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { readAllPages } from '@/lib/operationsMetrics';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -31,40 +34,47 @@ const daysUntil = (d: string) => Math.ceil((new Date(d).getTime() - Date.now()) 
 
 /** Alertes RH dérivées uniquement de données réelles (RLS appliquée). */
 export function useHrAlerts() {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: ['hr-alerts'],
+    queryKey: ['hr-alerts', user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile,
     queryFn: async (): Promise<HrAlert[]> => {
+      // Propagate every source failure; paginate beyond PostgREST's default cap.
+      const page = (table: string, columns: string, configure: (query: any) => any) =>
+        readAllPages<{ id: string }>(cursor => {
+          let query = configure(db.from(table).select(columns)).order('id').limit(500);
+          if (cursor) query = query.gt('id', cursor);
+          return query;
+        }) as Promise<any[]>;
       const [docs, reqs, leaves, trainings, profiles] = await Promise.all([
-        db.from('rh_employee_documents').select('id, employee_id, name, expires_at').not('expires_at', 'is', null),
-        db.from('hr_employee_requests').select('id, reference, first_name, last_name, status, created_at, start_date').in('status', ['submitted', 'hr_validated']),
-        db.from('hr_leave_requests').select('id, employee_id, start_date, status').eq('status', 'pending'),
-        db.from('hr_trainings').select('id, title, employee_id, due_date, status').in('status', ['planned', 'in_progress']).not('due_date', 'is', null),
-        db.from('profiles').select('id, first_name, last_name').eq('test_account', false),
+        page('rh_employee_documents', 'id, employee_id, name, expires_at', q => q.not('expires_at', 'is', null)),
+        page('hr_employee_requests', 'id, reference, first_name, last_name, status, created_at, start_date', q => q.in('status', ['submitted', 'hr_validated'])),
+        page('hr_leave_requests', 'id, employee_id, start_date, status', q => q.eq('status', 'pending')),
+        page('hr_trainings', 'id, title, employee_id, due_date, status', q => q.in('status', ['planned', 'in_progress']).not('due_date', 'is', null)),
+        page('profiles', 'id, first_name, last_name', q => q.eq('test_account', false)),
       ]);
-      const name = (id: string) => {
-        const p = (profiles.data ?? []).find((x: any) => x.id === id);
-        return p ? `${p.first_name} ${p.last_name}` : 'Collaborateur';
-      };
+      const names = new Map<string, string>(profiles.map(p => [p.id, `${p.first_name ?? ''} ${p.last_name ?? ''}`.trim()]));
+      const name = (id: string) => names.get(id) || 'Collaborateur';
       const out: HrAlert[] = [];
-      for (const d of docs.data ?? []) {
+      for (const d of docs) {
         const n = daysUntil(d.expires_at);
         if (n > 30) continue;
         out.push({ id: `doc-${d.id}`, category: 'Document', severity: n < 0 ? 'critical' : n <= 14 ? 'high' : 'medium',
           title: n < 0 ? `Document expiré : ${d.name}` : `Document à renouveler : ${d.name}`,
           detail: `${name(d.employee_id)} · ${n < 0 ? `expiré depuis ${-n} j` : `expire dans ${n} j`}`, due: d.expires_at, link: '/pole/rh/files' });
       }
-      for (const r of reqs.data ?? []) {
+      for (const r of reqs) {
         const age = -daysUntil(r.created_at);
         out.push({ id: `onb-${r.id}`, category: 'Onboarding', severity: age > 7 ? 'high' : 'medium',
           title: `Dossier ${r.reference} ${r.status === 'submitted' ? 'à valider (RH)' : 'compte à créer (Tech)'}`,
           detail: `${r.first_name} ${r.last_name} · en attente depuis ${age} j`, due: r.start_date, link: '/pole/rh/onboarding' });
       }
-      for (const l of leaves.data ?? []) {
+      for (const l of leaves) {
         const n = daysUntil(l.start_date);
         out.push({ id: `leave-${l.id}`, category: 'Congés', severity: n <= 3 ? 'high' : 'medium',
           title: 'Demande de congé à traiter', detail: `${name(l.employee_id)} · début dans ${n} j`, due: l.start_date, link: '/pole/rh/leave' });
       }
-      for (const t of trainings.data ?? []) {
+      for (const t of trainings) {
         const n = daysUntil(t.due_date);
         if (n > 14) continue;
         out.push({ id: `tr-${t.id}`, category: 'Formation', severity: n < 0 ? 'high' : 'medium',
@@ -79,7 +89,7 @@ export function useHrAlerts() {
 }
 
 export default function HRAlerts() {
-  const { data = [], isLoading, error } = useHrAlerts();
+  const { data = [], isLoading, error, refetch } = useHrAlerts();
   const [search, setSearch] = useState('');
   const [cat, setCat] = useState('all');
   const cats = Array.from(new Set(data.map((a) => a.category)));
@@ -97,12 +107,12 @@ export default function HRAlerts() {
         {(['critical', 'high', 'medium'] as Severity[]).map((s) => (
           <Card key={s}><CardContent className="p-4">
             <p className="text-sm text-muted-foreground">{SEV[s].label}</p>
-            <p className="text-2xl font-semibold">{data.filter((a) => a.severity === s).length}</p>
+            <p className="text-2xl font-semibold">{isLoading || error ? '—' : data.filter((a) => a.severity === s).length}</p>
           </CardContent></Card>
         ))}
         <Card><CardContent className="p-4">
           <p className="text-sm text-muted-foreground">Total</p>
-          <p className="text-2xl font-semibold">{data.length}</p>
+          <p className="text-2xl font-semibold">{isLoading || error ? '—' : data.length}</p>
         </CardContent></Card>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -122,7 +132,7 @@ export default function HRAlerts() {
         {isLoading ? (
           <div className="flex justify-center gap-2 p-10 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" />Chargement…</div>
         ) : error ? (
-          <div className="flex justify-center gap-2 p-10 text-destructive"><AlertTriangle className="h-4 w-4" />{(error as Error).message}</div>
+          <div role="alert" className="flex flex-wrap justify-center items-center gap-2 p-10 text-destructive"><AlertTriangle className="h-4 w-4" />Alertes indisponibles : {(error as Error).message} <Button size="sm" variant="outline" onClick={() => void refetch()}>Réessayer</Button></div>
         ) : rows.length === 0 ? (
           <div className="flex flex-col items-center gap-2 p-10 text-muted-foreground"><Inbox className="h-6 w-6" />Aucune alerte RH active.</div>
         ) : (
