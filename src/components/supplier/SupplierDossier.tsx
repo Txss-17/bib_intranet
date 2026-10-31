@@ -34,10 +34,10 @@ type AssignmentEvent = {
 const date = (value: string | null) =>
   value ? new Date(value).toLocaleDateString('fr-FR') : '—';
 
-export default function SupplierDossier({ supplierId }: { supplierId: string }) {
+export default function SupplierDossier({ supplierId, supplierStatus }: { supplierId: string; supplierStatus: string }) {
   const qc = useQueryClient();
   const { can } = usePermissions();
-  const canManage = can('supplier.suppliers', 'update');
+  const canManage = supplierStatus === 'validated' && can('supplier.suppliers', 'update');
   const staff = usePoleCollaborators('supplier', 'supplier.suppliers', 'update', canManage);
   const [portfolioId, setPortfolioId] = useState('unchanged');
   const [employeeId, setEmployeeId] = useState('unchanged');
@@ -188,6 +188,7 @@ export default function SupplierDossier({ supplierId }: { supplierId: string }) 
           <p>Collaborateur : <strong>{current?.assigned_to_id ? members.get(current.assigned_to_id) || current.assigned_to_name || 'Collaborateur inaccessible' : 'Non attribué'}</strong></p>
           <p className="text-xs text-muted-foreground">Dernière affectation : {date(current?.assigned_at || null)}</p>
         </div>
+        {supplierStatus !== 'validated' && <p className="text-sm text-muted-foreground">L’affectation n’est disponible qu’après validation du fournisseur.</p>}
         {canManage && <form className="space-y-3" onSubmit={event => {event.preventDefault();save.mutate();}}>
           <div className="space-y-1">
             <Label htmlFor="supplier-dossier-portfolio">Portefeuille fournisseur</Label>
