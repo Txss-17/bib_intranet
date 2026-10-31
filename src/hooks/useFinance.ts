@@ -20,9 +20,11 @@ export const useCashflows = (options?: {
   startDate?: string;
   endDate?: string;
   limit?: number;
+  enabled?: boolean;
 }) => {
   return useQuery({
     queryKey: ['cashflows', options],
+    enabled: options?.enabled !== false,
     queryFn: async () => {
       let query = supabase
         .from('cashflows')
