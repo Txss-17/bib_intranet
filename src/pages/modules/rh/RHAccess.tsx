@@ -234,6 +234,7 @@ const RHAccess = () => {
   const {
     data: employees = [],
     isLoading: employeesLoading,
+    isError: employeesError,
   } = useEmployees({});
 
   /* ==========================================================
@@ -273,6 +274,7 @@ const RHAccess = () => {
   const {
     data: roles = [],
     isLoading: rolesLoading,
+    isError: rolesError,
   } = useQuery({
     queryKey: ['rh-access-roles'],
     queryFn: async () => {
@@ -307,6 +309,7 @@ const RHAccess = () => {
   const {
     data: scopes = [],
     isLoading: scopesLoading,
+    isError: scopesError,
   } = useQuery({
     queryKey: ['rh-access-scopes'],
     queryFn: async () => {
@@ -350,6 +353,7 @@ const RHAccess = () => {
   const {
     data: assignments = [],
     isLoading: assignmentsLoading,
+    isError: assignmentsError,
   } = useQuery({
     queryKey: ['rh-access-assignments'],
     queryFn: async () => {
@@ -614,10 +618,11 @@ const RHAccess = () => {
     }
 
     return roles.filter((role) =>
+      !rolesError && !scopesError && !roleScopesError &&
       (role.role_key !== 'ceo' || isAdmin) &&
       roleMatchesEmployee(role, selectedEmployee),
     );
-  }, [roles, selectedEmployee, isAdmin]);
+  }, [roles, selectedEmployee, isAdmin, rolesError, scopesError, roleScopesError]);
 
 
   /* ==========================================================
@@ -785,7 +790,7 @@ const RHAccess = () => {
       return;
     }
 
-    if (roleScopesError || roleScopesLoading) {
+    if (rolesError || rolesLoading || scopesError || scopesLoading || assignmentsError || assignmentsLoading || employeesError || roleScopesError || roleScopesLoading) {
       toast({ title: 'Périmètres indisponibles', description: 'Impossible de vérifier le périmètre autorisé de ce rôle.', variant: 'destructive' });
       return;
     }
@@ -1767,6 +1772,7 @@ const RHAccess = () => {
                   setSelectedScopeValue('');
                 }}
                 disabled={
+                  rolesLoading || rolesError || scopesLoading || scopesError ||
                   !selectedEmployee ||
                   !canReceiveNewAccess(
                     selectedEmployee,
@@ -1823,7 +1829,7 @@ const RHAccess = () => {
                   setSelectedScopeId(value.slice(0, separator));
                   setSelectedScopeValue(value.slice(separator + 1));
                 }}
-                disabled={!selectedEmployee || !canReceiveNewAccess(selectedEmployee) || roleScopesLoading || roleScopesError}
+                disabled={!selectedEmployee || !canReceiveNewAccess(selectedEmployee) || rolesLoading || rolesError || scopesLoading || scopesError || roleScopesLoading || roleScopesError}
               >
                 <SelectTrigger><SelectValue placeholder="Périmètre défini pour ce rôle" /></SelectTrigger>
                 <SelectContent>
@@ -1900,6 +1906,8 @@ const RHAccess = () => {
               disabled={
                 saving ||
                 !selectedRoleId ||
+                rolesLoading || rolesError || scopesLoading || scopesError ||
+                assignmentsLoading || assignmentsError || employeesLoading || employeesError ||
                 roleScopesLoading || roleScopesError ||
                 (permittedScopeAssignments.length > 0 && selectedScopeId === 'none') ||
                 !user?.id ||

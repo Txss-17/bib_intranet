@@ -174,6 +174,7 @@ export const useEmployees = (
     ],
 
     queryFn: async () => {
+      const fetchPage = (cursor?: string) => {
       let query = from('profiles')
         .select(`
           id,
@@ -293,38 +294,28 @@ export const useEmployees = (
       // TRI + LIMITE
       // --------------------------------------------------------
 
-      query = query
-        .order(
-          'first_name',
-          {
-            ascending: true,
-          },
-        )
-        .order(
-          'last_name',
-          {
-            ascending: true,
-          },
-        )
-        .limit(
-          EMPLOYEES_PAGE_SIZE,
-        );
+      query = query.order('id', { ascending: true }).limit(EMPLOYEES_PAGE_SIZE);
+      if (cursor) query = query.gt('id', cursor);
+      return query;
+      };
 
-      // --------------------------------------------------------
-      // EXÉCUTION
-      // --------------------------------------------------------
-
-      const {
-        data,
-        error,
-      } = await query;
-
-      if (error) {
-        throw error;
+      const employees: Employee[] = [];
+      let cursor: string | undefined;
+      for (;;) {
+        const { data, error } = await fetchPage(cursor);
+        if (error) throw error;
+        const page = (data ?? []) as Employee[];
+        employees.push(...page);
+        if (page.length < EMPLOYEES_PAGE_SIZE) break;
+        const nextCursor = page[page.length - 1].id;
+        if (nextCursor === cursor) throw new Error('Pagination RH invalide : identifiant répété.');
+        cursor = nextCursor;
       }
 
-      let result =
-        (data ?? []) as Employee[];
+      let result = employees.sort((left, right) =>
+        (left.first_name ?? '').localeCompare(right.first_name ?? '', 'fr') ||
+        (left.last_name ?? '').localeCompare(right.last_name ?? '', 'fr')
+      );
 
       // --------------------------------------------------------
       // CATÉGORIE RH
