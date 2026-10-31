@@ -107,6 +107,7 @@ function form(pending = false) {
  const submitted = [], closed = [], agent = '10000000-0000-4000-8000-000000000008';
  const mocks = { react: { useState: value => [value, () => {}] },
   '@/hooks/useQualityAlerts': { useQualityPeople: () => ({ data: [{ id: agent, name: 'Auditeur' }] }), useQualityReferences: () => ({ data: { products: [], suppliers: [] } }) },
+  '@/hooks/usePoleCollaborators': { usePoleCollaborators: () => ({ data: [{ id: agent, first_name: 'Auditeur', last_name: '', eligible: true }], isLoading: false, isError: false }), collaboratorName: p => p.first_name },
   '@/components/operations/RecordAttachments': { default: 'RecordAttachments' },
  };
  for (const [file, names] of Object.entries({ button: ['Button'], input: ['Input'], label: ['Label'], textarea: ['Textarea'], dialog: ['Dialog', 'DialogContent', 'DialogHeader', 'DialogTitle'], select: ['Select', 'SelectContent', 'SelectItem', 'SelectTrigger', 'SelectValue'] })) mocks['@/components/ui/' + file] = Object.fromEntries(names.map(name => [name, name]));
