@@ -31,7 +31,7 @@ export default function Transactions() {
     </CardContent></Card>
     <Tabs defaultValue="ledger">
       <TabsList><TabsTrigger value="ledger">Écritures financières synchronisées</TabsTrigger><TabsTrigger value="review">Dossiers de contrôle</TabsTrigger></TabsList>
-      <TabsContent value="ledger"><FinancialOverview title="Registre des flux BIB" /></TabsContent>
+      <TabsContent value="ledger"><FinancialOverview title="Transactions importées de BIB Platform" mode="transactions" /></TabsContent>
       <TabsContent value="review"><ModuleWorkspace pageId="finance.transactions" /></TabsContent>
     </Tabs>
   </div>;
