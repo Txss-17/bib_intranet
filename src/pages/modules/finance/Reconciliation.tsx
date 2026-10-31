@@ -45,7 +45,7 @@ export default function Reconciliation() {
   const [sel, setSel] = useState<Item | null>(null);
   const [note, setNote] = useState('');
 
-  const { data: items = [], isLoading } = useQuery({
+  const { data: items = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['reconciliation'],
     queryFn: async () => {
       const { data, error } = await supabase.from('reconciliation_items')
@@ -90,8 +90,11 @@ export default function Reconciliation() {
     (!q || `${i.orders?.order_number ?? ''} ${i.shops?.name ?? ''}`.toLowerCase().includes(q.toLowerCase()))), [items, status, gap, q]);
 
   const count = (fn: (i: Item) => boolean) => items.filter(fn).length;
-  const gapTotal = items.filter((i) => ['gap', 'reviewing'].includes(i.status))
-    .reduce((s, i) => s + Math.abs(Number(i.order_amount) - Number(i.stripe_amount ?? 0)), 0);
+  // Missing Stripe receipts are unquantified gaps, never artificial 100% losses.
+  const pendingGaps = items.filter(i => ['gap', 'reviewing'].includes(i.status));
+  const unquantifiedGaps = pendingGaps.filter(i => i.stripe_amount == null).length;
+  const gapTotal = pendingGaps.filter(i => i.stripe_amount != null)
+    .reduce((total, i) => total + Math.abs(Number(i.order_amount) - Number(i.stripe_amount)), 0);
 
   return (
     <div className="space-y-6 p-6">
@@ -100,16 +103,23 @@ export default function Reconciliation() {
           <h1 className="flex items-center gap-2 text-2xl font-semibold"><GitCompare className="h-5 w-5" />Rapprochement</h1>
           <p className="text-sm text-muted-foreground">Commande B.I.B ↔ paiement Stripe ↔ facture ↔ reversement marchand. La commande B.I.B fait foi.</p>
         </div>
-        <Button onClick={() => run.mutate()} disabled={run.isPending}><RefreshCw className={`mr-2 h-4 w-4 ${run.isPending ? 'animate-spin' : ''}`} />Recalculer</Button>
+        <Button onClick={() => run.mutate()} disabled={run.isPending || isLoading}><RefreshCw className={`mr-2 h-4 w-4 ${run.isPending ? 'animate-spin' : ''}`} />Recalculer</Button>
       </div>
 
+      {isError && <div role="alert" className="rounded border p-3 text-sm text-destructive">
+        Impossible de charger le registre de rapprochement. Les indicateurs ci-dessous ne sont pas fiables.
+        <Button variant="outline" onClick={() => void refetch()}>Réessayer</Button>
+      </div>}
+      {unquantifiedGaps > 0 && !isError && <p className="text-xs text-muted-foreground">
+        {unquantifiedGaps} écart(s) sans montant Stripe vérifié : non inclus dans le total chiffré.
+      </p>}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         {[
-          ['Commandes analysées', items.length],
-          ['Rapprochées', count((i) => i.status === 'matched')],
-          ['Écarts à examiner', count((i) => i.status === 'gap')],
-          ['En examen', count((i) => i.status === 'reviewing')],
-          ['Écart Stripe cumulé', eur(gapTotal)],
+          ['Commandes analysées', isError ? 'Indisponible' : items.length],
+          ['Rapprochées', isError ? 'Indisponible' : count((i) => i.status === 'matched')],
+          ['Écarts à examiner', isError ? 'Indisponible' : count((i) => i.status === 'gap')],
+          ['En examen', isError ? 'Indisponible' : count((i) => i.status === 'reviewing')],
+          ['Écarts Stripe quantifiables', isError ? 'Indisponible' : eur(gapTotal)],
         ].map(([l, v]) => (
           <Card key={l as string}><CardContent className="p-4"><p className="text-xs text-muted-foreground">{l}</p><p className="text-2xl font-semibold">{v}</p></CardContent></Card>
         ))}
@@ -139,7 +149,7 @@ export default function Reconciliation() {
 
       <Card>
         <CardContent className="overflow-x-auto p-0">
-          {isLoading ? <p className="p-6 text-sm text-muted-foreground">Chargement…</p> : filtered.length === 0 ? (
+          {isLoading ? <p className="p-6 text-sm text-muted-foreground">Chargement…</p> : isError ? <p role="alert" className="p-6 text-sm text-destructive">Données indisponibles.</p> : filtered.length === 0 ? (
             <p className="p-6 text-sm text-muted-foreground">
               {items.length === 0 ? 'Aucune donnée : cliquez sur « Recalculer » une fois les commandes, paiements et factures reçus.' : 'Aucun écart pour ces filtres.'}
             </p>
