@@ -69,8 +69,8 @@ export default function PartnerPayouts() {
     <header>
       <h1 className="flex items-center gap-2 text-2xl font-semibold"><WalletCards className="h-6 w-6" />Paiements partenaires BIB</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Suivi financier séparé des versements marchands et des règlements fournisseurs.
-        La consultation n'exécute pas de paiement ni de remboursement : le statut doit être rapproché des preuves de règlement.
+        Suivi séparé des reversements aux marchands issus des commandes BIB et des règlements fournisseurs.
+        Une référence Stripe ne prouve pas à elle seule qu'un versement a été reçu : confirmer le type d'identifiant, le statut effectif et les justificatifs. Cette page ne déclenche aucun paiement ni remboursement.
       </p>
     </header>
     <div className="rounded-lg border p-3 text-sm text-muted-foreground">
