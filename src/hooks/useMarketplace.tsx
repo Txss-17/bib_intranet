@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { readAllPages } from '@/lib/operationsMetrics';
 import { toast } from 'sonner';
 
 export type Merchant = {
@@ -137,26 +139,19 @@ const SHOP_FIELDS = `
 `;
 
 export function useMarketplaceMerchants(search = '') {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: ['marketplace', 'merchants', search],
+    queryKey: ['marketplace', 'merchants', user?.id, profile?.test_account === true, search],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      let query = supabase
-        .from('user_accounts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (search.trim()) {
-        const term = search.trim();
-        query = query.or(
-          `company_name.ilike.%${term}%,contact_name.ilike.%${term}%,contact_email.ilike.%${term}%`,
-        );
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      return (data ?? []) as unknown as Merchant[];
+      const term = search.trim().replace(/[%,()]/g, ' ');
+      const rows = await readAllPages<Merchant>(cursor => {
+        let query = supabase.from('user_accounts').select('*').order('id').limit(500);
+        if (term) query = query.or(`company_name.ilike.%${term}%,contact_name.ilike.%${term}%,contact_email.ilike.%${term}%`);
+        if (cursor) query = query.gt('id', cursor);
+        return query;
+      });
+      return rows.sort((left, right) => (right.created_at ?? '').localeCompare(left.created_at ?? ''));
     },
   });
 }
@@ -198,17 +193,17 @@ export function useMerchantShops(merchantId?: string) {
 }
 
 export function useMarketplaceShops() {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: ['marketplace', 'shops'],
+    queryKey: ['marketplace', 'shops', user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('shops')
-        .select(SHOP_FIELDS)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      return (data ?? []) as MarketplaceShop[];
+      const rows = await readAllPages<MarketplaceShop>(cursor => {
+        let query = (supabase as any).from('shops').select(SHOP_FIELDS).order('id').limit(500);
+        if (cursor) query = query.gt('id', cursor);
+        return query;
+      });
+      return rows.sort((left, right) => (right.created_at ?? '').localeCompare(left.created_at ?? ''));
     },
   });
 }
@@ -597,30 +592,20 @@ export type MarketplaceProduct = {
 };
 
 export function useMarketplaceProducts() {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: ['marketplace', 'products'],
+    queryKey: ['marketplace', 'products', user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('products')
-        .select(`
-          id,
-          platform_id,
-          name,
-          sku,
-          category,
-          status,
-          shop_id,
-          unit_price,
-          currency,
-          platform_publish_status,
-          created_at,
-          updated_at
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      return (data ?? []) as MarketplaceProduct[];
+      const rows = await readAllPages<MarketplaceProduct>(cursor => {
+        let query = (supabase as any).from('products').select(`
+          id, platform_id, name, sku, category, status, shop_id, unit_price,
+          currency, platform_publish_status, created_at, updated_at
+        `).order('id').limit(500);
+        if (cursor) query = query.gt('id', cursor);
+        return query;
+      });
+      return rows.sort((left, right) => (right.created_at ?? '').localeCompare(left.created_at ?? ''));
     },
   });
 }

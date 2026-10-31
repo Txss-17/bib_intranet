@@ -1,5 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { readAllPages } from '@/lib/operationsMetrics';
 
 export type MarketplaceFavoriteType =
   | 'product'
@@ -100,77 +102,39 @@ const FAVORITE_FIELDS = `
   source
 `;
 
-export function useMarketplaceFavorites(
-  filters: MarketplaceFavoriteFilters = {},
-) {
-  const {
-    type = 'all',
-    platformUserId,
-    shopId,
-  } = filters;
-
+export function useMarketplaceFavorites(filters: MarketplaceFavoriteFilters = {}) {
+  const { user, profile } = useAuth();
+  const { type = 'all', platformUserId, shopId } = filters;
   return useQuery({
-    queryKey: [
-      'marketplace',
-      'favorites',
-      type,
-      platformUserId ?? null,
-      shopId ?? null,
-    ],
-
+    queryKey: ['marketplace', 'favorites', user?.id, profile?.test_account === true, type, platformUserId ?? null, shopId ?? null],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      let query = (supabase as any)
-        .from('marketplace_customer_favorites')
-        .select(FAVORITE_FIELDS)
-        .order('created_at', {
-          ascending: false,
-        });
-
-      if (type !== 'all') {
-        query = query.eq(
-          'favorite_type',
-          type,
-        );
-      }
-
-      if (platformUserId) {
-        query = query.eq(
-          'platform_user_id',
-          platformUserId,
-        );
-      }
-
-      if (shopId) {
-        query = query.eq(
-          'shop_id',
-          shopId,
-        );
-      }
-
-      const {
-        data,
-        error,
-      } = await query;
-
-      if (error) {
-        throw error;
-      }
-
-      return (
-        data ?? []
-      ) as MarketplaceCustomerFavorite[];
+      const rows = await readAllPages<MarketplaceCustomerFavorite>(cursor => {
+        let query = (supabase as any).from('marketplace_customer_favorites')
+          .select(FAVORITE_FIELDS).order('id').limit(500);
+        if (type !== 'all') query = query.eq('favorite_type', type);
+        if (platformUserId) query = query.eq('platform_user_id', platformUserId);
+        if (shopId) query = query.eq('shop_id', shopId);
+        if (cursor) query = query.gt('id', cursor);
+        return query;
+      });
+      return rows.sort((left, right) => right.created_at.localeCompare(left.created_at));
     },
   });
 }
 
 export function useMarketplaceFavoritesCount() {
+  const { user, profile } = useAuth();
   return useQuery({
     queryKey: [
       'marketplace',
       'favorites',
       'count',
+      user?.id,
+      profile?.test_account === true,
     ],
 
+    enabled: !!user && !!profile,
     queryFn: async () => {
       const {
         count,
@@ -194,51 +158,21 @@ export function useMarketplaceFavoritesCount() {
 }
 
 export function useMarketplaceFavoriteStats() {
+  const { user, profile } = useAuth();
   return useQuery({
-    queryKey: [
-      'marketplace',
-      'favorites',
-      'stats',
-    ],
-
+    queryKey: ['marketplace', 'favorites', 'stats', user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile,
     queryFn: async () => {
-      const {
-        data,
-        error,
-      } = await (supabase as any)
-        .from(
-          'marketplace_customer_favorites',
-        )
-        .select('favorite_type');
-
-      if (error) {
-        throw error;
-      }
-
-      let products = 0;
-      let boutiques = 0;
-
-      for (const favorite of data ?? []) {
-        if (
-          favorite.favorite_type ===
-          'product'
-        ) {
-          products += 1;
-        }
-
-        if (
-          favorite.favorite_type ===
-          'boutique'
-        ) {
-          boutiques += 1;
-        }
-      }
-
-      return {
-        total: products + boutiques,
-        products,
-        boutiques,
-      };
+      // Count all accessible favorite rows rather than just the default API page.
+      const rows = await readAllPages<{ id: string; favorite_type: string }>(cursor => {
+        let query = (supabase as any).from('marketplace_customer_favorites')
+          .select('id, favorite_type').order('id').limit(500);
+        if (cursor) query = query.gt('id', cursor);
+        return query;
+      });
+      const products = rows.filter(row => row.favorite_type === 'product').length;
+      const boutiques = rows.filter(row => row.favorite_type === 'boutique').length;
+      return { total: products + boutiques, products, boutiques };
     },
   });
 }
