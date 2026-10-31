@@ -46,14 +46,16 @@ function useSuppliers() {
 function AuditConformitySection({ supplierName }: { supplierName: string }) {
   const { data: audits = [], isLoading } = useSupplierAudits();
 
-  const supplierAudits = audits.filter(a =>
-    a.supplier.toLowerCase().includes(supplierName.toLowerCase().split(' ')[0])
-  );
+  // Legacy supplier_audits only stores a textual supplier name. Never match a
+  // single word: that could mix the audit history of unrelated companies.
+  const canonical = (name: string) => name.trim().replace(/\\s+/g, ' ').toLocaleLowerCase('fr');
+  const supplierAudits = audits.filter(a => canonical(a.supplier) === canonical(supplierName));
 
   const completedAudits = supplierAudits.filter(a => a.status === 'completed');
   const latestAudit = completedAudits.length > 0 ? completedAudits[0] : null;
-  const avgScore = completedAudits.length
-    ? Math.round(completedAudits.reduce((s, a) => s + (a.score || 0), 0) / completedAudits.length)
+  const scoredAudits = completedAudits.filter(a => a.score !== null && Number.isFinite(a.score));
+  const avgScore = scoredAudits.length
+    ? Math.round(scoredAudits.reduce((total,a) => total + (a.score ?? 0), 0) / scoredAudits.length)
     : null;
 
   const getAuditStatusBadge = (score: number | null) => {
@@ -88,6 +90,7 @@ function AuditConformitySection({ supplierName }: { supplierName: string }) {
 
       <div>
         <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Historique des audits</p>
+        <p className="mb-2 text-xs text-muted-foreground">Audits historiques rapprochés par nom exact ; une correspondance par identifiant fournisseur doit être confirmée avant toute décision.</p>
         {supplierAudits.length === 0 ? (
           <p className="text-sm text-muted-foreground italic">Aucun audit enregistré pour ce fournisseur.</p>
         ) : (
@@ -153,7 +156,8 @@ export default function SupplierFiles() {
   };
 
   const getRiskBadge = (score: number | null) => {
-    const s = score || 0;
+    if (score === null) return <Badge variant="secondary">Risque non évalué</Badge>;
+    const s = score;
     if (s >= 60) return <Badge variant="destructive">Risque élevé ({s})</Badge>;
     if (s >= 30) return <Badge variant="secondary" className="bg-warning/20 text-warning">Risque moyen ({s})</Badge>;
     return <Badge variant="outline" className="text-success border-success">Risque faible ({s})</Badge>;
