@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { BarChart3, Leaf, PackageCheck, Recycle, Star, ArrowUpRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -48,10 +48,19 @@ const show = (value: unknown) => value === null || value === undefined || value 
 export default function RseEvidencePage({ mode }: { mode: Mode }) {
   const d = views[mode];
   const { canViewPage } = usePermissions();
+  const allowed = canViewPage(d.id);
+  const [params, setParams] = useSearchParams();
+  const [tab, setTab] = useState(params.get('record') ? 'decisions' : 'evidence');
+  const openRecord = (id: string) => {
+    const next = new URLSearchParams(params);
+    next.set('record', id);
+    setParams(next, { replace: true });
+    setTab('decisions');
+  };
   const [search, setSearch] = useState('');
   const [offset, setOffset] = useState(0);
-  const query = useIntranetRecords(d.id, search, 'all', offset);
-  if (!canViewPage(d.id)) return <p role="alert">Accès à ce module RSE non autorisé.</p>;
+  const query = useIntranetRecords(d.id, search, 'all', offset, allowed);
+  if (!allowed) return <p role="alert">Accès à ce module RSE non autorisé.</p>;
   const Icon = d.Icon;
   const rows = query.data?.rows ?? [];
   return <div className="space-y-6">
@@ -61,7 +70,7 @@ export default function RseEvidencePage({ mode }: { mode: Mode }) {
       <p className="rounded-md border p-3 text-xs text-muted-foreground">{d.warning}</p>
       <Link to={d.next} className="inline-flex items-center gap-1 text-sm text-primary hover:underline">{d.nextLabel}<ArrowUpRight className="h-4 w-4" /></Link>
     </header>
-    <Tabs defaultValue="evidence">
+    <Tabs value={tab} onValueChange={setTab}>
       <TabsList>
         <TabsTrigger value="evidence">Mesures et preuves</TabsTrigger>
         <TabsTrigger value="decisions">Dossiers et validations</TabsTrigger>
@@ -86,6 +95,8 @@ export default function RseEvidencePage({ mode }: { mode: Mode }) {
               <p><strong>Quantité documentée :</strong> {row.payload.quantity == null || row.payload.quantity === '' ? 'Non confirmée' : String(row.payload.quantity)} {show(row.payload.unit)}</p>
               <p><strong>Méthode :</strong> {show(row.payload.method)}</p>
               <p><strong>Source :</strong> {show(row.payload.source)}</p>
+              <p><strong>État de validation :</strong> {row.status === "approved" ? "Dossier validé en interne (non certifié)" : "Donnée déclarée, non validée"}</p>
+              <Button variant="outline" size="sm" onClick={() => openRecord(row.id)}>Ouvrir le dossier et ses validations</Button>
               <p className="text-xs text-muted-foreground">Les totaux ne sont pas additionnés entre unités, méthodes et périmètres différents.</p>
             </CardContent>
           </Card>)}
@@ -93,8 +104,8 @@ export default function RseEvidencePage({ mode }: { mode: Mode }) {
         </div>}
         <div className="flex justify-end gap-2">
           <span className="self-center text-xs text-muted-foreground">Page {Math.floor(offset / 50) + 1} · résultats de la page uniquement</span>
-          <Button variant="outline" size="sm" disabled={!offset || query.isLoading} onClick={() => setOffset(Math.max(0, offset - 50))}>Précédent</Button>
-          <Button variant="outline" size="sm" disabled={!query.data?.has_more || query.isLoading} onClick={() => setOffset(v => v + 50)}>Suivant</Button>
+          <Button variant="outline" size="sm" disabled={!offset || query.isFetching || query.isError} onClick={() => setOffset(Math.max(0, offset - 50))}>Précédent</Button>
+          <Button variant="outline" size="sm" disabled={!query.data?.has_more || query.isFetching || query.isError} onClick={() => setOffset(v => v + 50)}>Suivant</Button>
         </div>
       </TabsContent>
       <TabsContent value="decisions" className="mt-4"><ModuleWorkspace pageId={d.id} /></TabsContent>
