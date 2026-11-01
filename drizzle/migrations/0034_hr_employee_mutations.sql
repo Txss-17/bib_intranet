@@ -1,3 +1,4 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS position_key text;
 -- Existing-account changes stay inside RH; they never invite or rebind an Auth account by email.
 ALTER TABLE public.hr_employee_requests
   ADD COLUMN IF NOT EXISTS request_kind text NOT NULL DEFAULT 'onboarding' CHECK (request_kind IN ('onboarding','mutation')),
