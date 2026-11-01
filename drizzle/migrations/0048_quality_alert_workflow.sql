@@ -23,6 +23,7 @@ ALTER TABLE public.quality_alerts
  ADD COLUMN IF NOT EXISTS change_note text;
 ALTER TABLE public.quality_alerts ALTER COLUMN is_nonconformity SET DEFAULT false,ALTER COLUMN approval_levels SET DEFAULT 1,ALTER COLUMN legacy_record SET DEFAULT false;
 ALTER TABLE public.quality_alerts DROP CONSTRAINT IF EXISTS quality_alerts_status_check;
+ALTER TABLE public.quality_alerts DROP CONSTRAINT IF EXISTS quality_alerts_status_check;
 ALTER TABLE public.quality_alerts ADD CONSTRAINT quality_alerts_status_check CHECK(status IN('open','investigating','resolved','reviewed','closed'));
 DROP TRIGGER IF EXISTS zz_intranet_business_guard ON public.quality_alerts;
 WITH modes AS(SELECT a.id,coalesce((SELECT p.test_account FROM public.profiles p WHERE p.id=a.reported_by),(SELECT p.test_account FROM public.profiles p WHERE p.id=a.assigned_to),false)AS mode FROM public.quality_alerts a)
