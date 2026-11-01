@@ -52,7 +52,7 @@ DO $$DECLARE t text;actor_column text;BEGIN
  FOREACH t IN ARRAY ARRAY['work_projects','work_processes','work_validations','work_escalations']LOOP
  EXECUTE format('ALTER TABLE public.%I ADD COLUMN IF NOT EXISTS revision bigint NOT NULL DEFAULT 1,ADD COLUMN IF NOT EXISTS test_account boolean NOT NULL DEFAULT false,ADD COLUMN IF NOT EXISTS archived_at timestamptz,ADD COLUMN IF NOT EXISTS updated_at timestamptz NOT NULL DEFAULT now(),ADD COLUMN IF NOT EXISTS creation_key uuid,ADD COLUMN IF NOT EXISTS creation_request jsonb,ADD COLUMN IF NOT EXISTS change_note text',t);
  actor_column:=CASE t WHEN 'work_validations'THEN 'requester_id'WHEN 'work_escalations'THEN 'raised_by'ELSE 'created_by'END;
- EXECUTE format('CREATE UNIQUE INDEX %I ON public.%I(%I,creation_key)WHERE creation_key IS NOT NULL',t||'_creation_retry',t,actor_column);
+ EXECUTE format('CREATE UNIQUE INDEX IF NOT EXISTS %I ON public.%I(%I,creation_key)WHERE creation_key IS NOT NULL',t||'_creation_retry',t,actor_column);
  EXECUTE format('DROP TRIGGER IF EXISTS zz_intranet_business_guard ON public.%I',t);
  -- Classify existing rows before exposing the new partition; test records must not become real work.
  EXECUTE format('UPDATE public.%I r SET test_account=coalesce((SELECT coalesce(p.test_account,false)FROM public.profiles p WHERE p.id=coalesce(r.%I,r.%I)),false)',t,actor_column,CASE t WHEN 'work_validations'THEN 'validator_id'WHEN 'work_escalations'THEN 'assigned_to'ELSE 'owner_id'END);
@@ -61,12 +61,14 @@ DO $$DECLARE t text;actor_column text;BEGIN
  EXECUTE format('CREATE POLICY work_no_physical_delete ON public.%I AS RESTRICTIVE FOR DELETE TO authenticated USING(false)',t);
  END LOOP;
 END $$;
+DROP POLICY IF EXISTS work_projects_team_read ON public.work_projects;
 CREATE POLICY work_projects_team_read ON public.work_projects FOR SELECT TO authenticated USING(public.can_intranet_action('work.projects','read')AND EXISTS(SELECT 1 FROM public.profiles p WHERE p.id=auth.uid()AND work_projects.pole=ANY(p.poles::text[])));
+DROP POLICY IF EXISTS work_processes_team_read ON public.work_processes;
 CREATE POLICY work_processes_team_read ON public.work_processes FOR SELECT TO authenticated USING(public.can_intranet_action('work.processes','read')AND((status='active'AND archived_at IS NULL AND(pole IS NULL OR EXISTS(SELECT 1 FROM public.profiles p WHERE p.id=auth.uid()AND work_processes.pole=ANY(p.poles::text[]))))OR(public.can_intranet_action('work.processes','publish')AND EXISTS(SELECT 1 FROM public.profiles p WHERE p.id=auth.uid()AND work_processes.pole=ANY(p.poles::text[])))));
 ALTER TABLE public.work_escalations ADD COLUMN IF NOT EXISTS resolution_note text;
 ALTER TABLE public.work_validations ADD COLUMN IF NOT EXISTS decided_by uuid REFERENCES public.profiles(id);
-CREATE TABLE public.work_module_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),kind text NOT NULL CHECK(kind IN ('projects','processes','validations','escalations')),record_id uuid NOT NULL,actor_id uuid REFERENCES public.profiles(id),action text NOT NULL,note text,before_state jsonb,after_state jsonb,created_at timestamptz NOT NULL DEFAULT now());
-CREATE INDEX work_module_events_record ON public.work_module_events(kind,record_id,created_at DESC);
+CREATE TABLE IF NOT EXISTS public.work_module_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),kind text NOT NULL CHECK(kind IN ('projects','processes','validations','escalations')),record_id uuid NOT NULL,actor_id uuid REFERENCES public.profiles(id),action text NOT NULL,note text,before_state jsonb,after_state jsonb,created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS work_module_events_record ON public.work_module_events(kind,record_id,created_at DESC);
 ALTER TABLE public.work_module_events ENABLE ROW LEVEL SECURITY;
 GRANT SELECT ON public.work_module_events TO authenticated;
 GRANT ALL ON public.work_module_events TO service_role;
@@ -76,6 +78,7 @@ DECLARE t text:=public.work_module_table(p_kind);found boolean;
 BEGIN IF t IS NULL OR NOT public.can_intranet_action('work.'||p_kind,'read')THEN RETURN false;END IF;
  EXECUTE format('SELECT EXISTS(SELECT 1 FROM public.%I WHERE id=$1)',t)INTO found USING p_id;RETURN found;END;
 $$;
+DROP POLICY IF EXISTS work_module_events_read ON public.work_module_events;
 CREATE POLICY work_module_events_read ON public.work_module_events FOR SELECT TO authenticated USING(public.can_read_work_module_record(kind,record_id));
 CREATE OR REPLACE FUNCTION public.list_work_module_people(p_kind text)
 RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$

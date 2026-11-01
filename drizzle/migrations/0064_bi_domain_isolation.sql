@@ -61,12 +61,15 @@ GRANT EXECUTE ON FUNCTION public.bib_data_domain_allowed(text,text) TO authentic
 
 -- BI dashboards: must have a domain that user may read. Existing unclassified
 -- dashboards remain owner-only, not shared across poles.
+DROP POLICY IF EXISTS bi_dashboards_domain_guard ON public.bi_dashboards;
 CREATE POLICY bi_dashboards_domain_guard ON public.bi_dashboards
   AS RESTRICTIVE FOR SELECT TO authenticated
   USING (
     (pole_id IS NOT NULL AND target_filiale IS NOT NULL AND public.bib_data_domain_allowed(pole_id,target_filiale))
     OR ((pole_id IS NULL OR target_filiale IS NULL) AND owner_id=auth.uid())
   );
+
+DROP POLICY IF EXISTS bi_dashboards_domain_write_guard ON public.bi_dashboards;
 
 CREATE POLICY bi_dashboards_domain_write_guard ON public.bi_dashboards
   AS RESTRICTIVE FOR ALL TO authenticated
@@ -80,6 +83,7 @@ CREATE POLICY bi_dashboards_domain_write_guard ON public.bi_dashboards
   );
 
 -- Every widget inherits exactly its parent dashboard's domain.
+DROP POLICY IF EXISTS bi_widgets_domain_guard ON public.bi_dashboard_widgets;
 CREATE POLICY bi_widgets_domain_guard ON public.bi_dashboard_widgets
   AS RESTRICTIVE FOR SELECT TO authenticated
   USING (
@@ -92,6 +96,7 @@ CREATE POLICY bi_widgets_domain_guard ON public.bi_dashboard_widgets
         )
     )
   );
+DROP POLICY IF EXISTS bi_widgets_domain_write_guard ON public.bi_dashboard_widgets;
 CREATE POLICY bi_widgets_domain_write_guard ON public.bi_dashboard_widgets
   AS RESTRICTIVE FOR ALL TO authenticated
   USING (
@@ -117,6 +122,7 @@ CREATE POLICY bi_widgets_domain_write_guard ON public.bi_dashboard_widgets
 
 -- Sources without a classified domain cannot become shared through a generic
 -- Data permission. Ownership is not a substitute for domain authorization.
+DROP POLICY IF EXISTS bi_sources_domain_guard ON public.bi_data_sources;
 CREATE POLICY bi_sources_domain_guard ON public.bi_data_sources
   AS RESTRICTIVE FOR SELECT TO authenticated
   USING (
@@ -124,6 +130,7 @@ CREATE POLICY bi_sources_domain_guard ON public.bi_data_sources
       AND public.bib_data_domain_allowed(business_pole,business_subsidiary))
     OR (business_pole IS NULL AND owner_id=auth.uid())
   );
+DROP POLICY IF EXISTS bi_sources_domain_write_guard ON public.bi_data_sources;
 CREATE POLICY bi_sources_domain_write_guard ON public.bi_data_sources
   AS RESTRICTIVE FOR ALL TO authenticated
   USING (
@@ -138,6 +145,7 @@ CREATE POLICY bi_sources_domain_write_guard ON public.bi_data_sources
 
 -- KPI can be shared with several poles, but each selected pole must be within
 -- the assigned rights. No generic published-KPI access across divisions.
+DROP POLICY IF EXISTS kpi_catalog_domain_guard ON public.kpi_catalog;
 CREATE POLICY kpi_catalog_domain_guard ON public.kpi_catalog
   AS RESTRICTIVE FOR SELECT TO authenticated
   USING (
@@ -147,6 +155,7 @@ CREATE POLICY kpi_catalog_domain_guard ON public.kpi_catalog
     ))
     OR (coalesce(cardinality(pole_access),0)=0 AND owner_id=auth.uid())
   );
+DROP POLICY IF EXISTS kpi_catalog_domain_write_guard ON public.kpi_catalog;
 CREATE POLICY kpi_catalog_domain_write_guard ON public.kpi_catalog
   AS RESTRICTIVE FOR ALL TO authenticated
   USING (

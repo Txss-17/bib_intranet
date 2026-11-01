@@ -1,6 +1,6 @@
 -- Specialize the existing 28 module workspaces; never delete historical fields/records.
 -- Apply on staged environments after 0052_restore_existing_account_access.sql.
-BEGIN;
+-- BEGIN; (managed by migrator)
 DO $$ BEGIN
  IF (SELECT count(*) FROM public.intranet_modules WHERE page_id = ANY(ARRAY['finance.transactions','finance.billing','finance.subscriptions','finance.guarantee','marketing.content','marketing.analytics','audit.reports','audit.sanctions','compliance.policies','compliance.risks','rse.packaging','rse.recycling','rse.co2','rse.esg','product.studio','product.integrations','product.documentation','product.innovation','security.infrastructure','security.environments','security.vpn','marketing.podcasts','rse.points','security.code','security.console','security.documentation','support.compliance','support.onboarding']::text[])) <> 28
  THEN RAISE EXCEPTION 'Missing prerequisite intranet modules for specialization'; END IF;
@@ -43,4 +43,4 @@ FROM (VALUES
   ('support.onboarding', '[{"key":"account","label":"Compte ou organisation accompagnée","type":"text","required":true},{"key":"category","label":"Parcours partenaire","type":"text","required":false},{"key":"issue","label":"Étape bloquante","type":"textarea","required":true},{"key":"resolution","label":"Plan de résolution","type":"textarea","required":false},{"key":"sla_date","label":"Échéance de prise en charge","type":"date","required":false},{"key":"platform_reference","label":"Identifiant Platform","type":"text","required":false},{"key":"next_step","label":"Prochaine étape","type":"text","required":false},{"key":"contact_channel","label":"Canal de contact","type":"text","required":false},{"key":"completion_evidence","label":"Preuve de finalisation","type":"text","required":false}]'::jsonb, 'Suivi des étapes d''accompagnement et des blocages d''intégration des partenaires.', 'Un dossier Support ne crée ni compte marchand ni fournisseur ; les identités restent contrôlées par Platform et les procédures RH concernées.', 'suivi d''onboarding')
 ) AS specification(id, fields, description, operational_note, record_label)
 WHERE m.page_id = specification.id;
-COMMIT;
+-- COMMIT; (managed by migrator)

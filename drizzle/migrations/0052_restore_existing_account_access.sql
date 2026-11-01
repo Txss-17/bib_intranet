@@ -9,7 +9,7 @@ RETURNS boolean LANGUAGE sql IMMUTABLE SET search_path=public,pg_temp AS $$
 $$;
 REVOKE ALL ON FUNCTION public.intranet_known_legacy_position(text)FROM PUBLIC,anon,authenticated;
 
-CREATE TABLE public.intranet_legacy_access_repairs(
+CREATE TABLE IF NOT EXISTS public.intranet_legacy_access_repairs(
  profile_id uuid PRIMARY KEY REFERENCES public.profiles(id),reason text NOT NULL,
  before_state jsonb NOT NULL,after_state jsonb NOT NULL,repaired_at timestamptz NOT NULL DEFAULT now());
 ALTER TABLE public.intranet_legacy_access_repairs ENABLE ROW LEVEL SECURITY;

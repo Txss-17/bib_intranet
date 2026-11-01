@@ -25,6 +25,7 @@ BEGIN
  RETURN NEW;
 END;$$;
 DROP TRIGGER IF EXISTS guard_notification_owner_update ON public.notifications;
+DROP TRIGGER IF EXISTS guard_notification_owner_update ON public.notifications;
 CREATE TRIGGER guard_notification_owner_update BEFORE UPDATE ON public.notifications
  FOR EACH ROW EXECUTE FUNCTION public.guard_notification_owner();
 
@@ -69,6 +70,7 @@ BEGIN
  RETURN NULL;
 END;$$;
 REVOKE ALL ON FUNCTION public.fanout_legacy_notification() FROM PUBLIC,anon,authenticated;
+DROP TRIGGER IF EXISTS notification_legacy_fanout_20261031 ON public.notifications;
 DROP TRIGGER IF EXISTS notification_legacy_fanout_20261031 ON public.notifications;
 CREATE TRIGGER notification_legacy_fanout_20261031
  AFTER INSERT ON public.notifications

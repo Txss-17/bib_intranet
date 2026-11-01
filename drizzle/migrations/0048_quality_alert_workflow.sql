@@ -23,12 +23,13 @@ ALTER TABLE public.quality_alerts
  ADD COLUMN IF NOT EXISTS change_note text;
 ALTER TABLE public.quality_alerts ALTER COLUMN is_nonconformity SET DEFAULT false,ALTER COLUMN approval_levels SET DEFAULT 1,ALTER COLUMN legacy_record SET DEFAULT false;
 ALTER TABLE public.quality_alerts DROP CONSTRAINT IF EXISTS quality_alerts_status_check;
+ALTER TABLE public.quality_alerts DROP CONSTRAINT IF EXISTS quality_alerts_status_check;
 ALTER TABLE public.quality_alerts ADD CONSTRAINT quality_alerts_status_check CHECK(status IN('open','investigating','resolved','reviewed','closed'));
 DROP TRIGGER IF EXISTS zz_intranet_business_guard ON public.quality_alerts;
 WITH modes AS(SELECT a.id,coalesce((SELECT p.test_account FROM public.profiles p WHERE p.id=a.reported_by),(SELECT p.test_account FROM public.profiles p WHERE p.id=a.assigned_to),false)AS mode FROM public.quality_alerts a)
 UPDATE public.quality_alerts a SET test_account=m.mode FROM modes m WHERE a.id=m.id AND a.test_account IS DISTINCT FROM m.mode;
-CREATE UNIQUE INDEX quality_alert_creation_retry ON public.quality_alerts(reported_by,creation_key)WHERE creation_key IS NOT NULL;
-CREATE INDEX quality_alert_queue ON public.quality_alerts(test_account,is_nonconformity,status,created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS quality_alert_creation_retry ON public.quality_alerts(reported_by,creation_key)WHERE creation_key IS NOT NULL;
+CREATE INDEX IF NOT EXISTS quality_alert_queue ON public.quality_alerts(test_account,is_nonconformity,status,created_at DESC);
 GRANT SELECT,INSERT,UPDATE ON public.quality_alerts TO authenticated;
 GRANT ALL ON public.quality_alerts TO service_role;
 CREATE OR REPLACE FUNCTION public.quality_action_for(p_actor uuid,p_action text)RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
@@ -43,9 +44,13 @@ DROP POLICY IF EXISTS intranet_read_boundary ON public.quality_alerts;
 CREATE POLICY intranet_read_boundary ON public.quality_alerts AS RESTRICTIVE FOR SELECT TO authenticated USING(public.quality_action('read'));
 DROP POLICY IF EXISTS intranet_update_boundary ON public.quality_alerts;
 CREATE POLICY intranet_update_boundary ON public.quality_alerts AS RESTRICTIVE FOR UPDATE TO authenticated USING(public.quality_action('read')AND(public.quality_action('update')OR public.quality_action('validate')OR public.quality_action('delete')))WITH CHECK(public.quality_action('read')AND(public.quality_action('update')OR public.quality_action('validate')OR public.quality_action('delete')));
+DROP POLICY IF EXISTS quality_staff_read ON public.quality_alerts;
 CREATE POLICY quality_staff_read ON public.quality_alerts FOR SELECT TO authenticated USING(public.quality_action('read'));
+DROP POLICY IF EXISTS quality_staff_create ON public.quality_alerts;
 CREATE POLICY quality_staff_create ON public.quality_alerts FOR INSERT TO authenticated WITH CHECK(public.quality_action('read')AND public.quality_action('create'));
+DROP POLICY IF EXISTS quality_staff_update ON public.quality_alerts;
 CREATE POLICY quality_staff_update ON public.quality_alerts FOR UPDATE TO authenticated USING(public.quality_action('read')AND(public.quality_action('update')OR public.quality_action('validate')OR public.quality_action('delete')));
+DROP POLICY IF EXISTS quality_no_physical_delete ON public.quality_alerts;
 CREATE POLICY quality_no_physical_delete ON public.quality_alerts AS RESTRICTIVE FOR DELETE TO authenticated USING(false);
 
 CREATE OR REPLACE FUNCTION public.check_quality_references()RETURNS trigger LANGUAGE plpgsql SECURITY INVOKER SET search_path=public,pg_temp AS $$
@@ -56,6 +61,7 @@ BEGIN
  IF NEW.product_id IS NOT NULL AND NEW.supplier_id IS NOT NULL AND(TG_OP='INSERT'OR NEW.product_id IS DISTINCT FROM OLD.product_id OR NEW.supplier_id IS DISTINCT FROM OLD.supplier_id)AND(SELECT supplier_id FROM public.products WHERE id=NEW.product_id)IS DISTINCT FROM NEW.supplier_id THEN RAISE EXCEPTION 'quality_product_supplier_mismatch' USING ERRCODE='22023';END IF;
  RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS quality_references ON public.quality_alerts;
 CREATE TRIGGER quality_references BEFORE INSERT OR UPDATE OF supplier_id,product_id ON public.quality_alerts FOR EACH ROW EXECUTE FUNCTION public.check_quality_references();
 CREATE OR REPLACE FUNCTION public.guard_quality_alert_write()RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE actor uuid:=auth.uid();before jsonb;after jsonb:=to_jsonb(NEW);manager boolean;claim boolean;changed boolean;review boolean;returning_for_changes boolean;required integer;field text;document uuid;
@@ -127,6 +133,7 @@ BEGIN
  END LOOP;
  NEW.title:=btrim(NEW.title);NEW.description:=btrim(NEW.description);NEW.updated_at:=clock_timestamp();RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS zz_quality_alert_guard ON public.quality_alerts;
 CREATE TRIGGER zz_quality_alert_guard BEFORE INSERT OR UPDATE ON public.quality_alerts FOR EACH ROW EXECUTE FUNCTION public.guard_quality_alert_write();
 
 CREATE OR REPLACE FUNCTION public.can_read_intranet_drive_document(p public.intranet_drive_documents)RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
@@ -135,13 +142,16 @@ CREATE OR REPLACE FUNCTION public.can_read_intranet_drive_document(p public.intr
  OR public.is_intranet_document_recipient(p.id)OR EXISTS(SELECT 1 FROM public.intranet_records r WHERE p.id=ANY(r.document_ids)AND public.can_read_intranet_record(r))
  OR EXISTS(SELECT 1 FROM public.quality_alerts a WHERE p.id=ANY(a.document_ids)AND public.can_read_quality_alert(a)));
 $$;
-CREATE TABLE public.quality_alert_comments(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),alert_id uuid NOT NULL REFERENCES public.quality_alerts(id),actor_id uuid NOT NULL REFERENCES public.profiles(id)DEFAULT auth.uid(),body text NOT NULL CHECK(length(btrim(body))BETWEEN 1 AND 5000),created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.quality_alert_comments(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),alert_id uuid NOT NULL REFERENCES public.quality_alerts(id),actor_id uuid NOT NULL REFERENCES public.profiles(id)DEFAULT auth.uid(),body text NOT NULL CHECK(length(btrim(body))BETWEEN 1 AND 5000),created_at timestamptz NOT NULL DEFAULT now());
 ALTER TABLE public.quality_alert_comments ENABLE ROW LEVEL SECURITY;
 GRANT SELECT,INSERT ON public.quality_alert_comments TO authenticated;
 GRANT ALL ON public.quality_alert_comments TO service_role;
-CREATE INDEX quality_comments_parent ON public.quality_alert_comments(alert_id,created_at);
+CREATE INDEX IF NOT EXISTS quality_comments_parent ON public.quality_alert_comments(alert_id,created_at);
+DROP POLICY IF EXISTS quality_comments_read ON public.quality_alert_comments;
 CREATE POLICY quality_comments_read ON public.quality_alert_comments FOR SELECT TO authenticated USING(EXISTS(SELECT 1 FROM public.quality_alerts a WHERE a.id=alert_id));
+DROP POLICY IF EXISTS quality_comments_add ON public.quality_alert_comments;
 CREATE POLICY quality_comments_add ON public.quality_alert_comments FOR INSERT TO authenticated WITH CHECK(actor_id=auth.uid()AND(public.quality_action('update')OR public.quality_action('validate'))AND EXISTS(SELECT 1 FROM public.quality_alerts a WHERE a.id=alert_id AND a.archived_at IS NULL AND a.status<>'closed'));
+DROP TRIGGER IF EXISTS quality_comment_stamp ON public.quality_alert_comments;
 CREATE TRIGGER quality_comment_stamp BEFORE INSERT ON public.quality_alert_comments FOR EACH ROW EXECUTE FUNCTION public.stamp_support_note();
 -- stamp_support_note only reads NEW.body and NEW.created_at and is shared with append-only internal notes.
 
@@ -220,6 +230,7 @@ DECLARE recipient uuid;url text;BEGIN
  url:=CASE WHEN public.can_intranet_action_for(recipient,'supplier.alerts','read')THEN '/pole/supplier/alerts'ELSE '/pole/audit/nonconformities'END||'?alert='||NEW.id::text;
  INSERT INTO public.notifications(user_id,title,message,type,action_url,metadata)VALUES(recipient,'Suivi qualité mis à jour',NEW.title,'info',url,jsonb_build_object('source','quality_alert','alert_id',NEW.id));END IF;RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS quality_notifications ON public.quality_alerts;
 CREATE TRIGGER quality_notifications AFTER INSERT OR UPDATE ON public.quality_alerts FOR EACH ROW EXECUTE FUNCTION public.notify_quality_change();
 INSERT INTO public.intranet_business_history(table_name,row_id,actor_id,action,after_state,test_account)SELECT 'quality_alerts',a.id::text,NULL,'imported',to_jsonb(a),a.test_account FROM public.quality_alerts a WHERE NOT EXISTS(SELECT 1 FROM public.intranet_business_history h WHERE h.table_name='quality_alerts'AND h.row_id=a.id::text);
 REVOKE ALL ON FUNCTION public.check_quality_references(),public.guard_quality_alert_write(),public.notify_quality_change()FROM PUBLIC,anon,authenticated;

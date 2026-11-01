@@ -151,7 +151,7 @@ export default function Reconciliation() {
         <CardContent className="overflow-x-auto p-0">
           {isLoading ? <p className="p-6 text-sm text-muted-foreground">Chargement…</p> : isError ? <p role="alert" className="p-6 text-sm text-destructive">Données indisponibles.</p> : filtered.length === 0 ? (
             <p className="p-6 text-sm text-muted-foreground">
-              {items.length === 0 ? 'Aucune donnée rapprochable reçue. Vérifiez d'abord la synchronisation des commandes, événements Stripe, factures et reversements, puis cliquez sur « Recalculer ».' : 'Aucun écart pour ces filtres.'}
+              {items.length === 0 ? "Aucune donnée rapprochable reçue. Vérifiez d'abord la synchronisation des commandes, événements Stripe, factures et reversements, puis cliquez sur « Recalculer »." : 'Aucun écart pour ces filtres.'}
             </p>
           ) : (
             <table className="w-full text-sm">

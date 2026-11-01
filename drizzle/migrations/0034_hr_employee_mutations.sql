@@ -1,3 +1,4 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS position_key text;
 -- Existing-account changes stay inside RH; they never invite or rebind an Auth account by email.
 ALTER TABLE public.hr_employee_requests
   ADD COLUMN IF NOT EXISTS request_kind text NOT NULL DEFAULT 'onboarding' CHECK (request_kind IN ('onboarding','mutation')),
@@ -375,16 +376,20 @@ $$;
 --> statement-breakpoint
 -- Existing permissive onboarding policies must not allow clients to forge a mutation.
 DROP POLICY IF EXISTS "Mutation requests read boundary" ON public.hr_employee_requests;
+DROP POLICY IF EXISTS "Mutation requests read boundary" ON public.hr_employee_requests;
 CREATE POLICY "Mutation requests read boundary" ON public.hr_employee_requests AS RESTRICTIVE FOR SELECT TO authenticated
 USING(request_kind<>'mutation' OR public.can_hr_employee_mutation_action('read'));
+DROP POLICY IF EXISTS "Mutation requests insert via RPC" ON public.hr_employee_requests;
 DROP POLICY IF EXISTS "Mutation requests insert via RPC" ON public.hr_employee_requests;
 CREATE POLICY "Mutation requests insert via RPC" ON public.hr_employee_requests AS RESTRICTIVE FOR INSERT TO authenticated
 WITH CHECK(request_kind='onboarding' AND target_user_id IS NULL AND mutation_creation_key IS NULL
   AND mutation_snapshot='{}'::jsonb AND cardinality(mutation_replace_assignment_ids)=0 AND mutation_result_assignment_id IS NULL);
 DROP POLICY IF EXISTS "Mutation requests update via RPC" ON public.hr_employee_requests;
+DROP POLICY IF EXISTS "Mutation requests update via RPC" ON public.hr_employee_requests;
 CREATE POLICY "Mutation requests update via RPC" ON public.hr_employee_requests AS RESTRICTIVE FOR UPDATE TO authenticated
 USING(request_kind='onboarding') WITH CHECK(request_kind='onboarding' AND target_user_id IS NULL AND mutation_creation_key IS NULL
   AND mutation_snapshot='{}'::jsonb AND cardinality(mutation_replace_assignment_ids)=0 AND mutation_result_assignment_id IS NULL);
+DROP POLICY IF EXISTS "Mutation requests delete boundary" ON public.hr_employee_requests;
 DROP POLICY IF EXISTS "Mutation requests delete boundary" ON public.hr_employee_requests;
 CREATE POLICY "Mutation requests delete boundary" ON public.hr_employee_requests AS RESTRICTIVE FOR DELETE TO authenticated
 USING(request_kind='onboarding');

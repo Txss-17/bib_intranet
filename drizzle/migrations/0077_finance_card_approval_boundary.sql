@@ -28,6 +28,7 @@ BEGIN
  RETURN NEW;
 END $$;
 DROP TRIGGER IF EXISTS guard_finance_card_decision ON public.corporate_card_transactions;
+DROP TRIGGER IF EXISTS guard_finance_card_decision ON public.corporate_card_transactions;
 CREATE TRIGGER guard_finance_card_decision BEFORE UPDATE ON public.corporate_card_transactions
  FOR EACH ROW EXECUTE FUNCTION public.guard_finance_card_decision();
 
@@ -42,6 +43,7 @@ BEGIN
  END IF;
  RETURN NULL;
 END $$;
+DROP TRIGGER IF EXISTS audit_finance_card_decision ON public.corporate_card_transactions;
 DROP TRIGGER IF EXISTS audit_finance_card_decision ON public.corporate_card_transactions;
 CREATE TRIGGER audit_finance_card_decision AFTER UPDATE ON public.corporate_card_transactions
  FOR EACH ROW EXECUTE FUNCTION public.audit_finance_card_decision();

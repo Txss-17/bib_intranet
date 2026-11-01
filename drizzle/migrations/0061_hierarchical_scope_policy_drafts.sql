@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS public.access_role_scope_policy_drafts (
 ALTER TABLE public.access_role_scope_policy_drafts ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.access_role_scope_policy_drafts FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON public.access_role_scope_policy_drafts TO authenticated;
+DROP POLICY IF EXISTS hierarchical_policy_drafts_admin_read ON public.access_role_scope_policy_drafts;
 CREATE POLICY hierarchical_policy_drafts_admin_read ON public.access_role_scope_policy_drafts
   FOR SELECT TO authenticated
   USING (public.has_role(auth.uid(), 'admin'::public.app_role));

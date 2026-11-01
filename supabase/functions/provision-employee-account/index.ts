@@ -797,7 +797,7 @@ Deno.serve(
               request.manager_id ??
               null,
             work_mode:
-              request.work_mode ?? null,
+              (request.work_mode === 'onsite' ? 'office' : request.work_mode) ?? null,
             subsidiary:
               request.subsidiary ?? null,
           })

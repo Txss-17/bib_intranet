@@ -28,8 +28,10 @@ ALTER TABLE public.access_scope_regions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.access_scope_portfolios ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.access_scope_regions,public.access_scope_portfolios FROM PUBLIC,anon,authenticated;
 GRANT SELECT ON public.access_scope_regions,public.access_scope_portfolios TO authenticated;
+DROP POLICY IF EXISTS access_scope_regions_admin_read ON public.access_scope_regions;
 CREATE POLICY access_scope_regions_admin_read ON public.access_scope_regions
   FOR SELECT TO authenticated USING (public.has_role(auth.uid(),'admin'::public.app_role));
+DROP POLICY IF EXISTS access_scope_portfolios_admin_read ON public.access_scope_portfolios;
 CREATE POLICY access_scope_portfolios_admin_read ON public.access_scope_portfolios
   FOR SELECT TO authenticated USING (public.has_role(auth.uid(),'admin'::public.app_role));
 

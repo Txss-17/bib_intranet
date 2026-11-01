@@ -469,6 +469,77 @@ export type Database = {
         }
         Relationships: []
       }
+      access_scope_portfolios: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          pole: string
+          portfolio_id: string
+          status: string
+          subsidiary: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          pole: string
+          portfolio_id: string
+          status?: string
+          subsidiary: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          pole?: string
+          portfolio_id?: string
+          status?: string
+          subsidiary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_scope_portfolios_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "access_business_portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      access_scope_regions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          label: string
+          pole: string
+          region_code: string
+          status: string
+          subsidiary: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label: string
+          pole: string
+          region_code: string
+          status?: string
+          subsidiary: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          label?: string
+          pole?: string
+          region_code?: string
+          status?: string
+          subsidiary?: string
+        }
+        Relationships: []
+      }
       access_scopes: {
         Row: {
           created_at: string
@@ -670,141 +741,156 @@ export type Database = {
       }
       anomalies: {
         Row: {
-          revision: number
-          test_account: boolean
-          legacy_record: boolean
-          team: string
-          corrective_action: string | null
-          evidence: string | null
-          resolution: string | null
-          document_ids: string[]
-          completed_checks: string[]
-          resolved_by: string | null
-          closed_by: string | null
-          closure_kind: string | null
-          archived_at: string | null
-          change_note: string | null
-          creation_key: string | null
-          creation_request: Json | null
           ai_decision: string | null
           ai_suggestion: Json | null
           ai_validated_at: string | null
           ai_validated_by: string | null
+          archived_at: string | null
           category: string | null
+          change_note: string | null
           checks: Json
           closed_at: string | null
+          closed_by: string | null
+          closure_kind: string | null
+          completed_checks: string[]
+          corrective_action: string | null
           created_at: string
           created_by: string | null
+          creation_key: string | null
+          creation_request: Json | null
           description: string | null
+          document_ids: string[]
           due_at: string | null
+          evidence: string | null
           id: string
           last_reminded_at: string | null
+          legacy_record: boolean
           object_id: string | null
           object_type: string | null
           owner_id: string | null
           reference: string
           reminder_at: string | null
+          resolution: string | null
           resolved_at: string | null
+          resolved_by: string | null
+          revision: number
           severity: string
           source: string
           status: string
+          team: string
+          test_account: boolean
           title: string
           type: string
           updated_at: string
         }
         Insert: {
-          revision?: number
-          test_account?: boolean
-          legacy_record?: boolean
-          team?: string
-          corrective_action?: string | null
-          evidence?: string | null
-          resolution?: string | null
-          document_ids?: string[]
-          completed_checks?: string[]
-          resolved_by?: string | null
-          closed_by?: string | null
-          closure_kind?: string | null
-          archived_at?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           ai_decision?: string | null
           ai_suggestion?: Json | null
           ai_validated_at?: string | null
           ai_validated_by?: string | null
+          archived_at?: string | null
           category?: string | null
+          change_note?: string | null
           checks?: Json
           closed_at?: string | null
+          closed_by?: string | null
+          closure_kind?: string | null
+          completed_checks?: string[]
+          corrective_action?: string | null
           created_at?: string
           created_by?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           description?: string | null
+          document_ids?: string[]
           due_at?: string | null
+          evidence?: string | null
           id?: string
           last_reminded_at?: string | null
+          legacy_record?: boolean
           object_id?: string | null
           object_type?: string | null
           owner_id?: string | null
           reference?: string
           reminder_at?: string | null
+          resolution?: string | null
           resolved_at?: string | null
+          resolved_by?: string | null
+          revision?: number
           severity?: string
           source: string
           status?: string
+          team?: string
+          test_account?: boolean
           title: string
           type: string
           updated_at?: string
         }
         Update: {
-          revision?: number
-          test_account?: boolean
-          legacy_record?: boolean
-          team?: string
-          corrective_action?: string | null
-          evidence?: string | null
-          resolution?: string | null
-          document_ids?: string[]
-          completed_checks?: string[]
-          resolved_by?: string | null
-          closed_by?: string | null
-          closure_kind?: string | null
-          archived_at?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           ai_decision?: string | null
           ai_suggestion?: Json | null
           ai_validated_at?: string | null
           ai_validated_by?: string | null
+          archived_at?: string | null
           category?: string | null
+          change_note?: string | null
           checks?: Json
           closed_at?: string | null
+          closed_by?: string | null
+          closure_kind?: string | null
+          completed_checks?: string[]
+          corrective_action?: string | null
           created_at?: string
           created_by?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           description?: string | null
+          document_ids?: string[]
           due_at?: string | null
+          evidence?: string | null
           id?: string
           last_reminded_at?: string | null
+          legacy_record?: boolean
           object_id?: string | null
           object_type?: string | null
           owner_id?: string | null
           reference?: string
           reminder_at?: string | null
+          resolution?: string | null
           resolved_at?: string | null
+          resolved_by?: string | null
+          revision?: number
           severity?: string
           source?: string
           status?: string
+          team?: string
+          test_account?: boolean
           title?: string
           type?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "anomalies_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "anomalies_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       anomaly_events: {
         Row: {
-          before_state: Json | null
           after_state: Json | null
           anomaly_id: string
+          before_state: Json | null
           created_at: string
           from_status: string | null
           id: string
@@ -814,9 +900,9 @@ export type Database = {
           to_status: string | null
         }
         Insert: {
-          before_state?: Json | null
           after_state?: Json | null
           anomaly_id: string
+          before_state?: Json | null
           created_at?: string
           from_status?: string | null
           id?: string
@@ -826,9 +912,9 @@ export type Database = {
           to_status?: string | null
         }
         Update: {
-          before_state?: Json | null
           after_state?: Json | null
           anomaly_id?: string
+          before_state?: Json | null
           created_at?: string
           from_status?: string | null
           id?: string
@@ -1259,6 +1345,8 @@ export type Database = {
       }
       bi_data_sources: {
         Row: {
+          business_pole: string | null
+          business_subsidiary: string | null
           config: Json
           created_at: string
           description: string | null
@@ -1269,6 +1357,8 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          business_pole?: string | null
+          business_subsidiary?: string | null
           config?: Json
           created_at?: string
           description?: string | null
@@ -1279,6 +1369,8 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          business_pole?: string | null
+          business_subsidiary?: string | null
           config?: Json
           created_at?: string
           description?: string | null
@@ -1322,6 +1414,126 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      bib_case_portfolio_members: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          ended_at: string | null
+          entity_id: string
+          entity_kind: string
+          id: string
+          portfolio_id: string
+          reason: string | null
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          ended_at?: string | null
+          entity_id: string
+          entity_kind: string
+          id?: string
+          portfolio_id: string
+          reason?: string | null
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          ended_at?: string | null
+          entity_id?: string
+          entity_kind?: string
+          id?: string
+          portfolio_id?: string
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_case_portfolio_members_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "bib_case_portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_case_portfolio_owner_events: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_owner_id: string | null
+          portfolio_id: string
+          previous_owner_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_owner_id?: string | null
+          portfolio_id: string
+          previous_owner_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_owner_id?: string | null
+          portfolio_id?: string
+          previous_owner_id?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_case_portfolio_owner_events_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "bib_case_portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_case_portfolios: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          owner_id: string | null
+          pole: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          owner_id?: string | null
+          pole: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          owner_id?: string | null
+          pole?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_case_portfolios_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       bugs: {
         Row: {
@@ -2350,32 +2562,31 @@ export type Database = {
       }
       field_audits: {
         Row: {
-          revision: number
-          created_by: string | null
-          test_account: boolean
-          decided_by: string | null
-          closed_by: string | null
-          correction_evidence: string | null
-          change_note: string | null
-          creation_key: string | null
-          creation_request: Json | null
           anomaly_id: string | null
           app_origin: string
           assigned_at: string | null
           audit_type: string
           auditor_id: string | null
+          change_note: string | null
           closed_at: string | null
+          closed_by: string | null
           completed_date: string | null
+          correction_evidence: string | null
           corrective_action: string | null
           corrective_due_date: string | null
           created_at: string | null
+          created_by: string | null
+          creation_key: string | null
+          creation_request: Json | null
           decided_at: string | null
+          decided_by: string | null
           decision_reason: string | null
           field_started_at: string | null
           findings: string | null
           id: string
           mission_reference: string | null
           recommendations: string | null
+          revision: number
           scheduled_date: string | null
           score: number | null
           status: string | null
@@ -2383,36 +2594,36 @@ export type Database = {
           target_id: string | null
           target_name: string | null
           target_type: string
+          test_account: boolean
           updated_at: string | null
           workflow_status: string
         }
         Insert: {
-          revision?: number
-          created_by?: string | null
-          test_account?: boolean
-          decided_by?: string | null
-          closed_by?: string | null
-          correction_evidence?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           anomaly_id?: string | null
           app_origin?: string
           assigned_at?: string | null
           audit_type: string
           auditor_id?: string | null
+          change_note?: string | null
           closed_at?: string | null
+          closed_by?: string | null
           completed_date?: string | null
+          correction_evidence?: string | null
           corrective_action?: string | null
           corrective_due_date?: string | null
           created_at?: string | null
+          created_by?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           decided_at?: string | null
+          decided_by?: string | null
           decision_reason?: string | null
           field_started_at?: string | null
           findings?: string | null
           id?: string
           mission_reference?: string | null
           recommendations?: string | null
+          revision?: number
           scheduled_date?: string | null
           score?: number | null
           status?: string | null
@@ -2420,36 +2631,36 @@ export type Database = {
           target_id?: string | null
           target_name?: string | null
           target_type: string
+          test_account?: boolean
           updated_at?: string | null
           workflow_status?: string
         }
         Update: {
-          revision?: number
-          created_by?: string | null
-          test_account?: boolean
-          decided_by?: string | null
-          closed_by?: string | null
-          correction_evidence?: string | null
-          change_note?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
           anomaly_id?: string | null
           app_origin?: string
           assigned_at?: string | null
           audit_type?: string
           auditor_id?: string | null
+          change_note?: string | null
           closed_at?: string | null
+          closed_by?: string | null
           completed_date?: string | null
+          correction_evidence?: string | null
           corrective_action?: string | null
           corrective_due_date?: string | null
           created_at?: string | null
+          created_by?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           decided_at?: string | null
+          decided_by?: string | null
           decision_reason?: string | null
           field_started_at?: string | null
           findings?: string | null
           id?: string
           mission_reference?: string | null
           recommendations?: string | null
+          revision?: number
           scheduled_date?: string | null
           score?: number | null
           status?: string | null
@@ -2457,6 +2668,7 @@ export type Database = {
           target_id?: string | null
           target_name?: string | null
           target_type?: string
+          test_account?: boolean
           updated_at?: string | null
           workflow_status?: string
         }
@@ -2468,7 +2680,94 @@ export type Database = {
             referencedRelation: "anomalies"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "field_audits_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_audits_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "field_audits_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      finance_invoice_register: {
+        Row: {
+          amount_excl_tax: number
+          counterparty: string
+          created_at: string
+          currency: string
+          description: string
+          direction: string
+          document_reference: string
+          due_date: string | null
+          id: string
+          invoice_number: string
+          issue_date: string
+          origin: string
+          payment_date: string | null
+          payment_reference: string | null
+          recorded_by: string
+          status: string
+          tax_amount: number
+          total_amount: number | null
+          updated_at: string
+        }
+        Insert: {
+          amount_excl_tax: number
+          counterparty: string
+          created_at?: string
+          currency?: string
+          description: string
+          direction: string
+          document_reference: string
+          due_date?: string | null
+          id?: string
+          invoice_number: string
+          issue_date: string
+          origin?: string
+          payment_date?: string | null
+          payment_reference?: string | null
+          recorded_by: string
+          status?: string
+          tax_amount?: number
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Update: {
+          amount_excl_tax?: number
+          counterparty?: string
+          created_at?: string
+          currency?: string
+          description?: string
+          direction?: string
+          document_reference?: string
+          due_date?: string | null
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          origin?: string
+          payment_date?: string | null
+          payment_reference?: string | null
+          recorded_by?: string
+          status?: string
+          tax_amount?: number
+          total_amount?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       fundraising_rounds: {
         Row: {
@@ -2825,7 +3124,11 @@ export type Database = {
           id: string
           last_name: string
           manager_id: string | null
+          mutation_creation_key: string | null
           mutation_of: string | null
+          mutation_replace_assignment_ids: string[]
+          mutation_result_assignment_id: string | null
+          mutation_snapshot: Json
           notes: string | null
           personal_email: string | null
           poles: string[]
@@ -2834,11 +3137,13 @@ export type Database = {
           primary_pole: string | null
           reference: string
           rejection_reason: string | null
+          request_kind: string
           requested_role: string
           seniority: string
           start_date: string | null
           status: string
           subsidiary: string | null
+          target_user_id: string | null
           updated_at: string
           work_email: string | null
           work_mode: string | null
@@ -2858,7 +3163,11 @@ export type Database = {
           id?: string
           last_name: string
           manager_id?: string | null
+          mutation_creation_key?: string | null
           mutation_of?: string | null
+          mutation_replace_assignment_ids?: string[]
+          mutation_result_assignment_id?: string | null
+          mutation_snapshot?: Json
           notes?: string | null
           personal_email?: string | null
           poles?: string[]
@@ -2867,11 +3176,13 @@ export type Database = {
           primary_pole?: string | null
           reference?: string
           rejection_reason?: string | null
+          request_kind?: string
           requested_role: string
           seniority?: string
           start_date?: string | null
           status?: string
           subsidiary?: string | null
+          target_user_id?: string | null
           updated_at?: string
           work_email?: string | null
           work_mode?: string | null
@@ -2891,7 +3202,11 @@ export type Database = {
           id?: string
           last_name?: string
           manager_id?: string | null
+          mutation_creation_key?: string | null
           mutation_of?: string | null
+          mutation_replace_assignment_ids?: string[]
+          mutation_result_assignment_id?: string | null
+          mutation_snapshot?: Json
           notes?: string | null
           personal_email?: string | null
           poles?: string[]
@@ -2900,11 +3215,13 @@ export type Database = {
           primary_pole?: string | null
           reference?: string
           rejection_reason?: string | null
+          request_kind?: string
           requested_role?: string
           seniority?: string
           start_date?: string | null
           status?: string
           subsidiary?: string | null
+          target_user_id?: string | null
           updated_at?: string
           work_email?: string | null
           work_mode?: string | null
@@ -2915,6 +3232,20 @@ export type Database = {
             columns: ["mutation_of"]
             isOneToOne: false
             referencedRelation: "hr_employee_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employee_requests_mutation_result_assignment_id_fkey"
+            columns: ["mutation_result_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "access_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_employee_requests_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2963,6 +3294,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      hr_onboarding_invitation_claims: {
+        Row: {
+          consumed_at: string | null
+          consumed_user_id: string | null
+          email: string
+          expires_at: string
+          issued_at: string
+          issued_by: string
+          nonce: string
+          request_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          consumed_user_id?: string | null
+          email: string
+          expires_at: string
+          issued_at?: string
+          issued_by: string
+          nonce: string
+          request_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          consumed_user_id?: string | null
+          email?: string
+          expires_at?: string
+          issued_at?: string
+          issued_by?: string
+          nonce?: string
+          request_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_onboarding_invitation_claims_issued_by_fkey"
+            columns: ["issued_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hr_onboarding_invitation_claims_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "hr_employee_requests"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hr_record_events: {
         Row: {
@@ -3117,6 +3496,806 @@ export type Database = {
           read?: boolean | null
           subject?: string
           to_pole?: Database["public"]["Enums"]["pole_id"]
+        }
+        Relationships: []
+      }
+      intranet_business_history: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string
+          id: string
+          row_id: string | null
+          table_name: string
+          test_account: boolean
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          row_id?: string | null
+          table_name: string
+          test_account?: boolean
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          row_id?: string | null
+          table_name?: string
+          test_account?: boolean
+        }
+        Relationships: []
+      }
+      intranet_business_tables: {
+        Row: {
+          page_ids: string[]
+          read_page_ids: string[]
+          shared_platform: boolean
+          table_name: string
+        }
+        Insert: {
+          page_ids: string[]
+          read_page_ids?: string[]
+          shared_platform?: boolean
+          table_name: string
+        }
+        Update: {
+          page_ids?: string[]
+          read_page_ids?: string[]
+          shared_platform?: boolean
+          table_name?: string
+        }
+        Relationships: []
+      }
+      intranet_document_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          details: Json
+          document_id: string | null
+          id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          details?: Json
+          document_id?: string | null
+          id?: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          details?: Json
+          document_id?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intranet_document_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_document_events_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "intranet_drive_documents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intranet_document_jobs: {
+        Row: {
+          actor_id: string
+          created_at: string
+          error_code: string | null
+          file_id: string | null
+          id: string
+          kind: string
+          lease_token: string
+          lease_until: string
+          metadata: Json
+          page_id: string
+          request_hash: string
+          request_key: string
+          result: Json | null
+          shortcut_id: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          error_code?: string | null
+          file_id?: string | null
+          id?: string
+          kind: string
+          lease_token?: string
+          lease_until?: string
+          metadata: Json
+          page_id: string
+          request_hash: string
+          request_key: string
+          result?: Json | null
+          shortcut_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          error_code?: string | null
+          file_id?: string | null
+          id?: string
+          kind?: string
+          lease_token?: string
+          lease_until?: string
+          metadata?: Json
+          page_id?: string
+          request_hash?: string
+          request_key?: string
+          result?: Json | null
+          shortcut_id?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intranet_document_jobs_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_document_jobs_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "intranet_modules"
+            referencedColumns: ["page_id"]
+          },
+        ]
+      }
+      intranet_drive_documents: {
+        Row: {
+          classification: string
+          created_at: string
+          file_id: string
+          id: string
+          job_id: string | null
+          mime_type: string
+          name: string
+          owner_id: string
+          page_id: string
+          size_bytes: number
+          test_account: boolean
+        }
+        Insert: {
+          classification: string
+          created_at?: string
+          file_id: string
+          id?: string
+          job_id?: string | null
+          mime_type: string
+          name: string
+          owner_id: string
+          page_id: string
+          size_bytes?: number
+          test_account?: boolean
+        }
+        Update: {
+          classification?: string
+          created_at?: string
+          file_id?: string
+          id?: string
+          job_id?: string | null
+          mime_type?: string
+          name?: string
+          owner_id?: string
+          page_id?: string
+          size_bytes?: number
+          test_account?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intranet_drive_documents_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: true
+            referencedRelation: "intranet_document_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_drive_documents_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_drive_documents_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "intranet_modules"
+            referencedColumns: ["page_id"]
+          },
+        ]
+      }
+      intranet_email_dispatch: {
+        Row: {
+          created_at: string
+          dispatch_key: string
+          message_id: string
+          outbox_id: string | null
+          payload: Json
+          provider_id: string | null
+          recipient: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          dispatch_key: string
+          message_id: string
+          outbox_id?: string | null
+          payload: Json
+          provider_id?: string | null
+          recipient: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          dispatch_key?: string
+          message_id?: string
+          outbox_id?: string | null
+          payload?: Json
+          provider_id?: string | null
+          recipient?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intranet_email_dispatch_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "intranet_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intranet_ethics_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          note: string | null
+          submission_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          note?: string | null
+          submission_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intranet_ethics_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_ethics_events_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "whistleblower_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intranet_legacy_access_repairs: {
+        Row: {
+          after_state: Json
+          before_state: Json
+          profile_id: string
+          reason: string
+          repaired_at: string
+        }
+        Insert: {
+          after_state: Json
+          before_state: Json
+          profile_id: string
+          reason: string
+          repaired_at?: string
+        }
+        Update: {
+          after_state?: Json
+          before_state?: Json
+          profile_id?: string
+          reason?: string
+          repaired_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intranet_legacy_access_repairs_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intranet_modules: {
+        Row: {
+          definition: Json
+          page_id: string
+        }
+        Insert: {
+          definition: Json
+          page_id: string
+        }
+        Update: {
+          definition?: Json
+          page_id?: string
+        }
+        Relationships: []
+      }
+      intranet_outbox: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          body: string
+          created_at: string
+          created_by: string
+          decision_note: string | null
+          gmail_references: string | null
+          gmail_thread_id: string | null
+          id: string
+          in_reply_to: string | null
+          queued_at: string | null
+          recipients: string[]
+          request_key: string
+          source_message_id: string | null
+          status: string
+          subject: string
+          test_account: boolean
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          body: string
+          created_at?: string
+          created_by: string
+          decision_note?: string | null
+          gmail_references?: string | null
+          gmail_thread_id?: string | null
+          id?: string
+          in_reply_to?: string | null
+          queued_at?: string | null
+          recipients: string[]
+          request_key: string
+          source_message_id?: string | null
+          status?: string
+          subject: string
+          test_account?: boolean
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          body?: string
+          created_at?: string
+          created_by?: string
+          decision_note?: string | null
+          gmail_references?: string | null
+          gmail_thread_id?: string | null
+          id?: string
+          in_reply_to?: string | null
+          queued_at?: string | null
+          recipients?: string[]
+          request_key?: string
+          source_message_id?: string | null
+          status?: string
+          subject?: string
+          test_account?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intranet_outbox_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_outbox_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_outbox_source_message_id_fkey"
+            columns: ["source_message_id"]
+            isOneToOne: false
+            referencedRelation: "external_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intranet_outbox_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          kind: string
+          note: string | null
+          outbox_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind: string
+          note?: string | null
+          outbox_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          outbox_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intranet_outbox_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_outbox_events_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: false
+            referencedRelation: "intranet_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intranet_record_events: {
+        Row: {
+          actor_id: string
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string
+          id: string
+          kind: string
+          note: string | null
+          record_id: string
+        }
+        Insert: {
+          actor_id: string
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          kind: string
+          note?: string | null
+          record_id: string
+        }
+        Update: {
+          actor_id?: string
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intranet_record_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_record_events_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "intranet_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intranet_records: {
+        Row: {
+          approved_by: string | null
+          created_at: string
+          created_by: string
+          creation_key: string
+          creation_request: Json
+          dispute_approved_at: string | null
+          dispute_change_note: string | null
+          dispute_legacy: boolean | null
+          dispute_opened_at: string | null
+          dispute_reference: string | null
+          dispute_required_reviews: number | null
+          dispute_reviewed_at: string | null
+          dispute_submitted_at: string | null
+          dispute_submitted_by: string | null
+          dispute_transition_key: string | null
+          document_ids: string[]
+          due_date: string | null
+          first_reviewer: string | null
+          id: string
+          owner_id: string | null
+          page_id: string
+          payload: Json
+          priority: string
+          revision: number
+          status: string
+          test_account: boolean
+          title: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string
+          created_by: string
+          creation_key: string
+          creation_request: Json
+          dispute_approved_at?: string | null
+          dispute_change_note?: string | null
+          dispute_legacy?: boolean | null
+          dispute_opened_at?: string | null
+          dispute_reference?: string | null
+          dispute_required_reviews?: number | null
+          dispute_reviewed_at?: string | null
+          dispute_submitted_at?: string | null
+          dispute_submitted_by?: string | null
+          dispute_transition_key?: string | null
+          document_ids?: string[]
+          due_date?: string | null
+          first_reviewer?: string | null
+          id?: string
+          owner_id?: string | null
+          page_id: string
+          payload?: Json
+          priority?: string
+          revision?: number
+          status?: string
+          test_account: boolean
+          title: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string
+          creation_key?: string
+          creation_request?: Json
+          dispute_approved_at?: string | null
+          dispute_change_note?: string | null
+          dispute_legacy?: boolean | null
+          dispute_opened_at?: string | null
+          dispute_reference?: string | null
+          dispute_required_reviews?: number | null
+          dispute_reviewed_at?: string | null
+          dispute_submitted_at?: string | null
+          dispute_submitted_by?: string | null
+          dispute_transition_key?: string | null
+          document_ids?: string[]
+          due_date?: string | null
+          first_reviewer?: string | null
+          id?: string
+          owner_id?: string | null
+          page_id?: string
+          payload?: Json
+          priority?: string
+          revision?: number
+          status?: string
+          test_account?: boolean
+          title?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intranet_records_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_records_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_records_dispute_submitted_by_fkey"
+            columns: ["dispute_submitted_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_records_first_reviewer_fkey"
+            columns: ["first_reviewer"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_records_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_records_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "intranet_modules"
+            referencedColumns: ["page_id"]
+          },
+        ]
+      }
+      intranet_share_requests: {
+        Row: {
+          approved_by: string | null
+          created_at: string
+          decided_at: string | null
+          decision_note: string | null
+          document_id: string
+          id: string
+          reason: string
+          recipient: string
+          release_file_id: string | null
+          released_at: string | null
+          requested_by: string
+          status: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decision_note?: string | null
+          document_id: string
+          id?: string
+          reason: string
+          recipient: string
+          release_file_id?: string | null
+          released_at?: string | null
+          requested_by: string
+          status?: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decision_note?: string | null
+          document_id?: string
+          id?: string
+          reason?: string
+          recipient?: string
+          release_file_id?: string | null
+          released_at?: string | null
+          requested_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "intranet_share_requests_approved_by_fkey"
+            columns: ["approved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_share_requests_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "intranet_drive_documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "intranet_share_requests_requested_by_fkey"
+            columns: ["requested_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      intranet_test_identity_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+          kind: string
+          role_key: string
+          target_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          role_key: string
+          target_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          role_key?: string
+          target_id?: string
+        }
+        Relationships: []
+      }
+      intranet_test_role_specs: {
+        Row: {
+          email: string
+          label: string
+          poles: string[]
+          position: string
+          role_key: string
+          seniority: string
+        }
+        Insert: {
+          email: string
+          label: string
+          poles: string[]
+          position: string
+          role_key: string
+          seniority: string
+        }
+        Update: {
+          email?: string
+          label?: string
+          poles?: string[]
+          position?: string
+          role_key?: string
+          seniority?: string
         }
         Relationships: []
       }
@@ -3510,6 +4689,56 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_customer_favorites: {
+        Row: {
+          created_at: string
+          favorite_type: string
+          id: string
+          platform_boutique_id: string | null
+          platform_synced_at: string
+          platform_target_id: string
+          platform_user_id: string
+          shop_id: string | null
+          source: string
+          target_name: string | null
+          target_sku: string | null
+        }
+        Insert: {
+          created_at?: string
+          favorite_type: string
+          id?: string
+          platform_boutique_id?: string | null
+          platform_synced_at?: string
+          platform_target_id: string
+          platform_user_id: string
+          shop_id?: string | null
+          source?: string
+          target_name?: string | null
+          target_sku?: string | null
+        }
+        Update: {
+          created_at?: string
+          favorite_type?: string
+          id?: string
+          platform_boutique_id?: string | null
+          platform_synced_at?: string
+          platform_target_id?: string
+          platform_user_id?: string
+          shop_id?: string | null
+          source?: string
+          target_name?: string | null
+          target_sku?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_customer_favorites_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       media_attachments: {
         Row: {
           created_at: string | null
@@ -3628,6 +4857,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "merchant_portfolio_assignments_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_portfolios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_portfolio_owner_events: {
+        Row: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_owner_id: string | null
+          portfolio_id: string
+          previous_owner_id: string | null
+          reason: string | null
+        }
+        Insert: {
+          changed_at?: string
+          changed_by: string
+          id?: string
+          new_owner_id?: string | null
+          portfolio_id: string
+          previous_owner_id?: string | null
+          reason?: string | null
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string
+          id?: string
+          new_owner_id?: string | null
+          portfolio_id?: string
+          previous_owner_id?: string | null
+          reason?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_portfolio_owner_events_portfolio_id_fkey"
             columns: ["portfolio_id"]
             isOneToOne: false
             referencedRelation: "merchant_portfolios"
@@ -4181,6 +5448,184 @@ export type Database = {
         }
         Relationships: []
       }
+      platform_boutique_products: {
+        Row: {
+          intranet_product_id: string
+          platform_boutique_id: string
+          platform_product_id: string
+          platform_supplier_product_id: string
+          platform_synced_at: string
+          public_price: number | null
+          public_status: string | null
+          shop_id: string
+        }
+        Insert: {
+          intranet_product_id: string
+          platform_boutique_id: string
+          platform_product_id: string
+          platform_supplier_product_id: string
+          platform_synced_at?: string
+          public_price?: number | null
+          public_status?: string | null
+          shop_id: string
+        }
+        Update: {
+          intranet_product_id?: string
+          platform_boutique_id?: string
+          platform_product_id?: string
+          platform_supplier_product_id?: string
+          platform_synced_at?: string
+          public_price?: number | null
+          public_status?: string | null
+          shop_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_boutique_products_intranet_product_id_fkey"
+            columns: ["intranet_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "platform_boutique_products_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_bridge_state: {
+        Row: {
+          name: string
+          snapshot_at: string
+        }
+        Insert: {
+          name: string
+          snapshot_at: string
+        }
+        Update: {
+          name?: string
+          snapshot_at?: string
+        }
+        Relationships: []
+      }
+      platform_customization_requests: {
+        Row: {
+          id: string
+          intranet_product_id: string
+          merchant_config: Json
+          platform_dossier_id: string
+          platform_product_id: string
+          source_updated_at: string
+          supplier_comment: string | null
+          supplier_status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          id?: string
+          intranet_product_id: string
+          merchant_config?: Json
+          platform_dossier_id: string
+          platform_product_id: string
+          source_updated_at: string
+          supplier_comment?: string | null
+          supplier_status: string
+          updated_at?: string
+          version: number
+        }
+        Update: {
+          id?: string
+          intranet_product_id?: string
+          merchant_config?: Json
+          platform_dossier_id?: string
+          platform_product_id?: string
+          source_updated_at?: string
+          supplier_comment?: string | null
+          supplier_status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_customization_requests_intranet_product_id_fkey"
+            columns: ["intranet_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_stock_restock_requests: {
+        Row: {
+          boutique_name: string | null
+          catalog_moq: number
+          created_at: string
+          id: string
+          note: string | null
+          platform_boutique_id: string
+          platform_product_id: string
+          platform_request_id: string
+          platform_supplier_product_id: string
+          platform_synced_at: string
+          product_id: string
+          product_name: string
+          requested_quantity: number
+          review_comment: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          boutique_name?: string | null
+          catalog_moq: number
+          created_at: string
+          id?: string
+          note?: string | null
+          platform_boutique_id: string
+          platform_product_id: string
+          platform_request_id: string
+          platform_supplier_product_id: string
+          platform_synced_at?: string
+          product_id: string
+          product_name: string
+          requested_quantity: number
+          review_comment?: string | null
+          status: string
+          updated_at: string
+          version: number
+        }
+        Update: {
+          boutique_name?: string | null
+          catalog_moq?: number
+          created_at?: string
+          id?: string
+          note?: string | null
+          platform_boutique_id?: string
+          platform_product_id?: string
+          platform_request_id?: string
+          platform_supplier_product_id?: string
+          platform_synced_at?: string
+          product_id?: string
+          product_name?: string
+          requested_quantity?: number
+          review_comment?: string | null
+          status?: string
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "platform_stock_restock_requests_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       platform_sync_runs: {
         Row: {
           action: string
@@ -4587,6 +6032,8 @@ export type Database = {
           category: string | null
           created_at: string
           currency: string | null
+          customization_capabilities: Json
+          customization_terms: Json
           description: string | null
           dimensions: string | null
           gallery: string[] | null
@@ -4623,6 +6070,8 @@ export type Database = {
           category?: string | null
           created_at?: string
           currency?: string | null
+          customization_capabilities?: Json
+          customization_terms?: Json
           description?: string | null
           dimensions?: string | null
           gallery?: string[] | null
@@ -4659,6 +6108,8 @@ export type Database = {
           category?: string | null
           created_at?: string
           currency?: string | null
+          customization_capabilities?: Json
+          customization_terms?: Json
           description?: string | null
           dimensions?: string | null
           gallery?: string[] | null
@@ -4714,6 +6165,7 @@ export type Database = {
           manager_id: string | null
           poles: Database["public"]["Enums"]["pole_id"][] | null
           position: Database["public"]["Enums"]["employee_position"] | null
+          position_key: string | null
           seniority: string | null
           subsidiary: string | null
           test_account: boolean
@@ -4733,6 +6185,7 @@ export type Database = {
           manager_id?: string | null
           poles?: Database["public"]["Enums"]["pole_id"][] | null
           position?: Database["public"]["Enums"]["employee_position"] | null
+          position_key?: string | null
           seniority?: string | null
           subsidiary?: string | null
           test_account?: boolean
@@ -4752,6 +6205,7 @@ export type Database = {
           manager_id?: string | null
           poles?: Database["public"]["Enums"]["pole_id"][] | null
           position?: Database["public"]["Enums"]["employee_position"] | null
+          position_key?: string | null
           seniority?: string | null
           subsidiary?: string | null
           test_account?: boolean
@@ -4931,115 +6385,175 @@ export type Database = {
           },
         ]
       }
+      quality_alert_comments: {
+        Row: {
+          actor_id: string
+          alert_id: string
+          body: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          actor_id?: string
+          alert_id: string
+          body: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string
+          alert_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quality_alert_comments_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_alert_comments_alert_id_fkey"
+            columns: ["alert_id"]
+            isOneToOne: false
+            referencedRelation: "quality_alerts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       quality_alerts: {
         Row: {
-          revision: number
-          test_account: boolean
-          is_nonconformity: boolean
           approval_levels: number
-          legacy_record: boolean
-          origin_page: string | null
-          creation_key: string | null
-          creation_request: Json | null
+          archived_at: string | null
+          assigned_to: string | null
+          change_note: string | null
+          closed_at: string | null
+          closed_by: string | null
           corrective_action: string | null
           corrective_due_date: string | null
-          evidence: string | null
-          document_ids: string[]
-          resolved_by: string | null
-          first_reviewer: string | null
-          reviewed_at: string | null
-          closed_by: string | null
-          closed_at: string | null
-          archived_at: string | null
-          change_note: string | null
-          assigned_to: string | null
           created_at: string
+          creation_key: string | null
+          creation_request: Json | null
           description: string
+          document_ids: string[]
+          evidence: string | null
+          first_reviewer: string | null
           id: string
+          is_nonconformity: boolean
+          legacy_record: boolean
+          origin_page: string | null
           product_id: string | null
           reported_by: string | null
           resolution_notes: string | null
           resolved_at: string | null
+          resolved_by: string | null
+          reviewed_at: string | null
+          revision: number
           severity: string
           status: string
           supplier_id: string | null
+          test_account: boolean
           title: string
           updated_at: string
         }
         Insert: {
-          revision?: number
-          test_account?: boolean
-          is_nonconformity?: boolean
           approval_levels?: number
-          legacy_record?: boolean
-          origin_page?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
+          archived_at?: string | null
+          assigned_to?: string | null
+          change_note?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           corrective_action?: string | null
           corrective_due_date?: string | null
-          evidence?: string | null
-          document_ids?: string[]
-          resolved_by?: string | null
-          first_reviewer?: string | null
-          reviewed_at?: string | null
-          closed_by?: string | null
-          closed_at?: string | null
-          archived_at?: string | null
-          change_note?: string | null
-          assigned_to?: string | null
           created_at?: string
+          creation_key?: string | null
+          creation_request?: Json | null
           description: string
+          document_ids?: string[]
+          evidence?: string | null
+          first_reviewer?: string | null
           id?: string
+          is_nonconformity?: boolean
+          legacy_record?: boolean
+          origin_page?: string | null
           product_id?: string | null
           reported_by?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
+          resolved_by?: string | null
+          reviewed_at?: string | null
+          revision?: number
           severity: string
           status?: string
           supplier_id?: string | null
+          test_account?: boolean
           title: string
           updated_at?: string
         }
         Update: {
-          revision?: number
-          test_account?: boolean
-          is_nonconformity?: boolean
           approval_levels?: number
-          legacy_record?: boolean
-          origin_page?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
+          archived_at?: string | null
+          assigned_to?: string | null
+          change_note?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           corrective_action?: string | null
           corrective_due_date?: string | null
-          evidence?: string | null
-          document_ids?: string[]
-          resolved_by?: string | null
-          first_reviewer?: string | null
-          reviewed_at?: string | null
-          closed_by?: string | null
-          closed_at?: string | null
-          archived_at?: string | null
-          change_note?: string | null
-          assigned_to?: string | null
           created_at?: string
+          creation_key?: string | null
+          creation_request?: Json | null
           description?: string
+          document_ids?: string[]
+          evidence?: string | null
+          first_reviewer?: string | null
           id?: string
+          is_nonconformity?: boolean
+          legacy_record?: boolean
+          origin_page?: string | null
           product_id?: string | null
           reported_by?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
+          resolved_by?: string | null
+          reviewed_at?: string | null
+          revision?: number
           severity?: string
           status?: string
           supplier_id?: string | null
+          test_account?: boolean
           title?: string
           updated_at?: string
         }
         Relationships: [
           {
+            foreignKeyName: "quality_alerts_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_alerts_first_reviewer_fkey"
+            columns: ["first_reviewer"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "quality_alerts_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quality_alerts_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
           {
@@ -5452,6 +6966,107 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      sav_escalation_queue: {
+        Row: {
+          acknowledged_at: string | null
+          assigned_to: string | null
+          closed_at: string | null
+          created_at: string
+          due_at: string
+          environment: string
+          escalated_at: string
+          issue_id: string
+          platform_boutique_id: string
+          platform_merchant_id: string
+          platform_order_id: string
+          reason: string
+          resolution_note: string | null
+          status: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          assigned_to?: string | null
+          closed_at?: string | null
+          created_at?: string
+          due_at: string
+          environment: string
+          escalated_at: string
+          issue_id: string
+          platform_boutique_id: string
+          platform_merchant_id: string
+          platform_order_id: string
+          reason?: string
+          resolution_note?: string | null
+          status?: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          assigned_to?: string | null
+          closed_at?: string | null
+          created_at?: string
+          due_at?: string
+          environment?: string
+          escalated_at?: string
+          issue_id?: string
+          platform_boutique_id?: string
+          platform_merchant_id?: string
+          platform_order_id?: string
+          reason?: string
+          resolution_note?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sav_escalation_queue_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sav_escalation_queue_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          issue_id: string
+          note: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          issue_id: string
+          note?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          issue_id?: string
+          note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sav_escalation_queue_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sav_escalation_queue_events_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "sav_escalation_queue"
+            referencedColumns: ["issue_id"]
           },
         ]
       }
@@ -5903,6 +7518,64 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      supplier_assignment_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          employee_id: string | null
+          id: string
+          portfolio_id: string | null
+          previous_employee_id: string | null
+          previous_portfolio_id: string | null
+          reason: string | null
+          supplier_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          employee_id?: string | null
+          id?: string
+          portfolio_id?: string | null
+          previous_employee_id?: string | null
+          previous_portfolio_id?: string | null
+          reason?: string | null
+          supplier_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          employee_id?: string | null
+          id?: string
+          portfolio_id?: string | null
+          previous_employee_id?: string | null
+          previous_portfolio_id?: string | null
+          reason?: string | null
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_assignment_events_portfolio_id_fkey"
+            columns: ["portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_portfolios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_assignment_events_previous_portfolio_id_fkey"
+            columns: ["previous_portfolio_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_portfolios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_assignment_events_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       supplier_audits: {
         Row: {
@@ -6358,19 +8031,56 @@ export type Database = {
         }
         Relationships: []
       }
+      support_ticket_notes: {
+        Row: {
+          actor_id: string
+          body: string
+          created_at: string
+          id: string
+          ticket_id: string
+        }
+        Insert: {
+          actor_id?: string
+          body: string
+          created_at?: string
+          id?: string
+          ticket_id: string
+        }
+        Update: {
+          actor_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_ticket_notes_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_ticket_notes_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "support_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_tickets: {
         Row: {
-          revision: number
-          test_account: boolean
           archived_at: string | null
-          closed_at: string | null
-          creation_key: string | null
-          creation_request: Json | null
-          change_note: string | null
           assigned_to: string | null
           category: string | null
+          change_note: string | null
+          closed_at: string | null
           created_at: string | null
           created_by: string | null
+          creation_key: string | null
+          creation_request: Json | null
           description: string
           id: string
           platform_id: string | null
@@ -6378,23 +8088,23 @@ export type Database = {
           priority: string | null
           resolution: string | null
           resolved_at: string | null
+          revision: number
           status: string | null
           subject: string
+          test_account: boolean
           updated_at: string | null
           user_account_id: string | null
         }
         Insert: {
-          revision?: number
-          test_account?: boolean
           archived_at?: string | null
-          closed_at?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
-          change_note?: string | null
           assigned_to?: string | null
           category?: string | null
+          change_note?: string | null
+          closed_at?: string | null
           created_at?: string | null
           created_by?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           description: string
           id?: string
           platform_id?: string | null
@@ -6402,23 +8112,23 @@ export type Database = {
           priority?: string | null
           resolution?: string | null
           resolved_at?: string | null
+          revision?: number
           status?: string | null
           subject: string
+          test_account?: boolean
           updated_at?: string | null
           user_account_id?: string | null
         }
         Update: {
-          revision?: number
-          test_account?: boolean
           archived_at?: string | null
-          closed_at?: string | null
-          creation_key?: string | null
-          creation_request?: Json | null
-          change_note?: string | null
           assigned_to?: string | null
           category?: string | null
+          change_note?: string | null
+          closed_at?: string | null
           created_at?: string | null
           created_by?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           description?: string
           id?: string
           platform_id?: string | null
@@ -6426,8 +8136,10 @@ export type Database = {
           priority?: string | null
           resolution?: string | null
           resolved_at?: string | null
+          revision?: number
           status?: string | null
           subject?: string
+          test_account?: boolean
           updated_at?: string | null
           user_account_id?: string | null
         }
@@ -6814,10 +8526,15 @@ export type Database = {
           created_at: string | null
           encrypted_content: string
           id: string
+          intake_hash: string | null
+          intake_key: string | null
+          report_mode: string
           resolution_notes: string | null
+          revision: number
           severity: string | null
           status: Database["public"]["Enums"]["whistleblower_status"] | null
           submission_code: string
+          test_account: boolean
           updated_at: string | null
         }
         Insert: {
@@ -6826,10 +8543,15 @@ export type Database = {
           created_at?: string | null
           encrypted_content: string
           id?: string
+          intake_hash?: string | null
+          intake_key?: string | null
+          report_mode?: string
           resolution_notes?: string | null
+          revision?: number
           severity?: string | null
           status?: Database["public"]["Enums"]["whistleblower_status"] | null
           submission_code: string
+          test_account?: boolean
           updated_at?: string | null
         }
         Update: {
@@ -6838,10 +8560,15 @@ export type Database = {
           created_at?: string | null
           encrypted_content?: string
           id?: string
+          intake_hash?: string | null
+          intake_key?: string | null
+          report_mode?: string
           resolution_notes?: string | null
+          revision?: number
           severity?: string | null
           status?: Database["public"]["Enums"]["whistleblower_status"] | null
           submission_code?: string
+          test_account?: boolean
           updated_at?: string | null
         }
         Relationships: []
@@ -6880,43 +8607,64 @@ export type Database = {
       }
       work_escalations: {
         Row: {
+          archived_at: string | null
           assigned_to: string | null
+          change_note: string | null
           created_at: string
+          creation_key: string | null
+          creation_request: Json | null
           description: string | null
           id: string
           pole: string | null
           raised_by: string | null
           resolution_note: string | null
           resolved_at: string | null
+          revision: number
           severity: string
           status: string
+          test_account: boolean
           title: string
+          updated_at: string
         }
         Insert: {
+          archived_at?: string | null
           assigned_to?: string | null
+          change_note?: string | null
           created_at?: string
+          creation_key?: string | null
+          creation_request?: Json | null
           description?: string | null
           id?: string
           pole?: string | null
           raised_by?: string | null
           resolution_note?: string | null
           resolved_at?: string | null
+          revision?: number
           severity?: string
           status?: string
+          test_account?: boolean
           title: string
+          updated_at?: string
         }
         Update: {
+          archived_at?: string | null
           assigned_to?: string | null
+          change_note?: string | null
           created_at?: string
+          creation_key?: string | null
+          creation_request?: Json | null
           description?: string | null
           id?: string
           pole?: string | null
           raised_by?: string | null
           resolution_note?: string | null
           resolved_at?: string | null
+          revision?: number
           severity?: string
           status?: string
+          test_account?: boolean
           title?: string
+          updated_at?: string
         }
         Relationships: [
           {
@@ -6928,41 +8676,103 @@ export type Database = {
           },
         ]
       }
+      work_module_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string
+          id: string
+          kind: string
+          note: string | null
+          record_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          kind: string
+          note?: string | null
+          record_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          kind?: string
+          note?: string | null
+          record_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "work_module_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       work_processes: {
         Row: {
+          archived_at: string | null
+          change_note: string | null
           created_at: string
           created_by: string | null
+          creation_key: string | null
+          creation_request: Json | null
           description: string | null
           id: string
           name: string
           owner_id: string | null
           pole: string | null
+          revision: number
           status: string
           steps: Json
+          test_account: boolean
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
+          change_note?: string | null
           created_at?: string
           created_by?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           description?: string | null
           id?: string
           name: string
           owner_id?: string | null
           pole?: string | null
+          revision?: number
           status?: string
           steps?: Json
+          test_account?: boolean
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
+          change_note?: string | null
           created_at?: string
           created_by?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           description?: string | null
           id?: string
           name?: string
           owner_id?: string | null
           pole?: string | null
+          revision?: number
           status?: string
           steps?: Json
+          test_account?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -6977,39 +8787,57 @@ export type Database = {
       }
       work_projects: {
         Row: {
+          archived_at: string | null
+          change_note: string | null
           created_at: string
           created_by: string | null
+          creation_key: string | null
+          creation_request: Json | null
           description: string | null
           due_date: string | null
           id: string
           name: string
           owner_id: string | null
           pole: string | null
+          revision: number
           status: string
+          test_account: boolean
           updated_at: string
         }
         Insert: {
+          archived_at?: string | null
+          change_note?: string | null
           created_at?: string
           created_by?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           description?: string | null
           due_date?: string | null
           id?: string
           name: string
           owner_id?: string | null
           pole?: string | null
+          revision?: number
           status?: string
+          test_account?: boolean
           updated_at?: string
         }
         Update: {
+          archived_at?: string | null
+          change_note?: string | null
           created_at?: string
           created_by?: string | null
+          creation_key?: string | null
+          creation_request?: Json | null
           description?: string | null
           due_date?: string | null
           id?: string
           name?: string
           owner_id?: string | null
           pole?: string | null
+          revision?: number
           status?: string
+          test_account?: boolean
           updated_at?: string
         }
         Relationships: [
@@ -7024,34 +8852,27 @@ export type Database = {
       }
       work_task_comments: {
         Row: {
-          id: string
-          task_id: string
           author_id: string
           body: string
           created_at: string
+          id: string
+          task_id: string
         }
         Insert: {
-          id?: string
-          task_id: string
           author_id?: string
           body: string
           created_at?: string
+          id?: string
+          task_id: string
         }
         Update: {
-          id?: string
-          task_id?: string
           author_id?: string
           body?: string
           created_at?: string
+          id?: string
+          task_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "work_task_comments_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "work_tasks"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "work_task_comments_author_id_fkey"
             columns: ["author_id"]
@@ -7059,44 +8880,44 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      work_task_history: {
-        Row: {
-          id: string
-          task_id: string
-          actor_id: string | null
-          action: string
-          before_state: Json | null
-          after_state: Json | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          task_id: string
-          actor_id?: string | null
-          action: string
-          before_state?: Json | null
-          after_state?: Json | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          task_id?: string
-          actor_id?: string | null
-          action?: string
-          before_state?: Json | null
-          after_state?: Json | null
-          created_at?: string
-        }
-        Relationships: [
           {
-            foreignKeyName: "work_task_history_task_id_fkey"
+            foreignKeyName: "work_task_comments_task_id_fkey"
             columns: ["task_id"]
             isOneToOne: false
             referencedRelation: "work_tasks"
             referencedColumns: ["id"]
           },
+        ]
+      }
+      work_task_history: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
           {
             foreignKeyName: "work_task_history_actor_id_fkey"
             columns: ["actor_id"]
@@ -7104,13 +8925,17 @@ export type Database = {
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "work_task_history_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "work_tasks"
+            referencedColumns: ["id"]
+          },
         ]
       }
       work_tasks: {
         Row: {
-          task_poles: string[]
-          objective: string | null
-          test_account: boolean
           archived_at: string | null
           assignee_id: string | null
           completed_at: string | null
@@ -7119,16 +8944,16 @@ export type Database = {
           description: string | null
           due_date: string | null
           id: string
+          objective: string | null
           pole: string | null
           priority: string
           status: string
+          task_poles: string[]
+          test_account: boolean
           title: string
           updated_at: string
         }
         Insert: {
-          task_poles?: string[]
-          objective?: string | null
-          test_account?: boolean
           archived_at?: string | null
           assignee_id?: string | null
           completed_at?: string | null
@@ -7137,16 +8962,16 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          objective?: string | null
           pole?: string | null
           priority?: string
           status?: string
+          task_poles?: string[]
+          test_account?: boolean
           title: string
           updated_at?: string
         }
         Update: {
-          task_poles?: string[]
-          objective?: string | null
-          test_account?: boolean
           archived_at?: string | null
           assignee_id?: string | null
           completed_at?: string | null
@@ -7155,9 +8980,12 @@ export type Database = {
           description?: string | null
           due_date?: string | null
           id?: string
+          objective?: string | null
           pole?: string | null
           priority?: string
           status?: string
+          task_poles?: string[]
+          test_account?: boolean
           title?: string
           updated_at?: string
         }
@@ -7180,42 +9008,73 @@ export type Database = {
       }
       work_validations: {
         Row: {
+          archived_at: string | null
+          change_note: string | null
           created_at: string
+          creation_key: string | null
+          creation_request: Json | null
           decided_at: string | null
+          decided_by: string | null
           decision_note: string | null
           description: string | null
           id: string
           pole: string | null
           requester_id: string | null
+          revision: number
           status: string
+          test_account: boolean
           title: string
+          updated_at: string
           validator_id: string | null
         }
         Insert: {
+          archived_at?: string | null
+          change_note?: string | null
           created_at?: string
+          creation_key?: string | null
+          creation_request?: Json | null
           decided_at?: string | null
+          decided_by?: string | null
           decision_note?: string | null
           description?: string | null
           id?: string
           pole?: string | null
           requester_id?: string | null
+          revision?: number
           status?: string
+          test_account?: boolean
           title: string
+          updated_at?: string
           validator_id?: string | null
         }
         Update: {
+          archived_at?: string | null
+          change_note?: string | null
           created_at?: string
+          creation_key?: string | null
+          creation_request?: Json | null
           decided_at?: string | null
+          decided_by?: string | null
           decision_note?: string | null
           description?: string | null
           id?: string
           pole?: string | null
           requester_id?: string | null
+          revision?: number
           status?: string
+          test_account?: boolean
           title?: string
+          updated_at?: string
           validator_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "work_validations_decided_by_fkey"
+            columns: ["decided_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "work_validations_validator_id_fkey"
             columns: ["validator_id"]
@@ -7230,10 +9089,252 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acknowledge_sav_escalation: {
+        Args: { p_issue_id: string }
+        Returns: Json
+      }
+      add_ops_anomaly_comment: {
+        Args: { p_id: string; p_message: string }
+        Returns: string
+      }
+      add_quality_comment: {
+        Args: { p_body: string; p_id: string; p_page: string }
+        Returns: string
+      }
+      add_support_ticket_note: {
+        Args: { p_body: string; p_id: string }
+        Returns: string
+      }
+      apply_hr_employee_mutation: {
+        Args: { p_request_id: string }
+        Returns: Json
+      }
+      archive_support_ticket: {
+        Args: { p_id: string; p_revision: number }
+        Returns: Json
+      }
+      assign_validated_supplier_dossier: {
+        Args: {
+          p_employee_id?: string
+          p_portfolio_id?: string
+          p_reason?: string
+          p_supplier_id: string
+        }
+        Returns: undefined
+      }
+      audit_mission_action: { Args: { p_action: string }; Returns: boolean }
+      audit_mission_action_for: {
+        Args: { p_action: string; p_actor: string }
+        Returns: boolean
+      }
+      bib_assign_case_entity: {
+        Args: {
+          p_entity_id: string
+          p_kind: string
+          p_portfolio_id: string
+          p_reason?: string
+        }
+        Returns: undefined
+      }
+      bib_change_case_portfolio_owner: {
+        Args: { p_new_owner: string; p_portfolio_id: string; p_reason?: string }
+        Returns: undefined
+      }
+      bib_create_case_portfolio: {
+        Args: { p_name: string; p_owner_id?: string; p_pole: string }
+        Returns: string
+      }
+      bib_data_domain_allowed: {
+        Args: { p_pole: string; p_subsidiary?: string }
+        Returns: boolean
+      }
+      bib_portfolio_permission: {
+        Args: { p_action: string; p_pole: string }
+        Returns: boolean
+      }
       calculate_demand_forecast: { Args: never; Returns: number }
       can_access_anomalies: { Args: { _uid: string }; Returns: boolean }
       can_access_finance: { Args: { _uid: string }; Returns: boolean }
+      can_access_product_customization: {
+        Args: { p_product_id: string; p_user_id?: string }
+        Returns: boolean
+      }
       can_access_rh_profiles: { Args: { _uid: string }; Returns: boolean }
+      can_hr_employee_mutation_action: {
+        Args: { p_action: string }
+        Returns: boolean
+      }
+      can_hr_publication_action: {
+        Args: { p_action: string }
+        Returns: boolean
+      }
+      can_intranet_action: {
+        Args: { p_action: string; p_page: string }
+        Returns: boolean
+      }
+      can_intranet_action_for: {
+        Args: { p_action: string; p_actor: string; p_page: string }
+        Returns: boolean
+      }
+      can_intranet_table_action: {
+        Args: { p_action: string; p_table: string }
+        Returns: boolean
+      }
+      can_manage_product_customization: {
+        Args: { p_product_id: string; p_user_id?: string }
+        Returns: boolean
+      }
+      can_read_intranet_business_history: {
+        Args: {
+          p_actor: string
+          p_id: string
+          p_table: string
+          p_test: boolean
+        }
+        Returns: boolean
+      }
+      can_read_intranet_drive_document: {
+        Args: {
+          p: Database["public"]["Tables"]["intranet_drive_documents"]["Row"]
+        }
+        Returns: boolean
+      }
+      can_read_intranet_outbox: {
+        Args: { r: Database["public"]["Tables"]["intranet_outbox"]["Row"] }
+        Returns: boolean
+      }
+      can_read_intranet_record: {
+        Args: { p: Database["public"]["Tables"]["intranet_records"]["Row"] }
+        Returns: boolean
+      }
+      can_read_ops_anomaly: {
+        Args: { a: Database["public"]["Tables"]["anomalies"]["Row"] }
+        Returns: boolean
+      }
+      can_read_quality_alert: {
+        Args: { a: Database["public"]["Tables"]["quality_alerts"]["Row"] }
+        Returns: boolean
+      }
+      can_read_released_hr_publication: {
+        Args: {
+          p_archive_at: string
+          p_available_at: string
+          p_publish_at: string
+          p_scope: string
+          p_status: string
+          p_targets: string[]
+        }
+        Returns: boolean
+      }
+      can_read_work_module_record: {
+        Args: { p_id: string; p_kind: string }
+        Returns: boolean
+      }
+      can_review_intranet_ethics: {
+        Args: { p_action: string }
+        Returns: boolean
+      }
+      can_work_task_action: { Args: { p_action: string }; Returns: boolean }
+      claim_intranet_delivery: {
+        Args: { p_key: string; p_message: string }
+        Returns: string
+      }
+      close_sav_escalation: {
+        Args: { p_issue_id: string; p_note: string }
+        Returns: Json
+      }
+      comment_compliance_dispute: {
+        Args: { p_id: string; p_note: string }
+        Returns: string
+      }
+      comment_intranet_record: {
+        Args: { p_id: string; p_note: string }
+        Returns: string
+      }
+      configure_intranet_test_identity: {
+        Args: { p_actor: string; p_role: string; p_target: string }
+        Returns: undefined
+      }
+      configure_verified_scope_dimension: {
+        Args: {
+          p_kind: string
+          p_pole: string
+          p_reason: string
+          p_subsidiary: string
+          p_value: string
+        }
+        Returns: undefined
+      }
+      create_audit_mission: {
+        Args: { p_key: string; p_payload: Json }
+        Returns: {
+          anomaly_id: string | null
+          app_origin: string
+          assigned_at: string | null
+          audit_type: string
+          auditor_id: string | null
+          change_note: string | null
+          closed_at: string | null
+          closed_by: string | null
+          completed_date: string | null
+          correction_evidence: string | null
+          corrective_action: string | null
+          corrective_due_date: string | null
+          created_at: string | null
+          created_by: string | null
+          creation_key: string | null
+          creation_request: Json | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          field_started_at: string | null
+          findings: string | null
+          id: string
+          mission_reference: string | null
+          recommendations: string | null
+          revision: number
+          scheduled_date: string | null
+          score: number | null
+          status: string | null
+          synced_at: string | null
+          target_id: string | null
+          target_name: string | null
+          target_type: string
+          test_account: boolean
+          updated_at: string | null
+          workflow_status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "field_audits"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      create_ops_anomaly: {
+        Args: { p_key: string; p_payload: Json }
+        Returns: Json
+      }
+      create_quality_alert: {
+        Args: { p_key: string; p_page: string; p_payload: Json }
+        Returns: Json
+      }
+      create_support_ticket: {
+        Args: { p_key: string; p_payload: Json }
+        Returns: Json
+      }
+      create_work_module_record: {
+        Args: { p_key: string; p_kind: string; p_payload: Json }
+        Returns: Json
+      }
+      decide_intranet_external_share: {
+        Args: { p_approve: boolean; p_id: string; p_note?: string }
+        Returns: undefined
+      }
+      decide_intranet_outbox: {
+        Args: { p_approve: boolean; p_id: string; p_note?: string }
+        Returns: undefined
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -7258,7 +9359,61 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      enqueue_intranet_email: {
+        Args: { p_key: string; p_payload: Json }
+        Returns: Json
+      }
+      enqueue_ops_anomaly_notification: {
+        Args: {
+          _a: Database["public"]["Tables"]["anomalies"]["Row"]
+          _kind: string
+          _msg: string
+        }
+        Returns: boolean
+      }
+      fail_intranet_document_job: {
+        Args: { p_job: string; p_lease: string }
+        Returns: undefined
+      }
+      finish_intranet_document_job: {
+        Args: {
+          p_classification: string
+          p_job: string
+          p_lease: string
+          p_mime: string
+          p_name: string
+          p_size: number
+          p_url?: string
+        }
+        Returns: Json
+      }
+      finish_intranet_external_share: {
+        Args: { p_file: string; p_id: string }
+        Returns: undefined
+      }
+      get_approved_intranet_share: { Args: { p_id: string }; Returns: Json }
+      get_compliance_dispute: { Args: { p_id: string }; Returns: Json }
+      get_compliance_dispute_stats: { Args: never; Returns: Json }
+      get_hr_onboarding_permissions: { Args: never; Returns: Json }
+      get_hr_publication_permissions: { Args: never; Returns: Json }
+      get_intranet_document_access: { Args: { p_id: string }; Returns: Json }
+      get_intranet_outbox_for_dispatch: {
+        Args: { p_id: string }
+        Returns: Json
+      }
       get_intranet_permissions: { Args: never; Returns: Json }
+      get_intranet_record: { Args: { p_id: string }; Returns: Json }
+      get_ops_anomaly: { Args: { p_id: string }; Returns: Json }
+      get_ops_anomaly_stats: { Args: { p_page?: string }; Returns: Json }
+      get_quality_alert: {
+        Args: { p_id: string; p_page: string }
+        Returns: Json
+      }
+      get_quality_stats: {
+        Args: { p_kind?: string; p_page: string }
+        Returns: Json
+      }
+      get_support_ticket_stats: { Args: never; Returns: Json }
       get_work_task_permissions: { Args: never; Returns: Json }
       has_any_pole: {
         Args: { _poles: string[]; _user_id: string }
@@ -7272,9 +9427,200 @@ export type Database = {
         }
         Returns: boolean
       }
+      hr_account_email_exists: { Args: { p_email: string }; Returns: boolean }
+      hr_employee_mutation_state: {
+        Args: { p_role_key: string; p_user: string }
+        Returns: Json
+      }
+      hr_mutation_legacy_position: { Args: { p_key: string }; Returns: string }
+      intranet_is_test_mode: { Args: never; Returns: boolean }
+      intranet_known_legacy_position: {
+        Args: { p_position: string }
+        Returns: boolean
+      }
+      intranet_module_summary: { Args: { p_scope: string }; Returns: Json }
+      intranet_poles_match: {
+        Args: { p_poles: string[]; p_requested: string }
+        Returns: boolean
+      }
+      is_canonical_bib_ceo: { Args: { p_actor: string }; Returns: boolean }
+      is_intranet_actor: { Args: never; Returns: boolean }
+      is_intranet_document_recipient: {
+        Args: { p_id: string }
+        Returns: boolean
+      }
       is_intranet_staff: { Args: { _uid: string }; Returns: boolean }
       is_leadership: { Args: { _user_id: string }; Returns: boolean }
       is_rbac_catalog_admin: { Args: { p_user_id: string }; Returns: boolean }
+      legacy_hr_publication_role: {
+        Args: { p_poles: string[]; p_position: string }
+        Returns: string
+      }
+      list_audit_people: {
+        Args: never
+        Returns: {
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+        }[]
+      }
+      list_compliance_dispute_events: {
+        Args: { p_id: string; p_offset?: number }
+        Returns: Json
+      }
+      list_compliance_dispute_people: { Args: never; Returns: Json }
+      list_compliance_disputes: {
+        Args: {
+          p_offset?: number
+          p_search?: string
+          p_stage?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
+      list_hr_mutation_targets: { Args: { p_search?: string }; Returns: Json }
+      list_hr_publications: {
+        Args: never
+        Returns: {
+          app_origin: string
+          archive_at: string | null
+          author_id: string | null
+          author_pole: string | null
+          available_at: string | null
+          body: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+          publish_at: string | null
+          related_kpi_id: string | null
+          status: string
+          subtype: string | null
+          summary: string | null
+          title: string
+          type: string
+          updated_at: string
+          version: string
+          visibility_scope: string
+          visibility_targets: string[]
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "publications"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      list_intranet_business_history: {
+        Args: { p_page: string }
+        Returns: Json
+      }
+      list_intranet_document_events: { Args: never; Returns: Json }
+      list_intranet_documents: {
+        Args: { p_page?: string; p_search?: string }
+        Returns: Json
+      }
+      list_intranet_ethics: { Args: { p_status?: string }; Returns: Json }
+      list_intranet_ethics_events: { Args: { p_id: string }; Returns: Json }
+      list_intranet_external_shares: { Args: never; Returns: Json }
+      list_intranet_outbox: { Args: never; Returns: Json }
+      list_intranet_outbox_events: { Args: { p_id: string }; Returns: Json }
+      list_intranet_people: { Args: never; Returns: Json }
+      list_intranet_record_events: { Args: { p_id: string }; Returns: Json }
+      list_intranet_records: {
+        Args: {
+          p_offset?: number
+          p_page: string
+          p_search?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
+      list_ops_anomalies: {
+        Args: {
+          p_offset?: number
+          p_search?: string
+          p_source?: string
+          p_status?: string
+          p_team?: string
+          p_view?: string
+        }
+        Returns: Json
+      }
+      list_ops_anomaly_events: {
+        Args: { p_id: string; p_offset?: number }
+        Returns: Json
+      }
+      list_ops_anomaly_notifications: {
+        Args: { p_id?: string; p_offset?: number }
+        Returns: Json
+      }
+      list_ops_anomaly_people: { Args: never; Returns: Json }
+      list_pole_collaborators: {
+        Args: { p_action?: string; p_page: string; p_pole: string }
+        Returns: Json
+      }
+      list_quality_alerts: {
+        Args: {
+          p_kind?: string
+          p_offset?: number
+          p_page: string
+          p_search?: string
+          p_status?: string
+        }
+        Returns: Json
+      }
+      list_quality_people: { Args: { p_page: string }; Returns: Json }
+      list_quality_timeline: {
+        Args: { p_id: string; p_offset?: number; p_page: string }
+        Returns: Json
+      }
+      list_support_assignees: { Args: never; Returns: Json }
+      list_support_ticket_history: {
+        Args: { p_id: string; p_offset?: number }
+        Returns: Json
+      }
+      list_support_ticket_notes: {
+        Args: { p_id: string; p_offset?: number }
+        Returns: Json
+      }
+      list_work_activity: {
+        Args: { p_kind?: string; p_offset?: number; p_search?: string }
+        Returns: Json
+      }
+      list_work_module_events: {
+        Args: { p_id: string; p_kind: string }
+        Returns: Json
+      }
+      list_work_module_people: { Args: { p_kind: string }; Returns: Json }
+      list_work_pole_members: {
+        Args: { p_kind: string; p_pole?: string }
+        Returns: Json
+      }
+      mark_intranet_delivery_sent: {
+        Args: { p_key: string; p_message: string; p_provider: string }
+        Returns: undefined
+      }
+      mark_intranet_outbox_queued: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      marketplace_assign_merchant: {
+        Args: {
+          p_merchant_id: string
+          p_portfolio_id: string
+          p_reason?: string
+        }
+        Returns: undefined
+      }
+      marketplace_change_portfolio_owner: {
+        Args: { p_new_owner: string; p_portfolio_id: string; p_reason?: string }
+        Returns: undefined
+      }
+      marketplace_create_portfolio: {
+        Args: { p_name: string; p_notes?: string; p_owner_id?: string }
+        Returns: string
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -7284,6 +9630,7 @@ export type Database = {
         }
         Returns: number
       }
+      my_hr_professional_details: { Args: never; Returns: Json }
       my_poles: { Args: never; Returns: string[] }
       notify_anomaly: {
         Args: {
@@ -7340,6 +9687,11 @@ export type Database = {
         Returns: Json
       }
       product_work_member: { Args: never; Returns: boolean }
+      quality_action: { Args: { p_action: string }; Returns: boolean }
+      quality_action_for: {
+        Args: { p_action: string; p_actor: string }
+        Returns: boolean
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -7347,6 +9699,15 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      read_intranet_ethics: { Args: { p_id: string }; Returns: Json }
+      release_rejected_intranet_delivery: {
+        Args: { p_key: string; p_message: string; p_status: number }
+        Returns: undefined
+      }
+      replace_access_permission_changes: {
+        Args: { p_changes: Json; p_reason: string; p_role_id: string }
+        Returns: undefined
       }
       replace_access_role_scopes: {
         Args: {
@@ -7357,14 +9718,86 @@ export type Database = {
         }
         Returns: undefined
       }
+      replace_platform_favorites: {
+        Args: { p_rows: Json; p_snapshot_at: string }
+        Returns: number
+      }
+      request_intranet_external_share: {
+        Args: { p_document: string; p_reason: string; p_recipient: string }
+        Returns: string
+      }
+      reserve_hr_onboarding_invitation: {
+        Args: { p_attempt_nonce: string; p_request_id: string }
+        Returns: boolean
+      }
+      reserve_intranet_document_job: {
+        Args: {
+          p_hash: string
+          p_key: string
+          p_kind: string
+          p_metadata: Json
+          p_page: string
+        }
+        Returns: Json
+      }
       rh_can_assign_employee_portfolio: {
         Args: { p_employee_id: string; p_portfolio_id: string }
         Returns: boolean
       }
       run_reconciliation: { Args: never; Returns: number }
+      save_catalog_customization: {
+        Args: { p_capabilities: Json; p_product_id: string; p_terms: Json }
+        Returns: Json
+      }
+      save_compliance_dispute: {
+        Args: {
+          p_documents?: string[]
+          p_due: string
+          p_id: string
+          p_key: string
+          p_owner: string
+          p_payload: Json
+          p_priority: string
+          p_revision: number
+          p_title: string
+          p_visibility: string
+        }
+        Returns: Json
+      }
       save_hierarchical_scope_policy_draft: {
         Args: { p_policy: Json; p_reason: string; p_role_id: string }
         Returns: undefined
+      }
+      save_hr_publication: {
+        Args: {
+          p_body: string
+          p_creation_key: string
+          p_expected_updated_at: string
+          p_id: string
+          p_poles: string[]
+          p_status: string
+          p_subtype: string
+          p_summary: string
+          p_title: string
+          p_visibility: string
+        }
+        Returns: Json
+      }
+      save_intranet_record: {
+        Args: {
+          p_documents?: string[]
+          p_due: string
+          p_expected_revision: number
+          p_id: string
+          p_key: string
+          p_owner: string
+          p_page: string
+          p_payload: Json
+          p_priority: string
+          p_title: string
+          p_visibility: string
+        }
+        Returns: Json
       }
       save_product_release_tracking: {
         Args: {
@@ -7383,6 +9816,201 @@ export type Database = {
         Returns: string
       }
       send_anomaly_reminders: { Args: never; Returns: number }
+      set_hr_employee_mutation_status: {
+        Args: { p_note?: string; p_request_id: string; p_status: string }
+        Returns: Json
+      }
+      set_intranet_document_job_ids: {
+        Args: {
+          p_file: string
+          p_job: string
+          p_lease: string
+          p_shortcut?: string
+        }
+        Returns: undefined
+      }
+      store_intranet_ethics_report: {
+        Args: {
+          p_category: string
+          p_ciphertext: string
+          p_hash: string
+          p_key: string
+          p_mode: string
+          p_severity: string
+          p_test: boolean
+        }
+        Returns: Json
+      }
+      submit_hr_employee_mutation: {
+        Args: {
+          p_creation_key: string
+          p_expected_target_revision: string
+          p_payload: Json
+          p_replace_assignment_ids: string[]
+          p_target_user_id: string
+        }
+        Returns: Json
+      }
+      submit_intranet_outbox: {
+        Args: {
+          p_body: string
+          p_key: string
+          p_recipients: string[]
+          p_source: string
+          p_subject: string
+        }
+        Returns: Json
+      }
+      transition_compliance_dispute: {
+        Args: {
+          p_action: string
+          p_id: string
+          p_note: string
+          p_revision: number
+        }
+        Returns: Json
+      }
+      transition_intranet_record: {
+        Args: {
+          p_expected_revision: number
+          p_id: string
+          p_note?: string
+          p_status: string
+        }
+        Returns: Json
+      }
+      transition_ops_anomaly: {
+        Args: {
+          p_action: string
+          p_id: string
+          p_note?: string
+          p_revision: number
+        }
+        Returns: Json
+      }
+      transition_quality_alert: {
+        Args: {
+          p_action: string
+          p_id: string
+          p_note?: string
+          p_page: string
+          p_revision: number
+        }
+        Returns: Json
+      }
+      transition_work_module_record: {
+        Args: {
+          p_id: string
+          p_kind: string
+          p_note?: string
+          p_revision: number
+          p_status: string
+        }
+        Returns: Json
+      }
+      update_audit_mission: {
+        Args: { p_id: string; p_patch: Json; p_revision: number }
+        Returns: {
+          anomaly_id: string | null
+          app_origin: string
+          assigned_at: string | null
+          audit_type: string
+          auditor_id: string | null
+          change_note: string | null
+          closed_at: string | null
+          closed_by: string | null
+          completed_date: string | null
+          correction_evidence: string | null
+          corrective_action: string | null
+          corrective_due_date: string | null
+          created_at: string | null
+          created_by: string | null
+          creation_key: string | null
+          creation_request: Json | null
+          decided_at: string | null
+          decided_by: string | null
+          decision_reason: string | null
+          field_started_at: string | null
+          findings: string | null
+          id: string
+          mission_reference: string | null
+          recommendations: string | null
+          revision: number
+          scheduled_date: string | null
+          score: number | null
+          status: string | null
+          synced_at: string | null
+          target_id: string | null
+          target_name: string | null
+          target_type: string
+          test_account: boolean
+          updated_at: string | null
+          workflow_status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "field_audits"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      update_intranet_ethics: {
+        Args: {
+          p_assignee: string
+          p_id: string
+          p_note: string
+          p_revision: number
+          p_status: string
+        }
+        Returns: undefined
+      }
+      update_ops_anomaly: {
+        Args: { p_id: string; p_patch: Json; p_revision: number }
+        Returns: Json
+      }
+      update_quality_alert: {
+        Args: {
+          p_id: string
+          p_page: string
+          p_patch: Json
+          p_revision: number
+        }
+        Returns: Json
+      }
+      update_support_ticket: {
+        Args: { p_id: string; p_patch: Json; p_revision: number }
+        Returns: Json
+      }
+      upsert_platform_customization_request: {
+        Args: { p_row: Json }
+        Returns: string
+      }
+      upsert_platform_stock_restock_request: {
+        Args: { p_row: Json }
+        Returns: string
+      }
+      validate_customization_metadata: {
+        Args: { p_caps: Json; p_details: Json; p_terms: Json }
+        Returns: undefined
+      }
+      validate_hr_employee_mutation: {
+        Args: { p_payload: Json; p_replace_ids: string[]; p_target: string }
+        Returns: Json
+      }
+      validate_intranet_payload: {
+        Args: { p_page: string; p_payload: Json }
+        Returns: undefined
+      }
+      work_module_table: { Args: { p_kind: string }; Returns: string }
+      work_task_in_scope: {
+        Args: {
+          p_assignee: string
+          p_creator: string
+          p_poles: string[]
+          p_test: boolean
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:

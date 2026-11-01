@@ -1,6 +1,6 @@
 -- Invitation proof is private, issued after server-side RH authorization and consumed
 -- by the Auth insert transaction. Public signup metadata is never sufficient.
-CREATE TABLE public.hr_onboarding_invitation_claims (
+CREATE TABLE IF NOT EXISTS public.hr_onboarding_invitation_claims (
   nonce uuid PRIMARY KEY,
   request_id uuid NOT NULL REFERENCES public.hr_employee_requests(id) ON DELETE CASCADE,
   email text NOT NULL,
@@ -12,7 +12,7 @@ CREATE TABLE public.hr_onboarding_invitation_claims (
   CHECK (expires_at > issued_at),
   CHECK ((consumed_user_id IS NULL) = (consumed_at IS NULL))
 );
-CREATE INDEX hr_onboarding_invitation_claims_request ON public.hr_onboarding_invitation_claims(request_id);
+CREATE INDEX IF NOT EXISTS hr_onboarding_invitation_claims_request ON public.hr_onboarding_invitation_claims(request_id);
 ALTER TABLE public.hr_onboarding_invitation_claims ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON TABLE public.hr_onboarding_invitation_claims FROM PUBLIC,anon,authenticated;
 GRANT ALL ON TABLE public.hr_onboarding_invitation_claims TO service_role;

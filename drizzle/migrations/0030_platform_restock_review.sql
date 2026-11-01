@@ -22,6 +22,7 @@ ALTER TABLE public.platform_stock_restock_requests ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.platform_stock_restock_requests FROM PUBLIC,anon,authenticated;
 GRANT SELECT ON public.platform_stock_restock_requests TO authenticated;
 GRANT ALL ON public.platform_stock_restock_requests TO service_role;
+DROP POLICY IF EXISTS "Staff read assigned Platform restock requests" ON public.platform_stock_restock_requests;
 CREATE POLICY "Staff read assigned Platform restock requests" ON public.platform_stock_restock_requests
 FOR SELECT TO authenticated USING (public.can_access_product_customization(product_id));
 --> statement-breakpoint

@@ -5,8 +5,8 @@ BEGIN
  IF NOT EXISTS (SELECT 1 FROM pg_constraint
    WHERE conrelid='public.product_release_tracking'::regclass
      AND conname='product_release_reviewer_independent') THEN
-  ALTER TABLE public.product_release_tracking
-    ADD CONSTRAINT product_release_reviewer_independent
+  ALTER TABLE public.product_release_tracking DROP CONSTRAINT IF EXISTS product_release_reviewer_independent;
+ALTER TABLE public.product_release_tracking ADD CONSTRAINT product_release_reviewer_independent
     CHECK (reviewer_id IS NULL OR reviewer_id <> created_by);
  END IF;
 END;
@@ -41,6 +41,7 @@ BEGIN
  RETURN NEW;
 END;
 $fn$;
+DROP TRIGGER IF EXISTS guard_product_release_actor_trigger ON public.product_release_tracking;
 DROP TRIGGER IF EXISTS guard_product_release_actor_trigger ON public.product_release_tracking;
 CREATE TRIGGER guard_product_release_actor_trigger
 BEFORE INSERT OR UPDATE ON public.product_release_tracking

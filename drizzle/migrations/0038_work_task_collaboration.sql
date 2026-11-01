@@ -62,25 +62,32 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_t
  OR cardinality(p_poles)=0 OR p_poles && coalesce(p.poles::text[],'{}'::text[])));
 $$;
 -- Restrictive boundaries also cover any older permissive policies.
+DROP POLICY IF EXISTS work_tasks_read_boundary ON public.work_tasks;
 CREATE POLICY work_tasks_read_boundary ON public.work_tasks AS RESTRICTIVE FOR SELECT TO authenticated
  USING(public.work_task_in_scope(created_by,assignee_id,task_poles,test_account));
+DROP POLICY IF EXISTS work_tasks_collaboration_read ON public.work_tasks;
 CREATE POLICY work_tasks_collaboration_read ON public.work_tasks FOR SELECT TO authenticated
  USING(public.work_task_in_scope(created_by,assignee_id,task_poles,test_account));
+DROP POLICY IF EXISTS work_tasks_create_boundary ON public.work_tasks;
 CREATE POLICY work_tasks_create_boundary ON public.work_tasks AS RESTRICTIVE FOR INSERT TO authenticated
  WITH CHECK(public.can_work_task_action('read') AND public.can_work_task_action('create') AND created_by=auth.uid());
+DROP POLICY IF EXISTS work_tasks_update_boundary ON public.work_tasks;
 CREATE POLICY work_tasks_update_boundary ON public.work_tasks AS RESTRICTIVE FOR UPDATE TO authenticated
  USING(public.can_work_task_action('update') AND public.work_task_in_scope(created_by,assignee_id,task_poles,test_account)
  AND (created_by=auth.uid() OR assignee_id=auth.uid() OR public.is_leadership(auth.uid()) OR public.has_role(auth.uid(),'admin')))
  WITH CHECK(public.can_work_task_action('update') AND public.work_task_in_scope(created_by,assignee_id,task_poles,test_account));
+DROP POLICY IF EXISTS work_tasks_collaboration_insert ON public.work_tasks;
 CREATE POLICY work_tasks_collaboration_insert ON public.work_tasks FOR INSERT TO authenticated WITH CHECK(public.can_work_task_action('read') AND public.can_work_task_action('create') AND created_by=auth.uid());
+DROP POLICY IF EXISTS work_tasks_collaboration_update ON public.work_tasks;
 CREATE POLICY work_tasks_collaboration_update ON public.work_tasks FOR UPDATE TO authenticated USING(public.can_work_task_action('update') AND (created_by=auth.uid() OR assignee_id=auth.uid() OR public.is_leadership(auth.uid()) OR public.has_role(auth.uid(),'admin')));
+DROP POLICY IF EXISTS work_tasks_no_physical_delete ON public.work_tasks;
 CREATE POLICY work_tasks_no_physical_delete ON public.work_tasks AS RESTRICTIVE FOR DELETE TO authenticated USING(false);
 
-CREATE TABLE public.work_task_comments (
+CREATE TABLE IF NOT EXISTS public.work_task_comments (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), task_id uuid NOT NULL REFERENCES public.work_tasks(id),
  author_id uuid NOT NULL REFERENCES public.profiles(id) DEFAULT auth.uid(),
  body text NOT NULL CHECK(char_length(btrim(body)) BETWEEN 1 AND 5000), created_at timestamptz NOT NULL DEFAULT now());
-CREATE TABLE public.work_task_history (
+CREATE TABLE IF NOT EXISTS public.work_task_history (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(), task_id uuid NOT NULL REFERENCES public.work_tasks(id),
  actor_id uuid REFERENCES public.profiles(id), action text NOT NULL,
  before_state jsonb, after_state jsonb, created_at timestamptz NOT NULL DEFAULT now());
@@ -89,17 +96,21 @@ ALTER TABLE public.work_task_history ENABLE ROW LEVEL SECURITY;
 GRANT SELECT,INSERT ON public.work_task_comments TO authenticated;
 GRANT SELECT ON public.work_task_history TO authenticated;
 GRANT ALL ON public.work_task_comments,public.work_task_history TO service_role;
-CREATE INDEX work_task_comments_task ON public.work_task_comments(task_id,created_at);
-CREATE INDEX work_task_history_task ON public.work_task_history(task_id,created_at);
+CREATE INDEX IF NOT EXISTS work_task_comments_task ON public.work_task_comments(task_id,created_at);
+CREATE INDEX IF NOT EXISTS work_task_history_task ON public.work_task_history(task_id,created_at);
+DROP POLICY IF EXISTS task_comments_read ON public.work_task_comments;
 CREATE POLICY task_comments_read ON public.work_task_comments FOR SELECT TO authenticated USING(
  EXISTS(SELECT 1 FROM public.work_tasks t WHERE t.id=task_id));
 CREATE OR REPLACE FUNCTION public.stamp_work_task_comment() RETURNS trigger LANGUAGE plpgsql SET search_path=public,pg_temp AS $$
 BEGIN NEW.created_at:=clock_timestamp(); RETURN NEW; END; $$;
+DROP TRIGGER IF EXISTS work_task_comment_stamp ON public.work_task_comments;
 CREATE TRIGGER work_task_comment_stamp BEFORE INSERT ON public.work_task_comments FOR EACH ROW EXECUTE FUNCTION public.stamp_work_task_comment();
 REVOKE ALL ON FUNCTION public.stamp_work_task_comment() FROM PUBLIC,anon,authenticated;
+DROP POLICY IF EXISTS task_comments_add ON public.work_task_comments;
 CREATE POLICY task_comments_add ON public.work_task_comments FOR INSERT TO authenticated WITH CHECK(
  author_id=auth.uid() AND public.can_work_task_action('update') AND EXISTS(
  SELECT 1 FROM public.work_tasks t WHERE t.id=task_id AND t.archived_at IS NULL));
+DROP POLICY IF EXISTS task_history_read ON public.work_task_history;
 CREATE POLICY task_history_read ON public.work_task_history FOR SELECT TO authenticated USING(
  EXISTS(SELECT 1 FROM public.work_tasks t WHERE t.id=task_id));
 
@@ -140,6 +151,7 @@ BEGIN
  RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS zz_work_task_guard ON public.work_tasks;
 CREATE TRIGGER zz_work_task_guard BEFORE INSERT OR UPDATE ON public.work_tasks FOR EACH ROW EXECUTE FUNCTION public.guard_work_task_write();
 CREATE OR REPLACE FUNCTION public.log_work_task_change()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
@@ -156,6 +168,7 @@ BEGIN
  RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS work_task_history ON public.work_tasks;
 CREATE TRIGGER work_task_history AFTER INSERT OR UPDATE ON public.work_tasks FOR EACH ROW EXECUTE FUNCTION public.log_work_task_change();
 REVOKE ALL ON FUNCTION public.guard_work_task_write(),public.log_work_task_change() FROM PUBLIC,anon,authenticated;
 REVOKE ALL ON FUNCTION public.can_work_task_action(text),public.get_work_task_permissions(),public.work_task_in_scope(uuid,uuid,text[],boolean) FROM PUBLIC,anon;

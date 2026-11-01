@@ -22,6 +22,7 @@ REVOKE ALL ON public.marketplace_customer_favorites FROM PUBLIC, anon, authentic
 GRANT SELECT ON public.marketplace_customer_favorites TO authenticated;
 GRANT ALL ON public.marketplace_customer_favorites TO service_role;
 DROP POLICY IF EXISTS "Marketplace favorites staff can view" ON public.marketplace_customer_favorites;
+DROP POLICY IF EXISTS "Marketplace favorites staff can view" ON public.marketplace_customer_favorites;
 CREATE POLICY "Marketplace favorites staff can view" ON public.marketplace_customer_favorites
 FOR SELECT TO authenticated USING (
   public.is_leadership(auth.uid()) OR public.has_any_pole(auth.uid(), ARRAY['marketplace','support','tech'])
@@ -84,6 +85,7 @@ ALTER TABLE public.platform_boutique_products ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.platform_boutique_products FROM PUBLIC, anon, authenticated;
 GRANT SELECT ON public.platform_boutique_products TO authenticated;
 GRANT ALL ON public.platform_boutique_products TO service_role;
+DROP POLICY IF EXISTS "Staff view visible catalog links" ON public.platform_boutique_products;
 DROP POLICY IF EXISTS "Staff view visible catalog links" ON public.platform_boutique_products;
 CREATE POLICY "Staff view visible catalog links" ON public.platform_boutique_products FOR SELECT TO authenticated
 USING ((public.is_leadership(auth.uid()) OR public.has_any_pole(auth.uid(), ARRAY['marketplace','supplier','ops','tech']))

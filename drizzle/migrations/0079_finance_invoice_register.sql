@@ -33,10 +33,13 @@ CREATE INDEX IF NOT EXISTS finance_invoice_due_idx ON public.finance_invoice_reg
 ALTER TABLE public.finance_invoice_register ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.finance_invoice_register FROM PUBLIC, anon;
 GRANT SELECT, INSERT, UPDATE ON public.finance_invoice_register TO authenticated;
+DROP POLICY IF EXISTS finance_invoice_read ON public.finance_invoice_register;
 CREATE POLICY finance_invoice_read ON public.finance_invoice_register FOR SELECT TO authenticated
  USING(public.can_intranet_action('finance.billing','read'));
+DROP POLICY IF EXISTS finance_invoice_insert ON public.finance_invoice_register;
 CREATE POLICY finance_invoice_insert ON public.finance_invoice_register FOR INSERT TO authenticated
  WITH CHECK(public.can_intranet_action('finance.billing','create') AND recorded_by=auth.uid());
+DROP POLICY IF EXISTS finance_invoice_update ON public.finance_invoice_register;
 CREATE POLICY finance_invoice_update ON public.finance_invoice_register FOR UPDATE TO authenticated
  USING(public.can_intranet_action('finance.billing','validate'))
  WITH CHECK(public.can_intranet_action('finance.billing','validate'));
@@ -69,6 +72,7 @@ BEGIN
  END IF;
  RETURN NEW;
 END; $$;
+DROP TRIGGER IF EXISTS finance_invoice_guard ON public.finance_invoice_register;
 DROP TRIGGER IF EXISTS finance_invoice_guard ON public.finance_invoice_register;
 CREATE TRIGGER finance_invoice_guard BEFORE INSERT OR UPDATE
   ON public.finance_invoice_register FOR EACH ROW EXECUTE FUNCTION public.guard_finance_invoice_register();

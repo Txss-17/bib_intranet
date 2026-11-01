@@ -1,17 +1,17 @@
 -- Controlled Drive documents. Provider credentials and file writes stay on the server.
-CREATE TABLE public.intranet_document_jobs(
+CREATE TABLE IF NOT EXISTS public.intranet_document_jobs(
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),actor_id uuid NOT NULL REFERENCES public.profiles(id),request_key uuid NOT NULL,page_id text NOT NULL REFERENCES public.intranet_modules(page_id),
  kind text NOT NULL CHECK(kind IN ('import','export','share')),request_hash text NOT NULL,metadata jsonb NOT NULL,status text NOT NULL DEFAULT 'running',
  lease_token uuid NOT NULL DEFAULT gen_random_uuid(),lease_until timestamptz NOT NULL DEFAULT now()+interval '3 minutes',file_id text,shortcut_id text,result jsonb,error_code text,
  created_at timestamptz NOT NULL DEFAULT now(),updated_at timestamptz NOT NULL DEFAULT now(),UNIQUE(actor_id,request_key));
-CREATE TABLE public.intranet_drive_documents(
+CREATE TABLE IF NOT EXISTS public.intranet_drive_documents(
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),job_id uuid UNIQUE REFERENCES public.intranet_document_jobs(id),file_id text NOT NULL UNIQUE,
  owner_id uuid NOT NULL REFERENCES public.profiles(id),page_id text NOT NULL REFERENCES public.intranet_modules(page_id),name text NOT NULL,mime_type text NOT NULL,size_bytes bigint NOT NULL DEFAULT 0,
  classification text NOT NULL CHECK(classification IN ('internal','confidential')),test_account boolean NOT NULL DEFAULT false,created_at timestamptz NOT NULL DEFAULT now());
-CREATE TABLE public.intranet_document_events(
+CREATE TABLE IF NOT EXISTS public.intranet_document_events(
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),document_id uuid REFERENCES public.intranet_drive_documents(id),actor_id uuid NOT NULL REFERENCES public.profiles(id),action text NOT NULL,
  details jsonb NOT NULL DEFAULT '{}',created_at timestamptz NOT NULL DEFAULT now());
-CREATE TABLE public.intranet_share_requests(
+CREATE TABLE IF NOT EXISTS public.intranet_share_requests(
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),document_id uuid NOT NULL REFERENCES public.intranet_drive_documents(id),recipient text NOT NULL,reason text NOT NULL,
  requested_by uuid NOT NULL REFERENCES public.profiles(id),status text NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected','released')),
  approved_by uuid REFERENCES public.profiles(id),decision_note text,release_file_id text,created_at timestamptz NOT NULL DEFAULT now(),decided_at timestamptz,released_at timestamptz);

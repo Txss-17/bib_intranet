@@ -62,6 +62,7 @@ $function$;
 
 DROP TRIGGER IF EXISTS trg_guard_access_assignment_scope
   ON public.access_assignments;
+DROP TRIGGER IF EXISTS trg_guard_access_assignment_scope ON public.access_assignments;
 CREATE TRIGGER trg_guard_access_assignment_scope
   BEFORE INSERT OR UPDATE OR DELETE ON public.access_assignments
   FOR EACH ROW EXECUTE FUNCTION public.guard_access_assignment_scope();

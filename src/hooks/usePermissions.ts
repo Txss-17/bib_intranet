@@ -69,6 +69,8 @@ export const usePermissions = (): UsePermissionsReturn => {
     enabled: !!user?.id && profile?.id === user.id,
     staleTime: 30000, refetchInterval: 60000,
     retry: 1,
+    // Keep the last known rights while a permission change refreshes them.
+    placeholderData: (previous) => previous,
     queryFn: ({ signal }) => readIntranetPermissions(signal),
   });
 
@@ -231,12 +233,13 @@ export const usePermissions = (): UsePermissionsReturn => {
   const canViewPage = useCallback((pageId: string) => permissions(pageId).read, [permissions]);
 
   const canViewPath = useCallback((path: string) => {
-  const page = getPageByPath(path);
-
-  if (!page) return false;
-
-  return permissions(page.id).read;
-}, [permissions]);
+    const page = getPageByPath(path);
+    if (page) return permissions(page.id).read;
+    if (isAdmin) return true;
+    // Unregistered sub-path: allowed only if the user can read a page of that pole.
+    const pole = path.match(/^\/pole\/([^/]+)/)?.[1];
+    return !!pole && pageRegistry.some((p) => p.scope === pole && permissions(p.id).read);
+  }, [permissions, isAdmin]);
 
   const visiblePoles = useMemo(() => {
     const scopes = Array.from(new Set(pageRegistry.filter((p) => !p.transversal).map((p) => p.scope)));
