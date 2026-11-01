@@ -74,7 +74,7 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_t
     AND (p_available_at IS NULL OR p_available_at<=now()) AND (p_archive_at IS NULL OR p_archive_at>now())
     AND (
       p_scope='all'
-      OR (p_scope='pole' AND coalesce(p_targets,'{}'::text[]) && coalesce((SELECT poles FROM public.profiles WHERE id=auth.uid()),'{}'::text[]))
+      OR (p_scope='pole' AND coalesce(p_targets,'{}'::text[]) && coalesce((SELECT poles::text[] FROM public.profiles WHERE id=auth.uid()),'{}'::text[]))
       OR (p_scope='user' AND auth.uid()::text=ANY(coalesce(p_targets,'{}'::text[])))
       OR (p_scope='subsidiary' AND (SELECT subsidiary FROM public.profiles WHERE id=auth.uid())=ANY(coalesce(p_targets,'{}'::text[])))
       OR (p_scope='role' AND EXISTS (
