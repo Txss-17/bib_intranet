@@ -11,12 +11,18 @@ BEGIN
   ('intranet_records',to_regclass('public.intranet_records') IS NOT NULL),
   ('intranet_record_events',to_regclass('public.intranet_record_events') IS NOT NULL),
   ('platform_sync_runs',to_regclass('public.platform_sync_runs') IS NOT NULL),
+  ('finance_invoice_register',to_regclass('public.finance_invoice_register') IS NOT NULL),
+  ('cashflows',to_regclass('public.cashflows') IS NOT NULL),
+  ('intranet_business_tables',to_regclass('public.intranet_business_tables') IS NOT NULL),
   ('support_tickets',to_regclass('public.support_tickets') IS NOT NULL),
   ('work_tasks',to_regclass('public.work_tasks') IS NOT NULL),
   ('sav_escalation_queue',to_regclass('public.sav_escalation_queue') IS NOT NULL),
   ('sav_escalation_queue_events',to_regclass('public.sav_escalation_queue_events') IS NOT NULL),
   ('can_intranet_action',to_regprocedure('public.can_intranet_action(text,text)') IS NOT NULL),
   ('get_intranet_permissions',to_regprocedure('public.get_intranet_permissions()') IS NOT NULL),
+  ('get_hr_onboarding_permissions',to_regprocedure('public.get_hr_onboarding_permissions()') IS NOT NULL),
+  ('guard_finance_manual_cashflows',to_regprocedure('public.guard_finance_manual_cashflows()') IS NOT NULL),
+  ('guard_finance_invoice_register',to_regprocedure('public.guard_finance_invoice_register()') IS NOT NULL),
   ('acknowledge_sav_escalation',to_regprocedure('public.acknowledge_sav_escalation(uuid)') IS NOT NULL),
   ('close_sav_escalation',to_regprocedure('public.close_sav_escalation(uuid,text)') IS NOT NULL)
  ) AS requirements(name,present)
@@ -41,9 +47,23 @@ BEGIN
    'public.intranet_records'::regclass,
    'public.intranet_record_events'::regclass,
    'public.sav_escalation_queue'::regclass,
-   'public.sav_escalation_queue_events'::regclass
+   'public.sav_escalation_queue_events'::regclass,
+   'public.cashflows'::regclass,
+   'public.finance_invoice_register'::regclass
   ) AND c.relrowsecurity IS NOT TRUE
  ) THEN RAISE EXCEPTION 'BIB_INTRANET_STAGING_NOT_READY: critical table without RLS' USING ERRCODE='42501';
+ END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_trigger
+  WHERE tgrelid='public.cashflows'::regclass
+    AND tgname='a_finance_manual_cashflow_guard' AND tgenabled='O'
+ ) THEN RAISE EXCEPTION 'BIB_INTRANET_STAGING_NOT_READY: finance cashflow guard not active' USING ERRCODE='42501';
+ END IF;
+ IF NOT EXISTS (
+  SELECT 1 FROM pg_trigger
+  WHERE tgrelid='public.finance_invoice_register'::regclass
+    AND tgname='finance_invoice_guard' AND tgenabled='O'
+ ) THEN RAISE EXCEPTION 'BIB_INTRANET_STAGING_NOT_READY: finance invoice guard not active' USING ERRCODE='42501';
  END IF;
  IF has_function_privilege('anon','public.acknowledge_sav_escalation(uuid)','EXECUTE')
     OR has_function_privilege('anon','public.close_sav_escalation(uuid,text)','EXECUTE')
