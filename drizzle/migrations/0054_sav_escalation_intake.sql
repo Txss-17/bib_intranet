@@ -1,7 +1,7 @@
 -- Protected, idempotent intake of insured SAV escalations from BIB Platform.
 -- No direct seller legal liability transfer, payment or refund occurs here.
 -- Requires 0039 (page permissions), 0044 (identity/test isolation), 0052.
-BEGIN;
+-- BEGIN; (managed by migrator)
 CREATE TABLE public.sav_escalation_queue (
  issue_id uuid PRIMARY KEY,
  platform_order_id uuid NOT NULL,
@@ -100,4 +100,4 @@ REVOKE ALL ON FUNCTION public.acknowledge_sav_escalation(uuid),public.close_sav_
  FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.acknowledge_sav_escalation(uuid),public.close_sav_escalation(uuid,text)
  TO authenticated,service_role;
-COMMIT;
+-- COMMIT; (managed by migrator)
