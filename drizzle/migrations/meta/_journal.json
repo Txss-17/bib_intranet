@@ -369,250 +369,201 @@
     {
       "idx": 52,
       "version": "7",
-      "when": 1793383201000,
-      "tag": "0001_harden_shop_lifecycle",
-      "breakpoints": true
-    },
-    {
-      "idx": 53,
-      "version": "7",
-      "when": 1793383202000,
-      "tag": "0005_shop_registry_lifecycle",
-      "breakpoints": true
-    },
-    {
-      "idx": 54,
-      "version": "7",
-      "when": 1793383203000,
-      "tag": "0012_shop_activity_documents",
-      "breakpoints": true
-    },
-    {
-      "idx": 55,
-      "version": "7",
-      "when": 1793383204000,
-      "tag": "0013_rbac_accounts_roles_scopes",
-      "breakpoints": true
-    },
-    {
-      "idx": 56,
-      "version": "7",
-      "when": 1793383205000,
-      "tag": "0014_seed_rbac_catalog",
-      "breakpoints": true
-    },
-    {
-      "idx": 57,
-      "version": "7",
-      "when": 1793383206000,
-      "tag": "0015_rbac_catalog_admin",
-      "breakpoints": true
-    },
-    {
-      "idx": 58,
-      "version": "7",
-      "when": 1793383207000,
-      "tag": "0016_rbac_role_capabilities",
-      "breakpoints": true
-    },
-    {
-      "idx": 59,
-      "version": "7",
       "when": 1793383208000,
       "tag": "0052_restore_existing_account_access",
       "breakpoints": true
     },
     {
-      "idx": 60,
+      "idx": 53,
       "version": "7",
       "when": 1793383209000,
       "tag": "0053_specialize_intranet_workspaces",
       "breakpoints": true
     },
     {
-      "idx": 61,
+      "idx": 54,
       "version": "7",
       "when": 1793383210000,
       "tag": "0054_sav_escalation_intake",
       "breakpoints": true
     },
     {
-      "idx": 62,
+      "idx": 55,
       "version": "7",
       "when": 1793383211000,
       "tag": "0055_existing_role_scope_editor",
       "breakpoints": true
     },
     {
-      "idx": 63,
+      "idx": 56,
       "version": "7",
       "when": 1793383212000,
       "tag": "0056_ceo_canonical_assignment",
       "breakpoints": true
     },
     {
-      "idx": 64,
+      "idx": 57,
       "version": "7",
       "when": 1793383213000,
       "tag": "0057_archive_duplicate_ceo_role",
       "breakpoints": true
     },
     {
-      "idx": 65,
+      "idx": 58,
       "version": "7",
       "when": 1793383214000,
       "tag": "0058_ceo_canonical_poles",
       "breakpoints": true
     },
     {
-      "idx": 66,
+      "idx": 59,
       "version": "7",
       "when": 1793383215000,
       "tag": "0059_ceo_profile_poles",
       "breakpoints": true
     },
     {
-      "idx": 67,
+      "idx": 60,
       "version": "7",
       "when": 1793383216000,
       "tag": "0060_guard_access_assignment_scopes",
       "breakpoints": true
     },
     {
-      "idx": 68,
+      "idx": 61,
       "version": "7",
       "when": 1793383217000,
       "tag": "0061_hierarchical_scope_policy_drafts",
       "breakpoints": true
     },
     {
-      "idx": 69,
+      "idx": 62,
       "version": "7",
       "when": 1793383218000,
       "tag": "0062_lock_unmapped_hierarchical_dimensions",
       "breakpoints": true
     },
     {
-      "idx": 70,
+      "idx": 63,
       "version": "7",
       "when": 1793383219000,
       "tag": "0063_verified_scope_dimension_catalog",
       "breakpoints": true
     },
     {
-      "idx": 71,
+      "idx": 64,
       "version": "7",
       "when": 1793383220000,
       "tag": "0064_bi_domain_isolation",
       "breakpoints": true
     },
     {
-      "idx": 72,
+      "idx": 65,
       "version": "7",
       "when": 1793383221000,
       "tag": "0065_atomic_permission_matrix_editor",
       "breakpoints": true
     },
     {
-      "idx": 73,
+      "idx": 66,
       "version": "7",
       "when": 1793383222000,
       "tag": "0065_product_release_tracking",
       "breakpoints": true
     },
     {
-      "idx": 74,
+      "idx": 67,
       "version": "7",
       "when": 1793383223000,
       "tag": "0066_product_workflow_records",
       "breakpoints": true
     },
     {
-      "idx": 75,
+      "idx": 68,
       "version": "7",
       "when": 1793383224000,
       "tag": "0067_product_release_hardening",
       "breakpoints": true
     },
     {
-      "idx": 76,
+      "idx": 69,
       "version": "7",
       "when": 1793383225000,
       "tag": "0068_product_archive_consistency",
       "breakpoints": true
     },
     {
-      "idx": 77,
+      "idx": 70,
       "version": "7",
       "when": 1793383226000,
       "tag": "0069_marketplace_portfolio_management",
       "breakpoints": true
     },
     {
-      "idx": 78,
+      "idx": 71,
       "version": "7",
       "when": 1793383227000,
       "tag": "0070_cross_pole_case_portfolios",
       "breakpoints": true
     },
     {
-      "idx": 79,
+      "idx": 72,
       "version": "7",
       "when": 1793383228000,
       "tag": "0071_canonical_ceo_global_actions",
       "breakpoints": true
     },
     {
-      "idx": 80,
+      "idx": 73,
       "version": "7",
       "when": 1793383229000,
       "tag": "0072_ceo_tasks_and_merchant_portfolio_read_scope",
       "breakpoints": true
     },
     {
-      "idx": 81,
+      "idx": 74,
       "version": "7",
       "when": 1793383230000,
       "tag": "0073_work_pole_directory",
       "breakpoints": true
     },
     {
-      "idx": 82,
+      "idx": 75,
       "version": "7",
       "when": 1793383231000,
       "tag": "0074_cross_pole_collaborator_directory",
       "breakpoints": true
     },
     {
-      "idx": 83,
+      "idx": 76,
       "version": "7",
       "when": 1793383232000,
       "tag": "0075_supplier_dossier_assignment",
       "breakpoints": true
     },
     {
-      "idx": 84,
+      "idx": 77,
       "version": "7",
       "when": 1793383233000,
       "tag": "0076_account_scoped_notifications",
       "breakpoints": true
     },
     {
-      "idx": 85,
+      "idx": 78,
       "version": "7",
       "when": 1793383234000,
       "tag": "0077_finance_card_approval_boundary",
       "breakpoints": true
     },
     {
-      "idx": 86,
+      "idx": 79,
       "version": "7",
       "when": 1793383235000,
       "tag": "0078_finance_manual_cashflows_guard",
       "breakpoints": true
     },
     {
-      "idx": 87,
+      "idx": 80,
       "version": "7",
       "when": 1793383236000,
       "tag": "0079_finance_invoice_register",
