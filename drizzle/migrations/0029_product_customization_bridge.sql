@@ -60,6 +60,7 @@ BEGIN
 END;
 $$;
 DROP TRIGGER IF EXISTS validate_intranet_customization_metadata ON public.products;
+DROP TRIGGER IF EXISTS validate_intranet_customization_metadata ON public.products;
 CREATE TRIGGER validate_intranet_customization_metadata BEFORE INSERT OR UPDATE OF customization_capabilities,customization_terms
 ON public.products FOR EACH ROW EXECUTE FUNCTION public.validate_intranet_customization_metadata();
 --> statement-breakpoint
@@ -108,6 +109,7 @@ ALTER TABLE public.platform_customization_requests ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.platform_customization_requests FROM PUBLIC,anon,authenticated;
 GRANT SELECT ON public.platform_customization_requests TO authenticated;
 GRANT ALL ON public.platform_customization_requests TO service_role;
+DROP POLICY IF EXISTS "Staff read assigned customization requests" ON public.platform_customization_requests;
 DROP POLICY IF EXISTS "Staff read assigned customization requests" ON public.platform_customization_requests;
 CREATE POLICY "Staff read assigned customization requests" ON public.platform_customization_requests FOR SELECT TO authenticated
 USING (public.can_access_product_customization(intranet_product_id));

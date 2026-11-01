@@ -19,6 +19,7 @@ BEGIN
 END;
 $$;
 DROP TRIGGER IF EXISTS guard_profile_authorization_fields ON public.profiles;
+DROP TRIGGER IF EXISTS guard_profile_authorization_fields ON public.profiles;
 CREATE TRIGGER guard_profile_authorization_fields BEFORE UPDATE ON public.profiles
 FOR EACH ROW EXECUTE FUNCTION public.guard_profile_authorization_fields();
 REVOKE ALL ON FUNCTION public.guard_profile_authorization_fields() FROM PUBLIC,anon,authenticated;

@@ -1,9 +1,9 @@
-CREATE TABLE public.intranet_outbox(
+CREATE TABLE IF NOT EXISTS public.intranet_outbox(
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),request_key uuid NOT NULL,created_by uuid NOT NULL REFERENCES public.profiles(id),source_message_id uuid REFERENCES public.external_messages(id),recipients text[] NOT NULL,subject text NOT NULL,body text NOT NULL,
  status text NOT NULL DEFAULT 'pending'CHECK(status IN ('pending','approved','rejected','queued','sent','unknown')),approved_by uuid REFERENCES public.profiles(id),decision_note text,
  gmail_thread_id text,in_reply_to text,gmail_references text,test_account boolean NOT NULL DEFAULT false,created_at timestamptz NOT NULL DEFAULT now(),approved_at timestamptz,queued_at timestamptz,UNIQUE(created_by,request_key));
-CREATE TABLE public.intranet_outbox_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),outbox_id uuid NOT NULL REFERENCES public.intranet_outbox(id),actor_id uuid REFERENCES public.profiles(id),kind text NOT NULL,note text,created_at timestamptz NOT NULL DEFAULT now());
-CREATE TABLE public.intranet_email_dispatch(
+CREATE TABLE IF NOT EXISTS public.intranet_outbox_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),outbox_id uuid NOT NULL REFERENCES public.intranet_outbox(id),actor_id uuid REFERENCES public.profiles(id),kind text NOT NULL,note text,created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.intranet_email_dispatch(
  dispatch_key text PRIMARY KEY,outbox_id uuid REFERENCES public.intranet_outbox(id),recipient text NOT NULL,message_id text NOT NULL,payload jsonb NOT NULL,
  status text NOT NULL DEFAULT 'queued'CHECK(status IN ('queued','sending','sent','unknown')),provider_id text,created_at timestamptz NOT NULL DEFAULT now(),sent_at timestamptz);
 ALTER TABLE public.intranet_outbox ENABLE ROW LEVEL SECURITY;

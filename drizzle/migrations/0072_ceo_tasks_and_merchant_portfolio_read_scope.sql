@@ -65,12 +65,14 @@ $$;
 
 -- Preserve existing permissive policies while imposing a restrictive ceiling:
 -- only authorized Marketplace managers or the active portfolio owner read its data.
+DROP POLICY IF EXISTS merchant_portfolios_read_scope_20261031 ON public.merchant_portfolios;
 CREATE POLICY merchant_portfolios_read_scope_20261031
   ON public.merchant_portfolios AS RESTRICTIVE FOR SELECT TO authenticated
   USING (
     public.can_intranet_action('marketplace.merchants','update')
     OR (owner_id=auth.uid() AND public.can_intranet_action('marketplace.portfolio','read'))
   );
+DROP POLICY IF EXISTS merchant_portfolio_assignments_read_scope_20261031 ON public.merchant_portfolio_assignments;
 CREATE POLICY merchant_portfolio_assignments_read_scope_20261031
   ON public.merchant_portfolio_assignments AS RESTRICTIVE FOR SELECT TO authenticated
   USING (

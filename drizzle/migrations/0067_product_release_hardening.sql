@@ -42,6 +42,7 @@ BEGIN
 END;
 $fn$;
 DROP TRIGGER IF EXISTS guard_product_release_actor_trigger ON public.product_release_tracking;
+DROP TRIGGER IF EXISTS guard_product_release_actor_trigger ON public.product_release_tracking;
 CREATE TRIGGER guard_product_release_actor_trigger
 BEFORE INSERT OR UPDATE ON public.product_release_tracking
 FOR EACH ROW EXECUTE FUNCTION public.guard_product_release_actor();

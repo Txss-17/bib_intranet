@@ -50,6 +50,7 @@ END;
 $guard$;
 
 DROP TRIGGER IF EXISTS a_finance_manual_cashflow_guard ON public.cashflows;
+DROP TRIGGER IF EXISTS a_finance_manual_cashflow_guard ON public.cashflows;
 CREATE TRIGGER a_finance_manual_cashflow_guard
 BEFORE INSERT OR UPDATE OR DELETE ON public.cashflows
 FOR EACH ROW EXECUTE FUNCTION public.guard_finance_manual_cashflows();

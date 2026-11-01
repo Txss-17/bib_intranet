@@ -26,16 +26,20 @@ DROP TRIGGER IF EXISTS trg_anomaly_assignment_notify ON public.anomalies;
 WITH modes AS(SELECT a.id,coalesce((SELECT p.test_account FROM public.profiles p WHERE p.id=a.created_by),(SELECT p.test_account FROM public.profiles p WHERE p.id=a.owner_id),false)AS mode FROM public.anomalies a)
 UPDATE public.anomalies a SET test_account=m.mode FROM modes m WHERE a.id=m.id AND a.test_account IS DISTINCT FROM m.mode;
 UPDATE public.anomalies SET team=CASE WHEN source IN('payments','stripe','invoices')THEN 'Finance'WHEN source='audits'THEN 'Qualité'ELSE 'Ops'END WHERE legacy_record;
-CREATE UNIQUE INDEX ops_anomaly_creation_retry ON public.anomalies(created_by,creation_key)WHERE creation_key IS NOT NULL;
-CREATE INDEX ops_anomaly_queue ON public.anomalies(test_account,status,created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS ops_anomaly_creation_retry ON public.anomalies(created_by,creation_key)WHERE creation_key IS NOT NULL;
+CREATE INDEX IF NOT EXISTS ops_anomaly_queue ON public.anomalies(test_account,status,created_at DESC);
 CREATE OR REPLACE FUNCTION public.can_read_ops_anomaly(a public.anomalies)RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$SELECT public.can_intranet_action('ops.anomalies','read')AND a.test_account=public.intranet_is_test_mode();$$;
 DROP POLICY IF EXISTS intranet_test_environment ON public.anomalies;
 CREATE POLICY intranet_test_environment ON public.anomalies AS RESTRICTIVE FOR ALL TO authenticated USING(test_account=public.intranet_is_test_mode())WITH CHECK(test_account=public.intranet_is_test_mode());
 DROP POLICY IF EXISTS intranet_update_boundary ON public.anomalies;
 CREATE POLICY intranet_update_boundary ON public.anomalies AS RESTRICTIVE FOR UPDATE TO authenticated USING(public.can_intranet_action('ops.anomalies','read')AND(public.can_intranet_action('ops.anomalies','update')OR public.can_intranet_action('ops.anomalies','validate')OR public.can_intranet_action('ops.anomalies','delete')))WITH CHECK(public.can_intranet_action('ops.anomalies','read')AND(public.can_intranet_action('ops.anomalies','update')OR public.can_intranet_action('ops.anomalies','validate')OR public.can_intranet_action('ops.anomalies','delete')));
+DROP POLICY IF EXISTS ops_anomalies_read ON public.anomalies;
 CREATE POLICY ops_anomalies_read ON public.anomalies FOR SELECT TO authenticated USING(public.can_intranet_action('ops.anomalies','read'));
+DROP POLICY IF EXISTS ops_anomalies_create ON public.anomalies;
 CREATE POLICY ops_anomalies_create ON public.anomalies FOR INSERT TO authenticated WITH CHECK(public.can_intranet_action('ops.anomalies','read')AND public.can_intranet_action('ops.anomalies','create'));
+DROP POLICY IF EXISTS ops_anomalies_update ON public.anomalies;
 CREATE POLICY ops_anomalies_update ON public.anomalies FOR UPDATE TO authenticated USING(public.can_intranet_action('ops.anomalies','read')AND(public.can_intranet_action('ops.anomalies','update')OR public.can_intranet_action('ops.anomalies','validate')OR public.can_intranet_action('ops.anomalies','delete')));
+DROP POLICY IF EXISTS ops_anomalies_preserve ON public.anomalies;
 CREATE POLICY ops_anomalies_preserve ON public.anomalies AS RESTRICTIVE FOR DELETE TO authenticated USING(false);
 GRANT SELECT,INSERT,UPDATE ON public.anomalies TO authenticated;
 GRANT ALL ON public.anomalies,public.anomaly_events,public.anomaly_notifications TO service_role;
@@ -117,6 +121,7 @@ BEGIN
  END LOOP;
  NEW.title:=btrim(NEW.title);NEW.type:=btrim(NEW.type);NEW.updated_at:=clock_timestamp();RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS zz_intranet_business_guard ON public.anomalies;
 CREATE TRIGGER zz_intranet_business_guard BEFORE INSERT OR UPDATE ON public.anomalies FOR EACH ROW EXECUTE FUNCTION public.guard_ops_anomaly_write();
 
 -- Shared evidence remains governed by both the parent record and Documents access.
@@ -133,7 +138,9 @@ DROP POLICY IF EXISTS intranet_test_environment ON public.anomaly_events;
 CREATE POLICY intranet_test_environment ON public.anomaly_events AS RESTRICTIVE FOR ALL TO authenticated USING(EXISTS(SELECT 1 FROM public.anomalies a WHERE a.id=anomaly_id))WITH CHECK(EXISTS(SELECT 1 FROM public.anomalies a WHERE a.id=anomaly_id AND a.archived_at IS NULL AND a.status<>'closed'));
 DROP POLICY IF EXISTS intranet_create_boundary ON public.anomaly_events;
 CREATE POLICY intranet_create_boundary ON public.anomaly_events AS RESTRICTIVE FOR INSERT TO authenticated WITH CHECK(public.can_intranet_action('ops.anomalies','read')AND(public.can_intranet_action('ops.anomalies','update')OR public.can_intranet_action('ops.anomalies','validate')));
+DROP POLICY IF EXISTS ops_event_read ON public.anomaly_events;
 CREATE POLICY ops_event_read ON public.anomaly_events FOR SELECT TO authenticated USING(EXISTS(SELECT 1 FROM public.anomalies a WHERE a.id=anomaly_id));
+DROP POLICY IF EXISTS ops_event_comment ON public.anomaly_events;
 CREATE POLICY ops_event_comment ON public.anomaly_events FOR INSERT TO authenticated WITH CHECK(kind='comment'AND performed_by=auth.uid()AND(public.can_intranet_action('ops.anomalies','update')OR public.can_intranet_action('ops.anomalies','validate'))AND EXISTS(SELECT 1 FROM public.anomalies a WHERE a.id=anomaly_id AND a.archived_at IS NULL AND a.status<>'closed'));
 CREATE OR REPLACE FUNCTION public.guard_ops_anomaly_event()RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 BEGIN
@@ -141,6 +148,7 @@ BEGIN
  IF NEW.kind IS DISTINCT FROM 'comment'OR NEW.from_status IS NOT NULL OR NEW.to_status IS NOT NULL OR NEW.before_state IS NOT NULL OR NEW.after_state IS NOT NULL OR length(btrim(coalesce(NEW.message,'')))NOT BETWEEN 1 AND 5000 OR NOT(public.can_intranet_action('ops.anomalies','read')AND(public.can_intranet_action('ops.anomalies','update')OR public.can_intranet_action('ops.anomalies','validate')))THEN RAISE EXCEPTION 'ops_anomaly_comment_forbidden' USING ERRCODE='42501';END IF;
  NEW.performed_by:=auth.uid();NEW.created_at:=clock_timestamp();NEW.message:=btrim(NEW.message);RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS ops_anomaly_event_guard ON public.anomaly_events;
 CREATE TRIGGER ops_anomaly_event_guard BEFORE INSERT ON public.anomaly_events FOR EACH ROW EXECUTE FUNCTION public.guard_ops_anomaly_event();
 REVOKE UPDATE,DELETE ON public.anomaly_events FROM authenticated;
 GRANT SELECT,INSERT ON public.anomaly_events TO authenticated;
@@ -151,6 +159,7 @@ DROP TRIGGER IF EXISTS zz_intranet_business_history ON public.anomaly_notificati
 UPDATE public.intranet_business_history h SET test_account=a.test_account FROM public.anomaly_notifications n JOIN public.anomalies a ON a.id=n.anomaly_id WHERE h.table_name='anomaly_notifications'AND h.row_id=n.id::text AND h.test_account IS DISTINCT FROM a.test_account;
 DROP POLICY IF EXISTS intranet_test_environment ON public.anomaly_notifications;
 CREATE POLICY intranet_test_environment ON public.anomaly_notifications AS RESTRICTIVE FOR ALL TO authenticated USING(EXISTS(SELECT 1 FROM public.anomalies a WHERE a.id=anomaly_id))WITH CHECK(false);
+DROP POLICY IF EXISTS ops_notification_read ON public.anomaly_notifications;
 CREATE POLICY ops_notification_read ON public.anomaly_notifications FOR SELECT TO authenticated USING(EXISTS(SELECT 1 FROM public.anomalies a WHERE a.id=anomaly_id));
 REVOKE INSERT,UPDATE,DELETE ON public.anomaly_notifications FROM authenticated;
 GRANT SELECT ON public.anomaly_notifications TO authenticated;
@@ -179,7 +188,9 @@ DECLARE before jsonb;recipient record;BEGIN
   END LOOP;
  END IF;RETURN NULL;
 END;$$;
+DROP TRIGGER IF EXISTS ops_anomaly_history ON public.anomalies;
 CREATE TRIGGER ops_anomaly_history AFTER INSERT OR UPDATE ON public.anomalies FOR EACH ROW EXECUTE FUNCTION public.log_ops_anomaly_write();
+DROP TRIGGER IF EXISTS ops_anomaly_business_delete ON public.anomalies;
 CREATE TRIGGER ops_anomaly_business_delete AFTER DELETE ON public.anomalies FOR EACH ROW EXECUTE FUNCTION public.log_intranet_business_write();
 CREATE OR REPLACE FUNCTION public.send_anomaly_reminders()RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE a public.anomalies;n integer:=0;BEGIN

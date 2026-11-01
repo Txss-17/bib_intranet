@@ -88,19 +88,24 @@ $$;
 -- A restrictive policy cannot grant a legitimate recipient access by itself.
 -- Add the matching permissive read path for user, role and subsidiary audiences.
 DROP POLICY IF EXISTS "HR released audience read" ON public.publications;
+DROP POLICY IF EXISTS "HR released audience read" ON public.publications;
 CREATE POLICY "HR released audience read" ON public.publications FOR SELECT TO authenticated
 USING(type='hr' AND public.can_read_released_hr_publication(
   status,publish_at,available_at,archive_at,visibility_scope,visibility_targets));
+DROP POLICY IF EXISTS "HR publication release boundary" ON public.publications;
 DROP POLICY IF EXISTS "HR publication release boundary" ON public.publications;
 CREATE POLICY "HR publication release boundary" ON public.publications AS RESTRICTIVE FOR SELECT TO authenticated
 USING(type<>'hr' OR public.can_hr_publication_action('read') OR
   public.can_read_released_hr_publication(status,publish_at,available_at,archive_at,visibility_scope,visibility_targets));
 DROP POLICY IF EXISTS "HR publication insert via RPC" ON public.publications;
+DROP POLICY IF EXISTS "HR publication insert via RPC" ON public.publications;
 CREATE POLICY "HR publication insert via RPC" ON public.publications AS RESTRICTIVE FOR INSERT TO authenticated
 WITH CHECK(type<>'hr');
 DROP POLICY IF EXISTS "HR publication update via RPC" ON public.publications;
+DROP POLICY IF EXISTS "HR publication update via RPC" ON public.publications;
 CREATE POLICY "HR publication update via RPC" ON public.publications AS RESTRICTIVE FOR UPDATE TO authenticated
 USING(type<>'hr') WITH CHECK(type<>'hr');
+DROP POLICY IF EXISTS "HR publication delete boundary" ON public.publications;
 DROP POLICY IF EXISTS "HR publication delete boundary" ON public.publications;
 CREATE POLICY "HR publication delete boundary" ON public.publications AS RESTRICTIVE FOR DELETE TO authenticated
 USING(type<>'hr');
@@ -112,6 +117,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS zz_hr_publication_timestamp ON public.publications;
 DROP TRIGGER IF EXISTS zz_hr_publication_timestamp ON public.publications;
 CREATE TRIGGER zz_hr_publication_timestamp BEFORE UPDATE ON public.publications
 FOR EACH ROW WHEN (OLD.type='hr' OR NEW.type='hr') EXECUTE FUNCTION public.touch_hr_publication_timestamp();

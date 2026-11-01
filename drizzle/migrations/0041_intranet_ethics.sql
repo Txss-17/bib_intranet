@@ -4,16 +4,20 @@ ALTER TABLE public.whistleblower_submissions
  ADD COLUMN IF NOT EXISTS report_mode text NOT NULL DEFAULT 'anonymous',
  ADD COLUMN IF NOT EXISTS test_account boolean NOT NULL DEFAULT false,
  ADD COLUMN IF NOT EXISTS revision bigint NOT NULL DEFAULT 1;
-CREATE TABLE public.intranet_ethics_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),submission_id uuid NOT NULL REFERENCES public.whistleblower_submissions(id),actor_id uuid REFERENCES public.profiles(id),kind text NOT NULL,note text,created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.intranet_ethics_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),submission_id uuid NOT NULL REFERENCES public.whistleblower_submissions(id),actor_id uuid REFERENCES public.profiles(id),kind text NOT NULL,note text,created_at timestamptz NOT NULL DEFAULT now());
 ALTER TABLE public.intranet_ethics_events ENABLE ROW LEVEL SECURITY;
 GRANT ALL ON public.intranet_ethics_events TO service_role;
 CREATE OR REPLACE FUNCTION public.can_review_intranet_ethics(p_action text)
 RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
  SELECT public.can_intranet_action('ethics.received',p_action)AND (public.has_role(auth.uid(),'admin')OR EXISTS(SELECT 1 FROM public.profiles p WHERE p.id=auth.uid()AND p.poles::text[]&&ARRAY['audit','compliance']));
 $$;
+DROP POLICY IF EXISTS ethics_private_read_boundary ON public.whistleblower_submissions;
 CREATE POLICY ethics_private_read_boundary ON public.whistleblower_submissions AS RESTRICTIVE FOR SELECT TO authenticated USING(public.can_review_intranet_ethics('read')AND coalesce(test_account,false)=coalesce((SELECT p.test_account FROM public.profiles p WHERE p.id=auth.uid()),false));
+DROP POLICY IF EXISTS ethics_no_direct_insert ON public.whistleblower_submissions;
 CREATE POLICY ethics_no_direct_insert ON public.whistleblower_submissions AS RESTRICTIVE FOR INSERT TO authenticated WITH CHECK(false);
+DROP POLICY IF EXISTS ethics_no_direct_update ON public.whistleblower_submissions;
 CREATE POLICY ethics_no_direct_update ON public.whistleblower_submissions AS RESTRICTIVE FOR UPDATE TO authenticated USING(false)WITH CHECK(false);
+DROP POLICY IF EXISTS ethics_no_direct_delete ON public.whistleblower_submissions;
 CREATE POLICY ethics_no_direct_delete ON public.whistleblower_submissions AS RESTRICTIVE FOR DELETE TO authenticated USING(false);
 CREATE OR REPLACE FUNCTION public.store_intranet_ethics_report(p_key uuid,p_hash text,p_category text,p_severity text,p_ciphertext text,p_mode text,p_test boolean)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$

@@ -87,7 +87,7 @@ REVOKE ALL ON FUNCTION public.marketplace_create_portfolio(text,uuid,text) FROM 
 GRANT EXECUTE ON FUNCTION public.marketplace_create_portfolio(text,uuid,text) TO authenticated;
 
 -- Consistency constraint after historical duplicates are resolved, not automatically
--- applied here: CREATE UNIQUE INDEX ... ON merchant_portfolio_assignments(merchant_id)
+-- applied here: CREATE UNIQUE INDEX IF NOT EXISTS ... ON merchant_portfolio_assignments(merchant_id)
 -- WHERE ended_at IS NULL;
 
 CREATE TABLE IF NOT EXISTS public.merchant_portfolio_owner_events(
@@ -102,6 +102,7 @@ CREATE TABLE IF NOT EXISTS public.merchant_portfolio_owner_events(
 ALTER TABLE public.merchant_portfolio_owner_events ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.merchant_portfolio_owner_events FROM PUBLIC,anon;
 GRANT SELECT ON public.merchant_portfolio_owner_events TO authenticated;
+DROP POLICY IF EXISTS merchant_portfolio_owner_events_read ON public.merchant_portfolio_owner_events;
 CREATE POLICY merchant_portfolio_owner_events_read
  ON public.merchant_portfolio_owner_events FOR SELECT TO authenticated
  USING (coalesce(public.can_intranet_action('marketplace.merchants','read'),false));

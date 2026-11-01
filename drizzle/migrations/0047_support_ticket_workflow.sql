@@ -1,5 +1,5 @@
 -- Support reads customer context without receiving commercial write permissions.
-ALTER TABLE public.intranet_business_tables ADD COLUMN read_page_ids text[] NOT NULL DEFAULT '{}';
+ALTER TABLE public.intranet_business_tables ADD COLUMN IF NOT EXISTS read_page_ids text[] NOT NULL DEFAULT '{}';
 UPDATE public.intranet_business_tables SET read_page_ids=ARRAY['support.overview','support.tickets','support.customer-success','support.monitoring','support.onboarding','support.compliance']WHERE table_name='user_accounts';
 CREATE OR REPLACE FUNCTION public.can_intranet_table_action(p_table text,p_action text)
 RETURNS boolean LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
@@ -31,17 +31,21 @@ WITH classified AS(SELECT t.id,coalesce(
 UPDATE public.support_tickets t SET test_account=c.mode FROM classified c WHERE t.id=c.id AND t.test_account IS DISTINCT FROM c.mode;
 GRANT SELECT,INSERT,UPDATE ON public.support_tickets TO authenticated;
 GRANT ALL ON public.support_tickets TO service_role;
-CREATE UNIQUE INDEX support_ticket_creation_retry ON public.support_tickets(created_by,creation_key)WHERE creation_key IS NOT NULL;
-CREATE INDEX support_ticket_queue ON public.support_tickets(test_account,status,created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS support_ticket_creation_retry ON public.support_tickets(created_by,creation_key)WHERE creation_key IS NOT NULL;
+CREATE INDEX IF NOT EXISTS support_ticket_queue ON public.support_tickets(test_account,status,created_at DESC);
 DROP POLICY IF EXISTS intranet_test_environment ON public.support_tickets;
 CREATE POLICY intranet_test_environment ON public.support_tickets AS RESTRICTIVE FOR ALL TO authenticated USING(NOT public.is_intranet_actor()OR test_account=public.intranet_is_test_mode())WITH CHECK(NOT public.is_intranet_actor()OR test_account=public.intranet_is_test_mode());
 DROP POLICY IF EXISTS intranet_read_boundary ON public.support_tickets;
 CREATE POLICY intranet_read_boundary ON public.support_tickets AS RESTRICTIVE FOR SELECT TO authenticated USING(NOT public.is_intranet_actor()OR public.can_intranet_action('support.tickets','read'));
 DROP POLICY IF EXISTS intranet_update_boundary ON public.support_tickets;
 CREATE POLICY intranet_update_boundary ON public.support_tickets AS RESTRICTIVE FOR UPDATE TO authenticated USING(NOT public.is_intranet_actor()OR(public.can_intranet_action('support.tickets','read')AND(public.can_intranet_action('support.tickets','update')OR public.can_intranet_action('support.tickets','delete'))))WITH CHECK(NOT public.is_intranet_actor()OR(public.can_intranet_action('support.tickets','read')AND(public.can_intranet_action('support.tickets','update')OR public.can_intranet_action('support.tickets','delete'))));
+DROP POLICY IF EXISTS support_staff_read ON public.support_tickets;
 CREATE POLICY support_staff_read ON public.support_tickets FOR SELECT TO authenticated USING(public.is_intranet_actor()AND public.can_intranet_action('support.tickets','read'));
+DROP POLICY IF EXISTS support_staff_create ON public.support_tickets;
 CREATE POLICY support_staff_create ON public.support_tickets FOR INSERT TO authenticated WITH CHECK(public.is_intranet_actor()AND public.can_intranet_action('support.tickets','read')AND public.can_intranet_action('support.tickets','create'));
+DROP POLICY IF EXISTS support_staff_update ON public.support_tickets;
 CREATE POLICY support_staff_update ON public.support_tickets FOR UPDATE TO authenticated USING(public.is_intranet_actor()AND public.can_intranet_action('support.tickets','read')AND(public.can_intranet_action('support.tickets','update')OR public.can_intranet_action('support.tickets','delete')));
+DROP POLICY IF EXISTS support_no_physical_delete ON public.support_tickets;
 CREATE POLICY support_no_physical_delete ON public.support_tickets AS RESTRICTIVE FOR DELETE TO authenticated USING(false);
 
 -- Validate a newly selected client through the caller's original row policies. An unchanged
@@ -51,6 +55,7 @@ BEGIN
  IF auth.uid()IS NOT NULL AND auth.role()IS DISTINCT FROM 'service_role'AND public.is_intranet_actor()AND NEW.user_account_id IS NOT NULL AND(TG_OP='INSERT'OR NEW.user_account_id IS DISTINCT FROM OLD.user_account_id)AND NOT EXISTS(SELECT 1 FROM public.user_accounts a WHERE a.id=NEW.user_account_id)THEN RAISE EXCEPTION 'support_account_forbidden' USING ERRCODE='42501';END IF;
  RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS support_account_link_guard ON public.support_tickets;
 CREATE TRIGGER support_account_link_guard BEFORE INSERT OR UPDATE OF user_account_id ON public.support_tickets FOR EACH ROW EXECUTE FUNCTION public.check_support_account_link();
 
 CREATE OR REPLACE FUNCTION public.guard_support_ticket_write()
@@ -108,16 +113,20 @@ BEGIN
  IF NEW.assigned_to IS NOT NULL AND(TG_OP='INSERT'OR NEW.assigned_to IS DISTINCT FROM OLD.assigned_to)AND NOT EXISTS(SELECT 1 FROM public.profiles p WHERE p.id=NEW.assigned_to AND p.app_origin='connect'AND p.hr_status='active'AND coalesce(p.test_account,false)=NEW.test_account AND public.can_intranet_action_for(p.id,'support.tickets','read')AND public.can_intranet_action_for(p.id,'support.tickets','update'))THEN RAISE EXCEPTION 'support_assignee_forbidden' USING ERRCODE='42501';END IF;
  IF TG_OP='INSERT'OR NEW.subject IS DISTINCT FROM OLD.subject THEN NEW.subject:=btrim(NEW.subject);END IF;IF TG_OP='INSERT'OR NEW.description IS DISTINCT FROM OLD.description THEN NEW.description:=btrim(NEW.description);END IF;NEW.updated_at:=clock_timestamp();RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS zz_support_ticket_guard ON public.support_tickets;
 CREATE TRIGGER zz_support_ticket_guard BEFORE INSERT OR UPDATE ON public.support_tickets FOR EACH ROW EXECUTE FUNCTION public.guard_support_ticket_write();
 
-CREATE TABLE public.support_ticket_notes(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),ticket_id uuid NOT NULL REFERENCES public.support_tickets(id),actor_id uuid NOT NULL REFERENCES public.profiles(id)DEFAULT auth.uid(),body text NOT NULL CHECK(length(btrim(body))BETWEEN 1 AND 5000),created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS public.support_ticket_notes(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),ticket_id uuid NOT NULL REFERENCES public.support_tickets(id),actor_id uuid NOT NULL REFERENCES public.profiles(id)DEFAULT auth.uid(),body text NOT NULL CHECK(length(btrim(body))BETWEEN 1 AND 5000),created_at timestamptz NOT NULL DEFAULT now());
 ALTER TABLE public.support_ticket_notes ENABLE ROW LEVEL SECURITY;
 GRANT SELECT,INSERT ON public.support_ticket_notes TO authenticated;
 GRANT ALL ON public.support_ticket_notes TO service_role;
-CREATE INDEX support_ticket_notes_parent ON public.support_ticket_notes(ticket_id,created_at);
+CREATE INDEX IF NOT EXISTS support_ticket_notes_parent ON public.support_ticket_notes(ticket_id,created_at);
+DROP POLICY IF EXISTS support_notes_read ON public.support_ticket_notes;
 CREATE POLICY support_notes_read ON public.support_ticket_notes FOR SELECT TO authenticated USING(public.can_intranet_action('support.tickets','read')AND EXISTS(SELECT 1 FROM public.support_tickets t WHERE t.id=ticket_id));
+DROP POLICY IF EXISTS support_notes_add ON public.support_ticket_notes;
 CREATE POLICY support_notes_add ON public.support_ticket_notes FOR INSERT TO authenticated WITH CHECK(actor_id=auth.uid()AND public.can_intranet_action('support.tickets','update')AND EXISTS(SELECT 1 FROM public.support_tickets t WHERE t.id=ticket_id AND t.archived_at IS NULL AND coalesce(t.status,'open')NOT IN('resolved','closed')));
 CREATE OR REPLACE FUNCTION public.stamp_support_note()RETURNS trigger LANGUAGE plpgsql SET search_path=public,pg_temp AS $$BEGIN NEW.body:=btrim(NEW.body);NEW.created_at:=clock_timestamp();RETURN NEW;END;$$;
+DROP TRIGGER IF EXISTS support_note_stamp ON public.support_ticket_notes;
 CREATE TRIGGER support_note_stamp BEFORE INSERT ON public.support_ticket_notes FOR EACH ROW EXECUTE FUNCTION public.stamp_support_note();
 
 CREATE OR REPLACE FUNCTION public.notify_support_ticket_change()RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
@@ -126,6 +135,7 @@ BEGIN
  IF TG_OP='UPDATE'AND NEW.status IS DISTINCT FROM OLD.status AND NEW.created_by IS NOT NULL AND NEW.created_by IS DISTINCT FROM auth.uid()AND EXISTS(SELECT 1 FROM public.profiles p WHERE p.id=NEW.created_by AND p.app_origin='connect'AND p.hr_status='active'AND coalesce(p.test_account,false)=NEW.test_account AND public.can_intranet_action_for(p.id,'support.tickets','read'))THEN INSERT INTO public.notifications(user_id,title,message,type,action_url,metadata)VALUES(NEW.created_by,'Ticket support mis à jour',NEW.subject,'info','/pole/support/tickets?ticket='||NEW.id::text,jsonb_build_object('source','support_ticket','ticket_id',NEW.id));END IF;
  RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS support_ticket_notifications ON public.support_tickets;
 CREATE TRIGGER support_ticket_notifications AFTER INSERT OR UPDATE ON public.support_tickets FOR EACH ROW EXECUTE FUNCTION public.notify_support_ticket_change();
 
 CREATE OR REPLACE FUNCTION public.create_support_ticket(p_key uuid,p_payload jsonb)RETURNS jsonb LANGUAGE plpgsql SECURITY INVOKER SET search_path=public,pg_temp AS $$

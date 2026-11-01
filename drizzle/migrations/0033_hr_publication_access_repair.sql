@@ -15,6 +15,7 @@ REVOKE ALL ON FUNCTION public.legacy_hr_publication_role(text,text[]) FROM PUBLI
 
 --> statement-breakpoint
 DROP POLICY IF EXISTS "HR released audience read" ON public.publications;
+DROP POLICY IF EXISTS "HR released audience read" ON public.publications;
 CREATE POLICY "HR released audience read" ON public.publications FOR SELECT TO authenticated
 USING(type='hr' AND public.can_read_released_hr_publication(
   status,publish_at,available_at,archive_at,visibility_scope,visibility_targets));

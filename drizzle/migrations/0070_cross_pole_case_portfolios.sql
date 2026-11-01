@@ -44,8 +44,10 @@ ALTER TABLE public.bib_case_portfolios ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.bib_case_portfolio_members ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.bib_case_portfolios, public.bib_case_portfolio_members FROM PUBLIC,anon;
 GRANT SELECT ON public.bib_case_portfolios,public.bib_case_portfolio_members TO authenticated;
+DROP POLICY IF EXISTS bib_case_portfolios_read ON public.bib_case_portfolios;
 CREATE POLICY bib_case_portfolios_read ON public.bib_case_portfolios FOR SELECT TO authenticated
  USING (public.bib_portfolio_permission(pole,'update') OR (owner_id=auth.uid() AND public.bib_portfolio_permission(pole,'read')));
+DROP POLICY IF EXISTS bib_case_portfolio_members_read ON public.bib_case_portfolio_members;
 CREATE POLICY bib_case_portfolio_members_read ON public.bib_case_portfolio_members FOR SELECT TO authenticated
  USING (EXISTS (SELECT 1 FROM public.bib_case_portfolios p
  WHERE p.id=portfolio_id AND (public.bib_portfolio_permission(p.pole,'update')
@@ -129,6 +131,7 @@ CREATE TABLE IF NOT EXISTS public.bib_case_portfolio_owner_events (
 ALTER TABLE public.bib_case_portfolio_owner_events ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.bib_case_portfolio_owner_events FROM PUBLIC,anon;
 GRANT SELECT ON public.bib_case_portfolio_owner_events TO authenticated;
+DROP POLICY IF EXISTS bib_case_portfolio_owner_events_read ON public.bib_case_portfolio_owner_events;
 CREATE POLICY bib_case_portfolio_owner_events_read ON public.bib_case_portfolio_owner_events
  FOR SELECT TO authenticated USING (EXISTS (
  SELECT 1 FROM public.bib_case_portfolios p

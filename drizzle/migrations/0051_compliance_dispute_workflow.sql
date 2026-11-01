@@ -19,7 +19,7 @@ UPDATE public.intranet_records SET
  WHERE page_id='compliance.disputes';
 UPDATE public.intranet_records SET payload=(payload-'amount')||jsonb_build_object('amount_raw',payload->>'amount')WHERE page_id='compliance.disputes'AND nullif(payload->>'amount','')IS NOT NULL AND((payload->>'amount')!~'^(0|[1-9][0-9]{0,11})(\.[0-9]{1,2})?$'OR coalesce(payload->>'currency','')!~'^[A-Z]{3}$');
 UPDATE public.intranet_records SET payload=jsonb_set(payload,'{amount}',to_jsonb(payload->>'amount'))WHERE page_id='compliance.disputes'AND nullif(payload->>'amount','')IS NOT NULL AND(payload->>'amount')~'^(0|[1-9][0-9]{0,11})(\.[0-9]{1,2})?$'AND(payload->>'currency')~'^[A-Z]{3}$';
-CREATE UNIQUE INDEX compliance_dispute_reference ON public.intranet_records(dispute_reference)WHERE dispute_reference IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS compliance_dispute_reference ON public.intranet_records(dispute_reference)WHERE dispute_reference IS NOT NULL;
 CREATE OR REPLACE FUNCTION public.guard_compliance_dispute()RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE actor uuid:=auth.uid();before jsonb;after jsonb:=to_jsonb(NEW);field text;changed boolean;manager boolean;levels integer;document uuid;new_stage text;old_stage text;
 BEGIN
@@ -87,6 +87,7 @@ BEGIN
  END LOOP;
  RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS compliance_dispute_guard ON public.intranet_records;
 CREATE TRIGGER compliance_dispute_guard BEFORE INSERT OR UPDATE ON public.intranet_records FOR EACH ROW EXECUTE FUNCTION public.guard_compliance_dispute();
 CREATE OR REPLACE FUNCTION public.stamp_compliance_dispute_event()RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE r public.intranet_records;BEGIN
@@ -96,6 +97,7 @@ DECLARE r public.intranet_records;BEGIN
  IF NEW.kind='comment'AND(r.status IN('approved','archived')OR NOT(public.can_intranet_action('compliance.disputes','update')OR public.can_intranet_action('compliance.disputes','validate')))THEN RAISE EXCEPTION 'dispute_comment_forbidden' USING ERRCODE='42501';END IF;
  NEW.actor_id:=auth.uid();NEW.created_at:=clock_timestamp();RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS compliance_dispute_event_stamp ON public.intranet_record_events;
 CREATE TRIGGER compliance_dispute_event_stamp BEFORE INSERT ON public.intranet_record_events FOR EACH ROW EXECUTE FUNCTION public.stamp_compliance_dispute_event();
 CREATE OR REPLACE FUNCTION public.save_compliance_dispute(p_id uuid,p_revision bigint,p_key uuid,p_title text,p_payload jsonb,p_owner uuid,p_due date,p_priority text,p_visibility text,p_documents uuid[]DEFAULT '{}')RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 BEGIN RETURN public.save_intranet_record(p_id,'compliance.disputes',p_revision,p_key,p_title,p_payload,p_owner,p_due,p_priority,p_visibility,p_documents);END;$$;

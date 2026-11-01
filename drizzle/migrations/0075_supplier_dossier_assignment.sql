@@ -16,6 +16,7 @@ CREATE INDEX IF NOT EXISTS supplier_assignment_events_supplier_date_idx
 ALTER TABLE public.supplier_assignment_events ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.supplier_assignment_events FROM PUBLIC,anon;
 GRANT SELECT ON public.supplier_assignment_events TO authenticated;
+DROP POLICY IF EXISTS supplier_assignment_events_read_20261031 ON public.supplier_assignment_events;
 CREATE POLICY supplier_assignment_events_read_20261031
  ON public.supplier_assignment_events FOR SELECT TO authenticated
  USING (coalesce(public.can_intranet_action('supplier.suppliers','read'),false));

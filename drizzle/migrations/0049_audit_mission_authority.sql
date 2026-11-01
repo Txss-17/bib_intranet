@@ -12,7 +12,7 @@ ALTER TABLE public.field_audits
  ADD COLUMN IF NOT EXISTS creation_request jsonb;
 DROP TRIGGER IF EXISTS zz_intranet_business_guard ON public.field_audits;
 UPDATE public.field_audits a SET test_account=p.test_account FROM public.profiles p WHERE p.id=a.auditor_id AND a.test_account IS DISTINCT FROM p.test_account;
-CREATE UNIQUE INDEX audit_mission_creation_retry ON public.field_audits(created_by,creation_key)WHERE creation_key IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS audit_mission_creation_retry ON public.field_audits(created_by,creation_key)WHERE creation_key IS NOT NULL;
 CREATE OR REPLACE FUNCTION public.audit_mission_action_for(p_actor uuid,p_action text)RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
  SELECT public.can_intranet_action_for(p_actor,'audit.missions',p_action)OR public.can_intranet_action_for(p_actor,'audit.field',p_action);
 $$;
@@ -21,9 +21,13 @@ DROP POLICY IF EXISTS intranet_test_environment ON public.field_audits;
 CREATE POLICY intranet_test_environment ON public.field_audits AS RESTRICTIVE FOR ALL TO authenticated USING(test_account=public.intranet_is_test_mode())WITH CHECK(test_account=public.intranet_is_test_mode());
 DROP POLICY IF EXISTS intranet_update_boundary ON public.field_audits;
 CREATE POLICY intranet_update_boundary ON public.field_audits AS RESTRICTIVE FOR UPDATE TO authenticated USING(public.audit_mission_action('read')AND(public.audit_mission_action('update')OR public.audit_mission_action('validate')))WITH CHECK(public.audit_mission_action('read')AND(public.audit_mission_action('update')OR public.audit_mission_action('validate')));
+DROP POLICY IF EXISTS audit_staff_read ON public.field_audits;
 CREATE POLICY audit_staff_read ON public.field_audits FOR SELECT TO authenticated USING(public.audit_mission_action('read'));
+DROP POLICY IF EXISTS audit_staff_insert ON public.field_audits;
 CREATE POLICY audit_staff_insert ON public.field_audits FOR INSERT TO authenticated WITH CHECK(public.audit_mission_action('read')AND public.audit_mission_action('create'));
+DROP POLICY IF EXISTS audit_staff_update ON public.field_audits;
 CREATE POLICY audit_staff_update ON public.field_audits FOR UPDATE TO authenticated USING(public.audit_mission_action('read')AND(public.audit_mission_action('update')OR public.audit_mission_action('validate')));
+DROP POLICY IF EXISTS audit_preserve_history ON public.field_audits;
 CREATE POLICY audit_preserve_history ON public.field_audits AS RESTRICTIVE FOR DELETE TO authenticated USING(false);
 GRANT SELECT,INSERT,UPDATE ON public.field_audits TO authenticated;
 GRANT ALL ON public.field_audits TO service_role;
@@ -82,6 +86,7 @@ BEGIN
  NEW.status:=CASE WHEN NEW.workflow_status IN('compliant','closed')THEN 'completed'WHEN NEW.workflow_status IN('mission','planned','assigned')THEN 'scheduled'ELSE 'in_progress'END;
  NEW.updated_at:=clock_timestamp();RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS aa_audit_mission_guard ON public.field_audits;
 CREATE TRIGGER aa_audit_mission_guard BEFORE INSERT OR UPDATE ON public.field_audits FOR EACH ROW EXECUTE FUNCTION public.guard_audit_mission_write();
 
 -- Preserve automatic real Ops findings without granting Audit users general Ops writes.
@@ -95,6 +100,7 @@ BEGIN
  IF TG_OP='INSERT'THEN NEW.created_by:=auth.uid();ELSIF NEW.created_by IS DISTINCT FROM OLD.created_by THEN RAISE EXCEPTION 'business_actor_immutable' USING ERRCODE='42501';END IF;
  RETURN NEW;
 END;$$;
+DROP TRIGGER IF EXISTS zz_intranet_business_guard ON public.anomalies;
 DROP TRIGGER IF EXISTS zz_intranet_business_guard ON public.anomalies;
 CREATE TRIGGER zz_intranet_business_guard BEFORE INSERT OR UPDATE OR DELETE ON public.anomalies FOR EACH ROW EXECUTE FUNCTION public.guard_audit_linked_anomaly();
 CREATE OR REPLACE FUNCTION public.audit_mission_workflow()RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
@@ -121,6 +127,7 @@ DROP POLICY IF EXISTS intranet_test_environment ON public.audit_mission_events;
 CREATE POLICY intranet_test_environment ON public.audit_mission_events AS RESTRICTIVE FOR SELECT TO authenticated USING(EXISTS(SELECT 1 FROM public.field_audits a WHERE a.id=audit_id));
 DROP POLICY IF EXISTS intranet_read_boundary ON public.audit_mission_events;
 CREATE POLICY intranet_read_boundary ON public.audit_mission_events AS RESTRICTIVE FOR SELECT TO authenticated USING(EXISTS(SELECT 1 FROM public.field_audits a WHERE a.id=audit_id));
+DROP POLICY IF EXISTS audit_parent_events_read ON public.audit_mission_events;
 CREATE POLICY audit_parent_events_read ON public.audit_mission_events FOR SELECT TO authenticated USING(EXISTS(SELECT 1 FROM public.field_audits a WHERE a.id=audit_id));
 CREATE OR REPLACE FUNCTION public.log_audit_mission_event()RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 BEGIN

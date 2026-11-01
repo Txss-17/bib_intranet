@@ -2,7 +2,7 @@
 -- No direct seller legal liability transfer, payment or refund occurs here.
 -- Requires 0039 (page permissions), 0044 (identity/test isolation), 0052.
 -- BEGIN; (managed by migrator)
-CREATE TABLE public.sav_escalation_queue (
+CREATE TABLE IF NOT EXISTS public.sav_escalation_queue (
  issue_id uuid PRIMARY KEY,
  platform_order_id uuid NOT NULL,
  platform_boutique_id uuid NOT NULL,
@@ -25,8 +25,8 @@ CREATE TABLE public.sav_escalation_queue (
        AND length(btrim(coalesce(resolution_note,'')))>=10)
  )
 );
-CREATE INDEX sav_intake_status ON public.sav_escalation_queue(status,escalated_at,issue_id);
-CREATE TABLE public.sav_escalation_queue_events (
+CREATE INDEX IF NOT EXISTS sav_intake_status ON public.sav_escalation_queue(status,escalated_at,issue_id);
+CREATE TABLE IF NOT EXISTS public.sav_escalation_queue_events (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  issue_id uuid NOT NULL REFERENCES public.sav_escalation_queue(issue_id) ON DELETE RESTRICT,
  actor_id uuid NOT NULL REFERENCES public.profiles(id),
@@ -34,18 +34,21 @@ CREATE TABLE public.sav_escalation_queue_events (
  note text,
  created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX sav_intake_events ON public.sav_escalation_queue_events(issue_id,created_at);
+CREATE INDEX IF NOT EXISTS sav_intake_events ON public.sav_escalation_queue_events(issue_id,created_at);
 ALTER TABLE public.sav_escalation_queue ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sav_escalation_queue_events ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.sav_escalation_queue,public.sav_escalation_queue_events FROM PUBLIC,anon,authenticated;
 GRANT SELECT ON public.sav_escalation_queue,public.sav_escalation_queue_events TO authenticated;
 GRANT ALL ON public.sav_escalation_queue,public.sav_escalation_queue_events TO service_role;
 
+DROP POLICY IF EXISTS sav_intake_staff_read ON public.sav_escalation_queue;
+
 CREATE POLICY sav_intake_staff_read ON public.sav_escalation_queue
  FOR SELECT TO authenticated USING (
    public.can_intranet_action('support.escalations','read')
    AND (environment='sandbox')=public.intranet_is_test_mode()
  );
+DROP POLICY IF EXISTS sav_intake_events_staff_read ON public.sav_escalation_queue_events;
 CREATE POLICY sav_intake_events_staff_read ON public.sav_escalation_queue_events
  FOR SELECT TO authenticated USING (
    EXISTS(SELECT 1 FROM public.sav_escalation_queue q
