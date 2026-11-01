@@ -69,6 +69,8 @@ export const usePermissions = (): UsePermissionsReturn => {
     enabled: !!user?.id && profile?.id === user.id,
     staleTime: 30000, refetchInterval: 60000,
     retry: 1,
+    // Keep the last known rights while a permission change refreshes them.
+    placeholderData: (previous) => previous,
     queryFn: ({ signal }) => readIntranetPermissions(signal),
   });
 
