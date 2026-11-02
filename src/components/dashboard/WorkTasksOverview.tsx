@@ -38,6 +38,8 @@ export function WorkTasksOverview() {
   if (!canReadTasks) return null;
   const upcoming = visibleTasks.filter(t => t.status === 'pending').length;
   const active = visibleTasks.filter(t => t.status === 'in_progress' || t.status === 'review').length;
+  const overdue = visibleTasks.filter(t => t.due_date && new Date(t.due_date).getTime() < Date.now()).length;
+  const assignedToMe = visibleTasks.filter(t => t.assignee_id === user?.id).length;
 
   return (
     <section aria-labelledby="dashboard-my-work" className="rounded-xl border border-border bg-card p-4 sm:p-5">
@@ -60,6 +62,8 @@ export function WorkTasksOverview() {
         <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
           <span><strong className="text-foreground">{active}</strong> en cours ou en revue</span>
           <span><strong className="text-foreground">{upcoming}</strong> à démarrer</span>
+          <span><strong className="text-foreground">{assignedToMe}</strong> assignée(s) à moi</span>
+          {overdue > 0 && <span className="font-medium text-destructive"><strong>{overdue}</strong> en retard</span>}
         </div>
         {visibleTasks.length === 0
           ? <div className="mt-4 flex items-center gap-2 rounded-lg bg-muted/40 p-3 text-sm text-muted-foreground"><CheckCircle2 className="h-4 w-4" />Aucune tâche en cours ou à venir dans votre périmètre.</div>
