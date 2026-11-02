@@ -395,26 +395,21 @@ type OverrideMap = Record<
   Record<string, PermissionRule>
 >;
 
-export const loadOverrides = (): OverrideMap => {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-};
-
+// No browser-stored permission overrides. Only authenticated backend settings
+// may control this cache; closing/reloading the app resets it.
+let remoteOverrides: OverrideMap = {};
+export const loadOverrides = (): OverrideMap => remoteOverrides;
 export const saveOverrides = (map: OverrideMap) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
-  window.dispatchEvent(new Event('permission-rules-changed'));
   void import('@/integrations/supabase/client').then(({ supabase }) =>
-    (supabase as any).from('permission_settings').upsert({ key: 'sensitive_rules', value: map }, { onConflict: 'key' })
-      .then(({ error }: any) => error && console.error('[permissions] synchronisation refusée', error.message)));
+    (supabase as any).from('permission_settings').upsert({
+      key: 'sensitive_rules', value: map,
+    }, { onConflict: 'key' }).then(({ error }: any) => {
+      if (error) console.error('[permissions] update refused', error.message);
+      else applyRemoteOverrides(map);
+    }));
 };
-
-/** Applique les règles sensibles reçues du backend (sans renvoi). */
 export const applyRemoteOverrides = (map: OverrideMap) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(map ?? {}));
+  remoteOverrides = map ?? {};
   window.dispatchEvent(new Event('permission-rules-changed'));
 };
 
