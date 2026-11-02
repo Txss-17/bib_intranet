@@ -32,6 +32,7 @@ import {
 import type { FeedItem, PoleId } from '@/types';
 import { poles } from '@/data/poles';
 import { ConnectedEmployeesBlock } from '@/components/dashboard/ConnectedEmployeesBlock';
+import { WorkTasksOverview } from '@/components/dashboard/WorkTasksOverview';
 
 const TARGET_POLES: readonly PoleId[] = [
   'direction',
@@ -282,7 +283,7 @@ export default function Dashboard() {
         return 'Qualité, Audit & Conformité · Contrôles, risques et rapports';
 
       case 'rse_impact_manager':
-        return 'RSE & Impact · Recyclage, emballages et indicateurs ESG';
+        return 'RSE & Impact · Conformité environnementale et fournisseurs';
 
       case 'product_engineering_manager':
         return 'Produit & Engineering · Produit, développement et innovation';
@@ -371,11 +372,12 @@ export default function Dashboard() {
           <span className="status-dot status-active animate-pulse-subtle" />
 
           <span className="text-muted-foreground">
-            All systems operational
+            Accès et données vérifiés par pôle
           </span>
         </div>
       </div>
 
+      <WorkTasksOverview />
       <ConnectedEmployeesBlock />
 
       <section>
@@ -570,12 +572,12 @@ export default function Dashboard() {
               <Shield className="h-4 w-4 text-muted-foreground" />
 
               <h2 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-                Pôles Overview
+                Vue des pôles autorisés
               </h2>
             </div>
 
             <span className="text-xs text-muted-foreground">
-              14 pôles actifs
+              Périmètres de votre compte
             </span>
           </div>
 
