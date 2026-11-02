@@ -925,7 +925,6 @@ rh: {
           { id: 'code', label: 'Revue de code', path: '/pole/security/code', icon: 'Code2' },
       { id: 'console', label: 'Interventions techniques', path: '/pole/security/console', icon: 'Terminal' },
       { id: 'documentation', label: 'Documentation', path: '/pole/security/documentation', icon: 'BookOpen' },
-      { id: 'sandbox', label: 'Sandbox', path: '/pole/security/sandbox', icon: 'FlaskConical' },
       { id: 'supervision', label: 'Supervision technique', path: '/pole/security/supervision', icon: 'Activity' },
       { id: 'dataflow', label: 'Flux de données', path: '/pole/security/dataflow', icon: 'Network' },
     ],
