@@ -124,18 +124,6 @@ export default function SecurityDashboard() {
       desc: 'Marchands, clients, fournisseurs, logistique et politiques RLS',
     },
     {
-      to: '/pole/security/sandbox',
-      label: 'Sandbox',
-      icon: FlaskConical,
-      desc: 'Simulation isolée',
-    },
-    {
-      to: '/pole/security/test-accounts',
-      label: 'Comptes de test',
-      icon: UserCog,
-      desc: 'Profils et environnements de test',
-    },
-    {
       to: '/pole/product/integrations',
       label: 'Intégrations',
       icon: Plug,
@@ -164,12 +152,12 @@ export default function SecurityDashboard() {
     {
       title: '2. Identités & sécurité BIB Platform',
       description: 'Personnel interne, comptes de test, marchands, clients, fournisseurs, logistique et RLS',
-      links: ['/pole/security/access','/pole/security/platform','/pole/security/vpn','/pole/security/test-accounts','/pole/security/dataflow'],
+      links: ['/pole/security/access','/pole/security/platform','/pole/security/vpn','/pole/security/dataflow'],
     },
     {
       title: '3. Infrastructure & sécurité applicative',
       description: 'Environnements, services, code, intégrations et essais isolés',
-      links: ['/pole/security/environments','/pole/security/code','/pole/security/sandbox','/pole/product/integrations'],
+      links: ['/pole/security/environments','/pole/security/code','/pole/product/integrations'],
     },
     {
       title: '4. Exploitation & gouvernance IT',
