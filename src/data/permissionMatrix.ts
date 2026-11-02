@@ -477,259 +477,59 @@ export const getDataScope = (
 // MATRICE ÉDITABLE
 // ---------------------------------------------------------------------------
 
-const MATRIX_KEY = 'bib.permission_matrix.v1';
-const HISTORY_KEY = 'bib.permission_matrix.history.v1';
-const ENFORCE_KEY = 'bib.rbac_enforced.v1';
-const TEST_MATRIX_KEY = 'bib.permission_matrix.test.v1';
-const TEST_ENFORCE_KEY = 'bib.rbac_enforced.test.v1';
-const TEST_HISTORY_KEY = 'bib.permission_matrix.history.test.v1';
-
+// No permission decisions, test roles or audit histories are stored in browsers.
+// The authoritative permission matrix must be loaded from protected Supabase tables.
 export const MATRIX_EVENT = 'permission-matrix-changed';
-
-/** roleId -> pageId -> permissions partielles. */
-export type MatrixOverrides = Record<
-  string,
-  Record<string, Partial<ActionSet>>
->;
-
+export type MatrixOverrides = Record<string, Record<string, Partial<ActionSet>>>;
 export interface MatrixHistoryEntry {
-  at: string;
-  actor: string;
-  roleId: string;
-  pageId: string;
-  action: PermissionAction;
-  value: boolean;
+  at: string; actor: string; roleId: string; pageId: string;
+  action: PermissionAction; value: boolean;
 }
-
-export const loadMatrixOverrides = (): MatrixOverrides => {
-  try {
-    return JSON.parse(localStorage.getItem(MATRIX_KEY) || '{}');
-  } catch {
-    return {};
-  }
-};
-
+let remoteMatrix: MatrixOverrides = {};
+let remoteHistory: MatrixHistoryEntry[] = [];
+export const loadMatrixOverrides = (): MatrixOverrides => remoteMatrix;
 export const saveMatrixOverrides = (matrix: MatrixOverrides) => {
-  try {
-    localStorage.setItem(MATRIX_KEY, JSON.stringify(matrix));
-    window.dispatchEvent(new Event(MATRIX_EVENT));
-    void pushPermissionSetting('matrix_overrides', matrix);
-  } catch {
-    // Le stockage local peut être indisponible.
-  }
+  void pushPermissionSetting('matrix_overrides', matrix);
 };
-
-/** Matrice exclusivement réservée aux comptes de test. */
-export const loadTestMatrixOverrides = (): MatrixOverrides => {
-  try {
-    return JSON.parse(localStorage.getItem(TEST_MATRIX_KEY) || '{}');
-  } catch {
-    return {};
-  }
+export const loadTestMatrixOverrides = (): MatrixOverrides => ({});
+export const saveTestMatrixOverrides = (_matrix: MatrixOverrides) => {};
+export const isTestRbacEnforced = (): boolean => true;
+export const setTestRbacEnforced = (_enabled: boolean) => {};
+export const loadMatrixHistory = (): MatrixHistoryEntry[] => remoteHistory;
+export const appendMatrixHistory = (_entries: MatrixHistoryEntry[]) => {
+  // Audit history must only be written to the server audit log.
 };
-
-/** Enregistre les permissions de test sans modifier la matrice globale. */
-export const saveTestMatrixOverrides = (matrix: MatrixOverrides) => {
-  try {
-    localStorage.setItem(TEST_MATRIX_KEY, JSON.stringify(matrix));
-    window.dispatchEvent(new Event(MATRIX_EVENT));
-    void pushPermissionSetting('test_matrix_overrides', matrix);
-  } catch {
-    // Le stockage local peut être indisponible.
-  }
-};
-
-export const isTestRbacEnforced = (): boolean => {
-  try {
-    return localStorage.getItem(TEST_ENFORCE_KEY) !== 'off';
-  } catch {
-    return true;
-  }
-};
-
-export const setTestRbacEnforced = (enabled: boolean) => {
-  try {
-    localStorage.setItem(TEST_ENFORCE_KEY, enabled ? 'on' : 'off');
-  } catch {
-    // localStorage indisponible.
-  }
-
-  window.dispatchEvent(new Event(MATRIX_EVENT));
-  void pushPermissionSetting('test_rbac_enforced', enabled);
-};
-
-export const loadMatrixHistory = (): MatrixHistoryEntry[] => {
-  try {
-    return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-  } catch {
-    return [];
-  }
-};
-
-export const appendMatrixHistory = (entries: MatrixHistoryEntry[]) => {
-  const next = [...entries, ...loadMatrixHistory()].slice(0, 500);
-
-  try {
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
-    window.dispatchEvent(new Event(MATRIX_EVENT));
-  } catch {
-    // Stockage local indisponible.
-  }
-};
-
-/** Historique isolé de la matrice expérimentale. */
-export const loadTestMatrixHistory = (): MatrixHistoryEntry[] => {
-  try {
-    return JSON.parse(localStorage.getItem(TEST_HISTORY_KEY) || '[]');
-  } catch {
-    return [];
-  }
-};
-
-export const appendTestMatrixHistory = (entries: MatrixHistoryEntry[]) => {
-  const next = [...entries, ...loadTestMatrixHistory()].slice(0, 500);
-
-  try {
-    localStorage.setItem(TEST_HISTORY_KEY, JSON.stringify(next));
-    window.dispatchEvent(new Event(MATRIX_EVENT));
-  } catch {
-    // Stockage local indisponible.
-  }
-};
-
-// ---------------------------------------------------------------------------
-// ÉTAT DU RBAC
-// ---------------------------------------------------------------------------
-
-/**
- * Le RBAC réel reste toujours appliqué.
- * Le mode expérimental des comptes de test est séparé.
- */
+export const loadTestMatrixHistory = (): MatrixHistoryEntry[] => [];
+export const appendTestMatrixHistory = (_entries: MatrixHistoryEntry[]) => {};
 export const isRbacEnforced = (): boolean => true;
-
-export const setRbacEnforced = (enabled: boolean) => {
-  try {
-    localStorage.setItem(ENFORCE_KEY, enabled ? 'on' : 'off');
-  } catch {
-    // localStorage indisponible.
-  }
-
-  window.dispatchEvent(new Event(MATRIX_EVENT));
-  void pushPermissionSetting('rbac_enforced', enabled);
+export const setRbacEnforced = (_enabled: boolean) => {
+  // Client cannot disable access control.
 };
-
-// ---------------------------------------------------------------------------
-// SYNCHRONISATION BACKEND
-// ---------------------------------------------------------------------------
-
-const pushPermissionSetting = async (
-  key: string,
-  value: unknown,
-) => {
+const pushPermissionSetting = async (key: string, value: unknown) => {
   const { error } = await (supabase as any)
-    .from('permission_settings')
-    .upsert({ key, value }, { onConflict: 'key' });
-
-  if (error) {
-    console.error(
-      '[permissions] synchronisation refusée',
-      error.message,
-    );
-  }
+    .from('permission_settings').upsert({ key, value }, { onConflict: 'key' });
+  if (error) console.error('[permissions] remote update refused', error.message);
 };
-
-let syncIsTest = false;
-
-const TEST_SETTING_KEYS = new Set([
-  'test_matrix_overrides',
-  'test_rbac_enforced',
-]);
-
 const applyRemoteSetting = (key: string, value: unknown) => {
-  // Les comptes réels ignorent les réglages expérimentaux.
-  if (TEST_SETTING_KEYS.has(key) && !syncIsTest) return;
-
-  try {
-    if (key === 'matrix_overrides') {
-      localStorage.setItem(MATRIX_KEY, JSON.stringify(value ?? {}));
-    }
-
-    if (key === 'sensitive_rules') {
-      applyRemoteOverrides(value as any);
-    }
-
-    if (key === 'rbac_enforced') {
-      localStorage.setItem(ENFORCE_KEY, value === false ? 'off' : 'on');
-    }
-
-    if (key === 'test_matrix_overrides') {
-      localStorage.setItem(TEST_MATRIX_KEY, JSON.stringify(value ?? {}));
-    }
-
-    if (key === 'test_rbac_enforced') {
-      localStorage.setItem(
-        TEST_ENFORCE_KEY,
-        value === false ? 'off' : 'on',
-      );
-    }
-  } catch {
-    // Stockage local indisponible.
+  if (key === 'matrix_overrides' && value && typeof value === 'object') {
+    remoteMatrix = value as MatrixOverrides;
   }
-
+  if (key === 'sensitive_rules') applyRemoteOverrides(value as any);
   window.dispatchEvent(new Event(MATRIX_EVENT));
 };
-
 let syncStarted = false;
-
-/** Charge les permissions depuis la base et écoute les changements temps réel. */
-export const startPermissionSync = (isTestAccount = false) => {
-  const db = supabase as any;
-  const switchedToTest = isTestAccount && !syncIsTest;
-
-  syncIsTest = isTestAccount;
-
-  if (!isTestAccount) {
-    // Un compte réel ne conserve aucun réglage test actif.
-    try {
-      localStorage.removeItem(TEST_MATRIX_KEY);
-      localStorage.removeItem(TEST_ENFORCE_KEY);
-    } catch {
-      // Stockage local indisponible.
-    }
-  }
-
-  if (syncStarted && !switchedToTest) return;
-
-  const firstStart = !syncStarted;
+export const startPermissionSync = (_isTestAccount = false) => {
+  if (syncStarted) return;
   syncStarted = true;
-
-  void db
-    .from('permission_settings')
-    .select('key, value')
-    .then(({ data }: any) => {
-      (data || []).forEach((row: any) => {
-        applyRemoteSetting(row.key, row.value);
-      });
-    });
-
-  if (!firstStart) return;
-
-  db
-    .channel('permission-settings-sync')
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'permission_settings',
-      },
-      (payload: any) => {
-        if (payload.new?.key) {
-          applyRemoteSetting(payload.new.key, payload.new.value);
-        }
-      },
-    )
-    .subscribe();
+  const db = supabase as any;
+  void db.from('permission_settings').select('key, value').then(({ data }: any) => {
+    (data ?? []).forEach((row: any) => applyRemoteSetting(row.key, row.value));
+  });
+  db.channel('permission-settings-sync').on('postgres_changes', {
+    event: '*', schema: 'public', table: 'permission_settings',
+  }, (payload: any) => {
+    if (payload.new?.key) applyRemoteSetting(payload.new.key, payload.new.value);
+  }).subscribe();
 };
 
 // ---------------------------------------------------------------------------
