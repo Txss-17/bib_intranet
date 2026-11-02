@@ -1,4 +1,4 @@
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/VolatileThemeProvider";
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 
