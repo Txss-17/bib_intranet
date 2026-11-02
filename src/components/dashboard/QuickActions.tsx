@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import {
-  Plus,
   FileText,
   AlertTriangle,
   Users,
@@ -9,6 +8,7 @@ import {
   ClipboardList,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { usePermissions } from '@/hooks/usePermissions';
 
 const quickActions = [
   {
@@ -20,7 +20,7 @@ const quickActions = [
   {
     label: 'Signaler un incident',
     icon: AlertTriangle,
-    path: '/pole/risk/active',
+    path: '/pole/ops/anomalies',
     color: 'bg-destructive/10 text-destructive hover:bg-destructive/20',
   },
   {
@@ -50,9 +50,12 @@ const quickActions = [
 ];
 
 export function QuickActions() {
+  const { canViewPath } = usePermissions();
+  const visibleActions = quickActions.filter((action) => canViewPath(action.path));
+  if (!visibleActions.length) return null;
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {quickActions.map((action) => (
+      {visibleActions.map((action) => (
         <Link
           key={action.label}
           to={action.path}
