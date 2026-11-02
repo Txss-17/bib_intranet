@@ -2,7 +2,6 @@ import {
   Activity,
   AlertTriangle,
   Code2,
-  FlaskConical,
   Gauge,
   Plug,
   Rocket,
