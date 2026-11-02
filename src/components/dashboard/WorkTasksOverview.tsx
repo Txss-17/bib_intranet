@@ -68,7 +68,7 @@ export function WorkTasksOverview() {
                 <div className="min-w-0">
                   <p className="font-medium text-foreground">{task.title}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">
-                    {TASK_STATUS_LABELS[task.status] ?? task.status} · {TASK_PRIORITY_LABELS[task.priority] ?? task.priority} · {task.pole ?? (task.task_poles ?? []).join(', ') || 'Transversale'}
+                    {TASK_STATUS_LABELS[task.status] ?? task.status} · {TASK_PRIORITY_LABELS[task.priority] ?? task.priority} · {task.pole || (task.task_poles ?? []).join(', ') || 'Transversale'}
                   </p>
                 </div>
                 <span className="flex items-center gap-1 text-xs text-muted-foreground"><CalendarClock className="h-3.5 w-3.5" />{dueLabel(task.due_date)}</span>
