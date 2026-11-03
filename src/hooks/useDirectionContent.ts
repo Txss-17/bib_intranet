@@ -116,11 +116,14 @@ export const useRoadmapActions = () => {
         }));
 
         if (id) {
-          const { error } = await supabase
+          const { data, error } = await supabase
             .from('direction_roadmap_items')
             .update({ ...patch, objectives })
-            .eq('id', id);
+            .eq('id', id)
+            .select('id')
+            .maybeSingle();
           if (error) throw error;
+          if (!data) throw new Error('Modification non confirmée : accès refusé ou jalon introuvable.');
           return;
         }
 
