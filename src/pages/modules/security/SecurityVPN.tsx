@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { KeyRound, MonitorSmartphone, RefreshCw, ShieldCheck } from 'lucide-react';
@@ -18,6 +19,16 @@ export default function SecurityVPN() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const rows = vpn.data ?? [];
+  const refresh = async () => {
+    try {
+      const result = await vpn.refetch();
+      if (result.error) throw result.error;
+      toast.success('Accès VPN actualisés.');
+    } catch {
+      toast.error('Impossible d’actualiser les accès VPN.');
+    }
+  };
+
   const filtered = useMemo(() => rows.filter(row => {
     const matchesStatus = status === 'all' || row.status === status;
     const matchesText = [
@@ -37,7 +48,7 @@ export default function SecurityVPN() {
         <p className="mt-2 text-sm text-muted-foreground">Inventaire des connexions réseau connues, terminaux, fournisseurs et traces de révocation, distinct des demandes d’autorisation.</p>
         <p className="mt-1 text-xs text-muted-foreground">Les statuts ci-dessous proviennent de l'Intranet. La confirmation d'accès effectif nécessite une synchronisation avec le fournisseur VPN.</p>
       </div>
-      <Button variant="outline" disabled={vpn.isFetching} onClick={() => void vpn.refetch()}><RefreshCw className="mr-2 h-4 w-4" />Actualiser</Button>
+      <Button variant="outline" disabled={vpn.isFetching} onClick={() => void refresh()}><RefreshCw className="mr-2 h-4 w-4" />Actualiser</Button>
     </header>
     <Tabs defaultValue="access">
       <TabsList><TabsTrigger value="access">Accès connus</TabsTrigger><TabsTrigger value="approvals">Demandes & révocations</TabsTrigger></TabsList>
