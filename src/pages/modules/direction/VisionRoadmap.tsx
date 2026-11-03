@@ -308,7 +308,7 @@ const VisionRoadmap = () => {
                           <Button type="button" size="icon" variant="ghost" aria-label="Retirer" onClick={() => setDraft({ ...draft, objectives: draft.objectives.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></Button>
                         </div>
                         <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                          <Select value={o.priority} onValueChange={(priority: RoadmapObjectivePriority) => setObj(i, { priority })}>
+                          <Select value={o.priority} onValueChange={(priority) => setObj(i, { priority: priority as RoadmapObjectivePriority })}>
                             <SelectTrigger aria-label="Priorité de l’objectif"><SelectValue /></SelectTrigger>
                             <SelectContent>{Object.entries(OBJECTIVE_PRIORITIES).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
                           </Select>
