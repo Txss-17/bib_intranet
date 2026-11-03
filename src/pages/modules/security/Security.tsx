@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { format } from 'date-fns';
-import { Shield } from 'lucide-react';
+import { RefreshCw, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -121,9 +121,19 @@ export default function Security() {
     data = [],
     isLoading,
     isError,
+    isFetching,
     refetch,
     update,
   } = useSecurityAlerts();
+  const refresh = async () => {
+    try {
+      const result = await refetch();
+      if (result.error) throw result.error;
+      toast.success('Alertes de sécurité actualisées.');
+    } catch {
+      toast.error('Impossible d’actualiser les alertes de sécurité.');
+    }
+  };
   const { can } = usePermissions();
   const mayChange = can('security.security', 'update');
 
@@ -235,7 +245,8 @@ export default function Security() {
 
   return (
     <div className="space-y-6">
-      <div>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
         <h1 className="flex items-center gap-2 text-3xl font-bold">
           <Shield className="h-7 w-7" />
           Sécurité
@@ -245,6 +256,11 @@ export default function Security() {
           Alertes, incidents et anomalies
           détectées sur les systèmes BIB.
         </p>
+        </div>
+        <Button type="button" variant="outline" disabled={isFetching} onClick={() => void refresh()}>
+          <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />
+          {isFetching ? 'Actualisation…' : 'Actualiser'}
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -392,7 +408,7 @@ export default function Security() {
           ) : isError ? (
             <div role="alert" className="space-y-2 p-4">
               <p className="text-destructive">Impossible de charger les alertes de sécurité.</p>
-              <Button type="button" variant="outline" onClick={() => void refetch()}>Réessayer</Button>
+              <Button type="button" variant="outline" onClick={() => void refresh()}>Réessayer</Button>
             </div>
           ) : filtered.length === 0 ? (
             <p className="text-sm text-muted-foreground">
