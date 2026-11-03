@@ -2,8 +2,19 @@
  * server-backed or volatile state. Never writes replacement browser data. */
 export function purgeLegacyBrowserRecords(): void {
   if (typeof window === "undefined") return;
+  // Run the legacy migration once only; repeated cleanup erased active auth
+  // sessions on refresh and after returning from hosted Stripe pages.
+  const migrationMarker = "bib:legacy-browser-cleanup:v2";
+  try {
+    if (window.localStorage.getItem(migrationMarker) === "done") return;
+  } catch {
+    // Storage might be unavailable (private browsing).
+  }
   const matches = (key: string) =>
-    /^(bib(?:[._:-]|$)|linksy(?:[._:-]|$)|sb-[a-z0-9-]+-auth-token$|supabase\.auth\.token$|alert-sound-enabled$)/i.test(key);
+    key !== migrationMarker &&
+    !/^sb-[a-z0-9-]+-auth-token$/i.test(key) &&
+    key !== "supabase.auth.token" &&
+    /^(bib(?:[._:-]|$)|linksy(?:[._:-]|$)|alert-sound-enabled$)/i.test(key);
   for (const storage of [window.localStorage, window.sessionStorage]) {
     try {
       const keys = Array.from({ length: storage.length }, (_, i) => storage.key(i))
@@ -28,5 +39,10 @@ export function purgeLegacyBrowserRecords(): void {
       keys.filter(key => /^(bib|linksy)([._:-]|$)/i.test(key))
         .map(key => window.caches.delete(key)),
     )).catch(() => {});
+  }
+  try {
+    window.localStorage.setItem(migrationMarker, "done");
+  } catch {
+    // Preserve normal operation if browser storage is unavailable.
   }
 }
