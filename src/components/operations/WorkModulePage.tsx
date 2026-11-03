@@ -1,6 +1,6 @@
 import { useDeferredValue, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Pencil, Archive } from 'lucide-react';
+import { Plus, Pencil, Archive, GripVertical, KanbanSquare, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -13,7 +13,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { usePoleCollaborators } from '@/hooks/usePoleCollaborators';
 import { poles as allPoles } from '@/data/poles';
-import { useWorkModuleRows, useWorkModuleActions, useWorkModulePeople, WorkModuleKind, WorkVersion, PROJECT_STATUS_LABELS, PROCESS_STATUS_LABELS, VALIDATION_STATUS_LABELS, ESCALATION_STATUS_LABELS, ESCALATION_SEVERITY_LABELS } from '@/hooks/useWorkModule';
+import { useWorkModuleRows, useWorkModuleActions, useWorkModulePeople, WorkModuleKind, WorkVersion, PROJECT_STATUS_LABELS, PROJECT_PRIORITY_LABELS, PROCESS_STATUS_LABELS, VALIDATION_STATUS_LABELS, ESCALATION_STATUS_LABELS, ESCALATION_SEVERITY_LABELS } from '@/hooks/useWorkModule';
 import WorkHistoryCard from './WorkHistoryCard';
 const definitions = { projects: { title: 'Projets', one: 'Projet', description: 'Responsables, échéances et avancement des projets.', statuses: PROJECT_STATUS_LABELS }, processes: { title: 'Processus', one: 'Processus', description: 'Procédures, étapes et versions publiées.', statuses: PROCESS_STATUS_LABELS }, validations: { title: 'Validations', one: 'Demande', description: 'Demandes, validateurs distincts et décisions motivées.', statuses: VALIDATION_STATUS_LABELS }, escalations: { title: 'Escalades', one: 'Escalade', description: 'Blocages, prise en charge et résolution documentée.', statuses: ESCALATION_STATUS_LABELS } };
 export interface WorkRow extends WorkVersion {
@@ -38,6 +38,7 @@ export interface WorkRow extends WorkVersion {
         label: string;
     }[];
     severity?: string;
+    priority?: string;
     decision_note?: string | null;
     resolution_note?: string | null;
     decided_at?: string | null;
@@ -75,6 +76,8 @@ export default function WorkModulePage({ kind, defaultPole, title }: {
     const [view, setView] = useState('all');
     const [editing, setEditing] = useState<WorkRow | null | undefined>();
     const [note, setNote] = useState('');
+    const [projectLayout, setProjectLayout] = useState<'kanban' | 'list'>('kanban');
+    const [draggedProject, setDraggedProject] = useState<string | null>(null);
     const selected = rows.find(r => r.id === selectedId);
     const visible = rows.filter(r => (!defaultPole || r.pole === defaultPole) && (status === 'archived' ? !!r.archived_at : !r.archived_at) && (status === 'all' || status === 'archived' || (status === 'open' ? !closed[kind].includes(r.status) : r.status === status)) && (view === 'all' || view === 'mine' && (creator(r) === user?.id || target(r) === user?.id) || view === 'pole' && !!r.pole && profile?.poles?.includes(r.pole as never)) && `${name(r)} ${r.description || ''} ${targetName(r)} ${r.pole || ''}`.toLowerCase().includes(deferred.toLowerCase()));
     const own = !!selected && (creator(selected) === user?.id || target(selected) === user?.id || isSuperAdmin);
@@ -82,10 +85,57 @@ export default function WorkModulePage({ kind, defaultPole, title }: {
     const editable = !!selected && !selected.archived_at && own && can(page, 'update') && (kind === 'processes' ? selected.status === 'draft' : kind === 'validations' ? selected.status === 'pending' : !closed[kind].includes(selected.status));
     const available = (r: WorkRow) => (transitions[kind][r.status] || []).filter(next => !r.archived_at && (kind === 'validations' ? can(page, 'validate') && r.validator_id === user?.id && r.requester_id !== user?.id : kind === 'processes' ? can(page, 'publish') && (own || scopeManager) : can(page, 'update') && (own || scopeManager)) && !(kind === 'projects' && closed.projects.includes(r.status) && !can(page, 'validate')) && !(kind === 'escalations' && next !== 'open' && r.assigned_to && r.assigned_to !== user?.id && !scopeManager));
     const transition = (r: WorkRow, next: string) => actions.update.mutate({ id: r.id, revision: r.revision, status: next, change_note: note }, { onSuccess: () => setNote('') });
+    const projectCanMove = (r: WorkRow, next: string) => {
+        if (kind !== 'projects' || r.archived_at || actions.update.isPending || !can(page, 'update')) return false;
+        const isOwner = creator(r) === user?.id || target(r) === user?.id || isSuperAdmin;
+        const isPoleManager = !!r.pole && !!profile?.poles?.includes(r.pole as never) && can(page, 'validate');
+        return (isOwner || isPoleManager) &&
+            (transitions.projects[r.status] || []).includes(next) &&
+            (!closed.projects.includes(r.status) || can(page, 'validate'));
+    };
+    const moveProject = (r: WorkRow, next: string) => {
+        if (!projectCanMove(r, next)) return;
+        let reason = '';
+        if (requiresNote('projects', r, next)) {
+            const entered = window.prompt('Motif obligatoire de ce changement de statut :');
+            if (!entered?.trim()) return;
+            reason = entered.trim();
+        }
+        actions.update.mutate({ id: r.id, revision: r.revision, status: next, change_note: reason });
+    };
     return <div className="space-y-5"><div className="flex flex-wrap justify-between gap-3"><div><h1 className="text-2xl font-semibold">{title || definition.title}</h1><p className="text-sm text-muted-foreground">{definition.description}</p></div><Button disabled={!can(page, 'create')} onClick={() => setEditing(null)}><Plus className="mr-2 h-4 w-4"/>Nouveau · {definition.one.toLowerCase()}</Button></div>
  <div className="grid grid-cols-2 gap-3 md:grid-cols-4">{Object.entries(definition.statuses).map(([key, label]) => <div key={key} className="rounded border p-4"><p className="text-xs text-muted-foreground">{label}</p><p className="text-2xl font-semibold">{rows.filter(r => !r.archived_at && (!defaultPole || r.pole === defaultPole) && r.status === key).length}</p></div>)}</div>
+ {kind === 'projects' && <div className="flex flex-wrap gap-2" aria-label="Mode d’affichage des projets">
+   <Button type="button" size="sm" variant={projectLayout === 'kanban' ? 'default' : 'outline'} onClick={() => setProjectLayout('kanban')}><KanbanSquare className="mr-2 h-4 w-4" />Kanban</Button>
+   <Button type="button" size="sm" variant={projectLayout === 'list' ? 'default' : 'outline'} onClick={() => setProjectLayout('list')}><List className="mr-2 h-4 w-4" />Liste</Button>
+ </div>}
  <div className="flex flex-wrap gap-3"><Input className="min-w-48 flex-1" placeholder="Rechercher…" aria-label="Rechercher dans le module Travail" maxLength={200} value={search} onChange={e => setSearch(e.target.value)}/><Select value={view} onValueChange={setView}><SelectTrigger className="w-44"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="all">Accessibles</SelectItem><SelectItem value="mine">Mes suivis</SelectItem><SelectItem value="pole">Mes pôles</SelectItem></SelectContent></Select><Select value={status} onValueChange={setStatus}><SelectTrigger className="w-48"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="open">En cours</SelectItem><SelectItem value="all">Tous les actifs</SelectItem><SelectItem value="archived">Archives</SelectItem>{Object.entries(definition.statuses).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div>
- {query.isLoading && <p role="status">Chargement…</p>}{query.isError && <p role="alert">Chargement impossible. <Button variant="outline" onClick={() => void query.refetch()}>Réessayer</Button></p>}{!query.isError && !query.isLoading && visible.length === 0 && <p className="text-muted-foreground">Aucun élément dans cette vue.</p>}<ul className="divide-y rounded border">{visible.map(r => <li key={r.id}><button className="flex w-full flex-wrap items-center justify-between gap-3 p-4 text-left hover:bg-muted/50" onClick={() => select(r.id)}><span><span className="block font-medium">{name(r)}</span><span className="text-xs text-muted-foreground">{targetName(r)}{r.pole ? ` · ${r.pole}` : ''}{r.due_date ? ` · ${r.due_date}` : ''}</span></span><span className="flex gap-2">{r.severity && <Badge variant="outline">{ESCALATION_SEVERITY_LABELS[r.severity as keyof typeof ESCALATION_SEVERITY_LABELS]}</Badge>}<Badge variant="outline">{r.archived_at ? 'Archivé' : (definition.statuses as Record<string, string>)[r.status]}</Badge></span></button></li>)}</ul>
+ {query.isLoading && <p role="status">Chargement…</p>}{query.isError && <p role="alert">Chargement impossible. <Button variant="outline" onClick={() => void query.refetch()}>Réessayer</Button></p>}{!query.isError && !query.isLoading && visible.length === 0 && <p className="text-muted-foreground">Aucun élément dans cette vue.</p>}{kind === 'projects' && projectLayout === 'kanban' && !query.isError && !query.isLoading &&
+ <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5" aria-label="Tableau Kanban des projets">
+   {(Object.entries(PROJECT_STATUS_LABELS)).map(([column, label]) =>
+    <section key={column} aria-label={label} className="min-h-64 rounded-xl border bg-muted/20 p-3"
+      onDragOver={event => { if (draggedProject) event.preventDefault(); }}
+      onDrop={event => { event.preventDefault(); const item = visible.find(r => r.id === draggedProject); setDraggedProject(null); if (item) moveProject(item, column); }}>
+      <h2 className="mb-3 flex items-center justify-between gap-2 text-sm font-semibold">{label}<Badge variant="outline">{visible.filter(r => r.status === column).length}</Badge></h2>
+      <div className="space-y-2">
+       {visible.filter(r => r.status === column).map(r => <div key={r.id} className="rounded-lg border bg-card p-3" draggable={can(page,'update') && !r.archived_at}
+         onDragStart={() => setDraggedProject(r.id)} onDragEnd={() => setDraggedProject(null)}>
+         <div className="flex items-start gap-2">
+          <GripVertical className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true"/>
+          <button type="button" className="min-w-0 flex-1 text-left font-medium hover:underline" onClick={() => select(r.id)}>{name(r)}</button>
+         </div>
+         <div className="mt-2 flex flex-wrap gap-1"><Badge variant={r.priority === 'critical' ? 'destructive' : 'outline'}>{PROJECT_PRIORITY_LABELS[(r.priority || 'medium') as keyof typeof PROJECT_PRIORITY_LABELS] || 'Priorité à définir'}</Badge>{r.pole && <Badge variant="secondary">{r.pole}</Badge>}</div>
+         <p className="mt-2 text-xs text-muted-foreground">{targetName(r)}</p>
+         <p className="mt-1 text-xs text-muted-foreground">{r.due_date ? `Échéance : ${r.due_date}` : 'Échéance à définir'}</p>
+         {can(page,'update') && <Select value={r.status} onValueChange={next => moveProject(r,next)} disabled={actions.update.isPending}>
+          <SelectTrigger className="mt-3" aria-label={`Changer le statut de ${name(r)}`}><SelectValue /></SelectTrigger>
+          <SelectContent>{Object.entries(PROJECT_STATUS_LABELS).filter(([key]) => key === r.status || projectCanMove(r,key)).map(([key,label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent>
+         </Select>}
+        </div>)}
+      </div>
+    </section>)}
+ </div>}
+ {(kind !== 'projects' || projectLayout === 'list') && <ul className="divide-y rounded border">{visible.map(r => <li key={r.id}><button className="flex w-full flex-wrap items-center justify-between gap-3 p-4 text-left hover:bg-muted/50" onClick={() => select(r.id)}><span><span className="block font-medium">{name(r)}</span><span className="text-xs text-muted-foreground">{targetName(r)}{r.pole ? ` · ${r.pole}` : ''}{r.due_date ? ` · ${r.due_date}` : ''}</span></span><span className="flex gap-2">{r.severity && <Badge variant="outline">{ESCALATION_SEVERITY_LABELS[r.severity as keyof typeof ESCALATION_SEVERITY_LABELS]}</Badge>}<Badge variant="outline">{r.archived_at ? 'Archivé' : (definition.statuses as Record<string, string>)[r.status]}</Badge></span></button></li>)}</ul>}
  {editing !== undefined && <WorkEditor key={editing?.id || 'new'} kind={kind} row={editing || undefined} defaultPole={defaultPole} pending={actions.create.isPending || actions.update.isPending} close={() => setEditing(undefined)} save={(input, base) => base ? actions.update.mutate({ id: base.id, revision: base.revision, ...input }, { onSuccess: () => setEditing(undefined) }) : actions.create.mutate(input, { onSuccess: () => setEditing(undefined) })}/>}
  <Sheet open={!!selectedId} onOpenChange={open => !open && select(null)}><SheetContent className="w-full overflow-y-auto sm:max-w-2xl">{selected ? <><SheetHeader><SheetTitle>{name(selected)}</SheetTitle></SheetHeader><div className="mt-5 space-y-4 text-sm"><Badge variant="outline">{selected.archived_at ? 'Archivé' : (definition.statuses as Record<string, string>)[selected.status]}</Badge><p className="whitespace-pre-wrap">{selected.description || 'Aucune description.'}</p><p>{kind === 'validations' ? 'Validateur' : 'Responsable'} : {targetName(selected)}</p>{selected.due_date && <p>Échéance : {selected.due_date}</p>}{selected.steps?.length > 0 && <ol className="list-inside list-decimal space-y-2">{selected.steps.map((step, i) => <li key={i}>{step.label}</li>)}</ol>}{selected.decided_at && <p>Décision du {new Date(selected.decided_at).toLocaleString('fr-FR')}</p>}{selected.decision_note && <p className="whitespace-pre-wrap">{selected.decision_note}</p>}{selected.resolved_at && <p>Résolue le {new Date(selected.resolved_at).toLocaleString('fr-FR')}</p>}{selected.resolution_note && <p className="whitespace-pre-wrap">{selected.resolution_note}</p>}{editable && <Button variant="outline" onClick={() => setEditing(selected)}><Pencil className="mr-2 h-4 w-4"/>{kind === 'validations' ? 'Changer le validateur' : 'Modifier'}</Button>}
  {available(selected).length > 0 && <div className="space-y-3 rounded border p-3"><Label htmlFor="work-note">Motif de décision ou de transition</Label><Textarea id="work-note" value={note} maxLength={5000} onChange={e => setNote(e.target.value)}/><div className="flex flex-wrap gap-2">{available(selected).map(next => <Button key={next} variant={next === 'rejected' || next === 'cancelled' ? 'destructive' : 'outline'} disabled={actions.update.isPending || requiresNote(kind, selected, next) && !note.trim()} onClick={() => transition(selected, next)}>{(definition.statuses as Record<string, string>)[next]}</Button>)}</div></div>}
@@ -112,7 +162,7 @@ function WorkEditor({ kind, row, defaultPole, pending, close, save }: {
     const directory = usePoleCollaborators(memberPole || null, `work.${kind}`, kind === 'validations' ? 'validate' : 'update');
     const poleOptions = allPoles.filter(p => isSuperAdmin || isCeo || poles.includes(p.id));
     const personColumn = kind === 'validations' ? 'validator_id' : kind === 'escalations' ? 'assigned_to' : 'owner_id';
-    const [form, setForm] = useState({ title: row ? name(row) : '', description: row?.description || '', pole: row?.pole || defaultPole || '', person: row?.owner_id || row?.validator_id || row?.assigned_to || 'none', due: row?.due_date || '', steps: (row?.steps || []).map(s => s.label).join('\n'), severity: row?.severity || 'medium', resolution: row?.resolution_note || '' });
+    const [form, setForm] = useState({ title: row ? name(row) : '', description: row?.description || '', pole: row?.pole || defaultPole || '', person: row?.owner_id || row?.validator_id || row?.assigned_to || 'none', due: row?.due_date || '', steps: (row?.steps || []).map(s => s.label).join('\n'), severity: row?.severity || 'medium', priority: row?.priority || 'medium', resolution: row?.resolution_note || '' });
     const change = (key: keyof typeof form, value: string) => setForm({ ...form, [key]: value });
     const assignedToPole = (p: { id: string }) =>
         !!directory.data?.some(m => m.id === p.id && m.eligible);
@@ -124,7 +174,7 @@ function WorkEditor({ kind, row, defaultPole, pending, close, save }: {
         save({ validator_id: form.person }, base);
         return;
     } const input: Record<string, unknown> = { [kind === 'projects' || kind === 'processes' ? 'name' : 'title']: form.title.trim(), description: form.description.trim() || null, pole: form.pole || null, [personColumn]: form.person === 'none' ? null : form.person }; if (kind === 'projects')
-        input.due_date = form.due || null; if (kind === 'processes')
+        { input.due_date = form.due || null; input.priority = form.priority; } if (kind === 'processes')
         input.steps = form.steps.split('\n').map(label => label.trim()).filter(Boolean).map(label => ({ label })); if (kind === 'escalations') {
         input.severity = form.severity;
         if (base)
@@ -156,6 +206,6 @@ function WorkEditor({ kind, row, defaultPole, pending, close, save }: {
    <p className="text-xs text-muted-foreground">Le pôle recense ses membres actifs. L'affectation exige en plus les droits métier vérifiés côté serveur.</p>
  </div>
  <div><Label>{kind === 'validations' ? 'Validateur distinct du demandeur' : 'Responsable'}</Label><Select value={form.person} onValueChange={value => change('person', value)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{kind !== 'validations' && <SelectItem value="none">Non attribué</SelectItem>}{availablePeople.map(p => <SelectItem key={p.id} value={p.id}>{p.first_name} {p.last_name}</SelectItem>)}</SelectContent></Select>{people.isError && <p role="alert" className="text-sm">Liste des responsables autorisés indisponible.</p>}</div>
- {kind === 'projects' && <div><Label htmlFor="work-due">Échéance</Label><Input id="work-due" type="date" value={form.due} onChange={e => change('due', e.target.value)}/></div>}{kind === 'processes' && <div><Label htmlFor="work-steps">Étapes, une par ligne</Label><Textarea id="work-steps" rows={6} maxLength={50000} value={form.steps} onChange={e => change('steps', e.target.value)}/></div>}{kind === 'escalations' && <><div><Label>Gravité</Label><Select value={form.severity} onValueChange={v => change('severity', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(ESCALATION_SEVERITY_LABELS).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div>{base && <div><Label htmlFor="work-resolution">Éléments de résolution en préparation</Label><Textarea id="work-resolution" maxLength={5000} value={form.resolution} onChange={e => change('resolution', e.target.value)}/></div>}</>}
+ {kind === 'projects' && <div className="grid gap-3 sm:grid-cols-2"><div><Label>Priorité du projet</Label><Select value={form.priority} onValueChange={v => change('priority', v)}><SelectTrigger aria-label="Priorité du projet"><SelectValue /></SelectTrigger><SelectContent>{Object.entries(PROJECT_PRIORITY_LABELS).map(([key,label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div><div><Label htmlFor="work-due">Échéance</Label><Input id="work-due" type="date" value={form.due} onChange={e => change('due', e.target.value)}/></div></div>}{kind === 'processes' && <div><Label htmlFor="work-steps">Étapes, une par ligne</Label><Textarea id="work-steps" rows={6} maxLength={50000} value={form.steps} onChange={e => change('steps', e.target.value)}/></div>}{kind === 'escalations' && <><div><Label>Gravité</Label><Select value={form.severity} onValueChange={v => change('severity', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{Object.entries(ESCALATION_SEVERITY_LABELS).map(([key, label]) => <SelectItem key={key} value={key}>{label}</SelectItem>)}</SelectContent></Select></div>{base && <div><Label htmlFor="work-resolution">Éléments de résolution en préparation</Label><Textarea id="work-resolution" maxLength={5000} value={form.resolution} onChange={e => change('resolution', e.target.value)}/></div>}</>}
  <div className="flex justify-end gap-2"><Button type="button" variant="outline" disabled={pending} onClick={close}>Annuler</Button><Button disabled={pending || !form.title.trim() || kind === 'validations' && form.person === 'none'}>{pending ? 'Enregistrement…' : base ? 'Enregistrer' : 'Créer'}</Button></div></form></DialogContent></Dialog>;
 }
