@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Documents from '@/pages/Documents';
+import FinancialAnalytics from '@/components/finance/FinancialAnalytics';
 import {
   GovernanceBlock, useGovernanceBlockActions, useGovernanceBlocks, useIsLeadership,
 } from '@/hooks/useDirectionContent';
@@ -113,6 +114,13 @@ const GroupGovernance = () => {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Supervision financière du Groupe</CardTitle>
+          <CardDescription>Vue graphique des écritures réellement enregistrées, par devise. Les budgets prévisionnels validés restent distincts.</CardDescription>
+        </CardHeader>
+        <CardContent><FinancialAnalytics compact /></CardContent>
+      </Card>
       <Documents pageId="direction.governance" />
 
       <Dialog open={!!bd} onOpenChange={(o) => !o && setBd(null)}>
