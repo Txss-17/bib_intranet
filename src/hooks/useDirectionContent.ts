@@ -17,7 +17,8 @@ export const useIsLeadership = () => {
   });
 };
 
-export interface RoadmapObjective { name: string; completed: boolean; start_date?: string | null; end_date?: string | null }
+export type RoadmapObjectivePriority = 'low' | 'medium' | 'high' | 'critical';
+export interface RoadmapObjective { name: string; completed: boolean; priority?: RoadmapObjectivePriority; start_date?: string | null; end_date?: string | null }
 export interface RoadmapItem {
   id: string;
   kind: 'milestone' | 'priority';
@@ -59,6 +60,8 @@ export const useRoadmapItems = () =>
             ).map((objective) => ({
               name: typeof objective.name === 'string' ? objective.name : '',
               completed: objective.completed === true,
+              priority: ['low', 'medium', 'high', 'critical'].includes(String(objective.priority))
+                ? objective.priority as RoadmapObjectivePriority : 'medium',
               start_date: typeof objective.start_date === 'string' ? objective.start_date : null,
               end_date: typeof objective.end_date === 'string' ? objective.end_date : null,
             }))
@@ -107,6 +110,7 @@ export const useRoadmapActions = () => {
         const objectives = patch.objectives?.map((objective) => ({
           name: objective.name,
           completed: objective.completed,
+          priority: objective.priority ?? 'medium',
           start_date: objective.start_date ?? null,
           end_date: objective.end_date ?? null,
         }));
