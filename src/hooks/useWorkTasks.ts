@@ -45,11 +45,12 @@ export const useWorkTasks = () => {
   const { user } = useAuth();
   return useQuery({
     queryKey: ['work-tasks', user?.id],
+    staleTime: 15_000,
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await db
         .from('work_tasks')
-        .select('*, assignee:profiles!work_tasks_assignee_id_fkey(first_name, last_name)')
+        .select('id, title, description, pole, task_poles, objective, updated_at, archived_at, status, priority, assignee_id, created_by, due_date, completed_at, created_at, assignee:profiles!work_tasks_assignee_id_fkey(first_name, last_name)')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return (data || []).map((t) => ({
@@ -64,6 +65,7 @@ export const useTaskAssignees = () => {
   const { user, profile } = useAuth();
   return useQuery({
     queryKey: ['task-assignees', user?.id, profile?.test_account === true],
+    staleTime: 60_000,
     enabled: !!user && !!profile,
     queryFn: async () => {
       let query = db.from('profiles').select('id, first_name, last_name')
