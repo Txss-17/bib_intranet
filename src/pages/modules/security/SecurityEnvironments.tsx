@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { AlertTriangle, ArrowRight, GitBranch, Layers3, RefreshCw, RotateCcw, ShieldCheck } from 'lucide-react';
@@ -24,6 +25,13 @@ export default function SecurityEnvironments() {
   const deployments = useSecurityDeployments();
   const bridge = useSecurityBridgeRuns();
   const [filter, setFilter] = useState('');
+  const refresh = async () => {
+    const results = await Promise.allSettled([deployments.refetch(), bridge.refetch()]);
+    const failed = results.some(result => result.status === 'rejected' || (result.status === 'fulfilled' && result.value.error));
+    if (failed) toast.error('Actualisation incomplète des environnements ou des synchronisations.');
+    else toast.success('Environnements et synchronisations actualisés.');
+  };
+
   const [stage, setStage] = useState('all');
   const rows = deployments.data ?? [];
   const runs = bridge.data ?? [];
@@ -45,7 +53,7 @@ export default function SecurityEnvironments() {
         <p className="max-w-3xl text-sm text-muted-foreground">Historique réel des déploiements, promotion des versions et suivi des échanges BIB Platform ↔ Intranet.</p>
         <p className="text-xs text-muted-foreground">Les données affichées sont des événements enregistrés ; elles ne prouvent ni la disponibilité instantanée, ni l’existence d’une préproduction indépendante.</p>
       </div>
-      <Button variant="outline" disabled={deployments.isFetching || bridge.isFetching} onClick={() => { void deployments.refetch(); void bridge.refetch(); }}>
+      <Button variant="outline" disabled={deployments.isFetching || bridge.isFetching} onClick={() => void refresh()}>
         <RefreshCw className="mr-2 h-4 w-4" />Actualiser
       </Button>
     </header>
