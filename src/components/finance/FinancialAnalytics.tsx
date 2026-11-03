@@ -80,42 +80,45 @@ export default function FinancialAnalytics({ compact = false }: Props) {
     </div>
     {movements.isLoading && <p role="status">Chargement des données financières…</p>}
     {movements.isError && <p role="alert" className="text-sm text-destructive">Données financières indisponibles. Les montants ne peuvent pas être confirmés.</p>}
-    {!movements.isLoading && !movements.isError && records.length === 0 && <p className="text-sm text-muted-foreground">Aucune écriture réelle à représenter.</p>}
+    {!movements.isLoading && !movements.isError && records.length === 0 && <p className="text-sm text-muted-foreground">Aucune écriture réelle : les tableaux graphiques sont prêts, sans valeurs inventées.</p>}
     {!movements.isLoading && !movements.isError && records.length > 0 && !selectedCurrency && <p className="text-sm text-muted-foreground">Aucune devise renseignée : impossible de produire des montants comparables.</p>}
-    {!movements.isLoading && !movements.isError && selectedCurrency && <>
+    {!movements.isLoading && !movements.isError && summary.matchedCount === 0 && selectedCurrency && <p className="text-sm text-muted-foreground">Aucune écriture exploitable sur les {period} derniers mois pour {selectedCurrency}.</p>}
+    {!movements.isLoading && !movements.isError && selectedCurrency && summary.matchedCount > 0 && <>
       <div className="grid gap-3 sm:grid-cols-3">
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Entrées du registre</p><p className="text-xl font-semibold tabular-nums">{value(summary.income, selectedCurrency)}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Sorties du registre</p><p className="text-xl font-semibold tabular-nums">{value(summary.expense, selectedCurrency)}</p></CardContent></Card>
         <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Net des flux, non bancaire</p><p className="text-xl font-semibold tabular-nums">{value(summary.income - summary.expense, selectedCurrency)}</p></CardContent></Card>
       </div>
-      <div className={compact ? 'grid gap-4' : 'grid gap-4 lg:grid-cols-2'}>
+    </>}
+    <div className={compact ? 'grid gap-4' : 'grid gap-4 lg:grid-cols-2'}>
         <Card><CardHeader><CardTitle className="text-base">Entrées et sorties par mois</CardTitle></CardHeader><CardContent>
-          <div role="img" aria-label="Histogramme des entrées et sorties du registre par mois, dans la devise sélectionnée">
+          {movements.isLoading || movements.isError || !selectedCurrency || summary.matchedCount === 0 ? <p className="flex min-h-[260px] items-center justify-center text-sm text-muted-foreground">{movements.isLoading ? 'Chargement du graphique…' : movements.isError ? 'Source indisponible' : 'Aucune donnée exploitable pour cette période'}</p> : <div role="img" aria-label="Histogramme des entrées et sorties du registre par mois, dans la devise sélectionnée">
             <ResponsiveContainer width="100%" height={260}><BarChart data={summary.series}>
               <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" tick={{ fontSize: 11 }}/><YAxis tick={{ fontSize: 11 }}/>
               <Tooltip formatter={(n: number | string) => value(Number(n), selectedCurrency)} /><Legend />
               <Bar dataKey="income" name="Entrées" fill="hsl(var(--chart-1))" />
               <Bar dataKey="expense" name="Sorties" fill="hsl(var(--chart-2))" />
             </BarChart></ResponsiveContainer>
-          </div>
+          </div>}
         </CardContent></Card>
         <Card><CardHeader><CardTitle className="text-base">Évolution du net mensuel</CardTitle></CardHeader><CardContent>
-          <div role="img" aria-label="Courbe du net mensuel des écritures du registre">
+          {movements.isLoading || movements.isError || !selectedCurrency || summary.matchedCount === 0 ? <p className="flex min-h-[260px] items-center justify-center text-sm text-muted-foreground">{movements.isLoading ? 'Chargement du graphique…' : movements.isError ? 'Source indisponible' : 'Aucune donnée exploitable pour cette période'}</p> : <div role="img" aria-label="Courbe du net mensuel des écritures du registre">
             <ResponsiveContainer width="100%" height={260}><LineChart data={summary.series}>
               <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" tick={{ fontSize: 11 }}/><YAxis tick={{ fontSize: 11 }}/>
               <Tooltip formatter={(n: number | string) => value(Number(n), selectedCurrency)} />
               <Line type="monotone" dataKey="net" name="Net des flux" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />
             </LineChart></ResponsiveContainer>
-          </div>
+          </div>}
         </CardContent></Card>
         {!compact && <Card className="lg:col-span-2"><CardHeader><CardTitle className="text-base">Dépenses par catégorie (8 principales)</CardTitle></CardHeader><CardContent>
-          {summary.byCategory.length === 0 ? <p className="text-sm text-muted-foreground">Aucune dépense sur cette période.</p> :
+          {movements.isLoading || movements.isError || summary.byCategory.length === 0 ? <p className="text-sm text-muted-foreground">Aucune dépense exploitable sur cette période.</p> :
             <ResponsiveContainer width="100%" height={Math.max(190, summary.byCategory.length * 38)}><BarChart layout="vertical" data={summary.byCategory} margin={{ left: 20 }}>
               <CartesianGrid strokeDasharray="3 3" /><XAxis type="number" /><YAxis type="category" dataKey="category" width={120} tick={{ fontSize: 11 }}/><Tooltip formatter={(n: number | string) => value(Number(n), selectedCurrency)} />
               <Bar dataKey="amount" name="Sorties" fill="hsl(var(--chart-2))" />
             </BarChart></ResponsiveContainer>}
         </CardContent></Card>}
       </div>
+    {!movements.isLoading && !movements.isError && selectedCurrency && summary.matchedCount > 0 && <>
       <p className="text-xs text-muted-foreground">Périmètre : {summary.matchedCount} écritures valides de {selectedCurrency} sur {period} mois ; échantillon limité aux 500 dernières lignes du registre accessibles. {summary.ignored > 0 ? `${summary.ignored} type(s) non catégorisé(s) exclus. ` : ''}Si le registre contient plus de 500 mouvements, les graphiques sont partiels. Aucun taux de change n’est appliqué.</p>
       <Card><CardContent className="p-4 text-sm"><strong>Budget prévisionnel vs réalisé :</strong> aucune enveloppe budgétaire approuvée n’est présente dans cette vue. Un écart budget/réel ne peut pas être calculé à partir des seuls mouvements financiers.</CardContent></Card>
     </>}
