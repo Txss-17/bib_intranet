@@ -47,7 +47,7 @@ const candidates: HrRecordsConfig = {
     { key: 'email', label: 'Email', type: 'text' },
     { key: 'position_key', label: 'Poste', type: 'position', required: true },
     { key: 'source', label: 'Source', type: 'select', options: [
-      { value: 'linkedin', label: 'LinkedIn' }, { value: 'referral', label: 'Cooptation' }, { value: 'website', label: 'Site BIB' },
+      { value: 'bib_talent', label: 'BIB Talent · Platform' }, { value: 'linkedin', label: 'LinkedIn' }, { value: 'referral', label: 'Cooptation' }, { value: 'website', label: 'Site BIB' },
       { value: 'school', label: 'École' }, { value: 'other', label: 'Autre' } ] },
     { key: 'next_step', label: 'Prochaine étape', type: 'text' },
   ],
