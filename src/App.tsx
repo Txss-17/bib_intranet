@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,258 +24,258 @@ import { ProtectedPage } from "./components/PermissionGate";
 import Login from "./pages/Login";
 import ResetPassword from "./pages/ResetPassword";
 import Unsubscribe from "./pages/Unsubscribe";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
-import Profile from "./pages/Profile";
-import PoleDashboard from "./pages/PoleDashboard";
-import SubSectionPage from "./pages/modules/SubSectionPage";
+const Index = lazy(() => import("./pages/Index"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Profile = lazy(() => import("./pages/Profile"));
+const PoleDashboard = lazy(() => import("./pages/PoleDashboard"));
+const SubSectionPage = lazy(() => import("./pages/modules/SubSectionPage"));
 
-import InternalFeed from "./pages/InternalFeed";
+const InternalFeed = lazy(() => import("./pages/InternalFeed"));
 import ModuleWorkspace from '@/components/operations/ModuleWorkspace';
-import Documents from "./pages/Documents";
-import Notifications from "./pages/Notifications";
-import Settings from "./pages/Settings";
+const Documents = lazy(() => import("./pages/Documents"));
+const Notifications = lazy(() => import("./pages/Notifications"));
+const Settings = lazy(() => import("./pages/Settings"));
 
-import RolesPermissions from "@/pages/admin/RolesPermissions";
+const RolesPermissions = lazy(() => import("@/pages/admin/RolesPermissions"));
 
 /* ============================================================
    GLOBAL AUDIT
    ============================================================ */
 
-import ComplianceAudit from "./pages/ComplianceAudit";
-import FinanceCompliance from "./pages/compliance/FinanceCompliance";
-import OpsCompliance from "./pages/compliance/OpsCompliance";
+const ComplianceAudit = lazy(() => import("./pages/ComplianceAudit"));
+const FinanceCompliance = lazy(() => import("./pages/compliance/FinanceCompliance"));
+const OpsCompliance = lazy(() => import("./pages/compliance/OpsCompliance"));
 
 /* ============================================================
    1. DIRECTION
    ============================================================ */
 
-import ExecutiveDashboard from "./pages/modules/direction/ExecutiveDashboard";
-import DirectionGlobal from "./pages/modules/direction/DirectionGlobal";
-import StrategicKPIs from "./pages/modules/direction/StrategicKPIs";
-import CriticalAlertsPage from "./pages/modules/direction/CriticalAlerts";
-import DecisionArbitrage from "./pages/modules/direction/DecisionArbitrage";
-import VisionRoadmap from "./pages/modules/direction/VisionRoadmap";
-import GroupGovernance from "./pages/modules/direction/GroupGovernance";
-import BoardReports from "./pages/modules/direction/BoardReports";
+const ExecutiveDashboard = lazy(() => import("./pages/modules/direction/ExecutiveDashboard"));
+const DirectionGlobal = lazy(() => import("./pages/modules/direction/DirectionGlobal"));
+const StrategicKPIs = lazy(() => import("./pages/modules/direction/StrategicKPIs"));
+const CriticalAlertsPage = lazy(() => import("./pages/modules/direction/CriticalAlerts"));
+const DecisionArbitrage = lazy(() => import("./pages/modules/direction/DecisionArbitrage"));
+const VisionRoadmap = lazy(() => import("./pages/modules/direction/VisionRoadmap"));
+const GroupGovernance = lazy(() => import("./pages/modules/direction/GroupGovernance"));
+const BoardReports = lazy(() => import("./pages/modules/direction/BoardReports"));
 
 /* ============================================================
    2. FINANCE
    ============================================================ */
 
-import FinanceDashboard from "./pages/modules/finance/FinanceDashboard";
-import CashflowRealtime from "./pages/modules/finance/CashflowRealtime";
-import Transactions from "./pages/modules/finance/Transactions";
-import SupplierPayments from "./pages/modules/finance/SupplierPayments";
-import Subscriptions from "./pages/modules/finance/Subscriptions";
-import Salaries from "./pages/modules/finance/Salaries";
-import CorporateCards from "./pages/modules/finance/CorporateCards";
-import GuaranteeFund from "./pages/modules/finance/GuaranteeFund";
-import Reconciliation from "./pages/modules/finance/Reconciliation";
+const FinanceDashboard = lazy(() => import("./pages/modules/finance/FinanceDashboard"));
+const CashflowRealtime = lazy(() => import("./pages/modules/finance/CashflowRealtime"));
+const Transactions = lazy(() => import("./pages/modules/finance/Transactions"));
+const SupplierPayments = lazy(() => import("./pages/modules/finance/SupplierPayments"));
+const Subscriptions = lazy(() => import("./pages/modules/finance/Subscriptions"));
+const Salaries = lazy(() => import("./pages/modules/finance/Salaries"));
+const CorporateCards = lazy(() => import("./pages/modules/finance/CorporateCards"));
+const GuaranteeFund = lazy(() => import("./pages/modules/finance/GuaranteeFund"));
+const Reconciliation = lazy(() => import("./pages/modules/finance/Reconciliation"));
 
 /* ============================================================
    3. OPÉRATIONS & LOGISTIQUE
    ============================================================ */
 
-import OpsDashboard from "./pages/modules/ops/OpsDashboard";
-import Orders from "./pages/modules/ops/Orders";
-import Shipments from "./pages/modules/ops/Shipments";
-import LogisticsIncidents from "./pages/modules/ops/LogisticsIncidents";
-import Partners from "./pages/modules/ops/Partners";
-import DistributedStocks from "./pages/modules/ops/DistributedStocks";
-import ProductCatalog from "./pages/modules/ops/ProductCatalog";
-import ProductLifecycle from "./pages/modules/ops/ProductLifecycle";
-import SyncFlows from "./pages/modules/ops/SyncFlows";
-import Replenishment from "./pages/modules/ops/Replenishment";
-import OrderPipeline from "./pages/modules/ops/OrderPipeline";
-import AuditLink from "./pages/modules/ops/AuditLink";
-import DemandForecast from "./pages/modules/ops/DemandForecast";
-import StockThresholds from "./pages/modules/ops/StockThresholds";
-import SupplierLeadTimes from "./pages/modules/ops/SupplierLeadTimes";
-import ShopsSupervision from "./pages/modules/ops/ShopsSupervision";
-import Anomalies from "./pages/modules/ops/Anomalies";
-import ShopDetail from "./pages/modules/ops/ShopDetail";
+const OpsDashboard = lazy(() => import("./pages/modules/ops/OpsDashboard"));
+const Orders = lazy(() => import("./pages/modules/ops/Orders"));
+const Shipments = lazy(() => import("./pages/modules/ops/Shipments"));
+const LogisticsIncidents = lazy(() => import("./pages/modules/ops/LogisticsIncidents"));
+const Partners = lazy(() => import("./pages/modules/ops/Partners"));
+const DistributedStocks = lazy(() => import("./pages/modules/ops/DistributedStocks"));
+const ProductCatalog = lazy(() => import("./pages/modules/ops/ProductCatalog"));
+const ProductLifecycle = lazy(() => import("./pages/modules/ops/ProductLifecycle"));
+const SyncFlows = lazy(() => import("./pages/modules/ops/SyncFlows"));
+const Replenishment = lazy(() => import("./pages/modules/ops/Replenishment"));
+const OrderPipeline = lazy(() => import("./pages/modules/ops/OrderPipeline"));
+const AuditLink = lazy(() => import("./pages/modules/ops/AuditLink"));
+const DemandForecast = lazy(() => import("./pages/modules/ops/DemandForecast"));
+const StockThresholds = lazy(() => import("./pages/modules/ops/StockThresholds"));
+const SupplierLeadTimes = lazy(() => import("./pages/modules/ops/SupplierLeadTimes"));
+const ShopsSupervision = lazy(() => import("./pages/modules/ops/ShopsSupervision"));
+const Anomalies = lazy(() => import("./pages/modules/ops/Anomalies"));
+const ShopDetail = lazy(() => import("./pages/modules/ops/ShopDetail"));
 
 /* ============================================================
    WORK / TRANSVERSAL OPERATIONS
    ============================================================ */
 
-import WorkTasks from "./pages/modules/work/WorkTasks";
-import WorkProjects from "./pages/modules/work/WorkProjects";
-import WorkProcesses from "./pages/modules/work/WorkProcesses";
-import WorkValidations from "./pages/modules/work/WorkValidations";
-import WorkEscalations from "./pages/modules/work/WorkEscalations";
-import WorkActivities from "./pages/modules/work/WorkActivities";
+const WorkTasks = lazy(() => import("./pages/modules/work/WorkTasks"));
+const WorkProjects = lazy(() => import("./pages/modules/work/WorkProjects"));
+const WorkProcesses = lazy(() => import("./pages/modules/work/WorkProcesses"));
+const WorkValidations = lazy(() => import("./pages/modules/work/WorkValidations"));
+const WorkEscalations = lazy(() => import("./pages/modules/work/WorkEscalations"));
+const WorkActivities = lazy(() => import("./pages/modules/work/WorkActivities"));
 
 /* ============================================================
    4. FOURNISSEURS & PRODUITS
    ============================================================ */
 
-import SupplierDashboard from "./pages/modules/supplier/SupplierDashboard";
-import PendingProducts from "./pages/modules/supplier/PendingProducts";
-import ValidatedProducts from "./pages/modules/supplier/ValidatedProducts";
-import SupplierFiles from "./pages/modules/supplier/SupplierFiles";
-import Certifications from "./pages/modules/supplier/Certifications";
-import DecisionHistory from "./pages/modules/supplier/DecisionHistory";
-import QualityAlerts from "./pages/modules/supplier/QualityAlerts";
-import SupplierPortfolios from "./pages/modules/supplier/SupplierPortfolios";
-import SupplierApplications from "./pages/modules/supplier/SupplierApplications";
-import SupplierApplicationDetail from "./pages/modules/supplier/SupplierApplicationDetail";
-import SupplierRestockOrders from "./pages/modules/supplier/SupplierRestockOrders";
-import SupplierCatalogInbox from "./pages/modules/supplier/SupplierCatalogInbox";
+const SupplierDashboard = lazy(() => import("./pages/modules/supplier/SupplierDashboard"));
+const PendingProducts = lazy(() => import("./pages/modules/supplier/PendingProducts"));
+const ValidatedProducts = lazy(() => import("./pages/modules/supplier/ValidatedProducts"));
+const SupplierFiles = lazy(() => import("./pages/modules/supplier/SupplierFiles"));
+const Certifications = lazy(() => import("./pages/modules/supplier/Certifications"));
+const DecisionHistory = lazy(() => import("./pages/modules/supplier/DecisionHistory"));
+const QualityAlerts = lazy(() => import("./pages/modules/supplier/QualityAlerts"));
+const SupplierPortfolios = lazy(() => import("./pages/modules/supplier/SupplierPortfolios"));
+const SupplierApplications = lazy(() => import("./pages/modules/supplier/SupplierApplications"));
+const SupplierApplicationDetail = lazy(() => import("./pages/modules/supplier/SupplierApplicationDetail"));
+const SupplierRestockOrders = lazy(() => import("./pages/modules/supplier/SupplierRestockOrders"));
+const SupplierCatalogInbox = lazy(() => import("./pages/modules/supplier/SupplierCatalogInbox"));
 
 /* ============================================================
    5. MARKETPLACE & CUSTOMER
    ============================================================ */
 
-import MarketplaceDashboard from "./pages/modules/marketplace/MarketplaceDashboard";
-import MerchantPortfolio from "./pages/modules/marketplace/MerchantPortfolio";
-import MerchantDetail from "./pages/modules/marketplace/MerchantDetail";
-import MarketplaceStoreDetail from "./pages/modules/marketplace/MarketplaceStoreDetail";
-import MarketplaceStores from "./pages/modules/marketplace/MarketplaceStores";
-import MarketplaceOpportunities from "./pages/modules/marketplace/MarketplaceOpportunities";
-import MarketplaceAnalytics from "./pages/modules/marketplace/MarketplaceAnalytics";
-import MarketplaceProducts from "./pages/modules/marketplace/MarketplaceProducts";
-import MarketplaceCustomers from "./pages/modules/marketplace/MarketplaceCustomers";
-import MarketplaceSubscriptions from "./pages/modules/marketplace/MarketplaceSubscriptions";
-import MarketplaceFavorites from "./pages/modules/marketplace/MarketplaceFavorites";
-import MarketplaceOrders from "./pages/modules/marketplace/MarketplaceOrders";
-import MarketplaceSubscribers from "./pages/modules/marketplace/MarketplaceSubscribers";
+const MarketplaceDashboard = lazy(() => import("./pages/modules/marketplace/MarketplaceDashboard"));
+const MerchantPortfolio = lazy(() => import("./pages/modules/marketplace/MerchantPortfolio"));
+const MerchantDetail = lazy(() => import("./pages/modules/marketplace/MerchantDetail"));
+const MarketplaceStoreDetail = lazy(() => import("./pages/modules/marketplace/MarketplaceStoreDetail"));
+const MarketplaceStores = lazy(() => import("./pages/modules/marketplace/MarketplaceStores"));
+const MarketplaceOpportunities = lazy(() => import("./pages/modules/marketplace/MarketplaceOpportunities"));
+const MarketplaceAnalytics = lazy(() => import("./pages/modules/marketplace/MarketplaceAnalytics"));
+const MarketplaceProducts = lazy(() => import("./pages/modules/marketplace/MarketplaceProducts"));
+const MarketplaceCustomers = lazy(() => import("./pages/modules/marketplace/MarketplaceCustomers"));
+const MarketplaceSubscriptions = lazy(() => import("./pages/modules/marketplace/MarketplaceSubscriptions"));
+const MarketplaceFavorites = lazy(() => import("./pages/modules/marketplace/MarketplaceFavorites"));
+const MarketplaceOrders = lazy(() => import("./pages/modules/marketplace/MarketplaceOrders"));
+const MarketplaceSubscribers = lazy(() => import("./pages/modules/marketplace/MarketplaceSubscribers"));
 
 /* ============================================================
    6. SUPPORT & CUSTOMER SUCCESS
    ============================================================ */
 
-import SupportTickets from "./pages/modules/support/SupportTickets";
-import CustomerSuccess from "./pages/modules/support/CustomerSucces";
-import SupportMonitoring from "./pages/modules/support/SupportMonitoring";
-import SupportEscalations from "./pages/modules/support/SupportEscalations";
+const SupportTickets = lazy(() => import("./pages/modules/support/SupportTickets"));
+const CustomerSuccess = lazy(() => import("./pages/modules/support/CustomerSucces"));
+const SupportMonitoring = lazy(() => import("./pages/modules/support/SupportMonitoring"));
+const SupportEscalations = lazy(() => import("./pages/modules/support/SupportEscalations"));
 
 /* ============================================================
    7. MARKETING & COMMUNICATION
    ============================================================ */
 
-import MarketingDashboard from "./pages/modules/marketing/MarketingDashboard";
-import Campaigns from "./pages/modules/marketing/Campaigns";
-import Content from "./pages/modules/marketing/Content";
-import Podcasts from "./pages/modules/marketing/Podcasts";
-import Analytics from "./pages/modules/marketing/Analytics";
+const MarketingDashboard = lazy(() => import("./pages/modules/marketing/MarketingDashboard"));
+const Campaigns = lazy(() => import("./pages/modules/marketing/Campaigns"));
+const Content = lazy(() => import("./pages/modules/marketing/Content"));
+const Podcasts = lazy(() => import("./pages/modules/marketing/Podcasts"));
+const Analytics = lazy(() => import("./pages/modules/marketing/Analytics"));
 
 /* ============================================================
    8. RH
    ============================================================ */
 
-import RHDashboard from "./pages/modules/rh/RHDashboard";
-import Employees from "./pages/modules/rh/Employees";
-import EmployeeFiles from "./pages/modules/rh/EmployeeFiles";
-import HRAlerts from "./pages/modules/rh/HRAlerts";
-import RHOnboarding from "./pages/modules/rh/Onboarding";
-import Billing from "./pages/modules/finance/Billing";
-import Attendance from "./pages/modules/rh/Attendance";
-import Leave from "./pages/modules/rh/Leave";
-import Training from "./pages/modules/rh/Training";
-import BusinessTrips from "./pages/modules/rh/BusinessTrips";
-import Publications from "./pages/modules/rh/Publications";
-import RHPortfolio from "./pages/modules/rh/RHPortfolio";
-import Organization from "./pages/modules/rh/Oraganization";
-import RHAccess from "./pages/modules/rh/RHAccess";
-import Recruitment from "./pages/modules/rh/Recruitment";
+const RHDashboard = lazy(() => import("./pages/modules/rh/RHDashboard"));
+const Employees = lazy(() => import("./pages/modules/rh/Employees"));
+const EmployeeFiles = lazy(() => import("./pages/modules/rh/EmployeeFiles"));
+const HRAlerts = lazy(() => import("./pages/modules/rh/HRAlerts"));
+const RHOnboarding = lazy(() => import("./pages/modules/rh/Onboarding"));
+const Billing = lazy(() => import("./pages/modules/finance/Billing"));
+const Attendance = lazy(() => import("./pages/modules/rh/Attendance"));
+const Leave = lazy(() => import("./pages/modules/rh/Leave"));
+const Training = lazy(() => import("./pages/modules/rh/Training"));
+const BusinessTrips = lazy(() => import("./pages/modules/rh/BusinessTrips"));
+const Publications = lazy(() => import("./pages/modules/rh/Publications"));
+const RHPortfolio = lazy(() => import("./pages/modules/rh/RHPortfolio"));
+const Organization = lazy(() => import("./pages/modules/rh/Oraganization"));
+const RHAccess = lazy(() => import("./pages/modules/rh/RHAccess"));
+const Recruitment = lazy(() => import("./pages/modules/rh/Recruitment"));
 
 /* ============================================================
    9. QUALITÉ & AUDIT
    ============================================================ */
 
-import AuditDashboard from "./pages/modules/audit/AuditDashboard";
-import FieldAudits from "./pages/modules/audit/FieldAudits";
-import AuditMissions from "./pages/modules/audit/AuditMissions";
-import SupplierAudits from "./pages/modules/audit/SupplierAudits";
-import OpsAudits from "./pages/modules/audit/OpsAudits";
-import AuditReports from "./pages/modules/audit/Reports";
-import NonConformities from "./pages/modules/audit/NonConformities";
-import Sanctions from "./pages/modules/audit/Sanctions";
+const AuditDashboard = lazy(() => import("./pages/modules/audit/AuditDashboard"));
+const FieldAudits = lazy(() => import("./pages/modules/audit/FieldAudits"));
+const AuditMissions = lazy(() => import("./pages/modules/audit/AuditMissions"));
+const SupplierAudits = lazy(() => import("./pages/modules/audit/SupplierAudits"));
+const OpsAudits = lazy(() => import("./pages/modules/audit/OpsAudits"));
+const AuditReports = lazy(() => import("./pages/modules/audit/Reports"));
+const NonConformities = lazy(() => import("./pages/modules/audit/NonConformities"));
+const Sanctions = lazy(() => import("./pages/modules/audit/Sanctions"));
 
 /* ============================================================
    10. CONFORMITÉ & JURIDIQUE
    ============================================================ */
 
-import ComplianceDashboard from "./pages/modules/compliance/ComplianceDashboard";
-import Contracts from "./pages/modules/compliance/Contracts";
-import Policies from "./pages/modules/compliance/Policies";
-import Disputes from "./pages/modules/compliance/Disputes";
-import ComplianceRiskRegister from "./pages/modules/compliance/RiskRegister";
+const ComplianceDashboard = lazy(() => import("./pages/modules/compliance/ComplianceDashboard"));
+const Contracts = lazy(() => import("./pages/modules/compliance/Contracts"));
+const Policies = lazy(() => import("./pages/modules/compliance/Policies"));
+const Disputes = lazy(() => import("./pages/modules/compliance/Disputes"));
+const ComplianceRiskRegister = lazy(() => import("./pages/modules/compliance/RiskRegister"));
 
 /* ============================================================
    11. RSE & IMPACT
    ============================================================ */
 
-import RSEDashboard from "./pages/modules/rse/RSEDashboard";
-import ValidatedPackaging from "./pages/modules/rse/ValidatedPackaging";
-import PackagingDashboard from "./pages/modules/packaging/PackagingDashboard";
-import RecyclingStats from "./pages/modules/rse/RecyclingStats";
-import CustomerPoints from "./pages/modules/rse/CustomerPoints";
-import CO2Impact from "./pages/modules/rse/CO2Impact";
-import ESGReports from "./pages/modules/rse/ESGReports";
+const RSEDashboard = lazy(() => import("./pages/modules/rse/RSEDashboard"));
+const ValidatedPackaging = lazy(() => import("./pages/modules/rse/ValidatedPackaging"));
+const PackagingDashboard = lazy(() => import("./pages/modules/packaging/PackagingDashboard"));
+const RecyclingStats = lazy(() => import("./pages/modules/rse/RecyclingStats"));
+const CustomerPoints = lazy(() => import("./pages/modules/rse/CustomerPoints"));
+const CO2Impact = lazy(() => import("./pages/modules/rse/CO2Impact"));
+const ESGReports = lazy(() => import("./pages/modules/rse/ESGReports"));
 
 /* ============================================================
    12. PRODUIT & ENGINEERING
    ============================================================ */
 
-import ProductEngineeringDashboard from "./pages/modules/product/ProductEngineeringDashboard";
-import ProductReleases from "./pages/modules/product/ProductReleases";
-import ProductTestingCenter from "./pages/modules/product/ProductTestingCenter";
+const ProductEngineeringDashboard = lazy(() => import("./pages/modules/product/ProductEngineeringDashboard"));
+const ProductReleases = lazy(() => import("./pages/modules/product/ProductReleases"));
+const ProductTestingCenter = lazy(() => import("./pages/modules/product/ProductTestingCenter"));
 import ProductPlanningWorkspace from "./components/product/ProductPlanningWorkspace";
 import ProductFunctionWorkspace from "./components/product/ProductFunctionWorkspace";
 import MarketingWorkflowPage from "./components/marketing/MarketingWorkflowPage";
-import CorrectiveActions from "./pages/modules/audit/CorrectiveActions";
+const CorrectiveActions = lazy(() => import("./pages/modules/audit/CorrectiveActions"));
 import SupportCoordinationPage from "./components/support/SupportCoordinationPage";
-import PartnerPayouts from "./pages/modules/finance/PartnerPayouts";
-import ProductStudio from "./pages/modules/product/ProductStudio";
-import ProductIntegrations from "./pages/modules/product/ProductIntegrations";
-import ProductDocumentation from "./pages/modules/product/ProductDocumention";
-import ProductInnovation from "./pages/modules/product/ProductInnovation";
-import ProductPerformance from "./pages/modules/product/ProductPerformance";
-import SupplierPerformance from "./pages/modules/product/SupplierPerformance";
-import ProductFrictions from "./pages/modules/product/ProductFrictions";
-import ProductReports from "./pages/modules/product/ProductReports";
-import ProductTicketDetail from "./pages/modules/product/ProductTicketDetail";
+const PartnerPayouts = lazy(() => import("./pages/modules/finance/PartnerPayouts"));
+const ProductStudio = lazy(() => import("./pages/modules/product/ProductStudio"));
+const ProductIntegrations = lazy(() => import("./pages/modules/product/ProductIntegrations"));
+const ProductDocumentation = lazy(() => import("./pages/modules/product/ProductDocumention"));
+const ProductInnovation = lazy(() => import("./pages/modules/product/ProductInnovation"));
+const ProductPerformance = lazy(() => import("./pages/modules/product/ProductPerformance"));
+const SupplierPerformance = lazy(() => import("./pages/modules/product/SupplierPerformance"));
+const ProductFrictions = lazy(() => import("./pages/modules/product/ProductFrictions"));
+const ProductReports = lazy(() => import("./pages/modules/product/ProductReports"));
+const ProductTicketDetail = lazy(() => import("./pages/modules/product/ProductTicketDetail"));
 
 /* ============================================================
    13. DATA & BI
    ============================================================ */
 
-import DataDashboard from "./pages/modules/data/DataDashboard";
-import KPICatalog from "./pages/modules/data/KPICatalog";
-import PublicationRequestsPage from "./pages/modules/data/PublicationRequests";
-import TechBacklogPage from "./pages/modules/data/TechBacklog";
-import KPIVersions from "./pages/modules/data/KPIVersions";
-import DataReports from "./pages/modules/data/Reports";
+const DataDashboard = lazy(() => import("./pages/modules/data/DataDashboard"));
+const KPICatalog = lazy(() => import("./pages/modules/data/KPICatalog"));
+const PublicationRequestsPage = lazy(() => import("./pages/modules/data/PublicationRequests"));
+const TechBacklogPage = lazy(() => import("./pages/modules/data/TechBacklog"));
+const KPIVersions = lazy(() => import("./pages/modules/data/KPIVersions"));
+const DataReports = lazy(() => import("./pages/modules/data/Reports"));
 
-import BIOverview from "./pages/modules/data/bi/BIOverview";
-import BIDashboardsList from "./pages/modules/data/bi/BIDashboardsList";
-import BIDesigner from "./pages/modules/data/bi/BIDesigner";
-import BITemplates from "./pages/modules/data/bi/BITemplates";
-import BIDataSources from "./pages/modules/data/bi/BIDataSources";
-import BIWidgetLibrary from "./pages/modules/data/bi/BIWidgetLibrary";
-import BIHistory from "./pages/modules/data/bi/BIHistory";
+const BIOverview = lazy(() => import("./pages/modules/data/bi/BIOverview"));
+const BIDashboardsList = lazy(() => import("./pages/modules/data/bi/BIDashboardsList"));
+const BIDesigner = lazy(() => import("./pages/modules/data/bi/BIDesigner"));
+const BITemplates = lazy(() => import("./pages/modules/data/bi/BITemplates"));
+const BIDataSources = lazy(() => import("./pages/modules/data/bi/BIDataSources"));
+const BIWidgetLibrary = lazy(() => import("./pages/modules/data/bi/BIWidgetLibrary"));
+const BIHistory = lazy(() => import("./pages/modules/data/bi/BIHistory"));
 
 /* ============================================================
    14. SECURITY & IT
    ============================================================ */
 
-import SecurityDashboard from "./pages/modules/security/SecurityDashboard";
-import SecurityOperations from "./pages/modules/security/Security";
-import SecurityAccess from "./pages/modules/security/SecurityAccess";
-import SecurityInfrastructure from "./pages/modules/security/SecurityInfrastructure";
-import SecurityEnvironments from "./pages/modules/security/SecurityEnvironments";
-import SecurityVPN from "./pages/modules/security/SecurityVPN";
-import SecurityLogs from "./pages/modules/security/SecurityLogs";
-import SecurityCode from "./pages/modules/security/SecurityCode";
-import SecurityConsole from "./pages/modules/security/SecurityConsole";
-import SecurityDocumentation from "./pages/modules/security/SecurityDocumentation";
-import SecuritySandbox from "./pages/modules/security/SecuritySandbox";
-import SecuritySupervision from "./pages/modules/security/SecuritySupervision";
-import SecurityDataFlow from "./pages/modules/security/SecurityDataFlow";
-import SecurityPlatform from "./pages/modules/security/SecurityPlatform";
+const SecurityDashboard = lazy(() => import("./pages/modules/security/SecurityDashboard"));
+const SecurityOperations = lazy(() => import("./pages/modules/security/Security"));
+const SecurityAccess = lazy(() => import("./pages/modules/security/SecurityAccess"));
+const SecurityInfrastructure = lazy(() => import("./pages/modules/security/SecurityInfrastructure"));
+const SecurityEnvironments = lazy(() => import("./pages/modules/security/SecurityEnvironments"));
+const SecurityVPN = lazy(() => import("./pages/modules/security/SecurityVPN"));
+const SecurityLogs = lazy(() => import("./pages/modules/security/SecurityLogs"));
+const SecurityCode = lazy(() => import("./pages/modules/security/SecurityCode"));
+const SecurityConsole = lazy(() => import("./pages/modules/security/SecurityConsole"));
+const SecurityDocumentation = lazy(() => import("./pages/modules/security/SecurityDocumentation"));
+const SecuritySandbox = lazy(() => import("./pages/modules/security/SecuritySandbox"));
+const SecuritySupervision = lazy(() => import("./pages/modules/security/SecuritySupervision"));
+const SecurityDataFlow = lazy(() => import("./pages/modules/security/SecurityDataFlow"));
+const SecurityPlatform = lazy(() => import("./pages/modules/security/SecurityPlatform"));
 
 
 
@@ -282,33 +283,33 @@ import SecurityPlatform from "./pages/modules/security/SecurityPlatform";
    TRANSVERSAL — ÉTHIQUE
    ============================================================ */
 
-import EthicsDashboard from "./pages/modules/ethics/EthicsDashboard";
-import EthicsReport from "./pages/modules/ethics/EthicsReport";
-import EthicsReceived from "./pages/modules/ethics/EthicsReceived";
-import EthicsOngoing from "./pages/modules/ethics/EthicsOngoing";
-import EthicsClosed from "./pages/modules/ethics/EthicsClosed";
-import EthicsStats from "./pages/modules/ethics/EthicsStats";
+const EthicsDashboard = lazy(() => import("./pages/modules/ethics/EthicsDashboard"));
+const EthicsReport = lazy(() => import("./pages/modules/ethics/EthicsReport"));
+const EthicsReceived = lazy(() => import("./pages/modules/ethics/EthicsReceived"));
+const EthicsOngoing = lazy(() => import("./pages/modules/ethics/EthicsOngoing"));
+const EthicsClosed = lazy(() => import("./pages/modules/ethics/EthicsClosed"));
+const EthicsStats = lazy(() => import("./pages/modules/ethics/EthicsStats"));
 
 /* ============================================================
    TRANSVERSAL — GATEWAY
    ============================================================ */
 
-import GatewayDashboard from "./pages/modules/gateway/GatewayDashboard";
-import GatewayInbox from "./pages/modules/gateway/GatewayInbox";
-import GatewayValidation from "./pages/modules/gateway/GatewayValidation";
-import GatewayRouting from "./pages/modules/gateway/GatewayRouting";
-import GatewayResponses from "./pages/modules/gateway/GatewayResponses";
-import GatewayCompose from "./pages/modules/gateway/GatewayCompose";
-import GatewayJournal from "./pages/modules/gateway/GatewayJournal";
-import GatewayMessageDetail from "./pages/modules/gateway/GatewayMessageDetail";
+const GatewayDashboard = lazy(() => import("./pages/modules/gateway/GatewayDashboard"));
+const GatewayInbox = lazy(() => import("./pages/modules/gateway/GatewayInbox"));
+const GatewayValidation = lazy(() => import("./pages/modules/gateway/GatewayValidation"));
+const GatewayRouting = lazy(() => import("./pages/modules/gateway/GatewayRouting"));
+const GatewayResponses = lazy(() => import("./pages/modules/gateway/GatewayResponses"));
+const GatewayCompose = lazy(() => import("./pages/modules/gateway/GatewayCompose"));
+const GatewayJournal = lazy(() => import("./pages/modules/gateway/GatewayJournal"));
+const GatewayMessageDetail = lazy(() => import("./pages/modules/gateway/GatewayMessageDetail"));
 
 /* ============================================================
    TRANSVERSAL — AUDIT INDÉPENDANT
    ============================================================ */
 
-import IndependentAuditDashboard from "./pages/modules/independent-audit/IndependentAuditDashboard";
-import IncidentDeclaration from "./pages/modules/independent-audit/IncidentDeclaration";
-import ResolutionTracking from "./pages/modules/independent-audit/ResolutionTracking";
+const IndependentAuditDashboard = lazy(() => import("./pages/modules/independent-audit/IndependentAuditDashboard"));
+const IncidentDeclaration = lazy(() => import("./pages/modules/independent-audit/IncidentDeclaration"));
+const ResolutionTracking = lazy(() => import("./pages/modules/independent-audit/ResolutionTracking"));
 
 /* ============================================================
    TRANSVERSAL — WORK
@@ -332,6 +333,7 @@ const App = () => (
           <Sonner />
 
           <BrowserRouter>
+            <Suspense fallback={<div role="status" aria-live="polite" className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">Chargement du module…</div>}>
             <Routes>
               {/* ======================================================
                   PUBLIC
@@ -1516,6 +1518,7 @@ const App = () => (
 
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </Suspense>
           </BrowserRouter>
         </SandboxProvider>
       </AuthProvider>
