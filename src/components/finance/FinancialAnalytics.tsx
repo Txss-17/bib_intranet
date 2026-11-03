@@ -29,7 +29,7 @@ export default function FinancialAnalytics({ compact = false }: Props) {
     const now = new Date();
     const months = Array.from({ length: maxMonths }, (_, index) => {
       const date = new Date(now.getFullYear(), now.getMonth() - maxMonths + index + 1, 1);
-      return date.toISOString().slice(0, 7);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
     });
     const monthly = new Map(months.map(month => [month, { month, income: 0, expense: 0, net: 0 }]));
     const expenses = new Map<string, number>();
@@ -93,7 +93,7 @@ export default function FinancialAnalytics({ compact = false }: Props) {
           <div role="img" aria-label="Histogramme des entrées et sorties du registre par mois, dans la devise sélectionnée">
             <ResponsiveContainer width="100%" height={260}><BarChart data={summary.series}>
               <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" tick={{ fontSize: 11 }}/><YAxis tick={{ fontSize: 11 }}/>
-              <Tooltip formatter={(n: number) => value(Number(n), selectedCurrency)} /><Legend />
+              <Tooltip formatter={(n: number | string) => value(Number(n), selectedCurrency)} /><Legend />
               <Bar dataKey="income" name="Entrées" fill="hsl(var(--chart-1))" />
               <Bar dataKey="expense" name="Sorties" fill="hsl(var(--chart-2))" />
             </BarChart></ResponsiveContainer>
@@ -103,7 +103,7 @@ export default function FinancialAnalytics({ compact = false }: Props) {
           <div role="img" aria-label="Courbe du net mensuel des écritures du registre">
             <ResponsiveContainer width="100%" height={260}><LineChart data={summary.series}>
               <CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="month" tick={{ fontSize: 11 }}/><YAxis tick={{ fontSize: 11 }}/>
-              <Tooltip formatter={(n: number) => value(Number(n), selectedCurrency)} />
+              <Tooltip formatter={(n: number | string) => value(Number(n), selectedCurrency)} />
               <Line type="monotone" dataKey="net" name="Net des flux" stroke="hsl(var(--chart-3))" strokeWidth={2} dot={false} />
             </LineChart></ResponsiveContainer>
           </div>
@@ -111,7 +111,7 @@ export default function FinancialAnalytics({ compact = false }: Props) {
         {!compact && <Card className="lg:col-span-2"><CardHeader><CardTitle className="text-base">Dépenses par catégorie (8 principales)</CardTitle></CardHeader><CardContent>
           {summary.byCategory.length === 0 ? <p className="text-sm text-muted-foreground">Aucune dépense sur cette période.</p> :
             <ResponsiveContainer width="100%" height={Math.max(190, summary.byCategory.length * 38)}><BarChart layout="vertical" data={summary.byCategory} margin={{ left: 20 }}>
-              <CartesianGrid strokeDasharray="3 3" /><XAxis type="number" /><YAxis type="category" dataKey="category" width={120} tick={{ fontSize: 11 }}/><Tooltip formatter={(n: number) => value(Number(n), selectedCurrency)} />
+              <CartesianGrid strokeDasharray="3 3" /><XAxis type="number" /><YAxis type="category" dataKey="category" width={120} tick={{ fontSize: 11 }}/><Tooltip formatter={(n: number | string) => value(Number(n), selectedCurrency)} />
               <Bar dataKey="amount" name="Sorties" fill="hsl(var(--chart-2))" />
             </BarChart></ResponsiveContainer>}
         </CardContent></Card>}
