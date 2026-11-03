@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import FinancialOverview from '@/components/operations/FinancialOverview';
+import FinancialAnalytics from '@/components/finance/FinancialAnalytics';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -27,6 +28,7 @@ export default function CashflowRealtime() {
         <Button variant="outline" asChild><Link to="/pole/finance/transactions">Écritures de la plateforme</Link></Button>
       </div>
     </CardContent></Card>
+    <FinancialAnalytics />
     <FinancialOverview title="Registre des mouvements de trésorerie" mode="treasury" />
   </div>;
 }
