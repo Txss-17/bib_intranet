@@ -3,6 +3,7 @@ import {
   useState,
 } from 'react';
 import { ExternalLink } from 'lucide-react';
+import TalentPlatformInbox from '@/components/rh/TalentPlatformInbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -70,35 +71,22 @@ export default function Recruitment() {
   return (
     <div className="space-y-5">
       <Card>
-        <CardHeader><CardTitle>Pré-lancement · BIB Talent</CardTitle></CardHeader>
+        <CardHeader><CardTitle>Recrutement BIB — source officielle Platform</CardTitle></CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <p>Les candidats déposent leur dossier via le formulaire BIB Talent. Ce formulaire Google n'est pas encore connecté automatiquement à la base RH : les candidatures doivent être examinées puis saisies dans le pipeline ci-dessous par un membre RH habilité.</p>
-          <p>Parcours : réception → présélection → entretien → validation des conditions de collaboration → demande d'intégration RH → accès Intranet sur invitation nominative et avec permissions limitées.</p>
-          <p className="text-muted-foreground">Ne transmettez aucun accès Intranet à un candidat non retenu. Avant toute mission, définissez un statut et des conditions contractuelles adaptés ; le bénévolat dans une société commerciale n'est pas une option générale.</p>
-          <p className="text-muted-foreground">Le Google Sheets « BIB TALENT CRM » centralise les réponses du formulaire. Son ouverture nécessite un partage nominatif accordé par le propriétaire Drive ; l'Intranet n'importe pas automatiquement ces données personnelles.</p>
+          <p>Les nouvelles candidatures proviennent du formulaire intégré à BIB Talent sur la plateforme, et non plus de Google Forms ou Google Drive. Le registre « Réception BIB Talent » ci-dessous reçoit les dossiers par un import sécurisé, réservé aux RH habilités.</p>
+          <p>Parcours : dépôt sur la plateforme → import RH → examen et rapprochement → pipeline de recrutement → décision RH → onboarding sur invitation nominative uniquement.</p>
+          <p className="text-muted-foreground">La synchronisation doit être configurée sur les deux serveurs. Un dossier non visible ne signifie pas nécessairement qu'aucune candidature n'a été reçue. Les anciens documents Drive sont des archives historiques, à traiter séparément.</p>
+          <p className="text-muted-foreground">Aucun compte Intranet, contrat ni accès opérationnel n'est attribué automatiquement aux candidats. Le statut légal de toute collaboration doit être validé préalablement.</p>
           <Button variant="outline" asChild>
-            <a href="https://docs.google.com/spreadsheets/d/1-9SEhNpSKduFxMUuhqGXFL-Jy0tn8eR0D-LmOg_4Swc/edit" target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="mr-2 h-4 w-4" />Consulter le CRM Talent (accès Drive requis)
-            </a>
-          </Button>
-          {' '}
-          <Button variant="outline" asChild>
-            <a href="https://bib-talent.lovable.app/carrieres/talent" target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="mr-2 h-4 w-4" />Voir la page publique BIB Talent
-            </a>
-          </Button>
-          {' '}
-          <Button variant="outline" asChild>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLSemotUUORqFwUdM60S1BAW-79YzSm-5TiocRvm-wuTUiCevvg/viewform" target="_blank" rel="noopener noreferrer">
-              <ExternalLink className="mr-2 h-4 w-4" />Consulter le formulaire public
-            </a>
+            <a href="https://bib-talent.lovable.app/carrieres/talent" target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Voir BIB Talent</a>
           </Button>
         </CardContent>
       </Card>
+      <TalentPlatformInbox />
       <Card>
         <CardContent className="space-y-2 p-4 text-sm">
           <p className="font-semibold">Recruter une nouvelle personne</p>
-          <p>Dans « Candidatures & pipeline », cliquez sur « Nouveau » puis saisissez le nom et les coordonnées du candidat. Il n'a pas besoin de posséder un compte BIB ni de figurer dans la liste des collaborateurs.</p>
+          <p>Après l'examen d'un dossier Talent, vérifiez les éventuels doublons par email avant de qualifier ou créer un candidat dans « Candidatures & pipeline ». Les dossiers reçus et le pipeline sont deux registres distincts tant qu'aucun rapprochement RH explicite n'a été validé.</p>
           <p className="text-muted-foreground">La sélection d'un collaborateur existant concerne uniquement l'attribution interne d'un dossier ou une mutation RH, pas l'inscription d'un candidat. Un compte intranet n'est créé qu'après acceptation et validation RH, depuis l'Onboarding.</p>
         </CardContent>
       </Card>
