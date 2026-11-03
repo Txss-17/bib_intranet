@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { Activity, AlertTriangle, ArrowRight, RefreshCw, Server, ShieldAlert } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +13,12 @@ export default function SecuritySupervision() {
   const { canViewPage } = usePermissions();
   const functions = useSecurityFunctionObservations();
   const alerts = useSecurityAlerts();
+  const refresh = async () => {
+    const results = await Promise.allSettled([functions.refetch(), alerts.refetch()]);
+    const failed = results.some(result => result.status === 'rejected' || (result.status === 'fulfilled' && result.value.error));
+    if (failed) toast.error('Actualisation incomplète : certaines sources de sécurité sont indisponibles.');
+    else toast.success('Données de supervision actualisées.');
+  };
   const events = functions.data ?? [];
   const incidents = alerts.data ?? [];
   const failures = events.filter(isFunctionFailure);
@@ -28,7 +35,7 @@ export default function SecuritySupervision() {
         <p className="mt-1 text-xs text-muted-foreground">Sans sonde externe ni contrôle d'hébergement, la disponibilité réelle, les temps de réponse globaux et les sauvegardes restent non mesurés.</p>
       </div>
       <Button variant="outline" disabled={functions.isFetching || alerts.isFetching}
-        onClick={() => { void functions.refetch(); void alerts.refetch(); }}><RefreshCw className="mr-2 h-4 w-4" />Actualiser</Button>
+        onClick={() => void refresh()}><RefreshCw className="mr-2 h-4 w-4" />Actualiser</Button>
     </header>
     {(functions.isError || alerts.isError) && <div role="alert" className="rounded-lg border border-destructive/40 p-3 text-sm text-destructive">Une source de supervision est indisponible. Les résultats de cette source ne sont pas confirmés.</div>}
     <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
