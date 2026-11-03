@@ -18,5 +18,5 @@ test('intranet sessions survive a page refresh and browser cleanup', () => {
   assert.match(auth, /persistSession: true/);
   assert.doesNotMatch(auth, /storage: memoryAuthStorage/);
   assert.match(cleanup, /migrationMarker = "bib:legacy-browser-cleanup:v2"/);
-  assert.match(cleanup, /!\/\^sb-\[a-z0-9-\]\+-auth-token\$\/i\.test\(key\)/);
+  assert.ok(cleanup.includes('!/^sb-[a-z0-9-]+-auth-token$/i.test(key)'));
 });
