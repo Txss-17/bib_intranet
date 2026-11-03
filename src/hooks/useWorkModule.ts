@@ -38,7 +38,10 @@ export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
     completed: 'Terminé',
     cancelled: 'Annulé',
 };
+export type WorkProjectPriority = 'low' | 'medium' | 'high' | 'critical';
+export const PROJECT_PRIORITY_LABELS: Record<WorkProjectPriority, string> = { low: 'Basse · P3', medium: 'Normale · P2', high: 'Haute · P1', critical: 'Critique · P0' };
 export interface WorkProject extends WorkVersion {
+    priority: WorkProjectPriority;
     id: string;
     name: string;
     description: string | null;
