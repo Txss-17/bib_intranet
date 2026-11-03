@@ -1,3 +1,4 @@
+import { toast } from 'sonner';
 import {
   Card,
   CardContent,
@@ -92,6 +93,16 @@ const SECURITY_CONTROLS = [
 export default function SecurityDataFlow() {
   const { canViewPage } = usePermissions();
   const bridge = useSecurityBridgeRuns();
+  const refresh = async () => {
+    try {
+      const result = await bridge.refetch();
+      if (result.error) throw result.error;
+      toast.success('Journal des flux actualisé.');
+    } catch {
+      toast.error('Impossible d’actualiser le journal des flux.');
+    }
+  };
+
   if (!canViewPage('security.dataflow')) return <p role="alert">Accès aux flux de données non autorisé.</p>;
   return (
     <div className="space-y-6">
@@ -102,7 +113,7 @@ export default function SecurityDataFlow() {
       <div className="rounded-lg border p-4 text-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-medium">Échanges Platform enregistrés</h2>
-          <Button variant="outline" size="sm" onClick={() => void bridge.refetch()} disabled={bridge.isFetching}>Actualiser</Button>
+          <Button variant="outline" size="sm" onClick={() => void refresh()} disabled={bridge.isFetching}>Actualiser</Button>
         </div>
         {bridge.isLoading && <p role="status" className="mt-2 text-muted-foreground">Chargement des échanges…</p>}
         {bridge.isError && <p role="alert" className="mt-2 text-destructive">Source de synchronisation indisponible.</p>}
