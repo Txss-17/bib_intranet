@@ -306,8 +306,7 @@ const VisionRoadmap = () => {
                 <div><Label>Date de début</Label><Input type="date" value={draft.start_date} onChange={(e) => setDraft({ ...draft, start_date: e.target.value })} /></div>
                 <div><Label>Date de fin</Label><Input type="date" value={draft.end_date} onChange={(e) => setDraft({ ...draft, end_date: e.target.value })} /></div>
               </div>
-              {draft.kind === 'milestone' ? (
-                <>
+              <>
                   <div className="grid grid-cols-2 gap-3">
                     <div><Label>Libellé de période</Label><Input value={draft.phase} placeholder="Q1 2027" onChange={(e) => setDraft({ ...draft, phase: e.target.value })} /></div>
                     <div><Label>Progression (%)</Label><Input type="number" min={0} max={100} value={draft.progress} onChange={(e) => setDraft({ ...draft, progress: Number(e.target.value) })} /></div>
@@ -337,10 +336,7 @@ const VisionRoadmap = () => {
                       </div>
                     ))}
                   </div>
-                </>
-              ) : (
-                <div><Label>Poids (%)</Label><Input type="number" value={draft.weight} onChange={(e) => setDraft({ ...draft, weight: Number(e.target.value) })} /></div>
-              )}
+              </>
             </div>
           )}
           <DialogFooter>
