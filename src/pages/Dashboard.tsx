@@ -54,10 +54,11 @@ const TARGET_POLES: readonly PoleId[] = [
 function useDashboardFeed() {
   return useQuery({
     queryKey: ['dashboard_feed'],
+    staleTime: 20_000,
     queryFn: async (): Promise<FeedItem[]> => {
       const { data, error } = await supabase
         .from('feed_posts')
-        .select('*')
+        .select('id, author_name, author_role, pole_id, title, content, type, visibility, created_at, reactions, comments')
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -88,11 +89,12 @@ function useDashboardFeed() {
 function useRecentIncidents(enabled: boolean) {
   return useQuery({
     queryKey: ['dashboard_incidents'],
+    staleTime: 15_000,
     enabled,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('logistics_incidents')
-        .select('*')
+        .select('id, incident_type, description, severity, status, created_at')
         .in('status', ['open', 'investigating'])
         .order('created_at', { ascending: false })
         .limit(5);
@@ -126,11 +128,12 @@ function useRecentIncidents(enabled: boolean) {
 function useRecentAuditLogs(enabled: boolean) {
   return useQuery({
     queryKey: ['dashboard_audit_logs'],
+    staleTime: 15_000,
     enabled,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('audit_logs')
-        .select('*')
+        .select('id, user_id, user_name, action, resource, resource_id, pole_id, created_at')
         .order('created_at', { ascending: false })
         .limit(5);
 
