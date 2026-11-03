@@ -18,7 +18,6 @@ import {
 } from '@/hooks/useDirectionContent';
 
 const MILESTONE_STATUS: Record<string, string> = { planned: 'Planifié', in_progress: 'En cours', completed: 'Terminé' };
-const PRIORITY_STATUS: Record<string, string> = { on_track: 'On track', at_risk: 'At risk' };
 const ACTION_LABELS: Record<string, string> = { create: 'Création', update: 'Modification', delete: 'Suppression' };
 const FIELD_LABELS: Record<string, string> = {
   title: 'Titre', phase: 'Période', start_date: 'Début', end_date: 'Fin', status: 'Statut', progress: 'Progression', weight: 'Poids', objectives: 'Objectifs',
@@ -27,13 +26,13 @@ const FIELD_LABELS: Record<string, string> = {
 type ObjDraft = { name: string; completed: boolean; priority: RoadmapObjectivePriority; start_date: string; end_date: string };
 const OBJECTIVE_PRIORITIES: Record<RoadmapObjectivePriority, string> = { critical: 'Critique · P0', high: 'Haute · P1', medium: 'Normale · P2', low: 'Basse · P3' };
 const MILESTONE_COLUMNS = ['planned', 'in_progress', 'completed'] as const;
-type Draft = { id?: string; kind: 'milestone' | 'priority'; title: string; phase: string; start_date: string; end_date: string; status: string; progress: number; weight: number; objectives: ObjDraft[] };
+type Draft = { id?: string; kind: 'milestone'; title: string; phase: string; start_date: string; end_date: string; status: string; progress: number; weight: number; objectives: ObjDraft[] };
 
 const fmtD = (d?: string | null) => (d ? format(new Date(d), 'dd MMM yyyy', { locale: fr }) : '');
 const period = (a?: string | null, b?: string | null) => (a || b ? `${fmtD(a) || '…'} → ${fmtD(b) || '…'}` : '');
 
 const toDraft = (i: RoadmapItem): Draft => ({
-  id: i.id, kind: i.kind, title: i.title, phase: i.phase ?? '', start_date: i.start_date ?? '', end_date: i.end_date ?? '',
+  id: i.id, kind: 'milestone', title: i.title, phase: i.phase ?? '', start_date: i.start_date ?? '', end_date: i.end_date ?? '',
   status: i.status, progress: i.progress, weight: i.weight,
   objectives: i.objectives.map((o) => ({ name: o.name, completed: !!o.completed, priority: o.priority ?? 'medium', start_date: o.start_date ?? '', end_date: o.end_date ?? '' })),
 });
@@ -64,8 +63,24 @@ const VisionRoadmap = () => {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [dragId, setDragId] = useState<string | null>(null);
 
-  const priorities = items.filter((i) => i.kind === 'priority');
   const milestones = items.filter((i) => i.kind === 'milestone');
+  // One source of truth: strategic priorities are objectives inside roadmap
+  // milestones, never independent records. Existing legacy priority rows are
+  // preserved in storage, but no longer used by the strategic view.
+  const priorities = milestones.flatMap((milestone) =>
+    milestone.objectives.filter((objective) => objective.name.trim()).map((objective, index) => ({
+      key: `${milestone.id}:${index}`,
+      name: objective.name,
+      priority: objective.priority ?? 'medium',
+      completed: objective.completed,
+      milestone,
+      index,
+    })),
+  ).sort((left, right) =>
+    ['critical', 'high', 'medium', 'low'].indexOf(left.priority)
+    - ['critical', 'high', 'medium', 'low'].indexOf(right.priority)
+    || left.milestone.sort_order - right.milestone.sort_order,
+  );
 
   const submit = () => {
     if (!draft) return;
@@ -73,10 +88,8 @@ const VisionRoadmap = () => {
     const objectives = draft.objectives.filter((o) => o.name.trim())
       .map((o) => ({ name: o.name.trim(), completed: o.completed, priority: o.priority, start_date: o.start_date || null, end_date: o.end_date || null }));
     const base = { kind: draft.kind, title: draft.title, status: draft.status, start_date: draft.start_date || null, end_date: draft.end_date || null };
-    const payload = draft.kind === 'milestone'
-      ? { ...base, phase: draft.phase || null, progress: Math.max(0, Math.min(100, Number(draft.progress) || 0)), objectives }
-      : { ...base, weight: Number(draft.weight) || 0 };
-    const sort_order = draft.id ? undefined : (items.filter((i) => i.kind === draft.kind).length + 1);
+    const payload = { ...base, phase: draft.phase || null, progress: Math.max(0, Math.min(100, Number(draft.progress) || 0)), objectives };
+    const sort_order = draft.id ? undefined : (milestones.length + 1);
     save.mutate({ ...(draft.id ? { id: draft.id } : { sort_order }), ...payload }, { onSuccess: () => setDraft(null) });
   };
 
@@ -105,7 +118,7 @@ const VisionRoadmap = () => {
       </div>
     ) : null;
 
-  const newDraft = (kind: Draft['kind']): Draft => ({ kind, title: '', phase: '', start_date: '', end_date: '', status: kind === 'milestone' ? 'planned' : 'on_track', progress: 0, weight: 0, objectives: [] });
+  const newDraft = (): Draft => ({ kind: 'milestone', title: '', phase: '', start_date: '', end_date: '', status: 'planned', progress: 0, weight: 0, objectives: [] });
   const setObj = (i: number, patch: Partial<ObjDraft>) => draft && setDraft({ ...draft, objectives: draft.objectives.map((o, j) => (j === i ? { ...o, ...patch } : o)) });
 
   return (
@@ -132,23 +145,29 @@ const VisionRoadmap = () => {
 
         <TabsContent value="roadmap" className="space-y-6">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>Priorités stratégiques</CardTitle>
-              {canEdit && <Button size="sm" variant="outline" onClick={() => setDraft(newDraft('priority'))}><Plus className="mr-1 h-4 w-4" />Priorité</Button>}
+            <CardHeader>
+              <CardTitle>Priorités stratégiques issues de la Roadmap</CardTitle>
+              <p className="text-sm text-muted-foreground">Cette synthèse est automatiquement déduite des objectifs des jalons. Pour ajouter ou modifier une priorité, éditez l’objectif dans sa phase de Roadmap.</p>
             </CardHeader>
             <CardContent>
-              {priorities.length === 0 && <p className="text-sm text-muted-foreground">{isLoading ? 'Chargement…' : 'Aucune priorité.'}</p>}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {priorities.length === 0 && <p className="text-sm text-muted-foreground">{isLoading ? 'Chargement…' : 'Aucun objectif renseigné dans la Roadmap.'}</p>}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {priorities.map((p) => (
-                  <div key={p.id} className="p-4 border rounded-lg">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <span className="text-sm font-medium">{p.title}</span>
-                      <EditButtons item={p} />
+                  <div key={p.key} className="space-y-2 rounded-lg border p-4">
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-medium">{p.name}</span>
+                      <Badge variant={p.priority === 'critical' ? 'destructive' : 'outline'}>{OBJECTIVE_PRIORITIES[p.priority]}</Badge>
                     </div>
-                    <Badge variant={p.status === 'at_risk' ? 'destructive' : 'default'}>{PRIORITY_STATUS[p.status] ?? p.status}</Badge>
-                    {period(p.start_date, p.end_date) && <p className="mt-1 text-xs text-muted-foreground">{period(p.start_date, p.end_date)}</p>}
-                    <div className="text-2xl font-bold mt-2">{p.weight}%</div>
-                    <Progress value={p.weight} className="mt-2 h-2" />
+                    <p className="text-xs text-muted-foreground">Jalon : {p.milestone.title}</p>
+                    <p className="text-xs text-muted-foreground">{period(p.milestone.start_date, p.milestone.end_date) || 'Échéance à définir'}</p>
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <span>{p.completed ? 'Objectif atteint' : 'Objectif à réaliser'}</span>
+                      <span>Jalon : {p.milestone.progress}%</span>
+                    </div>
+                    <Progress value={p.milestone.progress} className="h-2" />
+                    {canEdit && <Button size="sm" variant="outline" onClick={() => setDraft(toDraft(p.milestone))}>
+                      <Pencil className="mr-1 h-4 w-4" />Modifier dans la Roadmap
+                    </Button>}
                   </div>
                 ))}
               </div>
@@ -158,7 +177,7 @@ const VisionRoadmap = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold flex items-center gap-2"><Milestone className="h-5 w-5" />Roadmap</h2>
-              {canEdit && <Button size="sm" variant="outline" onClick={() => setDraft(newDraft('milestone'))}><Plus className="mr-1 h-4 w-4" />Étape</Button>}
+              {canEdit && <Button size="sm" variant="outline" onClick={() => setDraft(newDraft())}><Plus className="mr-1 h-4 w-4" />Étape</Button>}
             </div>
             {milestones.map((item) => (
               <Card key={item.id} className={item.status === 'in_progress' ? 'border-primary' : ''}>
@@ -267,7 +286,7 @@ const VisionRoadmap = () => {
       <Dialog open={!!draft} onOpenChange={(o) => !o && setDraft(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{draft?.id ? 'Modifier' : 'Ajouter'} {draft?.kind === 'priority' ? 'une priorité' : 'une étape'}</DialogTitle>
+            <DialogTitle>{draft?.id ? 'Modifier' : 'Ajouter'} une étape de Roadmap</DialogTitle>
           </DialogHeader>
           {draft && (
             <div className="grid gap-3">
@@ -277,7 +296,7 @@ const VisionRoadmap = () => {
                 <Select value={draft.status} onValueChange={(v) => setDraft({ ...draft, status: v })}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {Object.entries(draft.kind === 'milestone' ? MILESTONE_STATUS : PRIORITY_STATUS).map(([k, v]) => (
+                    {Object.entries(MILESTONE_STATUS).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v}</SelectItem>
                     ))}
                   </SelectContent>
