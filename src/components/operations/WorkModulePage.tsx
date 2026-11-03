@@ -72,7 +72,7 @@ export default function WorkModulePage({ kind, defaultPole, title }: {
         next.delete('record'); setParams(next, { replace: true }); setNote(''); };
     const [search, setSearch] = useState('');
     const deferred = useDeferredValue(search);
-    const [status, setStatus] = useState('open');
+    const [status, setStatus] = useState(kind === 'projects' ? 'all' : 'open');
     const [view, setView] = useState('all');
     const [editing, setEditing] = useState<WorkRow | null | undefined>();
     const [note, setNote] = useState('');
