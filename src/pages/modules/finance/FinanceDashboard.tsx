@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useCashflows } from '@/hooks/useFinance';
+import FinancialAnalytics from '@/components/finance/FinancialAnalytics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -41,6 +42,7 @@ export default function FinanceDashboard() {
       </Card>)}
     </div>
     {visible.length === 0 && <p role="alert">Aucune rubrique financière n'est accessible avec les permissions de ce compte.</p>}
+    {canReadCashflows && <FinancialAnalytics />}
     {canReadCashflows && <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-semibold">Dernières écritures disponibles dans l’Intranet</h2>
