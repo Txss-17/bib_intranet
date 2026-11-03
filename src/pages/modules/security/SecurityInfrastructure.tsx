@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { Activity, AlertTriangle, ArrowRight, Database, DatabaseBackup, RefreshCw, Server, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -26,6 +27,12 @@ export default function SecurityInfrastructure() {
   const functions = useSecurityFunctionObservations();
   const runs = useSecurityBridgeRuns();
   const inventory = useIntranetRecords('security.infrastructure', search, 'all', offset);
+  const refresh = async () => {
+    const results = await Promise.allSettled([inventory.refetch(), functions.refetch(), runs.refetch()]);
+    const failed = results.some(result => result.status === 'rejected' || (result.status === 'fulfilled' && result.value.error));
+    if (failed) toast.error('Actualisation incomplète : vérifiez les sources indisponibles.');
+    else toast.success('Données d’infrastructure actualisées.');
+  };
   const rows = inventory.data?.rows ?? [];
   const observed = functions.data ?? [];
   const functionsByName = useMemo(() => {
@@ -61,7 +68,7 @@ export default function SecurityInfrastructure() {
         <p className="text-xs text-muted-foreground">Les contrôles techniques restent séparés des opérations réelles chez les hébergeurs et partenaires. Aucune donnée de disponibilité n'est simulée.</p>
       </div>
       <Button variant="outline" disabled={inventory.isFetching || functions.isFetching || runs.isFetching}
-        onClick={() => { void inventory.refetch(); void functions.refetch(); void runs.refetch(); }}>
+        onClick={() => void refresh()}>
         <RefreshCw className="mr-2 h-4 w-4" />Actualiser
       </Button>
     </header>
