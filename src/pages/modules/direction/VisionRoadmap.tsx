@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { Target, Calendar, CheckCircle2, Clock, Milestone, Pencil, Plus, Trash2, History } from 'lucide-react';
+import { Target, Calendar, CheckCircle2, Clock, Milestone, Pencil, Plus, Trash2, History, GripVertical, LayoutDashboard, ListTodo } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Json } from '@/integrations/supabase/types';
 import {
-  RoadmapItem, useIsLeadership, useRoadmapActions, useRoadmapHistory, useRoadmapItems,
+  RoadmapItem, RoadmapObjectivePriority, useIsLeadership, useRoadmapActions, useRoadmapHistory, useRoadmapItems,
 } from '@/hooks/useDirectionContent';
 
 const MILESTONE_STATUS: Record<string, string> = { planned: 'Planifié', in_progress: 'En cours', completed: 'Terminé' };
@@ -24,7 +24,9 @@ const FIELD_LABELS: Record<string, string> = {
   title: 'Titre', phase: 'Période', start_date: 'Début', end_date: 'Fin', status: 'Statut', progress: 'Progression', weight: 'Poids', objectives: 'Objectifs',
 };
 
-type ObjDraft = { name: string; completed: boolean; start_date: string; end_date: string };
+type ObjDraft = { name: string; completed: boolean; priority: RoadmapObjectivePriority; start_date: string; end_date: string };
+const OBJECTIVE_PRIORITIES: Record<RoadmapObjectivePriority, string> = { critical: 'Critique · P0', high: 'Haute · P1', medium: 'Normale · P2', low: 'Basse · P3' };
+const MILESTONE_COLUMNS = ['planned', 'in_progress', 'completed'] as const;
 type Draft = { id?: string; kind: 'milestone' | 'priority'; title: string; phase: string; start_date: string; end_date: string; status: string; progress: number; weight: number; objectives: ObjDraft[] };
 
 const fmtD = (d?: string | null) => (d ? format(new Date(d), 'dd MMM yyyy', { locale: fr }) : '');
@@ -33,7 +35,7 @@ const period = (a?: string | null, b?: string | null) => (a || b ? `${fmtD(a) ||
 const toDraft = (i: RoadmapItem): Draft => ({
   id: i.id, kind: i.kind, title: i.title, phase: i.phase ?? '', start_date: i.start_date ?? '', end_date: i.end_date ?? '',
   status: i.status, progress: i.progress, weight: i.weight,
-  objectives: i.objectives.map((o) => ({ name: o.name, completed: !!o.completed, start_date: o.start_date ?? '', end_date: o.end_date ?? '' })),
+  objectives: i.objectives.map((o) => ({ name: o.name, completed: !!o.completed, priority: o.priority ?? 'medium', start_date: o.start_date ?? '', end_date: o.end_date ?? '' })),
 });
 
 const changedFields = (
@@ -60,6 +62,7 @@ const VisionRoadmap = () => {
   const { data: history = [] } = useRoadmapHistory(canEdit);
   const { save, remove } = useRoadmapActions();
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [dragId, setDragId] = useState<string | null>(null);
 
   const priorities = items.filter((i) => i.kind === 'priority');
   const milestones = items.filter((i) => i.kind === 'milestone');
@@ -68,7 +71,7 @@ const VisionRoadmap = () => {
     if (!draft) return;
     if (draft.start_date && draft.end_date && draft.end_date < draft.start_date) { alert('La date de fin doit suivre la date de début.'); return; }
     const objectives = draft.objectives.filter((o) => o.name.trim())
-      .map((o) => ({ name: o.name.trim(), completed: o.completed, start_date: o.start_date || null, end_date: o.end_date || null }));
+      .map((o) => ({ name: o.name.trim(), completed: o.completed, priority: o.priority, start_date: o.start_date || null, end_date: o.end_date || null }));
     const base = { kind: draft.kind, title: draft.title, status: draft.status, start_date: draft.start_date || null, end_date: draft.end_date || null };
     const payload = draft.kind === 'milestone'
       ? { ...base, phase: draft.phase || null, progress: Math.max(0, Math.min(100, Number(draft.progress) || 0)), objectives }
@@ -81,6 +84,14 @@ const VisionRoadmap = () => {
     if (!canEdit) return;
     const objectives = item.objectives.map((o, i) => (i === idx ? { ...o, completed: !o.completed } : o));
     save.mutate({ id: item.id, objectives });
+  };
+
+  const moveMilestone = (status: string) => {
+    if (!canEdit || save.isPending || !dragId) return;
+    const item = milestones.find((entry) => entry.id === dragId);
+    setDragId(null);
+    if (!item || item.status === status) return;
+    save.mutate({ id: item.id, status, progress: status === 'completed' ? 100 : status === 'planned' ? 0 : item.progress });
   };
 
   const statusBadge = (s: string) =>
@@ -104,12 +115,14 @@ const VisionRoadmap = () => {
           <Target className="h-8 w-8 text-primary" />
           Vision & Roadmap
         </h1>
-        <p className="text-muted-foreground mt-1">Stratégie et objectifs BIB</p>
+        <p className="text-muted-foreground mt-1">Pilotage stratégique BIB : objectifs, jalons et arbitrages. Les projets et les tâches restent gérés dans leurs modules dédiés.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Horizon de planification : janvier 2027 – septembre 2028. Les échéances et jalons proposés restent à valider par la Direction ; aucune date n’est considérée approuvée automatiquement.</p>
       </div>
 
       <Tabs defaultValue="roadmap">
         <TabsList>
-          <TabsTrigger value="roadmap">Roadmap</TabsTrigger>
+          <TabsTrigger value="roadmap"><ListTodo className="mr-1 h-4 w-4" />Roadmap</TabsTrigger>
+          <TabsTrigger value="kanban"><LayoutDashboard className="mr-1 h-4 w-4" />Kanban</TabsTrigger>
           {canEdit && <TabsTrigger value="history"><History className="mr-1 h-4 w-4" />Historique</TabsTrigger>}
         </TabsList>
 
@@ -170,6 +183,7 @@ const VisionRoadmap = () => {
                           <button key={i} type="button" disabled={!canEdit} onClick={() => toggleObjective(item, i)} className="flex items-center gap-2 text-left disabled:cursor-default">
                             {obj.completed ? <CheckCircle2 className="h-4 w-4 text-primary" /> : <Clock className="h-4 w-4 text-muted-foreground" />}
                             <span className={obj.completed ? 'line-through text-muted-foreground' : ''}>{obj.name}</span>
+                            <Badge variant={obj.priority === 'critical' ? 'destructive' : 'outline'}>{OBJECTIVE_PRIORITIES[obj.priority ?? 'medium']}</Badge>
                             {period(obj.start_date, obj.end_date) && <span className="text-xs text-muted-foreground">({period(obj.start_date, obj.end_date)})</span>}
                           </button>
                         ))}
@@ -178,6 +192,40 @@ const VisionRoadmap = () => {
                   </div>
                 </CardContent>
               </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="kanban" className="space-y-4">
+          <p className="text-sm text-muted-foreground">Déplacer un jalon entre les colonnes pour enregistrer son statut. Seule la Direction peut modifier la roadmap ; les objectifs ne sont pas des tâches opérationnelles.</p>
+          <div className="grid gap-4 lg:grid-cols-3">
+            {MILESTONE_COLUMNS.map((column) => (
+              <section key={column} aria-label={MILESTONE_STATUS[column]} className="min-h-64 rounded-xl border bg-muted/20 p-3"
+                onDragOver={(event) => { if (canEdit) event.preventDefault(); }}
+                onDrop={(event) => { event.preventDefault(); moveMilestone(column); }}>
+                <h2 className="mb-3 flex items-center justify-between font-semibold">{MILESTONE_STATUS[column]}<Badge variant="outline">{milestones.filter((item) => item.status === column).length}</Badge></h2>
+                <div className="space-y-3">
+                  {milestones.filter((item) => item.status === column).map((item) => (
+                    <Card key={item.id} draggable={canEdit && !save.isPending}
+                      onDragStart={() => setDragId(item.id)} onDragEnd={() => setDragId(null)}
+                      className={dragId === item.id ? 'opacity-60' : ''}>
+                      <CardContent className="space-y-3 p-4">
+                        <div className="flex items-start gap-2">
+                          {canEdit && <GripVertical className="mt-1 h-4 w-4 shrink-0 text-muted-foreground" aria-label="Déplaçable" />}
+                          <h3 className="min-w-0 flex-1 font-medium">{item.title}</h3><EditButtons item={item} />
+                        </div>
+                        <p className="text-xs text-muted-foreground">{[item.phase, period(item.start_date, item.end_date)].filter(Boolean).join(' · ') || 'Échéance à définir'}</p>
+                        <Progress value={item.progress} className="h-2" />
+                        <p className="text-xs text-muted-foreground">{item.objectives.length} objectif(s) · {item.progress}%</p>
+                        {canEdit && <Select value={item.status} onValueChange={(status) => save.mutate({ id: item.id, status, progress: status === 'completed' ? 100 : status === 'planned' ? 0 : item.progress })}>
+                          <SelectTrigger aria-label={`Statut de ${item.title}`}><SelectValue /></SelectTrigger>
+                          <SelectContent>{MILESTONE_COLUMNS.map((value) => <SelectItem key={value} value={value}>{MILESTONE_STATUS[value]}</SelectItem>)}</SelectContent>
+                        </Select>}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         </TabsContent>
@@ -244,7 +292,7 @@ const VisionRoadmap = () => {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label>Objectifs</Label>
-                      <Button type="button" size="sm" variant="outline" onClick={() => setDraft({ ...draft, objectives: [...draft.objectives, { name: '', completed: false, start_date: '', end_date: '' }] })}>
+                      <Button type="button" size="sm" variant="outline" onClick={() => setDraft({ ...draft, objectives: [...draft.objectives, { name: '', completed: false, priority: 'medium', start_date: '', end_date: '' }] })}>
                         <Plus className="mr-1 h-4 w-4" />Objectif
                       </Button>
                     </div>
@@ -255,7 +303,11 @@ const VisionRoadmap = () => {
                           <Input value={o.name} placeholder="Intitulé de l'objectif" onChange={(e) => setObj(i, { name: e.target.value })} />
                           <Button type="button" size="icon" variant="ghost" aria-label="Retirer" onClick={() => setDraft({ ...draft, objectives: draft.objectives.filter((_, j) => j !== i) })}><Trash2 className="h-4 w-4" /></Button>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+                          <Select value={o.priority} onValueChange={(priority: RoadmapObjectivePriority) => setObj(i, { priority })}>
+                            <SelectTrigger aria-label="Priorité de l’objectif"><SelectValue /></SelectTrigger>
+                            <SelectContent>{Object.entries(OBJECTIVE_PRIORITIES).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}</SelectContent>
+                          </Select>
                           <Input type="date" aria-label="Début" value={o.start_date} onChange={(e) => setObj(i, { start_date: e.target.value })} />
                           <Input type="date" aria-label="Fin" value={o.end_date} onChange={(e) => setObj(i, { end_date: e.target.value })} />
                         </div>
