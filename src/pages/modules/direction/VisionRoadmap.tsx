@@ -117,6 +117,10 @@ const VisionRoadmap = () => {
         </h1>
         <p className="text-muted-foreground mt-1">Pilotage stratégique BIB : objectifs, jalons et arbitrages. Les projets et les tâches restent gérés dans leurs modules dédiés.</p>
         <p className="mt-2 text-sm text-muted-foreground">Horizon de planification : janvier 2027 – septembre 2028. Les échéances et jalons proposés restent à valider par la Direction ; aucune date n’est considérée approuvée automatiquement.</p>
+        <div className="mt-3 flex flex-wrap gap-2" aria-label="Axes stratégiques BIB">
+          {['Marketplace', 'Intrabib', 'BIB Talent', 'PA / PWA', 'Équipe initiale', 'Boutiques tests', 'Fournisseurs', 'Logistique', 'Commercialisation', 'Consolidation'].map((axis) => <Badge key={axis} variant="outline">{axis}</Badge>)}
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">Axes de référence du programme, pas des objectifs réalisés ni des jalons créés automatiquement.</p>
       </div>
 
       <Tabs defaultValue="roadmap">
