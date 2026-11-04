@@ -32,6 +32,15 @@ export default function FinanceDashboard() {
         Les montants de cet aperçu proviennent uniquement des écritures disponibles dans l’Intranet, pas d’une interrogation directe de Stripe. Aucun virement n’est exécuté ici.
       </p>
     </header>
+    <Card>
+      <CardHeader><CardTitle className="text-base">Séparation des flux financiers — décisions BIB-00 / BIB-00bis</CardTitle></CardHeader>
+      <CardContent className="space-y-2 text-sm">
+        <p><strong>GMV ≠ chiffre d'affaires des marchands ≠ revenu propre de BIB.</strong> Les encaissements client, commissions de marchands tiers, abonnements fournisseurs, audits facturés sur devis, créances fournisseurs et reversements ne doivent jamais être additionnés comme un seul revenu BIB.</p>
+        <p className="text-muted-foreground">Les boutiques tests propres sont exploitées par la même entreprise individuelle. Elles ne génèrent ni abonnement ni commission internes, mais leurs ventes et charges doivent être distinguées analytiquement. Aucun compte bancaire ou SIREN autonome ne leur est attribué fictivement.</p>
+        <p className="text-muted-foreground">Audit documentaire initial payant sur devis accepté (base indicative de 150 €). Forfait fournisseur retenu à 19 €/mois, avec TVA à qualifier. Une commande fournisseur, son paiement et la couverture financière de la production suivent les jalons contractuels ; un paiement Stripe ne constitue ni une facture ni une disponibilité de trésorerie.</p>
+        <p className="text-muted-foreground">Les graphiques du registre de trésorerie ci-dessous ne calculent pas encore les trois agrégats GMV / CA marchand / CA BIB. Un rapprochement par commande et partie juridique sera nécessaire avant tout reporting financier consolidé.</p>
+      </CardContent>
+    </Card>
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {visible.map(section => <Card key={section.page}>
         <CardHeader className="pb-2"><CardTitle className="text-base">{section.name}</CardTitle></CardHeader>
