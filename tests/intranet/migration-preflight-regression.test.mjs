@@ -5,13 +5,16 @@ const read = path => readFileSync(new URL('../../' + path, import.meta.url), 'ut
 
 test('migration registry is contiguous and includes Finance and latest synchronization migration', () => {
   const journal = JSON.parse(read('drizzle/migrations/meta/_journal.json'));
-  assert.equal(journal.entries.length, 82);
+  assert.equal(journal.entries.length, 84);
+  assert.deepEqual(journal.entries.map(e => e.idx),Array.from({length:journal.entries.length},(_,i)=>i));
   assert.equal(new Set(journal.entries.map(x => x.when)).size, journal.entries.length);
   for (const tag of [
     '0052_restore_existing_account_access',
     '0078_finance_manual_cashflows_guard',
     '0079_finance_invoice_register',
     '0081_sync_pending_migrations',
+    '0082_work_project_priority',
+    '0083_supplier_audit_commercial_workflow',
   ]) {
     assert.ok(journal.entries.some(e => e.tag === tag), tag);
   }

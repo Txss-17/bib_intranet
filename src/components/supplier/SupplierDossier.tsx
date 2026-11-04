@@ -1,3 +1,4 @@
+import SupplierAuditWorkflow from '@/components/supplier/SupplierAuditWorkflow';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -138,11 +139,13 @@ export default function SupplierDossier({ supplierId, supplierStatus }: { suppli
   return <Tabs defaultValue="products" className="w-full">
     <TabsList className="flex w-full flex-wrap h-auto">
       <TabsTrigger value="products">Produits</TabsTrigger>
+      <TabsTrigger value="audit-workflow">Qualification et devis</TabsTrigger>
       <TabsTrigger value="certifications">Certifications</TabsTrigger>
       <TabsTrigger value="assignment">Affectation</TabsTrigger>
       <TabsTrigger value="history">Historique</TabsTrigger>
     </TabsList>
 
+    <TabsContent value="audit-workflow" className="pt-2"><SupplierAuditWorkflow supplierId={supplierId}/></TabsContent>
     <TabsContent value="products" className="space-y-3 pt-2">
       {products.isLoading && <p role="status">Chargement des produits…</p>}
       {products.isError && <p role="alert" className="text-destructive">Produits indisponibles. <Button variant="outline" onClick={() => void products.refetch()}>Réessayer</Button></p>}

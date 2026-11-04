@@ -1,0 +1,1032 @@
+{
+  "document": "BIB Adaptation Platform Intrabib",
+  "version": "1.1",
+  "date": "2026-11-04",
+  "statut": "Premier lot audit implémenté et testé localement ; autres lots et recette préproduction non terminés",
+  "dates_implementation": "À définir",
+  "integration": "Correspondance des champs Intrabib à réaliser avant import",
+  "source_code": {
+    "platform": "dc1dd979127f76c9c521f6249e1f23a4effa3855",
+    "intrabib": "80bddb3cc977e6875fe8cbce12ef30f7d036ff83"
+  },
+  "tasks": [
+    {
+      "id": "BIB-AD-001",
+      "lot": "L0",
+      "priorite": "P0",
+      "pole_pilote": "Direction",
+      "application": "Commun",
+      "titre": "Désigner les responsables de lots et les valideurs",
+      "dependances": [],
+      "tests_recette": [
+        "T29"
+      ],
+      "source": "DEC-018",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-002",
+      "lot": "L0",
+      "priorite": "P0",
+      "pole_pilote": "Technique",
+      "application": "Commun",
+      "titre": "Rapprocher schémas réels migrations Drizzle et permissions",
+      "dependances": [
+        "BIB-AD-001"
+      ],
+      "tests_recette": [
+        "T29"
+      ],
+      "source": "I32 et AGENTS",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-003",
+      "lot": "L0",
+      "priorite": "P0",
+      "pole_pilote": "Finance",
+      "application": "Commun",
+      "titre": "Définir les identités légales et les rôles de vendeur acheteur payeur propriétaire",
+      "dependances": [
+        "BIB-AD-002"
+      ],
+      "tests_recette": [
+        "T24",
+        "T30"
+      ],
+      "source": "DEC-001 002 010 011",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-004",
+      "lot": "L0",
+      "priorite": "P0",
+      "pole_pilote": "Fournisseurs",
+      "application": "Commun",
+      "titre": "Finaliser contrat fournisseur et séparer la procédure interne",
+      "dependances": [
+        "BIB-AD-003"
+      ],
+      "tests_recette": [
+        "T01",
+        "T06",
+        "T10"
+      ],
+      "source": "Contrat v5.4 et I45",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-005",
+      "lot": "L0",
+      "priorite": "P0",
+      "pole_pilote": "Audit",
+      "application": "Commun",
+      "titre": "Finaliser critères admission périmètres et imputabilité",
+      "dependances": [
+        "BIB-AD-004"
+      ],
+      "tests_recette": [
+        "T02",
+        "T07",
+        "T11"
+      ],
+      "source": "DEC-008 009",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-006",
+      "lot": "L0",
+      "priorite": "P0",
+      "pole_pilote": "Finance",
+      "application": "Commun",
+      "titre": "Valider barème devis TVA et début abonnement par contrat",
+      "dependances": [
+        "BIB-AD-004"
+      ],
+      "tests_recette": [
+        "T03",
+        "T04",
+        "T06"
+      ],
+      "source": "BIB-00 section 13",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-007",
+      "lot": "L0",
+      "priorite": "P0",
+      "pole_pilote": "Technique",
+      "application": "Commun",
+      "titre": "Définir autorité des objets et contrats événements versionnés",
+      "dependances": [
+        "BIB-AD-002",
+        "BIB-AD-003"
+      ],
+      "tests_recette": [
+        "T28",
+        "T29"
+      ],
+      "source": "Cahier sections 2 et 9",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-008",
+      "lot": "L0",
+      "priorite": "P0",
+      "pole_pilote": "Technique",
+      "application": "Commun",
+      "titre": "Ajouter stockage événement transactionnel dédoublonnage et reprise",
+      "dependances": [
+        "BIB-AD-007"
+      ],
+      "tests_recette": [
+        "T25",
+        "T28"
+      ],
+      "source": "Bridge existant",
+      "statut": "Partiellement implémenté — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Journal transactionnel et rejeu idempotent du dossier audit ; reprise globale/outbox non livrées."
+    },
+    {
+      "id": "BIB-AD-009",
+      "lot": "L1",
+      "priorite": "P1",
+      "pole_pilote": "Fournisseurs",
+      "application": "Intrabib",
+      "titre": "Créer dossier qualification avec fournisseur identifié exactement",
+      "dependances": [
+        "BIB-AD-005",
+        "BIB-AD-007"
+      ],
+      "tests_recette": [
+        "T01",
+        "T09"
+      ],
+      "source": "I01 et BIB-25",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Dossier qualification exact supplier_id, RLS portefeuille/environnement et historique."
+    },
+    {
+      "id": "BIB-AD-010",
+      "lot": "L1",
+      "priorite": "P1",
+      "pole_pilote": "Audit",
+      "application": "Intrabib",
+      "titre": "Définir périmètre initial et variantes partageant les preuves",
+      "dependances": [
+        "BIB-AD-009"
+      ],
+      "tests_recette": [
+        "T02"
+      ],
+      "source": "BIB-19 et annexe C",
+      "statut": "Partiellement implémenté — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Liste de références et note de périmètre ; regroupement de variantes décidé manuellement."
+    },
+    {
+      "id": "BIB-AD-011",
+      "lot": "L1",
+      "priorite": "P1",
+      "pole_pilote": "Finance",
+      "application": "Intrabib",
+      "titre": "Construire devis calculé versionné et validation financière",
+      "dependances": [
+        "BIB-AD-006",
+        "BIB-AD-010"
+      ],
+      "tests_recette": [
+        "T03",
+        "T04",
+        "T05"
+      ],
+      "source": "Annexe C",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Calcul SQL exact, versions, identités légales, fiscalité et revue Finance distincte ; export PDF non livré."
+    },
+    {
+      "id": "BIB-AD-012",
+      "lot": "L1",
+      "priorite": "P1",
+      "pole_pilote": "Fournisseurs",
+      "application": "BIB Platform",
+      "titre": "Présenter devis et recueillir acceptation externe exacte",
+      "dependances": [
+        "BIB-AD-008",
+        "BIB-AD-011"
+      ],
+      "tests_recette": [
+        "T05",
+        "T29"
+      ],
+      "source": "GOV-LEGAL et contrat",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Acceptation par preuve externe ou portail vérifié, texte structuré et empreinte exacts."
+    },
+    {
+      "id": "BIB-AD-013",
+      "lot": "L1",
+      "priorite": "P1",
+      "pole_pilote": "Finance",
+      "application": "Commun",
+      "titre": "Rapprocher paiement audit et appliquer condition de démarrage acceptée",
+      "dependances": [
+        "BIB-AD-012"
+      ],
+      "tests_recette": [
+        "T06",
+        "T07"
+      ],
+      "source": "DEC-009 et contrat",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Preuves de facture/paiements partiels et condition contractuelle de démarrage ; pas de mouvement bancaire exécuté."
+    },
+    {
+      "id": "BIB-AD-014",
+      "lot": "L1",
+      "priorite": "P1",
+      "pole_pilote": "Audit",
+      "application": "Intrabib",
+      "titre": "Constituer rapport final et revue distincte avec preuves",
+      "dependances": [
+        "BIB-AD-013"
+      ],
+      "tests_recette": [
+        "T08"
+      ],
+      "source": "DEC-008 et I45",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Rapport, référence des preuves, empreinte et revue distincte ; stockage documentaire externe conservé."
+    },
+    {
+      "id": "BIB-AD-015",
+      "lot": "L1",
+      "priorite": "P1",
+      "pole_pilote": "Audit",
+      "application": "Commun",
+      "titre": "Remplacer décision au seul score et liaison par nom par décision autorisée sur ID",
+      "dependances": [
+        "BIB-AD-014"
+      ],
+      "tests_recette": [
+        "T07",
+        "T08",
+        "T09"
+      ],
+      "source": "I01 et BIB-19",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Décision explicite par référence sur ID exact, ancienne liaison par nom supprimée."
+    },
+    {
+      "id": "BIB-AD-016",
+      "lot": "L1",
+      "priorite": "P1",
+      "pole_pilote": "Audit",
+      "application": "Intrabib",
+      "titre": "Créer contre audit lié à incident et contrôler absence de double facturation",
+      "dependances": [
+        "BIB-AD-005",
+        "BIB-AD-011"
+      ],
+      "tests_recette": [
+        "T10",
+        "T11"
+      ],
+      "source": "Annexe C et BIB-26",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Incident unique actif, devis accepté, contrôles 3PL exclus et facture après rapport approuvé."
+    },
+    {
+      "id": "BIB-AD-017",
+      "lot": "L1",
+      "priorite": "P1",
+      "pole_pilote": "Fournisseurs",
+      "application": "BIB Platform",
+      "titre": "Afficher pièces externes rapports et statuts de référencement propres au partenaire",
+      "dependances": [
+        "BIB-AD-008",
+        "BIB-AD-015",
+        "BIB-AD-016"
+      ],
+      "tests_recette": [
+        "T07",
+        "T08",
+        "T29"
+      ],
+      "source": "BIB-25",
+      "statut": "Partiellement implémenté — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Devis, rapport approuvé, paiements rapprochés et décisions propres au partenaire ; PDF/téléchargements non livrés."
+    },
+    {
+      "id": "BIB-AD-018",
+      "lot": "L2",
+      "priorite": "P0",
+      "pole_pilote": "Gouvernance juridique",
+      "application": "Intrabib",
+      "titre": "Mettre en place registre modèles validations et dates effet",
+      "dependances": [
+        "BIB-AD-003",
+        "BIB-AD-007"
+      ],
+      "tests_recette": [
+        "T12",
+        "T13",
+        "T14"
+      ],
+      "source": "GOV-LEGAL",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-019",
+      "lot": "L2",
+      "priorite": "P0",
+      "pole_pilote": "Fournisseurs",
+      "application": "BIB Platform",
+      "titre": "Vérifier identité vendeur et contrôler modifications des champs légaux",
+      "dependances": [
+        "BIB-AD-018"
+      ],
+      "tests_recette": [
+        "T13"
+      ],
+      "source": "DEC-021",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-020",
+      "lot": "L2",
+      "priorite": "P0",
+      "pole_pilote": "Technique",
+      "application": "BIB Platform",
+      "titre": "Générer documents boutique au serveur depuis modèles autorisés",
+      "dependances": [
+        "BIB-AD-008",
+        "BIB-AD-019"
+      ],
+      "tests_recette": [
+        "T12",
+        "T13"
+      ],
+      "source": "DEC-021 022",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-021",
+      "lot": "L2",
+      "priorite": "P0",
+      "pole_pilote": "Technique",
+      "application": "BIB Platform",
+      "titre": "Archiver texte présenté versions paramètres et preuve par commande",
+      "dependances": [
+        "BIB-AD-020"
+      ],
+      "tests_recette": [
+        "T14"
+      ],
+      "source": "GOV-LEGAL",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-022",
+      "lot": "L2",
+      "priorite": "P1",
+      "pole_pilote": "Technique",
+      "application": "Commun",
+      "titre": "Unifier versions onboarding sans rouvrir autoinscription marchande",
+      "dependances": [
+        "BIB-AD-018"
+      ],
+      "tests_recette": [
+        "T14",
+        "T15"
+      ],
+      "source": "P05",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-023",
+      "lot": "L2",
+      "priorite": "P0",
+      "pole_pilote": "Technique",
+      "application": "BIB Platform",
+      "titre": "Conserver consentements facultatifs distincts des conditions de vente",
+      "dependances": [
+        "BIB-AD-021"
+      ],
+      "tests_recette": [
+        "T15"
+      ],
+      "source": "GOV-LEGAL",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-024",
+      "lot": "L2",
+      "priorite": "P1",
+      "pole_pilote": "Fournisseurs",
+      "application": "BIB Platform",
+      "titre": "Lier catalogue offre et conformité à la référence et à sa version",
+      "dependances": [
+        "BIB-AD-015"
+      ],
+      "tests_recette": [
+        "T16",
+        "T17"
+      ],
+      "source": "BIB-19 et 25",
+      "statut": "Partiellement implémenté — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Admission sur couple fournisseur/SKU avant nouvel envoi ; versions de configuration et retrait historique non livrés."
+    },
+    {
+      "id": "BIB-AD-025",
+      "lot": "L2",
+      "priorite": "P1",
+      "pole_pilote": "Marketplace",
+      "application": "BIB Platform",
+      "titre": "Relier validation physique échantillon à la configuration vendue",
+      "dependances": [
+        "BIB-AD-024"
+      ],
+      "tests_recette": [
+        "T17"
+      ],
+      "source": "DEC-013 et P02",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-026",
+      "lot": "L2",
+      "priorite": "P1",
+      "pole_pilote": "Finance",
+      "application": "BIB Platform",
+      "titre": "Distinguer majoration taux de marque taxes et prix figés",
+      "dependances": [
+        "BIB-AD-006",
+        "BIB-AD-024"
+      ],
+      "tests_recette": [
+        "T18"
+      ],
+      "source": "BIB-21",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-027",
+      "lot": "L2",
+      "priorite": "P0",
+      "pole_pilote": "Technique",
+      "application": "BIB Platform",
+      "titre": "Ajouter contrôle publication et checkout serveur sur éligibilité complète",
+      "dependances": [
+        "BIB-AD-021",
+        "BIB-AD-025",
+        "BIB-AD-026"
+      ],
+      "tests_recette": [
+        "T13",
+        "T16",
+        "T17"
+      ],
+      "source": "BIB-19 et GOV-LEGAL",
+      "statut": "Partiellement implémenté — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Contrôle serveur du nouvel envoi catalogue par platform-bridge ; éligibilité complète et checkout non livrés."
+    },
+    {
+      "id": "BIB-AD-028",
+      "lot": "L3",
+      "priorite": "P1",
+      "pole_pilote": "Fournisseurs",
+      "application": "Commun",
+      "titre": "Créer capacité fournisseur vérifiée horodatée avec expiration",
+      "dependances": [
+        "BIB-AD-007",
+        "BIB-AD-024"
+      ],
+      "tests_recette": [
+        "T20"
+      ],
+      "source": "P01 et BIB-22",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-029",
+      "lot": "L3",
+      "priorite": "P0",
+      "pole_pilote": "Technique",
+      "application": "BIB Platform",
+      "titre": "Réserver capacité atomiquement avec compensation et conservation paiement confirmé",
+      "dependances": [
+        "BIB-AD-028"
+      ],
+      "tests_recette": [
+        "T19",
+        "T20"
+      ],
+      "source": "P01",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-030",
+      "lot": "L3",
+      "priorite": "P1",
+      "pole_pilote": "Opérations",
+      "application": "Commun",
+      "titre": "Configurer fenêtres précommandes seuils quotas et livraison réaliste",
+      "dependances": [
+        "BIB-AD-029"
+      ],
+      "tests_recette": [
+        "T21",
+        "T23"
+      ],
+      "source": "BIB-23 et DEC-014",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-031",
+      "lot": "L3",
+      "priorite": "P0",
+      "pole_pilote": "Finance",
+      "application": "Commun",
+      "titre": "Valider montage PSP et preuve de couverture financière fournisseur",
+      "dependances": [
+        "BIB-AD-003",
+        "BIB-AD-006"
+      ],
+      "tests_recette": [
+        "T22",
+        "T29"
+      ],
+      "source": "DEC-016 017 023",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-032",
+      "lot": "L3",
+      "priorite": "P0",
+      "pole_pilote": "Fournisseurs",
+      "application": "Commun",
+      "titre": "Créer ordre fournisseur par acheteur réel et conditions acceptées",
+      "dependances": [
+        "BIB-AD-030",
+        "BIB-AD-031"
+      ],
+      "tests_recette": [
+        "T22",
+        "T24"
+      ],
+      "source": "BIB-25 et 30",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-033",
+      "lot": "L3",
+      "priorite": "P0",
+      "pole_pilote": "Opérations",
+      "application": "Commun",
+      "titre": "Autoriser production tracée pour seules quantités fermes couvertes",
+      "dependances": [
+        "BIB-AD-032"
+      ],
+      "tests_recette": [
+        "T21",
+        "T22"
+      ],
+      "source": "DEC-012 017",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-034",
+      "lot": "L3",
+      "priorite": "P1",
+      "pole_pilote": "Logistique",
+      "application": "BIB Platform",
+      "titre": "Saisir réception 3PL et anomalies une seule fois avec preuve et lot",
+      "dependances": [
+        "BIB-AD-008",
+        "BIB-AD-033"
+      ],
+      "tests_recette": [
+        "T25",
+        "T29"
+      ],
+      "source": "BIB-26",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-035",
+      "lot": "L3",
+      "priorite": "P1",
+      "pole_pilote": "Logistique",
+      "application": "Commun",
+      "titre": "Conserver propriété dépôt retours ventes privées et réintégration",
+      "dependances": [
+        "BIB-AD-034"
+      ],
+      "tests_recette": [
+        "T16",
+        "T26"
+      ],
+      "source": "BIB-00 28 29",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-036",
+      "lot": "L4",
+      "priorite": "P1",
+      "pole_pilote": "Finance",
+      "application": "Commun",
+      "titre": "Relier devis ordres exécution factures avoirs et paiement dans journal métier",
+      "dependances": [
+        "BIB-AD-013",
+        "BIB-AD-034"
+      ],
+      "tests_recette": [
+        "T30"
+      ],
+      "source": "BIB-30 31 et I02",
+      "statut": "Partiellement implémenté — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Chaîne devis/prestation/facture externe/preuves de paiement audit ; journal métier général et avoirs non livrés."
+    },
+    {
+      "id": "BIB-AD-037",
+      "lot": "L4",
+      "priorite": "P1",
+      "pole_pilote": "Finance",
+      "application": "Intrabib",
+      "titre": "Séparer GMV CA tiers ventes EI et services BIB par devise",
+      "dependances": [
+        "BIB-AD-036"
+      ],
+      "tests_recette": [
+        "T30"
+      ],
+      "source": "DEC-003 et BIB-31",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-038",
+      "lot": "L4",
+      "priorite": "P1",
+      "pole_pilote": "Support",
+      "application": "BIB Platform",
+      "titre": "Afficher étapes client période livraison incidents et recours applicables",
+      "dependances": [
+        "BIB-AD-030",
+        "BIB-AD-034"
+      ],
+      "tests_recette": [
+        "T23",
+        "T27"
+      ],
+      "source": "BIB-23",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-039",
+      "lot": "L4",
+      "priorite": "P0",
+      "pole_pilote": "Support",
+      "application": "BIB Platform",
+      "titre": "Ajouter rétractation en ligne confirmation et accusé durable",
+      "dependances": [
+        "BIB-AD-003",
+        "BIB-AD-007"
+      ],
+      "tests_recette": [
+        "T27"
+      ],
+      "source": "L221 21 et D221 5",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-040",
+      "lot": "L4",
+      "priorite": "P1",
+      "pole_pilote": "Marketplace",
+      "application": "BIB Platform",
+      "titre": "Relier indicateurs marchands aux dossiers échantillons stocks prix et précommandes",
+      "dependances": [
+        "BIB-AD-025",
+        "BIB-AD-026",
+        "BIB-AD-035",
+        "BIB-AD-038"
+      ],
+      "tests_recette": [
+        "T16",
+        "T18",
+        "T26"
+      ],
+      "source": "Demande adaptation Platform",
+      "statut": "Spécifié pour développement",
+      "responsable_nominal": null,
+      "echeance": null
+    },
+    {
+      "id": "BIB-AD-041",
+      "lot": "L4",
+      "priorite": "P1",
+      "pole_pilote": "Technique",
+      "application": "Intrabib",
+      "titre": "Relier files pôles responsables validations et événements sans double saisie",
+      "dependances": [
+        "BIB-AD-008",
+        "BIB-AD-017",
+        "BIB-AD-036"
+      ],
+      "tests_recette": [
+        "T28",
+        "T29"
+      ],
+      "source": "DEC-018",
+      "statut": "Partiellement implémenté — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Même dossier audit partagé entre trois modules ; affectations/notifications automatiques non livrées."
+    },
+    {
+      "id": "BIB-AD-042",
+      "lot": "L4",
+      "priorite": "P0",
+      "pole_pilote": "Technique",
+      "application": "Commun",
+      "titre": "Exécuter recette isolée négative et complète avec preuve restauration",
+      "dependances": [
+        "BIB-AD-027",
+        "BIB-AD-033",
+        "BIB-AD-035",
+        "BIB-AD-037",
+        "BIB-AD-039",
+        "BIB-AD-040",
+        "BIB-AD-041"
+      ],
+      "tests_recette": [
+        "T01",
+        "T02",
+        "T03",
+        "T04",
+        "T05",
+        "T06",
+        "T07",
+        "T08",
+        "T09",
+        "T10",
+        "T11",
+        "T12",
+        "T13",
+        "T14",
+        "T15",
+        "T16",
+        "T17",
+        "T18",
+        "T19",
+        "T20",
+        "T21",
+        "T22",
+        "T23",
+        "T24",
+        "T25",
+        "T26",
+        "T27",
+        "T28",
+        "T29",
+        "T30"
+      ],
+      "source": "I32 et cahier recette",
+      "statut": "Partiellement implémenté — recette préproduction requise",
+      "responsable_nominal": null,
+      "echeance": null,
+      "implementation": "Tests SQL isolés et frontières HTTP du lot audit ; recette croisée complète et restauration non exécutées."
+    }
+  ],
+  "recette": [
+    {
+      "id": "T01",
+      "scenario": "Candidature sans présélection puis tentative de devis facturé automatiquement.",
+      "resultat_attendu": "Aucun engagement ni facture créé sans base et autorisation."
+    },
+    {
+      "id": "T02",
+      "scenario": "Variantes partageant les mêmes justificatifs.",
+      "resultat_attendu": "Le périmètre documente le regroupement ; pas de prix par unité de stock."
+    },
+    {
+      "id": "T03",
+      "scenario": "Devis avec lignes 150, 45, 30 et remise 15 ; TVA illustrative 20 %.",
+      "resultat_attendu": "210 HT, 42 de taxe, 252 TTC ; total identique serveur, PDF et espace partenaire."
+    },
+    {
+      "id": "T04",
+      "scenario": "TVA non renseignée ou devise contradictoire.",
+      "resultat_attendu": "Validation financière bloquée jusqu’à résolution explicite."
+    },
+    {
+      "id": "T05",
+      "scenario": "Devis modifié après l’acceptation.",
+      "resultat_attendu": "Version précédente conservée et nouvel accord demandé pour le supplément."
+    },
+    {
+      "id": "T06",
+      "scenario": "Facturation après prestation prévue au devis ; audit non prépayé.",
+      "resultat_attendu": "Le démarrage respecte cette condition et ne force pas un prépaiement universel."
+    },
+    {
+      "id": "T07",
+      "scenario": "Audit payé avec résultat non conforme.",
+      "resultat_attendu": "Paiement rapproché, référence refusée ou à corriger selon décision motivée."
+    },
+    {
+      "id": "T08",
+      "scenario": "Clôture sans rapport ou sans revue autorisée.",
+      "resultat_attendu": "Refus serveur ; aucun statut final ni notification trompeuse."
+    },
+    {
+      "id": "T09",
+      "scenario": "Deux fournisseurs aux noms proches.",
+      "resultat_attendu": "Toutes les écritures visent supplier_id exact ; aucun rapprochement par nom partiel."
+    },
+    {
+      "id": "T10",
+      "scenario": "Contre-audit portant sur un contrôle 3PL déjà payé.",
+      "resultat_attendu": "Double facturation refusée ; prestation supplémentaire distincte à justifier."
+    },
+    {
+      "id": "T11",
+      "scenario": "Cause du défaut indéterminée, mais urgence de sécurité.",
+      "resultat_attendu": "Blocage ciblé possible ; aucune dette fournisseur automatique."
+    },
+    {
+      "id": "T12",
+      "scenario": "Marchand modifiant les clauses standard par API ou thème.",
+      "resultat_attendu": "Clauses communes protégées ; seuls les champs autorisés suivent la procédure prévue."
+    },
+    {
+      "id": "T13",
+      "scenario": "Identité remplie mais non vérifiée ou modèle non approuvé.",
+      "resultat_attendu": "Publication et commande concernées bloquées côté serveur."
+    },
+    {
+      "id": "T14",
+      "scenario": "Nouvelle version CGV publiée après une commande.",
+      "resultat_attendu": "Ancien texte, paramètres, vendeur, date et empreinte restent consultables pour cette commande."
+    },
+    {
+      "id": "T15",
+      "scenario": "Refus du marketing et des cookies facultatifs pendant l’achat.",
+      "resultat_attendu": "Achat possible selon les conditions du service ; aucun consentement facultatif créé."
+    },
+    {
+      "id": "T16",
+      "scenario": "Ajout d’une référence en boutique.",
+      "resultat_attendu": "Offre créée, sans achat fournisseur ni augmentation du stock physique."
+    },
+    {
+      "id": "T17",
+      "scenario": "Échantillon accepté puis changement substantiel de configuration.",
+      "resultat_attendu": "Nouvelle validation requise pour la nouvelle configuration."
+    },
+    {
+      "id": "T18",
+      "scenario": "Coût 12 et majoration 50 %, puis taux de marque 50 %.",
+      "resultat_attendu": "Respectivement 18 HT et 24 HT, avec libellés et assiettes explicites."
+    },
+    {
+      "id": "T19",
+      "scenario": "Deux commandes simultanées pour la dernière unité ou capacité.",
+      "resultat_attendu": "Une seule réservation ferme ; aucune survente."
+    },
+    {
+      "id": "T20",
+      "scenario": "Capacité fournisseur expirée ou non vérifiée.",
+      "resultat_attendu": "Checkout à la demande bloqué ou capacité reconfirmée avant engagement."
+    },
+    {
+      "id": "T21",
+      "scenario": "200 unités vierges, quota illustratif 40, cinq commandes autorisées.",
+      "resultat_attendu": "Cinq unités personnalisées au maximum ; reste vierge et traçable."
+    },
+    {
+      "id": "T22",
+      "scenario": "Paiement confirmé mais fonds ou financement insuffisants.",
+      "resultat_attendu": "Aucun feu vert de production irréversible."
+    },
+    {
+      "id": "T23",
+      "scenario": "Seuil de précommande non atteint ou fournisseur indisponible.",
+      "resultat_attendu": "Information, annulation et remboursement selon conditions et droits applicables."
+    },
+    {
+      "id": "T24",
+      "scenario": "Acheteurs différents dans un regroupement fournisseur.",
+      "resultat_attendu": "Ordres et factures identifient chaque acheteur ; pas de dette attribuée fictivement à BIB."
+    },
+    {
+      "id": "T25",
+      "scenario": "Même réception 3PL livrée deux fois par le bridge.",
+      "resultat_attendu": "Un seul mouvement et un seul crédit de stock."
+    },
+    {
+      "id": "T26",
+      "scenario": "Retour d’invendu en vente privée.",
+      "resultat_attendu": "Retour vers la boutique d’origine après contrôle ; aucune nouvelle acquisition."
+    },
+    {
+      "id": "T27",
+      "scenario": "Rétractation en ligne sur un contrat concerné.",
+      "resultat_attendu": "Parcours visible, confirmation et accusé durable avec contenu, date et heure."
+    },
+    {
+      "id": "T28",
+      "scenario": "Événement dupliqué, ancien, retardé puis indisponibilité du bridge.",
+      "resultat_attendu": "Dédoublonnage, ordre des versions, reprise et alerte sans perte de preuve."
+    },
+    {
+      "id": "T29",
+      "scenario": "Accès à un autre marchand, fournisseur ou environnement et transition Finance par rôle Audit.",
+      "resultat_attendu": "Refus serveur, absence de fuite et journal de l’opération autorisée."
+    },
+    {
+      "id": "T30",
+      "scenario": "Vente boutique EI, vente tierce, audit facturé, avoir et paiement partiel.",
+      "resultat_attendu": "GMV et CA séparés, pas de frais à soi-même, dette et solde rapprochés par entité et devise."
+    }
+  ],
+  "suivi_implementation": "docs/supplier-audit-commercial-workflow-2026-11-04.md"
+}
