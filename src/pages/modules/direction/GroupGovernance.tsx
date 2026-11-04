@@ -50,7 +50,7 @@ const GroupGovernance = () => {
       <div>
         <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
           <Building className="h-8 w-8 text-primary" />
-          Gouvernance Groupe
+          Gouvernance BIB
         </h1>
         <p className="text-muted-foreground mt-1">Structure d’exploitation actuelle et transition juridique envisagée pour BIB</p>
       </div>
@@ -102,8 +102,8 @@ const GroupGovernance = () => {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" />Conseil d'Administration</CardTitle>
-            {isLeader && <Button size="sm" variant="outline" onClick={() => newBlock('board_member')}><Plus className="mr-1 h-4 w-4" />Membre</Button>}
+            <CardTitle className="flex items-center gap-2"><Users className="h-5 w-5" />Gouvernance et référents</CardTitle>
+            {isLeader && <Button size="sm" variant="outline" onClick={() => newBlock('board_member')}><Plus className="mr-1 h-4 w-4" />Référent</Button>}
           </div>
         </CardHeader>
         <CardContent>
@@ -137,7 +137,7 @@ const GroupGovernance = () => {
 
       <Dialog open={!!bd} onOpenChange={(o) => !o && setBd(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>{bd?.id ? 'Modifier' : 'Ajouter'} {bd?.kind === 'entity' ? 'une entité' : 'un membre'}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{bd?.id ? 'Modifier' : 'Ajouter'} {bd?.kind === 'entity' ? 'une entité' : 'un référent'}</DialogTitle></DialogHeader>
           {bd && (
             <div className="grid gap-3">
               <div><Label>Nom</Label><Input value={bd.name} onChange={(e) => setBd({ ...bd, name: e.target.value })} /></div>
