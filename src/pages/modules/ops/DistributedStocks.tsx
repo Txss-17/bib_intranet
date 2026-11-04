@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import { usePermissions } from '@/hooks/usePermissions';
 import StockTraceabilityPanel from '@/components/operations/StockTraceabilityPanel';
 import {
   AlertTriangle,
@@ -48,10 +50,14 @@ export default function DistributedStocks() {
   } = usePartnerStocks();
 
   const update = useUpdateStock();
+  const { can } = usePermissions();
+  const canAdjustStock = can('ops.stocks', 'update');
 
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<number>(0);
+  const [editReason, setEditReason] = useState('');
+  const [editReference, setEditReference] = useState('');
 
   // ============================================================
   // FILTRAGE
@@ -167,30 +173,36 @@ export default function DistributedStocks() {
   ) => {
     setEditing(stock.id);
     setEditValue(stock.quantity);
+    setEditReason('');
+    setEditReference('');
   };
 
   const cancelEditing = () => {
     setEditing(null);
     setEditValue(0);
+    setEditReason('');
+    setEditReference('');
   };
 
   const saveStock = (
     stock: (typeof stocks)[number]
   ) => {
+    if (!canAdjustStock) return toast.error('Accès en écriture non autorisé.');
+    if (!Number.isSafeInteger(editValue) || editValue < stock.reserved_quantity) {
+      return toast.error('Quantité entière requise, au moins égale aux unités réservées.');
+    }
+    if (!editReason.trim() || !editReference.trim()) {
+      return toast.error('Un motif et une référence de contrôle sont obligatoires.');
+    }
     update.mutate(
       {
         id: stock.id,
-        quantity: Math.max(
-          0,
-          Math.floor(editValue)
-        ),
+        expectedQuantity: stock.quantity,
+        quantity: editValue,
+        reason: editReason.trim(),
+        reference: editReference.trim(),
       },
-      {
-        onSuccess: () => {
-          setEditing(null);
-          setEditValue(0);
-        },
-      }
+      { onSuccess: cancelEditing }
     );
   };
 
@@ -268,6 +280,7 @@ export default function DistributedStocks() {
         <p className="font-semibold">Périmètre des stocks distribués et origine des quantités</p>
         <p className="text-muted-foreground">Les quantités ci-dessous correspondent aux unités physiquement suivies chez les partenaires logistiques et à leurs réservations. Elles ne représentent pas tout le stock encore détenu par les fournisseurs. Les références ajoutées par les marchands à leurs boutiques ne créent aucun stock dans ce registre.</p>
         <p className="text-muted-foreground">Modèle de vente à la demande : le fournisseur conserve le stock avant commande. Après confirmation d’une vente client et de la disponibilité, le marchand doit acheter les unités correspondantes auprès du fournisseur ; la réception, la personnalisation, l’expédition et toute correction d’inventaire doivent être tracées séparément.</p>
+        <p className="text-muted-foreground">Les corrections physiques nécessitent une justification et un identifiant de contrôle ; elles sont enregistrées atomiquement avec leur mouvement d’inventaire. Le bouton de correction est réservé aux responsables autorisés.</p>
       </CardContent></Card>
       {/* KPI */}
 
@@ -538,7 +551,8 @@ export default function DistributedStocks() {
 
                         <TableCell className="text-right font-medium">
                           {isEditing ? (
-                            <Input
+                            <div className="ml-auto flex min-w-44 flex-col gap-2">
+                              <Input
                               type="number"
                               min={0}
                               step={1}
@@ -557,6 +571,10 @@ export default function DistributedStocks() {
                               className="ml-auto h-8 w-24"
                               autoFocus
                             />
+                            <Input aria-label="Motif de correction" placeholder="Motif obligatoire" maxLength={1000} value={editReason} onChange={event => setEditReason(event.target.value)} />
+                            <Input aria-label="Référence justificative" placeholder="Référence du contrôle" maxLength={150} value={editReference} onChange={event => setEditReference(event.target.value)} />
+                            <p className="text-xs text-muted-foreground">Ajustement physique journalisé. Minimum : {stock.reserved_quantity} unités réservées.</p>
+                            </div>
                           ) : (
                             stock.quantity.toLocaleString(
                               'fr-FR'
@@ -651,6 +669,7 @@ export default function DistributedStocks() {
                             <Button
                               size="icon"
                               variant="ghost"
+                              disabled={!canAdjustStock}
                               onClick={() =>
                                 startEditing(stock)
                               }
