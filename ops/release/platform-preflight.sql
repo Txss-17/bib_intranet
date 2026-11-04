@@ -9,6 +9,15 @@ BEGIN
  FROM (VALUES
   ('boutiques',to_regclass('public.boutiques') IS NOT NULL),
   ('orders',to_regclass('public.orders') IS NOT NULL),
+  ('legal_governance_configuration',to_regclass('public.legal_governance_configuration') IS NOT NULL),
+  ('legal_governance_mirror',to_regclass('public.legal_governance_mirror') IS NOT NULL),
+  ('store_order_legal_snapshots',to_regclass('public.store_order_legal_snapshots') IS NOT NULL),
+  ('get_store_legal_bundle',to_regprocedure('public.get_store_legal_bundle(uuid)') IS NOT NULL),
+  ('compose_store_legal_bundle',to_regprocedure('public.compose_store_legal_bundle(uuid,boolean)') IS NOT NULL),
+  ('read_store_legal_identity_for_review',to_regprocedure('public.read_store_legal_identity_for_review(uuid)') IS NOT NULL),
+  ('track_order_legal_snapshot',to_regprocedure('public.track_order_legal_snapshot(text,text)') IS NOT NULL),
+  ('create_storefront_legal_orders',to_regprocedure('public.create_storefront_legal_orders(uuid,uuid,text,boolean,text,text,text,jsonb)') IS NOT NULL),
+  ('import_legal_governance_record',to_regprocedure('public.import_legal_governance_record(jsonb,text,text)') IS NOT NULL),
   ('order_refunds',to_regclass('public.order_refunds') IS NOT NULL),
   ('order_issues',to_regclass('public.order_issues') IS NOT NULL),
   ('subscriptions',to_regclass('public.subscriptions') IS NOT NULL),
@@ -35,10 +44,30 @@ BEGIN
    'public.customer_boutique_favorites'::regclass,
    'public.product_customization_dossiers'::regclass,
    'public.stock_restock_requests'::regclass,
-   'public.sav_escalation_events'::regclass
+   'public.sav_escalation_events'::regclass,
+   'public.legal_governance_configuration'::regclass,
+   'public.legal_governance_mirror'::regclass,
+   'public.store_order_legal_snapshots'::regclass
   ) AND c.relrowsecurity IS NOT TRUE
  ) THEN RAISE EXCEPTION 'BIB_PLATFORM_STAGING_NOT_READY: critical table without RLS' USING ERRCODE='42501';
  END IF;
+ IF EXISTS (
+  SELECT 1 FROM (VALUES
+   ('public.create_storefront_legal_orders(uuid,uuid,text,boolean,text,text,text,jsonb)'),
+   ('public.import_legal_governance_record(jsonb,text,text)'),
+   ('public.compose_store_legal_bundle(uuid,boolean)'),
+   ('public.read_store_legal_identity_for_review(uuid)')
+  ) private_functions(signature)
+  WHERE has_function_privilege('anon',signature,'EXECUTE') OR has_function_privilege('authenticated',signature,'EXECUTE')
+ ) THEN RAISE EXCEPTION 'BIB_PLATFORM_STAGING_NOT_READY: private legal function exposed' USING ERRCODE='42501'; END IF;
+ IF EXISTS (
+  SELECT 1 FROM (VALUES
+   ('public.boutiques'::regclass,'guard_store_legal_publication'),
+   ('public.orders'::regclass,'guard_order_legal_snapshot'),
+   ('public.store_order_legal_snapshots'::regclass,'immutable_store_legal_evidence')
+  ) expected(relation_id,trigger_name)
+  WHERE NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid=expected.relation_id AND tgname=expected.trigger_name AND tgenabled='O')
+ ) THEN RAISE EXCEPTION 'BIB_PLATFORM_STAGING_NOT_READY: legal guard not active' USING ERRCODE='42501'; END IF;
  IF has_function_privilege('anon','public.escalate_unanswered_order_issues(integer,text)','EXECUTE')
     OR has_function_privilege('authenticated','public.escalate_unanswered_order_issues(integer,text)','EXECUTE')
  THEN RAISE EXCEPTION 'BIB_PLATFORM_STAGING_NOT_READY: SAV worker executable outside service_role' USING ERRCODE='42501';

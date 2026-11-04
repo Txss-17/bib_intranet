@@ -1,8 +1,8 @@
 {
   "document": "BIB Adaptation Platform Intrabib",
-  "version": "1.1",
+  "version": "1.2",
   "date": "2026-11-04",
-  "statut": "Premier lot audit implémenté et testé localement ; autres lots et recette préproduction non terminés",
+  "statut": "Lots audit et juridique boutique implémentés et testés localement ; mise en service et autres lots non terminés",
   "dates_implementation": "À définir",
   "integration": "Correspondance des champs Intrabib à réaliser avant import",
   "source_code": {
@@ -161,7 +161,7 @@
       "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
       "echeance": null,
-      "implementation": "Journal transactionnel et rejeu idempotent du dossier audit ; reprise globale/outbox non livrées."
+      "implementation": "Journaux audit/juridique et dédoublonnage ; file persistante des transmissions juridiques avec accusé serveur et reprise manuelle, sans worker automatique général."
     },
     {
       "id": "BIB-AD-009",
@@ -367,9 +367,10 @@
         "T14"
       ],
       "source": "GOV-LEGAL",
-      "statut": "Spécifié pour développement",
+      "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Registre JUR-B01/B02/B03 FR, versions et dates, revues juridiques/Direction distinctes, publication/retrait et historique ; JUR-M/C non gouvernés nativement ici."
     },
     {
       "id": "BIB-AD-019",
@@ -385,9 +386,10 @@
         "T13"
       ],
       "source": "DEC-021",
-      "statut": "Spécifié pour développement",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Relecture serveur de la boutique exacte, preuve et revue indépendante ; entité EI partagée sur SIREN, changement du vendeur suspendant publication ; contrôle humain sur justificatifs requis."
     },
     {
       "id": "BIB-AD-020",
@@ -405,9 +407,10 @@
         "T13"
       ],
       "source": "DEC-021 022",
-      "statut": "Spécifié pour développement",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Assemblage SQL des trois modèles boutique depuis champs contrôlés et vendeur vérifié ; aucun texte publié par défaut ni PDF automatique."
     },
     {
       "id": "BIB-AD-021",
@@ -423,9 +426,10 @@
         "T14"
       ],
       "source": "GOV-LEGAL",
-      "statut": "Spécifié pour développement",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Instantané transactionnel des textes, paramètres, vendeur, versions, hash, accord et canal par commande ; récupération/téléchargement texte et historique non réécrit."
     },
     {
       "id": "BIB-AD-022",
@@ -442,9 +446,10 @@
         "T15"
       ],
       "source": "P05",
-      "statut": "Spécifié pour développement",
+      "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Versions TS/JS déjà concordantes, déclencheur serveur aligné sur confidentialité 2026-11-02 ; autoinscription fermée conservée, registre JUR-M/C à étendre."
     },
     {
       "id": "BIB-AD-023",
@@ -460,9 +465,10 @@
         "T15"
       ],
       "source": "GOV-LEGAL",
-      "statut": "Spécifié pour développement",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Accord légal explicite et lié à la version ; achat sans création de marketing ni cookies facultatifs ; confidentialité conservée comme événement séparé."
     },
     {
       "id": "BIB-AD-024",
@@ -542,7 +548,7 @@
       "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
       "echeance": null,
-      "implementation": "Contrôle serveur du nouvel envoi catalogue par platform-bridge ; éligibilité complète et checkout non livrés."
+      "implementation": "Admission audit avant envoi catalogue et garde SQL de publication/checkout juridique ; éligibilité globale, capacité et échantillon restent non livrés."
     },
     {
       "id": "BIB-AD-028",
@@ -819,7 +825,7 @@
       "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
       "echeance": null,
-      "implementation": "Même dossier audit partagé entre trois modules ; affectations/notifications automatiques non livrées."
+      "implementation": "Dossiers audit et juridique partagés entre pôles, validations distinctes et historique ; tâches/affectations/notifications générales non automatiques."
     },
     {
       "id": "BIB-AD-042",
@@ -873,7 +879,7 @@
       "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
       "echeance": null,
-      "implementation": "Tests SQL isolés et frontières HTTP du lot audit ; recette croisée complète et restauration non exécutées."
+      "implementation": "39 tests isolés additionnels sur le lot juridique et un parcours croisé exécutant les deux migrations ; recette Supabase complète et restauration non réalisées."
     }
   ],
   "recette": [
@@ -1028,5 +1034,10 @@
       "resultat_attendu": "GMV et CA séparés, pas de frais à soi-même, dette et solde rapprochés par entité et devise."
     }
   ],
-  "suivi_implementation": "docs/supplier-audit-commercial-workflow-2026-11-04.md"
+  "suivi_implementation": "docs/supplier-audit-commercial-workflow-2026-11-04.md",
+  "suivi_juridique": "docs/store-legal-governance-2026-11-04.md",
+  "implementation_base": {
+    "platform": "9f76d42890068ed96e1831a5099d4dfbc9d7b5e7",
+    "intrabib": "4f6ef92a065392d17dd4fca86d46f799e6b65e63"
+  }
 }

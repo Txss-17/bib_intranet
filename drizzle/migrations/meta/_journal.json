@@ -589,6 +589,13 @@
       "when": 1793817339535,
       "tag": "0083_supplier_audit_commercial_workflow",
       "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1793820875852,
+      "tag": "0084_legal_document_governance",
+      "breakpoints": true
     }
   ]
 }
