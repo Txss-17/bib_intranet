@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import StockTraceabilityPanel from '@/components/operations/StockTraceabilityPanel';
 import { Package, Search, Settings2, Send, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -85,6 +86,7 @@ export default function ValidatedProducts() {
           Actualiser
         </Button>
       </header>
+      <StockTraceabilityPanel />
       <section className="enterprise-card space-y-2 p-5 text-sm" aria-label="Circuit de stock fournisseur">
         <h2 className="font-semibold">Référencement fournisseur et commandes à la demande</h2>
         <p className="text-muted-foreground">Le fournisseur reste propriétaire des unités qu'il détient. L'ajout d'une référence à une boutique marchande n'enlève aucun stock fournisseur et ne crée aucun achat de BIB. La disponibilité et les capacités réelles du fournisseur doivent être vérifiées avant la vente.</p>
