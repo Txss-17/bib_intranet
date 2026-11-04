@@ -104,19 +104,16 @@ export default function DistributedStocks() {
     );
 
     const ruptures = stocks.filter(
-      (stock) =>
-        stock.quantity <= stock.rupture_threshold
+      (stock) => Math.max(0, stock.quantity - stock.reserved_quantity) <= (stock.rupture_threshold ?? 0)
     ).length;
 
-    const lows = stocks.filter(
-      (stock) =>
-        stock.quantity > stock.rupture_threshold &&
-        stock.quantity <= stock.reorder_threshold
-    ).length;
+    const lows = stocks.filter((stock) => {
+      const available = Math.max(0, stock.quantity - stock.reserved_quantity);
+      return available > (stock.rupture_threshold ?? 0) && available <= (stock.reorder_threshold ?? 0);
+    }).length;
 
     const healthy = stocks.filter(
-      (stock) =>
-        stock.quantity > stock.reorder_threshold
+      (stock) => Math.max(0, stock.quantity - stock.reserved_quantity) > (stock.reorder_threshold ?? 0)
     ).length;
 
     return {
@@ -136,9 +133,9 @@ export default function DistributedStocks() {
   const getStatus = (
     stock: (typeof stocks)[number]
   ) => {
+    const available = Math.max(0, stock.quantity - stock.reserved_quantity);
     if (
-      stock.quantity <=
-      stock.rupture_threshold
+      available <= (stock.rupture_threshold ?? 0)
     ) {
       return {
         label: 'Rupture',
@@ -147,8 +144,7 @@ export default function DistributedStocks() {
     }
 
     if (
-      stock.quantity <=
-      stock.reorder_threshold
+      available <= (stock.reorder_threshold ?? 0)
     ) {
       return {
         label: 'Faible',
