@@ -213,33 +213,36 @@ export const useUpdateStock = () => {
   return useMutation({
     mutationFn: async (vars: {
       id: string;
+      expectedQuantity: number;
       quantity: number;
+      reason: string;
+      reference: string;
     }) => {
-      if (vars.quantity < 0) {
-        throw new Error('La quantité de stock ne peut pas être négative.');
+      if (!Number.isSafeInteger(vars.quantity) || vars.quantity < 0 ||
+          !Number.isSafeInteger(vars.expectedQuantity) || vars.expectedQuantity < 0 ||
+          !vars.reason.trim() || !vars.reference.trim()) {
+        throw new Error('Quantité entière, motif et référence justificative obligatoires.');
       }
-
-      const { error } = await supabase
-        .from('partner_stocks')
-        .update({
-          quantity: vars.quantity,
-          last_inventory_at: new Date().toISOString(),
-        })
-        .eq('id', vars.id);
-
+      // One server-side atomic transaction updates the partner inventory and
+      // records the signed movement. The UI cannot credit stock silently.
+      const { data, error } = await supabase.rpc('adjust_partner_stock' as never, {
+        p_stock_id: vars.id,
+        p_expected_quantity: vars.expectedQuantity,
+        p_new_quantity: vars.quantity,
+        p_reason: vars.reason.trim(),
+        p_reference: vars.reference.trim(),
+      } as never);
       if (error) throw error;
+      if (!data) throw new Error('Ajustement non confirmé par le serveur.');
+      return data;
     },
-
     onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: ['ops', 'partner_stocks'],
-      });
-
-      toast.success('Stock mis à jour');
+      qc.invalidateQueries({ queryKey: ['ops', 'partner_stocks'] });
+      qc.invalidateQueries({ queryKey: ['ops', 'stock_movements'] });
+      toast.success('Correction de stock enregistrée et journalisée');
     },
-
-    onError: (e: Error) => {
-      toast.error(e.message);
+    onError: (error: Error) => {
+      toast.error('Correction de stock refusée', { description: error.message });
     },
   });
 };
