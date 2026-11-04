@@ -147,6 +147,15 @@ const OpsDashboard = () => {
           </div>
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader><CardTitle className="text-base">Précommandes groupées et production personnalisée — règles de pilotage</CardTitle></CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <p>Les produits personnalisables suivent une fenêtre de précommandes regroupées. La capacité fournisseur et les stocks mobilisables sont contrôlés avant confirmation. La personnalisation ne démarre pas avant le feu vert de production, une fois les commandes confirmées et regroupées.</p>
+          <p className="text-muted-foreground">Étapes à distinguer : fenêtre ouverte → confirmation → clôture/regroupement → achat fournisseur par le marchand → préparation → personnalisation → contrôle qualité → packaging → expédition → livraison. Le client est informé d'un délai pouvant aller jusqu'à un mois selon l'offre, avec une échéance annoncée avant paiement.</p>
+          <p className="text-muted-foreground">Une annulation commerciale sans frais doit rester possible avant le lancement effectif de production, sans préjudice des droits légaux. Ni un paiement Stripe ni un changement de statut logistique ne prouvent seuls que la production a commencé.</p>
+          <p className="text-muted-foreground">Cette page présente le processus approuvé ; l'ordonnancement automatique, le suivi des fenêtres et les événements de lancement de production ne sont pas encore disponibles dans le schéma de commandes.</p>
+        </CardContent>
+      </Card>
       {/* KPIs critiques */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
