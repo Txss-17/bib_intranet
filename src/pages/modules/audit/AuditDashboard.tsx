@@ -22,6 +22,15 @@ export default function AuditDashboard() {
     <div className="flex flex-wrap items-start justify-between gap-3"><div><h1 className="text-3xl font-bold">Pôle Audit</h1><p className="text-muted-foreground">Missions, résultats terrain et non-conformités.</p></div><div className="flex gap-2">{can('audit.missions', 'read') && <Button asChild variant="outline"><Link to="/pole/audit/missions">Missions</Link></Button>}{mayReadFindings && <Button asChild><Link to="/pole/audit/nonconformities">Non-conformités</Link></Button>}</div></div>
     {(audits.isError || quality.isError) && <p role="alert">Certains indicateurs sont indisponibles. <Button variant="link" onClick={() => { if (mayReadAudits) void audits.refetch(); void quality.refetch(); }}>Réessayer</Button></p>}
     <p className="text-xs text-muted-foreground">Audits accessibles, toutes dates. Les non-conformités comptent tous les dossiers actifs de cet environnement.</p>
+    <Card>
+      <CardHeader><CardTitle className="text-base">Qualification fournisseur — devis et conformité (DEC-008 / DEC-009 / DEC-018)</CardTitle></CardHeader>
+      <CardContent className="space-y-2 text-sm">
+        <p>Le parcours adopté est : présélection commerciale et de capacité → contrat → devis et contrôle documentaire initial à périmètre convenu → décision de conformité avant référencement. Le contrôle initial est <strong>payant sur devis accepté</strong>, avec une <strong>base indicative de 150 €</strong> selon le nombre de références, les catégories et la complexité : ce n'est pas un tarif automatique par SKU.</p>
+        <p className="text-muted-foreground">Le réaudit ou contrôle complémentaire doit correspondre à une prestation effectivement réalisée, sur devis accepté et sans double facturation. BIB Audit ne délivre aucune certification officielle par défaut.</p>
+        <p className="text-muted-foreground">Responsabilités : Fournisseurs qualifie et communique ; Audit définit les contrôles et devis ; Finance valide le traitement TVA/facture et la preuve d'encaissement ; Direction arbitre les exceptions. L'absence de validation documentée empêche de qualifier la référence comme commercialisable.</p>
+        <p className="text-muted-foreground">Le devis, la facture et la validation inter-pôles ne sont pas encore automatisés depuis cette page ; les missions affichées ne constituent pas un registre de facturation.</p>
+      </CardContent>
+    </Card>
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{[
       ['Audits planifiés', stats?.scheduled ?? '—'], ['Audits en cours', stats?.inProgress ?? '—'],
       ['Non-conformités à traiter', quality.data?.active ?? '—'], ['Score moyen des audits terminés', stats?.average == null ? '—' : `${stats.average.toFixed(1)}%`],
