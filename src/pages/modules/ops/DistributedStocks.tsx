@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import StockTraceabilityPanel from '@/components/operations/StockTraceabilityPanel';
 import {
   AlertTriangle,
   Check,
@@ -267,6 +268,11 @@ export default function DistributedStocks() {
         </p>
       </div>
 
+      <Card><CardContent className="space-y-2 p-4 text-sm">
+        <p className="font-semibold">Périmètre des stocks distribués et origine des quantités</p>
+        <p className="text-muted-foreground">Les quantités ci-dessous correspondent aux unités physiquement suivies chez les partenaires logistiques et à leurs réservations. Elles ne représentent pas tout le stock encore détenu par les fournisseurs. Les références ajoutées par les marchands à leurs boutiques ne créent aucun stock dans ce registre.</p>
+        <p className="text-muted-foreground">Modèle de vente à la demande : le fournisseur conserve le stock avant commande. Après confirmation d’une vente client et de la disponibilité, le marchand doit acheter les unités correspondantes auprès du fournisseur ; la réception, la personnalisation, l’expédition et toute correction d’inventaire doivent être tracées séparément.</p>
+      </CardContent></Card>
       {/* KPI */}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
@@ -376,6 +382,7 @@ export default function DistributedStocks() {
 
       </div>
 
+      <StockTraceabilityPanel />
       {/* TABLE */}
 
       <Card>
