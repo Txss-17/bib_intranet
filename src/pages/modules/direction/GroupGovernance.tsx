@@ -56,6 +56,19 @@ const GroupGovernance = () => {
       </div>
       <Card>
         <CardHeader>
+          <CardTitle>Décisions BIB approuvées — pilotage contractuel centralisé</CardTitle>
+          <CardDescription>Les arbitrages stratégiques sont validés par la Direction. Leur sécurisation juridique et leur implémentation restent des étapes distinctes.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <p><strong>Vendeur identifié :</strong> le marchand reste le vendeur juridique de sa commande. BIB administre les CGV communes, non librement modifiables par les boutiques, avec version et preuve d'acceptation liées à la commande.</p>
+          <p><strong>Précommandes :</strong> regroupement par fenêtre et capacité vérifiée ; personnalisation après confirmation ; annulation gratuite jusqu'au feu vert de production, sous réserve des droits légaux de rétractation et des autres recours.</p>
+          <p><strong>Prix :</strong> prix fournisseur comprenant la personnalisation contractualisée, puis marge marchand. <strong>Finance :</strong> Stripe retenu comme prestataire de paiement, configuration opérationnelle à finaliser ; Stripe et comptabilité restent deux systèmes distincts, à rapprocher.</p>
+          <p><strong>Conformité :</strong> mentions et politiques centralisées ; vendeur réel, versions contractuelles, consentements cookies et refus doivent être traçables. L'avocat sécurise la traduction contractuelle des décisions déjà approuvées sans les considérer comme non décidées.</p>
+          <p className="text-muted-foreground">Références de gouvernance : BIB-00 (paramètres), BIB-00bis (décisions architecturales), BIB-30 (cadre juridique), à tenir cohérentes avec les versions contractuelles publiées.</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
           <CardTitle>Trajectoire juridique BIB — lancement puis développement</CardTitle>
           <CardDescription>Cadre stratégique de pilotage. Il ne certifie ni l’immatriculation ni la réactivation administrative de l’entreprise.</CardDescription>
         </CardHeader>
