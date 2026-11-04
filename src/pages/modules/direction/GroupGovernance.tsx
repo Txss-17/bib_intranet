@@ -29,7 +29,7 @@ const GroupGovernance = () => {
   const governanceEntities = blocks.filter((b) => b.kind === 'entity');
   const boardMembers = blocks.filter((b) => b.kind === 'board_member');
   const editBlock = (b: GovernanceBlock) => setBd({ id: b.id, kind: b.kind, name: b.name, subtitle: b.subtitle ?? '', description: b.description ?? '', detail: b.detail ?? '', status: b.status });
-  const newBlock = (kind: BlockDraft['kind']) => setBd({ kind, name: '', subtitle: '', description: '', detail: kind === 'board_member' ? 'BIB SAS' : '', status: kind === 'entity' ? 'planned' : 'active' });
+  const newBlock = (kind: BlockDraft['kind']) => setBd({ kind, name: '', subtitle: '', description: '', detail: '', status: kind === 'entity' ? 'planned' : 'active' });
   const BlockButtons = ({ b }: { b: GovernanceBlock }) => isLeader ? (
     <div className="flex">
       <Button size="icon" variant="ghost" aria-label="Modifier" onClick={() => editBlock(b)}><Pencil className="h-4 w-4" /></Button>
@@ -52,8 +52,20 @@ const GroupGovernance = () => {
           <Building className="h-8 w-8 text-primary" />
           Gouvernance Groupe
         </h1>
-        <p className="text-muted-foreground mt-1">Structure juridique et gouvernance BIB</p>
+        <p className="text-muted-foreground mt-1">Structure d’exploitation actuelle et transition juridique envisagée pour BIB</p>
       </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Trajectoire juridique BIB — lancement puis développement</CardTitle>
+          <CardDescription>Cadre stratégique de pilotage. Il ne certifie ni l’immatriculation ni la réactivation administrative de l’entreprise.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p><strong>Phase initiale :</strong> adaptation et, si nécessaire, réactivation de l’entreprise individuelle au régime micro-entrepreneur pour les activités BIB autorisées et déclarées. Vérifier la situation SIRENE/INPI et l’activité enregistrée avant les opérations commerciales.</p>
+          <p><strong>Exploitation :</strong> boutiques tests permanentes pouvant réaliser de vraies ventes, contrats fournisseurs et logistiques, BIB agissant comme intermédiaire selon le contrat applicable. Le marchand reste identifié comme vendeur juridique dans le schéma marketplace retenu.</p>
+          <p><strong>Phase ultérieure :</strong> constitution envisagée d’une <strong>SASU</strong>, et non d’une SAS, avec transfert ou conclusion des contrats, des moyens de paiement et des obligations fiscales selon le calendrier validé. Une SASU est une nouvelle personne morale : le changement n’est pas une simple modification d’intitulé.</p>
+          <p className="text-muted-foreground">Les entités et membres ci-dessous sont des données déclarées par la Direction ; aucun statut « actif », capital social ou nom de société n’est créé automatiquement.</p>
+        </CardContent>
+      </Card>
       {isLeader && (
         <div className="flex justify-end">
           <Button size="sm" variant="outline" onClick={() => newBlock('entity')}><Plus className="mr-1 h-4 w-4" />Entité</Button>
@@ -79,7 +91,7 @@ const GroupGovernance = () => {
             <CardContent>
               <p className="text-sm mb-4">{entity.description}</p>
               <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Capital</span>
+                <span className="text-muted-foreground">Capital / indication juridique</span>
                 <span className="font-medium">{entity.detail}</span>
               </div>
             </CardContent>
@@ -131,7 +143,7 @@ const GroupGovernance = () => {
               <div><Label>Nom</Label><Input value={bd.name} onChange={(e) => setBd({ ...bd, name: e.target.value })} /></div>
               <div><Label>{bd.kind === 'entity' ? 'Type' : 'Fonction'}</Label><Input value={bd.subtitle} onChange={(e) => setBd({ ...bd, subtitle: e.target.value })} /></div>
               <div><Label>Description</Label><Textarea value={bd.description} onChange={(e) => setBd({ ...bd, description: e.target.value })} /></div>
-              <div><Label>{bd.kind === 'entity' ? 'Capital' : 'Entité'}</Label><Input value={bd.detail} onChange={(e) => setBd({ ...bd, detail: e.target.value })} /></div>
+              <div><Label>{bd.kind === 'entity' ? 'Capital ou indication juridique (facultatif)' : 'Entité ou rôle'}</Label><Input value={bd.detail} onChange={(e) => setBd({ ...bd, detail: e.target.value })} /></div>
               {bd.kind === 'entity' && (
                 <div>
                   <Label>Statut</Label>
