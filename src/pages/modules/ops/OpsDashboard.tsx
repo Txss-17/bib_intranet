@@ -134,6 +134,18 @@ const OpsDashboard = () => {
         </p>
       </div>
 
+      <Card>
+        <CardHeader><CardTitle className="text-base">Chaîne de stock : du fournisseur à la livraison</CardTitle></CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <p>Référence ajoutée à une boutique ≠ stock acheté. Le fournisseur conserve son inventaire initial ; le marchand déclenche l'achat correspondant lorsqu'une vente est confirmée et que la disponibilité est vérifiée. BIB coordonne ensuite la préparation, la personnalisation éventuelle et la logistique.</p>
+          <p className="text-muted-foreground">Les indicateurs de stock ci-dessous portent sur les unités physiquement enregistrées chez les partenaires logistiques. Ils ne totalisent pas la disponibilité des fournisseurs. Une demande de réapprovisionnement approuvée ne crédite ni stock local ni stock marchand sans réception confirmée.</p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild size="sm" variant="outline"><Link to="/pole/ops/stocks">Inventaire partenaires et mouvements</Link></Button>
+            <Button asChild size="sm" variant="outline"><Link to="/pole/ops/replenishment">Suggestions de réapprovisionnement</Link></Button>
+            <Button asChild size="sm" variant="outline"><Link to="/pole/ops/pipeline">Commandes et exécution</Link></Button>
+          </div>
+        </CardContent>
+      </Card>
       {/* KPIs critiques */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
