@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import LegalGovernancePanel from '@/components/compliance/LegalGovernancePanel';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Building, Users, FileText, Heart, Briefcase, Upload, Eye, Trash2, Pencil, Plus } from 'lucide-react';
@@ -157,6 +158,7 @@ const GroupGovernance = () => {
         </CardHeader>
         <CardContent><FinancialAnalytics compact /></CardContent>
       </Card>
+      <LegalGovernancePanel />
       <Documents pageId="direction.governance" />
 
       <Dialog open={!!bd} onOpenChange={(o) => !o && setBd(null)}>

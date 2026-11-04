@@ -1,4 +1,5 @@
 import { ManagedDocumentLink } from '@/components/operations/ManagedDocumentLink';
+import LegalGovernancePanel from '@/components/compliance/LegalGovernancePanel';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -70,6 +71,7 @@ export default function Contracts() {
       {isError && <div role="alert" className="rounded border border-destructive/40 p-3 text-sm">
         Contrats indisponibles. <Button size="sm" variant="outline" onClick={() => void refetch()}>Réessayer</Button>
       </div>}
+      <LegalGovernancePanel kind="identity" />
       <Card>
         <CardHeader>
           <div className="flex flex-wrap items-center gap-4">

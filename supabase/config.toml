@@ -13,5 +13,8 @@ verify_jwt = false
 [functions.supplier-audit-portal]
 verify_jwt = false
 
+[functions.legal-governance-bridge]
+verify_jwt = true
+
 [gateway-inbound-email]
 verify_jwt = false

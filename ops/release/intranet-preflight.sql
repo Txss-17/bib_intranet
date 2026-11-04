@@ -10,6 +10,15 @@ BEGIN
   ('intranet_modules',to_regclass('public.intranet_modules') IS NOT NULL),
   ('intranet_records',to_regclass('public.intranet_records') IS NOT NULL),
   ('intranet_record_events',to_regclass('public.intranet_record_events') IS NOT NULL),
+  ('legal_governance_records',to_regclass('public.legal_governance_records') IS NOT NULL),
+  ('legal_governance_events',to_regclass('public.legal_governance_events') IS NOT NULL),
+  ('legal_governance_deliveries',to_regclass('public.legal_governance_deliveries') IS NOT NULL),
+  ('supplier_audit_cases',to_regclass('public.supplier_audit_cases') IS NOT NULL),
+  ('create_legal_governance_record',to_regprocedure('public.create_legal_governance_record(uuid,text,jsonb)') IS NOT NULL),
+  ('advance_legal_governance_record',to_regprocedure('public.advance_legal_governance_record(uuid,integer,uuid,text,jsonb)') IS NOT NULL),
+  ('export_legal_governance_record',to_regprocedure('public.export_legal_governance_record(uuid)') IS NOT NULL),
+  ('acknowledge_legal_governance_delivery',to_regprocedure('public.acknowledge_legal_governance_delivery(uuid,bigint)') IS NOT NULL),
+  ('get_supplier_reference_admission',to_regprocedure('public.get_supplier_reference_admission(uuid,text,boolean)') IS NOT NULL),
   ('platform_sync_runs',to_regclass('public.platform_sync_runs') IS NOT NULL),
   ('finance_invoice_register',to_regclass('public.finance_invoice_register') IS NOT NULL),
   ('cashflows',to_regclass('public.cashflows') IS NOT NULL),
@@ -56,10 +65,23 @@ BEGIN
    'public.cashflows'::regclass,
    'public.finance_invoice_register'::regclass,
    'public.cashflows'::regclass,
-   'public.finance_invoice_register'::regclass
+   'public.finance_invoice_register'::regclass,
+   'public.legal_governance_records'::regclass,
+   'public.legal_governance_events'::regclass,
+   'public.legal_governance_deliveries'::regclass,
+   'public.supplier_audit_cases'::regclass
   ) AND c.relrowsecurity IS NOT TRUE
  ) THEN RAISE EXCEPTION 'BIB_INTRANET_STAGING_NOT_READY: critical table without RLS' USING ERRCODE='42501';
  END IF;
+ IF has_function_privilege('anon','public.acknowledge_legal_governance_delivery(uuid,bigint)','EXECUTE')
+  OR has_function_privilege('authenticated','public.acknowledge_legal_governance_delivery(uuid,bigint)','EXECUTE')
+  OR has_function_privilege('anon','public.create_legal_governance_record(uuid,text,jsonb)','EXECUTE')
+  OR has_function_privilege('anon','public.advance_legal_governance_record(uuid,integer,uuid,text,jsonb)','EXECUTE')
+ THEN RAISE EXCEPTION 'BIB_INTRANET_STAGING_NOT_READY: legal write privileges exposed' USING ERRCODE='42501'; END IF;
+ IF EXISTS (
+  SELECT 1 FROM (VALUES('legal_governance_record_guard'),('legal_governance_event')) expected(trigger_name)
+  WHERE NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.legal_governance_records'::regclass AND tgname=expected.trigger_name AND tgenabled='O')
+ ) THEN RAISE EXCEPTION 'BIB_INTRANET_STAGING_NOT_READY: legal governance guard not active' USING ERRCODE='42501'; END IF;
  IF NOT EXISTS (
   SELECT 1 FROM pg_trigger
   WHERE tgrelid='public.cashflows'::regclass
