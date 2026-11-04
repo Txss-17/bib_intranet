@@ -125,6 +125,14 @@ export default function SupplierDashboard() {
           </div>
         </CardContent>
       </Card>
+      <Card>
+        <CardHeader><CardTitle className="text-base">Précommandes : capacités et prix de personnalisation</CardTitle></CardHeader>
+        <CardContent className="space-y-2 text-sm">
+          <p>Les précommandes de références personnalisables se regroupent selon une fenêtre et une capacité fournisseur vérifiée. La production personnalisée ne peut commencer qu'après confirmation et feu vert tracé. Les produits vierges disponibles peuvent suivre un circuit plus court.</p>
+          <p className="text-muted-foreground">Le prix de base transmis au marchand doit comprendre les prestations de personnalisation convenues pour la référence ; le marchand ajoute sa marge contractuelle. Les variations de configuration doivent être explicitement tarifées avant paiement, jamais supposées gratuites.</p>
+          <p className="text-muted-foreground">Le pôle Fournisseurs contrôle MOQ, capacité, disponibilité, fenêtres de livraison et engagements. En cas de délai prévisionnel jusqu'à un mois, le client doit recevoir une information claire et un suivi par étapes. Aucun stock fournisseur n'est déduit automatiquement d'une simple précommande non confirmée.</p>
+        </CardContent>
+      </Card>
       {(isError || quality.isError) && <p role="alert">Indicateurs indisponibles. <Button variant="link" onClick={() => { void refetch(); void quality.refetch(); }}>Réessayer</Button></p>}
       <p className="text-xs text-muted-foreground">Indicateurs des données accessibles, toutes dates. Signalements qualité hors archives.</p>
       <Tabs value={dashTab} onValueChange={setDashTab}>
