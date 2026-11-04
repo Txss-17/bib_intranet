@@ -70,6 +70,12 @@ jobs:
             rm -f "$output"
           done
 
+      - name: Test supplier qualification quotes payment evidence and reports
+        run: npm run test:supplier-audit
+
+      - name: Typecheck supplier audit portal and catalogue publication boundary
+        run: npx tsc --noEmit --target ES2022 --module ESNext --moduleResolution bundler --lib ES2022,DOM --skipLibCheck --strictNullChecks --noImplicitAny false --allowImportingTsExtensions tests/supplier-audit/edge-env.d.ts supabase/functions/supplier-audit-portal/index.ts supabase/functions/platform-bridge/index.ts
+
       - name: Test restock contract
         run: npm run test:restock
 

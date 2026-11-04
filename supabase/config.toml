@@ -9,5 +9,9 @@ verify_jwt = true
 [functions.hub-field-missions]
 verify_jwt = false
 
+# Server-only: the handler verifies the bridge secret before accessing data.
+[functions.supplier-audit-portal]
+verify_jwt = false
+
 [gateway-inbound-email]
 verify_jwt = false

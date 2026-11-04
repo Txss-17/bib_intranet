@@ -1,3 +1,4 @@
+import SupplierAuditWorkflow from '@/components/supplier/SupplierAuditWorkflow';
 import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -164,7 +165,8 @@ export default function Billing() {
   return <div className="space-y-5">
     <header><h1 className="text-2xl font-semibold">Facturation BIB</h1><p className="text-sm text-muted-foreground">Suivi des factures reçues et émises hors plateforme, distinct des contrôles de facturation commerciale BIB Platform.</p></header>
     <Tabs defaultValue="register" className="space-y-4">
-      <TabsList><TabsTrigger value="register">Registre des factures</TabsTrigger><TabsTrigger value="checks">Contrôles de facturation Platform</TabsTrigger></TabsList>
+      <TabsList className="flex h-auto flex-wrap"><TabsTrigger value="audits">Devis et audits fournisseurs</TabsTrigger><TabsTrigger value="register">Registre des factures</TabsTrigger><TabsTrigger value="checks">Contrôles de facturation Platform</TabsTrigger></TabsList>
+      <TabsContent value="audits"><SupplierAuditWorkflow/></TabsContent>
       <TabsContent value="register"><ManualInvoiceRegistry/></TabsContent>
       <TabsContent value="checks"><ModuleWorkspace pageId="finance.billing"/></TabsContent>
     </Tabs>

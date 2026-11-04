@@ -1,69 +1,21 @@
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Search, Plus, Building, Calendar, FileText, Edit, Loader2, Send } from 'lucide-react';
+import { Search, Building, Calendar, FileText, Loader2 } from 'lucide-react';
 import { ExportButtons } from '@/components/ExportButtons';
-import AuditForm from '@/components/forms/AuditForm';
-import { useSupplierAudits, useCreateSupplierAudit, useUpdateSupplierAudit } from '@/hooks/useAudits';
-import { useAuditSupplierLiaison } from '@/hooks/useAuditSupplierLiaison';
+import SupplierAuditWorkflow from '@/components/supplier/SupplierAuditWorkflow';
+import { useSupplierAudits } from '@/hooks/useAudits';
 import { SourceBadge, SourceFilter } from '@/components/audit/SourceBadge';
 import { measuredAverage } from '@/lib/operationsMetrics';
 
 export default function SupplierAudits() {
   const [searchTerm, setSearchTerm] = useState('');
   const [sourceFilter, setSourceFilter] = useState('all');
-  const [formOpen, setFormOpen] = useState(false);
-  const [editingAudit, setEditingAudit] = useState<any>(null);
 
   const { data: audits = [], isLoading, isError, refetch } = useSupplierAudits(searchTerm || undefined, sourceFilter);
-  const createAudit = useCreateSupplierAudit();
-  const updateAudit = useUpdateSupplierAudit();
-  const { syncSupplierAfterAudit } = useAuditSupplierLiaison();
-
-  const handleSubmit = (data: any) => {
-    if (editingAudit) {
-      updateAudit.mutate({ id: editingAudit.id, ...data }, {
-        onSuccess: (updatedAudit: any) => {
-          toast.success('Audit modifié');
-          // Auto-sync supplier if audit is now completed with a score
-          if (data.status === 'completed' && data.score != null) {
-            syncSupplierAfterAudit(data.supplier || editingAudit.supplier, data.score);
-          }
-        },
-      });
-    } else {
-      createAudit.mutate(data, {
-        onSuccess: () => {
-          toast.success('Audit planifié');
-          if (data.status === 'completed' && data.score != null) {
-            syncSupplierAfterAudit(data.supplier, data.score);
-          }
-        },
-      });
-    }
-    setEditingAudit(null);
-  };
-
-  const handleCompleteAudit = (audit: any) => {
-    if (audit.score != null) {
-      updateAudit.mutate({ id: audit.id, status: 'completed' }, {
-        onSuccess: () => {
-          toast.success('Audit marqué comme terminé');
-          syncSupplierAfterAudit(audit.supplier, audit.score);
-        },
-      });
-    } else {
-      toast.error('Impossible de terminer un audit sans score');
-    }
-  };
-
-  const handleEdit = (audit: any) => { setEditingAudit(audit); setFormOpen(true); };
-  const handleNew = () => { setEditingAudit(null); setFormOpen(true); };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'completed': return <Badge className="bg-green-500/10 text-green-500">Terminé</Badge>;
@@ -80,7 +32,7 @@ export default function SupplierAudits() {
     return 'text-destructive';
   };
 
-  if (isLoading) return <div className="flex items-center justify-center h-64"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (isLoading) return <div className="space-y-4"><SupplierAuditWorkflow/><div className="flex items-center justify-center h-32"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></div>;
 
   const completed = audits.filter(a => a.status === 'completed');
   const { average: avgScore, samples: scoredAudits } = measuredAverage(completed.map(a => a.score));
@@ -90,7 +42,7 @@ export default function SupplierAudits() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Audits Fournisseurs</h1>
-          <p className="text-muted-foreground">Évaluation et conformité — liaison automatique avec le pôle fournisseur</p>
+          <p className="text-muted-foreground">Dossiers opérationnels et historique des contrôles</p>
         </div>
         <div className="flex gap-2">
           <ExportButtons filename="audits-fournisseurs" title="Audits fournisseurs" poleName="Audit" columns={[
@@ -99,10 +51,11 @@ export default function SupplierAudits() {
             { header: 'Statut', accessor: 'status' }, { header: 'Score', accessor: 'score' },
             { header: 'Non-conformités', accessor: 'findings' },
           ]} data={audits} />
-          <Button onClick={handleNew}><Plus className="mr-2 h-4 w-4" />Planifier un audit</Button>
         </div>
       </div>
 
+      <SupplierAuditWorkflow />
+      <h2 className="text-xl font-semibold">Historique des audits antérieurs</h2>
       {isError && <div role="alert" className="rounded-md border p-3 text-sm text-destructive">Audits indisponibles. <Button size="sm" variant="outline" onClick={() => void refetch()}>Réessayer</Button></div>}
       {!isError && <p className="text-xs text-muted-foreground">Indicateurs des audits accessibles correspondant aux filtres. {scoredAudits} audit(s) terminé(s) avec score valide ; un score absent ne vaut pas zéro.</p>}
       {!isError && <div className="grid gap-4 md:grid-cols-4">
@@ -127,7 +80,7 @@ export default function SupplierAudits() {
             <TableHeader><TableRow>
               <TableHead>Fournisseur</TableHead><TableHead>Source</TableHead><TableHead>Catégorie</TableHead><TableHead>Auditeur</TableHead>
               <TableHead>Date</TableHead><TableHead>Statut</TableHead><TableHead>Score</TableHead>
-              <TableHead>NC détectées</TableHead><TableHead>Actions</TableHead>
+              <TableHead>NC détectées</TableHead>
             </TableRow></TableHeader>
             <TableBody>
               {audits.map((audit) => (
@@ -140,25 +93,15 @@ export default function SupplierAudits() {
                   <TableCell>{getStatusBadge(audit.status)}</TableCell>
                   <TableCell>{audit.score !== null ? <span className={`font-bold ${getScoreColor(audit.score)}`}>{audit.score}%</span> : '-'}</TableCell>
                   <TableCell>{audit.findings !== null ? audit.findings : '-'}</TableCell>
-                  <TableCell>
-                    <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => handleEdit(audit)}><Edit className="h-4 w-4" /></Button>
-                      {audit.status !== 'completed' && audit.score !== null && (
-                        <Button variant="ghost" size="sm" onClick={() => handleCompleteAudit(audit)} title="Terminer et synchroniser fournisseur">
-                          <Send className="h-4 w-4 text-green-500" />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
+
                 </TableRow>
               ))}
-              {audits.length === 0 && <TableRow><TableCell colSpan={9} className="text-center text-muted-foreground py-8">Aucun audit trouvé</TableCell></TableRow>}
+              {audits.length === 0 && <TableRow><TableCell colSpan={8} className="text-center text-muted-foreground py-8">Aucun audit trouvé</TableCell></TableRow>}
             </TableBody>
           </Table>
         </CardContent>
       </Card>}
 
-      <AuditForm open={formOpen} onOpenChange={setFormOpen} audit={editingAudit} onSubmit={handleSubmit} type="supplier" />
     </div>
   );
 }

@@ -1,0 +1,49 @@
+# Qualification commerciale et audits fournisseurs — livraison du 4 novembre 2026
+
+Ce premier lot de code met en œuvre le parcours fournisseur décrit par le cahier commun. Il ne termine pas les 42 tâches du backlog. Il est testé localement ; aucune migration, configuration de secret ou fonction distante n’a été appliquée à une base existante.
+
+## Comportement livré
+
+- Un dossier est rattaché à `supplier_id` exact et à une liste de références. Le rapprochement automatique par nom partiel est supprimé. Les anciens audits restent consultables comme historique et ne peuvent plus qualifier automatiquement un fournisseur.
+- Fournisseurs présélectionne et enregistre le contrat applicable. Audit prépare le devis ; une autre personne disposant de la validation Finance l’approuve. Fournisseurs le communique puis conserve l’acceptation externe, ou le partenaire accepte la version présentée depuis son espace.
+- Les montants sont recalculés au serveur en centimes. Périmètre, lignes, remise, régime fiscal, validité, version du barème, identités légales réelles de l’émetteur et du destinataire et conditions de paiement sont obligatoires. Aucun tarif universel de 150 € ni taux de TVA n’est présumé. Ce lot accepte EUR uniquement.
+- Le devis accepté est verrouillé. Toute révision avant acceptation invalide l’approbation précédente et impose une nouvelle validation. La preuve conserve le texte structuré exact, son empreinte, la version, le signataire, le canal et la date. Le portail réinitialise le consentement si le devis affiché change.
+- Finance rattache une facture réellement émise et des preuves de paiements partiels. Ces saisies ne génèrent pas une facture fiscale, ne débitent aucun compte et ne donnent aucune autorisation de transfert. Une même référence de facture ou de paiement ne peut être comptée deux fois dans cet environnement.
+- Le démarrage impose contrat applicable et devis accepté. Le paiement intégral est exigé uniquement lorsque le devis prévoit un prépaiement. Un audit payable après prestation peut démarrer sans paiement préalable.
+- Audit soumet constat, conclusion et référence des preuves. Un autre valideur Audit approuve le rapport. Fournisseurs décide ensuite pour chaque référence : admission, corrections ou refus. Un règlement ou un ancien score ne déclenche aucune admission globale.
+- Un contre-audit exige incident identifié, prestation supplémentaire distincte des contrôles logistiques ordinaires et imputabilité documentée. Un dossier actif par fournisseur et incident empêche la duplication de cette prestation. Sa facturation est bloquée jusqu’à l’approbation du rapport et intervient après prestation.
+- Les mêmes dossiers sont accessibles depuis le dossier fournisseur, le module Audit et l’onglet Finance. Les actions disponibles suivent les permissions enregistrées ; les contrôles SQL restent obligatoires en cas d’appel direct.
+
+## Portail et publication catalogue
+
+Le portail partenaire passe par `partner-portal-action`, qui vérifie le jeton, l’approbation du dossier fournisseur et son email vérifié. L’identité du dossier provient de la base, jamais du navigateur. Le serveur Intrabib vérifie ensuite un secret partagé, la liaison explicite fournisseur/dossier Platform et la version du devis. Il retourne uniquement les documents communiqués, les rapports approuvés et les décisions du partenaire concerné ; ni les notes internes ni les preuves bancaires ne sont exposées.
+
+Le rattachement fournisseur/dossier Platform est manuel, justifié et immuable dans ce lot. Fournisseurs doit vérifier l’identité dans Platform avant de saisir l’identifiant exact. Aucun rapprochement de nom ou d’email ne crée ce lien. Une correction de lien nécessite une procédure contrôlée ; il n’existe pas de bouton permettant de le réaffecter librement.
+
+Avant tout nouvel envoi de produit par `platform-bridge`, le serveur exige les permissions actuelles de lecture et de validation sur une même page autorisée, lit le produit avec le JWT du collaborateur et conserve les restrictions de portefeuille et d’environnement. Il exige un produit validé réel et la dernière décision d’admission sur le couple exact `supplier_id` / `sku`. Un paiement ultérieur sur un ancien dossier ne réactive pas une admission remplacée par un refus. L’ordre des décisions utilise une séquence serveur, y compris si deux décisions ont la même date transactionnelle.
+
+Ce contrôle concerne les nouveaux envois par ce bridge. Il ne retire pas rétroactivement les produits déjà présents sur Platform et ne remplace pas les autres contrôles de publication ou de commande du backlog. Les références du périmètre d’audit doivent correspondre exactement aux SKU Intrabib ; aucun nom affiché ne sert de clé.
+
+## Mise en service à préparer en préproduction isolée
+
+1. Suivre le rapprochement des schémas et les préflights de l’issue [#32](https://github.com/Txss-17/bib_intranet/issues/32). Confirmer les dépendances et la sauvegarde/restauration avant toute base existante. La recette locale PGlite ne constitue pas une preuve de compatibilité de cette base.
+2. Déployer par la chaîne Drizzle la migration `0083_supplier_audit_commercial_workflow.sql`, après vérification de l’historique. Le journal enregistre également `0082_work_project_priority`, qui existait déjà dans le dépôt mais manquait au registre. Ne pas rejouer les anciennes migrations Supabase en bloc.
+3. Déployer dans cet environnement la fonction Intrabib `supplier-audit-portal` et les fonctions modifiées `platform-bridge` et Platform `partner-portal-action`. Les contrôles d’admission refusent les nouveaux envois si le service ou le schéma requis manque ; coordonner l’activation avant de reprendre les envois catalogue.
+4. Configurer `BIB_PLATFORM_BRIDGE_SECRET` des deux côtés avec la même valeur aléatoire d’au moins 32 caractères. Intrabib utilise ses variables serveur standard `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` et, pour les requêtes soumises aux RLS, `SUPABASE_ANON_KEY`. Platform utilise `BIB_INTRANET_AUDIT_PORTAL_URL`, URL HTTPS exacte de la fonction Intrabib de cet environnement. Aucun secret ne doit être placé dans une variable navigateur `VITE_*`.
+5. Vérifier les droits Fournisseurs, Audit et Finance dans `access_permissions`, avec auteurs et valideurs distincts. Tester les refus d’accès croisés et entre environnements. Le portail partenaire réel n’est jamais rattaché à un dossier sandbox ; cette liaison est interdite au serveur.
+6. Vérifier les identités et justificatifs, rattacher explicitement un fournisseur approuvé à son dossier Platform, puis exécuter le parcours complet sur des données de préproduction. Inclure devis remplacé, perte de réponse puis rejeu, paiement partiel, devis après prestation, refus malgré paiement et contre-audit non imputable.
+7. Examiner les anciennes références catalogue et organiser leur requalification. Aucune migration n’invente un rapport, une admission, une facture ou un paiement sur la base des anciens scores. La décision de mise en service reste conditionnée aux preuves de recette métier et aux contrôles de déploiement existants.
+
+## Vérifications de développement
+
+Intrabib : `npm run test:supplier-audit` exécute 21 tests, dont 11 exécutant réellement la nouvelle migration SQL sous PGlite, six sur l’endpoint privé et quatre sur la publication. Les rôles et l’environnement sont simulés ; la fonction existante de résolution des permissions est remplacée par un registre de droits de test. Le journal Drizzle possède trois tests de cohérence complémentaires.
+
+Platform : `npm run test:supplier-audit` exécute cinq tests du proxy, et `npx vitest run src/components/standalone/SupplierAuditPortal.test.tsx` vérifie la remise à zéro du consentement après remplacement du devis. Les deux frontières Edge sont vérifiées avec TypeScript et des alias typés vers les dépendances installées ; les builds des applications sont vérifiés séparément.
+
+Les suites générales restent en échec sur des cas préexistants. La comparaison locale avec les révisions `dc1dd979` (Platform) et `80bddb3c` (Intrabib), sous les mêmes dépendances, donne les mêmes échecs : Platform compte dix tests en échec et deux erreurs de chargement de suites ; Intrabib compte seize tests en échec. Ils concernent notamment navigation, permissions, comptes de test et assertions de texte déjà présentes. La suite croisée `npm run test:bridge` conserve également les mêmes sept échecs préexistants (184 tests passent sur 191), et `npm run check:bridge` passe. Le lot ne masque aucun de ces échecs et n’abaisse aucun contrôle CI. Voir les résultats des exécutions GitHub pour leur état distant.
+
+## Travaux restant dans le backlog
+
+Les devis sont consultables dans le portail mais ne sont pas encore exportés automatiquement en PDF. Les factures et preuves sont rattachées par référence à des documents externes existants ; leur génération fiscale, leur téléchargement et les avoirs ne sont pas livrés ici. Les dossiers annulés ne peuvent plus être acceptés et restent visibles pour conserver les documents communiqués ; une annulation après engagement doit être suivie manuellement au titre du contrat et du traitement financier approprié.
+
+Restent aussi le registre central des modèles juridiques, les instantanés légaux de commande, l’abonnement fournisseur et son événement de départ contractuel, Stripe/les transferts, les capacités et précommandes, la couverture financière avant production, le flux complet de propriété et de réception 3PL, la rétractation, les indicateurs et la création automatique de tâches/notifications. Les tableaux communs évitent la double saisie de ce dossier d’audit, sans constituer un moteur général d’orchestration inter-pôles. Les critères métier, les contrats définitifs et les identités réelles restent à valider par les responsables compétents.

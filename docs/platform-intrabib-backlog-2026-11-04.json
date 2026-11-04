@@ -1,8 +1,8 @@
 {
   "document": "BIB Adaptation Platform Intrabib",
-  "version": "1.0",
+  "version": "1.1",
   "date": "2026-11-04",
-  "statut": "Spécification sans exécution applicative",
+  "statut": "Premier lot audit implémenté et testé localement ; autres lots et recette préproduction non terminés",
   "dates_implementation": "À définir",
   "integration": "Correspondance des champs Intrabib à réaliser avant import",
   "source_code": {
@@ -158,9 +158,10 @@
         "T28"
       ],
       "source": "Bridge existant",
-      "statut": "Spécifié pour développement",
+      "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Journal transactionnel et rejeu idempotent du dossier audit ; reprise globale/outbox non livrées."
     },
     {
       "id": "BIB-AD-009",
@@ -178,9 +179,10 @@
         "T09"
       ],
       "source": "I01 et BIB-25",
-      "statut": "Spécifié pour développement",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Dossier qualification exact supplier_id, RLS portefeuille/environnement et historique."
     },
     {
       "id": "BIB-AD-010",
@@ -196,9 +198,10 @@
         "T02"
       ],
       "source": "BIB-19 et annexe C",
-      "statut": "Spécifié pour développement",
+      "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Liste de références et note de périmètre ; regroupement de variantes décidé manuellement."
     },
     {
       "id": "BIB-AD-011",
@@ -217,9 +220,10 @@
         "T05"
       ],
       "source": "Annexe C",
-      "statut": "Spécifié pour développement",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Calcul SQL exact, versions, identités légales, fiscalité et revue Finance distincte ; export PDF non livré."
     },
     {
       "id": "BIB-AD-012",
@@ -237,9 +241,10 @@
         "T29"
       ],
       "source": "GOV-LEGAL et contrat",
-      "statut": "Spécifié pour développement",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Acceptation par preuve externe ou portail vérifié, texte structuré et empreinte exacts."
     },
     {
       "id": "BIB-AD-013",
@@ -256,9 +261,10 @@
         "T07"
       ],
       "source": "DEC-009 et contrat",
-      "statut": "Spécifié pour développement",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Preuves de facture/paiements partiels et condition contractuelle de démarrage ; pas de mouvement bancaire exécuté."
     },
     {
       "id": "BIB-AD-014",
@@ -274,9 +280,10 @@
         "T08"
       ],
       "source": "DEC-008 et I45",
-      "statut": "Spécifié pour développement",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Rapport, référence des preuves, empreinte et revue distincte ; stockage documentaire externe conservé."
     },
     {
       "id": "BIB-AD-015",
@@ -294,9 +301,10 @@
         "T09"
       ],
       "source": "I01 et BIB-19",
-      "statut": "Spécifié pour développement",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Décision explicite par référence sur ID exact, ancienne liaison par nom supprimée."
     },
     {
       "id": "BIB-AD-016",
@@ -314,9 +322,10 @@
         "T11"
       ],
       "source": "Annexe C et BIB-26",
-      "statut": "Spécifié pour développement",
+      "statut": "Code implémenté et testé localement — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Incident unique actif, devis accepté, contrôles 3PL exclus et facture après rapport approuvé."
     },
     {
       "id": "BIB-AD-017",
@@ -336,9 +345,10 @@
         "T29"
       ],
       "source": "BIB-25",
-      "statut": "Spécifié pour développement",
+      "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Devis, rapport approuvé, paiements rapprochés et décisions propres au partenaire ; PDF/téléchargements non livrés."
     },
     {
       "id": "BIB-AD-018",
@@ -469,9 +479,10 @@
         "T17"
       ],
       "source": "BIB-19 et 25",
-      "statut": "Spécifié pour développement",
+      "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Admission sur couple fournisseur/SKU avant nouvel envoi ; versions de configuration et retrait historique non livrés."
     },
     {
       "id": "BIB-AD-025",
@@ -528,9 +539,10 @@
         "T17"
       ],
       "source": "BIB-19 et GOV-LEGAL",
-      "statut": "Spécifié pour développement",
+      "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Contrôle serveur du nouvel envoi catalogue par platform-bridge ; éligibilité complète et checkout non livrés."
     },
     {
       "id": "BIB-AD-028",
@@ -702,9 +714,10 @@
         "T30"
       ],
       "source": "BIB-30 31 et I02",
-      "statut": "Spécifié pour développement",
+      "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Chaîne devis/prestation/facture externe/preuves de paiement audit ; journal métier général et avoirs non livrés."
     },
     {
       "id": "BIB-AD-037",
@@ -803,9 +816,10 @@
         "T29"
       ],
       "source": "DEC-018",
-      "statut": "Spécifié pour développement",
+      "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Même dossier audit partagé entre trois modules ; affectations/notifications automatiques non livrées."
     },
     {
       "id": "BIB-AD-042",
@@ -856,9 +870,10 @@
         "T30"
       ],
       "source": "I32 et cahier recette",
-      "statut": "Spécifié pour développement",
+      "statut": "Partiellement implémenté — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "implementation": "Tests SQL isolés et frontières HTTP du lot audit ; recette croisée complète et restauration non exécutées."
     }
   ],
   "recette": [
@@ -1012,5 +1027,6 @@
       "scenario": "Vente boutique EI, vente tierce, audit facturé, avoir et paiement partiel.",
       "resultat_attendu": "GMV et CA séparés, pas de frais à soi-même, dette et solde rapprochés par entité et devise."
     }
-  ]
+  ],
+  "suivi_implementation": "docs/supplier-audit-commercial-workflow-2026-11-04.md"
 }

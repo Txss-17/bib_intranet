@@ -437,3 +437,8 @@ S01 — [Code de la consommation article L221 21](https://www.legifrance.gouv.fr
 S02 — [Code de la consommation article D221 5](https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000053303365) — présentation, confirmation et accusé sur support durable.
 
 S03 — [Stripe Understanding Connect account balances](https://docs.stripe.com/connect/account-balances) — distinction des soldes, allocation par compte et reprise des échecs de transfert.
+
+
+## Suivi du premier lot de code
+
+Le diagnostic ci-dessus décrit les révisions sources citées, avant développement. Le premier lot fournisseur/audit est maintenant implémenté et testé localement. Son périmètre exact, ses limites, ses vérifications et les conditions de mise en service sont décrits dans [la note de livraison](supplier-audit-commercial-workflow-2026-11-04.md). Le backlog JSON version 1.1 distingue les tâches implémentées localement, les éléments partiels et les travaux non commencés. Aucune recette de préproduction ni mise en service globale n’est déclarée accomplie.

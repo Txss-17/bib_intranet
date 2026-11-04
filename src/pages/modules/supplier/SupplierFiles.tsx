@@ -60,9 +60,9 @@ function AuditConformitySection({ supplierName }: { supplierName: string }) {
 
   const getAuditStatusBadge = (score: number | null) => {
     if (score === null) return <Badge variant="secondary">Non audité</Badge>;
-    if (score >= 70) return <Badge className="bg-green-500/10 text-green-500">Conforme</Badge>;
-    if (score >= 50) return <Badge className="bg-yellow-500/10 text-yellow-500">À surveiller</Badge>;
-    return <Badge variant="destructive">Non conforme</Badge>;
+    if (score >= 70) return <Badge className="bg-green-500/10 text-green-500">Score ≥ 70</Badge>;
+    if (score >= 50) return <Badge className="bg-yellow-500/10 text-yellow-500">Score de 50 à 69</Badge>;
+    return <Badge variant="destructive">Score inférieur à 50</Badge>;
   };
 
   if (isLoading) return <p className="text-sm text-muted-foreground">Chargement des audits...</p>;
@@ -71,7 +71,7 @@ function AuditConformitySection({ supplierName }: { supplierName: string }) {
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-3">
         <div className="p-3 rounded-lg bg-muted/50">
-          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Statut audit</p>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Indicateur historique</p>
           <div className="mt-1">{getAuditStatusBadge(avgScore)}</div>
         </div>
         <div className="p-3 rounded-lg bg-muted/50">

@@ -575,6 +575,20 @@
       "when": 1793492414948,
       "tag": "0081_sync_pending_migrations",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1793817339534,
+      "tag": "0082_work_project_priority",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1793817339535,
+      "tag": "0083_supplier_audit_commercial_workflow",
+      "breakpoints": true
     }
   ]
 }

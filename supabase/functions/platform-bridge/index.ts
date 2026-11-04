@@ -1,6 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
+import { canPublishSupplierProduct, loadAdmittedSupplierProduct } from "../_shared/supplier-reference-publication.mjs";
 import {
   canUsePlatformBridge,
   supplierProductPayload,
@@ -219,7 +220,20 @@ Deno.serve(async (req) => {
   // AUTORISATIONS
   // ========================================================
 
-  const allowed = canUsePlatformBridge(body.action, Boolean(leadership), poles);
+  let publicationCaller: typeof admin | null = null;
+  let allowed = canUsePlatformBridge(body.action, Boolean(leadership), poles);
+  if (body.action === "push_product") {
+    // Resolve saved permissions with the caller's JWT, rather than granting
+    // product publication from a department label or a browser role alone.
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    if (!anonKey) return json({ error: "Publication authorization unavailable" }, 503);
+    const caller = createClient(url, anonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+    publicationCaller = caller;
+    allowed = await canPublishSupplierProduct(caller);
+  }
 
   if (!allowed) {
     return json(
@@ -408,7 +422,7 @@ Deno.serve(async (req) => {
         let update = existing
           ? admin.from("user_accounts").update(row).eq("id", existing.id)
           : null;
-        if (update) update = existing.platform_synced_at
+        if (update && existing) update = existing.platform_synced_at
           ? update.eq("platform_synced_at", existing.platform_synced_at)
           : update.is("platform_synced_at", null);
         const result = update
@@ -456,7 +470,7 @@ Deno.serve(async (req) => {
         let update = existing
           ? admin.from("shops").update(row).eq("id", existing.id)
           : null;
-        if (update) update = existing.platform_synced_at
+        if (update && existing) update = existing.platform_synced_at
           ? update.eq("platform_synced_at", existing.platform_synced_at)
           : update.is("platform_synced_at", null);
         const result = update
@@ -1097,51 +1111,9 @@ Deno.serve(async (req) => {
     // ======================================================
 
     if (body.action === "push_product") {
-      const { data: product, error } = await admin
-        .from("products")
-        .select("*")
-        .eq("id", body.product_id)
-        .single();
-
-      if (error || !product) {
-        throw new Error("Produit introuvable");
-      }
-
-      // Supplier-pole callers may only publish products of suppliers in their own portfolio.
-      const supplierOnly =
-        !leadership &&
-        !poles.includes("tech") &&
-        !poles.includes("marketplace");
-
-      if (supplierOnly) {
-        const callerId = userResult.user.id;
-        const { data: portfolios } = await admin
-          .from("supplier_portfolios")
-          .select("id")
-          .or(`responsible_id.eq.${callerId},backup_id.eq.${callerId}`);
-        const portfolioIds = (portfolios ?? []).map(
-          (p: { id: string }) => p.id,
-        );
-        let query = admin
-          .from("portfolio_assignments")
-          .select("id")
-          .eq("supplier_id", product.supplier_id);
-        query = portfolioIds.length
-          ? query.or(
-              `assigned_to_id.eq.${callerId},portfolio_id.in.(${portfolioIds.join(",")})`,
-            )
-          : query.eq("assigned_to_id", callerId);
-        const { data: owned } = await query.limit(1);
-        if (!product.supplier_id || !owned?.length) {
-          return json({ error: "Forbidden" }, 403);
-        }
-      }
-
-      if (
-        !["validated", "approved", "active"].includes(String(product.status))
-      ) {
-        throw new Error("Seuls les produits validés peuvent être publiés");
-      }
+      const candidate = await loadAdmittedSupplierProduct(publicationCaller!, admin, body.product_id);
+      if (candidate.error) return json({ error: candidate.error }, candidate.status);
+      const product = candidate.product!;
 
       const response = await callPlatform(
         "intranet-import",
