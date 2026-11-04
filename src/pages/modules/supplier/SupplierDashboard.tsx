@@ -113,6 +113,18 @@ export default function SupplierDashboard() {
         </div>
       </div>
 
+      <Card>
+        <CardHeader><CardTitle className="text-base">Disponibilité fournisseur et approvisionnement à la vente</CardTitle></CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p>Le référencement d'un produit par un marchand ne constitue pas un achat et n'entraîne pas de sortie de stock fournisseur. Le stock de chaque fournisseur reste sous sa propriété tant que les conditions contractuelles n'en transfèrent pas la propriété.</p>
+          <p className="text-muted-foreground">À chaque commande client, la disponibilité fournisseur doit être confirmée avant l'achat par le marchand, puis le pôle Fournisseurs suit l'engagement de production ou de préparation. Les demandes de réassort anticipé restent distinctes des achats déclenchés par une vente.</p>
+          <p className="text-muted-foreground"><strong>Attention :</strong> les chiffres « Produits catalogue » et « Commandes en cours » ne donnent pas la quantité disponible chez les fournisseurs. Le référentiel actuel n'expose pas encore un inventaire fournisseur vérifié et horodaté ; ne déduisez pas une disponibilité d'un simple référencement.</p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="outline" size="sm"><Link to="/pole/supplier/validated">Catalogue et demandes Platform</Link></Button>
+            <Button asChild variant="outline" size="sm"><Link to="/pole/supplier/restock-orders">Ordres fournisseurs</Link></Button>
+          </div>
+        </CardContent>
+      </Card>
       {(isError || quality.isError) && <p role="alert">Indicateurs indisponibles. <Button variant="link" onClick={() => { void refetch(); void quality.refetch(); }}>Réessayer</Button></p>}
       <p className="text-xs text-muted-foreground">Indicateurs des données accessibles, toutes dates. Signalements qualité hors archives.</p>
       <Tabs value={dashTab} onValueChange={setDashTab}>
