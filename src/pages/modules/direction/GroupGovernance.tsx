@@ -68,6 +68,17 @@ const GroupGovernance = () => {
         </CardContent>
       </Card>
       <Card>
+        <CardHeader><CardTitle>Gouvernance documentaire JUR — architecture contractuelle</CardTitle><CardDescription>GOV-LEGAL v1.0, adopté sur le principe le 4 novembre 2026, non activé contractuellement sans validation des prérequis.</CardDescription></CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p><strong>BIB → Marchands :</strong> JUR-M01 (CGU Marchands) et JUR-M02 (CGS Marchands), complétés par les mandats/contrats signés. Les abonnements et commissions de BIB portent sur ses propres prestations, pas sur les ventes aux consommateurs.</p>
+          <p><strong>BIB → Clients :</strong> JUR-C01 (CGU Acheteurs). JUR-C02 (CGS Clients BIB) ne s'applique que si un service payant propre à BIB est réellement ouvert, sans promettre des avantages non activés.</p>
+          <p><strong>Vendeur → Clients :</strong> JUR-B01 (CGV de boutique) et JUR-B02 (CGU de boutique), avec JUR-B03 (mentions légales de boutique) et l'identité vérifiée du vendeur : tiers ou EI BIB pour les propres boutiques.</p>
+          <p><strong>Traçabilité :</strong> modèle central verrouillé, numéro de version, date d'effet, auteur et validation juridique, empreinte du texte ; génération par boutique, version présentée et acceptée liée à chaque commande. Les consentements marketing et cookies sont distincts des acceptations contractuelles.</p>
+          <p className="text-muted-foreground">Responsabilités : Direction valide les orientations et exceptions, Audit/Conformité relit, Finance contrôle prix, TVA, factures, Opérations accompagne. L'Intranet doit piloter la validation des modèles ; la plateforme les affiche, vérifie l'identité à l'onboarding et consigne les preuves sans les dupliquer manuellement.</p>
+          <p className="text-muted-foreground">Les modèles restent en phase de travail. Une mention « publié » ou « accepté » ne doit jamais être générée sans preuve effective de validation et de présentation.</p>
+        </CardContent>
+      </Card>
+      <Card>
         <CardHeader>
           <CardTitle>Trajectoire juridique BIB — lancement puis développement</CardTitle>
           <CardDescription>Cadre stratégique de pilotage. Il ne certifie ni l’immatriculation ni la réactivation administrative de l’entreprise.</CardDescription>
