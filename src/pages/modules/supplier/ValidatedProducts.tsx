@@ -85,6 +85,12 @@ export default function ValidatedProducts() {
           Actualiser
         </Button>
       </header>
+      <section className="enterprise-card space-y-2 p-5 text-sm" aria-label="Circuit de stock fournisseur">
+        <h2 className="font-semibold">Référencement fournisseur et commandes à la demande</h2>
+        <p className="text-muted-foreground">Le fournisseur reste propriétaire des unités qu'il détient. L'ajout d'une référence à une boutique marchande n'enlève aucun stock fournisseur et ne crée aucun achat de BIB. La disponibilité et les capacités réelles du fournisseur doivent être vérifiées avant la vente.</p>
+        <p className="text-muted-foreground">Après une vente client, le marchand doit déclencher l'achat de la quantité correspondante. BIB coordonne ensuite, selon le contrat et les besoins, la personnalisation, la préparation et la livraison. Le pôle Fournisseurs suit les références, le MOQ, les conditions contractuelles et les demandes d'approvisionnement ; Opérations et Logistique suivent les stocks physiquement réceptionnés et les mouvements.</p>
+        <p className="text-muted-foreground">Les demandes de réassort ci-dessous ne sont ni des commandes fournisseurs confirmées, ni des réceptions, et leur approbation ne crédite aucun stock.</p>
+      </section>
       <section className="grid gap-4 sm:grid-cols-3">
         {[
           ["Références validées", products.length],
