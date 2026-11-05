@@ -28,8 +28,8 @@ export default function FinanceDashboard() {
     <header>
       <h1 className="text-2xl font-semibold">Pilotage financier BIB</h1>
       <p className="mt-1 text-sm text-muted-foreground">
-        Les ventes et abonnements sont créés sur BIB Platform ; les paiements associés sont traités par Stripe.
-        Les montants de cet aperçu proviennent uniquement des écritures disponibles dans l’Intranet, pas d’une interrogation directe de Stripe. Aucun virement n’est exécuté ici.
+        Stripe est la source opérationnelle des événements de paiement de BIB Platform : charges, frais, commissions, transferts, remboursements, litiges et versements.
+        Cet aperçu s'appuie encore sur les écritures synchronisées dans l’Intranet, et non sur une consultation directe de l’API Stripe. Aucun virement n’est exécuté ici.
       </p>
     </header>
     <Card>
@@ -41,6 +41,32 @@ export default function FinanceDashboard() {
         <p className="text-muted-foreground">Les graphiques du registre de trésorerie ci-dessous ne calculent pas encore les trois agrégats GMV / CA marchand / CA BIB. Un rapprochement par commande et partie juridique sera nécessaire avant tout reporting financier consolidé.</p>
       </CardContent>
     </Card>
+    {canViewPage('finance.reconciliation') && (
+      <Card>
+        <CardHeader><CardTitle className="text-base">Contrôle Stripe et virements fournisseurs</CardTitle></CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p>
+            <strong>Stripe :</strong> suivre la charge, la commission BIB, les frais,
+            les transferts Connect, les refunds, les disputes et les versements.
+            Une charge Stripe confirmée n'est ni une facture, ni la preuve du crédit bancaire.
+          </p>
+          <p>
+            <strong>Virements des fournisseurs vers BIB :</strong> Finance vérifie
+            séparément le crédit sur le compte professionnel correspondant à l'entité
+            BIB émettrice de la facture d'audit ou de contre-audit.
+            Les virements non identifiés ou partiels restent à examiner.
+          </p>
+          <p className="text-muted-foreground">
+            Les API Stripe, l'import bancaire et la réconciliation automatique exhaustive
+            restent soumis à leur configuration et aux contrôles serveur.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" asChild><Link to="/pole/finance/reconciliation">Rapprochements Stripe</Link></Button>
+            <Button variant="outline" size="sm" asChild><Link to="/pole/finance/billing">Factures et audits</Link></Button>
+          </div>
+        </CardContent>
+      </Card>
+    )}
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {visible.map(section => <Card key={section.page}>
         <CardHeader className="pb-2"><CardTitle className="text-base">{section.name}</CardTitle></CardHeader>

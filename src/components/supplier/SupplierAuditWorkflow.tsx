@@ -369,7 +369,7 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
     (c.kind === "initial" || c.report_approved_by)
   )
     available.push("record_invoice");
-  if (financeUpdate && c.invoice && c.quote && paid < c.quote.total_cents)
+  if (financeUpdate && can("finance.billing", "validate") && c.invoice && c.quote && paid < c.quote.total_cents)
     available.push("record_payment");
   const stale = baseRevision !== c.revision;
   const bind = useMutation({
@@ -456,12 +456,25 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
           issue_date: fields.date,
           document_reference: fields.evidence,
         };
-      if (action === "record_payment")
+      if (action === "record_payment") {
+        if (fields.bank_verified !== "confirmed" || !fields.bank_statement_reference?.trim()) {
+          throw new Error("Le justificatif de relevé bancaire et sa vérification par Finance sont obligatoires.");
+        }
+        // The restricted server RPC records Finance's bank-statement attestation.
+        // The database rejects record_payment if no matching attested credit exists.
+        await intranetRpc("attest_supplier_audit_bank_receipt", {
+          p_case_id: c.id,
+          p_bank_transaction_reference: fields.reference.trim(),
+          p_bank_statement_reference: fields.bank_statement_reference.trim(),
+          p_credited_on: fields.date,
+          p_amount_cents: cents(fields.amount),
+        });
         payload = {
           reference: fields.reference,
           paid_on: fields.date,
           amount_cents: cents(fields.amount),
         };
+      }
       if (action === "submit_report")
         payload = {
           findings: fields.findings,
@@ -812,9 +825,29 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
           )}
           {action === "record_payment" && (
             <>
-              {field("reference", "Référence unique du paiement reçu")}
-              {field("date", "Date du paiement", "date")}
-              {field("amount", "Montant reçu en euros")}
+              <p className="rounded-md border border-amber-400/40 bg-amber-50/50 p-3 text-sm text-foreground">
+                Ce flux concerne un virement du fournisseur vers le compte professionnel BIB.
+                Consultez le relevé de banque : un ordre de virement ou un statut Stripe
+                ne confirme pas à lui seul le crédit de ce compte. L'enregistrement reste
+                soumis à la validation financière et aux contrôles serveur.
+              </p>
+              {field("reference", "Identifiant unique du mouvement bancaire crédité")}
+              {field("bank_statement_reference", "Référence du relevé bancaire vérifié")}
+              {field("date", "Date de crédit constatée sur le relevé", "date")}
+              {field("amount", "Montant crédité en euros")}
+              <div className="space-y-1">
+                <Label htmlFor="finance-bank-verification">Confirmation Finance *</Label>
+                <select
+                  id="finance-bank-verification"
+                  required
+                  className="h-10 w-full rounded-md border bg-background px-3"
+                  value={fields.bank_verified ?? ""}
+                  onChange={(e) => set("bank_verified", e.target.value)}
+                >
+                  <option value="">Confirmation requise</option>
+                  <option value="confirmed">Crédit vérifié sur le relevé du compte professionnel BIB</option>
+                </select>
+              </div>
             </>
           )}
           {action === "submit_report" && (
