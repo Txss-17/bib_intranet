@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-const sql = readFileSync(new URL('../../drizzle/migrations/0084_supplier_audit_bank_receipt_attestation.sql', import.meta.url), 'utf8');
+const sql = readFileSync(new URL('../../drizzle/migrations/0085_supplier_audit_bank_receipt_attestation.sql', import.meta.url), 'utf8');
 const ui = readFileSync(new URL('../../src/components/supplier/SupplierAuditWorkflow.tsx', import.meta.url), 'utf8');
 test('the payment cannot be confirmed solely by checking an audit UI checkbox', () => {
   assert.match(sql, /CREATE TRIGGER zz_supplier_audit_verified_bank_credit\s+AFTER UPDATE/);
