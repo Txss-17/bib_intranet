@@ -65,6 +65,9 @@ test("catalogue price cannot be approved by its author and contains no supplier 
  const price={version:"test-v1",currency:"EUR",goods_unit_cents:1000,delivery_unit_cents:100,bib_fee_unit_cents:150};
  const id=await rpc(author,"propose_catalog_acquisition_price",[product,price,"TARIF-TEST"]);await assert.rejects(()=>rpc(author,"approve_catalog_acquisition_price",[id]),/finance_permission_required/);
  await rpc(finance,"approve_catalog_acquisition_price",[id]);assert.deepEqual(await rpc(null,"get_catalog_acquisition_price",[product],"service_role"),price);
+ const publication=await rpc(null,"get_catalog_acquisition_publication",[product],"service_role");assert.deepEqual(publication.price,price);
+ assert.ok(Date.parse(publication.source_updated_at)>Date.parse("2026-11-01T00:00:00Z"),"an approved price has a durable publication version");
+
  await assert.rejects(()=>rpc(author,"propose_catalog_acquisition_price",[product,{...price,supplier_name:"leak"},"TARIF"]),/invalid_acquisition_price/);
 });
 test("single-destination payment refuses an additional independent logistics beneficiary",()=>{

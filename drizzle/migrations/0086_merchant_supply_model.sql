@@ -362,6 +362,14 @@ CREATE FUNCTION public.get_catalog_acquisition_price(p_product_id uuid) RETURNS 
  SELECT price FROM public.catalog_acquisition_prices p WHERE p.product_id=p_product_id AND p.state='approved' AND NOT p.test_account
  AND EXISTS(SELECT 1 FROM public.products x WHERE x.id=p.product_id AND x.supplier_id=p.supplier_id AND NOT coalesce(x.test_account,false));
 $$;
+-- A price approval advances the publication version without rewriting product content.
+CREATE FUNCTION public.get_catalog_acquisition_publication(p_product_id uuid) RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $
+ SELECT jsonb_build_object('price',p.price,'source_updated_at',p.approved_at)
+ FROM public.catalog_acquisition_prices p JOIN public.products x ON x.id=p.product_id AND x.supplier_id=p.supplier_id
+ WHERE p.product_id=p_product_id AND p.state='approved' AND NOT p.test_account AND NOT coalesce(x.test_account,false);
+$;
+REVOKE ALL ON FUNCTION public.get_catalog_acquisition_publication(uuid) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.get_catalog_acquisition_publication(uuid) TO service_role;
 CREATE FUNCTION public.create_merchant_supply_request(p_merchant_id uuid,p_boutique_id uuid,p_buyer_entity_id uuid,p_environment text,p_key uuid,p_payload jsonb) RETURNS jsonb
  LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE r public.merchant_supply_requests; buyer jsonb;
