@@ -58,6 +58,24 @@ BEGIN
      OR target.invoice IS NULL OR target.quote_state <> 'accepted' THEN
     RAISE EXCEPTION 'audited_invoice_required' USING ERRCODE='22023';
   END IF;
+  -- Network retries may repeat the same immutable attestation, but must not
+  -- repurpose the bank transaction reference for a different invoice or amount.
+  SELECT b.id INTO receipt_id
+  FROM public.supplier_audit_bank_receipts b
+  WHERE b.test_account = target.test_account
+    AND b.bank_transaction_reference = btrim(p_bank_transaction_reference);
+  IF FOUND THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM public.supplier_audit_bank_receipts b
+      WHERE b.id=receipt_id AND b.case_id=p_case_id
+        AND b.bank_statement_reference=btrim(p_bank_statement_reference)
+        AND b.credited_on=p_credited_on AND b.amount_cents=p_amount_cents
+        AND b.verified_by=auth.uid()
+    ) THEN
+      RAISE EXCEPTION 'bank_reference_already_allocated' USING ERRCODE='23505';
+    END IF;
+    RETURN receipt_id;
+  END IF;
   INSERT INTO public.supplier_audit_bank_receipts (
     case_id,test_account,bank_transaction_reference,bank_statement_reference,
     credited_on,amount_cents,verified_by
