@@ -456,12 +456,16 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
           issue_date: fields.date,
           document_reference: fields.evidence,
         };
-      if (action === "record_payment")
+      if (action === "record_payment") {
+        if (fields.bank_verified !== "confirmed") {
+          throw new Error("Le pôle Finance doit confirmer le crédit sur le relevé bancaire professionnel BIB.");
+        }
         payload = {
           reference: fields.reference,
           paid_on: fields.date,
           amount_cents: cents(fields.amount),
         };
+      }
       if (action === "submit_report")
         payload = {
           findings: fields.findings,
@@ -812,9 +816,28 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
           )}
           {action === "record_payment" && (
             <>
-              {field("reference", "Référence unique du paiement reçu")}
-              {field("date", "Date du paiement", "date")}
-              {field("amount", "Montant reçu en euros")}
+              <p className="rounded-md border border-amber-400/40 bg-amber-50/50 p-3 text-sm text-foreground">
+                Ce flux concerne un virement du fournisseur vers le compte professionnel BIB.
+                Consultez le relevé de banque : un ordre de virement ou un statut Stripe
+                ne confirme pas à lui seul le crédit de ce compte. L'enregistrement reste
+                soumis à la validation financière et aux contrôles serveur.
+              </p>
+              {field("reference", "Identifiant unique du mouvement bancaire crédité")}
+              {field("date", "Date de crédit constatée sur le relevé", "date")}
+              {field("amount", "Montant crédité en euros")}
+              <div className="space-y-1">
+                <Label htmlFor="finance-bank-verification">Confirmation Finance *</Label>
+                <select
+                  id="finance-bank-verification"
+                  required
+                  className="h-10 w-full rounded-md border bg-background px-3"
+                  value={fields.bank_verified ?? ""}
+                  onChange={(e) => set("bank_verified", e.target.value)}
+                >
+                  <option value="">Confirmation requise</option>
+                  <option value="confirmed">Crédit vérifié sur le relevé du compte professionnel BIB</option>
+                </select>
+              </div>
             </>
           )}
           {action === "submit_report" && (
