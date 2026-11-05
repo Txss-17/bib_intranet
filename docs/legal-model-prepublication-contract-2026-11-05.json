@@ -1,0 +1,52 @@
+{
+  "status": "BROUILLON_NON_PUBLIE",
+  "revision": "2.1",
+  "locale": "fr",
+  "effective_at": null,
+  "approval": {
+    "legal": false,
+    "direction": false,
+    "transmission": false
+  },
+  "allowed_models": [
+    "JUR-B01",
+    "JUR-B02",
+    "JUR-B03"
+  ],
+  "required_placeholders": {
+    "JUR-B01": [
+      "VENDEUR_NOM_LEGAL",
+      "BOUTIQUE_NOM",
+      "FORME_OU_EI",
+      "SIREN_SIRET",
+      "ADRESSE",
+      "CONTACT_VENDEUR",
+      "MEDIATEUR_COORDONNEES",
+      "CGV_MODELE_VERSION",
+      "CGV_BOUTIQUE_VERSION",
+      "DATE_EFFET"
+    ],
+    "JUR-B02": [
+      "VENDEUR_NOM_LEGAL",
+      "BOUTIQUE_NOM",
+      "URL_BOUTIQUE",
+      "CGU_MODELE_VERSION",
+      "CGU_BOUTIQUE_VERSION",
+      "CONTACT_VENDEUR"
+    ],
+    "JUR-B03": [
+      "VENDEUR_NOM_LEGAL",
+      "BOUTIQUE_NOM",
+      "URL_BOUTIQUE",
+      "FORME_OU_EI",
+      "SIREN_SIRET",
+      "ADRESSE",
+      "TVA_ID",
+      "CONTACT_VENDEUR",
+      "BIB_IDENTITE_LEGALE_VERIFIEE",
+      "BIB_CONTACT",
+      "HEBERGEUR_RAISON_SOCIALE_ET_COORDONNEES"
+    ]
+  },
+  "reference": "GitHub BIB Platform PR #22 et corpus Word/JUR-B01/B02/B03 v2.1 stocké dans Google Drive BIB — projets"
+}
