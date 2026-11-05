@@ -15,8 +15,7 @@ BEGIN
   ('merchant_supply_payment_outbox',to_regclass('public.merchant_supply_payment_outbox') IS NOT NULL),
   ('sample_purchases',to_regclass('public.sample_purchases') IS NOT NULL),
   ('sample_validations',to_regclass('public.sample_validations') IS NOT NULL),
-  ('get_supply_destination_route',to_regprocedure('public.verified_supply_sample(uuid,uuid,text,text)'),
-  ('public.get_supply_destination_route(uuid,text,text)') IS NOT NULL),
+  ('get_supply_destination_route',to_regprocedure('public.get_supply_destination_route(uuid,text,text)') IS NOT NULL),
   ('get_storefront_destination_route',to_regprocedure('public.get_storefront_destination_route(uuid,text)') IS NOT NULL),
   ('reserve_merchant_supply_payment',to_regprocedure('public.reserve_merchant_supply_payment(jsonb,uuid,uuid,text,uuid)') IS NOT NULL),
   ('attach_merchant_supply_session',to_regprocedure('public.attach_merchant_supply_session(uuid,uuid,text,text)') IS NOT NULL),
@@ -97,6 +96,7 @@ BEGIN
  THEN RAISE EXCEPTION 'BIB_PLATFORM_STAGING_NOT_READY: SAV worker executable outside service_role' USING ERRCODE='42501';
  END IF;
  IF EXISTS(SELECT 1 FROM (VALUES
+  ('public.verified_supply_sample(uuid,uuid,text,text)'),
   ('public.get_supply_destination_route(uuid,text,text)'),
   ('public.get_storefront_destination_route(uuid,text)'),
   ('public.reserve_merchant_supply_payment(jsonb,uuid,uuid,text,uuid)'),
