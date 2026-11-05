@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "decision_date": "2026-11-05",
+  "source_conversation": "Cadre réglementaire commissionnaire",
+  "legal_model": "transparent_intermediation",
+  "goods_transaction": {
+    "seller": "supplier",
+    "buyer": "merchant",
+    "bib_role": "disclosed_agent"
+  },
+  "customer_sale": {
+    "seller": "merchant",
+    "buyer": "customer"
+  },
+  "catalogue": {
+    "supplier_identity": "hidden",
+    "price": "approved_goods_plus_delivery_plus_bib_fee",
+    "selection_is_purchase": false
+  },
+  "quote": {
+    "supplier_identity": "disclosed",
+    "approval": "independent_finance",
+    "acceptance": "explicit_exact_version_hash",
+    "optional_marketing": "independent"
+  },
+  "payment": {
+    "model": "destination_charges",
+    "acquisition_destination": "supplier",
+    "acquisition_on_behalf_of": "supplier",
+    "acquisition_bib_application_fee": "gross_bib_services",
+    "retail_destination": "merchant",
+    "retail_on_behalf_of": "merchant",
+    "retail_additional_bib_fee": false,
+    "independent_third_destination": "blocked",
+    "activation": "disabled_until_staging_review"
+  },
+  "own_ei": {
+    "single_real_entity": true,
+    "self_commission": false,
+    "self_subscription": false,
+    "retail_route": "explicit_operator_principal_only"
+  },
+  "production": {
+    "accepted_quote_required": true,
+    "current_admission_required": true,
+    "verified_available_coverage_required": true,
+    "psp_paid_is_available_funds": false,
+    "refund_dispute": "hold",
+    "fresh_finance_review_after_dispute": true
+  },
+  "stock": {
+    "custody_is_bib_ownership": false,
+    "catalogue_or_payment_credit": false,
+    "credit": "protected_physical_receipt_only"
+  },
+  "migrations": {
+    "platform": "0027_merchant_supply_model",
+    "intrabib": "0086_merchant_supply_model"
+  },
+  "runtime_activated": false,
+  "runbook": "docs/merchant-supplier-flow-2026-11-05.md"
+}

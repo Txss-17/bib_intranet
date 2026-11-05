@@ -68,5 +68,8 @@ export async function loadAdmittedSupplierProduct(caller, admin, productId) {
         "Cette référence doit être admise après validation du rapport d’audit avant sa publication.",
     };
   }
-  return { product };
+  const { data: publication, error: pricingError } = await admin.rpc("get_catalog_acquisition_publication", { p_product_id: product.id });
+  if (pricingError || !publication?.price || typeof publication.source_updated_at !== "string" || !Number.isFinite(Date.parse(publication.source_updated_at))) return { status: 503, error: "Le prix global produit, livraison et commission BIB doit être validé par Finance avant publication." };
+  const version = Date.parse(product.updated_at ?? "") > Date.parse(publication.source_updated_at) ? product.updated_at : publication.source_updated_at;
+  return { product: { ...product, acquisition_pricing: publication.price, updated_at: version } };
 }

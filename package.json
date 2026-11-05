@@ -14,6 +14,7 @@
     "test:hr-mutations": "node --test tests/hr-mutations/*.test.mjs",
     "test:work-tasks": "node --test tests/work-tasks/*.test.mjs",
     "test:intranet": "node --test tests/intranet/*.test.mjs",
+    "test:supply": "node --test tests/supply/*.test.mjs",
     "test:supplier-audit": "node --test tests/supplier-audit/*.test.mjs",
     "test:legal-governance": "node --test tests/legal-governance/*.test.mjs"
   },

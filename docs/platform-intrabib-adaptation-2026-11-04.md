@@ -447,3 +447,8 @@ Le diagnostic ci-dessus décrit les révisions sources citées, avant développe
 ## Suivi du deuxième lot de code
 
 Le registre et l’assemblage serveur JUR-B01/B02/B03, la vérification des identités, les contrôles SQL de publication/commande et les preuves de version sont implémentés et testés localement. [La note du lot juridique](store-legal-governance-2026-11-04.md) détaille les validations humaines requises, les transmissions et leurs reprises, le déploiement coordonné et les limites restantes. Le backlog version 1.2 conserve la distinction entre code livré, éléments partiels et recette non exécutée.
+
+
+## Mise à jour du flux marchand, fournisseur et BIB — 5 novembre 2026
+
+Le choix d’intermédiation transparente et de Destination charges, le prix global produit/livraison/commission et le fournisseur identifié sur le devis sont précisés dans [le modèle de flux et son plan de mise en service](merchant-supplier-flow-2026-11-05.md). Les demandes, devis, revue Finance indépendante, acceptation exacte, contrôles PSP, rapprochements et couverture avant production ont leur code et leurs tests isolés. Le montage Connect est choisi ; sa configuration réelle, les mandats et la recette restent à valider. Les capacités/précommandes, la réception 3PL complète et la comptabilité consolidée restent ouvertes. Ce complément prévaut sur les anciennes mentions « montage à choisir » sans déclarer la mise en production réalisée.

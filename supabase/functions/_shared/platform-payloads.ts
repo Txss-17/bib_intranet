@@ -1,4 +1,5 @@
 import { z } from "npm:zod@3";
+import { parseAcquisitionPrice, acquisitionUnitTotal } from "./supply-contract.mjs";
 import {
   parseCustomizationCapabilities,
   parseCustomizationTerms,
@@ -21,6 +22,7 @@ const Product = z.object({
 export function supplierProductPayload(input: unknown) {
   const product = Product.parse(input);
   const source = input as Record<string, unknown>;
+  const acquisition = source.acquisition_pricing == null ? null : parseAcquisitionPrice(source.acquisition_pricing);
   const capabilities = parseCustomizationCapabilities(
     source.customization_capabilities,
   );
@@ -41,7 +43,8 @@ export function supplierProductPayload(input: unknown) {
       source_updated_at: product.updated_at,
       name: product.name,
       category: product.category,
-      base_price: product.selling_price,
+      base_price: acquisition ? acquisitionUnitTotal(acquisition) / 100 : product.selling_price,
+      ...(acquisition ? { acquisition_pricing: acquisition } : {}),
       description: product.description ?? null,
       image_url: product.image_url ?? null,
       ...(product.moq == null ? {} : { moq: product.moq }),

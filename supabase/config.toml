@@ -1,5 +1,8 @@
 project_id = "cxguhlssztinaxrgeuku"
 
+[functions.merchant-supply-portal]
+verify_jwt = false
+
 [functions.mirror-audit-intake]
 verify_jwt = false
 

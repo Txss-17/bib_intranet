@@ -7,6 +7,21 @@ DECLARE missing text[];
 BEGIN
  SELECT array_agg(name ORDER BY name) INTO missing
  FROM (VALUES
+  ('verified_supply_sample',to_regprocedure('public.verified_supply_sample(uuid,uuid,text,text)') IS NOT NULL),
+  ('supply_payment_configuration',to_regclass('public.supply_payment_configuration') IS NOT NULL),
+  ('supply_destination_routes',to_regclass('public.supply_destination_routes') IS NOT NULL),
+  ('merchant_supply_payments',to_regclass('public.merchant_supply_payments') IS NOT NULL),
+  ('merchant_supply_payment_events',to_regclass('public.merchant_supply_payment_events') IS NOT NULL),
+  ('merchant_supply_payment_outbox',to_regclass('public.merchant_supply_payment_outbox') IS NOT NULL),
+  ('sample_purchases',to_regclass('public.sample_purchases') IS NOT NULL),
+  ('sample_validations',to_regclass('public.sample_validations') IS NOT NULL),
+  ('get_supply_destination_route',to_regprocedure('public.get_supply_destination_route(uuid,text,text)') IS NOT NULL),
+  ('get_storefront_destination_route',to_regprocedure('public.get_storefront_destination_route(uuid,text)') IS NOT NULL),
+  ('reserve_merchant_supply_payment',to_regprocedure('public.reserve_merchant_supply_payment(jsonb,uuid,uuid,text,uuid)') IS NOT NULL),
+  ('attach_merchant_supply_session',to_regprocedure('public.attach_merchant_supply_session(uuid,uuid,text,text)') IS NOT NULL),
+  ('record_merchant_supply_payment',to_regprocedure('public.record_merchant_supply_payment(jsonb,jsonb,text,text)') IS NOT NULL),
+  ('adjust_merchant_supply_payment',to_regprocedure('public.adjust_merchant_supply_payment(text,text,text,text,bigint,jsonb)') IS NOT NULL),
+  ('fail_merchant_supply_checkout',to_regprocedure('public.fail_merchant_supply_checkout(text,text)') IS NOT NULL),
   ('boutiques',to_regclass('public.boutiques') IS NOT NULL),
   ('orders',to_regclass('public.orders') IS NOT NULL),
   ('legal_governance_configuration',to_regclass('public.legal_governance_configuration') IS NOT NULL),
@@ -47,7 +62,14 @@ BEGIN
    'public.sav_escalation_events'::regclass,
    'public.legal_governance_configuration'::regclass,
    'public.legal_governance_mirror'::regclass,
-   'public.store_order_legal_snapshots'::regclass
+   'public.store_order_legal_snapshots'::regclass,
+   'public.supply_payment_configuration'::regclass,
+   'public.supply_destination_routes'::regclass,
+   'public.merchant_supply_payments'::regclass,
+   'public.merchant_supply_payment_events'::regclass,
+   'public.merchant_supply_payment_outbox'::regclass,
+   'public.sample_purchases'::regclass,
+   'public.sample_validations'::regclass
   ) AND c.relrowsecurity IS NOT TRUE
  ) THEN RAISE EXCEPTION 'BIB_PLATFORM_STAGING_NOT_READY: critical table without RLS' USING ERRCODE='42501';
  END IF;
@@ -62,6 +84,7 @@ BEGIN
  ) THEN RAISE EXCEPTION 'BIB_PLATFORM_STAGING_NOT_READY: private legal function exposed' USING ERRCODE='42501'; END IF;
  IF EXISTS (
   SELECT 1 FROM (VALUES
+   ('public.stock_restock_requests'::regclass,'supplier_restock_requires_validated_sample'),
    ('public.boutiques'::regclass,'guard_store_legal_publication'),
    ('public.orders'::regclass,'guard_order_legal_snapshot'),
    ('public.store_order_legal_snapshots'::regclass,'immutable_store_legal_evidence')
@@ -72,6 +95,17 @@ BEGIN
     OR has_function_privilege('authenticated','public.escalate_unanswered_order_issues(integer,text)','EXECUTE')
  THEN RAISE EXCEPTION 'BIB_PLATFORM_STAGING_NOT_READY: SAV worker executable outside service_role' USING ERRCODE='42501';
  END IF;
+ IF EXISTS(SELECT 1 FROM (VALUES
+  ('public.verified_supply_sample(uuid,uuid,text,text)'),
+  ('public.get_supply_destination_route(uuid,text,text)'),
+  ('public.get_storefront_destination_route(uuid,text)'),
+  ('public.reserve_merchant_supply_payment(jsonb,uuid,uuid,text,uuid)'),
+  ('public.attach_merchant_supply_session(uuid,uuid,text,text)'),
+  ('public.record_merchant_supply_payment(jsonb,jsonb,text,text)'),
+  ('public.adjust_merchant_supply_payment(text,text,text,text,bigint,jsonb)'),
+  ('public.fail_merchant_supply_checkout(text,text)')
+ ) private_supply(signature) WHERE has_function_privilege('anon',signature,'EXECUTE') OR has_function_privilege('authenticated',signature,'EXECUTE'))
+ THEN RAISE EXCEPTION 'BIB_PLATFORM_STAGING_NOT_READY: private supply function exposed' USING ERRCODE='42501'; END IF;
 END;
 $security$;
 SELECT 'BIB_PLATFORM_STAGING_PRECHECK_OK' AS check_result;

@@ -7,6 +7,16 @@ DECLARE missing text[];
 BEGIN
  SELECT array_agg(name ORDER BY name) INTO missing
  FROM (VALUES
+  ('merchant_supply_quotes',to_regclass('public.merchant_supply_quotes') IS NOT NULL),
+  ('merchant_supply_events',to_regclass('public.merchant_supply_events') IS NOT NULL),
+  ('merchant_supply_requests',to_regclass('public.merchant_supply_requests') IS NOT NULL),
+  ('merchant_supply_settlements',to_regclass('public.merchant_supply_settlements') IS NOT NULL),
+  ('merchant_supply_invoice_refs',to_regclass('public.merchant_supply_invoice_refs') IS NOT NULL),
+  ('catalog_acquisition_prices',to_regclass('public.catalog_acquisition_prices') IS NOT NULL),
+  ('supply_operator_configuration',to_regclass('public.supply_operator_configuration') IS NOT NULL),
+  ('merchant_supply_portal',to_regprocedure('public.merchant_supply_portal(uuid,uuid,uuid,text,text,uuid,jsonb)') IS NOT NULL),
+  ('receive_merchant_supply_settlement',to_regprocedure('public.receive_merchant_supply_settlement(uuid,text,jsonb)') IS NOT NULL),
+  ('create_merchant_supply_request',to_regprocedure('public.create_merchant_supply_request(uuid,uuid,uuid,text,uuid,jsonb)') IS NOT NULL),
   ('intranet_modules',to_regclass('public.intranet_modules') IS NOT NULL),
   ('intranet_records',to_regclass('public.intranet_records') IS NOT NULL),
   ('intranet_record_events',to_regclass('public.intranet_record_events') IS NOT NULL),
@@ -69,7 +79,14 @@ BEGIN
    'public.legal_governance_records'::regclass,
    'public.legal_governance_events'::regclass,
    'public.legal_governance_deliveries'::regclass,
-   'public.supplier_audit_cases'::regclass
+   'public.supplier_audit_cases'::regclass,
+   'public.merchant_supply_quotes'::regclass,
+   'public.merchant_supply_events'::regclass,
+   'public.merchant_supply_requests'::regclass,
+   'public.merchant_supply_settlements'::regclass,
+   'public.merchant_supply_invoice_refs'::regclass,
+   'public.catalog_acquisition_prices'::regclass,
+   'public.supply_operator_configuration'::regclass
   ) AND c.relrowsecurity IS NOT TRUE
  ) THEN RAISE EXCEPTION 'BIB_INTRANET_STAGING_NOT_READY: critical table without RLS' USING ERRCODE='42501';
  END IF;
@@ -98,6 +115,13 @@ BEGIN
     OR has_function_privilege('anon','public.close_sav_escalation(uuid,text)','EXECUTE')
  THEN RAISE EXCEPTION 'BIB_INTRANET_STAGING_NOT_READY: anonymous SAV mutation allowed' USING ERRCODE='42501';
  END IF;
+ IF EXISTS(SELECT 1 FROM (VALUES
+  ('public.merchant_supply_portal(uuid,uuid,uuid,text,text,uuid,jsonb)'),
+  ('public.receive_merchant_supply_settlement(uuid,text,jsonb)'),
+  ('public.create_merchant_supply_request(uuid,uuid,uuid,text,uuid,jsonb)')
+ ) private_supply(signature) WHERE has_function_privilege('anon',signature,'EXECUTE') OR has_function_privilege('authenticated',signature,'EXECUTE'))
+ THEN RAISE EXCEPTION 'BIB_INTRANET_STAGING_NOT_READY: private supply function exposed' USING ERRCODE='42501'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.merchant_supply_quotes'::regclass AND tgname='merchant_supply_quote_guard' AND tgenabled='O') OR NOT EXISTS(SELECT 1 FROM pg_trigger WHERE tgrelid='public.supplier_restock_orders'::regclass AND tgname='supply_restock_guard' AND tgenabled='O') THEN RAISE EXCEPTION 'BIB_INTRANET_STAGING_NOT_READY: supply guard not active' USING ERRCODE='42501'; END IF;
 END;
 $security$;
 SELECT 'BIB_INTRANET_STAGING_PRECHECK_OK' AS check_result;
