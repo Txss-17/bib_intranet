@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "B.I.B Intranet",
+  "short_name": "BIB Intranet",
+  "description": "Espace collaborateur privé Brand-in-a-Box",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#14263d",
+  "icons": [
+    {
+      "src": "/bib-intranet-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
