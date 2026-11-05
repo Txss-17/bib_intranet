@@ -409,6 +409,7 @@ BEGIN
   IF revision<prior.revision THEN RETURN 'stale'; END IF;
   IF revision=prior.revision THEN IF p_evidence IS DISTINCT FROM prior.evidence THEN RAISE EXCEPTION 'supply_settlement_conflict' USING ERRCODE='40001'; END IF; RETURN 'replayed'; END IF;
  END IF;
+ IF coalesce((p_evidence->>'refunded_cents')::bigint,0)<coalesce((prior.evidence->>'refunded_cents')::bigint,0) THEN RAISE EXCEPTION 'supply_refund_regression' USING ERRCODE='22023'; END IF;
  INSERT INTO public.merchant_supply_settlements(quote_id,revision,state,evidence) VALUES(q.id,revision,p_evidence->>'state',p_evidence)
  ON CONFLICT(quote_id) DO UPDATE SET revision=excluded.revision,state=excluded.state,evidence=excluded.evidence,updated_at=now();
  UPDATE public.merchant_supply_quotes SET last_action='payment_evidence',command_key=gen_random_uuid(),command_payload=p_evidence WHERE id=q.id;
@@ -461,7 +462,9 @@ BEGIN
  THEN RAISE EXCEPTION 'current_supplier_admission_required' USING ERRCODE='55000'; END IF;
  IF NEW.status IN('in_production','shipped') THEN
   SELECT * INTO settlement FROM public.merchant_supply_settlements WHERE quote_id=q.id;
-  IF settlement.state IN('refunded','partially_refunded','disputed') OR NOT(coalesce((q.coverage->>'amount_cents')::bigint,0)>=(q.totals->>'total_cents')::bigint AND coalesce((q.coverage->>'valid_until')::timestamptz,'-infinity')>now())
+  IF settlement.state IN('refunded','partially_refunded','disputed')
+  OR (settlement.evidence->>'requires_finance_review'='true' AND coalesce((q.coverage->>'recorded_at')::timestamptz,'-infinity')<=settlement.updated_at)
+  OR NOT(coalesce((q.coverage->>'amount_cents')::bigint,0)>=(q.totals->>'total_cents')::bigint AND coalesce((q.coverage->>'valid_until')::timestamptz,'-infinity')>now())
   THEN RAISE EXCEPTION 'financial_coverage_required_before_production' USING ERRCODE='55000'; END IF;
  END IF;
  RETURN NEW;

@@ -45,7 +45,8 @@
     "current_admission_required": true,
     "verified_available_coverage_required": true,
     "psp_paid_is_available_funds": false,
-    "refund_dispute": "hold"
+    "refund_dispute": "hold",
+    "fresh_finance_review_after_dispute": true
   },
   "stock": {
     "custody_is_bib_ownership": false,

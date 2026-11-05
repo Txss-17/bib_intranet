@@ -106,6 +106,7 @@ test("a paid PSP event alone cannot start production; coverage and refund holds 
  assert.equal(await receive(evidence),"stale");
  await assert.rejects(()=>status("shipped"),/financial_coverage_required/);
  assert.equal((await db.query("SELECT payment_evidence FROM merchant_supply_quotes WHERE id=$1",[q.id])).rows[0].payment_evidence.length,2);
+ await assert.rejects(()=>receive({...evidence,event_id:"evt_invalid_restore",state:"paid",revision:4}),/supply_refund_regression/);
 });
 test("self fees and ambiguous or invalid dates are rejected by both validators",async()=>{
  const self=payload();self.parties.bib=self.parties.merchant;
@@ -121,4 +122,18 @@ test("staff cannot bypass the verified merchant sample request when drafting sto
  await assert.rejects(()=>rpc(author,"create_merchant_supply_quote",[randomUUID(),payload()]),/verified_sample_request_required/);
  await assert.rejects(()=>rpc(null,"create_merchant_supply_request",[merchant,boutique,merchant,"live",randomUUID(),{catalog_id:product,purpose:"stock",quantity:1,note:"No proof"}],"service_role"),/verified_paid_sample_required/);
  const p=payload();p.purpose="sample";assert.equal((await create(p)).state,"draft");
+});
+
+test("a won dispute requires a fresh Finance coverage review before production resumes",async()=>{
+ let q=await portal(await issue());const destination=randomUUID();await db.query("INSERT INTO logistics_partners VALUES($1,'Logisticien fictif','active')",[destination]);
+ const order=(await as(author,tx=>tx.query("INSERT INTO supplier_restock_orders(supply_quote_id,destination_type,destination_id,destination_name) VALUES($1,'logistics_partner',$2,'Test') RETURNING id",[q.id,destination]))).rows[0];
+ const status=value=>as(author,tx=>tx.query("UPDATE supplier_restock_orders SET status=$1 WHERE id=$2",[value,order.id]));await status("sent");
+ const coverage={amount_cents:4440,evidence_reference:"COVERAGE-TEST",coverage_terms:"Fonds vérifiés pour l’opération",valid_until:"2030-01-01T00:00:00Z"};
+ q=await advance(q,"record_coverage",coverage,finance);
+ const evidence={quote_id:q.id,quote_hash:q.quote_hash,environment:"live",amount_cents:4440,currency:"EUR",supplier_cents:3600,bib_revenue_cents:700,stripe_session_id:"cs_dispute_test",event_id:"evt_dispute",state:"disputed",revision:2,refunded_cents:0,requires_finance_review:true};
+ const receive=value=>rpc(null,"receive_merchant_supply_settlement",[q.id,"live",value],"service_role");
+ await receive(evidence);await assert.rejects(()=>status("in_production"),/financial_coverage_required/);
+ await receive({...evidence,event_id:"evt_won",state:"paid",revision:3});await assert.rejects(()=>status("in_production"),/financial_coverage_required/);
+ q=(await db.query("SELECT * FROM merchant_supply_quotes WHERE id=$1",[q.id])).rows[0];q=await advance(q,"record_coverage",{...coverage,evidence_reference:"FRESH-COVERAGE-TEST"},finance);
+ await status("in_production");
 });
