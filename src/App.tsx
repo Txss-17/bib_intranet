@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { CookieInformation } from "@/components/privacy/CookieInformation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   BrowserRouter,
@@ -333,6 +334,7 @@ const App = () => (
           <Sonner />
 
           <BrowserRouter>
+            <CookieInformation />
             <Suspense fallback={<div role="status" aria-live="polite" className="flex min-h-[40vh] items-center justify-center text-sm text-muted-foreground">Chargement du module…</div>}>
             <Routes>
               {/* ======================================================
