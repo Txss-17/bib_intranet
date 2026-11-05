@@ -1,8 +1,8 @@
 {
   "document": "BIB Adaptation Platform Intrabib",
-  "version": "1.2",
-  "date": "2026-11-04",
-  "statut": "Lots audit et juridique boutique implémentés et testés localement ; mise en service et autres lots non terminés",
+  "version": "1.3",
+  "date": "2026-11-05",
+  "statut": "Lots audit, juridique et flux d’acquisition livrés en code ; configuration, recette préproduction et autres lots non terminés",
   "dates_implementation": "À définir",
   "integration": "Correspondance des champs Intrabib à réaliser avant import",
   "source_code": {
@@ -59,9 +59,11 @@
         "T30"
       ],
       "source": "DEC-001 002 010 011",
-      "statut": "Spécifié pour développement",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "avancement_flux_2026_11_05": "Rôles marchand/fournisseur/BIB fixés dans le contrat technique ; identités réelles à vérifier avant configuration.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-004",
@@ -139,9 +141,11 @@
         "T29"
       ],
       "source": "Cahier sections 2 et 9",
-      "statut": "Spécifié pour développement",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "avancement_flux_2026_11_05": "Contrat acquisition versionné et autorité Intrabib/Platform définis ; autres domaines à compléter.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-008",
@@ -158,10 +162,12 @@
         "T28"
       ],
       "source": "Bridge existant",
-      "statut": "Partiellement implémenté — recette préproduction requise",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
       "echeance": null,
-      "implementation": "Journaux audit/juridique et dédoublonnage ; file persistante des transmissions juridiques avec accusé serveur et reprise manuelle, sans worker automatique général."
+      "implementation": "Journaux audit/juridique et dédoublonnage ; file persistante des transmissions juridiques avec accusé serveur et reprise manuelle, sans worker automatique général.",
+      "avancement_flux_2026_11_05": "File PSP transactionnelle avec reprises et révisions ; supervision connectée à valider.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-009",
@@ -485,10 +491,12 @@
         "T17"
       ],
       "source": "BIB-19 et 25",
-      "statut": "Partiellement implémenté — recette préproduction requise",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
       "echeance": null,
-      "implementation": "Admission sur couple fournisseur/SKU avant nouvel envoi ; versions de configuration et retrait historique non livrés."
+      "implementation": "Admission sur couple fournisseur/SKU avant nouvel envoi ; versions de configuration et retrait historique non livrés.",
+      "avancement_flux_2026_11_05": "DTO public sans identité fournisseur et prix global approuvé ; admission recontrôlée pour les devis.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-025",
@@ -523,9 +531,11 @@
         "T18"
       ],
       "source": "BIB-21",
-      "statut": "Spécifié pour développement",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "avancement_flux_2026_11_05": "Calcul exact HT/TVA/TTC du devis et allocation par émetteur ; autres indicateurs de marge à compléter.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-027",
@@ -545,10 +555,12 @@
         "T17"
       ],
       "source": "BIB-19 et GOV-LEGAL",
-      "statut": "Partiellement implémenté — recette préproduction requise",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
       "echeance": null,
-      "implementation": "Admission audit avant envoi catalogue et garde SQL de publication/checkout juridique ; éligibilité globale, capacité et échantillon restent non livrés."
+      "implementation": "Admission audit avant envoi catalogue et garde SQL de publication/checkout juridique ; éligibilité globale, capacité et échantillon restent non livrés.",
+      "avancement_flux_2026_11_05": "Réservation acquisition sur devis accepté et admission actuelle ; route vendeur vérifiée au checkout client ; éligibilité complète et capacité à compléter.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-028",
@@ -623,9 +635,11 @@
         "T29"
       ],
       "source": "DEC-016 017 023",
-      "statut": "Spécifié pour développement",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "avancement_flux_2026_11_05": "Destination charges choisi et implémenté avec on_behalf_of ; comptes réels/PSP et disponibilité des fonds à valider.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-032",
@@ -643,9 +657,11 @@
         "T24"
       ],
       "source": "BIB-25 et 30",
-      "statut": "Spécifié pour développement",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "avancement_flux_2026_11_05": "Ordre fournisseur dérivé du devis accepté, de son acheteur et d’une destination logistique BIB contrôlée.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-033",
@@ -662,9 +678,11 @@
         "T22"
       ],
       "source": "DEC-012 017",
-      "statut": "Spécifié pour développement",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "avancement_flux_2026_11_05": "Production soumise à couverture Finance suffisante/non expirée et absence de remboursement/litige ; capacité fournisseur et engagements fermes à compléter.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-034",
@@ -720,10 +738,12 @@
         "T30"
       ],
       "source": "BIB-30 31 et I02",
-      "statut": "Partiellement implémenté — recette préproduction requise",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
       "echeance": null,
-      "implementation": "Chaîne devis/prestation/facture externe/preuves de paiement audit ; journal métier général et avoirs non livrés."
+      "implementation": "Chaîne devis/prestation/facture externe/preuves de paiement audit ; journal métier général et avoirs non livrés.",
+      "avancement_flux_2026_11_05": "Lien devis, documents émis, registre PSP et ordres ; avoirs et exécution complète à compléter.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-037",
@@ -739,9 +759,11 @@
         "T30"
       ],
       "source": "DEC-003 et BIB-31",
-      "statut": "Spécifié pour développement",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
-      "echeance": null
+      "echeance": null,
+      "avancement_flux_2026_11_05": "Montants fournisseur/services BIB et HT/TTC distingués ; reporting comptable GMV/ventes EI à compléter.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-038",
@@ -822,10 +844,12 @@
         "T29"
       ],
       "source": "DEC-018",
-      "statut": "Partiellement implémenté — recette préproduction requise",
+      "statut": "Code acquisition partiel livré — recette préproduction requise",
       "responsable_nominal": null,
       "echeance": null,
-      "implementation": "Dossiers audit et juridique partagés entre pôles, validations distinctes et historique ; tâches/affectations/notifications générales non automatiques."
+      "implementation": "Dossiers audit et juridique partagés entre pôles, validations distinctes et historique ; tâches/affectations/notifications générales non automatiques.",
+      "avancement_flux_2026_11_05": "Files demandes/devis Fournisseurs, validation Finance et événements PSP reliés ; autres pôles à compléter.",
+      "preuve_flux": "docs/merchant-supplier-flow-2026-11-05.md"
     },
     {
       "id": "BIB-AD-042",
@@ -1039,5 +1063,7 @@
   "implementation_base": {
     "platform": "9f76d42890068ed96e1831a5099d4dfbc9d7b5e7",
     "intrabib": "4f6ef92a065392d17dd4fca86d46f799e6b65e63"
-  }
+  },
+  "suivi_flux_acquisition": "docs/merchant-supplier-flow-2026-11-05.md",
+  "contrat_flux": "docs/merchant-supplier-flow-contract-2026-11-05.json"
 }

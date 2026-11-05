@@ -603,6 +603,13 @@
       "when": 1793820875853,
       "tag": "0085_supplier_audit_bank_receipt_attestation",
       "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1793901600000,
+      "tag": "0086_merchant_supply_model",
+      "breakpoints": true
     }
   ]
 }

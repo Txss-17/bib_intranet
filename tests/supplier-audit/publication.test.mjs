@@ -55,7 +55,7 @@ test("publication uses current read and validate rights on the same page", async
 
 function setup(
   product,
-  { readError = null, admitted = true, admissionError = null } = {},
+  { readError = null, admitted = true, admissionError = null, pricing = price, pricingError = null } = {},
 ) {
   const calls = [];
   const caller = {
@@ -78,11 +78,12 @@ function setup(
   const admin = {
     rpc: async (name, args) => {
       calls.push([name, args]);
-      return { data: admitted, error: admissionError };
+      return name === "get_catalog_acquisition_price" ? {data:pricing,error:pricingError} : { data: admitted, error: admissionError };
     },
   };
   return { caller, admin, calls };
 }
+const price = {version:"TEST-v1",currency:"EUR",goods_unit_cents:1000,delivery_unit_cents:100,bib_fee_unit_cents:150};
 const approved = {
   id: "product-1",
   status: "validated",
@@ -141,9 +142,17 @@ test("publication requires the exact supplier reference and fails closed on miss
 test("an admitted product retains the caller-scoped record without a service-role product read", async () => {
   const { caller, admin, calls } = setup(approved);
   const result = await loadAdmittedSupplierProduct(caller, admin, approved.id);
-  assert.equal(result.product, approved);
+  assert.deepEqual(result.product, {...approved, acquisition_pricing: price});
   assert.deepEqual(calls.slice(0, 2), [
     ["caller", "products"],
     ["id", approved.id],
   ]);
+});
+
+test("an admitted product still cannot publish without an approved global acquisition price", async () => {
+ for(const options of [{pricing:null},{pricingError:{code:"42883"}}]) {
+  const {caller,admin}=setup(approved,options);
+  const result=await loadAdmittedSupplierProduct(caller,admin,approved.id);
+  assert.equal(result.status,503);assert.equal(result.product,undefined);
+ }
 });

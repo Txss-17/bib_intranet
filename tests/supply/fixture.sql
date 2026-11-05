@@ -1,0 +1,20 @@
+CREATE ROLE anon NOLOGIN; CREATE ROLE authenticated NOLOGIN; CREATE ROLE service_role NOLOGIN BYPASSRLS;
+CREATE SCHEMA auth;
+CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE AS $$SELECT nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+CREATE FUNCTION auth.role() RETURNS text LANGUAGE sql STABLE AS $$SELECT current_setting('request.jwt.claim.role',true)$$;
+GRANT USAGE ON SCHEMA public,auth TO authenticated,anon,service_role;
+CREATE TABLE test_permissions(actor uuid,page text,action text);
+CREATE FUNCTION public.can_intranet_action(page text,action text) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$ SELECT EXISTS(SELECT 1 FROM test_permissions p WHERE p.actor=auth.uid() AND p.page=$1 AND p.action=$2) $$;
+CREATE FUNCTION public.intranet_is_test_mode() RETURNS boolean LANGUAGE sql STABLE AS $$SELECT coalesce(nullif(current_setting('bib.test_mode',true),''),'false')::boolean$$;
+CREATE TABLE suppliers(id uuid PRIMARY KEY,name text,status text,test_account boolean DEFAULT false);
+CREATE TABLE products(id uuid PRIMARY KEY,supplier_id uuid REFERENCES suppliers(id),name text,sku text,status text,test_account boolean DEFAULT false);
+CREATE TABLE user_accounts(id uuid PRIMARY KEY,platform_id text);
+CREATE TABLE shops(id uuid PRIMARY KEY,platform_id text,merchant_id uuid REFERENCES user_accounts(id),name text);
+CREATE TABLE legal_governance_records(id uuid PRIMARY KEY,kind text,payload jsonb,state text,test_account boolean,activation_sequence bigint,created_at timestamptz DEFAULT now());
+CREATE TABLE logistics_partners(id uuid PRIMARY KEY,name text,status text);
+CREATE TABLE supplier_restock_orders(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),supplier_id uuid,catalog_id uuid,product_name text,quantity integer,destination_type text,destination_id uuid,destination_name text,status text DEFAULT 'draft',created_by uuid);
+GRANT SELECT,INSERT,UPDATE ON supplier_restock_orders TO authenticated;
+GRANT SELECT ON suppliers,products,shops,user_accounts TO authenticated,service_role;
+
+CREATE TABLE test_reference_admissions(supplier_id uuid,reference text,admitted boolean,test_account boolean,PRIMARY KEY(supplier_id,reference,test_account));
+CREATE FUNCTION public.get_supplier_reference_admission(uuid,text,boolean) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$SELECT coalesce((SELECT admitted FROM test_reference_admissions WHERE supplier_id=$1 AND reference=$2 AND test_account=$3),false)$$;

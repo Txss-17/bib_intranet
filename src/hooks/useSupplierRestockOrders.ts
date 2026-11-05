@@ -10,6 +10,10 @@ import { toast } from 'sonner';
 
 export interface SupplierRestockOrder {
   id: string;
+  supply_quote_id?: string | null;
+  source_product_id?: string | null;
+  buyer_merchant_id?: string | null;
+  buyer_boutique_id?: string | null;
   supplier_id: string;
   catalog_id: string | null;
   product_name: string;

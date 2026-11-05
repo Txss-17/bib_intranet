@@ -68,5 +68,7 @@ export async function loadAdmittedSupplierProduct(caller, admin, productId) {
         "Cette référence doit être admise après validation du rapport d’audit avant sa publication.",
     };
   }
-  return { product };
+  const { data: pricing, error: pricingError } = await admin.rpc("get_catalog_acquisition_price", { p_product_id: product.id });
+  if (pricingError || !pricing) return { status: 503, error: "Le prix global produit, livraison et commission BIB doit être validé par Finance avant publication." };
+  return { product: { ...product, acquisition_pricing: pricing } };
 }

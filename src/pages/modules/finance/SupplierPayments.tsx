@@ -18,6 +18,7 @@ import { ExportButtons } from '@/components/ExportButtons';
 import { useState } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useSupplierPayments, useSupplierPaymentStats, useUpdateSupplierPayment } from "@/hooks/useFinance";
+import {MerchantSupplyWorkspace} from '@/components/supply/MerchantSupplyWorkspace';
 
 const SupplierPayments = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -74,6 +75,7 @@ const SupplierPayments = () => {
 
   return (
     <div className="space-y-6">
+      <MerchantSupplyWorkspace />
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

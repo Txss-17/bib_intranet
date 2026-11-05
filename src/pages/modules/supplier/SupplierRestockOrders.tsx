@@ -16,6 +16,8 @@ import {
   type SupplierRestockOrder,
 } from '@/hooks/useSupplierRestockOrders';
 import { Plus, Send, Package } from 'lucide-react';
+import {MerchantSupplyWorkspace} from '@/components/supply/MerchantSupplyWorkspace';
+import {useMerchantSupply} from '@/hooks/useMerchantSupply';
 
 const statusLabels: Record<string, string> = {
   draft: 'Brouillon', sent: 'Envoyé', acknowledged: 'Accusé', in_production: 'En production',
@@ -45,120 +47,24 @@ interface NewOrderForm {
 }
 
 function NewOrderDialog() {
-  const [open, setOpen] = useState(false);
-  const { data: suppliers = [] } = useSuppliersList();
-  const { data: dests } = useDestinationOptions();
-  const { data: products = [] } = useCatalogProducts();
-  const create = useCreateRestockOrder();
-
-  const [form, setForm] = useState<NewOrderForm>({
-    supplier_id: '', catalog_id: '', product_name: '', quantity: 1,
-    destination_type: 'logistics_partner', destination_id: '', destination_name: '',
-    priority: 'standard', customization_notes: '', due_date: '',
-  });
-
-  const onProductChange = (id: string) => {
-    const p = products.find((product) => product.id === id);
-    setForm((current) => ({ ...current, catalog_id: id, product_name: p?.name ?? '', quantity: p?.moq ?? 1 }));
-  };
-  const onDestChange = (id: string) => {
-    const d = dests?.logistics_partners.find(x => x.id === id);
-    setForm((current) => ({ ...current, destination_id: id, destination_name: d?.name ?? '' }));
-  };
-
-  const submit = async () => {
-    if (!form.supplier_id || !form.product_name || !form.destination_name || !form.quantity) return;
-    await create.mutateAsync({
-      supplier_id: form.supplier_id,
-      catalog_id: form.catalog_id || null,
-      product_name: form.product_name,
-      quantity: Number(form.quantity),
-      destination_type: form.destination_type,
-      destination_id: form.destination_id || null,
-      destination_name: form.destination_name,
-      priority: form.priority,
-      customization_notes: form.customization_notes || null,
-      due_date: form.due_date || null,
-    });
+  const [open,setOpen]=useState(false),[quoteId,setQuoteId]=useState(''),[destinationId,setDestinationId]=useState(''),[notes,setNotes]=useState('');
+  const {data:supply}=useMerchantSupply();
+  const {data:dests}=useDestinationOptions();
+  const create=useCreateRestockOrder();
+  const quotes=supply?.quotes.filter(q=>q.state==='accepted')??[];
+  const quote=quotes.find(q=>q.id===quoteId),destination=dests?.logistics_partners.find(d=>d.id===destinationId);
+  async function submit(){
+    if(!quote||!destination)return;
+    await create.mutateAsync({supply_quote_id:quote.id,supplier_id:quote.payload.supplier_id,product_name:quote.product_name,quantity:quote.payload.quantity,
+      destination_type:'logistics_partner',destination_id:destination.id,destination_name:destination.name,customization_notes:notes||null});
     setOpen(false);
-  };
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button><Plus className="h-4 w-4 mr-2" />Nouvel ordre</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-lg">
-        <DialogHeader><DialogTitle>Nouvel ordre de restock</DialogTitle></DialogHeader>
-        <div className="space-y-3">
-          <div>
-            <Label>Fournisseur</Label>
-            <Select value={form.supplier_id} onValueChange={(v) => setForm({ ...form, supplier_id: v })}>
-              <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-              <SelectContent>
-                {suppliers.map((supplier) => <SelectItem key={supplier.id} value={supplier.id}>{supplier.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Produit</Label>
-            <Select value={form.catalog_id} onValueChange={onProductChange}>
-              <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-              <SelectContent>
-                {products.map((product) => (
-                  <SelectItem key={product.id} value={product.id}>{product.name} {product.shop_sku ? `(${product.shop_sku})` : ''}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>Quantité (MOQ)</Label>
-              <Input type="number" min={1} value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
-            </div>
-            <div>
-              <Label>Priorité</Label>
-              <Select value={form.priority} onValueChange={(value) => {
-                if (value === 'high' || value === 'standard' || value === 'low') {
-                  setForm({ ...form, priority: value });
-                }
-              }}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="high">🔥 Haute</SelectItem>
-                  <SelectItem value="standard">🟡 Standard</SelectItem>
-                  <SelectItem value="low">⚪ Faible</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <div>
-            <Label>Destination (partenaire logistique)</Label>
-            <Select value={form.destination_id} onValueChange={onDestChange}>
-              <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-              <SelectContent>
-                {(dests?.logistics_partners ?? []).map(d => (
-                  <SelectItem key={d.id} value={d.id}>{d.name} ({d.type})</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Date souhaitée</Label>
-            <Input type="date" value={form.due_date} onChange={(e) => setForm({ ...form, due_date: e.target.value })} />
-          </div>
-          <div>
-            <Label>Personnalisation / notes</Label>
-            <Textarea rows={3} value={form.customization_notes} onChange={(e) => setForm({ ...form, customization_notes: e.target.value })} />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Annuler</Button>
-          <Button onClick={submit} disabled={create.isPending}>Créer en brouillon</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+  }
+  return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button><Plus className="mr-2 h-4 w-4"/>Nouvel ordre</Button></DialogTrigger><DialogContent className="max-w-lg"><DialogHeader><DialogTitle>Approvisionnement rattaché à un devis accepté</DialogTitle></DialogHeader><div className="space-y-4">
+    <p className="text-sm text-muted-foreground">Le marchand est l’acheteur. Le fournisseur conserve son rôle de vendeur. Le stock n’est crédité qu’après réception validée ; la production exige une couverture financière.</p>
+    <Label className="block space-y-2"><span>Devis accepté par le marchand</span><select className="h-10 w-full rounded-md border bg-background px-3" value={quoteId} onChange={e=>setQuoteId(e.target.value)}><option value="">Choisir un devis</option>{quotes.map(q=><option key={q.id} value={q.id}>{q.reference??q.id.slice(0,8)} · {q.product_name} × {q.payload.quantity} · {q.payload.parties.merchant.legal_name}</option>)}</select></Label>
+    <Label className="block space-y-2"><span>Destination logistique BIB</span><select className="h-10 w-full rounded-md border bg-background px-3" value={destinationId} onChange={e=>setDestinationId(e.target.value)}><option value="">Choisir un partenaire</option>{dests?.logistics_partners.map(d=><option key={d.id} value={d.id}>{d.name}</option>)}</select></Label>
+    <Label className="block space-y-2"><span>Instructions complémentaires</span><Textarea value={notes} onChange={e=>setNotes(e.target.value)} maxLength={2000}/></Label>
+  </div><DialogFooter><Button variant="outline" onClick={()=>setOpen(false)}>Annuler</Button><Button disabled={!quote||!destination||create.isPending} onClick={submit}>Créer le brouillon</Button></DialogFooter></DialogContent></Dialog>;
 }
 
 export default function SupplierRestockOrders() {
@@ -188,6 +94,7 @@ export default function SupplierRestockOrders() {
   return (
     <ProtectedScreen screenId="supplier.restock_orders">
       <div className="space-y-6">
+        <MerchantSupplyWorkspace />
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold flex items-center gap-2"><Package className="h-7 w-7" /> Ordres de restock</h1>
