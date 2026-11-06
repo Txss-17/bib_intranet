@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import { LogIn, Eye, EyeOff, Shield, ArrowLeft, Mail } from 'lucide-react';
+import { LogIn, Eye, EyeOff, Shield, ArrowLeft, Mail, Download } from 'lucide-react';
 import { EmployeePosition } from '@/types/positions';
 
 const positionDefaultRoute: Record<EmployeePosition, string> = {
@@ -24,8 +24,43 @@ const positionDefaultRoute: Record<EmployeePosition, string> = {
 };
 
 
+type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }> };
+
 const Login = () => {
   const navigate = useNavigate();
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
+  const [showInstallHelp, setShowInstallHelp] = useState(false);
+  const [installed, setInstalled] = useState(false);
+
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+      ('standalone' in navigator && (navigator as Navigator & { standalone?: boolean }).standalone === true);
+    setInstalled(standalone);
+    const onPrompt = (event: Event) => {
+      event.preventDefault();
+      setInstallPrompt(event as InstallPromptEvent);
+    };
+    const onInstalled = () => { setInstalled(true); setInstallPrompt(null); setShowInstallHelp(false); };
+    window.addEventListener('beforeinstallprompt', onPrompt);
+    window.addEventListener('appinstalled', onInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt);
+      window.removeEventListener('appinstalled', onInstalled);
+    };
+  }, []);
+
+  const handleInstall = async () => {
+    if (!installPrompt) { setShowInstallHelp((value) => !value); return; }
+    try {
+      await installPrompt.prompt();
+      await installPrompt.userChoice;
+    } catch {
+      setShowInstallHelp(true);
+    } finally {
+      setInstallPrompt(null);
+    }
+  };
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -212,6 +247,20 @@ const Login = () => {
             </>
           )}
         </div>
+
+        {!installed && (
+          <div className="text-center space-y-2">
+            <Button type="button" variant="outline" onClick={handleInstall}>
+              <Download className="h-4 w-4 mr-2" />Installer Intrabib
+            </Button>
+            {showInstallHelp && (
+              <p className="text-xs text-muted-foreground" role="status">
+                Sur iPhone ou iPad : ouvrez cette page dans Safari, puis Partager → Sur l’écran d’accueil.
+                Sur ordinateur ou Android : utilisez « Installer » dans le menu du navigateur si cette option est proposée.
+              </p>
+            )}
+          </div>
+        )}
 
         <p className="text-center text-xs text-muted-foreground">
           Accès réservé aux collaborateurs BIB dont le compte a été validé.
