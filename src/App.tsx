@@ -64,6 +64,7 @@ const BoardReports = lazy(() => import("./pages/modules/direction/BoardReports")
    2. FINANCE
    ============================================================ */
 
+const FiscalGovernance = lazy(() => import("./pages/modules/finance/FiscalGovernance"));
 const FinanceDashboard = lazy(() => import("./pages/modules/finance/FinanceDashboard"));
 const CashflowRealtime = lazy(() => import("./pages/modules/finance/CashflowRealtime"));
 const Transactions = lazy(() => import("./pages/modules/finance/Transactions"));
@@ -414,6 +415,15 @@ const App = () => (
                     ==================================================== */}
 
                 <Route path="/pole/finance" element={<FinanceDashboard />} />
+                <Route path="/pole/finance/fiscal" element={<ProtectedPage pageId="finance.fiscal"><FiscalGovernance /></ProtectedPage>} />
+                <Route path="/pole/compliance/fiscal" element={<ProtectedPage pageId="finance.fiscal"><FiscalGovernance /></ProtectedPage>} />
+                <Route path="/pole/supplier/fiscal" element={<ProtectedPage pageId="finance.fiscal"><FiscalGovernance /></ProtectedPage>} />
+                <Route path="/pole/ops/fiscal" element={<ProtectedPage pageId="finance.fiscal"><FiscalGovernance /></ProtectedPage>} />
+                <Route path="/pole/marketplace/fiscal" element={<ProtectedPage pageId="finance.fiscal"><FiscalGovernance /></ProtectedPage>} />
+                <Route path="/pole/support/fiscal" element={<ProtectedPage pageId="finance.fiscal"><FiscalGovernance /></ProtectedPage>} />
+                <Route path="/pole/product/fiscal" element={<ProtectedPage pageId="finance.fiscal"><FiscalGovernance /></ProtectedPage>} />
+                <Route path="/pole/security/fiscal" element={<ProtectedPage pageId="finance.fiscal"><FiscalGovernance /></ProtectedPage>} />
+                <Route path="/pole/direction/fiscal" element={<ProtectedPage pageId="finance.fiscal"><FiscalGovernance /></ProtectedPage>} />
                 <Route path="/pole/finance/cashflow" element={<CashflowRealtime />} />
                 <Route path="/pole/finance/transactions" element={<Transactions />} />
                 <Route
@@ -1529,3 +1539,4 @@ const App = () => (
 );
 
 export default App;
+
