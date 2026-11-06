@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { z } from "npm:zod@3";
-import { canPublishSupplierProduct, loadAdmittedSupplierProduct } from "../_shared/supplier-reference-publication.mjs";
+import { canPublishSupplierProduct, loadAdmittedSupplierProduct, confirmCatalogEnvironment } from "../_shared/supplier-reference-publication.mjs";
 import {
   canUsePlatformBridge,
   supplierProductPayload,
@@ -1111,7 +1111,9 @@ Deno.serve(async (req) => {
     // ======================================================
 
     if (body.action === "push_product") {
-      const candidate = await loadAdmittedSupplierProduct(publicationCaller!, admin, body.product_id);
+      const environment = Deno.env.get("BIB_SUPPLY_ENVIRONMENT") ?? "live";
+      await confirmCatalogEnvironment(environment,callPlatform);
+      const candidate = await loadAdmittedSupplierProduct(publicationCaller!, admin, body.product_id, {environment});
       if (candidate.error) return json({ error: candidate.error }, candidate.status);
       const product = candidate.product!;
 

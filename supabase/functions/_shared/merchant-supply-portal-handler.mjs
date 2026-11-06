@@ -4,7 +4,8 @@ const externalQuote=q=>{
  const keys=["id","reference","payload","totals","product_name","quote_hash","quote_version","state","acceptance","invoice_documents","payment_evidence","revision","checkout_eligible"];
  const result=Object.fromEntries(keys.filter(k=>q?.[k]!==undefined).map(k=>[k,q[k]]));
  if(Array.isArray(result.invoice_documents))result.invoice_documents=result.invoice_documents.map(d=>Object.fromEntries(["issuer","reference","document_reference","amount_cents","debtor"].filter(k=>d[k]!==undefined).map(k=>[k,d[k]])));
- if(result.acceptance)result.acceptance=Object.fromEntries(["at","signatory","capacity","quote_hash","quote_version"].filter(k=>result.acceptance[k]!==undefined).map(k=>[k,result.acceptance[k]]));
+ // The accepting merchant's identity is part of the payment evidence. Staff IDs stay private.
+ if(result.acceptance)result.acceptance=Object.fromEntries(["actor_id","at","signatory","capacity","quote_hash","quote_version"].filter(k=>result.acceptance[k]!==undefined).map(k=>[k,result.acceptance[k]]));
  if(Array.isArray(result.payment_evidence))result.payment_evidence=result.payment_evidence.map(e=>Object.fromEntries(["state","recorded_at","amount_cents","currency"].filter(k=>e[k]!==undefined).map(k=>[k,e[k]])));
  return result;
 };

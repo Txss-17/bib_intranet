@@ -7,6 +7,7 @@ DECLARE missing text[];
 BEGIN
  SELECT array_agg(name ORDER BY name) INTO missing
  FROM (VALUES
+  ('catalogue_publication_by_mode',to_regprocedure('public.get_catalog_acquisition_publication(uuid,boolean)') IS NOT NULL),
   ('merchant_supply_quotes',to_regclass('public.merchant_supply_quotes') IS NOT NULL),
   ('merchant_supply_events',to_regclass('public.merchant_supply_events') IS NOT NULL),
   ('merchant_supply_requests',to_regclass('public.merchant_supply_requests') IS NOT NULL),
@@ -116,6 +117,7 @@ BEGIN
  THEN RAISE EXCEPTION 'BIB_INTRANET_STAGING_NOT_READY: anonymous SAV mutation allowed' USING ERRCODE='42501';
  END IF;
  IF EXISTS(SELECT 1 FROM (VALUES
+  ('public.get_catalog_acquisition_publication(uuid,boolean)'),
   ('public.merchant_supply_portal(uuid,uuid,uuid,text,text,uuid,jsonb)'),
   ('public.receive_merchant_supply_settlement(uuid,text,jsonb)'),
   ('public.create_merchant_supply_request(uuid,uuid,uuid,text,uuid,jsonb)')

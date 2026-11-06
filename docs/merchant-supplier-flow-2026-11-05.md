@@ -80,3 +80,8 @@ Les suites `npm run test:supply` exécutent des fonctions PostgreSQL réelles da
 - [Stripe — création d’une session Checkout](https://docs.stripe.com/api/checkout/sessions/create).
 
 Ces références encadrent les contrôles techniques ; les contrats effectifs, régimes fiscaux et capacités du prestataire doivent correspondre à l’opération réelle.
+
+
+## Vérification complémentaire du 6 novembre 2026
+
+La [note de préproduction](supply-preproduction-verification-2026-11-06.md) décrit la correction de transmission de l’identité du marchand acceptant, l’isolation du catalogue sandbox et la recette entre deux bases PostgreSQL locales. Les bases raccordées sont actuellement inaccessibles et la préproduction distincte n’est pas identifiée ; aucune mise en service connectée n’est déclarée réalisée.

@@ -38,6 +38,7 @@ export function supplierProductPayload(input: unknown) {
   return {
     type: "supplier_product" as const,
     data: {
+      environment: source.test_account === true ? "sandbox" as const : "live" as const,
       intranet_id: product.id,
       ...(product.platform_id ? { platform_id: product.platform_id } : {}),
       source_updated_at: product.updated_at,
