@@ -9,11 +9,20 @@ const set=async(k,v)=>{await db.query('SELECT set_config($1,$2,false)',[k,v]);};
 const call=async(r,rev=r.revision)=>(await db.query('SELECT public.save_bib_fiscal_record($1::jsonb,$2::bigint) AS body',[JSON.stringify(r),rev])).rows[0].body;
 const rejects=async(fn,code)=>{await assert.rejects(fn,e=>e.code===code);};
 const seed=(await db.query('SELECT body FROM public.bib_fiscal_reference_catalog')).rows.map(r=>r.body);
+const registry=JSON.parse(await readFile(new URL('../../src/data/intranetRegistry.json',import.meta.url),'utf8'));
+const aliases=JSON.parse(await readFile(new URL('../../src/data/intranetRouteAliases.json',import.meta.url),'utf8'));
+const app=await readFile(new URL('../../src/App.tsx',import.meta.url),'utf8');
+const navigation=await readFile(new URL('../../src/data/moduleNavigations.ts',import.meta.url),'utf8');
+assert.deepEqual((await db.query("SELECT definition FROM public.intranet_modules WHERE page_id='finance.fiscal'")).rows[0].definition,registry.find(r=>r.id==='finance.fiscal'));
+for(const pole of ['finance','compliance','supplier','ops','marketplace','support','product','security','direction']){assert.equal(aliases['/pole/'+pole+'/fiscal'],'finance.fiscal');assert.ok(app.includes('path="/pole/'+pole+'/fiscal"'));assert.ok(navigation.includes("path: '/pole/"+pole+"/fiscal'"));}
+
 await rejects(()=>db.query('SELECT public.list_bib_fiscal_records()'),'42501');
 await set('app.actor','00000000-0000-4000-8000-000000000001');await set('app.allowed','yes');await set('app.validate','yes');await set('app.test','false');
 assert.equal((await db.query('SELECT public.list_bib_fiscal_records() AS data')).rows[0].data.records.length,36);
 let r={...structuredClone(seed.find(r=>r.id==='RS-02')),status:'En cours',owner:'Test Finance',notes:'Revue de la couverture PSP'};
 r=await call(r);assert.equal(r.revision,1);
+await rejects(()=>call({...r,details:{TVA:{unexpected:true}}}),'22023');
+await rejects(()=>call({...r,contributors:[{unexpected:true}]}),'22023');
 await rejects(()=>call({...r,notes:'ancien'},0),'40001');
 await rejects(()=>call({...r,status:'Validé'}),'42501');
 let review={...r,status:'En revue',controls:r.controls.map(c=>({...c,done:true})),evidence:[{id:'test-ref',name:'Rapport fictif de recette',url:'https://example.org/recette',type:'link',addedAt:'2026-11-06T19:00:00Z'}]};
@@ -30,4 +39,4 @@ await set('app.allowed','yes');
 const history=(await db.query('SELECT public.list_bib_fiscal_events($1) AS events',['RS-02'])).rows[0].events;assert.equal(history.length,3);assert.equal(history[0].action,'Validation indépendante');
 await db.exec('SET ROLE authenticated');await rejects(()=>db.query("DELETE FROM public.bib_fiscal_events"),'42501');await rejects(()=>db.query("UPDATE public.bib_fiscal_records SET revision=100"),'42501');await db.exec('RESET ROLE');
 await set('app.test','true');await db.exec('SET ROLE authenticated');assert.equal((await db.query('SELECT * FROM public.bib_fiscal_records')).rows.length,0);await db.exec('RESET ROLE');
-console.log('PASS: 14 checks — permissions, immutable audit, test isolation, revisions, independent review, missing/cyclic dependencies, catalogue.');await db.close();
+console.log('PASS: fiscal module checks — permissions, immutable audit, test isolation, revisions, independent review, missing/cyclic dependencies, catalogue.');await db.close();

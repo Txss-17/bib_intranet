@@ -52,6 +52,9 @@ jobs:
         id: dependencies
         run: npm ci
 
+      - name: Test fiscal governance hub, pole links and independent validation
+        run: node --test tests/intranet/fiscal-governance-hub.test.mjs
+
       - name: Prove release preflights fail closed on an empty PostgreSQL
         run: |
           set -euo pipefail
@@ -162,4 +165,5 @@ jobs:
       - name: Build application
         if: ${{ !cancelled() && steps.dependencies.outcome == 'success' }}
         run: npm run build
+
 

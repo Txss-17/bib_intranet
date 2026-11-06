@@ -92,6 +92,14 @@ BEGIN
   OR jsonb_typeof(p_record->'trigger')IS DISTINCT FROM 'string'
   OR jsonb_array_length(p_record->'evidence')>40 OR jsonb_array_length(p_record->'controls')>30
   OR jsonb_array_length(p_record->'dependencies')>40 OR jsonb_array_length(p_record->'contributors')>12 THEN RAISE EXCEPTION 'invalid_fiscal_fields' USING ERRCODE='22023';END IF;
+ IF EXISTS(SELECT 1 FROM jsonb_each(p_record->'details')d WHERE jsonb_typeof(d.value)IS DISTINCT FROM 'string')
+  OR EXISTS(SELECT 1 FROM jsonb_array_elements(p_record->'refs')r WHERE jsonb_typeof(r)IS DISTINCT FROM 'string')
+  OR EXISTS(SELECT 1 FROM jsonb_array_elements(p_record->'contributors')p WHERE jsonb_typeof(p)IS DISTINCT FROM 'string')
+  OR (p_record?'relatedEntities' AND jsonb_typeof(p_record->'relatedEntities')IS DISTINCT FROM 'array')
+  OR EXISTS(SELECT 1 FROM jsonb_array_elements(coalesce(p_record->'relatedEntities','[]'))e WHERE jsonb_typeof(e)IS DISTINCT FROM 'string')
+  OR (p_record?'likelihood' AND (jsonb_typeof(p_record->'likelihood')IS DISTINCT FROM 'number' OR (p_record->>'likelihood')::numeric NOT BETWEEN 1 AND 5))
+  OR (p_record?'severity' AND (jsonb_typeof(p_record->'severity')IS DISTINCT FROM 'number' OR (p_record->>'severity')::numeric NOT BETWEEN 1 AND 5))
+ THEN RAISE EXCEPTION 'invalid_fiscal_value_types' USING ERRCODE='22023';END IF;
  IF base IS NOT NULL AND p_record->>'kind'IS DISTINCT FROM base->>'kind' OR existing.record_id IS NOT NULL AND p_record->>'kind'IS DISTINCT FROM existing.body->>'kind' THEN RAISE EXCEPTION 'immutable_fiscal_kind' USING ERRCODE='22023';END IF;
  IF coalesce(p_record->>'due','')<>''THEN PERFORM (p_record->>'due')::date;END IF;
  FOR item IN SELECT value FROM jsonb_array_elements(p_record->'controls')LOOP
