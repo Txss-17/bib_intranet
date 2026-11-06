@@ -10,7 +10,7 @@ const party=(id,name)=>({entity_id:id,legal_name:name,registration_id:"REG-TEST"
 const bibId="60000000-0000-4000-8000-000000000001";
 const payload=()=>({schema_version:1,model:"transparent_intermediation",purpose:"stock",merchant_id:merchant,boutique_id:boutique,catalog_id:product,supplier_id:supplier,quantity:3,currency:"EUR",parties:{supplier:party(supplier,"Fournisseur test"),merchant:{...party(merchant,"Marchand test"),evidence_reference:"Dossier juridique 70000000-0000-4000-8000-000000000001"},bib:party(bibId,"Opérateur BIB test")},lines:[{component:"goods",issuer:"supplier",label:"Produit",quantity:3,unit_net_cents:1000,tax_rate_bps:2000,tax_reason:"Régime fictif test"},{component:"delivery",issuer:"bib",label:"Livraison",quantity:1,unit_net_cents:500,tax_rate_bps:2000,tax_reason:"Régime fictif test"},{component:"bib_fee",issuer:"bib",label:"Commission BIB",quantity:1,unit_net_cents:200,tax_rate_bps:2000,tax_reason:"Régime fictif test"}],valid_until:"2030-01-01T00:00:00Z",mandate_reference:"MANDAT-TEST",terms_reference:"CGS-TEST",delivery_terms:"Réception chez un partenaire logistique BIB ; pas d’expédition directe au client.",ownership_terms:"Le contrat fournisseur fixe le transfert ; la sélection et le dépôt 3PL ne transfèrent pas la propriété."});
 let db;
-before(async()=>{db=new PGlite();await db.exec(await readFile(new URL("./fixture.sql",import.meta.url),"utf8"));await db.exec(await readFile(new URL("../../drizzle/migrations/0086_merchant_supply_model.sql",import.meta.url),"utf8")).catch(error=>{delete error.query;throw error;});});
+before(async()=>{db=new PGlite();await db.exec(await readFile(new URL("./fixture.sql",import.meta.url),"utf8"));await db.exec(await readFile(new URL("../../drizzle/migrations/0086_merchant_supply_model.sql",import.meta.url),"utf8")).catch(error=>{delete error.query;throw error;});await db.exec(await readFile(new URL("../../drizzle/migrations/0087_catalog_sandbox_isolation.sql",import.meta.url),"utf8"));});
 after(async()=>db.close());
 beforeEach(async()=>{
  await db.exec("TRUNCATE legal_governance_records");
@@ -26,8 +26,8 @@ beforeEach(async()=>{
  for(const action of ["read","create","update"])await db.query("INSERT INTO test_permissions VALUES($1,'supplier.suppliers',$2)",[author,action]);
  for(const action of ["read","validate"])await db.query("INSERT INTO test_permissions VALUES($1,'finance.billing',$2)",[finance,action]);
 });
-async function as(actor,fn,role="authenticated") {return db.transaction(async tx=>{await tx.exec("SET LOCAL ROLE "+role);await tx.query("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role',$2,true)",[actor??"",role]);return fn(tx);});}
-const rpc=(actor,name,args,role)=>as(actor,async tx=>(await tx.query(`SELECT ${name}(${args.map((_,i)=>`$${i+1}`).join(',')}) result`,args)).rows[0].result,role).catch(e=>{delete e.query;throw e;});
+async function as(actor,fn,role="authenticated",testMode=false) {return db.transaction(async tx=>{await tx.exec("SET LOCAL ROLE "+role);await tx.query("SELECT set_config('request.jwt.claim.sub',$1,true),set_config('request.jwt.claim.role',$2,true),set_config('bib.test_mode',$3,true)",[actor??"",role,String(testMode)]);return fn(tx);});}
+const rpc=(actor,name,args,role,testMode=false)=>as(actor,async tx=>(await tx.query(`SELECT ${name}(${args.map((_,i)=>`$${i+1}`).join(',')}) result`,args)).rows[0].result,role,testMode).catch(e=>{delete e.query;throw e;});
 const verifiedSample=()=>({merchant_id:merchant,boutique_id:boutique,catalog_id:product,environment:"live",sample_id:randomUUID(),product_id:randomUUID(),purchase_id:randomUUID(),visual_confirmed_at:"2026-11-01T12:00:00Z",verified_at:"2026-11-05T12:00:00Z"});
 const create=async(p=payload(),key=randomUUID(),actor=author)=>{
  let source=null;if(p.purpose!=="sample")source=(await rpc(null,"create_merchant_supply_request",[merchant,boutique,merchant,"live",randomUUID(),{catalog_id:product,purpose:p.purpose,quantity:p.quantity,note:"Test",verified_sample:verifiedSample()}],"service_role")).request_id;
@@ -139,4 +139,15 @@ test("a won dispute requires a fresh Finance coverage review before production r
  await receive({...evidence,event_id:"evt_won",state:"paid",revision:3});await assert.rejects(()=>status("in_production"),/financial_coverage_required/);
  q=(await db.query("SELECT * FROM merchant_supply_quotes WHERE id=$1",[q.id])).rows[0];q=await advance(q,"record_coverage",{...coverage,evidence_reference:"FRESH-COVERAGE-TEST"},finance);
  await status("in_production");
+});
+
+test("sandbox price publications stay private and cannot be read through the legacy live API",async()=>{
+ await db.exec("UPDATE products SET test_account=true;UPDATE suppliers SET test_account=true");
+ const price={version:"PRIX-SANDBOX",currency:"EUR",goods_unit_cents:1000,delivery_unit_cents:100,bib_fee_unit_cents:150};
+ const id=await rpc(author,"propose_catalog_acquisition_price",[product,price,"TARIF-FICTIF"],"authenticated",true);
+ await rpc(finance,"approve_catalog_acquisition_price",[id],"authenticated",true);
+ assert.equal(await rpc(null,"get_catalog_acquisition_publication",[product],"service_role"),null);
+ assert.equal(await rpc(null,"get_catalog_acquisition_publication",[product,false],"service_role"),null);
+ assert.deepEqual((await rpc(null,"get_catalog_acquisition_publication",[product,true],"service_role")).price,price);
+ await assert.rejects(()=>rpc(author,"get_catalog_acquisition_publication",[product,true]),/permission denied/);
 });

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   canPublishSupplierProduct,
   loadAdmittedSupplierProduct,
+  confirmCatalogEnvironment,
 } from "../../supabase/functions/_shared/supplier-reference-publication.mjs";
 
 test("publication uses current read and validate rights on the same page", async () => {
@@ -163,4 +164,24 @@ test("price approval advances the bridge version without rolling back a newer pr
   const result=await loadAdmittedSupplierProduct(caller,admin,approved.id);
   assert.equal(result.product.updated_at,expected);assert.deepEqual(result.product.acquisition_pricing,price);
  }
+});
+
+test("sandbox publication requires matching test data, admission and approved pricing",async()=>{
+ const {caller,admin,calls}=setup({...approved,test_account:true});
+ const result=await loadAdmittedSupplierProduct(caller,admin,approved.id,{environment:"sandbox"});
+ assert.equal(result.product.test_account,true);
+ assert.deepEqual(calls.find(([name])=>name==="get_supplier_reference_admission")[1],{p_supplier_id:approved.supplier_id,p_reference:approved.sku,p_test_account:true});
+ assert.deepEqual(calls.find(([name])=>name==="get_catalog_acquisition_publication")[1],{p_product_id:approved.id,p_test_account:true});
+ const real=setup(approved);assert.equal((await loadAdmittedSupplierProduct(real.caller,real.admin,approved.id,{environment:"sandbox"})).status,412);
+ assert.equal((await loadAdmittedSupplierProduct(caller,admin,approved.id,{environment:"unknown"})).status,503);
+});
+test("sandbox refuses older, live or unavailable catalogue receivers without sending product data",async()=>{
+ const calls=[];
+ for(const response of [{id:"legacy"},{schema_version:1,environment:"live"},{schema_version:2,environment:"sandbox"}]){
+  await assert.rejects(()=>confirmCatalogEnvironment("sandbox",async(name,body)=>{calls.push({name,body});return response;}),/sandbox_receiver_unconfirmed/);
+ }
+ assert.equal(calls.length,3);assert.ok(calls.every(c=>c.body.type==="catalog_environment"&&!c.body.data.product));
+ await assert.rejects(()=>confirmCatalogEnvironment("sandbox",async()=>{throw new Error("old receiver");}),/old receiver/);
+ await confirmCatalogEnvironment("sandbox",async()=>({schema_version:1,environment:"sandbox"}));
+ await confirmCatalogEnvironment("live",async()=>{throw new Error("legacy live needs no handshake");});
 });

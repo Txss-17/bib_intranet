@@ -24,6 +24,7 @@ test("merchant projection hides finance evidence and staff IDs while preserving 
  const input=body(),response=await handler(request(input)),result=await response.json();assert.equal(response.status,200);
  assert.equal(args.name,"merchant_supply_portal");assert.equal(args.input.p_merchant_id,input.merchant_id);
  assert.equal(result.quotes[0].payload.parties.supplier.legal_name,"Vendeur de test");assert.equal(result.quotes[0].checkout_eligible,true);
+ assert.equal(result.quotes[0].acceptance.actor_id,q.acceptance.actor_id);
  assert.equal(JSON.stringify(result).includes("PRIVATE"),false);assert.equal(JSON.stringify(result).includes("recorded_by"),false);
  assert.deepEqual(result.quotes[0].payment_evidence,[{state:"paid",amount_cents:1000,currency:"EUR"}]);
 });

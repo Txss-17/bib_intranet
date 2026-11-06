@@ -17,4 +17,4 @@ GRANT SELECT,INSERT,UPDATE ON supplier_restock_orders TO authenticated;
 GRANT SELECT ON suppliers,products,shops,user_accounts TO authenticated,service_role;
 
 CREATE TABLE test_reference_admissions(supplier_id uuid,reference text,admitted boolean,test_account boolean,PRIMARY KEY(supplier_id,reference,test_account));
-CREATE FUNCTION public.get_supplier_reference_admission(uuid,text,boolean) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$SELECT coalesce((SELECT admitted FROM test_reference_admissions WHERE supplier_id=$1 AND reference=$2 AND test_account=$3),false)$$;
+CREATE FUNCTION public.get_supplier_reference_admission(p_supplier_id uuid,p_reference text,p_test_account boolean) RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$SELECT coalesce((SELECT admitted FROM test_reference_admissions WHERE supplier_id=$1 AND reference=$2 AND test_account=$3),false)$$;

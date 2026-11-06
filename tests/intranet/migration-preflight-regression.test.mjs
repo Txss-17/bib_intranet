@@ -5,7 +5,7 @@ const read = path => readFileSync(new URL('../../' + path, import.meta.url), 'ut
 
 test('migration registry is contiguous and includes Finance and latest synchronization migration', () => {
   const journal = JSON.parse(read('drizzle/migrations/meta/_journal.json'));
-  assert.equal(journal.entries.length, 87);
+  assert.equal(journal.entries.length, 88);
   assert.deepEqual(journal.entries.map(e => e.idx),Array.from({length:journal.entries.length},(_,i)=>i));
   assert.equal(new Set(journal.entries.map(x => x.when)).size, journal.entries.length);
   for (const tag of [
@@ -18,6 +18,7 @@ test('migration registry is contiguous and includes Finance and latest synchroni
     '0084_legal_document_governance',
     '0085_supplier_audit_bank_receipt_attestation',
     '0086_merchant_supply_model',
+    '0087_catalog_sandbox_isolation',
   ]) {
     assert.ok(journal.entries.some(e => e.tag === tag), tag);
   }
