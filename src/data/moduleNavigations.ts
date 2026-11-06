@@ -49,6 +49,7 @@ export const moduleNavigations: Record<
     description:
       'Pilotage stratégique et gouvernance',
     items: [
+      { id: 'fiscal', label: 'Fiscalité & flux', path: '/pole/direction/fiscal', icon: 'Scale', description: 'Cadre fiscal, risques et obligations liés au pôle' },
       {
         id: 'overview',
         label: 'Vue d’ensemble',
@@ -107,6 +108,7 @@ export const moduleNavigations: Record<
     description:
       'Pilotage financier, paiements et facturation',
     items: [
+      { id: 'fiscal', label: 'Fiscalité & flux', path: '/pole/finance/fiscal', icon: 'Scale', description: 'Cadre fiscal, risques et obligations liés au pôle' },
       {
         id: 'overview',
         label: 'Vue d’ensemble',
@@ -171,6 +173,7 @@ export const moduleNavigations: Record<
     description:
       'Commandes, stocks, expéditions et partenaires',
     items: [
+      { id: 'fiscal', label: 'Fiscalité & flux', path: '/pole/ops/fiscal', icon: 'Scale', description: 'Cadre fiscal, risques et obligations liés au pôle' },
   {
     id: 'overview',
     label: 'Vue d’ensemble',
@@ -271,6 +274,7 @@ export const moduleNavigations: Record<
     description:
       'Qualification, produits, catalogues et certifications',
     items: [
+      { id: 'fiscal', label: 'Fiscalité & flux', path: '/pole/supplier/fiscal', icon: 'Scale', description: 'Cadre fiscal, risques et obligations liés au pôle' },
       {
         id: 'overview',
         label: 'Vue d’ensemble',
@@ -336,6 +340,7 @@ marketplace: {
   description:
     'Marchands, portefeuilles, boutiques et développement commercial',
   items: [
+      { id: 'fiscal', label: 'Fiscalité & flux', path: '/pole/marketplace/fiscal', icon: 'Scale', description: 'Cadre fiscal, risques et obligations liés au pôle' },
     {
       id: 'overview',
       label: 'Vue d’ensemble',
@@ -397,6 +402,7 @@ marketplace: {
     description:
       'Support, accompagnement et qualité de l’expérience',
     items: [
+      { id: 'fiscal', label: 'Fiscalité & flux', path: '/pole/support/fiscal', icon: 'Scale', description: 'Cadre fiscal, risques et obligations liés au pôle' },
       {
         id: 'overview',
         label: 'Vue d’ensemble',
@@ -646,6 +652,7 @@ rh: {
     description:
       'Cadre juridique, contrats et conformité',
     items: [
+      { id: 'fiscal', label: 'Fiscalité & flux', path: '/pole/compliance/fiscal', icon: 'Scale', description: 'Cadre fiscal, risques et obligations liés au pôle' },
       {
         id: 'overview',
         label: 'Vue d’ensemble',
@@ -725,6 +732,7 @@ rh: {
     description:
       'Produit, développement, plateforme, performance et innovation',
     items: [
+      { id: 'fiscal', label: 'Fiscalité & flux', path: '/pole/product/fiscal', icon: 'Scale', description: 'Cadre fiscal, risques et obligations liés au pôle' },
       {
         id: 'overview',
         label: 'Vue d’ensemble',
@@ -874,6 +882,7 @@ rh: {
     description:
       'Sécurité, accès, infrastructure et systèmes IT',
     items: [
+      { id: 'fiscal', label: 'Fiscalité & flux', path: '/pole/security/fiscal', icon: 'Scale', description: 'Cadre fiscal, risques et obligations liés au pôle' },
       {
         id: 'overview',
         label: 'Vue d’ensemble',
@@ -1185,3 +1194,4 @@ export default moduleNavigations;
 
 export const getModuleNavigation = (poleId: string): (ModuleNavigationItem & { labelFr?: string })[] =>
   (moduleNavigations[poleId]?.items ?? []).map((i) => ({ ...i, labelFr: i.label }));
+

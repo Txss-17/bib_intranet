@@ -262,5 +262,14 @@
   "/pole/data/bi/history/:id": "data.bi-dashboards",
   "/modules/gateway/message/:messageId": "gateway.inbox",
   "/pole/product/releases": "product.engineering",
-  "/pole/security/platform": "security.security"
+  "/pole/security/platform": "security.security",
+  "/pole/finance/fiscal": "finance.fiscal",
+  "/pole/compliance/fiscal": "finance.fiscal",
+  "/pole/supplier/fiscal": "finance.fiscal",
+  "/pole/ops/fiscal": "finance.fiscal",
+  "/pole/marketplace/fiscal": "finance.fiscal",
+  "/pole/support/fiscal": "finance.fiscal",
+  "/pole/product/fiscal": "finance.fiscal",
+  "/pole/security/fiscal": "finance.fiscal",
+  "/pole/direction/fiscal": "finance.fiscal"
 }

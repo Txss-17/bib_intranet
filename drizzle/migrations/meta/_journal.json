@@ -617,6 +617,13 @@
       "when": 1793923200000,
       "tag": "0087_catalog_sandbox_isolation",
       "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1793980800000,
+      "tag": "0088_fiscal_governance_hub",
+      "breakpoints": true
     }
   ]
 }

@@ -52,6 +52,7 @@ export default function ComplianceGovernancePage({ mode }: { mode: Mode }) {
       <Link className="inline-flex items-center gap-1 text-sm text-primary hover:underline" to={config.related}>
         {config.relatedLabel}<ArrowUpRight className="h-4 w-4" />
       </Link>
+      {mode === 'risks' && canViewPage('finance.fiscal') && <Link className="inline-flex items-center gap-1 text-sm text-primary hover:underline ml-4" to="/pole/compliance/fiscal?vue=risks">Risques fiscaux et flux BIB<ArrowUpRight className="h-4 w-4" /></Link>}
     </header>
     <Tabs defaultValue="overview">
       <TabsList>
@@ -110,3 +111,4 @@ export default function ComplianceGovernancePage({ mode }: { mode: Mode }) {
     </Tabs>
   </div>;
 }
+
