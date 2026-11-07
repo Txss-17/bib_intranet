@@ -8,12 +8,12 @@ CREATE TABLE IF NOT EXISTS public.bib_partner_access_handoffs (
  recipient_email text NOT NULL,
  test_account boolean NOT NULL,
  delivery_state text NOT NULL DEFAULT 'prepared'
-  CHECK (delivery_state IN ('prepared','confirmed')),
+  CHECK (delivery_state IN ('prepared','confirmed','simulated')),
  prepared_by uuid NOT NULL,
  confirmed_by uuid,
  confirmed_at timestamptz,
  created_at timestamptz NOT NULL DEFAULT now(),
- CHECK (delivery_state <> 'confirmed' OR
+ CHECK (delivery_state = 'prepared' OR
   (confirmed_by IS NOT NULL AND confirmed_at IS NOT NULL))
 );
 ALTER TABLE public.bib_partner_access_handoffs ENABLE ROW LEVEL SECURITY;
@@ -86,13 +86,16 @@ BEGIN
   WHERE case_id=c.id FOR UPDATE;
  IF h.id IS NULL THEN RAISE EXCEPTION 'invitation_missing' USING ERRCODE='23514'; END IF;
  SELECT * INTO o FROM public.intranet_outbox WHERE id=h.outbox_id;
- IF h.prepared_by=v_actor OR o.status<>'sent' OR o.test_account
-  OR o.created_by IS DISTINCT FROM h.prepared_by
+ IF h.prepared_by=v_actor OR
+  (NOT c.test_account AND (o.status<>'sent' OR o.test_account)) OR
+  (c.test_account AND (o.status<>'approved' OR NOT o.test_account)) OR
+  o.created_by IS DISTINCT FROM h.prepared_by
   OR o.recipients<>ARRAY[h.recipient_email]::text[]
   OR o.approved_by IS NULL OR o.approved_by=o.created_by
  THEN RAISE EXCEPTION 'independently_approved_delivery_evidence_required' USING ERRCODE='23514'; END IF;
  UPDATE public.bib_partner_access_handoffs
- SET delivery_state='confirmed',confirmed_by=v_actor,confirmed_at=now()
+ SET delivery_state=CASE WHEN c.test_account THEN 'simulated' ELSE 'confirmed' END,
+ confirmed_by=v_actor,confirmed_at=now()
  WHERE id=h.id AND delivery_state='prepared';
  RETURN h.id;
 END $$;
@@ -158,7 +161,8 @@ BEGIN
  END IF;
  IF p_next_stage='portal_access_recorded' AND NOT EXISTS (
   SELECT 1 FROM public.bib_partner_access_handoffs h
-  WHERE h.case_id=v_case.id AND h.test_account=v_test AND h.delivery_state='confirmed'
+  WHERE h.case_id=v_case.id AND h.test_account=v_test
+   AND (h.delivery_state='confirmed' OR (v_test AND h.delivery_state='simulated'))
  ) THEN RAISE EXCEPTION 'confirmed_invitation_delivery_required' USING ERRCODE='23514'; END IF;
  IF p_kind='supplier' AND p_next_stage IN ('catalog_reviewed','products_selected')
  AND (NOT EXISTS(
