@@ -18,7 +18,9 @@ Le recrutement, la qualification et la conclusion de partenariats sont ouverts s
 2. Prise de contact formalisée pour présenter le fonctionnement et les attentes de BIB.
 3. Transmission d'une **fiche des besoins de services** : transport, stockage, picking/packing, tracking, retours, incidents, délais, zones, API, informations financières et conditions de service.
 4. Accord du partenaire sur les besoins ou demande d'ajustements ; preuve de la version acceptée.
-5. Contrat arrêté et signé après accord ; conserver signataire, version et date.
+5. Après accord opérationnel de principe, **réception du contrat et des CGS/SLA proposés par le logisticien**, avec référence/version de chaque document.
+6. **Revue Juridique, Logistique et Finance** : tarifs, garanties, stockage et propriété des stocks, responsabilité, assurance, données personnelles, SLA, durée et sortie. Toute réserve déclenche une négociation tracée. Les contrôles doivent être formalisés et la décision validée.
+7. **Signature du contrat du prestataire** (ou d'un accord alternatif juridiquement opposable validé), archivage de la version signée, signataires et dates. BIB ne rédige pas systématiquement de contrat-cadre logistique propre.
 6. Transmission documentée des informations d'accès au portail ; **aucun mot de passe ni jeton en clair dans Intrabib**. L'ouverture de l'accès documentaire n'autorise pas à elle seule l'affectation de commandes.
 7. Rattachement contrôlé de l'identifiant `partner_onboarding_submissions.id` de Platform au partenaire `logistics_partners.id` d'Intrabib.
 8. Activation opérationnelle éventuelle : sélection pilote approuvée, contrôles juridiques et Finance, capacités, habilitations, contrat, assurance, tests techniques et Go/No-Go. La PR #56 apporte un garde-fou limité au bridge `assign_shipment`.
