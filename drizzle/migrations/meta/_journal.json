@@ -631,6 +631,13 @@
       "when": 1794042000000,
       "tag": "0090_partner_postapplication_workflows",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1794052800000,
+      "tag": "0091_partner_access_handoff",
+      "breakpoints": true
     }
   ]
 }
