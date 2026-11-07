@@ -16,6 +16,7 @@ export type PilotKind = 'supplier' | 'logistics';
 export type PilotCandidate = { id: string; label: string; eligible: boolean };
 type PilotSelection = {
  id: string; partner_id: string; partner_kind: PilotKind; wave: number;
+ platform_submission_id?: string | null;
  state: 'nominated' | 'approved' | 'paused'; evidence_reference: string | null;
  approved_at: string | null;
 };
@@ -37,12 +38,13 @@ export default function PilotPartnerSelection({
  const [wave, setWave] = useState('1');
  const [candidateId, setCandidateId] = useState('');
  const [reference, setReference] = useState('');
+ const [platformSubmission, setPlatformSubmission] = useState('');
  const [errorMessage, setErrorMessage] = useState('');
  const rowsQuery = useQuery({
   queryKey: ['pilot-partner-selections', kind],
   queryFn: async (): Promise<PilotSelection[]> => {
    const { data, error } = await db.from('bib_pilot_partner_selections')
-    .select('id,partner_id,partner_kind,wave,state,evidence_reference,approved_at')
+    .select('id,partner_id,partner_kind,platform_submission_id,wave,state,evidence_reference,approved_at')
     .eq('partner_kind', kind).order('created_at', { ascending: false });
    if (error) throw error;
    return data ?? [];
@@ -55,12 +57,14 @@ export default function PilotPartnerSelection({
    const { error } = await db.rpc('bib_set_pilot_partner_selection', {
     p_kind: kind, p_partner_id: id, p_wave: selectedWave,
     p_action: action, p_reference: action === 'approve' ? reference.trim() : null,
+    p_platform_submission_id: kind === 'logistics' && action === 'nominate' ? platformSubmission.trim() : null,
    });
    if (error) throw error;
   },
   onSuccess: () => {
    setErrorMessage('');
    setReference('');
+   setPlatformSubmission('');
    void qc.invalidateQueries({ queryKey: ['pilot-partner-selections', kind] });
    toast.success('Sélection pilote enregistrée');
   },
@@ -107,11 +111,19 @@ export default function PilotPartnerSelection({
       <SelectTrigger aria-label="Partenaire à sélectionner"><SelectValue placeholder="Choisir un partenaire qualifié" /></SelectTrigger>
       <SelectContent>{eligible.map(c => <SelectItem value={c.id} key={c.id}>{c.label}</SelectItem>)}</SelectContent>
      </Select>
-     <Button type="button" variant="outline" disabled={!candidateId || mutation.isPending || selected?.state === 'approved'}
+     <Button type="button" variant="outline" disabled={!candidateId || mutation.isPending || selected?.state === 'approved' ||
+       (kind === 'logistics' && !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(platformSubmission.trim()))}
       onClick={() => act('nominate')}>Proposer pour la vague</Button>
     </div>
+    {kind === 'logistics' && <Input aria-label="Identifiant dossier logistique Platform" value={platformSubmission}
+     onChange={e => setPlatformSubmission(e.target.value)}
+     placeholder="UUID de candidature logistique Platform vérifié" />}
     <Input aria-label="Référence de validation" value={reference} onChange={e => setReference(e.target.value)}
      placeholder="Référence de décision et de preuves (8 caractères minimum)" maxLength={500}/>
+    {kind === 'logistics' && <p className="text-xs text-muted-foreground">
+     Lier manuellement l'identifiant exact du dossier Platform après vérification documentaire.
+     Le serveur conserve cette liaison dans la décision ; une sélection n'ouvre pas à elle seule le portail.
+    </p>}
     <p className="text-xs text-muted-foreground">
      Validation par une autre personne habilitée que celle qui a proposé le partenaire.
      La qualification et les contrats doivent être vérifiés ; la validation n'active pas de service réel.
@@ -123,6 +135,7 @@ export default function PilotPartnerSelection({
        <div className="min-w-0">
         <p className="font-medium">{candidateName(row.partner_id)}</p>
         <p className="text-xs text-muted-foreground">{STATUS_LABEL[row.state]}</p>
+        {kind === 'logistics' && <p className="text-xs text-muted-foreground">Dossier Platform : {row.platform_submission_id ?? 'Non lié'}</p>}
        </div>
        <div className="flex items-center gap-2">
         {row.state === 'nominated' &&
