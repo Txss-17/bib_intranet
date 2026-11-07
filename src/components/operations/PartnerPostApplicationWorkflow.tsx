@@ -174,12 +174,14 @@ export default function PartnerPostApplicationWorkflow({kind,sourceId}:{kind:Kin
       <p className="text-xs text-muted-foreground">Référence Gateway : {handoffQuery.data.outbox_id}</p>
       <p className="text-sm">Transport : {handoffQuery.data.delivery_state==='confirmed'
        ? 'Envoi vérifié'
+       : handoffQuery.data.delivery_state==='simulated'
+       ? 'Simulation confirmée (aucun envoi externe)'
        : 'Approbation / mise en file / rapprochement en attente'}</p>
       <p className="text-xs text-muted-foreground">
        La communication doit être approuvée et envoyée via Gateway → Validation.
        Une simple demande d'envoi ne constitue pas une preuve de livraison.
       </p>
-      {handoffQuery.data.delivery_state!=='confirmed'&&
+      {!['confirmed','simulated'].includes(handoffQuery.data.delivery_state)&&
        <Button type="button" variant="outline" disabled={accessMutation.isPending}
         onClick={()=>accessMutation.mutate('confirm')}>Vérifier la confirmation Gateway</Button>}
      </div>}
