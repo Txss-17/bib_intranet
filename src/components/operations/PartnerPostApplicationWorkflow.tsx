@@ -18,6 +18,7 @@ const SUPPLIER = [
  ['precontract_catalog_received','Catalogue précontractuel reçu'],
  ['precontract_screened','Éligibilité précontractuelle examinée'],
  ['contract_signed','Contrat signé et validé'],
+ ['access_invitation_prepared','Invitation d’accès à préparer'],
  ['portal_access_recorded','Accès portail transmis et confirmé'],
  ['catalog_received','Catalogue complet reçu'],
  ['catalog_reviewed','Documents et certifications examinés'],
@@ -49,6 +50,10 @@ export default function PartnerPostApplicationWorkflow({kind,sourceId}:{kind:Kin
  const [certificates,setCertificates]=useState('');
  const [auditRef,setAuditRef]=useState('');
  const [decision,setDecision]=useState('under_review');
+ const [accessRecipient,setAccessRecipient]=useState('');
+ const [accessChannel,setAccessChannel]=useState('transactional_email');
+ const [invitationRef,setInvitationRef]=useState('');
+ const [deliveryRef,setDeliveryRef]=useState('');
  const key=['postapplication',kind,sourceId,user?.id,profile?.test_account===true];
  const query=useQuery({
   queryKey:key, enabled:!!user&&!!profile&&!!sourceId,
@@ -64,6 +69,38 @@ export default function PartnerPostApplicationWorkflow({kind,sourceId}:{kind:Kin
    if(result.error)throw result.error;
    return {item:data,products:result.data??[]};
   },
+ });
+ const handoffQuery=useQuery({
+  queryKey:['partner-access-handoff',kind,sourceId,user?.id,profile?.test_account===true],
+  enabled:!!query.data?.item?.id&&!!user&&!!profile,
+  queryFn:async()=>{
+   const {data,error}=await db.from('bib_partner_access_handoffs')
+    .select('id,delivery_state,channel,recipient_email,invitation_reference,delivery_reference')
+    .eq('case_id',query.data?.item?.id).maybeSingle();
+   if(error)throw error;
+   return data as null | {id:string;delivery_state:string;channel:string;
+    recipient_email:string;invitation_reference:string;delivery_reference:string|null};
+  },
+ });
+ const accessMutation=useMutation({
+  mutationFn:async(action:'prepare'|'confirm')=>{
+   if(!query.data?.item?.id)throw new Error('Contrat non validé dans le parcours');
+   const h=handoffQuery.data;
+   const {error}=await db.rpc('bib_record_partner_access_handoff',{
+    p_case_id:query.data.item.id,
+    p_action:action,p_channel:action==='confirm'?h?.channel:accessChannel,
+    p_recipient:action==='confirm'?h?.recipient_email:accessRecipient.trim().toLowerCase(),
+    p_invitation_reference:action==='confirm'?h?.invitation_reference:invitationRef.trim(),
+    p_delivery_reference:action==='confirm'?deliveryRef.trim():null,
+   });
+   if(error)throw error;
+  },
+  onSuccess:()=>{
+   toast.success('Preuve de remise des accès enregistrée');
+   setDeliveryRef('');
+   void qc.invalidateQueries({queryKey:['partner-access-handoff',kind,sourceId]});
+  },
+  onError:(e:Error)=>toast.error('Preuve d’accès refusée',{description:e.message}),
  });
  const stages=kind==='supplier'?SUPPLIER:LOGISTICS;
  const current=query.data?.item?.stage??'application_received';
@@ -129,6 +166,45 @@ export default function PartnerPostApplicationWorkflow({kind,sourceId}:{kind:Kin
      disabled={Boolean(query.data?.item?.platform_submission_id)}
      aria-label="Identifiant Platform du logisticien"
      placeholder="UUID exact du dossier logistique Platform (rapprochement contrôlé)"/>}
+    {current==='access_invitation_prepared'&&<div className="space-y-3 rounded-lg border p-3">
+     <h3 className="font-medium">Remise sécurisée de l'accès partenaire</h3>
+     <p className="text-sm text-muted-foreground">
+      Après contrat validé, le partenaire doit recevoir une invitation de connexion.
+      Le parcours Platform utilise une vérification par code OTP : ne jamais communiquer
+      de mot de passe, de jeton d'accès ou de lien confidentiel dans ce registre.
+     </p>
+     <p className="text-sm">Parcours de connexion public : {kind==='supplier'
+       ? 'https://brand-in-a-box.space/suppliers/resume?portal=suppliers'
+       : 'https://brand-in-a-box.space/ops/resume?portal=ops'}</p>
+     {!handoffQuery.data&&<div className="space-y-2">
+      <Input aria-label="Adresse destinataire" type="email" placeholder="Adresse professionnelle vérifiée"
+       value={accessRecipient} onChange={e=>setAccessRecipient(e.target.value)} />
+      <select aria-label="Canal de remise" className="w-full rounded-md border bg-background p-2"
+       value={accessChannel} onChange={e=>setAccessChannel(e.target.value)}>
+       <option value="transactional_email">E-mail transactionnel via Gateway</option>
+       <option value="verified_manual">Remise manuelle avec preuve indépendante</option>
+      </select>
+      <Input aria-label="Référence d'invitation" value={invitationRef}
+       onChange={e=>setInvitationRef(e.target.value)}
+       placeholder="Référence interne de demande d'envoi (sans secret)" maxLength={500}/>
+      <Button type="button" variant="outline"
+       disabled={accessMutation.isPending||invitationRef.trim().length<8||!accessRecipient.includes('@')}
+       onClick={()=>accessMutation.mutate('prepare')}>Enregistrer la préparation</Button>
+     </div>}
+     {handoffQuery.data&&<div className="space-y-2">
+      <p className="text-sm">Invitation : {handoffQuery.data.delivery_state} · {handoffQuery.data.recipient_email}</p>
+      {handoffQuery.data.delivery_state!=='confirmed'&&<>
+       <Input aria-label="Preuve de transmission vérifiée" value={deliveryRef}
+        onChange={e=>setDeliveryRef(e.target.value)}
+        placeholder="Référence de remise/accusé (sans URL ni code)" maxLength={500}/>
+       <Button type="button" variant="outline"
+        disabled={accessMutation.isPending||deliveryRef.trim().length<8}
+        onClick={()=>accessMutation.mutate('confirm')}>Confirmer après vérification indépendante</Button>
+      </>}
+      {handoffQuery.data.delivery_state==='confirmed'&&
+       <p className="text-sm">Remise confirmée. L'accès opérationnel reste soumis à l'approbation Platform et à la sélection pilote.</p>}
+     </div>}
+    </div>}
     {next&&<div className="space-y-2 rounded-lg border p-3">
      <p className="font-medium">Prochaine étape : {next[1]}</p>
      <Input value={reference} onChange={e=>setReference(e.target.value)}
