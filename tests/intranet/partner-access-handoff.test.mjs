@@ -37,5 +37,6 @@ test('intranet portal access UI uses Gateway and records no credentials',()=>{
  assert.match(ui,/bib_prepare_partner_access_invitation/);
  assert.match(ui,/bib_confirm_partner_access_delivery/);
  assert.match(ui,/code OTP/);
+ assert.match(ui,/Simulation confirmée/);
  assert.doesNotMatch(ui,/send-transactional-email|generateLink|access_token:/);
 });
