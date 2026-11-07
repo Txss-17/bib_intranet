@@ -52,3 +52,20 @@ test('shortlisted supplier conversion is explicit, idempotent, and fails closed 
  assert.match(sql,/audit_accepted,raw_payload,source,status/);
  assert.match(view,/profile\?\.test_account===true/);
 });
+
+test('automatic sourcing reminders use owner-only notifications, cron and deduplicated receipts',()=>{
+ assert.match(sql,/CREATE TABLE IF NOT EXISTS public\.bib_sourcing_notification_receipts/);
+ assert.match(sql,/followup_id uuid PRIMARY KEY/);
+ assert.match(sql,/bib_dispatch_due_sourcing_notifications/);
+ assert.match(sql,/f\.outcome='scheduled'/);
+ assert.match(sql,/f\.due_at<=p_now/);
+ assert.match(sql,/c\.followup_due_at=f\.due_at/);
+ assert.match(sql,/p\.hr_status='active'/);
+ assert.match(sql,/p\.test_account,false\)=m\.test_account/);
+ assert.match(sql,/INSERT INTO public\.notifications\(user_id,pole_id,title,message,type,action_url,metadata,read\)/);
+ assert.match(sql,/VALUES\(item\.owner_id,item\.pole::public\.pole_id/);
+ assert.match(sql,/FOR UPDATE SKIP LOCKED/);
+ assert.match(sql,/REVOKE ALL ON FUNCTION public\.bib_dispatch_due_sourcing_notifications/);
+ assert.match(sql,/cron\.schedule\('bib-sourcing-followup-reminders','\*\/15 \* \* \* \*'/);
+ assert.doesNotMatch(sql,/net\.http_post|send-transactional-email/);
+});
