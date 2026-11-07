@@ -30,6 +30,7 @@ import {
 import { useOpsPartners } from '@/hooks/useOpsControl';
 import CasePortfolioManager from '@/components/operations/CasePortfolioManager';
 import PilotPartnerSelection from '@/components/operations/PilotPartnerSelection';
+import SourcingWorkspace from '@/components/operations/SourcingWorkspace';
 
 interface Partner {
   id: string;
@@ -295,6 +296,8 @@ const Partners = () => {
           </div>
         </div>
       </div>
+
+      <SourcingWorkspace pole="ops" />
 
       <PilotPartnerSelection kind="logistics" candidates={partners.map(p => ({
         id: p.id, label: p.name, eligible: p.status !== 'suspended' && p.status !== 'inactive',
