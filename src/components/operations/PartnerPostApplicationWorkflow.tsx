@@ -65,6 +65,30 @@ export default function PartnerPostApplicationWorkflow({kind,sourceId}:{kind:Kin
    return {item:data,products:result.data??[]};
   },
  });
+ const handoffQuery=useQuery({
+  queryKey:['partner-access-handoff',kind,sourceId,user?.id,profile?.test_account===true],
+  enabled:!!query.data?.item?.id&&!!user&&!!profile,
+  queryFn:async()=>{
+   const {data,error}=await db.from('bib_partner_access_handoffs')
+    .select('id,delivery_state,outbox_id,recipient_email')
+    .eq('case_id',query.data?.item?.id).maybeSingle();
+   if(error)throw error;
+   return data as null | {id:string;delivery_state:string;outbox_id:string;recipient_email:string};
+  },
+ });
+ const accessMutation=useMutation({
+  mutationFn:async(action:'prepare'|'confirm')=>{
+   if(!query.data?.item?.id)throw new Error('Contrat non validé dans le parcours');
+   const name=action==='prepare'?'bib_prepare_partner_access_invitation':'bib_confirm_partner_access_delivery';
+   const {error}=await db.rpc(name,{p_case_id:query.data.item.id});
+   if(error)throw error;
+  },
+  onSuccess:(_data,action)=>{
+   toast.success(action==='prepare'?'Invitation soumise au circuit d’approbation Gateway':'Transport vérifié et confirmé');
+   void qc.invalidateQueries({queryKey:['partner-access-handoff',kind,sourceId]});
+  },
+  onError:(e:Error)=>toast.error('Opération refusée',{description:e.message}),
+ });
  const stages=kind==='supplier'?SUPPLIER:LOGISTICS;
  const current=query.data?.item?.stage??'application_received';
  const currentIndex=stages.findIndex(s=>s[0]===current);
@@ -129,6 +153,43 @@ export default function PartnerPostApplicationWorkflow({kind,sourceId}:{kind:Kin
      disabled={Boolean(query.data?.item?.platform_submission_id)}
      aria-label="Identifiant Platform du logisticien"
      placeholder="UUID exact du dossier logistique Platform (rapprochement contrôlé)"/>}
+    {current==='contract_signed'&&<div className="space-y-3 rounded-lg border p-3">
+     <h3 className="font-medium">Invitation sécurisée au portail partenaire</h3>
+     <p className="text-sm text-muted-foreground">
+      Après contrat signé, l'invitation est rédigée et soumise à Gateway. Une autre personne habilitée
+      doit approuver et expédier l'e-mail. Le partenaire se connecte ensuite via un code OTP,
+      sans mot de passe ni jeton transmis dans l'e-mail.
+     </p>
+     <p className="text-sm">Page publique de connexion : {kind==='supplier'
+       ? 'https://brand-in-a-box.space/suppliers/resume?portal=suppliers'
+       : 'https://brand-in-a-box.space/ops/resume?portal=ops'}</p>
+     {handoffQuery.isError&&<p role="alert" className="text-sm text-destructive">
+      Impossible de vérifier le registre des invitations. Aucune action autorisée.
+     </p>}
+     {!handoffQuery.isError&&!handoffQuery.isLoading&&!handoffQuery.data&&
+      <Button type="button" variant="outline" disabled={accessMutation.isPending}
+       onClick={()=>accessMutation.mutate('prepare')}>Créer une invitation à faire approuver</Button>}
+     {handoffQuery.data&&<div className="space-y-2">
+      <p className="text-sm">Destinataire : {handoffQuery.data.recipient_email}</p>
+      <p className="text-xs text-muted-foreground">Référence Gateway : {handoffQuery.data.outbox_id}</p>
+      <p className="text-sm">Transport : {handoffQuery.data.delivery_state==='confirmed'
+       ? 'Envoi vérifié'
+       : handoffQuery.data.delivery_state==='simulated'
+       ? 'Simulation confirmée (aucun envoi externe)'
+       : 'Approbation / mise en file / rapprochement en attente'}</p>
+      <p className="text-xs text-muted-foreground">
+       La communication doit être approuvée et envoyée via Gateway → Validation.
+       Une simple demande d'envoi ne constitue pas une preuve de livraison.
+      </p>
+      {!['confirmed','simulated'].includes(handoffQuery.data.delivery_state)&&
+       <Button type="button" variant="outline" disabled={accessMutation.isPending}
+        onClick={()=>accessMutation.mutate('confirm')}>Vérifier la confirmation Gateway</Button>}
+     </div>}
+     <p className="text-xs text-muted-foreground">
+      La preuve du transport n'active pas à elle seule les commandes : l'accès opérationnel
+      reste subordonné à l'approbation Platform et aux contrôles de la vague pilote.
+     </p>
+    </div>}
     {next&&<div className="space-y-2 rounded-lg border p-3">
      <p className="font-medium">Prochaine étape : {next[1]}</p>
      <Input value={reference} onChange={e=>setReference(e.target.value)}
