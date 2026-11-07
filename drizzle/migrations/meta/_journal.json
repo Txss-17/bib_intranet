@@ -631,6 +631,13 @@
       "when": 1794042000000,
       "tag": "0090_partner_postapplication_workflows",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1794056400000,
+      "tag": "0092_cross_pole_sourcing",
+      "breakpoints": true
     }
   ]
 }
