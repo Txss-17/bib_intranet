@@ -996,6 +996,15 @@ Deno.serve(async (req) => {
     }
 
     if (body.action === "assign_shipment") {
+      // Do not use the Platform approval status as an operational authorization.
+      // The live submission must be mapped to a canonical, approved pilot 3PL.
+      const { data: approvedPilot, error: pilotError } = await admin.rpc(
+        "bib_pilot_logistics_assignment_allowed",
+        { p_submission: body.platform_submission_id },
+      );
+      if (pilotError || approvedPilot !== true) {
+        throw new BridgeError("Partenaire logistique non sélectionné pour le pilote ou gouvernance indisponible.", 403);
+      }
       await callPlatform("intranet-import", {
         type: "shipment_assignment",
         data: {

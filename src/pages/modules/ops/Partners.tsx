@@ -29,7 +29,7 @@ import {
 } from 'lucide-react';
 import { useOpsPartners } from '@/hooks/useOpsControl';
 import CasePortfolioManager from '@/components/operations/CasePortfolioManager';
-import PartnerPostApplicationWorkflow from '@/components/operations/PartnerPostApplicationWorkflow';
+import PilotPartnerSelection from '@/components/operations/PilotPartnerSelection';
 
 interface Partner {
   id: string;
@@ -296,20 +296,9 @@ const Partners = () => {
         </div>
       </div>
 
-      <Card><CardHeader><CardTitle>Parcours après candidature logistique</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Contact, fiche de besoins, accord, contrat puis transmission des accès.
-            Le recrutement et la contractualisation ne sont pas plafonnés.
-          </p>
-          <select aria-label="Dossier logistique à examiner" className="w-full rounded-md border bg-background p-2"
-            value={selectedOnboarding ?? ''} onChange={e => setSelectedOnboarding(e.target.value || null)}>
-            <option value="">Sélectionner un partenaire</option>
-            {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
-          {selectedOnboarding && <PartnerPostApplicationWorkflow key={selectedOnboarding} kind="logistics" sourceId={selectedOnboarding} />}
-        </CardContent>
-      </Card>
+      <PilotPartnerSelection kind="logistics" candidates={partners.map(p => ({
+        id: p.id, label: p.name, eligible: p.status !== 'suspended' && p.status !== 'inactive',
+      }))} />
 
       <CasePortfolioManager pole="ops" title="Partenaires logistiques" entities={partners.map(p => ({ id: p.id, label: p.name }))} />
 
