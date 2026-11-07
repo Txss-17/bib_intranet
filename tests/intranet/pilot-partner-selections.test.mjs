@@ -5,6 +5,7 @@ const sql = readFileSync(new URL('../../drizzle/migrations/0089_pilot_partner_wa
 const view = readFileSync(new URL('../../src/components/operations/PilotPartnerSelection.tsx', import.meta.url), 'utf8');
 const supplier = readFileSync(new URL('../../src/pages/modules/supplier/SupplierApplications.tsx', import.meta.url), 'utf8');
 const logistics = readFileSync(new URL('../../src/pages/modules/ops/Partners.tsx', import.meta.url), 'utf8');
+const bridge = readFileSync(new URL('../../supabase/functions/platform-bridge/index.ts', import.meta.url), 'utf8');
 
 test('partner recruiting remains unlimited; only pilot operational selection is capped', () => {
  assert.match(sql, /pilot_wave_capacity_exceeded/);
@@ -34,7 +35,24 @@ test('sandbox data and partner rights remain separated', () => {
 
 test('suppliers and logistics can nominate partners without modifying their live operational status', () => {
  assert.match(supplier, /<PilotPartnerSelection kind="supplier"/);
+ assert.match(supplier, /canonicalSuppliers/);
+ assert.match(supplier, /s.status === 'validated'/);
+ assert.match(sql, /FROM public.suppliers/);
+ assert.match(sql, /status='validated'/);
+ assert.doesNotMatch(sql, /FROM public.supplier_applications/);
  assert.match(logistics, /<PilotPartnerSelection kind="logistics"/);
  assert.match(view, /bib_set_pilot_partner_selection/);
  assert.doesNotMatch(view, /\.update\(\{.*status/);
+});
+
+test('logistics real assignments require an approved exact Platform ID mapping', () => {
+ assert.match(sql, /platform_submission_id uuid/);
+ assert.match(sql, /bib_pilot_logistics_submission_unique/);
+ assert.match(sql, /bib_pilot_logistics_assignment_allowed/);
+ assert.match(sql, /s.state='approved'/);
+ assert.match(sql, /lp.status='active'/);
+ assert.match(bridge, /bib_pilot_logistics_assignment_allowed/);
+ assert.match(bridge, /approvedPilot !== true/);
+ assert.ok(bridge.indexOf('approvedPilot !== true') < bridge.indexOf('type: "shipment_assignment"'));
+ assert.match(view, /p_platform_submission_id/);
 });
