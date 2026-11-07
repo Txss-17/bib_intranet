@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS public.bib_pilot_partner_selections (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  partner_kind text NOT NULL CHECK(partner_kind IN ('supplier','logistics')),
  partner_id uuid NOT NULL,
+ platform_submission_id uuid,
  wave integer NOT NULL CHECK(wave BETWEEN 1 AND 3),
  state text NOT NULL DEFAULT 'nominated' CHECK(state IN ('nominated','approved','paused')),
  evidence_reference text,
@@ -15,10 +16,14 @@ CREATE TABLE IF NOT EXISTS public.bib_pilot_partner_selections (
  created_at timestamptz NOT NULL DEFAULT now(),
  updated_at timestamptz NOT NULL DEFAULT now(),
  UNIQUE(partner_kind,partner_id,test_account),
+ CHECK(partner_kind='logistics' OR platform_submission_id IS NULL),
  CHECK(state<>'approved' OR
   (nullif(btrim(coalesce(evidence_reference,'')),'') IS NOT NULL
    AND approved_by IS NOT NULL AND approved_at IS NOT NULL))
 );
+CREATE UNIQUE INDEX IF NOT EXISTS bib_pilot_logistics_submission_unique
+ ON public.bib_pilot_partner_selections(platform_submission_id,test_account)
+ WHERE partner_kind='logistics' AND platform_submission_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS bib_pilot_partner_wave_state_idx
  ON public.bib_pilot_partner_selections(test_account,wave,partner_kind,state);
 CREATE TABLE IF NOT EXISTS public.bib_pilot_partner_events(
@@ -48,14 +53,15 @@ GRANT SELECT ON public.bib_pilot_partner_events TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.bib_set_pilot_partner_selection(
  p_kind text, p_partner_id uuid, p_wave integer, p_action text,
- p_reference text DEFAULT NULL
+ p_reference text DEFAULT NULL, p_platform_submission_id uuid DEFAULT NULL
 ) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE
  v_actor uuid:=auth.uid(); v_test boolean:=public.intranet_is_test_mode();
  v_id uuid; v_previous text; v_nominator uuid;
  v_limit integer; v_active integer; v_next text;
 BEGIN
- IF v_actor IS NULL OR p_kind NOT IN ('supplier','logistics')
+ IF v_actor IS NULL OR (p_kind='supplier' AND p_platform_submission_id IS NOT NULL)
+    OR p_kind NOT IN ('supplier','logistics')
     OR p_action NOT IN ('nominate','approve','pause') OR p_wave NOT BETWEEN 1 AND 3
     OR p_partner_id IS NULL THEN
   RAISE EXCEPTION 'invalid_pilot_selection' USING ERRCODE='22023';
@@ -75,7 +81,7 @@ BEGIN
  ) THEN
   RAISE EXCEPTION 'canonical_supplier_must_be_validated' USING ERRCODE='23514';
  END IF;
- IF p_kind='logistics' AND NOT EXISTS(SELECT 1 FROM public.logistics_partners WHERE id=p_partner_id AND status NOT IN ('suspended','inactive')) THEN
+ IF p_kind='logistics' AND NOT EXISTS(SELECT 1 FROM public.logistics_partners WHERE id=p_partner_id AND status='active') THEN
   RAISE EXCEPTION 'logistics_partner_unavailable' USING ERRCODE='23514';
  END IF;
  SELECT id,state,nominated_by INTO v_id,v_previous,v_nominator
@@ -86,10 +92,11 @@ BEGIN
    RAISE EXCEPTION 'pause_approved_selection_before_changing_wave' USING ERRCODE='23514';
   END IF;
   INSERT INTO public.bib_pilot_partner_selections(
-   partner_kind,partner_id,wave,state,nominated_by,updated_by,test_account)
-  VALUES(p_kind,p_partner_id,p_wave,'nominated',v_actor,v_actor,v_test)
+   partner_kind,partner_id,platform_submission_id,wave,state,nominated_by,updated_by,test_account)
+  VALUES(p_kind,p_partner_id,p_platform_submission_id,p_wave,'nominated',v_actor,v_actor,v_test)
   ON CONFLICT(partner_kind,partner_id,test_account) DO UPDATE
-   SET wave=excluded.wave,state='nominated',approved_by=NULL,approved_at=NULL,
+   SET wave=excluded.wave,platform_submission_id=excluded.platform_submission_id,
+       state='nominated',approved_by=NULL,approved_at=NULL,
        evidence_reference=NULL,nominated_by=excluded.nominated_by,updated_by=v_actor,updated_at=now()
   RETURNING id INTO v_id;
   v_next:='nominated';
@@ -98,6 +105,7 @@ BEGIN
    RAISE EXCEPTION 'independent_review_required' USING ERRCODE='23514';
   END IF;
   IF p_wave<>(SELECT wave FROM public.bib_pilot_partner_selections WHERE id=v_id)
+    OR (p_kind='logistics' AND (SELECT platform_submission_id FROM public.bib_pilot_partner_selections WHERE id=v_id) IS NULL)
     OR length(btrim(coalesce(p_reference,''))) NOT BETWEEN 8 AND 500 THEN
    RAISE EXCEPTION 'approval_evidence_required' USING ERRCODE='23514';
   END IF;
@@ -122,7 +130,21 @@ BEGIN
  VALUES(v_id,v_actor,p_action,v_previous,v_next,nullif(btrim(coalesce(p_reference,'')),''));
  RETURN v_id;
 END $$;
-REVOKE ALL ON FUNCTION public.bib_set_pilot_partner_selection(text,uuid,integer,text,text) FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION public.bib_set_pilot_partner_selection(text,uuid,integer,text,text) TO authenticated;
+REVOKE ALL ON FUNCTION public.bib_set_pilot_partner_selection(text,uuid,integer,text,text,uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.bib_set_pilot_partner_selection(text,uuid,integer,text,text,uuid) TO authenticated;
 -- This is a tracked selection only, NEVER a direct authorization to transmit
 -- payments, execute stock moves, or mutate partner live-service flags.
+
+-- Operational bridge gate: exact Platform submission ID must have a reviewed
+-- canonical logistics mapping in the real pilot register; no name-based joins.
+CREATE OR REPLACE FUNCTION public.bib_pilot_logistics_assignment_allowed(p_submission uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
+ SELECT EXISTS (
+  SELECT 1 FROM public.bib_pilot_partner_selections s
+  JOIN public.logistics_partners lp ON lp.id=s.partner_id
+  WHERE s.partner_kind='logistics' AND s.platform_submission_id=p_submission
+    AND s.test_account=false AND s.state='approved' AND lp.status='active'
+ );
+$$;
+REVOKE ALL ON FUNCTION public.bib_pilot_logistics_assignment_allowed(uuid) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.bib_pilot_logistics_assignment_allowed(uuid) TO service_role;
