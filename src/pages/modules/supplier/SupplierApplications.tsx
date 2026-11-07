@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Link } from 'react-router-dom';
 import { ProtectedScreen } from '@/components/ProtectedScreen';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,6 +31,15 @@ function statusColor(s: string) {
 
 export default function SupplierApplications() {
   const { data: apps = [], isLoading, isError, refetch } = useSupplierApplications();
+  // Applications are leads; the wave register refers to canonical supplier IDs.
+  const canonicalSuppliers = useQuery({
+    queryKey: ['pilot-canonical-suppliers'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('suppliers').select('id,name,status').order('name');
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState<string>('all');
   const [priority, setPriority] = useState<string>('all');
@@ -77,9 +88,12 @@ export default function SupplierApplications() {
         </div>
 
 
-          <PilotPartnerSelection kind="supplier" candidates={apps.map(a => ({
-            id: a.id, label: a.company_name, eligible: a.status === 'approved',
-          }))} />
+          {canonicalSuppliers.isError && <p role="alert" className="text-sm text-destructive">
+            Fournisseurs de référence indisponibles : impossible de sélectionner un fournisseur pilote.
+          </p>}
+          {!canonicalSuppliers.isError && <PilotPartnerSelection kind="supplier" candidates={(canonicalSuppliers.data ?? []).map(s => ({
+            id: s.id, label: s.name, eligible: s.status === 'validated',
+          }))} />}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card><CardContent className="pt-6"><div className="text-xs text-muted-foreground">Nouvelles</div><div className="text-2xl font-semibold mt-1">{isError ? "—" : counts.new}</div></CardContent></Card>
