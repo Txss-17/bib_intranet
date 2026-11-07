@@ -13,6 +13,7 @@ import { ExportButtons } from '@/components/ExportButtons';
 import { useSupplierApplications } from '@/hooks/useSupplierApplications';
 import { Inbox, Flame } from 'lucide-react';
 import PilotPartnerSelection from '@/components/operations/PilotPartnerSelection';
+import SourcingWorkspace from '@/components/operations/SourcingWorkspace';
 
 
 const statusLabels: Record<string, string> = {
@@ -91,6 +92,8 @@ export default function SupplierApplications() {
           {canonicalSuppliers.isError && <p role="alert" className="text-sm text-destructive">
             Fournisseurs de référence indisponibles : impossible de sélectionner un fournisseur pilote.
           </p>}
+          <SourcingWorkspace pole="supplier" />
+
           {!canonicalSuppliers.isError && <PilotPartnerSelection kind="supplier" candidates={(canonicalSuppliers.data ?? []).map(s => ({
             id: s.id, label: s.name, eligible: s.status === 'validated',
           }))} />}
