@@ -1,23 +1,29 @@
-# Accès fournisseur et logisticien après signature — 7 novembre 2026
+# BIB — Invitation et habilitation des accès partenaires après contrat
+Date : 7 novembre 2026. Branche de travail : PR #58.
 
-## Décision opérationnelle
-La validation ou signature du contrat intervient avant toute remise des informations d'accès. Le processus sépare (1) l'approbation du contrat, (2) la préparation de l'invitation, (3) la vérification indépendante de la transmission, (4) l'ouverture d'une session partenaire, (5) l'autorisation des opérations actives. La préparation et la remise des accès n'autorisent pas les commandes live.
+## Décision
+Fournisseurs et logisticiens ne reçoivent leurs instructions de connexion qu'après la validation du contrat dans Intrabib. L'accès au portail ne signifie pas l'activation opérationnelle du partenaire. La capacité opérationnelle et les sélections par vagues demeurent gouvernées séparément (PR #56).
 
-## Code de cette PR
-- Migration **0091**, additive, après la 0090 : table privée `bib_partner_access_handoffs`, destinataire professionnel, référence d'invitation, canal, statut et référence de preuve de livraison ; aucune donnée d'authentification stockée. RLS par environnement et pôle.
-- RPC `bib_record_partner_access_handoff` : peut préparer seulement après `contract_signed`, confirme uniquement avec une personne différente, et valide la correspondance entre le destinataire et le dossier correspondant.
-- La fonction `bib_advance_partner_onboarding` refuse de passer de `contract_signed` à `portal_access_recorded` sans remise confirmée et référencée.
-- `PartnerPostApplicationWorkflow` : affiche les points d'entrée publics de reprise de connexion et le formulaire de preuve. **Ce formulaire n'envoie aucun e-mail et n'affiche aucun jeton.**
+## Parcours implémenté dans la PR #58
+1. `bib_partner_onboarding_cases.stage='contract_signed'` constitue le préalable serveur.
+2. Un collaborateur habilité au dossier et à Gateway crée une demande via `bib_prepare_partner_access_invitation`. Le destinataire est lu par le serveur depuis la candidature fournisseur ou le dossier logistique canonique ; il ne peut pas être modifié librement dans l'UI.
+3. `submit_intranet_outbox` enregistre une communication idempotente, associée à l'identifiant du dossier. Aucun envoi n'est réalisé à ce stade ; le circuit Gateway préexistant exige qu'une deuxième personne valide le contenu et l'expédition.
+4. Le message contient une adresse publique de connexion : `https://brand-in-a-box.space/suppliers/resume?portal=suppliers` ou `https://brand-in-a-box.space/ops/resume?portal=ops`. Pas de mot de passe ni de lien vers `/portal/:token`.
+5. Le collaborateur habilité passe par **Gateway → Validation** pour approuver, mettre en file et, si nécessaire, rapprocher la remise avec Gmail. Le backend `bib_confirm_partner_access_delivery` ne valide la remise réelle que lorsque l'outbox indique `sent`, avec approbateur différent de l'auteur, destinataire identique et environnement non test.
+6. Pour un compte sandbox, un statut `simulated` est autorisé uniquement après approbation Gateway sans expédition externe. La simulation est distinguée du transport réel.
+7. La progression vers `portal_access_recorded` est refusée si la preuve n'est ni `confirmed` (réelle), ni `simulated` dans l'environnement d'essai.
 
-## Accès partenaire via Platform
-- Fournisseur : `https://brand-in-a-box.space/suppliers/resume?portal=suppliers`.
-- Logistique : `https://brand-in-a-box.space/ops/resume?portal=ops`.
-- Ces pages utilisent le processus OTP existant ; un e-mail d'invitation ne doit contenir que l'URL publique et les instructions, ni code OTP, ni mot de passe, ni `access_token` de dossier.
-- La fonction Platform `partner_load_operational_portal` utilise actuellement une vérification de statut `approved` et des jetons de dossier. Elle n'est pas liée au contrat signé ni au statut de sélection pilote Intrabib dans cette PR. La refonte de l'accès réellement révocable et borné est suivie par l'issue https://github.com/Txss-17/bib_platform/issues/41.
+## Sécurité et restrictions
+- RLS et table sans droits directs d'écriture des utilisateurs. Les RPC contrôlent pôle, droits Gateway, identité, destinataire, environnement et étape contractuelle.
+- Envoi d'instructions de connexion publiques ; les codes OTP sont générés et vérifiés séparément par Platform. Pas de secret conservé dans le registre.
+- Gateway dispose de sa propre double validation et du traitement idempotent des e-mails, évitant le contournement par un simple clic de validation dans le dossier.
+- Le courrier ou sa préparation ne crée pas automatiquement de session, ne fixe pas le statut Platform `approved`, n'active pas les partenaires pilotes ni les permissions de commandes live.
+- Le statut `approved` existant de Platform et les liens `/portal/:token` requièrent une revue de découplage avec le contrat et la sélection pilote ; suivi dans https://github.com/Txss-17/bib_platform/issues/41.
+- Le portefeuille partenaires conserve un recrutement et une contractualisation sans plafond ; les flux actifs de la première vague portent sur deux fournisseurs et un logisticien.
 
-## Préproduction / garde-fous
-- Vérifier les migrations 0089, 0090 et 0091 ainsi que le journal des migrations et les bases réelles avant toute application.
-- Tester deux personnes habilitées distinctes, mauvaise adresse, refus du statut sans preuve, mauvais pôle, sandbox vs live, double action et révocation.
-- Tester la livraison via Gateway et le retour d'une preuve de file/livraison avant automatisation : pas de confirmation sur simple tentative d'envoi.
-- Ne pas transmettre de secret dans les notes Intrabib.
-- Aucune invitation réelle, migration distante ni autorisation opérationnelle n'est déclenchée par cette PR.
+## Dépendances et recette avant préproduction
+- Migration additive `0091_partner_access_handoff.sql` sur un schéma Intrabib contenant `0090_partner_postapplication_workflows.sql` et Gateway Outbox.
+- Rapprocher l'historique des migrations, notamment la PR #56/0089 encore non fusionnée ; aucune migration distante exécutée par cette PR.
+- Tester avec profils réels de préproduction : contrat absent, droits de pôle absents, auteur = approbateur, destinataire invalidé, e-mail non envoyé, approbation Gateway manquante, doublon de demande, sandbox, session/permissions Platform, suspension, rollback.
+- Confirmer la configuration des services e-mail/OTP et des URL publiques. L'intégration bout en bout des habilitations de Platform n'est pas prouvée par les seuls tests statiques.
+- Aucune invitation réelle n'a été envoyée et aucun déploiement n'a été déclenché par ce lot.
