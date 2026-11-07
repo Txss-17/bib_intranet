@@ -103,9 +103,9 @@ CREATE OR REPLACE FUNCTION public.bib_update_sourcing_review(
 ) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE m public.bib_sourcing_missions%ROWTYPE; a uuid:=auth.uid(); candidate_id uuid;
 BEGIN
- SELECT c.id,m.* INTO candidate_id,m FROM public.bib_sourcing_candidates c
- JOIN public.bib_sourcing_missions m ON m.id=c.mission_id
- WHERE c.id=p_candidate;
+ SELECT c.id INTO candidate_id FROM public.bib_sourcing_candidates c WHERE c.id=p_candidate;
+ SELECT m.* INTO m FROM public.bib_sourcing_missions m JOIN public.bib_sourcing_candidates c
+ ON c.mission_id=m.id WHERE c.id=p_candidate FOR UPDATE OF m;
  IF a IS NULL OR candidate_id IS NULL OR m.test_account<>public.intranet_is_test_mode()
  OR NOT public.bib_sourcing_allowed(m.pole) OR m.status IN ('closed','cancelled')
  OR p_status NOT IN ('identified','contacted','responded','evaluating','shortlisted','not_selected')
