@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { ExportButtons } from '@/components/ExportButtons';
 import { useSupplierApplications } from '@/hooks/useSupplierApplications';
 import { Inbox, Flame } from 'lucide-react';
+import PilotPartnerSelection from '@/components/operations/PilotPartnerSelection';
 
 
 const statusLabels: Record<string, string> = {
@@ -75,6 +76,10 @@ export default function SupplierApplications() {
           {!isLoading && !isError && <ExportButtons data={exportRows} columns={exportColumns} filename="candidatures-fournisseurs" title="Candidatures fournisseurs" />}
         </div>
 
+
+          <PilotPartnerSelection kind="supplier" candidates={apps.map(a => ({
+            id: a.id, label: a.company_name, eligible: a.status === 'approved',
+          }))} />
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <Card><CardContent className="pt-6"><div className="text-xs text-muted-foreground">Nouvelles</div><div className="text-2xl font-semibold mt-1">{isError ? "—" : counts.new}</div></CardContent></Card>
