@@ -21,6 +21,15 @@ BEGIN
  );
 END $$;
 
+-- Legal reviewers can read logistics contract dossiers without receiving Ops write rights.
+DROP POLICY IF EXISTS bib_partner_onboarding_cases_read ON public.bib_partner_onboarding_cases;
+CREATE POLICY bib_partner_onboarding_cases_read ON public.bib_partner_onboarding_cases
+ FOR SELECT TO authenticated USING (
+ test_account=public.intranet_is_test_mode() AND (
+  public.bib_partner_onboarding_permitted(partner_kind,'read') OR
+  (partner_kind='logistics' AND
+   coalesce(public.can_intranet_action('compliance.contracts','read'),false))
+ ));
 -- Only an authorized legal/contracts reviewer may validate the contract.
 -- The signing transition requires a distinct actor.
 
@@ -82,7 +91,11 @@ BEGIN
  IF v_actor IS NULL OR p_source_id IS NULL OR p_kind NOT IN ('supplier','logistics')
   OR length(btrim(coalesce(p_evidence_reference,''))) NOT BETWEEN 8 AND 500
   OR length(coalesce(p_notes,''))>2000
-  OR NOT public.bib_partner_onboarding_permitted(p_kind,'update') THEN
+  OR NOT (public.bib_partner_onboarding_permitted(p_kind,'update')
+   OR (p_kind='logistics' AND p_expected_stage='provider_contract_received'
+    AND p_next_stage='provider_contract_reviewed'
+    AND coalesce(public.can_intranet_action('compliance.contracts','update'),false)))
+ THEN
   RAISE EXCEPTION 'partner_onboarding_not_authorized' USING ERRCODE='42501';
  END IF;
  IF p_kind='supplier' AND (p_platform_submission_id IS NOT NULL OR NOT EXISTS(
