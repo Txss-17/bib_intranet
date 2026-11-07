@@ -1,4 +1,5 @@
 import { ManagedDocumentLink } from '@/components/operations/ManagedDocumentLink';
+import PartnerPostApplicationWorkflow from '@/components/operations/PartnerPostApplicationWorkflow';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
@@ -82,7 +83,12 @@ export default function SupplierApplicationDetail() {
               <TabsTrigger value="documents">Documents</TabsTrigger>
               <TabsTrigger value="decision">Décision</TabsTrigger>
               <TabsTrigger value="history">Historique</TabsTrigger>
+              <TabsTrigger value="postapplication">Après candidature</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="postapplication" className="space-y-4">
+              <PartnerPostApplicationWorkflow kind="supplier" sourceId={app.id} />
+            </TabsContent>
 
             <TabsContent value="overview" className="space-y-4">
               <Card>

@@ -77,6 +77,7 @@ const Partners = () => {
   } = useOpsPartners();
 
   const [search, setSearch] = useState('');
+  const [selectedOnboarding, setSelectedOnboarding] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<
     'all' | 'active' | 'pending' | 'suspended' | 'inactive'
   >('all');
