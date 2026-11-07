@@ -49,3 +49,17 @@ test('governed RPCs and RLS keep invitations and publication outside the workflo
  assert.match(suppliers,/PartnerPostApplicationWorkflow kind="supplier"/);
  assert.match(logistics,/PartnerPostApplicationWorkflow key=\{selectedOnboarding\} kind="logistics"/);
 });
+
+test('access invitation is a separate verified post-contract gate', () => {
+ assert.match(sql, /access_invitation_prepared/);
+ assert.match(sql, /confirmed_invitation_delivery_required/);
+ assert.match(sql, /bib_partner_access_handoffs/);
+ assert.match(sql, /delivery_state='confirmed'/);
+ assert.match(sql, /v_handoff\.prepared_by=v_actor/);
+ assert.match(sql, /supplier_recipient_mismatch/);
+ assert.match(sql, /logistics_recipient_mismatch/);
+ assert.match(sql, /p_delivery_reference ~\*/);
+ assert.match(component, /bib_record_partner_access_handoff/);
+ assert.match(component, /code OTP/);
+ assert.doesNotMatch(component, /send-transactional-email|generateLink|access_token:/);
+});
