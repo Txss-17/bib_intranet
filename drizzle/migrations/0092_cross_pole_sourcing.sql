@@ -107,8 +107,8 @@ CREATE OR REPLACE FUNCTION public.bib_update_sourcing_review(
 DECLARE m public.bib_sourcing_missions%ROWTYPE; a uuid:=auth.uid(); candidate_id uuid;
 BEGIN
  SELECT c.id INTO candidate_id FROM public.bib_sourcing_candidates c WHERE c.id=p_candidate;
- SELECT m.* INTO m FROM public.bib_sourcing_missions m JOIN public.bib_sourcing_candidates c
- ON c.mission_id=m.id WHERE c.id=p_candidate FOR UPDATE OF m;
+ SELECT sm.* INTO m FROM public.bib_sourcing_missions sm JOIN public.bib_sourcing_candidates c
+ ON c.mission_id=sm.id WHERE c.id=p_candidate FOR UPDATE OF sm;
  IF a IS NULL OR candidate_id IS NULL OR m.test_account<>public.intranet_is_test_mode()
  OR NOT public.bib_sourcing_allowed(m.pole) OR m.status IN ('closed','cancelled')
  OR p_status NOT IN ('identified','contacted','responded','evaluating','shortlisted','not_selected')
@@ -210,8 +210,8 @@ CREATE OR REPLACE FUNCTION public.bib_update_sourcing_review(
 DECLARE m public.bib_sourcing_missions%ROWTYPE; a uuid:=auth.uid(); candidate_id uuid;
 BEGIN
  SELECT c.id INTO candidate_id FROM public.bib_sourcing_candidates c WHERE c.id=p_candidate;
- SELECT m.* INTO m FROM public.bib_sourcing_missions m JOIN public.bib_sourcing_candidates c
- ON c.mission_id=m.id WHERE c.id=p_candidate FOR UPDATE OF m;
+ SELECT sm.* INTO m FROM public.bib_sourcing_missions sm JOIN public.bib_sourcing_candidates c
+ ON c.mission_id=sm.id WHERE c.id=p_candidate FOR UPDATE OF sm;
  IF a IS NULL OR candidate_id IS NULL OR m.test_account<>public.intranet_is_test_mode()
  OR NOT public.bib_sourcing_allowed(m.pole) OR m.status IN ('closed','cancelled')
  OR p_status NOT IN ('identified','contacted','responded','evaluating','shortlisted','not_selected')
@@ -236,9 +236,9 @@ CREATE OR REPLACE FUNCTION public.bib_set_sourcing_offer_metrics(
 ) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE m public.bib_sourcing_missions%ROWTYPE; a uuid:=auth.uid();
 BEGIN
- SELECT m.* INTO m FROM public.bib_sourcing_missions m
- JOIN public.bib_sourcing_candidates c ON c.mission_id=m.id
- WHERE c.id=p_candidate FOR UPDATE OF m;
+ SELECT sm.* INTO m FROM public.bib_sourcing_missions sm
+ JOIN public.bib_sourcing_candidates c ON c.mission_id=sm.id
+ WHERE c.id=p_candidate FOR UPDATE OF sm;
  IF a IS NULL OR m.id IS NULL OR m.test_account<>public.intranet_is_test_mode()
  OR NOT public.bib_sourcing_allowed(m.pole) OR m.status IN ('closed','cancelled')
  OR (p_currency IS NOT NULL AND p_currency !~ '^[A-Z]{3}$')
@@ -277,8 +277,8 @@ CREATE OR REPLACE FUNCTION public.bib_record_sourcing_followup(
 ) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE m public.bib_sourcing_missions%ROWTYPE; a uuid:=auth.uid(); v_id uuid;
 BEGIN
- SELECT m.* INTO m FROM public.bib_sourcing_missions m JOIN public.bib_sourcing_candidates c
- ON c.mission_id=m.id WHERE c.id=p_candidate FOR UPDATE OF m;
+ SELECT sm.* INTO m FROM public.bib_sourcing_missions sm JOIN public.bib_sourcing_candidates c
+ ON c.mission_id=sm.id WHERE c.id=p_candidate FOR UPDATE OF sm;
  IF a IS NULL OR m.id IS NULL OR m.test_account<>public.intranet_is_test_mode()
  OR NOT public.bib_sourcing_allowed(m.pole) OR m.status IN ('closed','cancelled')
  OR p_due_at IS NULL OR p_outcome NOT IN ('scheduled','contacted','responded','cancelled')
@@ -305,7 +305,7 @@ BEGIN
  SELECT * INTO c FROM public.bib_sourcing_candidates WHERE id=p_candidate FOR UPDATE;
  IF c.id IS NULL THEN RAISE EXCEPTION 'sourcing_candidate_missing' USING ERRCODE='23514'; END IF;
  SELECT * INTO m FROM public.bib_sourcing_missions WHERE id=c.mission_id FOR UPDATE;
- IF a IS NULL OR m.test_account<>public.intranet_is_test_mode() OR m.pole<>'supplier'
+ IF a IS NULL OR public.intranet_is_test_mode() OR m.test_account IS DISTINCT FROM false OR m.pole<>'supplier'
  OR NOT public.bib_sourcing_allowed('supplier') OR c.candidate_status<>'shortlisted'
  OR length(btrim(coalesce(p_evidence,''))) NOT BETWEEN 8 AND 500
  OR normalized_email !~ '^[^[:space:]@]+@[^[:space:]@]+[.][^[:space:]@]+$'
