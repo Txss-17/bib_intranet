@@ -1,160 +1,105 @@
--- Follow-on to migration 0090. The original migration remains immutable.
--- A signed contract does not itself allow marking access as delivered.
--- Access invitation is informational only. No credentials, OTPs, token URLs or
--- passwords may be stored here. Delivery proof must originate from the
--- approved communication process, not a self-reported UI checkbox.
+-- 0091 follows merged migration 0090 without rewriting its history.
+-- Partner portal invitations use the existing independently approved Gateway Outbox.
+-- No passwords, OTP codes or partner access tokens are stored or emailed.
 CREATE TABLE IF NOT EXISTS public.bib_partner_access_handoffs (
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  case_id uuid NOT NULL UNIQUE REFERENCES public.bib_partner_onboarding_cases(id),
+ outbox_id uuid NOT NULL UNIQUE REFERENCES public.intranet_outbox(id),
+ recipient_email text NOT NULL,
  test_account boolean NOT NULL,
- channel text NOT NULL CHECK(channel IN ('transactional_email','verified_manual')),
- recipient_email text NOT NULL CHECK(recipient_email ~ '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+
-CREATE OR REPLACE FUNCTION public.bib_record_partner_catalog_eligibility(
- p_case_id uuid,p_sku text,p_description text,p_status text,
- p_documentary jsonb,p_certifications jsonb,p_audit_reference text DEFAULT NULL
-) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
-DECLARE v_case public.bib_partner_onboarding_cases%ROWTYPE; v_actor uuid:=auth.uid(); v_id uuid;
-BEGIN
- SELECT * INTO v_case FROM public.bib_partner_onboarding_cases WHERE id=p_case_id FOR UPDATE;
- IF v_actor IS NULL OR v_case.id IS NULL OR v_case.partner_kind<>'supplier'
- OR v_case.test_account<>public.intranet_is_test_mode()
- OR NOT public.bib_partner_onboarding_permitted('supplier','update')
- OR v_case.stage NOT IN ('catalog_received','catalog_reviewed','products_selected')
- OR length(btrim(coalesce(p_sku,''))) NOT BETWEEN 1 AND 120
- OR length(btrim(coalesce(p_description,''))) NOT BETWEEN 1 AND 1000
- OR p_status NOT IN ('under_review','eligible','rejected','changes_requested')
- OR jsonb_typeof(p_documentary) IS DISTINCT FROM 'array'
- OR jsonb_typeof(p_certifications) IS DISTINCT FROM 'array'
- OR (p_status='eligible' AND jsonb_array_length(p_documentary)=0) THEN
-  RAISE EXCEPTION 'catalog_eligibility_not_authorized' USING ERRCODE='42501';
- END IF;
- INSERT INTO public.bib_partner_catalog_eligibility
- (case_id,sku,product_description,status,documentary_evidence,certification_evidence,
-  audit_reuse_reference,reviewed_by,reviewed_at,test_account)
- VALUES(p_case_id,btrim(p_sku),btrim(p_description),p_status,p_documentary,p_certifications,
-  nullif(btrim(coalesce(p_audit_reference,'')),''),CASE WHEN p_status='under_review' THEN NULL ELSE v_actor END,
-  CASE WHEN p_status='under_review' THEN NULL ELSE now() END,v_case.test_account)
- ON CONFLICT(case_id,sku) DO UPDATE SET product_description=EXCLUDED.product_description,
- status=EXCLUDED.status,documentary_evidence=EXCLUDED.documentary_evidence,
- certification_evidence=EXCLUDED.certification_evidence,audit_reuse_reference=EXCLUDED.audit_reuse_reference,
- reviewed_by=EXCLUDED.reviewed_by,reviewed_at=EXCLUDED.reviewed_at,updated_at=now()
- RETURNING id INTO v_id;
- RETURN v_id;
-END $$;
-REVOKE ALL ON FUNCTION public.bib_record_partner_catalog_eligibility(uuid,text,text,text,jsonb,jsonb,text)
- FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION public.bib_record_partner_catalog_eligibility(uuid,text,text,text,jsonb,jsonb,text)
- TO authenticated;
-),
- invitation_reference text NOT NULL CHECK(length(btrim(invitation_reference)) BETWEEN 8 AND 500),
- delivery_state text NOT NULL DEFAULT 'prepared' CHECK(delivery_state IN ('prepared','queued','confirmed','failed')),
- delivery_reference text,
+ delivery_state text NOT NULL DEFAULT 'prepared'
+  CHECK (delivery_state IN ('prepared','confirmed')),
  prepared_by uuid NOT NULL,
  confirmed_by uuid,
  confirmed_at timestamptz,
  created_at timestamptz NOT NULL DEFAULT now(),
- updated_at timestamptz NOT NULL DEFAULT now(),
- CHECK(delivery_state<>'confirmed' OR (
-  confirmed_by IS NOT NULL AND confirmed_at IS NOT NULL
-  AND length(btrim(coalesce(delivery_reference,''))) BETWEEN 8 AND 500))
+ CHECK (delivery_state <> 'confirmed' OR
+  (confirmed_by IS NOT NULL AND confirmed_at IS NOT NULL))
 );
 ALTER TABLE public.bib_partner_access_handoffs ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.bib_partner_access_handoffs FROM PUBLIC,anon,authenticated;
 GRANT SELECT ON public.bib_partner_access_handoffs TO authenticated;
-CREATE POLICY bib_partner_access_handoffs_read ON public.bib_partner_access_handoffs
- FOR SELECT TO authenticated USING(test_account=public.intranet_is_test_mode()
- AND EXISTS(SELECT 1 FROM public.bib_partner_onboarding_cases c WHERE c.id=case_id));
+CREATE POLICY bib_partner_access_handoffs_read
+ ON public.bib_partner_access_handoffs FOR SELECT TO authenticated
+ USING (test_account=public.intranet_is_test_mode() AND EXISTS (
+  SELECT 1 FROM public.bib_partner_onboarding_cases c
+  WHERE c.id=case_id AND public.bib_partner_onboarding_permitted(c.partner_kind,'read')
+ ));
 
-CREATE OR REPLACE FUNCTION public.bib_record_partner_access_handoff(
- p_case_id uuid,p_action text,p_channel text,p_recipient text,
- p_invitation_reference text,p_delivery_reference text DEFAULT NULL
-) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $
-DECLARE v_actor uuid:=auth.uid(); v_case public.bib_partner_onboarding_cases%ROWTYPE;
- v_handoff public.bib_partner_access_handoffs%ROWTYPE; v_id uuid;
+CREATE OR REPLACE FUNCTION public.bib_prepare_partner_access_invitation(p_case_id uuid)
+RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
+DECLARE v_actor uuid:=auth.uid(); c public.bib_partner_onboarding_cases%ROWTYPE;
+ v_email text; v_url text; v_outbox jsonb; v_id uuid;
 BEGIN
- SELECT * INTO v_case FROM public.bib_partner_onboarding_cases WHERE id=p_case_id FOR UPDATE;
- IF v_actor IS NULL OR v_case.id IS NULL OR v_case.test_account<>public.intranet_is_test_mode()
-  OR NOT public.bib_partner_onboarding_permitted(v_case.partner_kind,'update')
-  OR v_case.stage NOT IN ('access_invitation_prepared','portal_access_recorded')
-  OR p_action NOT IN ('prepare','confirm') OR p_channel NOT IN ('transactional_email','verified_manual')
-  OR length(btrim(coalesce(p_invitation_reference,''))) NOT BETWEEN 8 AND 500
-  OR p_recipient !~ '^[^[:space:]@]+@[^[:space:]@]+\\.[^[:space:]@]+
-CREATE OR REPLACE FUNCTION public.bib_record_partner_catalog_eligibility(
- p_case_id uuid,p_sku text,p_description text,p_status text,
- p_documentary jsonb,p_certifications jsonb,p_audit_reference text DEFAULT NULL
-) RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
-DECLARE v_case public.bib_partner_onboarding_cases%ROWTYPE; v_actor uuid:=auth.uid(); v_id uuid;
-BEGIN
- SELECT * INTO v_case FROM public.bib_partner_onboarding_cases WHERE id=p_case_id FOR UPDATE;
- IF v_actor IS NULL OR v_case.id IS NULL OR v_case.partner_kind<>'supplier'
- OR v_case.test_account<>public.intranet_is_test_mode()
- OR NOT public.bib_partner_onboarding_permitted('supplier','update')
- OR v_case.stage NOT IN ('catalog_received','catalog_reviewed','products_selected')
- OR length(btrim(coalesce(p_sku,''))) NOT BETWEEN 1 AND 120
- OR length(btrim(coalesce(p_description,''))) NOT BETWEEN 1 AND 1000
- OR p_status NOT IN ('under_review','eligible','rejected','changes_requested')
- OR jsonb_typeof(p_documentary) IS DISTINCT FROM 'array'
- OR jsonb_typeof(p_certifications) IS DISTINCT FROM 'array'
- OR (p_status='eligible' AND jsonb_array_length(p_documentary)=0) THEN
-  RAISE EXCEPTION 'catalog_eligibility_not_authorized' USING ERRCODE='42501';
+ SELECT * INTO c FROM public.bib_partner_onboarding_cases WHERE id=p_case_id FOR UPDATE;
+ IF v_actor IS NULL OR c.id IS NULL OR c.stage<>'contract_signed'
+  OR c.test_account<>public.intranet_is_test_mode()
+  OR NOT public.bib_partner_onboarding_permitted(c.partner_kind,'update')
+  OR NOT public.can_intranet_action('gateway.compose','create')
+  OR NOT public.can_intranet_action('gateway.compose','read')
+ THEN RAISE EXCEPTION 'signed_contract_and_gateway_permission_required' USING ERRCODE='42501'; END IF;
+ IF c.partner_kind='supplier' THEN
+  SELECT lower(contact_email) INTO v_email FROM public.supplier_applications WHERE id=c.source_id;
+  v_url:='https://brand-in-a-box.space/suppliers/resume?portal=suppliers';
+ ELSE
+  SELECT lower(contact_email) INTO v_email FROM public.logistics_partners WHERE id=c.source_id;
+  v_url:='https://brand-in-a-box.space/ops/resume?portal=ops';
  END IF;
- INSERT INTO public.bib_partner_catalog_eligibility
- (case_id,sku,product_description,status,documentary_evidence,certification_evidence,
-  audit_reuse_reference,reviewed_by,reviewed_at,test_account)
- VALUES(p_case_id,btrim(p_sku),btrim(p_description),p_status,p_documentary,p_certifications,
-  nullif(btrim(coalesce(p_audit_reference,'')),''),CASE WHEN p_status='under_review' THEN NULL ELSE v_actor END,
-  CASE WHEN p_status='under_review' THEN NULL ELSE now() END,v_case.test_account)
- ON CONFLICT(case_id,sku) DO UPDATE SET product_description=EXCLUDED.product_description,
- status=EXCLUDED.status,documentary_evidence=EXCLUDED.documentary_evidence,
- certification_evidence=EXCLUDED.certification_evidence,audit_reuse_reference=EXCLUDED.audit_reuse_reference,
- reviewed_by=EXCLUDED.reviewed_by,reviewed_at=EXCLUDED.reviewed_at,updated_at=now()
- RETURNING id INTO v_id;
+ IF v_email IS NULL OR length(v_email)>254 OR strpos(v_email,'@')<2
+  OR strpos(split_part(v_email,'@',2),'.')<2 THEN
+  RAISE EXCEPTION 'verified_professional_recipient_required' USING ERRCODE='23514';
+ END IF;
+ -- Idempotency key is case UUID; no duplicate invitation on retries.
+ -- Gateway still requires another authorized person to approve and dispatch.
+ SELECT public.submit_intranet_outbox(c.id,NULL,ARRAY[v_email],
+  'BIB - Accès sécurisé à votre espace partenaire',
+  'Votre contrat partenaire est enregistré. Pour accéder à votre espace BIB, '
+  ||'utilisez cette page publique de connexion : '||v_url||E'\n'
+  ||'Un code de vérification sera demandé pour votre adresse e-mail. '
+  ||'Aucun mot de passe ni jeton d’accès n’est transmis par ce message.'
+ ) INTO v_outbox;
+ v_id:=(v_outbox->>'id')::uuid;
+ INSERT INTO public.bib_partner_access_handoffs
+ (case_id,outbox_id,recipient_email,test_account,prepared_by)
+ VALUES(c.id,v_id,v_email,c.test_account,v_actor)
+ ON CONFLICT(case_id) DO NOTHING;
+ IF NOT EXISTS(SELECT 1 FROM public.bib_partner_access_handoffs
+  WHERE case_id=c.id AND outbox_id=v_id AND recipient_email=v_email) THEN
+  RAISE EXCEPTION 'invitation_reference_conflict' USING ERRCODE='23514';
+ END IF;
  RETURN v_id;
 END $$;
-REVOKE ALL ON FUNCTION public.bib_record_partner_catalog_eligibility(uuid,text,text,text,jsonb,jsonb,text)
- FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION public.bib_record_partner_catalog_eligibility(uuid,text,text,text,jsonb,jsonb,text)
- TO authenticated;
+REVOKE ALL ON FUNCTION public.bib_prepare_partner_access_invitation(uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.bib_prepare_partner_access_invitation(uuid) TO authenticated;
 
- THEN RAISE EXCEPTION 'partner_access_handoff_not_authorized' USING ERRCODE='42501'; END IF;
- IF v_case.partner_kind='supplier' AND NOT EXISTS(
-  SELECT 1 FROM public.supplier_applications a
-  WHERE a.id=v_case.source_id AND lower(a.contact_email)=lower(p_recipient)
- ) THEN RAISE EXCEPTION 'supplier_recipient_mismatch' USING ERRCODE='23514'; END IF;
- IF v_case.partner_kind='logistics' AND NOT EXISTS(
-  SELECT 1 FROM public.logistics_partners lp
-  WHERE lp.id=v_case.source_id AND lower(lp.contact_email)=lower(p_recipient)
- ) THEN RAISE EXCEPTION 'logistics_recipient_mismatch' USING ERRCODE='23514'; END IF;
- SELECT * INTO v_handoff FROM public.bib_partner_access_handoffs WHERE case_id=p_case_id FOR UPDATE;
- IF p_action='prepare' THEN
-  IF v_handoff.id IS NOT NULL THEN
-   RAISE EXCEPTION 'access_handoff_already_prepared' USING ERRCODE='23514'; END IF;
-  INSERT INTO public.bib_partner_access_handoffs(case_id,test_account,channel,
-   recipient_email,invitation_reference,prepared_by)
-  VALUES(p_case_id,v_case.test_account,p_channel,lower(p_recipient),
-   btrim(p_invitation_reference),v_actor) RETURNING id INTO v_id;
- ELSE
-  IF v_handoff.id IS NULL OR v_handoff.delivery_state NOT IN ('prepared','queued')
-   OR v_handoff.prepared_by=v_actor OR
-   p_channel IS DISTINCT FROM v_handoff.channel OR
-   lower(p_recipient) IS DISTINCT FROM v_handoff.recipient_email OR
-   p_invitation_reference IS DISTINCT FROM v_handoff.invitation_reference OR
-   length(btrim(coalesce(p_delivery_reference,''))) NOT BETWEEN 8 AND 500
-   OR p_delivery_reference ~* '(access_token|password|secret|otp|https?://)'
-  THEN RAISE EXCEPTION 'independent_delivery_confirmation_required' USING ERRCODE='23514'; END IF;
-  UPDATE public.bib_partner_access_handoffs SET delivery_state='confirmed',
-   delivery_reference=btrim(p_delivery_reference),confirmed_by=v_actor,
-   confirmed_at=now(),updated_at=now() WHERE id=v_handoff.id RETURNING id INTO v_id;
- END IF;
- RETURN v_id;
-END $;
-REVOKE ALL ON FUNCTION public.bib_record_partner_access_handoff(uuid,text,text,text,text,text)
- FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION public.bib_record_partner_access_handoff(uuid,text,text,text,text,text)
- TO authenticated;
+CREATE OR REPLACE FUNCTION public.bib_confirm_partner_access_delivery(p_case_id uuid)
+RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
+DECLARE v_actor uuid:=auth.uid(); c public.bib_partner_onboarding_cases%ROWTYPE;
+ h public.bib_partner_access_handoffs%ROWTYPE; o public.intranet_outbox%ROWTYPE;
+BEGIN
+ SELECT * INTO c FROM public.bib_partner_onboarding_cases WHERE id=p_case_id FOR UPDATE;
+ IF v_actor IS NULL OR c.id IS NULL OR c.stage<>'contract_signed'
+  OR c.test_account<>public.intranet_is_test_mode()
+  OR NOT public.bib_partner_onboarding_permitted(c.partner_kind,'update')
+ THEN RAISE EXCEPTION 'access_confirmation_not_authorized' USING ERRCODE='42501'; END IF;
+ SELECT * INTO h FROM public.bib_partner_access_handoffs
+  WHERE case_id=c.id FOR UPDATE;
+ IF h.id IS NULL THEN RAISE EXCEPTION 'invitation_missing' USING ERRCODE='23514'; END IF;
+ SELECT * INTO o FROM public.intranet_outbox WHERE id=h.outbox_id;
+ IF h.prepared_by=v_actor OR o.status<>'sent' OR o.test_account
+  OR o.created_by IS DISTINCT FROM h.prepared_by
+  OR o.recipients<>ARRAY[h.recipient_email]::text[]
+  OR o.approved_by IS NULL OR o.approved_by=o.created_by
+ THEN RAISE EXCEPTION 'independently_approved_delivery_evidence_required' USING ERRCODE='23514'; END IF;
+ UPDATE public.bib_partner_access_handoffs
+ SET delivery_state='confirmed',confirmed_by=v_actor,confirmed_at=now()
+ WHERE id=h.id AND delivery_state='prepared';
+ RETURN h.id;
+END $$;
+REVOKE ALL ON FUNCTION public.bib_confirm_partner_access_delivery(uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.bib_confirm_partner_access_delivery(uuid) TO authenticated;
 
-
--- Replaces only the transition function to require verified access handoff.
+-- Preserve every existing 0090 transition and additionally require verified delivery.
 CREATE OR REPLACE FUNCTION public.bib_advance_partner_onboarding(
  p_kind text,p_source_id uuid,p_expected_stage text,p_next_stage text,
  p_evidence_reference text,p_notes text DEFAULT NULL,p_platform_submission_id uuid DEFAULT NULL
@@ -211,7 +156,7 @@ BEGIN
  IF v_next IS NULL OR v_next IS DISTINCT FROM p_next_stage THEN
   RAISE EXCEPTION 'invalid_partner_onboarding_transition' USING ERRCODE='23514';
  END IF;
- IF p_next_stage='portal_access_recorded' AND NOT EXISTS(
+ IF p_next_stage='portal_access_recorded' AND NOT EXISTS (
   SELECT 1 FROM public.bib_partner_access_handoffs h
   WHERE h.case_id=v_case.id AND h.test_account=v_test AND h.delivery_state='confirmed'
  ) THEN RAISE EXCEPTION 'confirmed_invitation_delivery_required' USING ERRCODE='23514'; END IF;
