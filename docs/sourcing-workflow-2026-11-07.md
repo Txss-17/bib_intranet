@@ -28,3 +28,16 @@ Migration 0092 sur main après réconciliation du registre 0089 (PR #56) et 0091
 - **Conversion en candidature fournisseur** : uniquement un prospect présélectionné, explicitement demandé et justifié, soumis au contrôle de doublons (même e-mail et même entreprise). Un brouillon `supplier_applications` est créé au statut `new`, `audit_accepted=false`, sans consentement présumé. L'identifiant créé est journalisé dans l'historique et relié au prospect. Conversion désactivée en sandbox car la table héritée ne distingue pas encore les comptes de test. Le parcours logistique continue par formulaire, échange et fiche des besoins ; il n'est pas converti automatiquement en partenaire actif.
 - **Avant utilisation réelle** : vérifier l'autorisation du contact e-mail et la conformité RGPD/prospection B2B, les exigences de preuve de l'accord de mise en relation, ainsi que les permissions transversales de lecture des comptes marchands. Les opérations de sourcing n'ont aucun effet sur les achats, stocks, contrats, catalogues, sessions partenaires et paiements.
 - **Limites restantes** : lien natif depuis le formulaire de demande marchand, notifications réelles de relance et journal immuable des changements d'évaluation doivent faire l'objet d'un développement et d'une recette spécifiques.
+
+## Notifications automatiques de relance (PR #59)
+
+Le registre ne se contente plus de stocker les dates de relance. La migration `0092_cross_pole_sourcing.sql` ajoute un traitement interne planifié `bib-sourcing-followup-reminders` toutes les **15 minutes** au moyen de `pg_cron`. Il recherche les échéances atteintes pour les prospects des missions actives et émet une **notification dans Intrabib à l'unique responsable de la mission** (`owner_id`). Les missions fournisseurs et logistiques suivent les mêmes règles.
+
+- Le destinataire doit être un collaborateur Intrabib actif et de même environnement que la mission.
+- Les missions clôturées/annulées, relances annulées ou remplacées, et comptes de collaborateurs inactifs sont exclus.
+- La table `bib_sourcing_notification_receipts` assure une unique notification par identifiant de relance, y compris en cas de réexécution du job.
+- Les notifications contiennent la mission, le prospect, l'échéance et les identifiants de traçabilité ; **aucun e-mail externe n'est envoyé automatiquement aux fournisseurs ou logisticiens**.
+- La fréquence de 15 minutes décrit le scan, non une garantie d'exécution tant que le job n'a pas été déployé et exécuté sur l'environnement distant.
+- La fonction de diffusion n'est pas exécutable par les utilisateurs anonymes ou authentifiés ; seul le rôle de la tâche planifiée peut l'exécuter. L'installation exige l'extension `pg_cron` ; elle échoue explicitement si elle est absente.
+- Vérifier la compatibilité avec les politiques RLS des notifications, le statut des comptes, les permissions de lecture, les fuseaux des dates, les reprises après panne, la concurrence, les doublons, la séparation test/réel et la procédure de rollback.
+- **État : implémenté sur une PR non fusionnée, migration distante non exécutée, job non actif en production.** Les rappels seront effectifs seulement après migrations, tests de préproduction et décision Go/No-Go.
