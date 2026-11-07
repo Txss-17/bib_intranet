@@ -140,10 +140,14 @@ BEGIN
  IF v_next IS NULL OR v_next IS DISTINCT FROM p_next_stage THEN
   RAISE EXCEPTION 'invalid_partner_onboarding_transition' USING ERRCODE='23514';
  END IF;
- IF p_kind='supplier' AND p_next_stage IN ('catalog_reviewed','products_selected') AND NOT EXISTS(
+ IF p_kind='supplier' AND p_next_stage IN ('catalog_reviewed','products_selected')
+ AND (NOT EXISTS(
   SELECT 1 FROM public.bib_partner_catalog_eligibility e
-  WHERE e.case_id=v_case.id AND e.test_account=v_test
- ) THEN RAISE EXCEPTION 'catalog_documentary_review_required' USING ERRCODE='23514'; END IF;
+  WHERE e.case_id=v_case.id AND e.test_account=v_test AND e.status<>'under_review'
+ ) OR EXISTS(
+  SELECT 1 FROM public.bib_partner_catalog_eligibility e
+  WHERE e.case_id=v_case.id AND e.test_account=v_test AND e.status='under_review'
+ )) THEN RAISE EXCEPTION 'catalog_documentary_review_required' USING ERRCODE='23514'; END IF;
  IF p_kind='supplier' AND p_next_stage='products_selected' AND NOT EXISTS(
   SELECT 1 FROM public.bib_partner_catalog_eligibility e
   WHERE e.case_id=v_case.id AND e.test_account=v_test AND e.status='eligible'
