@@ -331,3 +331,96 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.bib_convert_sourcing_to_supplier_application(uuid,text,text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.bib_convert_sourcing_to_supplier_application(uuid,text,text) TO authenticated;
+
+
+-- Automatic in-app reminders. Dispatch is called by pg_cron, never by staff JWT.
+-- A receipt row and notification are written in one transaction and protected
+-- by a unique followup_id to avoid duplicate alerts across worker retries.
+CREATE TABLE IF NOT EXISTS public.bib_sourcing_notification_receipts (
+ followup_id uuid PRIMARY KEY REFERENCES public.bib_sourcing_followups(id),
+ notification_id uuid NOT NULL UNIQUE REFERENCES public.notifications(id),
+ recipient_id uuid NOT NULL,
+ created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.bib_sourcing_notification_receipts ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.bib_sourcing_notification_receipts FROM PUBLIC,anon,authenticated;
+
+CREATE OR REPLACE FUNCTION public.bib_dispatch_due_sourcing_notifications(p_now timestamptz DEFAULT now())
+RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
+DECLARE item record; notification_id uuid; sent_count integer:=0;
+BEGIN
+ -- pg_cron runs this as the database owner; never expose a worker-style
+ -- SECURITY DEFINER function to authenticated or anon callers.
+ IF current_user NOT IN ('postgres','supabase_admin') THEN
+  RAISE EXCEPTION 'sourcing_notification_dispatch_forbidden' USING ERRCODE='42501';
+ END IF;
+ FOR item IN
+  SELECT f.id AS followup_id,f.due_at,c.id AS candidate_id,c.organization_name,
+   m.id AS mission_id,m.title,m.pole,m.owner_id,m.test_account
+  FROM public.bib_sourcing_followups f
+  JOIN public.bib_sourcing_candidates c ON c.id=f.candidate_id
+  JOIN public.bib_sourcing_missions m ON m.id=c.mission_id
+  JOIN public.profiles p ON p.id=m.owner_id
+  WHERE f.outcome='scheduled'
+   AND f.due_at<=p_now
+   AND c.followup_due_at=f.due_at
+   AND m.status NOT IN ('closed','cancelled')
+   AND p.app_origin='connect' AND p.hr_status='active'
+   AND coalesce(p.test_account,false)=m.test_account
+   AND NOT EXISTS(
+    SELECT 1 FROM public.bib_sourcing_followups later
+    WHERE later.candidate_id=f.candidate_id
+      AND (later.created_at>f.created_at OR
+        (later.created_at=f.created_at AND later.id>f.id))
+   )
+   AND NOT EXISTS(
+    SELECT 1 FROM public.bib_sourcing_notification_receipts r WHERE r.followup_id=f.id
+   )
+  ORDER BY f.due_at,f.id
+  LIMIT 200
+ LOOP
+  -- Lock the follow-up so concurrent cron runs don't send twice.
+  PERFORM 1 FROM public.bib_sourcing_followups WHERE id=item.followup_id FOR UPDATE SKIP LOCKED;
+  IF NOT FOUND THEN CONTINUE; END IF;
+  IF EXISTS(SELECT 1 FROM public.bib_sourcing_notification_receipts WHERE followup_id=item.followup_id)
+   OR NOT EXISTS(SELECT 1 FROM public.bib_sourcing_candidates c
+                 JOIN public.bib_sourcing_missions m ON m.id=c.mission_id
+                 WHERE c.id=item.candidate_id AND c.followup_due_at=(
+                  SELECT due_at FROM public.bib_sourcing_followups WHERE id=item.followup_id)
+                  AND m.status NOT IN ('closed','cancelled')) THEN
+   CONTINUE;
+  END IF;
+  -- A distinct, addressed notification. Nothing is distributed to the whole pole.
+  INSERT INTO public.notifications(user_id,pole_id,title,message,type,action_url,metadata,read)
+  VALUES(item.owner_id,item.pole::public.pole_id,
+   'Sourcing — relance à effectuer',
+   left('Mission : '||item.title||' · Partenaire : '||item.organization_name,600),
+   'info','/pole/'||CASE WHEN item.pole='supplier' THEN 'supplier/applications'
+                        ELSE 'ops/partners' END,
+   jsonb_build_object('source','bib_sourcing','mission_id',item.mission_id,
+    'candidate_id',item.candidate_id,'followup_id',item.followup_id,
+    'due_at',item.due_at,'test_account',item.test_account),false)
+  RETURNING id INTO notification_id;
+  INSERT INTO public.bib_sourcing_notification_receipts
+    (followup_id,notification_id,recipient_id)
+  VALUES(item.followup_id,notification_id,item.owner_id);
+  sent_count:=sent_count+1;
+ END LOOP;
+ RETURN sent_count;
+END $$;
+REVOKE ALL ON FUNCTION public.bib_dispatch_due_sourcing_notifications(timestamptz)
+ FROM PUBLIC,anon,authenticated;
+-- Do not use a webhook or external email: in-app alerts use existing notification UI.
+-- pg_cron already exists in this Supabase deployment; migration must fail if
+-- unavailable rather than pretending that automated reminders are active.
+DO $$
+BEGIN
+ IF to_regprocedure('cron.schedule(text,text,text)') IS NULL THEN
+  RAISE EXCEPTION 'pg_cron_required_for_sourcing_reminders';
+ END IF;
+ IF EXISTS(SELECT 1 FROM cron.job WHERE jobname='bib-sourcing-followup-reminders') THEN
+  PERFORM cron.unschedule('bib-sourcing-followup-reminders');
+ END IF;
+ PERFORM cron.schedule('bib-sourcing-followup-reminders','*/15 * * * *',
+  'SELECT public.bib_dispatch_due_sourcing_notifications();');
+END $$;
