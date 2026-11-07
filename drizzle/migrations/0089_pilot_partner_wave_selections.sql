@@ -39,7 +39,7 @@ REVOKE ALL ON public.bib_pilot_partner_selections,public.bib_pilot_partner_event
 GRANT SELECT ON public.bib_pilot_partner_selections TO authenticated;
 CREATE POLICY bib_pilot_partner_read ON public.bib_pilot_partner_selections FOR SELECT TO authenticated
  USING(test_account=public.intranet_is_test_mode() AND (
-   (partner_kind='supplier' AND public.can_intranet_action('supplier.applications','read'))
+   (partner_kind='supplier' AND public.can_intranet_action('supplier.suppliers','read'))
    OR (partner_kind='logistics' AND public.can_intranet_action('ops.partners','read'))
  ));
 CREATE POLICY bib_pilot_partner_events_read ON public.bib_pilot_partner_events FOR SELECT TO authenticated
@@ -60,14 +60,20 @@ BEGIN
     OR p_partner_id IS NULL THEN
   RAISE EXCEPTION 'invalid_pilot_selection' USING ERRCODE='22023';
  END IF;
- IF NOT ((p_kind='supplier' AND public.can_intranet_action('supplier.applications','update'))
+ IF NOT ((p_kind='supplier' AND public.can_intranet_action('supplier.suppliers','update'))
       OR (p_kind='logistics' AND public.can_intranet_action('ops.partners','update'))) THEN
   RAISE EXCEPTION 'pilot_selection_not_authorized' USING ERRCODE='42501';
  END IF;
  -- The portfolio is intentionally unlimited. Only approval consumes capacity.
  PERFORM pg_advisory_xact_lock(hashtext('bib_pilot_wave_'||v_test::text||'_'||p_wave::text||'_'||p_kind));
- IF p_kind='supplier' AND NOT EXISTS(SELECT 1 FROM public.supplier_applications WHERE id=p_partner_id AND status='approved') THEN
-  RAISE EXCEPTION 'supplier_must_be_qualified_first' USING ERRCODE='23514';
+ -- Use the canonical operational supplier UUID, never a candidature UUID.
+ -- Platform bridge imports partner onboarding into public.suppliers(platform_id).
+ IF p_kind='supplier' AND NOT EXISTS(
+   SELECT 1 FROM public.suppliers
+   WHERE id=p_partner_id AND status='validated'
+     AND coalesce(test_account,false)=v_test
+ ) THEN
+  RAISE EXCEPTION 'canonical_supplier_must_be_validated' USING ERRCODE='23514';
  END IF;
  IF p_kind='logistics' AND NOT EXISTS(SELECT 1 FROM public.logistics_partners WHERE id=p_partner_id AND status NOT IN ('suspended','inactive')) THEN
   RAISE EXCEPTION 'logistics_partner_unavailable' USING ERRCODE='23514';
