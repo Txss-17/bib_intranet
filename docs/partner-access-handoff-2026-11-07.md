@@ -2,7 +2,7 @@
 Date : 7 novembre 2026. Branche de travail : PR #58.
 
 ## Décision
-Fournisseurs et logisticiens ne reçoivent leurs instructions de connexion qu'après la validation du contrat dans Intrabib. L'accès au portail ne signifie pas l'activation opérationnelle du partenaire. La capacité opérationnelle et les sélections par vagues demeurent gouvernées séparément (PR #56).
+Fournisseurs et logisticiens ne reçoivent leurs instructions de connexion qu'après la validation du contrat dans Intrabib. Pour la logistique, l'accord opérationnel sur les besoins est **distinct** de la réception du contrat proposé par le prestataire, de sa revue Juridique/Finance et de sa signature. Aucune invitation ne doit être possible tant que ces étapes ne sont pas attestées côté serveur (suivi : issue #60). L'accès au portail ne signifie pas l'activation opérationnelle du partenaire. La capacité opérationnelle et les sélections par vagues demeurent gouvernées séparément (PR #56).
 
 ## Parcours implémenté dans la PR #58
 1. `bib_partner_onboarding_cases.stage='contract_signed'` constitue le préalable serveur.
