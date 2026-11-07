@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useOpsPartners } from '@/hooks/useOpsControl';
 import CasePortfolioManager from '@/components/operations/CasePortfolioManager';
+import PilotPartnerSelection from '@/components/operations/PilotPartnerSelection';
 
 interface Partner {
   id: string;
@@ -293,6 +294,10 @@ const Partners = () => {
           </div>
         </div>
       </div>
+
+      <PilotPartnerSelection kind="logistics" candidates={partners.map(p => ({
+        id: p.id, label: p.name, eligible: p.status !== 'suspended' && p.status !== 'inactive',
+      }))} />
 
       <CasePortfolioManager pole="ops" title="Partenaires logistiques" entities={partners.map(p => ({ id: p.id, label: p.name }))} />
 
