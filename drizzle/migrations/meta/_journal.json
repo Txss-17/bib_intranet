@@ -638,6 +638,13 @@
       "when": 1794056400000,
       "tag": "0092_cross_pole_sourcing",
       "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1794132600000,
+      "tag": "0093_supplier_audit_document_manifest",
+      "breakpoints": true
     }
   ]
 }
