@@ -27,7 +27,8 @@ CREATE POLICY supplier_audit_manifest_read
   test_account=public.intranet_is_test_mode() AND
   EXISTS (
    SELECT 1 FROM public.supplier_audit_cases c
-   WHERE c.id=case_id AND c.test_account=test_account
+   WHERE c.id=supplier_audit_document_manifest.case_id
+     AND c.test_account=supplier_audit_document_manifest.test_account
   )
  );
 
