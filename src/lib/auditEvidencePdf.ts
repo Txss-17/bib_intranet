@@ -31,15 +31,18 @@ export function downloadAuditEvidencePdf(c: SupplierAuditCase): void {
   };
   const newPage = () => { doc.addPage(); page += 1; y = 27; header(); };
   const paragraph = (title: string, value: string) => {
-    const text = doc.splitTextToSize(value || 'Non renseigné', width);
-    const height = 9 + text.length * 5;
-    if (y + height > 276) newPage();
+    const lines: string[] = doc.splitTextToSize(value || 'Non renseigné', width);
+    if (y + 17 > 276) newPage();
     doc.setFont('helvetica', 'bold');
     doc.text(title, margin, y);
     y += 6;
     doc.setFont('helvetica', 'normal');
-    doc.text(text, margin, y);
-    y += text.length * 5 + 5;
+    for (const line of lines) {
+      if (y + 5 > 276) newPage();
+      doc.text(line, margin, y);
+      y += 5;
+    }
+    y += 5;
   };
   header();
   doc.setFont('helvetica', 'bold');
