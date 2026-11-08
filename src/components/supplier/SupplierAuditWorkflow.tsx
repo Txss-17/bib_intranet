@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { usePermissions } from "@/hooks/usePermissions";
 import { intranetRpc } from "@/lib/intranet";
 import { readAllPages } from "@/lib/operationsMetrics";
+import { downloadAuditEvidencePdf } from "@/lib/auditEvidencePdf";
 import {
   useSupplierAuditCases,
   useSupplierAuditCaseActions,
@@ -540,6 +541,20 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
             ? "https://drive.google.com/file/d/1jfRdJbjkLcwg1JuxzyFYOJLVQbJ7klye/view"
             : "https://drive.google.com/file/d/1sH-7fz28KBbBm-JzgLvLQWHQEIwfoCSz/view"}
             target="_blank" rel="noopener noreferrer">Modèle de rapport seul</a>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button type="button" variant="outline" size="sm"
+            disabled={!c.invoice || !c.report || !c.report_approved_by || !c.report.evidence_reference.trim()}
+            onClick={() => {
+              try { downloadAuditEvidencePdf(c); }
+              catch (error) { toast.error((error as Error).message); }
+            }}>
+            Télécharger synthèse du dossier (PDF)
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            Disponible seulement après rattachement de facture et approbation du rapport.
+            Copie de suivi interne non fiscale ; aucun archivage automatique.
+          </span>
         </div>
         <dl className="grid gap-2 text-xs sm:grid-cols-2">
           <div><dt className="font-semibold">Facture réelle</dt><dd>{c.invoice
