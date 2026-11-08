@@ -523,6 +523,41 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
           </p>
         )}
       </div>
+      <section aria-label="Pièces justificatives et modèles PDF" className="space-y-3 rounded-lg border p-4">
+        <div>
+          <h4 className="font-semibold">Dossier documentaire — facture et rapport d’audit</h4>
+          <p className="text-xs text-muted-foreground">
+            Modèles vierges de présentation BIB (non émis). La facture fiscale réelle et le rapport approuvé doivent
+            être produits, vérifiés, archivés et rattachés séparément au dossier.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 text-sm">
+          <a className="underline underline-offset-4" href={c.kind === "initial"
+            ? "https://drive.google.com/file/d/17CP1lGicPRAP_s_ZBN8CJ2ATsxxgqIWO/view"
+            : "https://drive.google.com/file/d/1yeSXIxCzpxOhkLw6CC-uFEX2aQ_brTOh/view"}
+            target="_blank" rel="noopener noreferrer">Modèle facture + rapport (PDF)</a>
+          <a className="underline underline-offset-4" href={c.kind === "initial"
+            ? "https://drive.google.com/file/d/1jfRdJbjkLcwg1JuxzyFYOJLVQbJ7klye/view"
+            : "https://drive.google.com/file/d/1sH-7fz28KBbBm-JzgLvLQWHQEIwfoCSz/view"}
+            target="_blank" rel="noopener noreferrer">Modèle de rapport seul</a>
+        </div>
+        <dl className="grid gap-2 text-xs sm:grid-cols-2">
+          <div><dt className="font-semibold">Facture réelle</dt><dd>{c.invoice
+            ? `Rattachée : ${c.invoice.reference} — justificatif ${c.invoice.document_reference}`
+            : "Non rattachée"}</dd></div>
+          <div><dt className="font-semibold">Rapport réel</dt><dd>{c.report
+            ? (c.report_approved_by ? "Approuvé — preuve : " : "En relecture — preuve : ") + c.report.evidence_reference
+            : "Non rattaché"}</dd></div>
+          <div><dt className="font-semibold">Produits concernés</dt><dd>{c.scope.join(", ") || "À compléter"}</dd></div>
+          <div><dt className="font-semibold">Validation produit</dt><dd>{c.reference_decisions?.length
+            ? `${c.reference_decisions.length} décision(s) enregistrée(s)`
+            : "Non enregistrée"}</dd></div>
+        </dl>
+        <p className="text-xs text-muted-foreground">
+          Ne pas confondre l’accès à une maquette PDF avec la génération ou l’envoi d’une facture.
+          Aucun paiement, validation d’audit ou changement de statut n’est déclenché par ces liens.
+        </p>
+      </section>
       {c.quote && (
         <div className="space-y-2 rounded-lg border p-3">
           <h4 className="font-semibold">Devis version {c.quote_version}</h4>
