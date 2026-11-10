@@ -37,6 +37,8 @@ export default function CasePortfolioManager({
   const [transferPortfolioId, setTransferPortfolioId] = useState('');
   const [transferOwnerId, setTransferOwnerId] = useState('');
   const [transferReason, setTransferReason] = useState('');
+  const [archivePortfolioId,setArchivePortfolioId]=useState('');
+  const [archiveReason,setArchiveReason]=useState('');
 
   const { data: portfolios = [], isError: portfoliosError } = useQuery({
     queryKey: ['case-portfolios', pole],
@@ -108,6 +110,20 @@ export default function CasePortfolioManager({
       toast.success('Responsable modifié. Historique conservé.');
     },
     onError: (error: Error) => toast.error(error.message),
+  });
+  const archive = useMutation({
+    mutationFn: async () => {
+      const {error}=await supabase.rpc('bib_archive_case_portfolio' as never,{
+        p_portfolio_id:archivePortfolioId,p_reason:archiveReason.trim(),
+      } as never);
+      if(error)throw error;
+    },
+    onSuccess:()=>{
+      setArchivePortfolioId('');setArchiveReason('');
+      void qc.invalidateQueries({queryKey:['case-portfolios',pole]});
+      toast.success('Portefeuille archivé : historique conservé.');
+    },
+    onError:(error:Error)=>toast.error(error.message),
   });
   if (!canRead) return null;
   const active = portfolios.filter(p => p.status === 'active');
@@ -191,14 +207,24 @@ export default function CasePortfolioManager({
             </Button></div>
           </form>
         )}
-        <div className="space-y-1 text-sm">
-          {entities.length === 0 ? <p className="text-muted-foreground">Aucune entité disponible.</p> :
-           entities.slice(0,100).map(item =>
-             <div key={item.id} className="flex justify-between gap-3 border-b py-2">
-               <span className="truncate">{item.label}</span>
-               <span className="text-muted-foreground">{names.get(current.get(item.id) || '') || 'Non affecté'}</span>
-             </div>)}
-          {entities.length > 100 && <p className="text-muted-foreground">Affichage limité aux 100 premières entités. Utilisez la sélection pour les autres.</p>}
+        {canManage && active.length > 0 && <form className="space-y-3 rounded-md border p-3"
+          onSubmit={e=>{e.preventDefault();archive.mutate();}}>
+          <h3 className="font-medium">Archiver un portefeuille vide</h3>
+          <p className="text-xs text-muted-foreground">La suppression physique est désactivée. L'archivage conserve l'historique et sera refusé si des dossiers restent affectés. Réaffectez d'abord tous les dossiers.</p>
+          <select aria-label="Portefeuille à archiver" value={archivePortfolioId} required
+           onChange={e=>setArchivePortfolioId(e.target.value)}
+           className="h-10 w-full rounded-md border bg-background px-3 text-sm">
+           <option value="">Sélectionner le portefeuille</option>
+           {active.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <Input aria-label="Motif d'archivage" placeholder="Motif justifié (8 caractères minimum)"
+           required minLength={8} maxLength={500} value={archiveReason} onChange={e=>setArchiveReason(e.target.value)}/>
+          <Button variant="outline" type="submit" disabled={archive.isPending||!archivePortfolioId||archiveReason.trim().length<8}>
+           {archive.isPending?'Archivage…':'Archiver sans effacer'}
+          </Button>
+        </form>}
+        <div className="rounded-md border border-dashed p-3 text-sm text-muted-foreground">
+          La liste générale des portefeuilles existants n'est plus affichée. Créez un portefeuille, puis affectez ou transférez les dossiers avec les formulaires ci-dessus ; les attributions antérieures restent conservées et consultables dans les dossiers autorisés.
         </div>
       </CardContent>
     </Card>

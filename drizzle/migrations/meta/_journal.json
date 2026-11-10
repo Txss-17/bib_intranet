@@ -694,6 +694,13 @@
       "when": 1794301194147,
       "tag": "0100_fiscal_entity_approval_and_delegations",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1794301195147,
+      "tag": "0101_portfolio_archival_lifecycle",
+      "breakpoints": true
     }
   ]
 }
