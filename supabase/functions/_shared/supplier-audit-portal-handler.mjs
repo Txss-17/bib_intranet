@@ -43,11 +43,11 @@ export function createSupplierAuditPortalHandler({ secret, getAdmin }) {
       Array.isArray(body) ||
       body.schema_version !== 1 ||
       !uuid(body.submission_id) ||
-      !["list", "accept"].includes(body.action)
+      !["list", "accept", "list_references"].includes(body.action)
     )
       return json({ error: "invalid_audit_request" }, 400);
     const fields =
-      body.action === "list"
+      ["list", "list_references"].includes(body.action)
         ? ["schema_version", "submission_id", "action"]
         : [
             "schema_version",
@@ -85,6 +85,13 @@ export function createSupplierAuditPortalHandler({ secret, getAdmin }) {
         if (!Array.isArray(r.data)) throw new Error("invalid_audit_response");
         return r.data;
       };
+      if (body.action === "list_references") {
+        const result = await admin.rpc("list_supplier_portal_reference_decisions", {
+          p_submission_id: body.submission_id,
+        });
+        if (result.error || !Array.isArray(result.data)) throw new Error("reference_decisions_unavailable");
+        return json({ references: result.data });
+      }
       const cases = await list();
       if (body.action === "list") return json({ cases });
       if (!cases.some((c) => c.id === body.case_id))
