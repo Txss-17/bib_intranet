@@ -9,7 +9,7 @@ const id=n=>"10000000-0000-4000-8000-"+String(n).padStart(12,"0");
 async function invoke(options={}) {
  const calls={invites:[],writes:[],rpc:[],clients:[]};
  const request={id:id(1),reference:"HR-TEST",request_kind:"onboarding",status:"hr_validated",hr_validated_by:id(2),created_user_id:null,target_user_id:id(3),
- first_name:"Nouveau",last_name:"Collaborateur",work_email:"new@bib.test",personal_email:null,position:"ops_logistics_manager",
+ first_name:"Nouveau",last_name:"Collaborateur",work_email:"new@brand-in-a-box.space",personal_email:null,position:"ops_logistics_manager",
  position_key:"ops_logistics_manager",poles:["ops"],primary_pole:"ops",seniority:"mid",collaborator_type:"internal",manager_id:id(2),
  requested_role:"new_ops",contract_type:"CDI",start_date:"2026-01-01",work_mode:"office",subsidiary:"BIB",attached_documents:[],...options.request};
  const callerProfile={id:id(2),first_name:"Responsable",last_name:"RH",poles:["rh"],position:"rh_manager",hr_status:"active",test_account:false};
