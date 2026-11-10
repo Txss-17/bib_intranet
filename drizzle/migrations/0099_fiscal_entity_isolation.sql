@@ -144,6 +144,25 @@ END $$;
 REVOKE ALL ON FUNCTION public.bib_assign_fiscal_record_entity(text,uuid,boolean) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.bib_assign_fiscal_record_entity(text,uuid,boolean) TO authenticated;
 
+CREATE FUNCTION public.list_bib_fiscal_entity_assignments()
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $
+DECLARE items jsonb;
+BEGIN
+ IF NOT public.bib_fiscal_is_canonical_ceo() THEN
+  RAISE EXCEPTION 'fiscal_entity_ceo_only' USING ERRCODE='42501'; END IF;
+ SELECT coalesce(jsonb_agg(jsonb_build_object(
+  'record_id',r.record_id,'entity_id',l.entity_id
+ ) ORDER BY r.record_id),'[]'::jsonb)
+ INTO items
+ FROM (SELECT record_id FROM public.bib_fiscal_reference_catalog
+       UNION SELECT record_id FROM public.bib_fiscal_records WHERE test_account=false)r
+ LEFT JOIN public.bib_fiscal_record_entities l
+ ON l.record_id=r.record_id AND l.test_account=false;
+ RETURN items;
+END $;
+REVOKE ALL ON FUNCTION public.list_bib_fiscal_entity_assignments() FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.list_bib_fiscal_entity_assignments() TO authenticated;
+
 -- No grant RPC yet: projects are not active legal entities. Do not enable sharing before
 -- identity/verification, explicit reviewer approval, and tested cross-entity RLS.
 NOTIFY pgrst,'reload schema';
