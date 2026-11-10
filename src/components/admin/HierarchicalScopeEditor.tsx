@@ -109,6 +109,13 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
       };
     },
   });
+  const mappingReadiness = useMemo(() => ({
+    accessPortfolios: mapped.data?.businesses.length ?? 0,
+    verifiedLinks: mapped.data?.portfolios.length ?? 0,
+    activeLinks: mapped.data?.portfolios.filter(link =>
+      mapped.data?.businesses.some(business => business.id===link.portfolio_id)
+    ).length ?? 0,
+  }), [mapped.data]);
   // The scope editor configures future roles, not only roles of existing employees.
   // Keep the subsidiary catalog based on verified organisation and mapping records.
   const entities = useMemo(() => unique([
@@ -131,6 +138,8 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
       mapped.data?.portfolios.some(candidate => candidate.subsidiary===pair.subsidiary &&
         candidate.pole===pair.pole && candidate.portfolio_id===item.portfolio_id)))
     .map(item => item.portfolio_id)), [mapped.data,selectedPairs]);
+  // A business portfolio is an RBAC catalogue item, not automatically an
+  // operational supplier, merchant or case portfolio.
   const sourcePortfolios = useMemo(() => {
     const typeIds = new Set((mapped.data?.types ?? []).filter(x => x.business_pole===mappingPole).map(x=>x.id));
     return (mapped.data?.businesses ?? []).filter(x => typeIds.has(x.portfolio_type_id));
@@ -194,6 +203,22 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
         « Tout » à chaque niveau signifie global dans la sélection parente, jamais accès total à BIB.
       </p>
       <Badge variant="outline" className="w-fit">Brouillon non applicable aux données avant intégration RLS</Badge>
+      {mapped.isSuccess && <div role="status" className="rounded-md border p-3 text-sm">
+        <strong>État réel des rattachements :</strong> {mappingReadiness.accessPortfolios} portefeuille(s) du catalogue d'accès,
+        {' '}{mappingReadiness.verifiedLinks} rattachement(s) entité/pôle/portefeuille,
+        {' '}{mappingReadiness.activeLinks} rattachement(s) relié(s) à un portefeuille actif.
+        {mappingReadiness.activeLinks === 0 && <p className="mt-1 text-destructive">
+          Aucun portefeuille n'est actuellement attribuable par ce sélecteur.
+          Il faut d'abord rattacher un portefeuille d'accès actif à une entité et à un pôle vérifiés.
+          Les portefeuilles Fournisseurs, Marchands et dossiers métier sont des registres distincts :
+          leur existence ne crée jamais une habilitation.
+        </p>}
+        <p className="mt-1 text-muted-foreground">
+          Ces rattachements alimentent uniquement les options des politiques en brouillon.
+          Ils n'autorisent aucune consultation tant qu'un contrôle serveur applicable aux dossiers n'a pas été activé.
+        </p>
+      </div>}
+
     </CardHeader>
     <CardContent className="space-y-5">
       {!roleId && <p role="status">Sélectionnez d'abord un rôle.</p>}
@@ -291,7 +316,7 @@ export default function HierarchicalScopeEditor({ roleId }: { roleId: string }) 
                 <option value="">Portefeuille actif du pôle</option>
                 {sourcePortfolios.map(item=><option key={item.id} value={item.id}>{item.label_snapshot}</option>)}
               </select>
-              <Button type="button" variant="outline" disabled={!mappingPole||!portfolioDraft||mappingReason.trim().length<8||mappingSaving||mapped.isError}
+              <Button type="button" variant="outline" disabled={!mappingSubsidiary||!mappingPole||!portfolioDraft||mappingReason.trim().length<8||mappingSaving||mapped.isError}
                 onClick={()=>void createMapping('portfolio',portfolioDraft)}>Rattacher</Button>
             </div>
           </div>

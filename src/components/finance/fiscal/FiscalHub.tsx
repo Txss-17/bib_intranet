@@ -1,15 +1,16 @@
 'use client';
 import React,{useState,useEffect,useMemo,useRef} from 'react';
 import {LayoutDashboard,ArrowLeftRight,ShieldAlert,Files,CalendarDays,Calculator,BookOpen,Building2,Search,SlidersHorizontal,Plus,ArrowUpRight,Download,ChevronRight,ChevronDown,X,Check,AlertTriangle,Clock3,GitBranch,ExternalLink,Paperclip,Save,Menu,Users,Loader2,RefreshCw,ShieldCheck,Wallet,CheckCircle2,ArrowRight,FileText,Link2,Layers3} from 'lucide-react';
-import {seedRecords,refs,entities,poles,poleLinks,kinds,scenarios,FiscalRecord,Kind,Status,Confidence,Risk,riskScore,dueState,validationIssues} from './data';
+import {refs,entities,poles,poleLinks,kinds,scenarios,FiscalRecord,Kind,Status,Confidence,Risk,riskScore,dueState,validationIssues} from './data';
 import './fiscal.css';
+import {INTRANET_CHANGE_EVENT} from '@/lib/intranetSync';
 type View='overview'|'flows'|'risks'|'documents'|'obligations'|'scenarios'|'entities'|'sources';
 export type Transport={list:()=>Promise<{records:FiscalRecord[];canWrite:boolean;mode?:string}>;save:(r:FiscalRecord)=>Promise<FiscalRecord>;history:(id:string)=>Promise<any[]>;upload:(id:string,file:File)=>Promise<any>;export?:(format:'csv'|'json',records:FiscalRecord[],filters:Record<string,string>)=>Promise<void>;evidencePicker?:(record:FiscalRecord,onAdded:(e:any)=>void,enabled:boolean)=>React.ReactNode};
 async function response(r:Response){const d:any=await r.json();if(!r.ok)throw new Error(d.error||'Action impossible.');return d;}
 const defaultTransport:Transport={list:()=>fetch('/api/records',{cache:'no-store'}).then(response),save:r=>fetch('/api/records',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(r)}).then(response).then(d=>d.record),history:id=>fetch('/api/events?record='+encodeURIComponent(id)).then(response).then(d=>d.events),upload:(id,file)=>{const f=new FormData();f.append('record',id);f.append('file',file);return fetch('/api/files',{method:'POST',body:f}).then(response).then(d=>d.evidence);}};
 const navigation:{id:View;label:string;icon:any}[]=[{id:'overview',label:'Vue d’ensemble',icon:LayoutDashboard},{id:'flows',label:'Cartographie des flux',icon:ArrowLeftRight},{id:'risks',label:'Registre des risques',icon:ShieldAlert},{id:'documents',label:'Documents à réviser',icon:Files},{id:'obligations',label:'Obligations & échéances',icon:CalendarDays},{id:'scenarios',label:'Première déclaration',icon:Calculator}];
 const viewKind:Partial<Record<View,Kind>>={flows:'flow',risks:'risk',documents:'document',obligations:'obligation'};
-const emptyFilters={entity:'',activity:'',flow:'',pole:'',risk:'',confidence:''};
+const emptyFilters={entity:'',entityId:'',activity:'',flow:'',pole:'',risk:'',confidence:'',status:''};
 const clone=<T,>(v:T):T=>JSON.parse(JSON.stringify(v));
 const date=(v:string)=>v?new Date(v+'T12:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):'À déterminer';
 const initials=(s:string)=>s.split(/[ +—]/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
@@ -18,17 +19,28 @@ const tone=(s:string)=>s==='Confirmé'||s==='Validé'?'green':s==='Critique'||s=
 function Badge({value,outline=false}:{value:string;outline?:boolean}){return <span className={'fh-badge '+tone(value)+(outline?' outline':'')}><i/>{value}</span>;}
 function download(name:string,body:string,type='application/json'){const url=URL.createObjectURL(new Blob([body],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 export default function FiscalHub({embedded=false,transport=defaultTransport,canValidate=true,initialPole=''}:{embedded?:boolean;transport?:Transport;canValidate?:boolean;initialPole?:string}){
- const [records,setRecords]=useState<FiscalRecord[]>(seedRecords),[view,setView]=useState<View>('overview');
+ const [records,setRecords]=useState<FiscalRecord[]>([]),[view,setView]=useState<View>('overview');
  const [filters,setFilters]=useState(emptyFilters),[search,setSearch]=useState(''),[filterOpen,setFilterOpen]=useState(false),[menu,setMenu]=useState(false);
  const [selected,setSelected]=useState<FiscalRecord|null>(null),[creating,setCreating]=useState(false),[drawerTab,setDrawerTab]=useState('cadre');
  const [loading,setLoading]=useState(true),[canWrite,setCanWrite]=useState(false),[error,setError]=useState(''),[toast,setToast]=useState('');
  const [scenario,setScenario]=useState('ei'),[simType,setSimType]=useState('ei'),[sales,setSales]=useState('1200'),[commission,setCommission]=useState('120'),[fees,setFees]=useState('36'),[refund,setRefund]=useState('0');
  const [vatRegime,setVatRegime]=useState('franchise'),[collectedVat,setCollectedVat]=useState('200'),[deductVat,setDeductVat]=useState('40');
  const [entityOpen,setEntityOpen]=useState<string|null>(null);
- const reload=async()=>{setLoading(true);setError('');try{const d=await transport.list();setRecords(d.records);setCanWrite(d.canWrite);}catch(e:any){setError(e.message);setCanWrite(false);}finally{setLoading(false);}};
- useEffect(()=>{void reload();const params=new URLSearchParams(window.location.search),pole=params.get('pole')||initialPole,v=params.get('vue');if(pole&&poles.includes(pole))setFilters(f=>({...f,pole}));if(v&&[...navigation.map(n=>n.id),'entities','sources'].includes(v as View))setView(v as View);},[transport,initialPole]);
+ const reload=async()=>{setLoading(true);setError('');try{const d=await transport.list();setRecords(d.records);setCanWrite(d.canWrite);}catch(e:any){setRecords([]);setSelected(null);setError(e.message);setCanWrite(false);}finally{setLoading(false);}};
+ useEffect(()=>{void reload();const params=new URLSearchParams(window.location.search),pole=params.get('pole')||initialPole,v=params.get('vue'),entityId=params.get('entite')||'',risk=params.get('risque')||'',status=params.get('statut')||'';setFilters(f=>({...f,pole:pole&&poles.includes(pole)?pole:'',entityId:/^[0-9a-f-]{36}$/i.test(entityId)?entityId:'',risk:['Faible','Modéré','Élevé','Critique'].includes(risk)?risk:'',status:['À préparer','En cours','Bloqué','En revue','Validé'].includes(status)?status:''}));if(v&&[...navigation.map(n=>n.id),'entities','sources'].includes(v as View))setView(v as View);},[transport,initialPole]);
+ useEffect(()=>{
+  // FiscalHub uses an imperative transport, not a TanStack query. Refresh it
+  // whenever another intranet screen saves, and also check remote changes
+  // while visible. The selected editing draft is not silently overwritten.
+  const onChange=()=>{void reload();};
+  window.addEventListener(INTRANET_CHANGE_EVENT,onChange);
+  const timer=window.setInterval(()=>{
+   if(document.visibilityState==='visible')void reload();
+  },30_000);
+  return()=>{window.removeEventListener(INTRANET_CHANGE_EVENT,onChange);window.clearInterval(timer);};
+ },[transport]);
  useEffect(()=>{if(toast){const t=setTimeout(()=>setToast(''),4200);return()=>clearTimeout(t);}},[toast]);
- const filtered=useMemo(()=>records.filter(r=>{if(filters.entity&&r.entity!==filters.entity&&!r.relatedEntities?.includes(filters.entity))return false;if(filters.activity&&r.activity!==filters.activity)return false;if(filters.flow&&r.flow!==filters.flow)return false;if(filters.pole&&r.pole!==filters.pole&&!r.contributors.includes(filters.pole))return false;if(filters.risk&&r.risk!==filters.risk)return false;if(filters.confidence&&r.confidence!==filters.confidence)return false;return !search||normalized([r.id,r.title,r.summary,r.entity,r.owner,r.pole,...r.contributors,...Object.values(r.details)].join(' ')).includes(normalized(search));}),[records,filters,search]);
+ const filtered=useMemo(()=>records.filter(r=>{if(filters.entity&&r.entity!==filters.entity&&!r.relatedEntities?.includes(filters.entity))return false;if(filters.entityId&&r.legalEntityId!==filters.entityId)return false;if(filters.status&&r.status!==filters.status)return false;if(filters.activity&&r.activity!==filters.activity)return false;if(filters.flow&&r.flow!==filters.flow)return false;if(filters.pole&&r.pole!==filters.pole&&!r.contributors.includes(filters.pole))return false;if(filters.risk&&r.risk!==filters.risk)return false;if(filters.confidence&&r.confidence!==filters.confidence)return false;return !search||normalized([r.id,r.title,r.summary,r.entity,r.owner,r.pole,...r.contributors,...Object.values(r.details)].join(' ')).includes(normalized(search));}),[records,filters,search]);
  const flowRecords=filtered.filter(r=>r.kind==='flow'),riskRecords=filtered.filter(r=>r.kind==='risk'),docs=filtered.filter(r=>r.kind==='document'),obligations=filtered.filter(r=>r.kind==='obligation');
  const activeFilters=Object.values(filters).filter(Boolean).length;
  const open=(r:FiscalRecord,tab='cadre')=>{setSelected(clone(r));setDrawerTab(tab);};

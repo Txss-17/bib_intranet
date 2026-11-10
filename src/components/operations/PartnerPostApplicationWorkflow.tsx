@@ -129,6 +129,14 @@ export default function PartnerPostApplicationWorkflow({kind,sourceId}:{kind:Kin
  });
  const canRecordProduct=kind==='supplier'&&['catalog_received','catalog_reviewed','products_selected'].includes(current);
  const eligible=(query.data?.products??[]).filter(p=>p.status==='eligible').length;
+ // The approved logistics workflow requires receipt and independent legal review of the
+ // provider's contract. The corresponding backend transition is still under PR #61;
+ // until it is merged and proven, fail closed in this UI instead of signing directly.
+ const pendingLegalContractReview=kind==='logistics'&&current==='requirements_accepted'&&next?.[0]==='contract_signed';
+ const pendingAccessProof=next?.[0]==='portal_access_recorded'&&
+  (handoffQuery.isLoading||handoffQuery.isError||!handoffQuery.data||
+   !['confirmed','simulated'].includes(handoffQuery.data.delivery_state)||
+   (handoffQuery.data.delivery_state==='simulated'&&profile?.test_account!==true));
  return <Card>
   <CardHeader>
    <CardTitle>Parcours après candidature — {kind==='supplier'?'Fournisseur':'Logistique'}</CardTitle>
@@ -192,13 +200,19 @@ export default function PartnerPostApplicationWorkflow({kind,sourceId}:{kind:Kin
       reste subordonné à l'approbation Platform et aux contrôles de la vague pilote.
      </p>
     </div>}
+    {kind==='logistics'&&next?.[0]==='provider_contract_reviewed'&&<p className="text-sm text-muted-foreground">Seul un acteur habilité au pôle Juridique peut valider cette étape. Le signataire suivant doit être une autre personne. Les réserves doivent être levées avant signature.</p>}
+    {pendingLegalContractReview&&<div role="alert" className="space-y-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-sm">
+     <p className="font-medium">Validation du contrat logisticien requise avant signature</p>
+     <p>Après l’accord sur les besoins, réceptionnez la version du contrat, des CGS et du SLA proposés par le prestataire. La revue indépendante Juridique / Logistique / Finance doit être enregistrée avant signature. Cette transition reste bloquée dans le parcours courant tant que le contrôle serveur de la PR #61 n’est pas intégré et vérifié.</p>
+    </div>}
     {next&&<div className="space-y-2 rounded-lg border p-3">
      <p className="font-medium">Prochaine étape : {next[1]}</p>
      <Input value={reference} onChange={e=>setReference(e.target.value)}
       aria-label="Preuve de l'étape" placeholder={kind==='logistics' && next[0]==='provider_contract_received' ? 'Référence et version du contrat / annexes reçus' : kind==='logistics' && next[0]==='provider_contract_reviewed' ? 'Référence du visa juridique (acteur habilité requis)' : 'Référence de pièce ou décision (8 caractères minimum)'} maxLength={500}/>
      <Textarea value={notes} onChange={e=>setNotes(e.target.value)}
       aria-label="Observations" placeholder="Responsable, vérification réalisée, date ou réserve" maxLength={2000}/>
-     <Button disabled={transition.isPending||reference.trim().length<8||
+     {pendingAccessProof&&<p role="alert" className="text-sm text-warning">L’étape d’accès exige la confirmation de l’envoi Gateway approuvé indépendamment. Une invitation préparée ou en attente ne vaut pas livraison. La simulation n’est admissible que pour un compte de test.</p>}
+     <Button disabled={transition.isPending||pendingLegalContractReview||pendingAccessProof||reference.trim().length<8||
       (needsPlatform&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(linkedId))}
       onClick={()=>transition.mutate()}>Enregistrer l'étape</Button>
     </div>}

@@ -131,7 +131,7 @@ export default function MarketplaceDashboard() {
    * Elle ne constitue pas un KPI commercial.
    */
   const {
-    data: syncRun,
+    data: syncRuns = [],
     isLoading: syncLoading,
     isError: syncError,
   } = useQuery({
@@ -150,16 +150,22 @@ export default function MarketplaceDashboard() {
         .order("started_at", {
           ascending: false,
         })
-        .limit(1)
-        .maybeSingle();
+        .limit(25);
 
       if (error) {
         throw error;
       }
 
-      return data;
+      return data ?? [];
     },
   });
+
+  const syncRun = syncRuns[0];
+  const lastSuccessfulSync = syncRuns.find(run => run.status === 'success');
+  const syncHasFailed = Boolean(syncRun && syncRun.status !== 'success');
+  const lastSuccessLabel = lastSuccessfulSync?.finished_at
+    ? new Intl.DateTimeFormat('fr-FR',{dateStyle:'short',timeStyle:'short'}).format(new Date(lastSuccessfulSync.finished_at))
+    : 'Aucune synchronisation réussie dans les dernières exécutions';
 
   const activeShops = shops.filter(
     (shop) => shop.status === "active",
@@ -226,6 +232,15 @@ export default function MarketplaceDashboard() {
           KPI PORTEFEUILLE
       ====================================================== */}
 
+      {syncHasFailed && !syncLoading && !syncError && (
+        <div role="alert" className="rounded-lg border border-amber-500/50 p-4 text-sm">
+          <strong>Les données Platform peuvent être périmées.</strong>
+          {' '}Dernier transfert : {syncRun?.status ?? 'inconnu'}.
+          {' '}Dernière synchronisation réussie : {lastSuccessLabel}.
+          La réactualisation de la page ne lance pas un import de la base Platform.
+          Vérifiez le journal de synchronisation et corrigez l'erreur côté source avant d'utiliser ces chiffres.
+        </div>
+      )}
       {incomplete && (
         <div role="alert" className="rounded-lg border border-destructive/30 p-4 text-sm text-destructive">
           Certaines données Marketplace ou la synchronisation Platform sont indisponibles.

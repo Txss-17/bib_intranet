@@ -1,6 +1,8 @@
 import {useMemo,useState} from 'react';
 import {useLocation} from 'react-router-dom';
 import FiscalHub,{Transport} from '@/components/finance/fiscal/FiscalHub';
+import FiscalEntityDrafts from '@/components/finance/fiscal/FiscalEntityDrafts';
+import FiscalEntityOperations from '@/components/finance/fiscal/FiscalEntityOperations';
 import {FiscalRecord,refs} from '@/components/finance/fiscal/data';
 import {useAuth} from '@/hooks/useAuth';
 import {usePermissions} from '@/hooks/usePermissions';
@@ -34,5 +36,5 @@ export default function FiscalGovernance(){
  }),[user?.id,profile?.test_account]);
  if(!canViewPage('finance.fiscal'))return <p role="alert">Accès restreint au pilotage fiscal.</p>;
  const scope=location.pathname.split('/')[2];
- return <FiscalHub key={[scope,user?.id,profile?.test_account].join(':')} embedded transport={transport} canValidate={can('finance.fiscal','validate')} initialPole={scope==='finance'?'':poleNames[scope]||''}/>;
+ return <><FiscalEntityDrafts/><FiscalEntityOperations/><FiscalHub key={[scope,user?.id,profile?.test_account].join(':')} embedded transport={transport} canValidate={can('finance.fiscal','validate')} initialPole={scope==='finance'?'':poleNames[scope]||''}/></>;
 }

@@ -1,3 +1,4 @@
+import {AuditCrossPoleInbox} from '@/components/audit/CrossPoleAuditReferral';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
@@ -83,6 +84,8 @@ export default function AuditMissions() {
         </div>
         <Button disabled={!mayCreate} onClick={() => setOpen(true)}><Plus className="mr-2 h-4 w-4" />Nouvelle mission</Button>
       </div>
+
+      <AuditCrossPoleInbox />
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
         {([

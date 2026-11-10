@@ -1,3 +1,4 @@
+import {CrossPoleAuditReferralButton} from '@/components/audit/CrossPoleAuditReferral';
 import { useMemo, useState } from 'react';
 import {
   Card,
@@ -653,6 +654,7 @@ const LogisticsIncidents = () => {
                       {getStatusBadge(
                         incident.status,
                       )}
+                      <CrossPoleAuditReferralButton sourcePole="ops" sourceType="logistics_incident" sourceId={incident.id} />
                     </div>
                   </div>
                 </CardContent>

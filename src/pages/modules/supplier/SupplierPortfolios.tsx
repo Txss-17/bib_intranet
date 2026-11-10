@@ -164,6 +164,7 @@ function useSupplierPortfolios() {
       const { data, error } = await supabase
         .from('supplier_portfolios')
         .select('*')
+        .is('archived_at',null)
         .order('category')
         .order('responsible_name');
 
@@ -527,6 +528,8 @@ export default function SupplierPortfolios() {
     savingPortfolio,
     setSavingPortfolio,
   ] = useState(false);
+  const [archivePortfolioId,setArchivePortfolioId]=useState('');
+  const [archiveReason,setArchiveReason]=useState('');
 
   const {
     data: portfolios = [],
@@ -688,6 +691,21 @@ export default function SupplierPortfolios() {
       return grouped;
     }, [suppliers]);
 
+  const archivePortfolio = useMutation({
+    mutationFn: async () => {
+      const {error}=await supabase.rpc('bib_archive_supplier_portfolio' as never,{
+        p_portfolio_id:archivePortfolioId,p_reason:archiveReason.trim()
+      } as never);
+      if(error)throw error;
+    },
+    onSuccess:()=>{
+      setArchivePortfolioId('');setArchiveReason('');
+      void queryClient.invalidateQueries({queryKey:['supplier-portfolios']});
+      void queryClient.invalidateQueries({queryKey:['supplier-portfolio-data']});
+      toast.success('Portefeuille fournisseur archivé sans supprimer les dossiers.');
+    },
+    onError:(error:Error)=>toast.error(error.message),
+  });
   const openCreateDialog = () => {
     setEditingPortfolio(null);
     setPortfolioForm(EMPTY_FORM);
@@ -1218,178 +1236,46 @@ export default function SupplierPortfolios() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>
-                Portefeuilles fournisseurs
-              </CardTitle>
-
+              <CardTitle>Créer et attribuer les portefeuilles fournisseurs</CardTitle>
               <CardDescription>
-                Chaque carte correspond à un
-                enregistrement réel de
-                supplier_portfolios.
+                Le registre préexistant n'est plus présenté comme une liste de cartes.
+                La création, les responsables et les affectations doivent être
+                définis explicitement selon l'organisation du pôle Fournisseurs.
+                Aucun dossier ni historique fournisseur n'a été supprimé.
               </CardDescription>
             </CardHeader>
-
-            <CardContent>
-              {portfolioSummaries.length ===
-              0 ? (
-                <div className="rounded-lg border border-dashed p-8 text-center">
-                  <FolderOpen className="mx-auto h-8 w-8 text-muted-foreground" />
-
-                  <p className="mt-3 font-medium">
-                    Aucun portefeuille
-                    fournisseur
+            <CardContent className="space-y-3">
+              <Button onClick={openCreateDialog}>
+                <Plus className="mr-2 h-4 w-4"/>Créer un nouveau portefeuille
+              </Button>
+              {portfolios.length > 0 && (
+                <form className="space-y-3 rounded-md border p-3" onSubmit={e=>{e.preventDefault();archivePortfolio.mutate();}}>
+                  <h3 className="font-medium">Archiver un portefeuille fournisseur sans dossier affecté</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Les dossiers doivent d'abord être réaffectés. L'archivage conserve
+                    les pièces et l'historique ; il bloque toute nouvelle affectation
+                    sur ce portefeuille.
                   </p>
-
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Créez le premier
-                    portefeuille fournisseur
-                    pour commencer la
-                    répartition.
-                  </p>
-
-                  <Button
-                    className="mt-4"
-                    onClick={
-                      openCreateDialog
-                    }
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Créer un portefeuille
+                  <select aria-label="Portefeuille fournisseur à archiver" required
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={archivePortfolioId} onChange={e=>setArchivePortfolioId(e.target.value)}>
+                    <option value="">Choisir un portefeuille vide</option>
+                    {portfolios.map(p=><option key={p.id} value={p.id}>{p.category}</option>)}
+                  </select>
+                  <Input aria-label="Motif d'archivage fournisseur" required minLength={8} maxLength={500}
+                    value={archiveReason} onChange={e=>setArchiveReason(e.target.value)}
+                    placeholder="Motif obligatoire (8 caractères minimum)"/>
+                  <Button type="submit" variant="outline" disabled={!archivePortfolioId||archiveReason.trim().length<8||archivePortfolio.isPending}>
+                    {archivePortfolio.isPending?'Archivage…':'Archiver ce portefeuille'}
                   </Button>
-                </div>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {portfolioSummaries.map(
-                    (portfolio) => (
-                      <Card
-                        key={portfolio.id}
-                        className="transition-shadow hover:shadow-md"
-                      >
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <CardTitle className="text-lg">
-                                {
-                                  portfolio.category
-                                }
-                              </CardTitle>
-
-                              <CardDescription>
-                                Responsable :{' '}
-                                {portfolio.responsible_name ||
-                                  'Non défini'}
-                              </CardDescription>
-                            </div>
-
-                            <Badge variant="outline">
-                              Portefeuille
-                            </Badge>
-                          </div>
-                        </CardHeader>
-
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                Fournisseurs
-                              </p>
-
-                              <p className="text-xl font-bold">
-                                {
-                                  portfolio.supplierCount
-                                }
-                              </p>
-                            </div>
-
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                Alertes
-                              </p>
-
-                              <p className="text-xl font-bold">
-                                {
-                                  portfolio.alertCount
-                                }
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">
-                                Score qualité
-                              </span>
-
-                              <span className="font-medium">
-                                {
-                                  portfolio.averageScore
-                                }
-                                %
-                              </span>
-                            </div>
-
-                            <Progress
-                              value={
-                                portfolio.averageScore
-                              }
-                              className="h-2"
-                            />
-                          </div>
-
-                          <div className="flex flex-wrap gap-2">
-                            <Badge variant="secondary">
-                              {
-                                portfolio.category
-                              }
-                            </Badge>
-
-                            {portfolio.backup_name && (
-                              <Badge variant="outline">
-                                Backup :{' '}
-                                {
-                                  portfolio.backup_name
-                                }
-                              </Badge>
-                            )}
-                          </div>
-
-                          <div className="flex gap-2 pt-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1"
-                              onClick={() => {
-                                setSelectedPortfolio(
-                                  portfolio.id,
-                                );
-                                setActiveTab(
-                                  'suppliers',
-                                );
-                              }}
-                            >
-                              <Users className="mr-1 h-4 w-4" />
-                              Fournisseurs
-                            </Button>
-
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                openEditDialog(
-                                  portfolio,
-                                )
-                              }
-                            >
-                              <Edit className="mr-1 h-4 w-4" />
-                              Modifier
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ),
-                  )}
-                </div>
+                </form>
               )}
+              <p className="text-sm text-muted-foreground">
+                {portfolioSummaries.length} portefeuille(s) conservé(s) dans le registre.
+                Utilisez l'onglet Fournisseurs pour consulter les dossiers et
+                réaffecter leurs responsables. Les enregistrements historiques
+                ne sont pas recréés automatiquement.
+              </p>
             </CardContent>
           </Card>
 

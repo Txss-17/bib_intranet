@@ -1,3 +1,4 @@
+-- NOTE: not in the Drizzle journal; applied to the database as 0096_partner_access_handoff.sql.
 -- 0091 follows merged migration 0090 without rewriting its history.
 -- Partner portal invitations use the existing independently approved Gateway Outbox.
 -- No passwords, OTP codes or partner access tokens are stored or emailed.

@@ -4,7 +4,7 @@ export type Status = 'À préparer' | 'En cours' | 'Bloqué' | 'En revue' | 'Val
 export type Risk = 'Faible' | 'Modéré' | 'Élevé' | 'Critique';
 export type Evidence = {id:string; name:string; url:string; type:'link'|'file'; addedAt:string};
 export type FiscalRecord = {
- id:string; kind:Kind; title:string; summary:string; entity:string; activity:string; flow:string;
+ id:string; kind:Kind; title:string; summary:string; entity:string; legalEntityId?:string; activity:string; flow:string;
  pole:string; contributors:string[]; relatedEntities?:string[]; confidence:Confidence; status:Status; risk:Risk;
  owner:string; due:string; dueType:'Légale'|'Interne'|'À déterminer'; trigger:string;
  dependencies:string[]; controls:{label:string; done:boolean}[]; evidence:Evidence[];

@@ -1535,6 +1535,675 @@ export type Database = {
           },
         ]
       }
+      bib_fiscal_events: {
+        Row: {
+          action: string
+          actor_id: string
+          after_body: Json
+          before_body: Json | null
+          created_at: string
+          id: string
+          record_id: string
+          test_account: boolean
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          after_body: Json
+          before_body?: Json | null
+          created_at?: string
+          id?: string
+          record_id: string
+          test_account: boolean
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          after_body?: Json
+          before_body?: Json | null
+          created_at?: string
+          id?: string
+          record_id?: string
+          test_account?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_fiscal_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_fiscal_legal_entities: {
+        Row: {
+          country_code: string
+          created_at: string
+          created_by: string
+          id: string
+          legal_form: string
+          legal_name: string
+          notes: string
+          status: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          country_code: string
+          created_at?: string
+          created_by: string
+          id?: string
+          legal_form: string
+          legal_name: string
+          notes?: string
+          status?: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          legal_form?: string
+          legal_name?: string
+          notes?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_fiscal_legal_entities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bib_fiscal_legal_entities_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_fiscal_records: {
+        Row: {
+          body: Json
+          created_by: string
+          record_id: string
+          revision: number
+          test_account: boolean
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          body: Json
+          created_by: string
+          record_id: string
+          revision?: number
+          test_account: boolean
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          body?: Json
+          created_by?: string
+          record_id?: string
+          revision?: number
+          test_account?: boolean
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_fiscal_records_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bib_fiscal_records_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_fiscal_reference_catalog: {
+        Row: {
+          body: Json
+          record_id: string
+          reference_version: string
+        }
+        Insert: {
+          body: Json
+          record_id: string
+          reference_version?: string
+        }
+        Update: {
+          body?: Json
+          record_id?: string
+          reference_version?: string
+        }
+        Relationships: []
+      }
+      bib_partner_access_handoffs: {
+        Row: {
+          case_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          delivery_state: string
+          id: string
+          outbox_id: string
+          prepared_by: string
+          recipient_email: string
+          test_account: boolean
+        }
+        Insert: {
+          case_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          delivery_state?: string
+          id?: string
+          outbox_id: string
+          prepared_by: string
+          recipient_email: string
+          test_account: boolean
+        }
+        Update: {
+          case_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          delivery_state?: string
+          id?: string
+          outbox_id?: string
+          prepared_by?: string
+          recipient_email?: string
+          test_account?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_partner_access_handoffs_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "bib_partner_onboarding_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bib_partner_access_handoffs_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: true
+            referencedRelation: "intranet_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_partner_catalog_eligibility: {
+        Row: {
+          audit_reuse_reference: string | null
+          case_id: string
+          certification_evidence: Json
+          created_at: string
+          documentary_evidence: Json
+          id: string
+          product_description: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          sku: string
+          status: string
+          test_account: boolean
+          updated_at: string
+        }
+        Insert: {
+          audit_reuse_reference?: string | null
+          case_id: string
+          certification_evidence?: Json
+          created_at?: string
+          documentary_evidence?: Json
+          id?: string
+          product_description: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sku: string
+          status?: string
+          test_account?: boolean
+          updated_at?: string
+        }
+        Update: {
+          audit_reuse_reference?: string | null
+          case_id?: string
+          certification_evidence?: Json
+          created_at?: string
+          documentary_evidence?: Json
+          id?: string
+          product_description?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          sku?: string
+          status?: string
+          test_account?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_partner_catalog_eligibility_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "bib_partner_onboarding_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_partner_onboarding_cases: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          partner_kind: string
+          platform_submission_id: string | null
+          source_id: string
+          stage: string
+          test_account: boolean
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          partner_kind: string
+          platform_submission_id?: string | null
+          source_id: string
+          stage?: string
+          test_account?: boolean
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          partner_kind?: string
+          platform_submission_id?: string | null
+          source_id?: string
+          stage?: string
+          test_account?: boolean
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: []
+      }
+      bib_partner_onboarding_events: {
+        Row: {
+          actor_id: string
+          case_id: string
+          created_at: string
+          evidence_reference: string
+          id: string
+          next_stage: string
+          notes: string | null
+          previous_stage: string | null
+        }
+        Insert: {
+          actor_id: string
+          case_id: string
+          created_at?: string
+          evidence_reference: string
+          id?: string
+          next_stage: string
+          notes?: string | null
+          previous_stage?: string | null
+        }
+        Update: {
+          actor_id?: string
+          case_id?: string
+          created_at?: string
+          evidence_reference?: string
+          id?: string
+          next_stage?: string
+          notes?: string | null
+          previous_stage?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_partner_onboarding_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "bib_partner_onboarding_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_pilot_partner_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          next_state: string
+          previous_state: string | null
+          reference: string | null
+          selection_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          next_state: string
+          previous_state?: string | null
+          reference?: string | null
+          selection_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          next_state?: string
+          previous_state?: string | null
+          reference?: string | null
+          selection_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_pilot_partner_events_selection_id_fkey"
+            columns: ["selection_id"]
+            isOneToOne: false
+            referencedRelation: "bib_pilot_partner_selections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_pilot_partner_selections: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          evidence_reference: string | null
+          id: string
+          nominated_by: string
+          partner_id: string
+          partner_kind: string
+          platform_submission_id: string | null
+          state: string
+          test_account: boolean
+          updated_at: string
+          updated_by: string
+          wave: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          evidence_reference?: string | null
+          id?: string
+          nominated_by: string
+          partner_id: string
+          partner_kind: string
+          platform_submission_id?: string | null
+          state?: string
+          test_account?: boolean
+          updated_at?: string
+          updated_by: string
+          wave: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          evidence_reference?: string | null
+          id?: string
+          nominated_by?: string
+          partner_id?: string
+          partner_kind?: string
+          platform_submission_id?: string | null
+          state?: string
+          test_account?: boolean
+          updated_at?: string
+          updated_by?: string
+          wave?: number
+        }
+        Relationships: []
+      }
+      bib_sourcing_candidates: {
+        Row: {
+          candidate_status: string
+          comparison_notes: string | null
+          contact_reference: string | null
+          converted_application_id: string | null
+          coverage: string | null
+          created_at: string
+          created_by: string
+          currency: string | null
+          evidence_reference: string | null
+          followup_due_at: string | null
+          id: string
+          lead_time_days: number | null
+          mission_id: string
+          moq: number | null
+          offer_summary: string
+          organization_name: string
+          partner_reference: string | null
+          price_amount: number | null
+          sla_percent: number | null
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          candidate_status?: string
+          comparison_notes?: string | null
+          contact_reference?: string | null
+          converted_application_id?: string | null
+          coverage?: string | null
+          created_at?: string
+          created_by: string
+          currency?: string | null
+          evidence_reference?: string | null
+          followup_due_at?: string | null
+          id?: string
+          lead_time_days?: number | null
+          mission_id: string
+          moq?: number | null
+          offer_summary: string
+          organization_name: string
+          partner_reference?: string | null
+          price_amount?: number | null
+          sla_percent?: number | null
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          candidate_status?: string
+          comparison_notes?: string | null
+          contact_reference?: string | null
+          converted_application_id?: string | null
+          coverage?: string | null
+          created_at?: string
+          created_by?: string
+          currency?: string | null
+          evidence_reference?: string | null
+          followup_due_at?: string | null
+          id?: string
+          lead_time_days?: number | null
+          mission_id?: string
+          moq?: number | null
+          offer_summary?: string
+          organization_name?: string
+          partner_reference?: string | null
+          price_amount?: number | null
+          sla_percent?: number | null
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_sourcing_candidates_converted_application_id_fkey"
+            columns: ["converted_application_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bib_sourcing_candidates_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "bib_sourcing_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_sourcing_followups: {
+        Row: {
+          candidate_id: string
+          created_at: string
+          due_at: string
+          id: string
+          note: string
+          outcome: string
+          recorded_by: string
+        }
+        Insert: {
+          candidate_id: string
+          created_at?: string
+          due_at: string
+          id?: string
+          note: string
+          outcome: string
+          recorded_by: string
+        }
+        Update: {
+          candidate_id?: string
+          created_at?: string
+          due_at?: string
+          id?: string
+          note?: string
+          outcome?: string
+          recorded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_sourcing_followups_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: false
+            referencedRelation: "bib_sourcing_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_sourcing_missions: {
+        Row: {
+          created_at: string
+          created_by: string
+          due_date: string | null
+          evidence_reference: string | null
+          id: string
+          merchant_id: string | null
+          merchant_reference: string | null
+          owner_id: string
+          pole: string
+          priority: string
+          purpose: string
+          requirements: string
+          status: string
+          test_account: boolean
+          title: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          due_date?: string | null
+          evidence_reference?: string | null
+          id?: string
+          merchant_id?: string | null
+          merchant_reference?: string | null
+          owner_id: string
+          pole: string
+          priority?: string
+          purpose: string
+          requirements: string
+          status?: string
+          test_account?: boolean
+          title: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          due_date?: string | null
+          evidence_reference?: string | null
+          id?: string
+          merchant_id?: string | null
+          merchant_reference?: string | null
+          owner_id?: string
+          pole?: string
+          priority?: string
+          purpose?: string
+          requirements?: string
+          status?: string
+          test_account?: boolean
+          title?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_sourcing_missions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "user_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_sourcing_notification_receipts: {
+        Row: {
+          created_at: string
+          followup_id: string
+          notification_id: string
+          recipient_id: string
+        }
+        Insert: {
+          created_at?: string
+          followup_id: string
+          notification_id: string
+          recipient_id: string
+        }
+        Update: {
+          created_at?: string
+          followup_id?: string
+          notification_id?: string
+          recipient_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_sourcing_notification_receipts_followup_id_fkey"
+            columns: ["followup_id"]
+            isOneToOne: true
+            referencedRelation: "bib_sourcing_followups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bib_sourcing_notification_receipts_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: true
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bugs: {
         Row: {
           assigned_to: string | null
@@ -1716,6 +2385,66 @@ export type Database = {
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      catalog_acquisition_prices: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          created_by: string
+          evidence_reference: string
+          id: string
+          price: Json
+          product_id: string
+          state: string
+          supplier_id: string
+          test_account: boolean
+          total_cents: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by: string
+          evidence_reference: string
+          id?: string
+          price: Json
+          product_id: string
+          state?: string
+          supplier_id: string
+          test_account?: boolean
+          total_cents: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          created_by?: string
+          evidence_reference?: string
+          id?: string
+          price?: Json
+          product_id?: string
+          state?: string
+          supplier_id?: string
+          test_account?: boolean
+          total_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "catalog_acquisition_prices_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "catalog_acquisition_prices_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
             referencedColumns: ["id"]
           },
         ]
@@ -3021,6 +3750,7 @@ export type Database = {
           need_id: string | null
           next_step: string | null
           owner_id: string | null
+          platform_application_id: string | null
           position_key: string | null
           source: string | null
           status: string
@@ -3035,6 +3765,7 @@ export type Database = {
           need_id?: string | null
           next_step?: string | null
           owner_id?: string | null
+          platform_application_id?: string | null
           position_key?: string | null
           source?: string | null
           status?: string
@@ -3049,6 +3780,7 @@ export type Database = {
           need_id?: string | null
           next_step?: string | null
           owner_id?: string | null
+          platform_application_id?: string | null
           position_key?: string | null
           source?: string | null
           status?: string
@@ -3420,6 +4152,86 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      hr_talent_applications: {
+        Row: {
+          assigned_pole: string | null
+          availability: string | null
+          candidate_id: string | null
+          consent_given_at: string
+          contribution_type: string | null
+          current_activity: string | null
+          email: string
+          full_name: string
+          future_opportunities_consent: boolean
+          imported_at: string
+          locale: string | null
+          location: string | null
+          motivation: string | null
+          platform_application_id: string
+          platform_status: string | null
+          platform_updated_at: string
+          portfolio_url: string | null
+          preferred_pole: string | null
+          retention_until: string
+          skills: string | null
+          submitted_at: string
+        }
+        Insert: {
+          assigned_pole?: string | null
+          availability?: string | null
+          candidate_id?: string | null
+          consent_given_at: string
+          contribution_type?: string | null
+          current_activity?: string | null
+          email: string
+          full_name: string
+          future_opportunities_consent?: boolean
+          imported_at?: string
+          locale?: string | null
+          location?: string | null
+          motivation?: string | null
+          platform_application_id: string
+          platform_status?: string | null
+          platform_updated_at: string
+          portfolio_url?: string | null
+          preferred_pole?: string | null
+          retention_until: string
+          skills?: string | null
+          submitted_at: string
+        }
+        Update: {
+          assigned_pole?: string | null
+          availability?: string | null
+          candidate_id?: string | null
+          consent_given_at?: string
+          contribution_type?: string | null
+          current_activity?: string | null
+          email?: string
+          full_name?: string
+          future_opportunities_consent?: boolean
+          imported_at?: string
+          locale?: string | null
+          location?: string | null
+          motivation?: string | null
+          platform_application_id?: string
+          platform_status?: string | null
+          platform_updated_at?: string
+          portfolio_url?: string | null
+          preferred_pole?: string | null
+          retention_until?: string
+          skills?: string | null
+          submitted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hr_talent_applications_candidate_id_fkey"
+            columns: ["candidate_id"]
+            isOneToOne: true
+            referencedRelation: "hr_candidates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hr_trainings: {
         Row: {
@@ -4457,6 +5269,154 @@ export type Database = {
           },
         ]
       }
+      legal_governance_deliveries: {
+        Row: {
+          delivered_at: string | null
+          delivery_sequence: number
+          record_id: string
+          state: string
+        }
+        Insert: {
+          delivered_at?: string | null
+          delivery_sequence: number
+          record_id: string
+          state?: string
+        }
+        Update: {
+          delivered_at?: string | null
+          delivery_sequence?: number
+          record_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_governance_deliveries_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "legal_governance_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_governance_events: {
+        Row: {
+          action: string
+          actor_id: string
+          after_state: Json
+          before_state: Json | null
+          command_key: string
+          created_at: string
+          id: string
+          record_id: string
+          request: Json
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          after_state: Json
+          before_state?: Json | null
+          command_key: string
+          created_at?: string
+          id?: string
+          record_id: string
+          request: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          after_state?: Json
+          before_state?: Json | null
+          command_key?: string
+          created_at?: string
+          id?: string
+          record_id?: string
+          request?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_governance_events_record_id_fkey"
+            columns: ["record_id"]
+            isOneToOne: false
+            referencedRelation: "legal_governance_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_governance_records: {
+        Row: {
+          activation_sequence: number | null
+          command_key: string
+          command_payload: Json
+          command_revision: number
+          created_at: string
+          created_by: string
+          creation_key: string
+          creation_request: Json
+          delivery_sequence: number
+          direction_evidence: string | null
+          direction_reviewer: string | null
+          id: string
+          kind: string
+          last_action: string
+          legal_evidence: string | null
+          legal_reviewer: string | null
+          payload: Json
+          reason: string | null
+          revision: number
+          state: string
+          test_account: boolean
+          updated_at: string
+        }
+        Insert: {
+          activation_sequence?: number | null
+          command_key: string
+          command_payload?: Json
+          command_revision?: number
+          created_at?: string
+          created_by: string
+          creation_key: string
+          creation_request: Json
+          delivery_sequence?: number
+          direction_evidence?: string | null
+          direction_reviewer?: string | null
+          id?: string
+          kind: string
+          last_action?: string
+          legal_evidence?: string | null
+          legal_reviewer?: string | null
+          payload: Json
+          reason?: string | null
+          revision?: number
+          state?: string
+          test_account?: boolean
+          updated_at?: string
+        }
+        Update: {
+          activation_sequence?: number | null
+          command_key?: string
+          command_payload?: Json
+          command_revision?: number
+          created_at?: string
+          created_by?: string
+          creation_key?: string
+          creation_request?: Json
+          delivery_sequence?: number
+          direction_evidence?: string | null
+          direction_reviewer?: string | null
+          id?: string
+          kind?: string
+          last_action?: string
+          legal_evidence?: string | null
+          legal_reviewer?: string | null
+          payload?: Json
+          reason?: string | null
+          revision?: number
+          state?: string
+          test_account?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       lifecycle_email_campaigns: {
         Row: {
           audience: string | null
@@ -4934,6 +5894,286 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      merchant_supply_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          command_key: string
+          created_at: string
+          id: string
+          quote_id: string
+          request: Json
+          result: Json
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          command_key: string
+          created_at?: string
+          id?: string
+          quote_id: string
+          request: Json
+          result: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          command_key?: string
+          created_at?: string
+          id?: string
+          quote_id?: string
+          request?: Json
+          result?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_supply_events_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_supply_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_supply_invoice_refs: {
+        Row: {
+          issuer_entity_id: string
+          quote_id: string
+          reference: string
+          test_account: boolean
+        }
+        Insert: {
+          issuer_entity_id: string
+          quote_id: string
+          reference: string
+          test_account: boolean
+        }
+        Update: {
+          issuer_entity_id?: string
+          quote_id?: string
+          reference?: string
+          test_account?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_supply_invoice_refs_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_supply_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_supply_quotes: {
+        Row: {
+          acceptance: Json | null
+          approval_reference: string | null
+          approved_by: string | null
+          boutique_id: string
+          catalog_id: string
+          command_key: string
+          command_payload: Json
+          coverage: Json | null
+          created_at: string
+          created_by: string
+          creation_key: string
+          creation_request: Json
+          id: string
+          invoice_documents: Json
+          last_action: string
+          merchant_id: string
+          payload: Json
+          payment_evidence: Json
+          product_name: string
+          quote_author: string
+          quote_hash: string
+          quote_version: number
+          reference: string
+          revision: number
+          source_request_id: string | null
+          state: string
+          supplier_id: string
+          test_account: boolean
+          totals: Json
+          updated_at: string
+        }
+        Insert: {
+          acceptance?: Json | null
+          approval_reference?: string | null
+          approved_by?: string | null
+          boutique_id: string
+          catalog_id: string
+          command_key: string
+          command_payload?: Json
+          coverage?: Json | null
+          created_at?: string
+          created_by: string
+          creation_key: string
+          creation_request: Json
+          id?: string
+          invoice_documents?: Json
+          last_action?: string
+          merchant_id: string
+          payload: Json
+          payment_evidence?: Json
+          product_name?: string
+          quote_author: string
+          quote_hash?: string
+          quote_version?: number
+          reference?: string
+          revision?: number
+          source_request_id?: string | null
+          state?: string
+          supplier_id: string
+          test_account?: boolean
+          totals?: Json
+          updated_at?: string
+        }
+        Update: {
+          acceptance?: Json | null
+          approval_reference?: string | null
+          approved_by?: string | null
+          boutique_id?: string
+          catalog_id?: string
+          command_key?: string
+          command_payload?: Json
+          coverage?: Json | null
+          created_at?: string
+          created_by?: string
+          creation_key?: string
+          creation_request?: Json
+          id?: string
+          invoice_documents?: Json
+          last_action?: string
+          merchant_id?: string
+          payload?: Json
+          payment_evidence?: Json
+          product_name?: string
+          quote_author?: string
+          quote_hash?: string
+          quote_version?: number
+          reference?: string
+          revision?: number
+          source_request_id?: string | null
+          state?: string
+          supplier_id?: string
+          test_account?: boolean
+          totals?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_supply_quotes_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_supply_quotes_source_request_id_fkey"
+            columns: ["source_request_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_supply_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_supply_quotes_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_supply_requests: {
+        Row: {
+          boutique_id: string
+          buyer_entity_id: string
+          catalog_id: string
+          created_at: string
+          id: string
+          merchant_id: string
+          quote_id: string | null
+          request: Json
+          request_key: string
+          state: string
+          test_account: boolean
+        }
+        Insert: {
+          boutique_id: string
+          buyer_entity_id: string
+          catalog_id: string
+          created_at?: string
+          id?: string
+          merchant_id: string
+          quote_id?: string | null
+          request: Json
+          request_key: string
+          state?: string
+          test_account: boolean
+        }
+        Update: {
+          boutique_id?: string
+          buyer_entity_id?: string
+          catalog_id?: string
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          quote_id?: string | null
+          request?: Json
+          request_key?: string
+          state?: string
+          test_account?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_supply_requests_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_supply_requests_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_supply_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_supply_settlements: {
+        Row: {
+          evidence: Json
+          quote_id: string
+          revision: number
+          state: string
+          updated_at: string
+        }
+        Insert: {
+          evidence: Json
+          quote_id: string
+          revision: number
+          state: string
+          updated_at?: string
+        }
+        Update: {
+          evidence?: Json
+          quote_id?: string
+          revision?: number
+          state?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_supply_settlements_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: true
+            referencedRelation: "merchant_supply_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_routing_log: {
         Row: {
@@ -6057,6 +7297,7 @@ export type Database = {
           status: string
           supplier_id: string
           tech_integration_status: string | null
+          test_account: boolean
           transmitted_at: string | null
           transmitted_by: string | null
           unit_price: number | null
@@ -6095,6 +7336,7 @@ export type Database = {
           status?: string
           supplier_id: string
           tech_integration_status?: string | null
+          test_account?: boolean
           transmitted_at?: string | null
           transmitted_by?: string | null
           unit_price?: number | null
@@ -6133,6 +7375,7 @@ export type Database = {
           status?: string
           supplier_id?: string
           tech_integration_status?: string | null
+          test_account?: boolean
           transmitted_at?: string | null
           transmitted_by?: string | null
           unit_price?: number | null
@@ -7577,6 +8820,336 @@ export type Database = {
           },
         ]
       }
+      supplier_audit_bank_receipts: {
+        Row: {
+          amount_cents: number
+          bank_statement_reference: string
+          bank_transaction_reference: string
+          case_id: string
+          credited_on: string
+          currency: string
+          id: string
+          test_account: boolean
+          verified_at: string
+          verified_by: string
+        }
+        Insert: {
+          amount_cents: number
+          bank_statement_reference: string
+          bank_transaction_reference: string
+          case_id: string
+          credited_on: string
+          currency?: string
+          id?: string
+          test_account: boolean
+          verified_at?: string
+          verified_by: string
+        }
+        Update: {
+          amount_cents?: number
+          bank_statement_reference?: string
+          bank_transaction_reference?: string
+          case_id?: string
+          credited_on?: string
+          currency?: string
+          id?: string
+          test_account?: boolean
+          verified_at?: string
+          verified_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_audit_bank_receipts_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_audit_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_audit_case_events: {
+        Row: {
+          action: string
+          actor_id: string | null
+          after_state: Json
+          before_state: Json | null
+          case_id: string
+          command_key: string
+          created_at: string
+          event_order: number
+          id: string
+          portal_submission_id: string | null
+          request: Json
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          after_state: Json
+          before_state?: Json | null
+          case_id: string
+          command_key: string
+          created_at?: string
+          event_order?: never
+          id?: string
+          portal_submission_id?: string | null
+          request: Json
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          after_state?: Json
+          before_state?: Json | null
+          case_id?: string
+          command_key?: string
+          created_at?: string
+          event_order?: never
+          id?: string
+          portal_submission_id?: string | null
+          request?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_audit_case_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_audit_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_audit_cases: {
+        Row: {
+          acceptance: Json | null
+          command_key: string
+          command_payload: Json
+          command_revision: number
+          contract_effective_on: string | null
+          contract_reference: string | null
+          created_at: string
+          created_by: string
+          creation_key: string
+          creation_request: Json
+          id: string
+          incident_reference: string | null
+          invoice: Json | null
+          kind: string
+          last_action: string
+          payments: Json
+          quote: Json | null
+          quote_approved_by: string | null
+          quote_author: string | null
+          quote_hash: string | null
+          quote_state: string
+          quote_version: number
+          reason: string | null
+          reference_decisions: Json | null
+          report: Json | null
+          report_approved_by: string | null
+          report_author: string | null
+          report_hash: string | null
+          revision: number
+          scope: string[]
+          state: string
+          supplier_id: string
+          supplier_name: string
+          test_account: boolean
+          updated_at: string
+        }
+        Insert: {
+          acceptance?: Json | null
+          command_key: string
+          command_payload?: Json
+          command_revision?: number
+          contract_effective_on?: string | null
+          contract_reference?: string | null
+          created_at?: string
+          created_by: string
+          creation_key: string
+          creation_request: Json
+          id?: string
+          incident_reference?: string | null
+          invoice?: Json | null
+          kind: string
+          last_action?: string
+          payments?: Json
+          quote?: Json | null
+          quote_approved_by?: string | null
+          quote_author?: string | null
+          quote_hash?: string | null
+          quote_state?: string
+          quote_version?: number
+          reason?: string | null
+          reference_decisions?: Json | null
+          report?: Json | null
+          report_approved_by?: string | null
+          report_author?: string | null
+          report_hash?: string | null
+          revision?: number
+          scope: string[]
+          state?: string
+          supplier_id: string
+          supplier_name?: string
+          test_account?: boolean
+          updated_at?: string
+        }
+        Update: {
+          acceptance?: Json | null
+          command_key?: string
+          command_payload?: Json
+          command_revision?: number
+          contract_effective_on?: string | null
+          contract_reference?: string | null
+          created_at?: string
+          created_by?: string
+          creation_key?: string
+          creation_request?: Json
+          id?: string
+          incident_reference?: string | null
+          invoice?: Json | null
+          kind?: string
+          last_action?: string
+          payments?: Json
+          quote?: Json | null
+          quote_approved_by?: string | null
+          quote_author?: string | null
+          quote_hash?: string | null
+          quote_state?: string
+          quote_version?: number
+          reason?: string | null
+          reference_decisions?: Json | null
+          report?: Json | null
+          report_approved_by?: string | null
+          report_author?: string | null
+          report_hash?: string | null
+          revision?: number
+          scope?: string[]
+          state?: string
+          supplier_id?: string
+          supplier_name?: string
+          test_account?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_audit_cases_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_audit_document_manifest: {
+        Row: {
+          case_id: string
+          document_kind: string
+          document_reference: string
+          id: string
+          recorded_at: string
+          recorded_by: string
+          sha256_hex: string
+          test_account: boolean
+          version_label: string
+        }
+        Insert: {
+          case_id: string
+          document_kind: string
+          document_reference: string
+          id?: string
+          recorded_at?: string
+          recorded_by: string
+          sha256_hex: string
+          test_account: boolean
+          version_label: string
+        }
+        Update: {
+          case_id?: string
+          document_kind?: string
+          document_reference?: string
+          id?: string
+          recorded_at?: string
+          recorded_by?: string
+          sha256_hex?: string
+          test_account?: boolean
+          version_label?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_audit_document_manifest_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_audit_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_audit_payment_evidence: {
+        Row: {
+          amount_cents: number
+          case_id: string
+          created_at: string
+          id: string
+          payment_reference: string
+          test_account: boolean
+        }
+        Insert: {
+          amount_cents: number
+          case_id: string
+          created_at?: string
+          id?: string
+          payment_reference: string
+          test_account: boolean
+        }
+        Update: {
+          amount_cents?: number
+          case_id?: string
+          created_at?: string
+          id?: string
+          payment_reference?: string
+          test_account?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_audit_payment_evidence_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "supplier_audit_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      supplier_audit_portal_links: {
+        Row: {
+          bound_by: string
+          created_at: string
+          evidence_reference: string
+          platform_submission_id: string
+          supplier_id: string
+        }
+        Insert: {
+          bound_by: string
+          created_at?: string
+          evidence_reference: string
+          platform_submission_id: string
+          supplier_id: string
+        }
+        Update: {
+          bound_by?: string
+          created_at?: string
+          evidence_reference?: string
+          platform_submission_id?: string
+          supplier_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "supplier_audit_portal_links_supplier_id_fkey"
+            columns: ["supplier_id"]
+            isOneToOne: true
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       supplier_audits: {
         Row: {
           app_origin: string
@@ -7887,6 +9460,8 @@ export type Database = {
       supplier_restock_orders: {
         Row: {
           acknowledged_at: string | null
+          buyer_boutique_id: string | null
+          buyer_merchant_id: string | null
           catalog_id: string | null
           created_at: string
           created_by: string | null
@@ -7901,12 +9476,16 @@ export type Database = {
           quantity: number
           received_at: string | null
           sent_at: string | null
+          source_product_id: string | null
           status: string
           supplier_id: string
+          supply_quote_id: string | null
           updated_at: string
         }
         Insert: {
           acknowledged_at?: string | null
+          buyer_boutique_id?: string | null
+          buyer_merchant_id?: string | null
           catalog_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -7921,12 +9500,16 @@ export type Database = {
           quantity: number
           received_at?: string | null
           sent_at?: string | null
+          source_product_id?: string | null
           status?: string
           supplier_id: string
+          supply_quote_id?: string | null
           updated_at?: string
         }
         Update: {
           acknowledged_at?: string | null
+          buyer_boutique_id?: string | null
+          buyer_merchant_id?: string | null
           catalog_id?: string | null
           created_at?: string
           created_by?: string | null
@@ -7941,8 +9524,10 @@ export type Database = {
           quantity?: number
           received_at?: string | null
           sent_at?: string | null
+          source_product_id?: string | null
           status?: string
           supplier_id?: string
+          supply_quote_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -7954,10 +9539,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "supplier_restock_orders_source_product_id_fkey"
+            columns: ["source_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "supplier_restock_orders_supplier_id_fkey"
             columns: ["supplier_id"]
             isOneToOne: false
             referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "supplier_restock_orders_supply_quote_id_fkey"
+            columns: ["supply_quote_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_supply_quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -7981,6 +9580,7 @@ export type Database = {
           quality_score: number | null
           risk_score: number | null
           status: string
+          test_account: boolean
           updated_at: string
           validated_at: string | null
           validated_by: string | null
@@ -8003,6 +9603,7 @@ export type Database = {
           quality_score?: number | null
           risk_score?: number | null
           status?: string
+          test_account?: boolean
           updated_at?: string
           validated_at?: string | null
           validated_by?: string | null
@@ -8025,9 +9626,31 @@ export type Database = {
           quality_score?: number | null
           risk_score?: number | null
           status?: string
+          test_account?: boolean
           updated_at?: string
           validated_at?: string | null
           validated_by?: string | null
+        }
+        Relationships: []
+      }
+      supply_operator_configuration: {
+        Row: {
+          enabled: boolean
+          evidence_reference: string | null
+          party: Json | null
+          singleton: boolean
+        }
+        Insert: {
+          enabled?: boolean
+          evidence_reference?: string | null
+          party?: Json | null
+          singleton?: boolean
+        }
+        Update: {
+          enabled?: boolean
+          evidence_reference?: string | null
+          party?: Json | null
+          singleton?: boolean
         }
         Relationships: []
       }
@@ -8799,6 +10422,7 @@ export type Database = {
           name: string
           owner_id: string | null
           pole: string | null
+          priority: string
           revision: number
           status: string
           test_account: boolean
@@ -8817,6 +10441,7 @@ export type Database = {
           name: string
           owner_id?: string | null
           pole?: string | null
+          priority?: string
           revision?: number
           status?: string
           test_account?: boolean
@@ -8835,6 +10460,7 @@ export type Database = {
           name?: string
           owner_id?: string | null
           pole?: string | null
+          priority?: string
           revision?: number
           status?: string
           test_account?: boolean
@@ -9089,6 +10715,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      acknowledge_legal_governance_delivery: {
+        Args: { p_id: string; p_sequence: number }
+        Returns: undefined
+      }
       acknowledge_sav_escalation: {
         Args: { p_issue_id: string }
         Returns: Json
@@ -9105,9 +10735,53 @@ export type Database = {
         Args: { p_body: string; p_id: string }
         Returns: string
       }
+      adjust_partner_stock: {
+        Args: {
+          p_expected_quantity: number
+          p_new_quantity: number
+          p_reason: string
+          p_reference: string
+          p_stock_id: string
+        }
+        Returns: string
+      }
+      advance_legal_governance_record: {
+        Args: {
+          p_action: string
+          p_id: string
+          p_key: string
+          p_payload?: Json
+          p_revision: number
+        }
+        Returns: Json
+      }
+      advance_merchant_supply_quote: {
+        Args: {
+          p_action: string
+          p_id: string
+          p_key: string
+          p_payload?: Json
+          p_revision: number
+        }
+        Returns: Json
+      }
+      advance_supplier_audit_case: {
+        Args: {
+          p_action: string
+          p_id: string
+          p_key: string
+          p_payload?: Json
+          p_revision: number
+        }
+        Returns: Json
+      }
       apply_hr_employee_mutation: {
         Args: { p_request_id: string }
         Returns: Json
+      }
+      approve_catalog_acquisition_price: {
+        Args: { p_id: string }
+        Returns: undefined
       }
       archive_support_ticket: {
         Args: { p_id: string; p_revision: number }
@@ -9122,10 +10796,41 @@ export type Database = {
         }
         Returns: undefined
       }
+      attest_supplier_audit_bank_receipt: {
+        Args: {
+          p_amount_cents: number
+          p_bank_statement_reference: string
+          p_bank_transaction_reference: string
+          p_case_id: string
+          p_credited_on: string
+        }
+        Returns: string
+      }
       audit_mission_action: { Args: { p_action: string }; Returns: boolean }
       audit_mission_action_for: {
         Args: { p_action: string; p_actor: string }
         Returns: boolean
+      }
+      bib_add_sourcing_candidate: {
+        Args: {
+          p_contact_reference?: string
+          p_mission: string
+          p_name: string
+          p_offer: string
+        }
+        Returns: string
+      }
+      bib_advance_partner_onboarding: {
+        Args: {
+          p_evidence_reference: string
+          p_expected_stage: string
+          p_kind: string
+          p_next_stage: string
+          p_notes?: string
+          p_platform_submission_id?: string
+          p_source_id: string
+        }
+        Returns: string
       }
       bib_assign_case_entity: {
         Args: {
@@ -9140,19 +10845,129 @@ export type Database = {
         Args: { p_new_owner: string; p_portfolio_id: string; p_reason?: string }
         Returns: undefined
       }
+      bib_confirm_partner_access_delivery: {
+        Args: { p_case_id: string }
+        Returns: string
+      }
+      bib_convert_sourcing_to_supplier_application: {
+        Args: { p_candidate: string; p_email: string; p_evidence: string }
+        Returns: string
+      }
       bib_create_case_portfolio: {
         Args: { p_name: string; p_owner_id?: string; p_pole: string }
+        Returns: string
+      }
+      bib_create_sourcing_mission: {
+        Args: {
+          p_due_date?: string
+          p_merchant_id?: string
+          p_merchant_reference?: string
+          p_pole: string
+          p_priority: string
+          p_purpose: string
+          p_requirements: string
+          p_title: string
+        }
         Returns: string
       }
       bib_data_domain_allowed: {
         Args: { p_pole: string; p_subsidiary?: string }
         Returns: boolean
       }
+      bib_dispatch_due_sourcing_notifications: {
+        Args: { p_now?: string }
+        Returns: number
+      }
+      bib_fiscal_body: {
+        Args: { p_id: string; p_replacement?: Json; p_test: boolean }
+        Returns: Json
+      }
+      bib_fiscal_is_canonical_ceo: { Args: never; Returns: boolean }
+      bib_partner_onboarding_permitted: {
+        Args: { p_action: string; p_kind: string }
+        Returns: boolean
+      }
+      bib_pilot_logistics_assignment_allowed: {
+        Args: { p_submission: string }
+        Returns: boolean
+      }
       bib_portfolio_permission: {
         Args: { p_action: string; p_pole: string }
         Returns: boolean
       }
+      bib_prepare_partner_access_invitation: {
+        Args: { p_case_id: string }
+        Returns: string
+      }
+      bib_record_partner_catalog_eligibility: {
+        Args: {
+          p_audit_reference?: string
+          p_case_id: string
+          p_certifications: Json
+          p_description: string
+          p_documentary: Json
+          p_sku: string
+          p_status: string
+        }
+        Returns: string
+      }
+      bib_record_sourcing_followup: {
+        Args: {
+          p_candidate: string
+          p_due_at: string
+          p_note: string
+          p_outcome: string
+        }
+        Returns: string
+      }
+      bib_set_pilot_partner_selection: {
+        Args: {
+          p_action: string
+          p_kind: string
+          p_partner_id: string
+          p_platform_submission_id?: string
+          p_reference?: string
+          p_wave: number
+        }
+        Returns: string
+      }
+      bib_set_sourcing_offer_metrics: {
+        Args: {
+          p_candidate: string
+          p_coverage: string
+          p_currency: string
+          p_lead_days: number
+          p_moq: number
+          p_price: number
+          p_sla_percent: number
+        }
+        Returns: string
+      }
+      bib_sourcing_allowed: { Args: { p_pole: string }; Returns: boolean }
+      bib_update_sourcing_review: {
+        Args: {
+          p_candidate: string
+          p_comparison_notes: string
+          p_evidence_reference?: string
+          p_status: string
+        }
+        Returns: string
+      }
+      bind_supplier_audit_portal: {
+        Args: {
+          p_evidence_reference: string
+          p_submission_id: string
+          p_supplier_id: string
+        }
+        Returns: undefined
+      }
+      calculate_catalog_acquisition_price: {
+        Args: { p: Json }
+        Returns: number
+      }
       calculate_demand_forecast: { Args: never; Returns: number }
+      calculate_supplier_audit_quote: { Args: { p: Json }; Returns: Json }
+      calculate_supply_quote: { Args: { p: Json }; Returns: Json }
       can_access_anomalies: { Args: { _uid: string }; Returns: boolean }
       can_access_finance: { Args: { _uid: string }; Returns: boolean }
       can_access_product_customization: {
@@ -9311,12 +11126,50 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_bib_fiscal_legal_entity: {
+        Args: {
+          p_country_code: string
+          p_legal_form: string
+          p_legal_name: string
+          p_notes?: string
+        }
+        Returns: string
+      }
+      create_legal_governance_record: {
+        Args: { p_key: string; p_kind: string; p_payload: Json }
+        Returns: Json
+      }
+      create_merchant_supply_quote: {
+        Args: { p_key: string; p_payload: Json; p_request_id?: string }
+        Returns: Json
+      }
+      create_merchant_supply_request: {
+        Args: {
+          p_boutique_id: string
+          p_buyer_entity_id: string
+          p_environment: string
+          p_key: string
+          p_merchant_id: string
+          p_payload: Json
+        }
+        Returns: Json
+      }
       create_ops_anomaly: {
         Args: { p_key: string; p_payload: Json }
         Returns: Json
       }
       create_quality_alert: {
         Args: { p_key: string; p_page: string; p_payload: Json }
+        Returns: Json
+      }
+      create_supplier_audit_case: {
+        Args: {
+          p_incident_reference?: string
+          p_key: string
+          p_kind: string
+          p_scope: string[]
+          p_supplier_id: string
+        }
         Returns: Json
       }
       create_support_ticket: {
@@ -9371,6 +11224,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      export_legal_governance_record: { Args: { p_id: string }; Returns: Json }
       fail_intranet_document_job: {
         Args: { p_job: string; p_lease: string }
         Returns: undefined
@@ -9392,6 +11246,16 @@ export type Database = {
         Returns: undefined
       }
       get_approved_intranet_share: { Args: { p_id: string }; Returns: Json }
+      get_catalog_acquisition_price: {
+        Args: { p_product_id: string }
+        Returns: Json
+      }
+      get_catalog_acquisition_publication:
+        | { Args: { p_product_id: string }; Returns: Json }
+        | {
+            Args: { p_product_id: string; p_test_account: boolean }
+            Returns: Json
+          }
       get_compliance_dispute: { Args: { p_id: string }; Returns: Json }
       get_compliance_dispute_stats: { Args: never; Returns: Json }
       get_hr_onboarding_permissions: { Args: never; Returns: Json }
@@ -9412,6 +11276,14 @@ export type Database = {
       get_quality_stats: {
         Args: { p_kind?: string; p_page: string }
         Returns: Json
+      }
+      get_supplier_reference_admission: {
+        Args: {
+          p_reference: string
+          p_supplier_id: string
+          p_test_account?: boolean
+        }
+        Returns: boolean
       }
       get_support_ticket_stats: { Args: never; Returns: Json }
       get_work_task_permissions: { Args: never; Returns: Json }
@@ -9456,6 +11328,7 @@ export type Database = {
         Args: { p_poles: string[]; p_position: string }
         Returns: string
       }
+      legal_required_text: { Args: { k: string; p: Json }; Returns: string }
       list_audit_people: {
         Args: never
         Returns: {
@@ -9465,6 +11338,9 @@ export type Database = {
           last_name: string
         }[]
       }
+      list_bib_fiscal_events: { Args: { p_record_id: string }; Returns: Json }
+      list_bib_fiscal_legal_entities: { Args: never; Returns: Json }
+      list_bib_fiscal_records: { Args: never; Returns: Json }
       list_compliance_dispute_events: {
         Args: { p_id: string; p_offset?: number }
         Returns: Json
@@ -9575,6 +11451,10 @@ export type Database = {
         Args: { p_id: string; p_offset?: number; p_page: string }
         Returns: Json
       }
+      list_supplier_audit_portal: {
+        Args: { p_submission_id: string }
+        Returns: Json
+      }
       list_support_assignees: { Args: never; Returns: Json }
       list_support_ticket_history: {
         Args: { p_id: string; p_offset?: number }
@@ -9620,6 +11500,18 @@ export type Database = {
       marketplace_create_portfolio: {
         Args: { p_name: string; p_notes?: string; p_owner_id?: string }
         Returns: string
+      }
+      merchant_supply_portal: {
+        Args: {
+          p_action: string
+          p_boutique_id: string
+          p_buyer_entity_id: string
+          p_environment: string
+          p_merchant_id: string
+          p_payload?: Json
+          p_quote_id?: string
+        }
+        Returns: Json
       }
       move_to_dlq: {
         Args: {
@@ -9687,6 +11579,14 @@ export type Database = {
         Returns: Json
       }
       product_work_member: { Args: never; Returns: boolean }
+      propose_catalog_acquisition_price: {
+        Args: {
+          p_evidence_reference: string
+          p_price: Json
+          p_product_id: string
+        }
+        Returns: string
+      }
       quality_action: { Args: { p_action: string }; Returns: boolean }
       quality_action_for: {
         Args: { p_action: string; p_actor: string }
@@ -9701,6 +11601,20 @@ export type Database = {
         }[]
       }
       read_intranet_ethics: { Args: { p_id: string }; Returns: Json }
+      receive_merchant_supply_settlement: {
+        Args: { p_environment: string; p_evidence: Json; p_quote_id: string }
+        Returns: string
+      }
+      record_supplier_audit_document_manifest: {
+        Args: {
+          p_case_id: string
+          p_document_reference: string
+          p_kind: string
+          p_sha256_hex: string
+          p_version_label: string
+        }
+        Returns: string
+      }
       release_rejected_intranet_delivery: {
         Args: { p_key: string; p_message: string; p_status: number }
         Returns: undefined
@@ -9745,6 +11659,10 @@ export type Database = {
         Returns: boolean
       }
       run_reconciliation: { Args: never; Returns: number }
+      save_bib_fiscal_record: {
+        Args: { p_expected_revision: number; p_record: Json }
+        Returns: Json
+      }
       save_catalog_customization: {
         Args: { p_capabilities: Json; p_product_id: string; p_terms: Json }
         Returns: Json
@@ -9861,6 +11779,27 @@ export type Database = {
         }
         Returns: Json
       }
+      supplier_audit_require_text: {
+        Args: { k: string; p: Json }
+        Returns: string
+      }
+      supply_buyer_identity: {
+        Args: { p_boutique_id: string; p_merchant_id: string; p_test: boolean }
+        Returns: Json
+      }
+      supply_quote_eligible: {
+        Args: {
+          q: Database["public"]["Tables"]["merchant_supply_quotes"]["Row"]
+        }
+        Returns: boolean
+      }
+      supply_quote_options: { Args: never; Returns: Json }
+      supply_restock_in_mode: { Args: { p_quote_id: string }; Returns: boolean }
+      supply_text: {
+        Args: { k: string; max_length?: number; p: Json }
+        Returns: string
+      }
+      supply_timestamp: { Args: { value: string }; Returns: string }
       transition_compliance_dispute: {
         Args: {
           p_action: string
@@ -9999,6 +11938,10 @@ export type Database = {
       }
       validate_intranet_payload: {
         Args: { p_page: string; p_payload: Json }
+        Returns: undefined
+      }
+      validate_legal_governance_payload: {
+        Args: { kind: string; p: Json }
         Returns: undefined
       }
       work_module_table: { Args: { p_kind: string }; Returns: string }
