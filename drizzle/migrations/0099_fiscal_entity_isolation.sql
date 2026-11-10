@@ -145,7 +145,7 @@ REVOKE ALL ON FUNCTION public.bib_assign_fiscal_record_entity(text,uuid,boolean)
 GRANT EXECUTE ON FUNCTION public.bib_assign_fiscal_record_entity(text,uuid,boolean) TO authenticated;
 
 CREATE FUNCTION public.list_bib_fiscal_entity_assignments()
-RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE items jsonb;
 BEGIN
  IF NOT public.bib_fiscal_is_canonical_ceo() THEN
@@ -159,7 +159,7 @@ BEGIN
  LEFT JOIN public.bib_fiscal_record_entities l
  ON l.record_id=r.record_id AND l.test_account=false;
  RETURN items;
-END $;
+END $$;
 REVOKE ALL ON FUNCTION public.list_bib_fiscal_entity_assignments() FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.list_bib_fiscal_entity_assignments() TO authenticated;
 
