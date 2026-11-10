@@ -47,7 +47,7 @@ const candidates: HrRecordsConfig = {
     { key: 'email', label: 'Email', type: 'text' },
     { key: 'position_key', label: 'Poste', type: 'position', required: true },
     { key: 'source', label: 'Source', type: 'select', options: [
-      { value: 'bib_talent', label: 'BIB Talent · Platform' }, { value: 'linkedin', label: 'LinkedIn' }, { value: 'referral', label: 'Cooptation' }, { value: 'website', label: 'Site BIB' },
+      { value: 'bib_talent', label: 'Carrières BIB · import historique Platform' }, { value: 'linkedin', label: 'LinkedIn' }, { value: 'referral', label: 'Cooptation' }, { value: 'website', label: 'Site BIB' },
       { value: 'school', label: 'École' }, { value: 'other', label: 'Autre' } ] },
     { key: 'next_step', label: 'Prochaine étape', type: 'text' },
   ],
@@ -73,12 +73,12 @@ export default function Recruitment() {
       <Card>
         <CardHeader><CardTitle>Recrutement BIB — source officielle Platform</CardTitle></CardHeader>
         <CardContent className="space-y-3 text-sm">
-          <p>Les nouvelles candidatures proviennent du formulaire intégré à BIB Talent sur la plateforme, et non plus de Google Forms ou Google Drive. Le registre « Réception BIB Talent » ci-dessous reçoit les dossiers par un import sécurisé, réservé aux RH habilités.</p>
+          <p>Les nouvelles candidatures sont déposées sur la page Carrières de BIB Platform, et non sur l’ancienne page BIB Talent. Le registre « Réception Carrières BIB » reçoit les dossiers par un import sécurisé réservé aux RH habilités. Le nom technique historique de l’import reste inchangé.</p>
           <p>Parcours : dépôt sur la plateforme → import RH → examen et rapprochement → pipeline de recrutement → décision RH → onboarding sur invitation nominative uniquement.</p>
           <p className="text-muted-foreground">La synchronisation doit être configurée sur les deux serveurs. Un dossier non visible ne signifie pas nécessairement qu'aucune candidature n'a été reçue. Les anciens documents Drive sont des archives historiques, à traiter séparément.</p>
           <p className="text-muted-foreground">Aucun compte Intranet, contrat ni accès opérationnel n'est attribué automatiquement aux candidats. Le statut légal de toute collaboration doit être validé préalablement.</p>
           <Button variant="outline" asChild>
-            <a href="https://bib-talent.lovable.app/carrieres/talent" target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Voir BIB Talent</a>
+            <a href="https://bib-talent.lovable.app/carrieres" target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Voir les offres Carrières</a>
           </Button>
         </CardContent>
       </Card>
@@ -86,7 +86,7 @@ export default function Recruitment() {
       <Card>
         <CardContent className="space-y-2 p-4 text-sm">
           <p className="font-semibold">Recruter une nouvelle personne</p>
-          <p>Après l'examen d'un dossier Talent, vérifiez les éventuels doublons par email avant de qualifier ou créer un candidat dans « Candidatures & pipeline ». Les dossiers reçus et le pipeline sont deux registres distincts tant qu'aucun rapprochement RH explicite n'a été validé.</p>
+          <p>Après l'examen d'un dossier Carrières, vérifiez les éventuels doublons par email avant de qualifier ou créer un candidat dans « Candidatures & pipeline ». Les dossiers reçus et le pipeline sont deux registres distincts tant qu'aucun rapprochement RH explicite n'a été validé.</p>
           <p className="text-muted-foreground">La sélection d'un collaborateur existant concerne uniquement l'attribution interne d'un dossier ou une mutation RH, pas l'inscription d'un candidat. Un compte intranet n'est créé qu'après acceptation et validation RH, depuis l'Onboarding.</p>
         </CardContent>
       </Card>
