@@ -673,6 +673,13 @@
       "when": 1794301191147,
       "tag": "0097_logistics_provider_contract_review",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1794301192147,
+      "tag": "0098_ceo_fiscal_legal_entity_drafts",
+      "breakpoints": true
     }
   ]
 }
