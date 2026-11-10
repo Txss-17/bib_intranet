@@ -135,6 +135,49 @@ export function useSupplierAuditCaseEvents(caseId?: string) {
     },
   });
 }
+export type SupplierAuditHandoff = {
+  case_id: string;
+  supplier_id: string;
+  audit_kind: "initial" | "counter_audit";
+  sent_by: string;
+  sent_at: string;
+  status: "received";
+  case_revision: number;
+};
+
+export function useSupplierAuditHandoffs() {
+  const { user, profile } = useAuth();
+  return useQuery({
+    queryKey: ["supplier-audit-handoffs", user?.id, profile?.test_account === true],
+    enabled: !!user && !!profile,
+    queryFn: async () => readAllPages<SupplierAuditHandoff>((cursor) => {
+      let q = from<SupplierAuditHandoff>("supplier_audit_handoffs")
+        .select("case_id,supplier_id,audit_kind,sent_by,sent_at,status,case_revision")
+        .order("case_id")
+        .limit(500);
+      if (cursor) q = q.gt("case_id", cursor);
+      return q;
+    }),
+    staleTime: 10_000,
+  });
+}
+
+export function useTransmitSupplierAudit() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({caseId,revision,reason}: {caseId:string;revision:number;reason:string}) =>
+      intranetRpc<{case_id:string;sent_at:string;status:string;already_transmitted:boolean}>(
+        "transmit_supplier_audit_to_pole", {
+          p_case_id:caseId,
+          p_expected_revision:revision,
+          p_reason:reason.trim(),
+        }),
+    onSuccess: () => {
+      void qc.invalidateQueries({queryKey:["supplier-audit-handoffs"]});
+      void qc.invalidateQueries({queryKey:["supplier-audit-cases"]});
+    },
+  });
+}
 export function useSupplierAuditCaseActions() {
   const qc = useQueryClient();
   const { user } = useAuth();
