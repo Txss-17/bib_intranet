@@ -10,10 +10,13 @@ jobs:
   verify-stage:
     name: Verify both BIB staging schemas
     runs-on: ubuntu-latest
+    environment: staging
     timeout-minutes: 8
     env:
       PLATFORM_DATABASE_URL: ${{ secrets.BIB_STAGING_PLATFORM_DATABASE_URL }}
       INTRANET_DATABASE_URL: ${{ secrets.BIB_STAGING_INTRANET_DATABASE_URL }}
+      PLATFORM_EXPECTED_DB: ${{ vars.BIB_STAGING_PLATFORM_DB_NAME }}
+      INTRANET_EXPECTED_DB: ${{ vars.BIB_STAGING_INTRANET_DB_NAME }}
       PGOPTIONS: "-c default_transaction_read_only=on -c statement_timeout=15000"
 
     steps:
@@ -26,6 +29,9 @@ jobs:
             echo "Missing staging database URLs; configure both GitHub staging secrets before a manual run."
             exit 1
           fi
+
+      - name: Verify independently approved staging target identities
+        run: node scripts/check-staging-targets.mjs
 
       - name: Verify Platform staging schema without writes
         run: psql "${PLATFORM_DATABASE_URL}" --no-psqlrc -v ON_ERROR_STOP=1 -f ops/release/platform-preflight.sql
