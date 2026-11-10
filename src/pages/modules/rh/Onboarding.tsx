@@ -196,7 +196,7 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
     isError: referentsError,
   } = useHrReferents();
 
-  const [primaryPole, setPrimaryPole] = useState('ops');
+  const [primaryPole, setPrimaryPole] = useState('');
 
   const {
     data: positionCatalog = [],
@@ -228,7 +228,7 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
 
   const pending = create.isPending || submitMutation.isPending;
 
-  const [poles, setPoles] = useState<string[]>(['ops']);
+  const [poles, setPoles] = useState<string[]>([]);
 
   const requiredPole = primaryPole;
 
@@ -606,6 +606,7 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
             <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Classification RH
             </p>
+            <p className="mb-3 text-xs text-muted-foreground">Le pôle et le rôle sont choisis explicitement pour chaque dossier. Une affectation au pôle Finance, Direction ou Conformité ne donne pas, à elle seule, accès au pilotage fiscal d'une entité juridique. Ces habilitations sont accordées séparément et doivent être validées côté serveur.</p>
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
@@ -1073,13 +1074,14 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Filiale</Label>
+                <Label>Entité de rattachement déclarée (à vérifier)</Label>
                 <Input
                   aria-label="Filiale"
                   value={form.subsidiary}
                   onChange={(e) => setForm((p) => ({ ...p, subsidiary: e.target.value }))}
-                  placeholder="Ex. Brand-in-a-box France"
+                  placeholder="Nom légal exact de l'entité existante (ne pas inventer une filiale)"
                 />
+                <p className="mt-1 text-xs text-muted-foreground">Ce champ RH reste une information déclarative, pas une activation d'entité fiscale. L'identité juridique sera vérifiée séparément par Direction et Juridique.</p>
               </div>
             </div>
           </section>
