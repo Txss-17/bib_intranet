@@ -1402,6 +1402,64 @@ function RequestSheet({
             </div>
           </div>
 
+          {/* PARAMÈTRES DU COMPTE — valeurs enregistrées et non formulaire de création */}
+          <section className="space-y-3 rounded-lg border border-border p-3" aria-label="Paramètres du compte du dossier">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Paramètres du compte
+            </h3>
+            <dl className="grid gap-3 text-sm sm:grid-cols-2">
+              <div>
+                <dt className="text-xs text-muted-foreground">Mode de travail</dt>
+                <dd className="font-medium">
+                  {request.work_mode === 'office' || request.work_mode === 'onsite'
+                    ? 'Sur site'
+                    : request.work_mode === 'hybrid'
+                      ? 'Hybride'
+                      : request.work_mode === 'remote'
+                        ? 'Télétravail'
+                        : request.work_mode === 'field'
+                          ? 'Terrain'
+                          : 'Non renseigné'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Entité de rattachement déclarée</dt>
+                <dd className="font-medium">{request.subsidiary?.trim() || 'Non renseignée'}</dd>
+                <p className="text-xs text-muted-foreground">Déclaratif — ne vaut pas activation fiscale d'une entité.</p>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Pôle principal</dt>
+                <dd className="font-medium">{request.primary_pole ? poleLabel(request.primary_pole) : 'Non renseigné'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Rôle demandé</dt>
+                <dd className="font-medium">{request.requested_role || 'Non renseigné'}</dd>
+              </div>
+            </dl>
+            <div className="space-y-2">
+              <p className="text-xs font-medium text-muted-foreground">Chartes, politiques et documents joints</p>
+              {Array.isArray(request.attached_documents) && request.attached_documents.length > 0 ? (
+                <ul className="space-y-1">
+                  {request.attached_documents.map((doc, index) => (
+                    <li key={index} className="rounded-md border border-border/60 px-3 py-2 text-xs">
+                      <span className="font-medium">{doc.name || 'Document sans nom'}</span>
+                      <span className="ml-2 text-muted-foreground">({doc.document_type || 'Autre'})</span>
+                      {doc.document_url && /^https:\/\//i.test(doc.document_url) && (
+                        <a href={doc.document_url} target="_blank" rel="noopener noreferrer"
+                          className="ml-2 underline underline-offset-2">Consulter la pièce</a>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-xs text-muted-foreground">Aucune charte ou politique jointe au dossier.</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Les documents joints ne prouvent pas, à eux seuls, une acceptation contractuelle signée.
+              </p>
+            </div>
+          </section>
+
           {/* RÉFÉRENT */}
           <div className="rounded-lg border border-border p-3">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
