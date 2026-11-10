@@ -122,7 +122,7 @@ CREATE POLICY supplier_portfolio_archive_events_read ON public.supplier_portfoli
 
 CREATE FUNCTION public.bib_archive_supplier_portfolio(
  p_portfolio_id uuid,p_reason text
-) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE v_id uuid;
 BEGIN
  IF auth.uid() IS NULL
@@ -138,21 +138,21 @@ BEGIN
  UPDATE public.supplier_portfolios SET archived_at=now() WHERE id=p_portfolio_id;
  INSERT INTO public.supplier_portfolio_archive_events(portfolio_id,actor_id,reason)
  VALUES(p_portfolio_id,auth.uid(),btrim(p_reason));
-END;$;
+END;$$;
 REVOKE ALL ON FUNCTION public.bib_archive_supplier_portfolio(uuid,text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.bib_archive_supplier_portfolio(uuid,text) TO authenticated;
 
 -- All supplier assignment writes, including legacy direct table paths, must reject
 -- new links to an archived supplier portfolio.
 CREATE FUNCTION public.bib_guard_supplier_archive_assignment()
-RETURNS trigger LANGUAGE plpgsql SET search_path=public,pg_temp AS $
+RETURNS trigger LANGUAGE plpgsql SET search_path=public,pg_temp AS $$
 BEGIN
  IF NEW.portfolio_id IS NOT NULL AND EXISTS(
   SELECT 1 FROM public.supplier_portfolios
   WHERE id=NEW.portfolio_id AND archived_at IS NOT NULL
  ) THEN RAISE EXCEPTION 'supplier_portfolio_archived' USING ERRCODE='23514'; END IF;
  RETURN NEW;
-END;$;
+END;$$;
 CREATE TRIGGER bib_guard_supplier_archive_assignment
  BEFORE INSERT OR UPDATE OF portfolio_id ON public.portfolio_assignments
  FOR EACH ROW EXECUTE FUNCTION public.bib_guard_supplier_archive_assignment();
