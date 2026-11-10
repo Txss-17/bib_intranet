@@ -553,6 +553,25 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
           </p>
         )}
       </div>
+      <section aria-label="Transmission au pôle Audit" className="space-y-2 rounded-lg border p-3">
+        <h4 className="font-semibold">Transmission au pôle Audit</h4>
+        {handoffs.isLoading ? <p role="status" className="text-sm">Vérification de la réception…</p> :
+          handoffs.isError ? <p role="alert" className="text-sm text-destructive">Statut de transmission indisponible. Aucune confirmation ne peut être affichée.</p> :
+          sentHandoff ? <p role="status" className="text-sm">Dossier reçu par le pôle Audit le {new Date(sentHandoff.sent_at).toLocaleString("fr-FR")}. Le pôle Audit est responsable des constats et du rapport.</p> :
+          <p className="text-sm text-muted-foreground">Non transmis : un dossier visible dans le pôle Audit ne vaut pas réception formelle. Fournisseurs doit soumettre le dossier après qualification.</p>}
+        {canTransmit && <>
+          <Label htmlFor={`audit-handoff-reason-${c.id}`}>Motif et nature du contrôle *</Label>
+          <Textarea id={`audit-handoff-reason-${c.id}`} value={handoffReason}
+            maxLength={500} onChange={event=>setHandoffReason(event.target.value)}
+            placeholder={c.kind === "counter_audit"
+              ? "Contre-audit ciblé : incident, constats d'origine et pièces à vérifier…"
+              : "Audit documentaire initial : références et pièces à contrôler…"} />
+          <Button type="button" onClick={()=>void transmitToAudit()} disabled={transmit.isPending || handoffReason.trim().length<8}>
+            {transmit.isPending ? "Transmission en cours…" : "Transmettre au pôle Audit"}
+          </Button>
+          <p className="text-xs text-muted-foreground">La transmission crée une trace nominative et horodatée, sans attribuer de conformité, ni publier les documents, ni déclencher une facture.</p>
+        </>}
+      </section>
       <section aria-label="Pièces justificatives et modèles PDF" className="space-y-3 rounded-lg border p-4">
         <div>
           <h4 className="font-semibold">Dossier documentaire — facture et rapport d’audit</h4>
