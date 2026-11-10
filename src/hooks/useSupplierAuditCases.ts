@@ -136,6 +136,7 @@ export function useSupplierAuditCaseEvents(caseId?: string) {
   });
 }
 export type SupplierAuditHandoff = {
+  id: string;
   case_id: string;
   supplier_id: string;
   audit_kind: "initial" | "counter_audit";
@@ -153,10 +154,10 @@ export function useSupplierAuditHandoffs() {
     enabled: !!user && !!profile,
     queryFn: async () => readAllPages<SupplierAuditHandoff>((cursor) => {
       let q = from<SupplierAuditHandoff>("supplier_audit_handoffs")
-        .select("case_id,supplier_id,audit_kind,audit_modality,sent_by,sent_at,status,case_revision")
-        .order("case_id")
+        .select("id,case_id,supplier_id,audit_kind,audit_modality,sent_by,sent_at,status,case_revision")
+        .order("id")
         .limit(500);
-      if (cursor) q = q.gt("case_id", cursor);
+      if (cursor) q = q.gt("id", cursor);
       return q;
     }),
     staleTime: 10_000,
