@@ -139,6 +139,7 @@ export type SupplierAuditHandoff = {
   case_id: string;
   supplier_id: string;
   audit_kind: "initial" | "counter_audit";
+  audit_modality: "documentary" | "on_site" | "quality_control";
   sent_by: string;
   sent_at: string;
   status: "received";
@@ -152,7 +153,7 @@ export function useSupplierAuditHandoffs() {
     enabled: !!user && !!profile,
     queryFn: async () => readAllPages<SupplierAuditHandoff>((cursor) => {
       let q = from<SupplierAuditHandoff>("supplier_audit_handoffs")
-        .select("case_id,supplier_id,audit_kind,sent_by,sent_at,status,case_revision")
+        .select("case_id,supplier_id,audit_kind,audit_modality,sent_by,sent_at,status,case_revision")
         .order("case_id")
         .limit(500);
       if (cursor) q = q.gt("case_id", cursor);
@@ -165,12 +166,13 @@ export function useSupplierAuditHandoffs() {
 export function useTransmitSupplierAudit() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({caseId,revision,reason}: {caseId:string;revision:number;reason:string}) =>
+    mutationFn: async ({caseId,revision,reason,modality}: {caseId:string;revision:number;reason:string;modality:"documentary"|"on_site"|"quality_control"}) =>
       intranetRpc<{case_id:string;sent_at:string;status:string;already_transmitted:boolean}>(
         "transmit_supplier_audit_to_pole", {
           p_case_id:caseId,
           p_expected_revision:revision,
           p_reason:reason.trim(),
+          p_modality:modality,
         }),
     onSuccess: () => {
       void qc.invalidateQueries({queryKey:["supplier-audit-handoffs"]});
