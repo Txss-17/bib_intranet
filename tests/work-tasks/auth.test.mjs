@@ -89,6 +89,10 @@ test('a non-administrator cannot activate the role stored by another account',()
  const h=preview(false);assert.equal(h.value.roleId,null);assert.equal(h.value.role,undefined);
  h.value.setRole('cto');assert.equal(h.stored(),'ceo');
 });
-test('a verified administrator retains the role preview',()=>{
- const h=preview(true);assert.equal(h.value.role.id,'ceo');h.value.setRole('cto');assert.equal(h.stored(),'cto');
+test('administrator role preview is disabled in production as for non-administrators',()=>{
+ const h=preview(true);
+ assert.equal(h.value.roleId,null);
+ assert.equal(h.value.role,undefined);
+ h.value.setRole('cto');
+ assert.equal(h.stored(),'ceo');
 });
