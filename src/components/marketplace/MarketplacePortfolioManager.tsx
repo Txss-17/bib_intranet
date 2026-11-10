@@ -21,6 +21,8 @@ export default function MarketplacePortfolioManager() {
   const [transferPortfolioId, setTransferPortfolioId] = useState('');
   const [transferOwnerId, setTransferOwnerId] = useState('');
   const [transferReason, setTransferReason] = useState('');
+  const [archivePortfolioId,setArchivePortfolioId]=useState('');
+  const [archiveReason,setArchiveReason]=useState('');
   const { data: merchants = [] } = useMarketplaceMerchants();
   const { data: shops = [] } = useMarketplaceShops();
   const merchantIds = new Set(shops.map(shop => shop.merchant_id).filter(Boolean));
@@ -78,6 +80,20 @@ export default function MarketplacePortfolioManager() {
       toast.success('Responsable modifié. Historique conservé.');
     },
     onError: (error: Error) => toast.error(error.message),
+  });
+  const archive=useMutation({
+    mutationFn:async()=>{
+      const {error}=await supabase.rpc('marketplace_archive_portfolio' as never,{
+        p_portfolio_id:archivePortfolioId,p_reason:archiveReason.trim(),
+      } as never);
+      if(error)throw error;
+    },
+    onSuccess:()=>{
+      setArchivePortfolioId('');setArchiveReason('');
+      void queryClient.invalidateQueries({queryKey:['marketplace','portfolios']});
+      toast.success('Portefeuille archivé, historique conservé.');
+    },
+    onError:(error:Error)=>toast.error(error.message),
   });
   if (!canManage) return null;
   return (
@@ -137,7 +153,7 @@ export default function MarketplacePortfolioManager() {
               onChange={e => setTransferPortfolioId(e.target.value)}
               className="h-10 rounded-md border bg-background px-3 text-sm">
               <option value="">Portefeuille</option>
-              {portfolios.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {portfolios.filter(p=>p.status==='active'&&p.role_scope==='marketplace').map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
             <select value={transferOwnerId} aria-label="Nouveau responsable"
               onChange={e => setTransferOwnerId(e.target.value)}
@@ -152,6 +168,24 @@ export default function MarketplacePortfolioManager() {
           </div>
           <Button type="submit" disabled={!transferPortfolioId || transfer.isPending}>
             {transfer.isPending ? 'Transfert…' : 'Transférer la responsabilité'}
+          </Button>
+        </form>
+        <form className="space-y-3 rounded-md border p-3 lg:col-span-2"
+          onSubmit={e=>{e.preventDefault();archive.mutate();}}>
+          <h3 className="font-medium">Archiver un portefeuille marchand vide</h3>
+          <p className="text-sm text-muted-foreground">Les anciens portefeuilles ne sont plus présentés comme une liste de départ. L'archivage conserve les preuves et n'est permis qu'après réaffectation des marchands actifs.</p>
+          <select className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+            value={archivePortfolioId} required aria-label="Portefeuille marchand à archiver"
+            onChange={e=>setArchivePortfolioId(e.target.value)}>
+            <option value="">Choisir le portefeuille à archiver</option>
+            {portfolios.filter(p=>p.status==='active'&&p.role_scope==='marketplace').map(p=><option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <Input required minLength={8} maxLength={500} aria-label="Motif de retrait du portefeuille"
+            placeholder="Motif d'archivage (8 caractères minimum)" value={archiveReason}
+            onChange={e=>setArchiveReason(e.target.value)}/>
+          <Button variant="outline" type="submit"
+            disabled={archive.isPending||!archivePortfolioId||archiveReason.trim().length<8}>
+            {archive.isPending?'Archivage…':'Archiver sans supprimer les affectations historiques'}
           </Button>
         </form>
       </CardContent>
