@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import ExistingLeadershipOnboarding from '@/components/hr/ExistingLeadershipOnboarding';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -1714,6 +1715,8 @@ export default function Onboarding() {
           </>}
         </div>
       </div>
+
+      <ExistingLeadershipOnboarding />
 
       {/* KPI */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
