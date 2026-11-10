@@ -176,3 +176,21 @@ test("revision errors are reported as conflicts without returning internal SQL d
   assert.equal(r.status, 409);
   assert.deepEqual(await r.json(), { error: "quote_changed" });
 });
+
+test("latest SKU decisions use a submission-scoped read-only RPC",async()=>{
+  const calls=[];
+  const h=createSupplierAuditPortalHandler({secret,getAdmin:()=>({
+    rpc:async(name,args)=>{calls.push([name,args]);return {data:[{reference:"SKU-1",decision:"refused"}],error:null};}
+  })});
+  const r=await h(request({...base,action:"list_references"}));
+  assert.equal(r.status,200);
+  assert.deepEqual(await r.json(),{references:[{reference:"SKU-1",decision:"refused"}]});
+  assert.deepEqual(calls,[["list_supplier_portal_reference_decisions",{p_submission_id:submission}]]);
+});
+test("SKU decisions cannot be read with forged selectors or missing service rights",async()=>{
+  const h=createSupplierAuditPortalHandler({secret,getAdmin:()=>({rpc:async()=>({data:null,error:{code:"42501",message:"PRIVATE"}})})});
+  assert.equal((await h(request({...base,action:"list_references",supplier_id:"forged"}))).status,400);
+  const r=await h(request({...base,action:"list_references"}));
+  assert.equal(r.status,403);
+  assert.equal(JSON.stringify(await r.json()).includes("PRIVATE"),false);
+});
