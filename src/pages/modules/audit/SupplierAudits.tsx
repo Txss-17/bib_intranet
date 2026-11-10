@@ -42,7 +42,7 @@ export default function SupplierAudits() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Audits Fournisseurs</h1>
-          <p className="text-muted-foreground">Dossiers opérationnels et historique des contrôles</p>
+          <p className="text-muted-foreground">Dossiers transmis depuis Fournisseurs, audit documentaire, contre-audit et historique des contrôles</p>
         </div>
         <div className="flex gap-2">
           <ExportButtons filename="audits-fournisseurs" title="Audits fournisseurs" poleName="Audit" columns={[
@@ -54,7 +54,7 @@ export default function SupplierAudits() {
         </div>
       </div>
 
-      <SupplierAuditWorkflow />
+      <SupplierAuditWorkflow auditInbox />
       <h2 className="text-xl font-semibold">Historique des audits antérieurs</h2>
       {isError && <div role="alert" className="rounded-md border p-3 text-sm text-destructive">Audits indisponibles. <Button size="sm" variant="outline" onClick={() => void refetch()}>Réessayer</Button></div>}
       {!isError && <p className="text-xs text-muted-foreground">Indicateurs des audits accessibles correspondant aux filtres. {scoredAudits} audit(s) terminé(s) avec score valide ; un score absent ne vaut pas zéro.</p>}

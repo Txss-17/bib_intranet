@@ -701,6 +701,13 @@
       "when": 1794301195147,
       "tag": "0101_portfolio_archival_lifecycle",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1794340800000,
+      "tag": "0102_supplier_audit_pole_handoff",
+      "breakpoints": true
     }
   ]
 }

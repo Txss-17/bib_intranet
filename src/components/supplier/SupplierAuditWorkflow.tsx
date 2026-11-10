@@ -11,6 +11,8 @@ import {
   useSupplierAuditCases,
   useSupplierAuditCaseActions,
   useSupplierAuditCaseEvents,
+  useSupplierAuditHandoffs,
+  useTransmitSupplierAudit,
   type SupplierAuditCase,
 } from "@/hooks/useSupplierAuditCases";
 import { Button } from "@/components/ui/button";
@@ -109,12 +111,18 @@ function Field({
 
 export default function SupplierAuditWorkflow({
   supplierId,
+  auditInbox = false,
 }: {
   supplierId?: string;
+  auditInbox?: boolean;
 }) {
   const { user, profile } = useAuth();
   const { can } = usePermissions();
   const query = useSupplierAuditCases(supplierId);
+  const handoffs = useSupplierAuditHandoffs();
+  const handoffIds = new Set(handoffs.data?.map(h => h.case_id) ?? []);
+  const receivedCases = query.data?.filter(c => handoffIds.has(c.id)) ?? [];
+  const visibleCases = auditInbox ? receivedCases : (query.data ?? []);
   const mutations = useSupplierAuditCaseActions();
   const [selected, setSelected] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -166,14 +174,15 @@ export default function SupplierAuditWorkflow({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold">
-            Qualification et audits fournisseurs
+            {auditInbox ? "Dossiers transmis au pôle Audit" : "Qualification et audits fournisseurs"}
           </h2>
           <p className="text-sm text-muted-foreground">
-            Devis, acceptation, prestation, rapport et décision sont suivis
-            séparément. Le paiement ne garantit pas le référencement.
+            {auditInbox
+              ? "Réception des dossiers envoyés par Fournisseurs : audits documentaires initiaux et contre-audits. L’examen, les rapports et la validation appartiennent au pôle Audit."
+              : "Les dossiers de qualification sont transmis explicitement au pôle Audit, avec auteur, date et motif. Devis, acceptation, prestation, rapport et décision restent distincts. Le paiement ne garantit pas le référencement."}
           </p>
         </div>
-        {can("supplier.suppliers", "create") && (
+        {!auditInbox && can("supplier.suppliers", "create") && (
           <Button onClick={() => setCreating((v) => !v)}>
             {creating ? "Fermer" : "Nouveau dossier"}
           </Button>
@@ -259,15 +268,17 @@ export default function SupplierAuditWorkflow({
           </Button>
         </p>
       )}
-      {!query.isLoading && !query.isError && (
+      {auditInbox && handoffs.isLoading && <p role="status">Chargement des transmissions du pôle Audit…</p>}
+      {auditInbox && handoffs.isError && <p role="alert" className="text-sm text-destructive">Le registre des transmissions Audit est indisponible. Aucun dossier ne peut être confirmé comme reçu. <Button variant="outline" size="sm" onClick={() => void handoffs.refetch()}>Réessayer</Button></p>}
+      {!query.isLoading && !query.isError && (!auditInbox || (!handoffs.isLoading && !handoffs.isError)) && (
         <div className="grid gap-4 lg:grid-cols-[minmax(220px,1fr)_3fr]">
           <div className="space-y-2">
-            {query.data?.length === 0 && (
+            {visibleCases.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Aucun dossier accessible.
+                {auditInbox ? "Aucun dossier transmis au pôle Audit. Les anciens dossiers non transmis restent disponibles depuis leur registre d’origine." : "Aucun dossier accessible."}
               </p>
             )}
-            {query.data?.map((c) => (
+            {visibleCases.map((c) => (
               <button
                 key={c.id}
                 type="button"
@@ -280,6 +291,7 @@ export default function SupplierAuditWorkflow({
                   {c.scope.length} référence(s)
                 </span>
                 <Badge variant="outline">{labels[c.state] ?? c.state}</Badge>
+                {handoffIds.has(c.id) && <Badge variant="secondary" className="ml-1">Transmis au pôle Audit</Badge>}
               </button>
             ))}
           </div>
@@ -300,6 +312,11 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
   const { can } = usePermissions();
   const { user, profile } = useAuth();
   const { advance } = useSupplierAuditCaseActions();
+  const handoffs = useSupplierAuditHandoffs();
+  const transmit = useTransmitSupplierAudit();
+  const [handoffReason,setHandoffReason] = useState("");
+  const [handoffModality,setHandoffModality] = useState<"documentary"|"on_site"|"quality_control">("documentary");
+  const sentHandoff = handoffs.data?.find(h => h.case_id === c.id);
   const events = useSupplierAuditCaseEvents(c.id);
   const qc = useQueryClient();
   const [action, setAction] = useState("");
@@ -372,6 +389,8 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
     available.push("record_invoice");
   if (financeUpdate && can("finance.billing", "validate") && c.invoice && c.quote && paid < c.quote.total_cents)
     available.push("record_payment");
+  const canTransmit = supplierUpdate && !sentHandoff && ["preselected","contracted"].includes(c.state)
+    && !handoffs.isLoading && !handoffs.isError && !handoffs.isFetching;
   const stale = baseRevision !== c.revision;
   const bind = useMutation({
     mutationFn: () =>
@@ -387,6 +406,17 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
     },
     onError: (e: Error) => toast.error(e.message),
   });
+  const transmitToAudit = async () => {
+    try {
+      if (!canTransmit || handoffReason.trim().length < 8 || handoffReason.trim().length > 500)
+        throw new Error("Motif de transmission requis (8 à 500 caractères).");
+      await transmit.mutateAsync({caseId:c.id,revision:c.revision,reason:handoffReason,modality:handoffModality});
+      setHandoffReason("");
+      toast.success("Dossier transmis au pôle Audit et inscrit dans la file de réception.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Transmission non confirmée.");
+    }
+  };
   const field = (
     key: string,
     label: string,
@@ -524,6 +554,33 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
           </p>
         )}
       </div>
+      <section aria-label="Transmission au pôle Audit" className="space-y-2 rounded-lg border p-3">
+        <h4 className="font-semibold">Transmission au pôle Audit</h4>
+        {handoffs.isLoading ? <p role="status" className="text-sm">Vérification de la réception…</p> :
+          handoffs.isError ? <p role="alert" className="text-sm text-destructive">Statut de transmission indisponible. Aucune confirmation ne peut être affichée.</p> :
+          sentHandoff ? <p role="status" className="text-sm">Dossier reçu par le pôle Audit le {new Date(sentHandoff.sent_at).toLocaleString("fr-FR")} — {sentHandoff.audit_modality === "documentary" ? "documentaire" : sentHandoff.audit_modality === "on_site" ? "sur site" : "contrôle qualité"}. Le pôle Audit est responsable des constats et du rapport.</p> :
+          <p className="text-sm text-muted-foreground">Non transmis : un dossier visible dans le pôle Audit ne vaut pas réception formelle. Fournisseurs doit soumettre le dossier après qualification.</p>}
+        {canTransmit && <>
+          <Label htmlFor={`audit-handoff-modality-${c.id}`}>Modalité du contrôle *</Label>
+          <select id={`audit-handoff-modality-${c.id}`} value={handoffModality}
+            onChange={event=>setHandoffModality(event.target.value as "documentary"|"on_site"|"quality_control")}
+            className="h-10 w-full rounded-md border bg-background px-3">
+            <option value="documentary">Audit documentaire</option>
+            <option value="on_site">Audit sur site</option>
+            <option value="quality_control">Contrôle qualité ciblé</option>
+          </select>
+          <Label htmlFor={`audit-handoff-reason-${c.id}`}>Motif et références à vérifier *</Label>
+          <Textarea id={`audit-handoff-reason-${c.id}`} value={handoffReason}
+            maxLength={500} onChange={event=>setHandoffReason(event.target.value)}
+            placeholder={c.kind === "counter_audit"
+              ? "Contre-audit ciblé : incident, constats d'origine et pièces à vérifier…"
+              : "Audit documentaire initial : références et pièces à contrôler…"} />
+          <Button type="button" onClick={()=>void transmitToAudit()} disabled={transmit.isPending || handoffReason.trim().length<8}>
+            {transmit.isPending ? "Transmission en cours…" : "Transmettre au pôle Audit"}
+          </Button>
+          <p className="text-xs text-muted-foreground">La transmission crée une trace nominative et horodatée, sans attribuer de conformité, ni publier les documents, ni déclencher une facture.</p>
+        </>}
+      </section>
       <section aria-label="Pièces justificatives et modèles PDF" className="space-y-3 rounded-lg border p-4">
         <div>
           <h4 className="font-semibold">Dossier documentaire — facture et rapport d’audit</h4>
