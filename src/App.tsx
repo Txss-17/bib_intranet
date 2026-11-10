@@ -3,7 +3,9 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CookieInformation } from "@/components/privacy/CookieInformation";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, MutationCache } from "@tanstack/react-query";
+import {IntranetSyncCoordinator} from "@/components/IntranetSyncCoordinator";
+import {publishIntranetChange} from "@/lib/intranetSync";
 import {
   BrowserRouter,
   Navigate,
@@ -317,7 +319,22 @@ const ResolutionTracking = lazy(() => import("./pages/modules/independent-audit/
    TRANSVERSAL — WORK
    ============================================================ */
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Active authorized views converge even when another employee writes to
+      // tables that are not yet enabled for Supabase Realtime replication.
+      refetchInterval: 30_000,
+      refetchIntervalInBackground: false,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+      staleTime: 10_000,
+    },
+  },
+  mutationCache: new MutationCache({
+    onSuccess: () => publishIntranetChange(),
+  }),
+});
 
 const AppInner = () => {
   useAuthLogger();
@@ -330,6 +347,7 @@ const App = () => (
       <AuthProvider>
         <SandboxProvider>
           <AppInner />
+          <IntranetSyncCoordinator />
 
           <Toaster />
           <Sonner />
