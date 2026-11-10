@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS public.supplier_audit_handoffs (
   test_account boolean NOT NULL,
   supplier_id uuid NOT NULL REFERENCES public.suppliers(id) ON DELETE RESTRICT,
   audit_kind text NOT NULL CHECK (audit_kind IN ('initial','counter_audit')),
+  audit_modality text NOT NULL CHECK (audit_modality IN ('documentary','on_site','quality_control')),
   sent_by uuid NOT NULL REFERENCES auth.users(id),
   sent_at timestamptz NOT NULL DEFAULT clock_timestamp(),
   reason text NOT NULL CHECK (length(btrim(reason)) BETWEEN 8 AND 500),
@@ -22,7 +23,9 @@ CREATE POLICY supplier_audit_handoff_read ON public.supplier_audit_handoffs FOR 
   test_account=public.intranet_is_test_mode()
   AND EXISTS(
     SELECT 1 FROM public.supplier_audit_cases c
-    WHERE c.id=case_id AND c.supplier_id=supplier_id AND c.test_account=test_account
+    WHERE c.id=supplier_audit_handoffs.case_id
+      AND c.supplier_id=supplier_audit_handoffs.supplier_id
+      AND c.test_account=supplier_audit_handoffs.test_account
   )
   AND (
     coalesce(public.can_intranet_action('audit.supplier','read'),false)
@@ -31,7 +34,7 @@ CREATE POLICY supplier_audit_handoff_read ON public.supplier_audit_handoffs FOR 
 );
 
 CREATE OR REPLACE FUNCTION public.transmit_supplier_audit_to_pole(
-  p_case_id uuid, p_expected_revision integer, p_reason text
+  p_case_id uuid, p_expected_revision integer, p_reason text, p_modality text
 ) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER
 SET search_path=public,pg_temp AS $$
 DECLARE v_case public.supplier_audit_cases;
@@ -40,6 +43,8 @@ BEGIN
   IF auth.uid() IS NULL OR NOT coalesce(public.is_intranet_staff(auth.uid()),false)
     OR NOT coalesce(public.can_intranet_action('supplier.suppliers','update'),false)
   THEN RAISE EXCEPTION 'audit_handoff_forbidden' USING ERRCODE='42501'; END IF;
+  IF p_modality NOT IN ('documentary','on_site','quality_control') OR p_modality IS NULL
+  THEN RAISE EXCEPTION 'audit_handoff_modality_invalid' USING ERRCODE='22023'; END IF;
   IF p_case_id IS NULL OR p_expected_revision IS NULL
      OR length(btrim(coalesce(p_reason,''))) NOT BETWEEN 8 AND 500
   THEN RAISE EXCEPTION 'audit_handoff_invalid_request' USING ERRCODE='22023'; END IF;
@@ -64,13 +69,13 @@ BEGIN
     AND coalesce(s.test_account,false)=v_case.test_account)
   THEN RAISE EXCEPTION 'audit_handoff_supplier_invalid' USING ERRCODE='23503'; END IF;
   INSERT INTO public.supplier_audit_handoffs(
-    case_id,test_account,supplier_id,audit_kind,sent_by,reason,case_revision
-  ) VALUES(p_case_id,v_case.test_account,v_case.supplier_id,v_case.kind,auth.uid(),btrim(p_reason),v_case.revision)
+    case_id,test_account,supplier_id,audit_kind,audit_modality,sent_by,reason,case_revision
+  ) VALUES(p_case_id,v_case.test_account,v_case.supplier_id,v_case.kind,p_modality,auth.uid(),btrim(p_reason),v_case.revision)
   RETURNING * INTO v_handoff;
   RETURN jsonb_build_object('case_id',v_handoff.case_id,'sent_at',v_handoff.sent_at,
     'status',v_handoff.status,'already_transmitted',false);
 END;$$;
-REVOKE ALL ON FUNCTION public.transmit_supplier_audit_to_pole(uuid,integer,text) FROM PUBLIC,anon;
+REVOKE ALL ON FUNCTION public.transmit_supplier_audit_to_pole(uuid,integer,text,text) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.transmit_supplier_audit_to_pole(uuid,integer,text) TO authenticated;
 COMMENT ON TABLE public.supplier_audit_handoffs IS 'Immutable internal handoff to Audit pole. Does not certify compliance, transmit documents externally or imply approval.';
 NOTIFY pgrst, 'reload schema';
