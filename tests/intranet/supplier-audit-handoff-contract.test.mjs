@@ -9,7 +9,7 @@ const auditPage=readFileSync(new URL('../../src/pages/modules/audit/SupplierAudi
 
 test('an audit handoff is immutable, identified and authorized at the database',()=>{
   assert.match(sql,/CREATE TABLE IF NOT EXISTS public\.supplier_audit_handoffs/);
-  assert.match(sql,/case_id uuid PRIMARY KEY/);
+  assert.match(sql,/case_id uuid NOT NULL UNIQUE/);
   assert.match(sql,/sent_by uuid NOT NULL/);
   assert.match(sql,/sent_at timestamptz NOT NULL/);
   assert.match(sql,/REVOKE ALL ON public\.supplier_audit_handoffs FROM PUBLIC,anon,authenticated/);
