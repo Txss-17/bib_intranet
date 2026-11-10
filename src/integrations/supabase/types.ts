@@ -1639,6 +1639,60 @@ export type Database = {
         }
         Relationships: []
       }
+      bib_partner_access_handoffs: {
+        Row: {
+          case_id: string
+          confirmed_at: string | null
+          confirmed_by: string | null
+          created_at: string
+          delivery_state: string
+          id: string
+          outbox_id: string
+          prepared_by: string
+          recipient_email: string
+          test_account: boolean
+        }
+        Insert: {
+          case_id: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          delivery_state?: string
+          id?: string
+          outbox_id: string
+          prepared_by: string
+          recipient_email: string
+          test_account: boolean
+        }
+        Update: {
+          case_id?: string
+          confirmed_at?: string | null
+          confirmed_by?: string | null
+          created_at?: string
+          delivery_state?: string
+          id?: string
+          outbox_id?: string
+          prepared_by?: string
+          recipient_email?: string
+          test_account?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_partner_access_handoffs_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "bib_partner_onboarding_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bib_partner_access_handoffs_outbox_id_fkey"
+            columns: ["outbox_id"]
+            isOneToOne: true
+            referencedRelation: "intranet_outbox"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bib_partner_catalog_eligibility: {
         Row: {
           audit_reuse_reference: string | null
@@ -10727,6 +10781,10 @@ export type Database = {
         Args: { p_new_owner: string; p_portfolio_id: string; p_reason?: string }
         Returns: undefined
       }
+      bib_confirm_partner_access_delivery: {
+        Args: { p_case_id: string }
+        Returns: string
+      }
       bib_convert_sourcing_to_supplier_application: {
         Args: { p_candidate: string; p_email: string; p_evidence: string }
         Returns: string
@@ -10771,6 +10829,10 @@ export type Database = {
       bib_portfolio_permission: {
         Args: { p_action: string; p_pole: string }
         Returns: boolean
+      }
+      bib_prepare_partner_access_invitation: {
+        Args: { p_case_id: string }
+        Returns: string
       }
       bib_record_partner_catalog_eligibility: {
         Args: {
