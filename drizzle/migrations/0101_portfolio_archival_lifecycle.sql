@@ -102,4 +102,59 @@ BEGIN
  (portfolio_id,previous_owner_id,new_owner_id,changed_by,reason)
  VALUES(p_portfolio_id,v_old,p_new_owner,v_actor,nullif(btrim(p_reason),''));
 END;$$;
+-- Supplier uses a separate canonical registry and assignment model.
+-- Add a non-destructive archive marker instead of deleting supplier links.
+ALTER TABLE public.supplier_portfolios
+ ADD COLUMN IF NOT EXISTS archived_at timestamptz;
+CREATE TABLE IF NOT EXISTS public.supplier_portfolio_archive_events(
+ id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+ portfolio_id uuid NOT NULL REFERENCES public.supplier_portfolios(id),
+ actor_id uuid NOT NULL REFERENCES public.profiles(id),
+ reason text NOT NULL,
+ created_at timestamptz NOT NULL DEFAULT now()
+);
+ALTER TABLE public.supplier_portfolio_archive_events ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.supplier_portfolio_archive_events FROM PUBLIC,anon,authenticated;
+CREATE POLICY supplier_portfolio_archive_events_read ON public.supplier_portfolio_archive_events
+ FOR SELECT TO authenticated USING (
+  coalesce(public.can_intranet_action('supplier.portfolios','read'),false)
+ );
+
+CREATE FUNCTION public.bib_archive_supplier_portfolio(
+ p_portfolio_id uuid,p_reason text
+) RETURNS void LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $
+DECLARE v_id uuid;
+BEGIN
+ IF auth.uid() IS NULL
+ OR NOT coalesce(public.can_intranet_action('supplier.portfolios','update'),false)
+ THEN RAISE EXCEPTION 'supplier_portfolio_archive_forbidden' USING ERRCODE='42501';END IF;
+ IF length(btrim(coalesce(p_reason,''))) NOT BETWEEN 8 AND 500
+ THEN RAISE EXCEPTION 'portfolio_archive_reason_required' USING ERRCODE='22023';END IF;
+ SELECT id INTO v_id FROM public.supplier_portfolios
+ WHERE id=p_portfolio_id AND archived_at IS NULL FOR UPDATE;
+ IF v_id IS NULL THEN RAISE EXCEPTION 'supplier_portfolio_not_active' USING ERRCODE='23514';END IF;
+ IF EXISTS(SELECT 1 FROM public.portfolio_assignments WHERE portfolio_id=p_portfolio_id)
+ THEN RAISE EXCEPTION 'portfolio_has_active_assignments' USING ERRCODE='23514';END IF;
+ UPDATE public.supplier_portfolios SET archived_at=now() WHERE id=p_portfolio_id;
+ INSERT INTO public.supplier_portfolio_archive_events(portfolio_id,actor_id,reason)
+ VALUES(p_portfolio_id,auth.uid(),btrim(p_reason));
+END;$;
+REVOKE ALL ON FUNCTION public.bib_archive_supplier_portfolio(uuid,text) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.bib_archive_supplier_portfolio(uuid,text) TO authenticated;
+
+-- All supplier assignment writes, including legacy direct table paths, must reject
+-- new links to an archived supplier portfolio.
+CREATE FUNCTION public.bib_guard_supplier_archive_assignment()
+RETURNS trigger LANGUAGE plpgsql SET search_path=public,pg_temp AS $
+BEGIN
+ IF NEW.portfolio_id IS NOT NULL AND EXISTS(
+  SELECT 1 FROM public.supplier_portfolios
+  WHERE id=NEW.portfolio_id AND archived_at IS NOT NULL
+ ) THEN RAISE EXCEPTION 'supplier_portfolio_archived' USING ERRCODE='23514'; END IF;
+ RETURN NEW;
+END;$;
+CREATE TRIGGER bib_guard_supplier_archive_assignment
+ BEFORE INSERT OR UPDATE OF portfolio_id ON public.portfolio_assignments
+ FOR EACH ROW EXECUTE FUNCTION public.bib_guard_supplier_archive_assignment();
+
 NOTIFY pgrst,'reload schema';
