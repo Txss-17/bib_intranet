@@ -1218,178 +1218,24 @@ export default function SupplierPortfolios() {
         >
           <Card>
             <CardHeader>
-              <CardTitle>
-                Portefeuilles fournisseurs
-              </CardTitle>
-
+              <CardTitle>Créer et attribuer les portefeuilles fournisseurs</CardTitle>
               <CardDescription>
-                Chaque carte correspond à un
-                enregistrement réel de
-                supplier_portfolios.
+                Le registre préexistant n'est plus présenté comme une liste de cartes.
+                La création, les responsables et les affectations doivent être
+                définis explicitement selon l'organisation du pôle Fournisseurs.
+                Aucun dossier ni historique fournisseur n'a été supprimé.
               </CardDescription>
             </CardHeader>
-
-            <CardContent>
-              {portfolioSummaries.length ===
-              0 ? (
-                <div className="rounded-lg border border-dashed p-8 text-center">
-                  <FolderOpen className="mx-auto h-8 w-8 text-muted-foreground" />
-
-                  <p className="mt-3 font-medium">
-                    Aucun portefeuille
-                    fournisseur
-                  </p>
-
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Créez le premier
-                    portefeuille fournisseur
-                    pour commencer la
-                    répartition.
-                  </p>
-
-                  <Button
-                    className="mt-4"
-                    onClick={
-                      openCreateDialog
-                    }
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Créer un portefeuille
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                  {portfolioSummaries.map(
-                    (portfolio) => (
-                      <Card
-                        key={portfolio.id}
-                        className="transition-shadow hover:shadow-md"
-                      >
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <CardTitle className="text-lg">
-                                {
-                                  portfolio.category
-                                }
-                              </CardTitle>
-
-                              <CardDescription>
-                                Responsable :{' '}
-                                {portfolio.responsible_name ||
-                                  'Non défini'}
-                              </CardDescription>
-                            </div>
-
-                            <Badge variant="outline">
-                              Portefeuille
-                            </Badge>
-                          </div>
-                        </CardHeader>
-
-                        <CardContent className="space-y-4">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                Fournisseurs
-                              </p>
-
-                              <p className="text-xl font-bold">
-                                {
-                                  portfolio.supplierCount
-                                }
-                              </p>
-                            </div>
-
-                            <div>
-                              <p className="text-xs text-muted-foreground">
-                                Alertes
-                              </p>
-
-                              <p className="text-xl font-bold">
-                                {
-                                  portfolio.alertCount
-                                }
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">
-                                Score qualité
-                              </span>
-
-                              <span className="font-medium">
-                                {
-                                  portfolio.averageScore
-                                }
-                                %
-                              </span>
-                            </div>
-
-                            <Progress
-                              value={
-                                portfolio.averageScore
-                              }
-                              className="h-2"
-                            />
-                          </div>
-
-                          <div className="flex flex-wrap gap-2">
-                            <Badge variant="secondary">
-                              {
-                                portfolio.category
-                              }
-                            </Badge>
-
-                            {portfolio.backup_name && (
-                              <Badge variant="outline">
-                                Backup :{' '}
-                                {
-                                  portfolio.backup_name
-                                }
-                              </Badge>
-                            )}
-                          </div>
-
-                          <div className="flex gap-2 pt-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="flex-1"
-                              onClick={() => {
-                                setSelectedPortfolio(
-                                  portfolio.id,
-                                );
-                                setActiveTab(
-                                  'suppliers',
-                                );
-                              }}
-                            >
-                              <Users className="mr-1 h-4 w-4" />
-                              Fournisseurs
-                            </Button>
-
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                openEditDialog(
-                                  portfolio,
-                                )
-                              }
-                            >
-                              <Edit className="mr-1 h-4 w-4" />
-                              Modifier
-                            </Button>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ),
-                  )}
-                </div>
-              )}
+            <CardContent className="space-y-3">
+              <Button onClick={openCreateDialog}>
+                <Plus className="mr-2 h-4 w-4"/>Créer un nouveau portefeuille
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                {portfolioSummaries.length} portefeuille(s) conservé(s) dans le registre.
+                Utilisez l'onglet Fournisseurs pour consulter les dossiers et
+                réaffecter leurs responsables. Les enregistrements historiques
+                ne sont pas recréés automatiquement.
+              </p>
             </CardContent>
           </Card>
 
