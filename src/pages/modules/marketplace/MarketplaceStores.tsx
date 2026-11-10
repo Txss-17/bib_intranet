@@ -1,3 +1,4 @@
+import {CrossPoleAuditReferralButton} from '@/components/audit/CrossPoleAuditReferral';
 import { Link } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import {
@@ -439,6 +440,7 @@ export default function MarketplaceStores() {
                               <ArrowRight className="ml-2 h-4 w-4" />
                             </Link>
                           </Button>
+                          <CrossPoleAuditReferralButton sourcePole="marketplace" sourceType="shop" sourceId={shop.id}/>
                         </td>
                       </tr>
                     ))}

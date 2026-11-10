@@ -77,6 +77,6 @@ BEGIN
     'status',v_handoff.status,'already_transmitted',false);
 END;$$;
 REVOKE ALL ON FUNCTION public.transmit_supplier_audit_to_pole(uuid,integer,text,text) FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION public.transmit_supplier_audit_to_pole(uuid,integer,text) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.transmit_supplier_audit_to_pole(uuid,integer,text,text) TO authenticated;
 COMMENT ON TABLE public.supplier_audit_handoffs IS 'Immutable internal handoff to Audit pole. Does not certify compliance, transmit documents externally or imply approval.';
 NOTIFY pgrst, 'reload schema';
