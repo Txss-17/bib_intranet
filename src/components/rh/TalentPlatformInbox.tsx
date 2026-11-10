@@ -56,7 +56,7 @@ export default function TalentPlatformInbox() {
     },
     onSuccess: async result => {
       await qc.invalidateQueries({ queryKey: ['hr-talent-applications'] });
-      toast.success(`Import BIB Talent terminé : ${result.imported} dossier(s) reçus, ${result.purged} copie(s) supprimée(s).`);
+      toast.success(`Import Carrières BIB terminé : ${result.imported} dossier(s) reçus, ${result.purged} copie(s) supprimée(s).`);
     },
     onError: error => toast.error('Import impossible', { description: error instanceof Error ? error.message : 'Vérifier le serveur et les secrets Talent.' }),
   });
@@ -67,11 +67,11 @@ export default function TalentPlatformInbox() {
   return <Card>
     <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
       <div>
-        <CardTitle>Réception BIB Talent — Platform</CardTitle>
-        <p className="mt-1 text-sm text-muted-foreground">Candidatures conservées dans un registre RH privé. Source : formulaire BIB Talent intégré à la plateforme, et non Google Drive.</p>
+        <CardTitle>Réception Carrières BIB — Platform</CardTitle>
+        <p className="mt-1 text-sm text-muted-foreground">Candidatures conservées dans un registre RH privé. Source : formulaire de la page Carrières BIB Platform, et non Google Drive. L’identifiant technique d’import BIB Talent est conservé pour assurer la compatibilité avec les candidatures déjà enregistrées.</p>
       </div>
       <Button type="button" disabled={!enabled || sync.isPending || inbox.isFetching} onClick={() => sync.mutate()}>
-        <RefreshCw className="mr-2 h-4 w-4" />{sync.isPending ? 'Import en cours…' : 'Importer depuis BIB Platform'}
+        <RefreshCw className="mr-2 h-4 w-4" />{sync.isPending ? 'Import en cours…' : 'Importer les candidatures Carrières'}
       </Button>
     </CardHeader>
     <CardContent className="space-y-3">
@@ -79,10 +79,10 @@ export default function TalentPlatformInbox() {
       {rightsError && <p role="alert" className="text-destructive">Impossible de vérifier vos droits RH.</p>}
       {!rightsLoading && !rightsError && !isHr && <p role="alert">Accès réservé au service RH et aux responsables habilités.</p>}
       {enabled && <>
-        <Input aria-label="Rechercher une candidature Talent" placeholder="Nom, email, pôle…" value={search} onChange={e => setSearch(e.target.value)} />
+        <Input aria-label="Rechercher une candidature Carrières" placeholder="Nom, email, pôle…" value={search} onChange={e => setSearch(e.target.value)} />
         {inbox.isLoading && <p role="status">Chargement des candidatures…</p>}
         {inbox.isError && <p role="alert" className="text-destructive">Registre Talent indisponible. Vérifier la migration, les permissions et la connexion Supabase. <Button variant="outline" onClick={() => void inbox.refetch()}>Réessayer</Button></p>}
-        {!inbox.isLoading && !inbox.isError && filtered.length === 0 && <p className="text-sm text-muted-foreground">Aucune candidature Talent synchronisée correspondant à la recherche. L'absence de dossier ne signifie pas que la plateforme n'a reçu aucune demande.</p>}
+        {!inbox.isLoading && !inbox.isError && filtered.length === 0 && <p className="text-sm text-muted-foreground">Aucune candidature Carrières synchronisée correspondant à la recherche. L'absence de dossier ne signifie pas que la plateforme n'a reçu aucune demande.</p>}
         {!inbox.isLoading && !inbox.isError && filtered.length > 0 &&
           <div className="overflow-x-auto rounded border"><table className="w-full text-left text-sm">
             <thead className="border-b"><tr>{['Candidat', 'Pôle demandé', 'Pôle proposé', 'Date de dépôt', 'Statut Platform', 'Action'].map(x => <th key={x} className="p-3">{x}</th>)}</tr></thead>
@@ -99,7 +99,7 @@ export default function TalentPlatformInbox() {
       </>}
       <Dialog open={!!selected} onOpenChange={open => !open && setSelected(null)}>
         <DialogContent className="max-h-[85vh] overflow-y-auto">
-          <DialogHeader><DialogTitle>Candidature BIB Talent</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Candidature Carrières BIB</DialogTitle></DialogHeader>
           {selected && <div className="space-y-2 text-sm">
             <p><strong>Candidat :</strong> {selected.full_name}</p>
             <p><strong>Contact :</strong> {selected.email}</p>
