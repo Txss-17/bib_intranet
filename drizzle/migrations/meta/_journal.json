@@ -687,6 +687,13 @@
       "when": 1794301193147,
       "tag": "0099_fiscal_entity_isolation",
       "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1794301194147,
+      "tag": "0100_fiscal_entity_approval_and_delegations",
+      "breakpoints": true
     }
   ]
 }
