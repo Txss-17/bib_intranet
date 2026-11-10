@@ -1,6 +1,7 @@
 import definitions from '@/data/intranetRegistry.json';
 import aliases from '@/data/intranetRouteAliases.json';
 import { supabase } from '@/integrations/supabase/client';
+import {isIntranetWriteRpc,publishIntranetChange} from '@/lib/intranetSync';
 export type ModuleField = { key: string; label: string; type: string; required: boolean };
 export type ModuleDefinition = { id: string; path: string; label: string; scope: string; transversal: boolean; approvalLevels: number; fields: ModuleField[]; description?: string; operationalNote?: string; recordLabel?: string; permissionAliases?: string[]; public?: boolean; restrictedRoles?: string[] };
 export const intranetModules = definitions as ModuleDefinition[];
@@ -30,6 +31,7 @@ export async function intranetRpc<T>(name: string, args: Record<string, unknown>
       : error.code === '22023' ? 'Vérifiez les champs obligatoires, les valeurs et le motif de décision.' : 'L’opération n’a pas pu être enregistrée. Réessayez.';
     throw new Error(message);
   }
+  if(isIntranetWriteRpc(name))publishIntranetChange();
   return data as T;
 }
 export function normalizeModulePayload(fields: ModuleField[], values: Record<string, unknown>) {
