@@ -105,9 +105,9 @@ BEGIN
  -- Enforce immutable canonical attribution independently from the editable body.entity text.
  SELECT entity_id INTO existing_entity FROM public.bib_fiscal_record_entities
  WHERE record_id=v_id AND test_account=v_mode;
- IF existing_entity IS NOT NULL AND p_record?'legalEntityId'
-  AND p_record->>'legalEntityId' IS DISTINCT FROM existing_entity::text
- THEN RAISE EXCEPTION 'fiscal_entity_identity_conflict' USING ERRCODE='22023'; END IF;
+ IF p_record?'legalEntityId' THEN
+  RAISE EXCEPTION 'fiscal_entity_identity_is_server_managed' USING ERRCODE='22023';
+ END IF;
  RETURN public.bib_fiscal_save_internal_0088(p_record,p_expected_revision);
 END $$;
 
