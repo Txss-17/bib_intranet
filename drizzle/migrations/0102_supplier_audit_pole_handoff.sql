@@ -2,7 +2,8 @@
 -- Does not create a new case, admit a product, issue an invoice or change audit status.
 -- Historical cases without a handoff are NOT inferred to have been transmitted.
 CREATE TABLE IF NOT EXISTS public.supplier_audit_handoffs (
-  case_id uuid PRIMARY KEY REFERENCES public.supplier_audit_cases(id) ON DELETE RESTRICT,
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  case_id uuid NOT NULL UNIQUE REFERENCES public.supplier_audit_cases(id) ON DELETE RESTRICT,
   test_account boolean NOT NULL,
   supplier_id uuid NOT NULL REFERENCES public.suppliers(id) ON DELETE RESTRICT,
   audit_kind text NOT NULL CHECK (audit_kind IN ('initial','counter_audit')),
