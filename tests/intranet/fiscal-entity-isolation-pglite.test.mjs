@@ -22,7 +22,7 @@ test('PGlite: future mapping starts deny-by-default, and only entity grant unloc
    CREATE ROLE anon NOLOGIN; CREATE ROLE authenticated NOLOGIN;
    CREATE SCHEMA auth;
    CREATE FUNCTION auth.uid() RETURNS uuid LANGUAGE sql STABLE
-    AS $$SELECT nullif(current_setting('app.actor',true),'')::uuid$$;
+    AS $ SELECT nullif(current_setting('app.actor',true),'')::uuid $;
    CREATE TABLE public.profiles(id uuid PRIMARY KEY);
    INSERT INTO public.profiles VALUES('${CEO}'),('${FIN}'),('${OTHER}');
    CREATE TABLE public.bib_fiscal_legal_entities(id uuid PRIMARY KEY,status text NOT NULL);
@@ -33,19 +33,19 @@ test('PGlite: future mapping starts deny-by-default, and only entity grant unloc
    INSERT INTO public.bib_fiscal_reference_catalog VALUES
     ('FL-01','{"id":"FL-01","entity":"BIB — intermédiation","revision":0}');
    CREATE FUNCTION public.intranet_is_test_mode() RETURNS boolean LANGUAGE sql STABLE
-    AS $$SELECT coalesce(nullif(current_setting('app.test',true),''),'false')::boolean$$;
+    AS $ SELECT coalesce(nullif(current_setting('app.test',true),''),'false')::boolean $;
    CREATE FUNCTION public.can_intranet_action(p text,a text) RETURNS boolean
-    LANGUAGE sql STABLE SECURITY DEFINER AS $$SELECT auth.uid() IS NOT NULL AND p='finance.fiscal'$$;
+    LANGUAGE sql STABLE SECURITY DEFINER AS $ SELECT auth.uid() IS NOT NULL AND p='finance.fiscal' $;
    CREATE FUNCTION public.bib_fiscal_is_canonical_ceo() RETURNS boolean
-    LANGUAGE sql STABLE SECURITY DEFINER AS $$SELECT auth.uid()='${CEO}'::uuid$$;
+    LANGUAGE sql STABLE SECURITY DEFINER AS $ SELECT auth.uid()='${CEO}'::uuid $;
    CREATE FUNCTION public.list_bib_fiscal_records() RETURNS jsonb
     LANGUAGE sql STABLE SECURITY DEFINER AS $$
       SELECT jsonb_build_object('records',jsonb_agg(body),'canWrite',true) FROM public.bib_fiscal_reference_catalog
     $$;
    CREATE FUNCTION public.save_bib_fiscal_record(p jsonb,rev bigint) RETURNS jsonb
-    LANGUAGE sql SECURITY DEFINER AS $$SELECT p$$;
+    LANGUAGE sql SECURITY DEFINER AS $ SELECT p $;
    CREATE FUNCTION public.list_bib_fiscal_events(p text) RETURNS jsonb
-    LANGUAGE sql STABLE SECURITY DEFINER AS $$SELECT '[]'::jsonb$$;
+    LANGUAGE sql STABLE SECURITY DEFINER AS $ SELECT '[]'::jsonb $;
    ALTER TABLE public.bib_fiscal_reference_catalog ENABLE ROW LEVEL SECURITY;
    ALTER TABLE public.bib_fiscal_records ENABLE ROW LEVEL SECURITY;
    ALTER TABLE public.bib_fiscal_events ENABLE ROW LEVEL SECURITY;
