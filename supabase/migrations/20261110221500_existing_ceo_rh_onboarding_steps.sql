@@ -68,6 +68,10 @@ BEGIN
     AND app_origin='connect' AND test_account=false AND hr_status='active') THEN
     RAISE EXCEPTION 'Eligible account not found';
   END IF;
+  IF p_step='independent_review' AND EXISTS (
+    SELECT 1 FROM public.hr_existing_account_onboarding_steps s
+    WHERE s.subject_id=p_subject AND s.step_key='hr_review' AND s.reviewer_id=v_actor
+  ) THEN RAISE EXCEPTION 'Independent visa requires a different reviewer' USING ERRCODE='42501'; END IF;
   v_index := array_position(v_steps,p_step);
   IF v_index IS NULL THEN RAISE EXCEPTION 'Invalid step'; END IF;
   -- Steps may not be skipped. Review of a rejected step can be repeated with a new proof.
