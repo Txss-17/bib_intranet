@@ -86,7 +86,7 @@ BEGIN
  RETURN new_id;
 END $$;
 REVOKE ALL ON FUNCTION public.bib_create_sourcing_mission(text,text,text,text,text,text,date,uuid) FROM PUBLIC,anon;
-GRANT EXECUTE ON FUNCTION public.bib_create_sourcing_mission(text,text,text,text,text,text,date) TO authenticated;
+GRANT EXECUTE ON FUNCTION public.bib_create_sourcing_mission(text,text,text,text,text,text,date,uuid) TO authenticated;
 
 CREATE OR REPLACE FUNCTION public.bib_add_sourcing_candidate(
  p_mission uuid,p_name text,p_offer text,p_contact_reference text DEFAULT NULL
