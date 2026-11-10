@@ -1775,6 +1775,98 @@ export type Database = {
           },
         ]
       }
+      bib_pilot_partner_events: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          next_state: string
+          previous_state: string | null
+          reference: string | null
+          selection_id: string
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id?: string
+          next_state: string
+          previous_state?: string | null
+          reference?: string | null
+          selection_id: string
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          next_state?: string
+          previous_state?: string | null
+          reference?: string | null
+          selection_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_pilot_partner_events_selection_id_fkey"
+            columns: ["selection_id"]
+            isOneToOne: false
+            referencedRelation: "bib_pilot_partner_selections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bib_pilot_partner_selections: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string
+          evidence_reference: string | null
+          id: string
+          nominated_by: string
+          partner_id: string
+          partner_kind: string
+          platform_submission_id: string | null
+          state: string
+          test_account: boolean
+          updated_at: string
+          updated_by: string
+          wave: number
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          evidence_reference?: string | null
+          id?: string
+          nominated_by: string
+          partner_id: string
+          partner_kind: string
+          platform_submission_id?: string | null
+          state?: string
+          test_account?: boolean
+          updated_at?: string
+          updated_by: string
+          wave: number
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string
+          evidence_reference?: string | null
+          id?: string
+          nominated_by?: string
+          partner_id?: string
+          partner_kind?: string
+          platform_submission_id?: string | null
+          state?: string
+          test_account?: boolean
+          updated_at?: string
+          updated_by?: string
+          wave?: number
+        }
+        Relationships: []
+      }
       bib_sourcing_candidates: {
         Row: {
           candidate_status: string
@@ -10672,6 +10764,10 @@ export type Database = {
         Args: { p_action: string; p_kind: string }
         Returns: boolean
       }
+      bib_pilot_logistics_assignment_allowed: {
+        Args: { p_submission: string }
+        Returns: boolean
+      }
       bib_portfolio_permission: {
         Args: { p_action: string; p_pole: string }
         Returns: boolean
@@ -10694,6 +10790,17 @@ export type Database = {
           p_due_at: string
           p_note: string
           p_outcome: string
+        }
+        Returns: string
+      }
+      bib_set_pilot_partner_selection: {
+        Args: {
+          p_action: string
+          p_kind: string
+          p_partner_id: string
+          p_platform_submission_id?: string
+          p_reference?: string
+          p_wave: number
         }
         Returns: string
       }
