@@ -164,6 +164,7 @@ function useSupplierPortfolios() {
       const { data, error } = await supabase
         .from('supplier_portfolios')
         .select('*')
+        .is('archived_at',null)
         .order('category')
         .order('responsible_name');
 
@@ -527,6 +528,8 @@ export default function SupplierPortfolios() {
     savingPortfolio,
     setSavingPortfolio,
   ] = useState(false);
+  const [archivePortfolioId,setArchivePortfolioId]=useState('');
+  const [archiveReason,setArchiveReason]=useState('');
 
   const {
     data: portfolios = [],
@@ -688,6 +691,21 @@ export default function SupplierPortfolios() {
       return grouped;
     }, [suppliers]);
 
+  const archivePortfolio = useMutation({
+    mutationFn: async () => {
+      const {error}=await supabase.rpc('bib_archive_supplier_portfolio' as never,{
+        p_portfolio_id:archivePortfolioId,p_reason:archiveReason.trim()
+      } as never);
+      if(error)throw error;
+    },
+    onSuccess:()=>{
+      setArchivePortfolioId('');setArchiveReason('');
+      void queryClient.invalidateQueries({queryKey:['supplier-portfolios']});
+      void queryClient.invalidateQueries({queryKey:['supplier-portfolio-data']});
+      toast.success('Portefeuille fournisseur archivé sans supprimer les dossiers.');
+    },
+    onError:(error:Error)=>toast.error(error.message),
+  });
   const openCreateDialog = () => {
     setEditingPortfolio(null);
     setPortfolioForm(EMPTY_FORM);
@@ -1230,6 +1248,28 @@ export default function SupplierPortfolios() {
               <Button onClick={openCreateDialog}>
                 <Plus className="mr-2 h-4 w-4"/>Créer un nouveau portefeuille
               </Button>
+              {portfolios.length > 0 && (
+                <form className="space-y-3 rounded-md border p-3" onSubmit={e=>{e.preventDefault();archivePortfolio.mutate();}}>
+                  <h3 className="font-medium">Archiver un portefeuille fournisseur sans dossier affecté</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Les dossiers doivent d'abord être réaffectés. L'archivage conserve
+                    les pièces et l'historique ; il bloque toute nouvelle affectation
+                    sur ce portefeuille.
+                  </p>
+                  <select aria-label="Portefeuille fournisseur à archiver" required
+                    className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+                    value={archivePortfolioId} onChange={e=>setArchivePortfolioId(e.target.value)}>
+                    <option value="">Choisir un portefeuille vide</option>
+                    {portfolios.map(p=><option key={p.id} value={p.id}>{p.category}</option>)}
+                  </select>
+                  <Input aria-label="Motif d'archivage fournisseur" required minLength={8} maxLength={500}
+                    value={archiveReason} onChange={e=>setArchiveReason(e.target.value)}
+                    placeholder="Motif obligatoire (8 caractères minimum)"/>
+                  <Button type="submit" variant="outline" disabled={!archivePortfolioId||archiveReason.trim().length<8||archivePortfolio.isPending}>
+                    {archivePortfolio.isPending?'Archivage…':'Archiver ce portefeuille'}
+                  </Button>
+                </form>
+              )}
               <p className="text-sm text-muted-foreground">
                 {portfolioSummaries.length} portefeuille(s) conservé(s) dans le registre.
                 Utilisez l'onglet Fournisseurs pour consulter les dossiers et
