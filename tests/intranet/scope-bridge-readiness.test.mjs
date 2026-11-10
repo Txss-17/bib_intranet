@@ -9,7 +9,7 @@ test('scope editor labels draft as not enforced, and only considers mapped activ
  assert.match(editor,/Brouillon non applicable aux données avant intégration RLS/);
  assert.match(editor,/mappingReadiness\.verifiedLinks/);
  assert.match(editor,/rattachement\(s\) relié\(s\) à un portefeuille actif/);
- assert.match(editor,/aucune habilitation/);
+ assert.match(editor,/ne crée jamais une habilitation/);
  assert.match(editor,/access_business_portfolios/);
  assert.match(editor,/access_scope_portfolios/);
  assert.match(editor,/!mappingSubsidiary\|\|!mappingPole\|\|!portfolioDraft/);
