@@ -28,8 +28,8 @@ const LOGISTICS = [
  ['contact_completed','Échange sur les attentes BIB réalisé'],
  ['requirements_sent','Fiche des besoins BIB transmise'],
  ['requirements_accepted','Accord du logisticien sur les besoins'],
- ['provider_contract_received','Contrat / CGS / SLA du logisticien reçus, versions archivées'],
- ['provider_contract_reviewed','Visa juridique indépendant du contrat prestataire'],
+ ['provider_contract_received','Contrat du logisticien et annexes reçus'],
+ ['provider_contract_reviewed','Contrat examiné et validé par le pôle Juridique'],
  ['contract_signed','Contrat signé et validé'],
  ['portal_access_recorded','Accès portail transmis et confirmé'],
 ] as const;
@@ -141,7 +141,7 @@ export default function PartnerPostApplicationWorkflow({kind,sourceId}:{kind:Kin
   <CardHeader>
    <CardTitle>Parcours après candidature — {kind==='supplier'?'Fournisseur':'Logistique'}</CardTitle>
    <p className="text-sm text-muted-foreground">
-    Dossier de contrôle interne. La signature du contrat ne transmet pas automatiquement des identifiants.
+    Dossier de contrôle interne. Pour la logistique, réception du contrat du prestataire et visa juridique indépendant précèdent sa signature. La signature du contrat ne transmet pas automatiquement des identifiants.
     La transmission et sa réception doivent être attestées par une preuve distincte.
    </p>
   </CardHeader>
@@ -208,7 +208,7 @@ export default function PartnerPostApplicationWorkflow({kind,sourceId}:{kind:Kin
     {next&&<div className="space-y-2 rounded-lg border p-3">
      <p className="font-medium">Prochaine étape : {next[1]}</p>
      <Input value={reference} onChange={e=>setReference(e.target.value)}
-      aria-label="Preuve de l'étape" placeholder={kind==='logistics'&&next?.[0]==='provider_contract_received'?'Référence et versions du contrat, CGS et SLA reçus':kind==='logistics'&&next?.[0]==='provider_contract_reviewed'?'Référence du visa juridique indépendant (8 caractères minimum)':'Référence de pièce ou décision (8 caractères minimum)'} maxLength={500}/>
+      aria-label="Preuve de l'étape" placeholder={kind==='logistics' && next[0]==='provider_contract_received' ? 'Référence et version du contrat / annexes reçus' : kind==='logistics' && next[0]==='provider_contract_reviewed' ? 'Référence du visa juridique (acteur habilité requis)' : 'Référence de pièce ou décision (8 caractères minimum)'} maxLength={500}/>
      <Textarea value={notes} onChange={e=>setNotes(e.target.value)}
       aria-label="Observations" placeholder="Responsable, vérification réalisée, date ou réserve" maxLength={2000}/>
      {pendingAccessProof&&<p role="alert" className="text-sm text-warning">L’étape d’accès exige la confirmation de l’envoi Gateway approuvé indépendamment. Une invitation préparée ou en attente ne vaut pas livraison. La simulation n’est admissible que pour un compte de test.</p>}

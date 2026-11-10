@@ -49,3 +49,18 @@ test('governed RPCs and RLS keep invitations and publication outside the workflo
  assert.match(suppliers,/PartnerPostApplicationWorkflow kind="supplier"/);
  assert.match(logistics,/PartnerPostApplicationWorkflow key=\{selectedOnboarding\} kind="logistics"/);
 });
+
+const migration93 = readFileSync(new URL('../../drizzle/migrations/0093_logistics_provider_contract_review.sql', import.meta.url), 'utf8');
+test('provider contract is received and independently reviewed before signed access', () => {
+ const received = migration93.indexOf("WHEN 'requirements_accepted' THEN 'provider_contract_received'");
+ const reviewed = migration93.indexOf("WHEN 'provider_contract_received' THEN 'provider_contract_reviewed'");
+ const signed = migration93.indexOf("WHEN 'provider_contract_reviewed' THEN 'contract_signed'");
+ assert.ok(received >= 0 && received < reviewed && reviewed < signed);
+ assert.match(migration93,/can_intranet_action\('compliance.contracts','update'\)/);
+ assert.match(migration93,/independent_legal_review_required/);
+ assert.match(migration93,/logistics_legal_review_required/);
+ assert.match(migration93,/provider_contract_review_missing/);
+ assert.match(migration93,/signed_contract_and_gateway_permission_required/);
+ assert.match(component,/Contrat du logisticien et annexes reçus/);
+ assert.match(component,/Contrat examiné et validé par le pôle Juridique/);
+});
