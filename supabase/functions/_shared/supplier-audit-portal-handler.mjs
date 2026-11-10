@@ -89,7 +89,8 @@ export function createSupplierAuditPortalHandler({ secret, getAdmin }) {
         const result = await admin.rpc("list_supplier_portal_reference_decisions", {
           p_submission_id: body.submission_id,
         });
-        if (result.error || !Array.isArray(result.data)) throw new Error("reference_decisions_unavailable");
+        if (result.error) throw result.error;
+        if (!Array.isArray(result.data)) throw new Error("reference_decisions_unavailable");
         return json({ references: result.data });
       }
       const cases = await list();
