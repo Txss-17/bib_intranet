@@ -1,0 +1,24 @@
+name: BIB staging target identity gate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  targets:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check configured staging target identity without printing URLs
+        env:
+          PLATFORM_DATABASE_URL: ${{ secrets.BIB_STAGING_PLATFORM_DATABASE_URL }}
+          INTRANET_DATABASE_URL: ${{ secrets.BIB_STAGING_INTRANET_DATABASE_URL }}
+          PLATFORM_EXPECTED_DB: ${{ vars.BIB_STAGING_PLATFORM_DB_NAME }}
+          INTRANET_EXPECTED_DB: ${{ vars.BIB_STAGING_INTRANET_DB_NAME }}
+        run: node scripts/check-staging-targets.mjs
