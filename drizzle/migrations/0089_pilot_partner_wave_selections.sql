@@ -1,3 +1,4 @@
+-- NOTE: not in the Drizzle journal; applied to the database as 0095_pilot_partner_wave_selections.sql.
 -- Pilot capacity governance is separate from recruitment and contracts.
 -- No mutation to supplier_applications/logistics_partners or any live service.
 CREATE TABLE IF NOT EXISTS public.bib_pilot_partner_selections (

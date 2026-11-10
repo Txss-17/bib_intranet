@@ -1,3 +1,6 @@
+-- Sandbox isolation for supplier/catalog references: additive, real rows stay false.
+ALTER TABLE public.suppliers ADD COLUMN IF NOT EXISTS test_account boolean NOT NULL DEFAULT false;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS test_account boolean NOT NULL DEFAULT false;
 -- Canonical commercial audit dossiers. A payment never admits a reference.
 -- SECURITY INVOKER commands retain RLS; the write trigger also guards direct writes.
 CREATE TABLE public.supplier_audit_cases (
