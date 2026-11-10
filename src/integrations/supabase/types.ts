@@ -1576,6 +1576,60 @@ export type Database = {
           },
         ]
       }
+      bib_fiscal_legal_entities: {
+        Row: {
+          country_code: string
+          created_at: string
+          created_by: string
+          id: string
+          legal_form: string
+          legal_name: string
+          notes: string
+          status: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          country_code: string
+          created_at?: string
+          created_by: string
+          id?: string
+          legal_form: string
+          legal_name: string
+          notes?: string
+          status?: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          legal_form?: string
+          legal_name?: string
+          notes?: string
+          status?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bib_fiscal_legal_entities_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bib_fiscal_legal_entities_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bib_fiscal_records: {
         Row: {
           body: Json
@@ -10681,6 +10735,16 @@ export type Database = {
         Args: { p_body: string; p_id: string }
         Returns: string
       }
+      adjust_partner_stock: {
+        Args: {
+          p_expected_quantity: number
+          p_new_quantity: number
+          p_reason: string
+          p_reference: string
+          p_stock_id: string
+        }
+        Returns: string
+      }
       advance_legal_governance_record: {
         Args: {
           p_action: string
@@ -10818,6 +10882,7 @@ export type Database = {
         Args: { p_id: string; p_replacement?: Json; p_test: boolean }
         Returns: Json
       }
+      bib_fiscal_is_canonical_ceo: { Args: never; Returns: boolean }
       bib_partner_onboarding_permitted: {
         Args: { p_action: string; p_kind: string }
         Returns: boolean
@@ -11061,6 +11126,15 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      create_bib_fiscal_legal_entity: {
+        Args: {
+          p_country_code: string
+          p_legal_form: string
+          p_legal_name: string
+          p_notes?: string
+        }
+        Returns: string
+      }
       create_legal_governance_record: {
         Args: { p_key: string; p_kind: string; p_payload: Json }
         Returns: Json
@@ -11265,6 +11339,7 @@ export type Database = {
         }[]
       }
       list_bib_fiscal_events: { Args: { p_record_id: string }; Returns: Json }
+      list_bib_fiscal_legal_entities: { Args: never; Returns: Json }
       list_bib_fiscal_records: { Args: never; Returns: Json }
       list_compliance_dispute_events: {
         Args: { p_id: string; p_offset?: number }
