@@ -39,3 +39,10 @@ test('only CEO may attribute an unlinked dossier, without rewriting history',()=
  assert.match(sql,/bib_fiscal_governance_events/);
  assert.doesNotMatch(sql,/UPDATE public\.bib_fiscal_records SET/);
 });
+
+test('fiscal interface starts empty and revokes cached records on RPC failure',()=>{
+ const ui=read('src/components/finance/fiscal/FiscalHub.tsx');
+ assert.match(ui,/useState<FiscalRecord\[\]>\(\[\]\)/);
+ assert.match(ui,/catch\(e:any\)\{setRecords\(\[\]\);setSelected\(null\);/);
+ assert.doesNotMatch(ui,/useState<FiscalRecord\[\]>\(seedRecords\)/);
+});
