@@ -47,6 +47,31 @@ RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_t
   ) END);
 $$;
 
+-- Return canonical entity identifiers only after the same per-record authorization check.
+CREATE OR REPLACE FUNCTION public.list_bib_fiscal_records()
+RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
+DECLARE v jsonb; items jsonb; v_ceo boolean;
+BEGIN
+ IF auth.uid() IS NULL OR NOT coalesce(public.can_intranet_action('finance.fiscal','read'),false)
+ THEN RAISE EXCEPTION 'fiscal_read_forbidden' USING ERRCODE='42501'; END IF;
+ v_ceo:=public.bib_fiscal_is_canonical_ceo();
+ v:=public.bib_fiscal_list_internal_0088();
+ SELECT coalesce(jsonb_agg(
+  CASE WHEN l.entity_id IS NULL THEN x.value
+  ELSE x.value||jsonb_build_object('legalEntityId',l.entity_id) END
+  ORDER BY x.value->>'id'),'[]'::jsonb) INTO items
+ FROM jsonb_array_elements(v->'records') x
+ LEFT JOIN public.bib_fiscal_record_entities l
+  ON l.record_id=x.value->>'id' AND l.test_account=public.intranet_is_test_mode()
+ WHERE public.bib_fiscal_record_allowed(x.value->>'id',public.intranet_is_test_mode(),'read');
+ RETURN jsonb_build_object('records',items,'canWrite',v_ceo OR EXISTS(
+  SELECT 1 FROM public.bib_fiscal_entity_grants g
+  JOIN public.bib_fiscal_legal_entities e ON e.id=g.entity_id
+  WHERE g.user_id=auth.uid() AND g.can_update AND e.status='active'
+   AND (g.expires_at IS NULL OR g.expires_at>now())
+ ),'mode','saved');
+END $$;
+
 -- Restrict legal reviewer list to project candidates, not operational fiscal dossiers.
 CREATE FUNCTION public.list_bib_fiscal_entity_reviews()
 RETURNS jsonb LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
