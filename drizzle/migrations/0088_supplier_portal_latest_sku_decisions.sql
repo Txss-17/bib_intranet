@@ -21,7 +21,7 @@ RETURNS jsonb LANGUAGE sql STABLE SECURITY DEFINER SET search_path=public,pg_tem
     WHERE l.platform_submission_id=p_submission_id
       AND e.after_state->>'report_approved_by' IS NOT NULL
       AND length(btrim(coalesce(d.entry->>'reference',''))) BETWEEN 1 AND 200
-      AND d.entry->>'decision' IN ('admitted','refused','changes_required')
+      AND d.entry->>'decision' IN ('admitted','refused','correction_required')
     ORDER BY btrim(d.entry->>'reference'), e.event_order DESC
   )
   SELECT coalesce(jsonb_agg(jsonb_build_object(
