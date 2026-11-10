@@ -32,3 +32,13 @@ test('old prebuilt lists are removed from the onboarding-facing views but record
  assert.match(caseUi,/La liste générale des portefeuilles existants n'est plus affichée/);
  assert.match(merchantUi,/Archiver sans supprimer les affectations historiques/);
 });
+
+test('supplier archival retains canonical assignments and blocks future links',()=>{
+ assert.match(sql,/ADD COLUMN IF NOT EXISTS archived_at timestamptz/);
+ assert.match(sql,/bib_archive_supplier_portfolio/);
+ assert.match(sql,/public\.portfolio_assignments WHERE portfolio_id=p_portfolio_id/);
+ assert.match(sql,/CREATE TRIGGER bib_guard_supplier_archive_assignment/);
+ assert.match(sql,/supplier_portfolio_archived/);
+ assert.match(supplierUi,/bib_archive_supplier_portfolio/);
+ assert.match(supplierUi,/\.is\('archived_at',null\)/);
+});
