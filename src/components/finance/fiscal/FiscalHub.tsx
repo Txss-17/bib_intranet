@@ -1,7 +1,7 @@
 'use client';
 import React,{useState,useEffect,useMemo,useRef} from 'react';
 import {LayoutDashboard,ArrowLeftRight,ShieldAlert,Files,CalendarDays,Calculator,BookOpen,Building2,Search,SlidersHorizontal,Plus,ArrowUpRight,Download,ChevronRight,ChevronDown,X,Check,AlertTriangle,Clock3,GitBranch,ExternalLink,Paperclip,Save,Menu,Users,Loader2,RefreshCw,ShieldCheck,Wallet,CheckCircle2,ArrowRight,FileText,Link2,Layers3} from 'lucide-react';
-import {seedRecords,refs,entities,poles,poleLinks,kinds,scenarios,FiscalRecord,Kind,Status,Confidence,Risk,riskScore,dueState,validationIssues} from './data';
+import {refs,entities,poles,poleLinks,kinds,scenarios,FiscalRecord,Kind,Status,Confidence,Risk,riskScore,dueState,validationIssues} from './data';
 import './fiscal.css';
 type View='overview'|'flows'|'risks'|'documents'|'obligations'|'scenarios'|'entities'|'sources';
 export type Transport={list:()=>Promise<{records:FiscalRecord[];canWrite:boolean;mode?:string}>;save:(r:FiscalRecord)=>Promise<FiscalRecord>;history:(id:string)=>Promise<any[]>;upload:(id:string,file:File)=>Promise<any>;export?:(format:'csv'|'json',records:FiscalRecord[],filters:Record<string,string>)=>Promise<void>;evidencePicker?:(record:FiscalRecord,onAdded:(e:any)=>void,enabled:boolean)=>React.ReactNode};
@@ -18,14 +18,14 @@ const tone=(s:string)=>s==='Confirmé'||s==='Validé'?'green':s==='Critique'||s=
 function Badge({value,outline=false}:{value:string;outline?:boolean}){return <span className={'fh-badge '+tone(value)+(outline?' outline':'')}><i/>{value}</span>;}
 function download(name:string,body:string,type='application/json'){const url=URL.createObjectURL(new Blob([body],{type}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 export default function FiscalHub({embedded=false,transport=defaultTransport,canValidate=true,initialPole=''}:{embedded?:boolean;transport?:Transport;canValidate?:boolean;initialPole?:string}){
- const [records,setRecords]=useState<FiscalRecord[]>(seedRecords),[view,setView]=useState<View>('overview');
+ const [records,setRecords]=useState<FiscalRecord[]>([]),[view,setView]=useState<View>('overview');
  const [filters,setFilters]=useState(emptyFilters),[search,setSearch]=useState(''),[filterOpen,setFilterOpen]=useState(false),[menu,setMenu]=useState(false);
  const [selected,setSelected]=useState<FiscalRecord|null>(null),[creating,setCreating]=useState(false),[drawerTab,setDrawerTab]=useState('cadre');
  const [loading,setLoading]=useState(true),[canWrite,setCanWrite]=useState(false),[error,setError]=useState(''),[toast,setToast]=useState('');
  const [scenario,setScenario]=useState('ei'),[simType,setSimType]=useState('ei'),[sales,setSales]=useState('1200'),[commission,setCommission]=useState('120'),[fees,setFees]=useState('36'),[refund,setRefund]=useState('0');
  const [vatRegime,setVatRegime]=useState('franchise'),[collectedVat,setCollectedVat]=useState('200'),[deductVat,setDeductVat]=useState('40');
  const [entityOpen,setEntityOpen]=useState<string|null>(null);
- const reload=async()=>{setLoading(true);setError('');try{const d=await transport.list();setRecords(d.records);setCanWrite(d.canWrite);}catch(e:any){setError(e.message);setCanWrite(false);}finally{setLoading(false);}};
+ const reload=async()=>{setLoading(true);setError('');try{const d=await transport.list();setRecords(d.records);setCanWrite(d.canWrite);}catch(e:any){setRecords([]);setSelected(null);setError(e.message);setCanWrite(false);}finally{setLoading(false);}};
  useEffect(()=>{void reload();const params=new URLSearchParams(window.location.search),pole=params.get('pole')||initialPole,v=params.get('vue');if(pole&&poles.includes(pole))setFilters(f=>({...f,pole}));if(v&&[...navigation.map(n=>n.id),'entities','sources'].includes(v as View))setView(v as View);},[transport,initialPole]);
  useEffect(()=>{if(toast){const t=setTimeout(()=>setToast(''),4200);return()=>clearTimeout(t);}},[toast]);
  const filtered=useMemo(()=>records.filter(r=>{if(filters.entity&&r.entity!==filters.entity&&!r.relatedEntities?.includes(filters.entity))return false;if(filters.activity&&r.activity!==filters.activity)return false;if(filters.flow&&r.flow!==filters.flow)return false;if(filters.pole&&r.pole!==filters.pole&&!r.contributors.includes(filters.pole))return false;if(filters.risk&&r.risk!==filters.risk)return false;if(filters.confidence&&r.confidence!==filters.confidence)return false;return !search||normalized([r.id,r.title,r.summary,r.entity,r.owner,r.pole,...r.contributors,...Object.values(r.details)].join(' ')).includes(normalized(search));}),[records,filters,search]);

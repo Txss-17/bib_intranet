@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 
+type EntityAssignment = {record_id:string;entity_id:string|null};
 type EntityDraft = {
   id:string; legal_name:string;country_code:string;legal_form:string;
   status:'project';notes:string;created_at:string;
@@ -21,6 +22,8 @@ export default function FiscalEntityDrafts(){
   const [country,setCountry]=useState('FR');
   const [legalForm,setLegalForm]=useState('');
   const [notes,setNotes]=useState('');
+  const [selectedRecord,setSelectedRecord]=useState('');
+  const [selectedEntity,setSelectedEntity]=useState('');
   const key=['fiscal-legal-entity-drafts',user?.id];
   const drafts=useQuery({
     queryKey:key,enabled:show,staleTime:30_000,
@@ -29,6 +32,27 @@ export default function FiscalEntityDrafts(){
       if(error)throw error;
       if(!Array.isArray(data))throw new Error('Registre des entités indisponible.');
       return data as EntityDraft[];
+    }
+  });
+  const assignments=useQuery({
+    queryKey:['fiscal-entity-assignments',user?.id],enabled:show,
+    queryFn:async():Promise<EntityAssignment[]>=>{
+      const {data,error}=await supabase.rpc('list_bib_fiscal_entity_assignments' as never);
+      if(error)throw error;
+      if(!Array.isArray(data))throw new Error('Attributions fiscales indisponibles.');
+      return data as EntityAssignment[];
+    }
+  });
+  const assign=useMutation({
+    mutationFn:async()=>{
+      const {error}=await supabase.rpc('bib_assign_fiscal_record_entity' as never,{
+        p_record_id:selectedRecord,p_entity_id:selectedEntity,p_test:false
+      } as never);
+      if(error)throw error;
+    },
+    onSuccess:()=>{
+      setSelectedRecord('');setSelectedEntity('');
+      void qc.invalidateQueries({queryKey:['fiscal-entity-assignments',user?.id]});
     }
   });
   const create=useMutation({
@@ -76,6 +100,31 @@ export default function FiscalEntityDrafts(){
         {create.isError&&<p role="alert" className="text-sm text-destructive sm:col-span-2">Enregistrement refusé : {(create.error as Error).message}</p>}
         <div className="sm:col-span-2"><Button type="submit" disabled={create.isPending||legalName.trim().length<3||legalForm.trim().length<2||!/^[A-Z]{2}$/.test(country)}>{create.isPending?'Enregistrement…':"Créer un dossier d'entité en projet"}</Button></div>
       </form>}
+      <section className="border-t pt-4 space-y-3">
+        <h3 className="font-medium text-sm">Rattachement juridique des dossiers fiscaux</h3>
+        <p className="text-xs text-muted-foreground">Aucun rattachement ne se fait automatiquement selon les libellés EI, SASU ou Intermédiation. Vérifiez l'émetteur et la propriété juridique avant d'attribuer chaque dossier ; un projet n'autorise aucune déclaration ni délégation.</p>
+        {assignments.isError&&<p role="alert" className="text-sm text-destructive">Attributions indisponibles : migration 0099 ou habilitation CEO à vérifier.</p>}
+        {assignments.isSuccess&&<>
+          <p className="text-xs text-muted-foreground">{assignments.data.filter(a=>a.entity_id).length} dossiers rattachés sur {assignments.data.length}. Les dossiers non rattachés restent réservés au CEO.</p>
+          {drafts.isSuccess&&drafts.data.length>0&&assignments.data.some(a=>!a.entity_id)&&
+          <form className="grid gap-3 sm:grid-cols-2" onSubmit={e=>{e.preventDefault();if(!assign.isPending)assign.mutate();}}>
+            <label className="grid gap-1 text-sm">Dossier à rattacher
+              <select className="h-10 rounded-md border border-input bg-background px-3" value={selectedRecord} onChange={e=>setSelectedRecord(e.target.value)} required>
+                <option value="">Sélectionner une référence</option>
+                {assignments.data.filter(a=>!a.entity_id).map(a=><option value={a.record_id} key={a.record_id}>{a.record_id}</option>)}
+              </select>
+            </label>
+            <label className="grid gap-1 text-sm">Entité de rattachement
+              <select className="h-10 rounded-md border border-input bg-background px-3" value={selectedEntity} onChange={e=>setSelectedEntity(e.target.value)} required>
+                <option value="">Sélectionner l'entité réelle ou en projet</option>
+                {drafts.data.map(e=><option value={e.id} key={e.id}>{e.legal_name} — {e.status}</option>)}
+              </select>
+            </label>
+            {assign.isError&&<p role="alert" className="sm:col-span-2 text-sm text-destructive">Attribution non enregistrée : {(assign.error as Error).message}</p>}
+            <div className="sm:col-span-2"><Button type="submit" disabled={assign.isPending||!selectedEntity||!selectedRecord}>{assign.isPending?'Attribution…':'Rattacher ce dossier (sans activation)'}</Button></div>
+          </form>}
+        </>}
+      </section>
     </CardContent>
   </Card>;
 }
