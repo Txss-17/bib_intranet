@@ -315,6 +315,7 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
   const handoffs = useSupplierAuditHandoffs();
   const transmit = useTransmitSupplierAudit();
   const [handoffReason,setHandoffReason] = useState("");
+  const [handoffModality,setHandoffModality] = useState<"documentary"|"on_site"|"quality_control">("documentary");
   const sentHandoff = handoffs.data?.find(h => h.case_id === c.id);
   const events = useSupplierAuditCaseEvents(c.id);
   const qc = useQueryClient();
@@ -409,7 +410,7 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
     try {
       if (!canTransmit || handoffReason.trim().length < 8 || handoffReason.trim().length > 500)
         throw new Error("Motif de transmission requis (8 à 500 caractères).");
-      await transmit.mutateAsync({caseId:c.id,revision:c.revision,reason:handoffReason});
+      await transmit.mutateAsync({caseId:c.id,revision:c.revision,reason:handoffReason,modality:handoffModality});
       setHandoffReason("");
       toast.success("Dossier transmis au pôle Audit et inscrit dans la file de réception.");
     } catch (error) {
@@ -557,10 +558,18 @@ function CaseDetail({ dossier: c }: { dossier: SupplierAuditCase }) {
         <h4 className="font-semibold">Transmission au pôle Audit</h4>
         {handoffs.isLoading ? <p role="status" className="text-sm">Vérification de la réception…</p> :
           handoffs.isError ? <p role="alert" className="text-sm text-destructive">Statut de transmission indisponible. Aucune confirmation ne peut être affichée.</p> :
-          sentHandoff ? <p role="status" className="text-sm">Dossier reçu par le pôle Audit le {new Date(sentHandoff.sent_at).toLocaleString("fr-FR")}. Le pôle Audit est responsable des constats et du rapport.</p> :
+          sentHandoff ? <p role="status" className="text-sm">Dossier reçu par le pôle Audit le {new Date(sentHandoff.sent_at).toLocaleString("fr-FR")} — {sentHandoff.audit_modality === "documentary" ? "documentaire" : sentHandoff.audit_modality === "on_site" ? "sur site" : "contrôle qualité"}. Le pôle Audit est responsable des constats et du rapport.</p> :
           <p className="text-sm text-muted-foreground">Non transmis : un dossier visible dans le pôle Audit ne vaut pas réception formelle. Fournisseurs doit soumettre le dossier après qualification.</p>}
         {canTransmit && <>
-          <Label htmlFor={`audit-handoff-reason-${c.id}`}>Motif et nature du contrôle *</Label>
+          <Label htmlFor={`audit-handoff-modality-${c.id}`}>Modalité du contrôle *</Label>
+          <select id={`audit-handoff-modality-${c.id}`} value={handoffModality}
+            onChange={event=>setHandoffModality(event.target.value as "documentary"|"on_site"|"quality_control")}
+            className="h-10 w-full rounded-md border bg-background px-3">
+            <option value="documentary">Audit documentaire</option>
+            <option value="on_site">Audit sur site</option>
+            <option value="quality_control">Contrôle qualité ciblé</option>
+          </select>
+          <Label htmlFor={`audit-handoff-reason-${c.id}`}>Motif et références à vérifier *</Label>
           <Textarea id={`audit-handoff-reason-${c.id}`} value={handoffReason}
             maxLength={500} onChange={event=>setHandoffReason(event.target.value)}
             placeholder={c.kind === "counter_audit"
