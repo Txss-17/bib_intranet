@@ -26,6 +26,9 @@ before(async () => {
  CREATE FUNCTION public.can_intranet_action(p text,a text)RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER AS $$SELECT EXISTS(SELECT 1 FROM test_grants WHERE actor=auth.uid() AND page=p AND action=a)$$;
  CREATE FUNCTION public.intranet_is_test_mode()RETURNS boolean LANGUAGE sql STABLE AS $$SELECT coalesce(current_setting('test.sandbox',true),'false')='true'$$;
  CREATE TABLE public.suppliers(id uuid PRIMARY KEY,name text,owner_id uuid,test_account boolean DEFAULT false);
+ -- Migration 0083 also adds test_account to the existing products table.
+ -- Keep the fixture minimal: no product is published or admitted by these tests.
+ CREATE TABLE public.products(id uuid PRIMARY KEY);
  ALTER TABLE public.suppliers ENABLE ROW LEVEL SECURITY;
  CREATE POLICY supplier_owner ON public.suppliers FOR SELECT TO authenticated USING(owner_id=auth.uid());
  GRANT SELECT ON public.suppliers TO authenticated;
