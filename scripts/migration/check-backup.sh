@@ -48,13 +48,17 @@ assert_min "TABLE DATA" public 207
 assert_min FUNCTION public 307
 assert_min TRIGGER public 292
 for entry in "TABLE auth users" "TABLE DATA auth users" "TABLE storage objects" "TABLE DATA storage objects"; do
-  # A TOC entry with that schema + name must exist.
-  read -r _kind _schema _name <<< "$entry"
-  if [[ "$entry" == TABLE\\ DATA* ]]; then
-    _kind="TABLE DATA"; _schema=$(awk '{print $3}' <<< "$entry"); _name=$(awk '{print $4}' <<< "$entry")
+  if [[ "$entry" == "TABLE DATA "* ]]; then
+    kind="TABLE DATA"
+    schema=$(awk '{print $3}' <<< "$entry")
+    object=$(awk '{print $4}' <<< "$entry")
+  else
+    kind="TABLE"
+    schema=$(awk '{print $2}' <<< "$entry")
+    object=$(awk '{print $3}' <<< "$entry")
   fi
-  if ! awk -v k="$_kind" -v s="$_schema" -v n="$_name" '
-      $0 !~ /^[;]/ && index($0, " " k " " s " " n " ") > 0 {ok=1}
+  if ! awk -v k="$kind" -v s="$schema" -v n="$object" '
+      $0 !~ /^;/ && index($0, " " k " " s " " n " ") > 0 {ok=1}
       END {exit !ok}
     ' "$toc"; then
     echo "ERROR: missing TOC section: $entry" >&2
