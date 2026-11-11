@@ -46,7 +46,11 @@ assert_min(){
 assert_min TABLE public 207
 assert_min "TABLE DATA" public 207
 assert_min FUNCTION public 307
-assert_min TRIGGER public 292
+# Trigger objects include auth/pgmq/public schemas; count all archived CREATE TRIGGER entries.
+# Count all trigger TOC entries across schemas; source pg_trigger includes managed objects.
+found_triggers=$(awk '$0 !~ /^;/ && $0 ~ / TRIGGER / {n++} END {print n+0}' "$toc")
+echo "TRIGGER (all schemas): $found_triggers (expected 291)"
+[[ "$found_triggers" == "291" ]] || { echo "ERROR: archived triggers changed; investigate before restore" >&2; exit 7; }
 for entry in "TABLE auth users" "TABLE DATA auth users" "TABLE storage objects" "TABLE DATA storage objects"; do
   if [[ "$entry" == "TABLE DATA "* ]]; then
     kind="TABLE DATA"
