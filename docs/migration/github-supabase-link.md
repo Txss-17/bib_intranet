@@ -25,3 +25,11 @@ Production Lovable project ref: preserved in supabase/config.toml (DO NOT REPLAC
 - [ ] Only after all tests, create separate production environment and manual cutover approval.
 
 Drive BIB master document: https://docs.google.com/document/d/18lpUzk5j6jTKMw9m_s2XAPsALxdeP4OVkkqpbr-iv9M/edit
+
+## Verified source-code contract (2026-11-11)
+- `src/integrations/supabase/client.ts` reads `import.meta.env.VITE_SUPABASE_URL` and `import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY`. This matches the GitHub staging workflow; no client change required to select an alternate Supabase at build time.
+- Both the GitHub pipeline and the independent frontend host must receive their own staging configuration. GitHub Actions variables by themselves do NOT configure Cloudflare Pages or any other deployed frontend.
+- **Never use these staging variables for Lovable production.** The live `supabase/config.toml` ref must remain unchanged until a separate, reviewed production migration.
+- Target Supabase project ID is `hjquaokkcpnwnvpdfmyj`; this identifier is not a database credential. The publishable API key is public client configuration, not a service-role key.
+- As the available GitHub connector cannot configure repository Actions Environments, the Environment `supabase-staging` and two variables remain owner-side steps. Do not mark GitHub↔Supabase connected until a verified successful Actions run uses the target ref.
+- Do not enable real email, Stripe, cron jobs, Edge Functions with network calls, or privileged backend bridges until staging data and secrets are reviewed.
