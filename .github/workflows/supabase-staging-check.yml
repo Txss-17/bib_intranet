@@ -1,0 +1,65 @@
+name: Supabase staging linkage verification
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/supabase-staging-check.yml"
+      - "docs/migration/github-supabase-link.md"
+permissions:
+  contents: read
+
+jobs:
+  build_only:
+    name: Compile app without database credentials (no deployment)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Compile frontend
+        run: npm run build
+
+  check:
+    name: Check isolated staging configuration and build
+    runs-on: ubuntu-latest
+    environment: supabase-staging
+    env:
+      EXPECTED_STAGING_REF: "hjquaokkcpnwnvpdfmyj"
+      # These two are PUBLIC browser configuration values, not secrets.
+      # Protected GitHub Environment vars can override the staging defaults.
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://hjquaokkcpnwnvpdfmyj.supabase.co' }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_oKO4YRixwNJKJDjeJGzBqA_ZSFnAGeh' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify explicit staging-only target
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="https://${EXPECTED_STAGING_REF}.supabase.co"
+          test -n "${VITE_SUPABASE_PUBLISHABLE_KEY}" || { echo "Missing staging publishable key"; exit 1; }
+          test "${VITE_SUPABASE_URL}" = "${expected}" || { echo "Unexpected Supabase target: production is forbidden"; exit 1; }
+          [[ "${VITE_SUPABASE_PUBLISHABLE_KEY}" == sb_publishable_* ]] || { echo "Expected publishable key (not secret/service_role)"; exit 1; }
+          echo "Staging URL matches the approved Supabase target."
+      - name: Verify live staging Auth API reachability (no user data)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Confirm the exact preapproved staging target before making any request.
+          test "${VITE_SUPABASE_URL}" = "https://${EXPECTED_STAGING_REF}.supabase.co"
+          response=$(curl --proto '=https' --tlsv1.2 --fail --silent --show-error --retry 2 --retry-delay 1 \
+            --max-time 20 --header "apikey: ${VITE_SUPABASE_PUBLISHABLE_KEY}" \
+            "${VITE_SUPABASE_URL}/auth/v1/health")
+          RESPONSE="$response" node -e 'const v = JSON.parse(process.env.RESPONSE); if (typeof v.version !== "string" && typeof v.name !== "string") process.exit(1); console.log("Supabase staging Auth endpoint reachable");'
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Build frontend for staging (no deploy)
+        run: npm run build
