@@ -42,7 +42,7 @@ fi
 # Aggregate only: never emit SQL statements, row data, personal identifiers or secret values.
 count_type() {
   local type="$1"
-  awk -v t="$type" '$0 !~ /^;/ && index($0, " " t " ") > 0 { n++ } END { print n + 0 }' "$workdir/toc.txt"
+  awk -v t="$type" '$1 ~ /^[0-9]+;$/ { if (t == "TABLE") { if ($4 == "TABLE" && $5 != "DATA") n++ } else if (t == "TABLE DATA") { if ($4 == "TABLE" && $5 == "DATA") n++ } else if ($4 == t) { n++ } } END { print n + 0 }' "$workdir/toc.txt"
 }
 size_bytes="$(wc -c < "$archive" | tr -d '[:space:]')"
 printf 'backup_status=LISTABLE\narchive_bytes=%s\narchive_sha256=%s\n' "$size_bytes" "$hash"
