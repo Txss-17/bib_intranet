@@ -29,11 +29,13 @@ jobs:
     environment: supabase-staging
     env:
       EXPECTED_STAGING_REF: "hjquaokkcpnwnvpdfmyj"
-      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
-      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+      # These two are PUBLIC browser configuration values, not secrets.
+      # Protected GitHub Environment vars can override the staging defaults.
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL || 'https://hjquaokkcpnwnvpdfmyj.supabase.co' }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_oKO4YRixwNJKJDjeJGzBqA_ZSFnAGeh' }}
     steps:
       - uses: actions/checkout@v4
-      - name: Refuse production / incomplete config
+      - name: Verify explicit staging-only target
         shell: bash
         run: |
           set -euo pipefail
