@@ -50,8 +50,8 @@ jobs:
           set -euo pipefail
           # Confirm the exact preapproved staging target before making any request.
           test "${VITE_SUPABASE_URL}" = "https://${EXPECTED_STAGING_REF}.supabase.co"
-          response=$(curl --proto '=https' --tlsv1.2 --fail --silent --show-error --retry 2 --retry-delay 1 \\
-            --max-time 20 --header "apikey: ${VITE_SUPABASE_PUBLISHABLE_KEY}" \\
+          response=$(curl --proto '=https' --tlsv1.2 --fail --silent --show-error --retry 2 --retry-delay 1 \
+            --max-time 20 --header "apikey: ${VITE_SUPABASE_PUBLISHABLE_KEY}" \
             "${VITE_SUPABASE_URL}/auth/v1/health")
           RESPONSE="$response" node -e 'const v = JSON.parse(process.env.RESPONSE); if (typeof v.version !== "string" && typeof v.name !== "string") process.exit(1); console.log("Supabase staging Auth endpoint reachable");'
       - name: Use Node.js 20
