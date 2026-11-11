@@ -9,6 +9,20 @@ permissions:
   contents: read
 
 jobs:
+  build_only:
+    name: Compile app without database credentials (no deployment)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Compile frontend
+        run: npm run build
+
   check:
     name: Check isolated staging configuration and build
     runs-on: ubuntu-latest
