@@ -1,0 +1,39 @@
+name: Supabase staging linkage verification
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/supabase-staging-check.yml"
+      - "docs/migration/github-supabase-link.md"
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Check isolated staging configuration and build
+    runs-on: ubuntu-latest
+    environment: supabase-staging
+    env:
+      EXPECTED_STAGING_REF: "hjquaokkcpnwnvpdfmyj"
+      VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+      VITE_SUPABASE_PUBLISHABLE_KEY: ${{ vars.VITE_SUPABASE_PUBLISHABLE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refuse production / incomplete config
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="https://${EXPECTED_STAGING_REF}.supabase.co"
+          test -n "${VITE_SUPABASE_PUBLISHABLE_KEY}" || { echo "Missing staging publishable key"; exit 1; }
+          test "${VITE_SUPABASE_URL}" = "${expected}" || { echo "Unexpected Supabase target: production is forbidden"; exit 1; }
+          [[ "${VITE_SUPABASE_PUBLISHABLE_KEY}" == sb_publishable_* ]] || { echo "Expected publishable key (not secret/service_role)"; exit 1; }
+          echo "Staging URL matches the approved Supabase target."
+      - name: Use Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Build frontend for staging (no deploy)
+        run: npm run build
