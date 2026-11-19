@@ -29,3 +29,8 @@ test('Talent sign-in preserves real staff profile verification',()=>{
  assert.match(login,/supabase\.auth\.signOut\(\)/);
  assert.doesNotMatch(login,/endsWith\('@brand-in-a-box.space'\)/);
 });
+
+test('Invitation origin is mandatory: no implicit redirect to Lovable when staging is unconfigured',()=>{
+ assert.match(edge,/Deno\.env\.get\('BIB_INTRANET_PUBLIC_URL'\) \?\? ''/);
+ assert.doesNotMatch(edge,/Deno\.env\.get\('BIB_INTRANET_PUBLIC_URL'\) \?\?\s*'https:\/\/bib-intranet\.lovable\.app'/);
+});
