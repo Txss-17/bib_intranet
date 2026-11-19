@@ -622,8 +622,9 @@ Deno.serve(
         // Exact protected Vercel Preview origin for the BIB staging acceptance test.
         'https://bib-intranet-staging-dxwa5e90e-txss-17.vercel.app',
       ]);
-      const inviteOrigin = (Deno.env.get('BIB_INTRANET_PUBLIC_URL') ??
-        'https://bib-intranet.lovable.app').trim().replace(/[/]+$/, '');
+      const inviteOrigin = (Deno.env.get('BIB_INTRANET_PUBLIC_URL') ?? '').trim().replace(/[/]+$/, '');
+      // Fail closed if staging has not explicitly configured the approved origin.
+      // Never silently redirect invited staff back to the historical Lovable host.
       if (!inviteOrigins.has(inviteOrigin))
         return json({ error: 'Origine d\'invitation RH non autorisée.' }, 503);
 
