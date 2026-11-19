@@ -1110,43 +1110,10 @@ Deno.serve(
 
 
       /*
-       * Finalisation.
+       * Provisioning is not onboarding completion.
+       * Keep account_created until invitation acceptance, first login and
+       * effective access are independently verified by a dedicated workflow.
        */
-      const {
-        error:
-          completedError,
-      } =
-        await admin
-          .from(
-            'hr_employee_requests',
-          )
-          .update({
-            status:
-              'completed',
-          })
-          .eq(
-            'id',
-            requestId,
-          )
-          .eq(
-            'status',
-            'account_created',
-          );
-
-
-      if (
-        completedError
-      ) {
-        return json(
-          {
-            error:
-              `Accès provisionnés mais dossier non finalisé : ${completedError.message}`,
-          },
-          400,
-        );
-      }
-
-
       const actorName =
         `${profileResult.data?.first_name ?? ''} ${
           profileResult.data?.last_name ?? ''
@@ -1218,9 +1185,9 @@ Deno.serve(
               ? 'Compte existant synchronisé, profil et RBAC mis à jour'
               : 'Compte invité, profil et RBAC provisionnés',
           from_status:
-            'account_created',
+            'hr_validated',
           to_status:
-            'completed',
+            'account_created',
           note:
             `Rôle ${accessRole.role_key} · pôles ${(
               request.poles ??
@@ -1241,7 +1208,7 @@ Deno.serve(
             request.manager_id ??
             user.id,
           title:
-            `Onboarding terminé — ${request.first_name} ${request.last_name}`,
+            `Compte créé — activation à vérifier : ${request.first_name} ${request.last_name}`,
           message:
             `${email} · rôle ${accessRole.label}`,
           type:
