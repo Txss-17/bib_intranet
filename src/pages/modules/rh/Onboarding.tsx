@@ -85,6 +85,7 @@ import {
   useHrEmployeeRequests,
   useHrOnboardingActions,
   useHrActivationEvidence,
+  useCompleteHrOnboarding,
   useHrReferents,
   useHrRequestEvents,
   useHrPositionCatalog,
@@ -1229,11 +1230,14 @@ function RequestSheet({
   } = useHrOnboardingActions();
 
   const [reason, setReason] = useState('');
+  const [completionNote, setCompletionNote] = useState('');
+  const [completionReviewed, setCompletionReviewed] = useState(false);
+  const completeOnboarding = useCompleteHrOnboarding();
   const mutationStatus = useSetHrMutationStatus();
   const applyMutation = useApplyHrEmployeeMutation();
   const { user } = useAuth();
   const isMutation = request.request_kind === 'mutation';
-  const actionPending = setStatus.isPending || provisionAccount.isPending || mutationStatus.isPending || applyMutation.isPending;
+  const actionPending = setStatus.isPending || provisionAccount.isPending || mutationStatus.isPending || applyMutation.isPending || completeOnboarding.isPending;
   const mayValidate = canValidate && (!isMutation || request.target_user_id !== user?.id);
   const mayApply = canProvision && (!isMutation || request.target_user_id !== user?.id);
   const statusAction = (status: 'hr_validated' | 'rejected') => {
@@ -1572,6 +1576,34 @@ function RequestSheet({
               )}
               <Button type="button" size="sm" variant="outline" disabled={activation.isFetching}
                 onClick={() => void activation.refetch()}>Actualiser les contrôles</Button>
+
+              {canValidate && (
+                <div className="space-y-2 border-t pt-3">
+                  <h4 className="text-sm font-semibold">Revue indépendante et clôture RH</h4>
+                  <p className="text-xs text-muted-foreground">Vérifiez la réception de l’invitation et les écrans métiers avec le collaborateur. Le validateur, créateur du dossier ou opérateur ayant provisionné le compte ne peut pas clôturer sa propre opération. Le serveur revérifie ces conditions.</p>
+                  <Label htmlFor="hr-completion-note">Compte rendu de recette (30 caractères minimum)</Label>
+                  <Textarea id="hr-completion-note" rows={3} maxLength={2000}
+                    value={completionNote}
+                    disabled={actionPending}
+                    onChange={event => {setCompletionNote(event.target.value);setCompletionReviewed(false);}}
+                    placeholder="Indiquer les parcours contrôlés, les accès métiers testés et le résultat." />
+                  <label className="flex items-start gap-2 text-xs">
+                    <Checkbox checked={completionReviewed} disabled={actionPending}
+                      onCheckedChange={checked => setCompletionReviewed(checked === true)} />
+                    <span>Je confirme avoir vérifié la connexion, les droits effectifs et les usages du poste.</span>
+                  </label>
+                  <Button type="button" size="sm"
+                    disabled={actionPending || activation.isLoading || activation.isError ||
+                      !activation.data || !Object.values(activation.data).every(value => value === true) ||
+                      !completionReviewed || completionNote.trim().length < 30}
+                    onClick={() => completeOnboarding.mutate({requestId:request.id,note:completionNote})}>
+                    {completeOnboarding.isPending ? 'Clôture en cours…' : 'Valider la clôture RH'}
+                  </Button>
+                  {completeOnboarding.isError && <p role="alert" className="text-xs text-destructive">
+                    {completeOnboarding.error instanceof Error ? completeOnboarding.error.message : 'Clôture refusée par le serveur.'}
+                  </p>}
+                </div>
+              )}
             </section>
           )}
 
