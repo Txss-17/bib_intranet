@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS public.audit_cross_pole_referrals (
 );
 -- A direct allowed INSERT still cannot forge the author, timestamp, status or mode.
 CREATE OR REPLACE FUNCTION public.audit_cross_pole_referral_stamp()
-RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path=public,pg_temp AS $$
 BEGIN
  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'audit_referral_forbidden' USING ERRCODE='42501'; END IF;
  NEW.sent_by:=auth.uid();
@@ -28,7 +28,7 @@ BEGIN
  NEW.test_account:=public.intranet_is_test_mode();
  NEW.status:='received';
  RETURN NEW;
-END;$;
+END;$$;
 REVOKE ALL ON FUNCTION public.audit_cross_pole_referral_stamp() FROM PUBLIC,anon,authenticated;
 DROP TRIGGER IF EXISTS audit_cross_pole_referral_stamp_trigger ON public.audit_cross_pole_referrals;
 CREATE TRIGGER audit_cross_pole_referral_stamp_trigger
