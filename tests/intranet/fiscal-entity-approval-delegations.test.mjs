@@ -9,8 +9,8 @@ const hub=read('src/components/finance/fiscal/FiscalHub.tsx');
 const page=read('src/pages/modules/finance/FiscalGovernance.tsx');
 
 test('migration order 0098 → 0099 → 0100 keeps original fiscal records intact',()=>{
- assert.deepEqual(journal.entries.slice(-3).map(x=>x.idx),[98,99,100]);
- assert.equal(journal.entries.at(-1).tag,'0100_fiscal_entity_approval_and_delegations');
+ assert.deepEqual(journal.entries.filter(e=>e.idx>=98&&e.idx<=100).map(x=>x.idx),[98,99,100]);
+ assert.equal(journal.entries.find(e=>e.idx===100).tag,'0100_fiscal_entity_approval_and_delegations');
  assert.doesNotMatch(sql,/TRUNCATE|DELETE FROM public\.bib_fiscal_records|UPDATE public\.bib_fiscal_records/);
 });
 test('legal review must be independent before CEO can activate verified legal entity',()=>{

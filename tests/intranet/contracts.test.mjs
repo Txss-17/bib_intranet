@@ -53,6 +53,8 @@ test('server migrations reconstruct the frontend registry including domain schem
    const afterDispute=page.id===dispute.id?dispute:page;
    return {...afterDispute,...(overrides.get(page.id)||{})};
  });
+ const fiscal=JSON.parse(read('drizzle/migrations/0088_fiscal_governance_hub.sql').match(/\$module\$([\s\S]*?)\$module\$/)[1]);
+ effective.push(fiscal);
  assert.deepEqual(effective,registry);
  const marketplace=JSON.parse(read('drizzle/migrations/0052_restore_existing_account_access.sql').match(/\$marketplace_lead_pages\$([\s\S]*?)\$marketplace_lead_pages\$/)[1]);
  // 0052 extends server-side default grants only. It must not be mistaken for

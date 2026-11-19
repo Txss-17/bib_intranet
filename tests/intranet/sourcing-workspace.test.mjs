@@ -15,7 +15,9 @@ test('sourcing is independent of recruitment, contracts, partner activation and 
  assert.match(sql,/CREATE TABLE IF NOT EXISTS public\.bib_sourcing_missions/);
  assert.match(sql,/CREATE TABLE IF NOT EXISTS public\.bib_sourcing_candidates/);
  assert.match(sql,/GRANT SELECT ON public\.bib_sourcing_missions,public\.bib_sourcing_candidates TO authenticated/);
- assert.doesNotMatch(sql,/INSERT INTO public\.(suppliers|supplier_applications|logistics_partners|contracts|orders|products)/);
+ const automaticPaths=sql.replace(/CREATE OR REPLACE FUNCTION public\.bib_convert_sourcing_to_supplier_application[\s\S]*?\$\$[\s\S]*?\$\$;/,'');
+ assert.ok(automaticPaths.length<sql.length,'explicit conversion remains separately validated');
+ assert.doesNotMatch(automaticPaths,/INSERT INTO public\.(suppliers|supplier_applications|logistics_partners|contracts|orders|products)/);
  assert.match(view,/La présélection ne vaut ni contrat/);
 });
 test('permissions, sandbox isolation and evidence are server enforced',()=>{

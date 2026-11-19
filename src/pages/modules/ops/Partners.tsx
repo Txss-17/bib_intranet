@@ -8,6 +8,9 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import PartnerPostApplicationWorkflow from '@/components/operations/PartnerPostApplicationWorkflow';
 import {
   Table,
   TableBody,
@@ -622,6 +625,14 @@ const Partners = () => {
 
                         <TableCell>
                           {getStatusBadge(partner.status)}
+                          <Button
+                            variant="link"
+                            className="block h-auto px-0 py-1"
+                            onClick={() => setSelectedOnboarding(partner.id)}
+                            aria-label={`Parcours d’intégration de ${partner.name}`}
+                          >
+                            Parcours d’intégration
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -632,6 +643,16 @@ const Partners = () => {
           )}
         </CardContent>
       </Card>
+      <Dialog open={selectedOnboarding !== null} onOpenChange={(open) => { if (!open) setSelectedOnboarding(null); }}>
+        <DialogContent className="max-h-[90vh] max-w-5xl overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Parcours d’intégration du partenaire logistique</DialogTitle>
+          </DialogHeader>
+          {selectedOnboarding && (
+            <PartnerPostApplicationWorkflow key={selectedOnboarding} kind="logistics" sourceId={selectedOnboarding} />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

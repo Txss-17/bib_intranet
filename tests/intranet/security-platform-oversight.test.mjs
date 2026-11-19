@@ -8,7 +8,7 @@ test('Platform RLS supervision is reachable only through the existing Security p
   const app = read('src/App.tsx');
   const page = read('src/pages/modules/security/SecurityPlatform.tsx');
   const nav = read('src/data/moduleNavigations.ts');
-  assert.match(app, /import SecurityPlatform from/);
+  assert.match(app, /const SecurityPlatform = lazy\(\(\) => import\("\.\/pages\/modules\/security\/SecurityPlatform"\)\)/);
   assert.match(app, /path="\/pole\/security\/platform"/);
   assert.match(app, /element=\{<SecurityPlatform \/>\}/);
   assert.match(nav, /Sécurité BIB Platform & RLS/);

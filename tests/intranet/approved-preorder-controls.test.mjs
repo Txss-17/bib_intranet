@@ -7,7 +7,7 @@ test('governance respects approved decisions and merchant legal seller', () => {
   const source = read('src/pages/modules/direction/GroupGovernance.tsx');
   assert.match(source, /Décisions BIB approuvées/);
   assert.match(source, /BIB-00bis/);
-  assert.match(source, /marchand reste le vendeur juridique/);
+  assert.match(source, /marchand tiers reste vendeur et acheteur fournisseur de ses propres commandes/);
   assert.match(source, /Stripe et comptabilité restent deux systèmes distincts/);
 });
 test('Supplier and Ops explain operational preorder production gates', () => {

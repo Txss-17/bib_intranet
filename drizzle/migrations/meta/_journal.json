@@ -715,6 +715,13 @@
       "when": 1794340801000,
       "tag": "0103_audit_cross_pole_referrals",
       "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1795060011896,
+      "tag": "0104_restore_function_search_path",
+      "breakpoints": true
     }
   ]
 }

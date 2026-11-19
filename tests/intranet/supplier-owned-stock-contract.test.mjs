@@ -9,7 +9,7 @@ test('Ops partner inventory is distinct from supplier-owned stock', () => {
 });
 test('supplier dashboard explains procurement triggered by real orders', () => {
   const supplier = read('src/pages/modules/supplier/SupplierDashboard.tsx');
-  assert.match(supplier, /l'achat de la quantité correspondante/);
+  assert.match(supplier, /disponibilité fournisseur doit être confirmée avant l'achat par le marchand/);
   assert.match(supplier, /n'expose pas encore un inventaire fournisseur vérifié/);
 });
 test('stock journal is read-only, access-controlled by existing RLS', () => {

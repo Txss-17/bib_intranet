@@ -22,5 +22,8 @@ test('no fake sandbox datasets or local permission records remain active', () =>
   const perm = file('src/data/permissionMatrix.ts');
   assert.doesNotMatch(sandbox, /generateSpaceDatasets|localStorage/);
   assert.doesNotMatch(perm, /localStorage\./);
-  assert.match(file('src/integrations/supabase/client.ts'),/storage: memoryAuthStorage/);
+  const client=file('src/integrations/supabase/client.ts');
+  assert.match(client,/persistSession: true/);
+  assert.match(client,/autoRefreshToken: true/);
+  assert.doesNotMatch(client,/memoryAuthStorage|brokeredPreviewStorage|postMessage/);
 });
