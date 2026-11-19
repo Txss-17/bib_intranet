@@ -9,6 +9,7 @@ test('Invitation path is a server-owned approved redirect and never relies on ar
  assert.match(edge,/inviteOrigins = new Set/);
  assert.match(edge,/https:\/\/bib-intranet\.lovable\.app/);
  assert.match(edge,/https:\/\/workspace\.brand-in-a-box\.space/);
+ assert.match(edge,/bib-intranet-staging-dxwa5e90e-txss-17\.vercel\.app/);
  assert.match(edge,/inviteOrigins\.has\(inviteOrigin\)/);
  assert.match(edge,/redirectTo:\s*\x60\$\{inviteOrigin\}\/reset-password\x60/);
  assert.match(edge,/reserve_hr_onboarding_invitation/);

@@ -619,6 +619,8 @@ Deno.serve(
       const inviteOrigins = new Set([
         'https://bib-intranet.lovable.app',
         'https://workspace.brand-in-a-box.space',
+        // Exact protected Vercel Preview origin for the BIB staging acceptance test.
+        'https://bib-intranet-staging-dxwa5e90e-txss-17.vercel.app',
       ]);
       const inviteOrigin = (Deno.env.get('BIB_INTRANET_PUBLIC_URL') ??
         'https://bib-intranet.lovable.app').trim().replace(/[/]+$/, '');

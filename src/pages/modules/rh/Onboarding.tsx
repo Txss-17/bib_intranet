@@ -1534,6 +1534,23 @@ function RequestSheet({
             {request.target_user_id === user?.id && <p role="alert" className="text-destructive">Un autre responsable RH doit traiter votre mutation.</p>}
           </section>}
 
+          {/* SUIVI DU PROVISIONNEMENT ET PROCHAINES ACTIONS */}
+          {!isMutation && request.status === 'hr_validated' && (
+            <section className="space-y-2 rounded-lg border border-border p-3" aria-label="Prochaine étape d'intégration">
+              <h3 className="text-sm font-semibold">Prochaine étape : créer le compte et les accès</h3>
+              <p className="text-sm text-muted-foreground">Un responsable RH habilité doit déclencher le provisionnement serveur. Cette action crée le compte, associe le rôle approuvé et prépare l'invitation professionnelle. La validation RH seule ne crée aucun compte.</p>
+              {!canProvision && <p role="status" className="text-sm text-amber-700">Action indisponible pour vos permissions : demandez à un responsable RH habilité de poursuivre.</p>}
+              <p className="text-xs text-muted-foreground">Si le service de création n'est pas déployé ou configuré, une erreur doit être affichée ; aucun compte ne doit être considéré comme créé.</p>
+            </section>
+          )}
+          {!isMutation && request.status === 'account_created' && (
+            <section className="space-y-2 rounded-lg border border-border p-3" aria-label="Suivi de l'activation du collaborateur">
+              <h3 className="text-sm font-semibold">Compte créé — activation à confirmer</h3>
+              <p className="text-sm text-muted-foreground">Vérifiez l'envoi et la réception de l'invitation, la définition du mot de passe, la première connexion et les droits effectifs du collaborateur. Le statut « Compte créé » ne prouve pas que l'invitation a été reçue ni que les accès fonctionnent.</p>
+              <p className="text-xs text-muted-foreground">Consultez l'historique et les contrôles Auth avant de clôturer le dossier. Ne marquez pas l'intégration comme terminée tant que ces preuves ne sont pas vérifiées.</p>
+            </section>
+          )}
+
           {/* ACTIONS */}
           {(mayValidate || mayApply) && request.status !== 'completed' &&
             (!isMutation || ['submitted', 'hr_validated'].includes(request.status)) && (
