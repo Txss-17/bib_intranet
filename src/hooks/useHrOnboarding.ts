@@ -172,6 +172,30 @@ const db = supabase as unknown as {
   from: (table: string) => any;
 };
 
+export interface HrActivationEvidence {
+  auth_user_exists: boolean;
+  email_confirmed: boolean;
+  first_login_recorded: boolean;
+  role_assignment_active: boolean;
+}
+
+export const useHrActivationEvidence = (requestId: string | null) =>
+  useQuery({
+    queryKey: ['hr_activation_evidence', requestId],
+    enabled: Boolean(requestId),
+    queryFn: async (): Promise<HrActivationEvidence | null> => {
+      if (!requestId) return null;
+      const { data, error } = await supabase.rpc(
+        'hr_onboarding_activation_evidence' as any,
+        { p_request_id: requestId } as any,
+      );
+      if (error) throw error;
+      const evidence = (data as unknown as HrActivationEvidence[] | null)?.[0];
+      return evidence ?? null;
+    },
+    staleTime: 0,
+  });
+
 export const useHrEmployeeRequests = () =>
   useQuery({
     queryKey: ['hr_employee_requests'],
