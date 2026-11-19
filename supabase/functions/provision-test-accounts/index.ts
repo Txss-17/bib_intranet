@@ -1,6 +1,6 @@
 // Fake/test identity provisioning is permanently disabled.
 // Production BIB Intranet accepts only real, authorized user identities.
-Deno.serve((request) => new Response(JSON.stringify({ error: "test_account_provisioning_disabled" }), {
+Deno.serve(async () => new Response(JSON.stringify({ error: "test_account_provisioning_disabled" }), {
   status: 410, headers: {
     "Content-Type": "application/json", "Cache-Control": "no-store",
     "Access-Control-Allow-Origin": "*",
