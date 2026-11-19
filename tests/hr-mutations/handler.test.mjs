@@ -62,7 +62,7 @@ async function invoke(options={}) {
   }},
  };
  let handler;
- const environment={SUPABASE_URL:"https://supabase.test",SUPABASE_ANON_KEY:"anon",SUPABASE_SERVICE_ROLE_KEY:"service"};
+ const environment={SUPABASE_URL:"https://supabase.test",SUPABASE_ANON_KEY:"anon",SUPABASE_SERVICE_ROLE_KEY:"service",BIB_INTRANET_PUBLIC_URL:options.missingInviteOrigin?undefined:"https://bib-intranet-staging-dxwa5e90e-txss-17.vercel.app"};
  const context={Deno:{env:{get:key=>environment[key]},serve:fn=>{handler=fn;}},Response,Request,URL,JSON,Date,
  crypto:{randomUUID:()=>id(99)},console:{error(){},warn(){},log(){}},
  createClient:(url,key,settings)=>{calls.clients.push({key,settings});return key==="service"?admin:caller;}};
@@ -141,4 +141,12 @@ test("normal newhire reservation and invitation use the same fresh request nonce
  const reservation=r.calls.rpc.find(x=>x.name==="reserve_hr_onboarding_invitation");
  assert.ok(reservation);assert.equal(reservation.client,"caller");assert.equal(reservation.args.p_request_id,id(1));
  assert.equal(reservation.args.p_attempt_nonce,r.calls.invites[0].settings.data.hr_onboarding_attempt_nonce);
+});
+
+test('missing explicit invitation origin fails closed before reservation or invitation',async()=>{
+ const r=await invoke({missingInviteOrigin:true});
+ assert.equal(r.status,503);
+ assert.equal(r.calls.invites.length,0);
+ assert.equal(r.calls.rpc.some(x=>x.name==='reserve_hr_onboarding_invitation'),false);
+ assert.equal(r.calls.writes.length,0);
 });
