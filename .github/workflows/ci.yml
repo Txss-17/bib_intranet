@@ -125,6 +125,10 @@ jobs:
         run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f tests/work-tasks/permissions.sql
 
       - name: Test pole and transversal contracts
+        env:
+          NODE_OPTIONS: --import=./scripts/migration/test-network-guard.mjs
+          VITE_SUPABASE_URL: https://hjquaokkcpnwnvpdfmyj.supabase.co
+          VITE_SUPABASE_PUBLISHABLE_KEY: sb_publishable_local_regression_fixture
         run: npm run test:intranet
 
       - name: Test module workflows, server permissions and document services

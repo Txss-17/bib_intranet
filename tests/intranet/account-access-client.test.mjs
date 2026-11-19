@@ -82,6 +82,7 @@ function gate(state,allowed=true,pathKnown=true){
  const retries=[];const permissions={accessState:()=>state,canViewPage:()=>allowed,retryAccess:id=>retries.push(id)};
  const {RouteAccessGate}=load('src/components/operations/RouteAccessGate.tsx',{
   'react-router-dom':{useLocation:()=>({pathname:'/pole/support'})},'@/hooks/usePermissions':{usePermissions:()=>permissions},
+  '@/hooks/useHrEmployeeMutations':{useHrOnboardingPermissions:()=>{throw new Error('RH hook must not run for other routes');}},
   '@/lib/intranet':{resolveIntranetPage:()=>pathKnown?{id:'support.overview'}:undefined},
   '@/components/ProtectedScreen':{AccessDenied:'denied'},'./AccessStatus':{AccessStatus:'status'},
  });

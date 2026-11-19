@@ -47,6 +47,11 @@ test('les sous-pages répertoriées ont un accès de navigation ou un routage d�
   for (const page of allIds) {
     assert.ok(app.includes(`path="${page.path}"`) || app.includes('path="/pole/:poleId/:subSection"'),
       `No route for ${page.id}`);
+    if (page.id === 'security.sandbox') {
+      assert.match(read('src/pages/modules/security/SecuritySandbox.tsx'), /<Navigate to="\/pole\/security" replace \/>/);
+      assert.ok(!nav.includes("path: '/pole/security/sandbox'"));
+      continue;
+    }
     const subId = page.id.slice(page.scope.length + 1);
     assert.ok(nav.includes(`id: '${subId}'`), `Missing navigation item: ${page.id}`);
   }

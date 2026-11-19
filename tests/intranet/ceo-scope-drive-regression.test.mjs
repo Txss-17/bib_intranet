@@ -42,5 +42,6 @@ test('sandbox has no local journal download and no production Drive export',()=>
  const sandbox=read('src/pages/modules/security/SecuritySandbox.tsx');
  assert.doesNotMatch(sandbox, /URL\.createObjectURL/);
  assert.doesNotMatch(sandbox, /anchor\.download/);
- assert.match(sandbox, /Export du journal Sandbox suspendu/);
+ assert.match(sandbox, /<Navigate to="\/pole\/security" replace \/>/);
+ assert.doesNotMatch(sandbox, /fetch\(|\.invoke\(|\.rpc\(/);
 });

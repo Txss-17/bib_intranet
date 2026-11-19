@@ -9,8 +9,9 @@ const merchantUi=read('src/components/marketplace/MarketplacePortfolioManager.ts
 const supplierUi=read('src/pages/modules/supplier/SupplierPortfolios.tsx');
 
 test('migration 0101 follows 0100 and never hard deletes portfolio history',()=>{
- assert.equal(journal.entries.at(-1).tag,'0101_portfolio_archival_lifecycle');
- assert.equal(journal.entries.at(-1).idx,101);
+ assert.equal(journal.entries.find(e=>e.idx===101).tag,'0101_portfolio_archival_lifecycle');
+ assert.equal(journal.entries.find(e=>e.idx===101).idx,101);
+ assert.equal(journal.entries.find(e=>e.idx===100).tag,'0100_fiscal_entity_approval_and_delegations');
  assert.doesNotMatch(sql,/DELETE FROM public\.(bib_case_portfolios|merchant_portfolios|bib_case_portfolio_members|merchant_portfolio_assignments)/);
  assert.match(sql,/portfolio_has_active_assignments/);
  assert.match(sql,/status='inactive'/);

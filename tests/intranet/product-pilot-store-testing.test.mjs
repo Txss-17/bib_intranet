@@ -3,27 +3,17 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 const read = file => readFileSync(new URL('../../'+file,import.meta.url),'utf8');
 
-test('test center is linked and gated by Engineering permission',()=>{
+test('legacy testing route keeps its engineering permission and redirects to Product',()=>{
  const app=read('src/App.tsx');
- const nav=read('src/data/moduleNavigations.ts');
- const home=read('src/pages/modules/product/ProductEngineeringDashboard.tsx');
+ const aliases=JSON.parse(read('src/data/intranetRouteAliases.json'));
  const page=read('src/pages/modules/product/ProductTestingCenter.tsx');
- assert.match(app,/import ProductTestingCenter from/);
  assert.match(app,/path="\/pole\/product\/testing"/);
- assert.match(nav,/Tests & boutiques pilotes/);
- assert.match(home,/path: '\/pole\/product\/testing'/);
- assert.match(home,/pageId: 'product.engineering'/);
- assert.match(page,/canViewPage\('product\.engineering'\)/);
+ assert.equal(aliases['/pole/product/testing'],'product.engineering');
+ assert.match(page,/<Navigate to="\/pole\/product" replace \/>/);
 });
 
-test('test center specifies the six cross-app E2E scenarios without falsely running them',()=>{
+test('retired synthetic scenarios cannot create shops, orders or claim completed E2E runs',()=>{
  const page=read('src/pages/modules/product/ProductTestingCenter.tsx');
- for(const scenario of ['merchant','checkout','supplier','logistics','sav','permissions'])
-   assert.ok(page.includes("key: '"+scenario+"'"),scenario);
- for(const boundary of ['48 h','Stripe','RLS','marchand','fournisseur','logistique'])
-   assert.ok(page.includes(boundary),boundary);
- assert.match(page,/NON EXÉCUTÉ/);
- assert.match(page,/Ne renseigner une réussite que sur preuve/);
- assert.match(page,/Cette page ne crée pas de boutique/);
- assert.doesNotMatch(page,/\.from\(|\.rpc\(|fetch\(/);
+ assert.doesNotMatch(page,/\.from\(|\.rpc\(|fetch\(|functions\.invoke\(|NON EXÉCUTÉ|key: 'merchant'/);
+ assert.match(page,/Synthetic product and order scenarios are not part of BIB production/);
 });

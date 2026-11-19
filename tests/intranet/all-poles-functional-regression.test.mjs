@@ -35,6 +35,11 @@ test('toutes les sous-pages inventoriées ont une route explicite et une entrée
   assert.equal(inventory.poles.length, 14);
   for (const page of polePages) {
     assert.ok(app.includes(`path="${page.path}"`), `Route absente: ${page.id}`);
+    if (page.id === 'security.sandbox') {
+      assert.match(read('src/pages/modules/security/SecuritySandbox.tsx'), /<Navigate to="\/pole\/security" replace \/>/);
+      assert.ok(!nav.includes("path: '/pole/security/sandbox'"));
+      continue;
+    }
     const itemId = page.id.slice(page.scope.length + 1);
     assert.ok(nav.includes(`id: '${itemId}'`), `Onglet absent: ${page.id}`);
   }

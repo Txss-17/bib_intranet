@@ -5,8 +5,16 @@ const read = path => readFileSync(new URL('../../' + path, import.meta.url), 'ut
 
 test('migration registry is contiguous and includes Finance and latest synchronization migration', () => {
   const journal = JSON.parse(read('drizzle/migrations/meta/_journal.json'));
-  assert.equal(journal.entries.length, 88);
-  assert.deepEqual(journal.entries.map(e => e.idx),Array.from({length:journal.entries.length},(_,i)=>i));
+  assert.ok(journal.entries.length >= 102);
+  for (const entry of journal.entries) assert.ok(read('drizzle/migrations/'+entry.tag+'.sql').trim(),entry.tag);
+  // Historical 0089/0091 were superseded by registered 0095/0096; replaying both is unsafe.
+  const retired=new Set([89,91]);
+  assert.deepEqual(journal.entries.map(e=>e.idx),Array.from({length:journal.entries.at(-1).idx+1},(_,i)=>i).filter(i=>!retired.has(i)));
+  for(const [oldTag,newTag] of [['0089_pilot_partner_wave_selections','0095_pilot_partner_wave_selections'],['0091_partner_access_handoff','0096_partner_access_handoff']]){
+    assert.ok(!journal.entries.some(e=>e.tag===oldTag));
+    assert.ok(journal.entries.some(e=>e.tag===newTag));
+    assert.match(read('drizzle/migrations/'+oldTag+'.sql'),/NOTE: not in the Drizzle journal/);
+  }
   assert.equal(new Set(journal.entries.map(x => x.when)).size, journal.entries.length);
   for (const tag of [
     '0052_restore_existing_account_access',
