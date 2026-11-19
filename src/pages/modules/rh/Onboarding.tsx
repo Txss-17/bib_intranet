@@ -84,6 +84,7 @@ import {
   useHrAccessRoles,
   useHrEmployeeRequests,
   useHrOnboardingActions,
+  useHrActivationEvidence,
   useHrReferents,
   useHrRequestEvents,
   useHrPositionCatalog,
@@ -1218,6 +1219,9 @@ function RequestSheet({
   const events = useHrRequestEvents(
     request.id,
   );
+  const activation = useHrActivationEvidence(
+    request.request_kind !== 'mutation' && request.status === 'account_created' ? request.id : null,
+  );
 
   const {
     setStatus,
@@ -1547,7 +1551,27 @@ function RequestSheet({
             <section className="space-y-2 rounded-lg border border-border p-3" aria-label="Suivi de l'activation du collaborateur">
               <h3 className="text-sm font-semibold">Compte créé — activation à confirmer</h3>
               <p className="text-sm text-muted-foreground">Vérifiez l'envoi et la réception de l'invitation, la définition du mot de passe, la première connexion et les droits effectifs du collaborateur. Le statut « Compte créé » ne prouve pas que l'invitation a été reçue ni que les accès fonctionnent.</p>
-              <p className="text-xs text-muted-foreground">Consultez l'historique et les contrôles Auth avant de clôturer le dossier. Ne marquez pas l'intégration comme terminée tant que ces preuves ne sont pas vérifiées.</p>
+              <p className="text-xs text-muted-foreground">Ces vérifications techniques ne prouvent pas la réception de l'invitation ni que tous les écrans métiers fonctionnent. L'intégration reste à clôturer par un responsable RH après une recette connectée.</p>
+              {activation.isLoading && <p role="status" className="text-xs">Vérification des éléments d'activation…</p>}
+              {activation.isError && <p role="alert" className="text-sm text-destructive">Impossible de vérifier les preuves serveur. Aucun statut de réussite ne peut être conclu.</p>}
+              {!activation.isLoading && !activation.isError && !activation.data && <p role="status" className="text-xs">Aucune preuve d'activation disponible pour ce dossier.</p>}
+              {activation.data && (
+                <dl className="grid gap-2 text-xs sm:grid-cols-2" aria-label="Preuves techniques du compte">
+                  {([
+                    ['Compte Auth présent', activation.data.auth_user_exists],
+                    ['Adresse email confirmée', activation.data.email_confirmed],
+                    ['Première connexion enregistrée', activation.data.first_login_recorded],
+                    ['Affectation du rôle active', activation.data.role_assignment_active],
+                  ] as const).map(([label, valid]) => (
+                    <div key={label} className="flex items-center justify-between gap-2 rounded border p-2">
+                      <dt>{label}</dt>
+                      <dd className={valid ? 'font-medium text-green-700' : 'font-medium text-amber-700'}>{valid ? 'Vérifié' : 'Non confirmé'}</dd>
+                    </div>
+                  ))}
+                </dl>
+              )}
+              <Button type="button" size="sm" variant="outline" disabled={activation.isFetching}
+                onClick={() => void activation.refetch()}>Actualiser les contrôles</Button>
             </section>
           )}
 
