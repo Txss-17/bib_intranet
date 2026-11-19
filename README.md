@@ -1,73 +1,46 @@
-# Welcome to your Lovable project
+# BIB Intranet
 
-## Project info
+Application interne BIB : collaborateurs, pôles, fournisseurs, audits, Finance
+et suivi des opérations. React, TypeScript, Vite et Supabase.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## Développement indépendant
 
-## How can I edit this code?
+Utiliser Node.js 22 et le verrou npm du dépôt :
 
-There are several ways of editing your application.
-
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+npm ci
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Renseigner les variables du projet Supabase de développement dans un fichier
+local ignoré par Git :
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```dotenv
+VITE_SUPABASE_URL=https://<project-ref>.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=<publishable-key>
+```
 
-**Use GitHub Codespaces**
+Les secrets serveur et les clés `service_role` ne doivent jamais porter le
+préfixe `VITE_` ni être ajoutés au dépôt. Le projet ne nécessite pas l’éditeur
+Lovable pour être compilé ou exécuté.
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Vérification et déploiement
 
-## What technologies are used for this project?
+La CI exécute les contrats, les tests PostgreSQL, le typage et la compilation.
+`npm run test:intranet` exécute la suite transversale ; les tests PostgreSQL
+utilisent les bases éphémères décrites dans `.github/workflows/ci.yml`.
 
-This project is built with:
+Les migrations applicatives et leur journal canonique sont dans
+`drizzle/migrations`. Drizzle lit la connexion serveur `BIB_DATABASE_URL`.
+Comparer les schémas et les deux historiques de migrations avant d’appliquer
+du SQL à une base restaurée ; ne pas rejouer en bloc les anciennes migrations
+`supabase/migrations`, ni modifier artificiellement un journal.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Les fonctions Edge sont dans `supabase/functions`. Leur présence dans GitHub
+ne prouve pas leur déploiement ni la configuration des fournisseurs externes.
+Les réglages Auth, secrets, fournisseurs email/IA, fichiers Storage et parcours
+connectés exigent une validation distincte de la compilation.
 
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Le [dossier maître BIB](https://docs.google.com/document/d/18lpUzk5j6jTKMw9m_s2XAPsALxdeP4OVkkqpbr-iv9M)
+centralise les preuves, blocages et décisions Go/No-Go. Les branches de
+migration n’autorisent aucune bascule de production, DNS ou Stripe réel.
