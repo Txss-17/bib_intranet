@@ -104,12 +104,13 @@ test("duplicate invite errors never authorize an existing-account profile update
  const r=await invoke({inviteError:{code:"email_exists",message:"already registered",status:422}});
  assert.equal(r.status,409);assert.equal(r.calls.invites.length,1);assert.equal(r.calls.writes.length,0);
 });
-test("normal creation retains its account invitation and completes the new profile/role workflow",async()=>{
+test("normal creation invites and provisions permissions but leaves activation pending",async()=>{
  const r=await invoke();
  assert.equal(r.status,200);assert.equal(r.body.invitationSent,true);assert.equal(r.calls.invites.length,1);
  assert.ok(r.calls.writes.some(x=>x.table==="profiles"&&x.verb==="update"));
  assert.ok(r.calls.writes.some(x=>x.table==="access_assignments"&&x.verb==="insert"));
- assert.ok(r.calls.writes.some(x=>x.table==="hr_employee_requests"&&x.values.status==="completed"));
+ assert.ok(r.calls.writes.some(x=>x.table==="hr_employee_requests"&&x.values.status==="account_created"));
+  assert.ok(!r.calls.writes.some(x=>x.table==="hr_employee_requests"&&x.values.status==="completed"));
 });
 test("custom catalogue positions are accepted via position_key when the legacy enum value is null",async()=>{
  const r=await invoke({request:{position:null,position_key:"custom_ops_job"}});
