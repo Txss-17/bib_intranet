@@ -455,6 +455,30 @@ export const useHrRequestEvents = (
   });
 
 
+export const useCompleteHrOnboarding = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({requestId, note}: {requestId: string; note: string}) => {
+      const reason = note.trim();
+      if (reason.length < 30) throw new Error('La revue RH requiert un compte rendu d’au moins 30 caractères.');
+      const {data, error} = await supabase.rpc(
+        'complete_hr_employee_onboarding' as any,
+        {p_request_id: requestId, p_review_note: reason} as any,
+      );
+      if (error) throw error;
+      if (data !== true) throw new Error('La clôture n’a pas été confirmée par le serveur.');
+      return requestId;
+    },
+    onSuccess: requestId => {
+      queryClient.invalidateQueries({queryKey:['hr_employee_requests']});
+      queryClient.invalidateQueries({queryKey:['hr_employee_request_events',requestId]});
+      queryClient.invalidateQueries({queryKey:['hr_activation_evidence',requestId]});
+      toast({title:'Intégration clôturée',description:'Revue indépendante confirmée et historisée.'});
+    },
+    onError: (error: Error) => toast({title:'Clôture RH refusée',description:error.message,variant:'destructive'}),
+  });
+};
+
 export const useHrOnboardingActions = () => {
   const queryClient = useQueryClient();
 
