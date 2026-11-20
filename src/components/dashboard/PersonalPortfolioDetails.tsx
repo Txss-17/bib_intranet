@@ -70,7 +70,7 @@ async function fetchPersonalPortfolioDetail(reference: PortfolioReference, userI
     // A RBAC entitlement grants access only to the underlying supplier
     // portfolio that it references; direct portfolio visits require ownership.
     const { data: portfolio, error } = await supabase.from('supplier_portfolios')
-      .select('id,category,responsible_id,backup_id,archived_at')
+      .select('id,category,responsible_id,backup_id')
       .eq('id', linkedId).is('archived_at', null).maybeSingle();
     if (error) throw error;
     if (!portfolio || (reference.source !== 'rbac' &&
