@@ -35,6 +35,7 @@ test('completion maps a provisioned identity only to its RH referent portfolio',
   assert.ok(sql.includes("m.ended_at IS NULL"));
   assert.ok(sql.includes("rh_portfolio_required_before_completion"));
   assert.ok(sql.includes('ON public.hr_employee_requests'));
+  assert.ok(sql.includes('rh_onboarding_portfolio_conflict'));
   assert.ok(sql.includes('AS RESTRICTIVE FOR SELECT TO authenticated'));
   assert.ok(!sql.includes('NEW.personal_email'));
 });
@@ -47,4 +48,14 @@ test('HR portfolio writers cannot claim or transfer another RH owner portfolio',
   assert.ok(sql.includes('rh_portfolio_transfer_owner_required'));
   assert.ok(sql.includes('rh_portfolio_archive_owner_required'));
   assert.ok(sql.includes('public.is_canonical_bib_ceo'));
+});
+
+test('RH manager creates personal portfolio for self, CEO remains a separate oversight case', () => {
+ const ui=read('src/components/operations/CasePortfolioManager.tsx');
+ assert.ok(ui.includes("isRhPersonal = pole === 'rh'"));
+ assert.ok(ui.includes('p_owner_id: isRhPersonal ? user?.id ?? null : ownerId || null'));
+ const grant=read('ops/release/rh-case-portfolio-invoker-grants-20261120.sql');
+ assert.ok(grant.includes('GRANT EXECUTE ON FUNCTION public.bib_create_case_portfolio'));
+ assert.ok(grant.includes('GRANT EXECUTE ON FUNCTION public.bib_change_case_portfolio_owner'));
+ assert.ok(!grant.includes('GRANT ALL'));
 });
