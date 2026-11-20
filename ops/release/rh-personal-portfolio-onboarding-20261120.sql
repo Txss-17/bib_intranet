@@ -51,7 +51,7 @@ CREATE OR REPLACE FUNCTION public.rh_link_onboarded_employee_to_referent_portfol
 RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=''
 AS $fn$
-DECLARE v_portfolio uuid; v_total integer;
+DECLARE v_portfolio uuid; v_total integer; v_existing uuid;
 BEGIN
   IF NEW.request_kind IS DISTINCT FROM 'onboarding' OR NEW.created_user_id IS NULL
      OR NEW.status NOT IN ('account_created','completed') THEN
@@ -88,10 +88,15 @@ BEGIN
   END IF;
 
   PERFORM pg_advisory_xact_lock(hashtextextended('employee:'||NEW.created_user_id::text,0));
-  -- Keep manually reassigned employees in their current portfolio.
-  IF EXISTS(SELECT 1 FROM public.bib_case_portfolio_members m
-            WHERE m.entity_kind='employee' AND m.entity_id=NEW.created_user_id
-              AND m.ended_at IS NULL) THEN
+  -- Do not silently claim a collaborator held by another RH manager.
+  SELECT m.portfolio_id INTO v_existing
+  FROM public.bib_case_portfolio_members m
+  WHERE m.entity_kind='employee' AND m.entity_id=NEW.created_user_id
+    AND m.ended_at IS NULL;
+  IF v_existing IS NOT NULL THEN
+    IF NEW.status='completed' AND v_existing IS DISTINCT FROM v_portfolio THEN
+      RAISE EXCEPTION 'rh_onboarding_portfolio_conflict' USING ERRCODE='23514';
+    END IF;
     RETURN NEW;
   END IF;
   INSERT INTO public.bib_case_portfolio_members
