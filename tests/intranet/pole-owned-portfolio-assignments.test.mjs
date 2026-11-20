@@ -25,5 +25,9 @@ test("Business portfolio assignments are owned by active pole managers, not HR",
   assert.match(sql, /assigned_by=\(SELECT auth\.uid\(\)\)/);
   assert.match(sql, /TG_OP='INSERT'/);
   assert.match(sql, /portfolio_assignment_author_immutable/);
+  assert.match(sql, /bib_portfolio_catalog_pole_visibility/);
+  assert.match(sql, /bib_can_manage_access_portfolio_type/);
+  assert.match(sql, /AS RESTRICTIVE/);
+  assert.match(sql, /apt\.business_pole=ANY/);
   assert.doesNotMatch(sql, /has_pole\(auth\.uid\(\),\s*'rh'/);
 });
