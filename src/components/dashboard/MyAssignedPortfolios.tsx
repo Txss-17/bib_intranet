@@ -1,4 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { PersonalPortfolioDetails } from './PersonalPortfolioDetails';
 import { Link } from 'react-router-dom';
 import { BriefcaseBusiness, Loader2, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -63,6 +65,7 @@ async function loadOwnPortfolios(userId: string): Promise<OwnPortfolio[]> {
 
 export function MyAssignedPortfolios() {
   const { user, profile, loading } = useAuth();
+  const [expanded, setExpanded] = useState<string | null>(null);
   const identityReady = !loading && !!user?.id && profile?.id === user.id &&
     profile.app_origin === 'connect' && profile.hr_status === 'active' && !profile.test_account;
 
@@ -100,14 +103,27 @@ export function MyAssignedPortfolios() {
           <p className="text-sm text-muted-foreground">Aucun portefeuille actif ne vous est encore attribué. Le responsable de votre pôle effectue les attributions.</p>
         ) : (
           <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {data.map(p => (
-              <li key={p.source + ':' + p.id} className="rounded-lg border p-3">
-                <p className="font-medium">{p.label}</p>
-                <p className="mb-2 text-xs text-muted-foreground">Pôle : {p.pole}</p>
-                <Link className="text-sm font-medium text-primary underline underline-offset-4" to={p.path}>Ouvrir le pôle</Link>
-              </li>
-            ))}
-          </ul>
+            {data.map(p => {
+              const itemKey = p.source + ':' + p.id;
+              const isOpen = expanded === itemKey;
+              return (
+                <li key={itemKey} className="rounded-lg border p-3">
+                  <p className="font-medium">{p.label}</p>
+                  <p className="mb-2 text-xs text-muted-foreground">Pôle : {p.pole}</p>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button variant="outline" size="sm"
+                      aria-expanded={isOpen}
+                      onClick={() => setExpanded(isOpen ? null : itemKey)}>
+                      {isOpen ? 'Masquer les détails' : 'Voir les dossiers et le suivi'}
+                    </Button>
+                    <Link className="text-sm font-medium text-primary underline underline-offset-4"
+                      to={p.path}>Ouvrir le pôle</Link>
+                  </div>
+                  {isOpen && <PersonalPortfolioDetails key={itemKey}
+                    reference={p} onClose={() => setExpanded(null)} />}
+                </li>
+              );
+            })}        </ul>
         )}
       </CardContent>
     </Card>
