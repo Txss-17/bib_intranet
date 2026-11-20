@@ -60,6 +60,9 @@ export interface Employee {
 }
 
 export interface EmployeeFilters {
+  /** Explicit RH portfolio membership. Empty set returns no profiles. */
+  allowedEmployeeIds?: string[];
+  enabled?: boolean;
   search?: string;
 
   collaboratorType?:
@@ -173,7 +176,10 @@ export const useEmployees = (
       filters,
     ],
 
+    enabled: filters.enabled !== false,
     queryFn: async () => {
+      // Fail closed: unknown/empty RH portfolio scope is never an unrestricted list.
+      if (filters.allowedEmployeeIds && filters.allowedEmployeeIds.length === 0) return [];
       const fetchPage = (cursor?: string) => {
       let query = from('profiles')
         .select(`
@@ -202,6 +208,10 @@ export const useEmployees = (
           'test_account',
           false,
         );
+
+      if (filters.allowedEmployeeIds) {
+        query = query.in('id', filters.allowedEmployeeIds);
+      }
 
       // --------------------------------------------------------
       // TYPE PRÉCIS
