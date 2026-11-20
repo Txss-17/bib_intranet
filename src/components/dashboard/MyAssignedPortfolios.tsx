@@ -26,7 +26,7 @@ async function loadOwnPortfolios(userId: string): Promise<OwnPortfolio[]> {
       .eq('employee_id', userId).eq('assignment_status', 'active')
       .or('ends_at.is.null,ends_at.gte.' + new Date().toISOString()),
     supabase.from('supplier_portfolios')
-      .select('id,category,archived_at,responsible_id,backup_id')
+      .select('id,category,responsible_id,backup_id')
       .or(`responsible_id.eq.${userId},backup_id.eq.${userId}`)
       .is('archived_at', null),
     supabase.from('merchant_portfolios')
