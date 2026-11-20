@@ -50,7 +50,7 @@ BEGIN
  INSERT INTO public.bib_case_portfolio_members
  (portfolio_id,entity_kind,entity_id,assigned_by,reason)
  VALUES(p_portfolio_id,p_kind,p_entity_id,v_actor,nullif(btrim(p_reason),''));
-END; $function$
+END; $function$;
 
 
 CREATE OR REPLACE FUNCTION public.bib_create_case_portfolio(p_pole text, p_name text, p_owner_id uuid DEFAULT NULL::uuid)
@@ -80,7 +80,7 @@ BEGIN
  INSERT INTO public.bib_case_portfolios (pole,name,owner_id,created_by)
  VALUES (p_pole,btrim(p_name),p_owner_id,v_actor) RETURNING id INTO v_id;
  RETURN v_id;
-END; $function$
+END; $function$;
 
 
 CREATE OR REPLACE FUNCTION public.bib_change_case_portfolio_owner(p_portfolio_id uuid, p_new_owner uuid, p_reason text DEFAULT NULL::text)
@@ -110,7 +110,7 @@ BEGIN
  INSERT INTO public.bib_case_portfolio_owner_events
  (portfolio_id,previous_owner_id,new_owner_id,changed_by,reason)
  VALUES(p_portfolio_id,v_previous,p_new_owner,v_actor,nullif(btrim(p_reason),''));
-END;$function$
+END;$function$;
 
 
 CREATE OR REPLACE FUNCTION public.bib_archive_case_portfolio(p_portfolio_id uuid, p_reason text)
@@ -141,6 +141,6 @@ BEGIN
  (portfolio_id,previous_owner_id,new_owner_id,changed_by,reason)
  SELECT id,owner_id,owner_id,auth.uid(),'Archivage : '||btrim(p_reason)
  FROM public.bib_case_portfolios WHERE id=p_portfolio_id;
-END;$function$
+END;$function$;
 
 COMMIT;
