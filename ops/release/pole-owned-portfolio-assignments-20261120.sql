@@ -71,7 +71,7 @@ CREATE OR REPLACE FUNCTION public.bib_can_manage_access_portfolio_type(p_portfol
 RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = ''
-AS $
+AS $portfolio_manager$
   SELECT (SELECT auth.uid()) IS NOT NULL AND EXISTS (
     SELECT 1
     FROM public.access_portfolio_types apt
@@ -94,7 +94,7 @@ AS $
        OR (apt.business_pole='marketplace' AND ar.role_key='responsable_marketplace')
       )
   );
-$;
+$portfolio_manager$;
 REVOKE ALL ON FUNCTION public.bib_can_manage_access_portfolio_type(uuid) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.bib_can_manage_access_portfolio_type(uuid) TO authenticated,service_role;
 
