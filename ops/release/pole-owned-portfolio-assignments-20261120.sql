@@ -65,6 +65,76 @@ $$;
 REVOKE ALL ON FUNCTION public.rh_can_assign_employee_portfolio(uuid,uuid) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.rh_can_assign_employee_portfolio(uuid,uuid) TO authenticated,service_role;
 
+-- Ne pas laisser la politique catalogue ALL (administrateurs / managers génériques)
+-- exposer ou modifier les portefeuilles d'un autre pôle.
+CREATE OR REPLACE FUNCTION public.bib_can_manage_access_portfolio_type(p_portfolio_type_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = ''
+AS $
+  SELECT (SELECT auth.uid()) IS NOT NULL AND EXISTS (
+    SELECT 1
+    FROM public.access_portfolio_types apt
+    JOIN public.profiles p ON p.id=(SELECT auth.uid())
+    JOIN public.access_assignments aa ON aa.employee_id=p.id
+    JOIN public.access_roles ar ON ar.id=aa.role_id
+    WHERE apt.id=p_portfolio_type_id
+      AND apt.status='active'
+      AND p.app_origin='connect' AND p.hr_status='active' AND p.test_account IS FALSE
+      AND apt.business_pole=ANY(COALESCE(p.poles::text[], ARRAY[]::text[]))
+      AND aa.status='active' AND ar.status='active'
+      AND (aa.starts_at IS NULL OR aa.starts_at<=now())
+      AND (aa.ends_at IS NULL OR aa.ends_at>=now())
+      AND ar.business_pole=apt.business_pole
+      AND ar.seniority='lead' AND ar.owner_type='pole_responsible'
+      AND coalesce(ar.is_external,false) IS FALSE
+      AND (
+       (apt.business_pole='supplier' AND ar.role_key IN ('responsable_fournisseurs','responsable_catalogue'))
+       OR (apt.business_pole='ops' AND ar.role_key='responsable_logistique')
+       OR (apt.business_pole='marketplace' AND ar.role_key='responsable_marketplace')
+      )
+  );
+$;
+REVOKE ALL ON FUNCTION public.bib_can_manage_access_portfolio_type(uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.bib_can_manage_access_portfolio_type(uuid) TO authenticated,service_role;
+
+-- La Direction générale conserve une visibilité transverse explicite, sans
+-- la conférer au seul rôle RH. Le collaborateur ne voit que son propre pôle.
+DROP POLICY IF EXISTS "bib_portfolio_catalog_pole_visibility" ON public.access_business_portfolios;
+CREATE POLICY "bib_portfolio_catalog_pole_visibility"
+ON public.access_business_portfolios AS RESTRICTIVE
+FOR SELECT TO authenticated
+USING (
+  public.is_canonical_bib_ceo((SELECT auth.uid()))
+  OR EXISTS (
+    SELECT 1 FROM public.access_portfolio_types apt
+    JOIN public.profiles me ON me.id=(SELECT auth.uid())
+    WHERE apt.id=access_business_portfolios.portfolio_type_id
+      AND me.app_origin='connect' AND me.hr_status='active'
+      AND me.test_account IS FALSE
+      AND apt.business_pole=ANY(COALESCE(me.poles::text[],ARRAY[]::text[]))
+  )
+);
+
+DROP POLICY IF EXISTS "bib_portfolio_catalog_pole_insert" ON public.access_business_portfolios;
+CREATE POLICY "bib_portfolio_catalog_pole_insert"
+ON public.access_business_portfolios AS RESTRICTIVE
+FOR INSERT TO authenticated
+WITH CHECK (public.bib_can_manage_access_portfolio_type(portfolio_type_id));
+
+DROP POLICY IF EXISTS "bib_portfolio_catalog_pole_update" ON public.access_business_portfolios;
+CREATE POLICY "bib_portfolio_catalog_pole_update"
+ON public.access_business_portfolios AS RESTRICTIVE
+FOR UPDATE TO authenticated
+USING (public.bib_can_manage_access_portfolio_type(portfolio_type_id))
+WITH CHECK (public.bib_can_manage_access_portfolio_type(portfolio_type_id));
+
+DROP POLICY IF EXISTS "bib_portfolio_catalog_pole_delete" ON public.access_business_portfolios;
+CREATE POLICY "bib_portfolio_catalog_pole_delete"
+ON public.access_business_portfolios AS RESTRICTIVE
+FOR DELETE TO authenticated
+USING (public.bib_can_manage_access_portfolio_type(portfolio_type_id));
+
 -- Retirer l'ancienne visibilité RH transversale sur les affectations.
 DROP POLICY IF EXISTS "Employees read own access_portfolio_assignments" ON public.access_portfolio_assignments;
 CREATE POLICY "Employees read own access_portfolio_assignments"
