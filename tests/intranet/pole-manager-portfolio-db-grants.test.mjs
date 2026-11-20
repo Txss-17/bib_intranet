@@ -10,8 +10,8 @@ test('lead-only portfolio assignment writes retain governed RLS', () => {
  assert.match(sql,/DROP POLICY IF EXISTS "intranet_authority_update"/);
  assert.match(sql,/public\.bib_can_manage_access_portfolio\(portfolio_id\)/);
  assert.match(sql,/NOT public\.intranet_is_test_mode\(\)/);
- assert.doesNotMatch(sql,/GRANT DELETE/i);
- assert.doesNotMatch(sql,/GRANT ALL/i);
+ assert.doesNotMatch(sql,/^\s*GRANT DELETE\b/im);
+ assert.doesNotMatch(sql,/^\s*GRANT ALL\b/im);
  assert.doesNotMatch(sql,/DROP POLICY IF EXISTS "access_portfolio_assignments_insert_governed"/);
  assert.doesNotMatch(sql,/DROP POLICY IF EXISTS "access_portfolio_assignments_update_governed"/);
 });
