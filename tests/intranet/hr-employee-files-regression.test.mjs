@@ -11,5 +11,5 @@ test('employee documents ignore late responses from another selected employee', 
 });
 test('directory read failures do not reset selected employee', () => {
  const page = read('src/pages/modules/rh/EmployeeFiles.tsx');
- assert.match(page, /!isLoadingEmployees &&\s*!isEmployeesError &&\s*!selectedEmployee/);
+ assert.match(page, /!isLoadingEmployees &&\s*!isEmployeesError &&\s*rhScope\.ready &&\s*!selectedEmployee/);
 });
