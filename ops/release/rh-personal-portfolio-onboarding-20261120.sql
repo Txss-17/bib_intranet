@@ -69,7 +69,7 @@ BEGIN
     END IF;
     RETURN NEW;
   END IF;
-  SELECT count(*),min(id) INTO v_total,v_portfolio
+  SELECT count(*),min(id::text)::uuid INTO v_total,v_portfolio
   FROM public.bib_case_portfolios
   WHERE pole='rh' AND owner_id=NEW.manager_id AND status='active';
 
