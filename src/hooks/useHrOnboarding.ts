@@ -92,6 +92,7 @@ export const HR_STEPS = [
 
 export interface HrEmployeeRequest {
   id: string;
+  candidate_id?: string | null;
   reference: string;
 
   first_name: string;

@@ -1,3 +1,4 @@
+import { useMyAcceptedRhCandidates } from '@/hooks/useMyAcceptedRhCandidates';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ExistingLeadershipOnboarding from '@/components/hr/ExistingLeadershipOnboarding';
 import { format } from 'date-fns';
@@ -192,6 +193,31 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
     : mutationTargets.data ?? [];
 
   const { create } = useHrOnboardingActions();
+  const [candidateId, setCandidateId] = useState('');
+  const { data: myCandidates = [], isLoading: candidatesLoading,
+    isError: candidatesError } = useMyAcceptedRhCandidates(!mutation);
+  const selectedCandidate = myCandidates.find(candidate => candidate.id === candidateId);
+  const chooseAcceptedCandidate = (id: string) => {
+    setCandidateId(id);
+    const candidate = myCandidates.find(row => row.id === id);
+    if (!candidate) return;
+    const tokens = candidate.full_name.trim().split(/\\s+/);
+    const position = allPositions.data?.find(item => item.position_key === candidate.position_key);
+    setForm(previous => ({
+      ...previous,
+      first_name: tokens[0] ?? '',
+      last_name: tokens.slice(1).join(' '),
+      personal_email: candidate.email ?? '',
+      manager_id: candidate.owner_id,
+      position: candidate.position_key,
+      requested_role: '',
+    }));
+    if (position?.pole_id) {
+      setPrimaryPole(position.pole_id);
+      setPoles([position.pole_id]);
+    }
+  };
+
 
   const {
     data: referents = [],
@@ -275,6 +301,7 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
       work_mode: 'office',
       subsidiary: '',
     });
+    setCandidateId('');
     setAttachedDocs([]);
     setDocDraft({ name: '', document_type: 'charter', document_url: '' });
     setTargetId('');
@@ -385,6 +412,7 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
           personal_email: form.personal_email.trim() || null,
           work_email: form.work_email.trim() || null,
           collaborator_type: form.collaborator_type,
+          candidate_id: candidateId || null,
         } as any);
       }
       setOpen(false);
@@ -528,6 +556,25 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
               </div> : <p className="text-sm text-muted-foreground">Aucune affectation métier active. Le nouveau rôle sera créé après validation.</p>}
               <p className="text-sm text-muted-foreground">Privilèges techniques conservés : {reviewedTarget.technical_roles.length ? reviewedTarget.technical_roles.join(', ') : 'aucun'}.</p>
             </div>}
+          </section>}
+          {!mutation && <section className="rounded-lg border p-4 space-y-2">
+            <Label htmlFor="accepted-rh-candidate">Candidature acceptée (liaison traçable)</Label>
+            <select id="accepted-rh-candidate" className="h-10 w-full rounded-md border bg-background px-3 text-sm"
+              value={candidateId} disabled={candidatesLoading || candidatesError}
+              onChange={event => chooseAcceptedCandidate(event.target.value)}>
+              <option value="">Nouveau collaborateur sans candidature associée</option>
+              {myCandidates.map(candidate =>
+                <option key={candidate.id} value={candidate.id}>
+                  {candidate.full_name} — {candidate.position_key}
+                </option>)}
+            </select>
+            {candidatesError && <p role="alert" className="text-sm text-destructive">
+              Les candidatures acceptées sont indisponibles ; aucun rapprochement automatique n'est effectué.
+            </p>}
+            {selectedCandidate && <p className="text-xs text-muted-foreground">
+              Candidature conservée par identifiant. Vérifiez nom et prénom préremplis.
+              Le référent RH est celui qui suit cette candidature et restera propriétaire du dossier d'onboarding.
+            </p>}
           </section>}
           {/* IDENTITÉ */}
           <section>
@@ -942,7 +989,7 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
                     manager_id: value,
                   }))
                 }
-                disabled={referentsLoading}
+                disabled={referentsLoading || !!candidateId}
               >
                 <SelectTrigger>
                   <SelectValue
