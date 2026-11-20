@@ -33,6 +33,7 @@ import type { FeedItem, PoleId } from '@/types';
 import { poles } from '@/data/poles';
 import { ConnectedEmployeesBlock } from '@/components/dashboard/ConnectedEmployeesBlock';
 import { WorkTasksOverview } from '@/components/dashboard/WorkTasksOverview';
+import { MyAssignedPortfolios } from '@/components/dashboard/MyAssignedPortfolios';
 
 const TARGET_POLES: readonly PoleId[] = [
   'direction',
@@ -380,6 +381,7 @@ export default function Dashboard() {
         </div>
       </div>
 
+      <MyAssignedPortfolios />
       <WorkTasksOverview />
       <ConnectedEmployeesBlock />
 
