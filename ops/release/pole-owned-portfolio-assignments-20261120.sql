@@ -98,23 +98,33 @@ $portfolio_manager$;
 REVOKE ALL ON FUNCTION public.bib_can_manage_access_portfolio_type(uuid) FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.bib_can_manage_access_portfolio_type(uuid) TO authenticated,service_role;
 
+-- Isoler l'appel CEO non accessible directement depuis le rôle authenticated.
+CREATE OR REPLACE FUNCTION public.bib_can_read_access_portfolio_type(p_portfolio_type_id uuid)
+RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path=''
+AS $portfolio_read$
+ SELECT (SELECT auth.uid()) IS NOT NULL AND (
+   public.is_canonical_bib_ceo((SELECT auth.uid()))
+   OR EXISTS (
+     SELECT 1 FROM public.access_portfolio_types apt
+     JOIN public.profiles me ON me.id=(SELECT auth.uid())
+     WHERE apt.id=p_portfolio_type_id
+       AND me.app_origin='connect' AND me.hr_status='active'
+       AND me.test_account IS FALSE
+       AND apt.business_pole=ANY(COALESCE(me.poles::text[],ARRAY[]::text[]))
+   )
+ );
+$portfolio_read$;
+REVOKE ALL ON FUNCTION public.bib_can_read_access_portfolio_type(uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.bib_can_read_access_portfolio_type(uuid) TO authenticated,service_role;
+
 -- La Direction générale conserve une visibilité transverse explicite, sans
 -- la conférer au seul rôle RH. Le collaborateur ne voit que son propre pôle.
 DROP POLICY IF EXISTS "bib_portfolio_catalog_pole_visibility" ON public.access_business_portfolios;
 CREATE POLICY "bib_portfolio_catalog_pole_visibility"
 ON public.access_business_portfolios AS RESTRICTIVE
 FOR SELECT TO authenticated
-USING (
-  public.is_canonical_bib_ceo((SELECT auth.uid()))
-  OR EXISTS (
-    SELECT 1 FROM public.access_portfolio_types apt
-    JOIN public.profiles me ON me.id=(SELECT auth.uid())
-    WHERE apt.id=access_business_portfolios.portfolio_type_id
-      AND me.app_origin='connect' AND me.hr_status='active'
-      AND me.test_account IS FALSE
-      AND apt.business_pole=ANY(COALESCE(me.poles::text[],ARRAY[]::text[]))
-  )
-);
+USING (public.bib_can_read_access_portfolio_type(portfolio_type_id));
 
 -- Les responsables métier n'ont pas nécessairement le rôle applicatif générique
 -- "manager" ; ajouter une autorisation PERMISSIVE exacte, ensuite bornée par
