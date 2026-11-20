@@ -432,7 +432,7 @@ const RHAccess = () => {
         throw error;
       }
 
-      return (data ?? []) as BusinessPortfolio[];
+      return ((data ?? []) as BusinessPortfolio[]).filter((portfolio) => portfolio.portfolio_type?.business_pole === 'rh');
     },
   });
 
@@ -482,7 +482,7 @@ const RHAccess = () => {
         throw error;
       }
 
-      return (data ?? []) as PortfolioAssignment[];
+      return ((data ?? []) as PortfolioAssignment[]).filter((assignment) => assignment.portfolio?.portfolio_type?.business_pole === 'rh');
     },
   });
 
@@ -1677,20 +1677,9 @@ const RHAccess = () => {
                               <UserCog className="mr-2 h-4 w-4" />
                               Rôle
                             </Button>
-
-
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() =>
-                                openPortfolioDialog(
-                                  employee.id,
-                                )
-                              }
-                            >
-                              <Briefcase className="mr-2 h-4 w-4" />
-                              Portefeuille
-                            </Button>
+                            <span className="text-xs text-muted-foreground">
+                              Portefeuilles gérés par les responsables des pôles.
+                            </span>
 
                           </div>
 
@@ -1932,226 +1921,8 @@ const RHAccess = () => {
       </Dialog>
 
 
-      {/* ======================================================
-          DIALOGUE PORTEFEUILLE
-      ====================================================== */}
+      {/* Les attributions de portefeuilles métier relèvent désormais du responsable du pôle propriétaire. */}
 
-      <Dialog
-        open={portfolioDialogOpen}
-        onOpenChange={
-          setPortfolioDialogOpen
-        }
-      >
-        <DialogContent className="sm:max-w-lg">
-
-          <DialogHeader>
-            <DialogTitle>
-              Affecter un portefeuille
-            </DialogTitle>
-
-            <DialogDescription>
-              {selectedEmployee
-                ? `Choisissez le portefeuille métier autorisé pour ${getEmployeeName(
-                    selectedEmployee,
-                  )}.`
-                : 'Sélection du portefeuille.'}
-            </DialogDescription>
-          </DialogHeader>
-
-
-          {selectedEmployee &&
-            !canReceiveNewAccess(
-              selectedEmployee,
-            ) && (
-              <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm">
-                <p className="font-medium">
-                  Affectation désactivée
-                </p>
-
-                <p className="mt-1 text-muted-foreground">
-                  Un portefeuille ne peut être attribué qu’à un
-                  collaborateur actif ou en onboarding.
-                </p>
-              </div>
-            )}
-
-
-          <div className="space-y-5 py-4">
-
-            <div className="rounded-lg border bg-muted/30 p-4">
-              <div className="flex items-start gap-3">
-                <Briefcase className="mt-0.5 h-5 w-5 text-muted-foreground" />
-
-                <div>
-                  <p className="font-medium">
-                    Portefeuille métier
-                  </p>
-
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Le portefeuille ne crée pas un nouveau rôle.
-                    Il limite les ressources métier auxquelles le
-                    collaborateur peut accéder.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Portefeuille
-              </label>
-
-              <Select
-                value={selectedPortfolioId}
-                onValueChange={
-                  setSelectedPortfolioId
-                }
-                disabled={
-                  !selectedEmployee ||
-                  !canReceiveNewAccess(
-                    selectedEmployee,
-                  )
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un portefeuille" />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {portfoliosLoading ? (
-                    <div className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Chargement…
-                    </div>
-                  ) : availablePortfolios.length ===
-                    0 ? (
-                    <div className="px-3 py-2 text-sm text-muted-foreground">
-                      Aucun portefeuille autorisé pour ce collaborateur.
-                    </div>
-                  ) : (
-                    availablePortfolios.map(
-                      (portfolio) => (
-                        <SelectItem
-                          key={portfolio.id}
-                          value={portfolio.id}
-                        >
-                          {portfolio.label_snapshot ??
-                            'Portefeuille'}
-                          {' — '}
-                          {portfolio
-                            .portfolio_type
-                            ?.label ??
-                            'Métier'}
-                        </SelectItem>
-                      ),
-                    )
-                  )}
-                </SelectContent>
-              </Select>
-
-              <p className="text-xs text-muted-foreground">
-                Les portefeuilles sont filtrés selon le pôle,
-                le poste et le type de portefeuille.
-              </p>
-            </div>
-
-
-            {selectedEmployeePortfolioAssignments.length >
-              0 && (
-              <div className="space-y-2">
-                <p className="text-sm font-medium">
-                  Portefeuilles déjà affectés
-                </p>
-
-                <div className="space-y-2">
-                  {selectedEmployeePortfolioAssignments.map(
-                    (assignment) => (
-                      <div
-                        key={assignment.id}
-                        className="flex items-center justify-between rounded-md border p-3"
-                      >
-                        <div>
-                          <p className="text-sm font-medium">
-                            {assignment
-                              .portfolio
-                              ?.label_snapshot ??
-                              'Portefeuille'}
-                          </p>
-
-                          <p className="text-xs text-muted-foreground">
-                            {assignment
-                              .portfolio
-                              ?.portfolio_type
-                              ?.label ??
-                              'Portefeuille métier'}
-                          </p>
-                        </div>
-
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => {
-                            void revokePortfolio(
-                              assignment,
-                            );
-                          }}
-                        >
-                          <XCircle className="mr-2 h-4 w-4" />
-                          Révoquer
-                        </Button>
-                      </div>
-                    ),
-                  )}
-                </div>
-              </div>
-            )}
-
-          </div>
-
-
-          <DialogFooter>
-
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() =>
-                setPortfolioDialogOpen(
-                  false,
-                )
-              }
-            >
-              Annuler
-            </Button>
-
-            <Button
-              type="button"
-              onClick={() =>
-                void handleSavePortfolio()
-              }
-              disabled={
-                saving ||
-                !selectedPortfolioId ||
-                !user?.id ||
-                !selectedEmployee ||
-                !canReceiveNewAccess(
-                  selectedEmployee,
-                )
-              }
-            >
-              {saving ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Save className="mr-2 h-4 w-4" />
-              )}
-
-              Affecter
-            </Button>
-
-          </DialogFooter>
-
-        </DialogContent>
-      </Dialog>
 
     </div>
   );
