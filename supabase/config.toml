@@ -21,3 +21,11 @@ verify_jwt = true
 
 [gateway-inbound-email]
 verify_jwt = false
+
+# Browser CORS preflight is unauthenticated; handler validates user JWT and role.
+[functions.intranet-drive]
+verify_jwt = false
+
+# Browser CORS preflight is unauthenticated; handler validates user JWT and role.
+[functions.pull-talent-applications]
+verify_jwt = false
