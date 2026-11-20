@@ -1,3 +1,4 @@
+import { useMyRhEmployeePortfolioScope } from '@/hooks/useMyRhEmployeePortfolioScope';
 import {
   useMemo,
   useState,
@@ -295,6 +296,7 @@ export default function Employees() {
   // DATA
   // ----------------------------------------------------------
 
+  const rhScope = useMyRhEmployeePortfolioScope();
   const {
     data: employees = [],
     isLoading,
@@ -317,6 +319,8 @@ export default function Employees() {
 
     pole:
       poleFilter,
+    allowedEmployeeIds: rhScope.ids,
+    enabled: rhScope.ready,
   });
 
   const updateEmployee =
@@ -594,6 +598,9 @@ export default function Employees() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {rhScope.loading && <p role="status" className="rounded border p-3 text-sm">Vérification de votre portefeuille RH…</p>}
+      {rhScope.error && <p role="alert" className="rounded border border-destructive p-3 text-sm text-destructive">Le périmètre de votre portefeuille RH est indisponible. Aucun dossier collaborateur n'est affiché.</p>}
+      {rhScope.ready && rhScope.ids.length === 0 && <p className="rounded border p-3 text-sm text-muted-foreground">Aucun collaborateur n'est encore rattaché à votre portefeuille RH.</p>}
 
       {/* HEADER */}
 

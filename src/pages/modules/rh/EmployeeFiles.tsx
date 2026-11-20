@@ -1,3 +1,4 @@
+import { useMyRhEmployeePortfolioScope } from '@/hooks/useMyRhEmployeePortfolioScope';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -325,6 +326,7 @@ export default function EmployeeFiles() {
   // EMPLOYEES
   // ==========================================================
 
+  const rhScope = useMyRhEmployeePortfolioScope();
   const {
     data: employees = [],
     isLoading: isLoadingEmployees,
@@ -336,6 +338,8 @@ export default function EmployeeFiles() {
     directoryType,
     collaboratorType: typeFilter,
     hrStatus: statusFilter,
+    allowedEmployeeIds: rhScope.ids,
+    enabled: rhScope.ready,
   });
 
 
@@ -370,6 +374,7 @@ export default function EmployeeFiles() {
       selectedEmployeeId &&
       !isLoadingEmployees &&
       !isEmployeesError &&
+      rhScope.ready &&
       !selectedEmployee
     ) {
       setSearchParams({});
@@ -381,6 +386,7 @@ export default function EmployeeFiles() {
     selectedEmployee,
     isLoadingEmployees,
     isEmployeesError,
+    rhScope.ready,
     setSearchParams,
   ]);
 
@@ -773,6 +779,9 @@ export default function EmployeeFiles() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {rhScope.loading && <p role="status" className="rounded border p-3 text-sm">Vérification de votre portefeuille RH…</p>}
+      {rhScope.error && <p role="alert" className="rounded border border-destructive p-3 text-sm text-destructive">Le périmètre de votre portefeuille RH est indisponible. Aucun dossier collaborateur n'est affiché.</p>}
+      {rhScope.ready && rhScope.ids.length === 0 && <p className="rounded border p-3 text-sm text-muted-foreground">Aucun collaborateur n'est encore rattaché à votre portefeuille RH.</p>}
 
       {/* ======================================================
           HEADER

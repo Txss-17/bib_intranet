@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { usePoleCollaborators, collaboratorName } from '@/hooks/usePoleCollaborators';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -25,6 +26,8 @@ export default function CasePortfolioManager({
   pole, entities, title,
 }: { pole: Pole; entities: EntityOption[]; title: string }) {
   const { can } = usePermissions();
+  const { user, profile } = useAuth();
+  const isRhPersonal = pole === 'rh' && profile?.position !== 'ceo';
   const page = pageForPole[pole];
   const canRead = can(page, 'read');
   const canManage = can(page, 'update');
@@ -69,7 +72,8 @@ export default function CasePortfolioManager({
   const create = useMutation({
     mutationFn: async () => {
       const { error } = await supabase.rpc('bib_create_case_portfolio' as never, {
-        p_pole: pole, p_name: name.trim(), p_owner_id: ownerId || null,
+        p_pole: pole, p_name: name.trim(),
+        p_owner_id: isRhPersonal ? user?.id ?? null : ownerId || null,
       } as never);
       if (error) throw error;
     },
@@ -147,6 +151,11 @@ export default function CasePortfolioManager({
               <h3 className="font-medium">Créer un portefeuille</h3>
               <Input value={name} maxLength={120} required aria-label="Nom du portefeuille"
                 placeholder="Nom du portefeuille" onChange={e => setName(e.target.value)}/>
+              {isRhPersonal ? (
+                <p className="rounded border p-2 text-sm text-muted-foreground">
+                  Propriétaire : votre compte RH connecté. Ce portefeuille ne peut pas être créé pour un autre gestionnaire.
+                </p>
+              ) : (
               <select value={ownerId} aria-label="Responsable du portefeuille"
                 onChange={e => setOwnerId(e.target.value)}
                 className="h-10 w-full rounded-md border bg-background px-3 text-sm">
@@ -155,6 +164,7 @@ export default function CasePortfolioManager({
                   {collaboratorName(p)}
                 </option>)}
               </select>
+              )}
               {colleaguesError && <p className="text-sm text-destructive">Collaborateurs indisponibles.</p>}
               <Button type="submit" disabled={create.isPending || !name.trim() || colleaguesError}>Créer</Button>
             </form>
