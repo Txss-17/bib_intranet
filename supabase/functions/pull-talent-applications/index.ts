@@ -1,6 +1,8 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 
-const corsHeaders = { "Access-Control-Allow-Origin": Deno.env.get("BIB_APP_ORIGIN") || "", "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info", "Access-Control-Allow-Methods": "POST, OPTIONS" };\n\nconst json = (body: unknown, status = 200) =>
+const corsHeaders = { "Access-Control-Allow-Origin": Deno.env.get("BIB_APP_ORIGIN") || "", "Access-Control-Allow-Headers": "authorization, apikey, content-type, x-client-info", "Access-Control-Allow-Methods": "POST, OPTIONS" };
+
+const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: {
     ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store",
   } });
