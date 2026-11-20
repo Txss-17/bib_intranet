@@ -389,7 +389,9 @@ export default function RHPortfolio() {
 
   const activeAssignments =
     assignments.filter((assignment) =>
-      isActiveStatus(assignment.status),
+      isActiveStatus(assignment.status) &&
+      (roleById.get(assignment.role_id)?.business_pole === 'rh' ||
+       roleById.get(assignment.role_id)?.department === 'rh'),
     );
 
   const activePortfolioAssignments =
@@ -589,7 +591,7 @@ export default function RHPortfolio() {
         </p>
       </div>
 
-      <CasePortfolioManager pole="rh" title="Suivi des collaborateurs" entities={profiles.map(p => ({ id: p.id, label: getProfileName(p) }))} />
+      <CasePortfolioManager pole="rh" title="Suivi des collaborateurs" entities={rhProfiles.map(p => ({ id: p.id, label: getProfileName(p) }))} />
 
       {/* KPIs */}
 
