@@ -116,6 +116,28 @@ USING (
   )
 );
 
+-- Les responsables métier n'ont pas nécessairement le rôle applicatif générique
+-- "manager" ; ajouter une autorisation PERMISSIVE exacte, ensuite bornée par
+-- les politiques RESTRICTIVE du même pôle.
+DROP POLICY IF EXISTS "bib_portfolio_catalog_manager_insert" ON public.access_business_portfolios;
+CREATE POLICY "bib_portfolio_catalog_manager_insert"
+ON public.access_business_portfolios
+FOR INSERT TO authenticated
+WITH CHECK (public.bib_can_manage_access_portfolio_type(portfolio_type_id));
+
+DROP POLICY IF EXISTS "bib_portfolio_catalog_manager_update" ON public.access_business_portfolios;
+CREATE POLICY "bib_portfolio_catalog_manager_update"
+ON public.access_business_portfolios
+FOR UPDATE TO authenticated
+USING (public.bib_can_manage_access_portfolio_type(portfolio_type_id))
+WITH CHECK (public.bib_can_manage_access_portfolio_type(portfolio_type_id));
+
+DROP POLICY IF EXISTS "bib_portfolio_catalog_manager_delete" ON public.access_business_portfolios;
+CREATE POLICY "bib_portfolio_catalog_manager_delete"
+ON public.access_business_portfolios
+FOR DELETE TO authenticated
+USING (public.bib_can_manage_access_portfolio_type(portfolio_type_id));
+
 DROP POLICY IF EXISTS "bib_portfolio_catalog_pole_insert" ON public.access_business_portfolios;
 CREATE POLICY "bib_portfolio_catalog_pole_insert"
 ON public.access_business_portfolios AS RESTRICTIVE
