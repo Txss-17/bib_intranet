@@ -21,6 +21,32 @@ $fn$;
 REVOKE ALL ON FUNCTION public.rh_my_portfolio_employee_ids() FROM PUBLIC,anon;
 GRANT EXECUTE ON FUNCTION public.rh_my_portfolio_employee_ids() TO authenticated,service_role;
 
+-- A portfolio belongs to its RH manager; CEO oversight is explicit.
+CREATE OR REPLACE FUNCTION public.rh_can_read_case_portfolio(p_id uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path=''
+AS $fn$
+ SELECT (SELECT auth.uid()) IS NOT NULL AND EXISTS(
+  SELECT 1 FROM public.bib_case_portfolios p
+  WHERE p.id=p_id AND p.pole='rh'
+   AND (p.owner_id=(SELECT auth.uid())
+       OR public.is_canonical_bib_ceo((SELECT auth.uid())))
+ );
+$fn$;
+REVOKE ALL ON FUNCTION public.rh_can_read_case_portfolio(uuid) FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.rh_can_read_case_portfolio(uuid) TO authenticated,service_role;
+
+DROP POLICY IF EXISTS "rh_case_portfolios_owner_select" ON public.bib_case_portfolios;
+CREATE POLICY "rh_case_portfolios_owner_select" ON public.bib_case_portfolios
+AS RESTRICTIVE FOR SELECT TO authenticated
+USING (pole<>'rh' OR public.rh_can_read_case_portfolio(id));
+
+DROP POLICY IF EXISTS "rh_case_members_owner_select" ON public.bib_case_portfolio_members;
+CREATE POLICY "rh_case_members_owner_select" ON public.bib_case_portfolio_members
+AS RESTRICTIVE FOR SELECT TO authenticated
+USING (NOT EXISTS(SELECT 1 FROM public.bib_case_portfolios p
+    WHERE p.id=bib_case_portfolio_members.portfolio_id AND p.pole='rh')
+    OR public.rh_can_read_case_portfolio(portfolio_id));
+
 CREATE OR REPLACE FUNCTION public.rh_link_onboarded_employee_to_referent_portfolio()
 RETURNS trigger
 LANGUAGE plpgsql SECURITY DEFINER SET search_path=''
@@ -34,7 +60,7 @@ BEGIN
   -- Link once when the identity is provisioned, or on completion if not
   -- previously linked. Never alter a legitimately transferred assignment.
   IF TG_OP='UPDATE' AND OLD.created_user_id IS NOT DISTINCT FROM NEW.created_user_id
-    AND OLD.status IN ('account_created','completed') THEN
+    AND OLD.status='completed' THEN
     RETURN NEW;
   END IF;
   IF NEW.manager_id IS NULL THEN
