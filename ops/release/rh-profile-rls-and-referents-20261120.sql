@@ -41,7 +41,7 @@ WITH CHECK (public.rh_can_access_employee_profile(id));
 CREATE OR REPLACE FUNCTION public.rh_onboarding_referents()
 RETURNS TABLE (
  id uuid, first_name text, last_name text, email text,
- position text, poles text[], hr_status text, test_account boolean
+ "position" text, poles text[], hr_status text, test_account boolean
 )
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path=''
 AS $referents$
