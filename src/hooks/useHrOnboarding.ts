@@ -343,36 +343,12 @@ export const useHrPositionCatalog = (poleId?: string) =>
 export const useHrReferents = () =>
   useQuery({
     queryKey: ['rh-onboarding-referents'],
-
     queryFn: async (): Promise<HrReferent[]> => {
-      const { data, error } = await db
-        .from('profiles')
-        .select(`
-          id,
-          first_name,
-          last_name,
-          email,
-          position,
-          poles,
-          hr_status,
-          test_account
-        `)
-        .eq('test_account', false)
-        .eq('position', 'rh_manager')
-        .in('hr_status', ['active', 'onboarding'])
-        .contains('poles', ['rh'])
-        .order('first_name', {
-          ascending: true,
-        });
-
-      if (error) {
-        throw error;
-      }
-
+      const { data, error } = await supabase.rpc('rh_onboarding_referents' as never);
+      if (error) throw error;
       return (data ?? []) as HrReferent[];
     },
   });
-
 
 /**
  * Catalogue RBAC réel.
