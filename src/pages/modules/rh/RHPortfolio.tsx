@@ -1,3 +1,4 @@
+import { useMyRhEmployeePortfolioScope } from '@/hooks/useMyRhEmployeePortfolioScope';
 // @ts-nocheck — contrôle désactivé sur cette page (lectures de portefeuilles)
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -134,8 +135,10 @@ function getPoleLabel(
 }
 
 export default function RHPortfolio() {
+  const rhScope = useMyRhEmployeePortfolioScope();
   const { data, isLoading } = useQuery({
-    queryKey: ['rh-portfolio-administration'],
+    queryKey: ['rh-portfolio-administration', rhScope.ids],
+    enabled: rhScope.ready,
 
     queryFn: async () => {
       const [
@@ -160,6 +163,7 @@ export default function RHPortfolio() {
               seniority
             `,
           )
+          .in('id', rhScope.ids)
           .order('last_name'),
 
         supabase
@@ -415,13 +419,8 @@ export default function RHPortfolio() {
     },
   );
 
-  const rhProfiles = profiles.filter(
-    (profile) =>
-      profile.poles?.some(
-        (pole) =>
-          pole.toLowerCase() === 'rh',
-      ),
-  );
+  // RH manages personnel across all destination poles, scoped by owned portfolio.
+  const rhProfiles = profiles;
 
   /*
    * On ne compte comme portefeuille RH que
@@ -566,6 +565,8 @@ export default function RHPortfolio() {
 
   return (
     <div className="space-y-6">
+      {rhScope.loading && <p role="status">Vérification des portefeuilles RH…</p>}
+      {rhScope.error && <p role="alert" className="text-destructive">Impossible de vérifier votre portefeuille RH. Aucun collaborateur n'est affiché.</p>}
       {/* HEADER */}
 
       <div>
@@ -658,13 +659,11 @@ export default function RHPortfolio() {
       <Card>
         <CardHeader>
           <CardTitle>
-            Collaborateurs du pôle RH
+            Collaborateurs de mon portefeuille RH
           </CardTitle>
 
           <CardDescription>
-            Collaborateurs identifiés dans le
-            périmètre RH et leurs responsabilités
-            d'accès.
+            Collaborateurs rattachés à votre portefeuille personnel, quel que soit leur pôle métier.
           </CardDescription>
         </CardHeader>
 
@@ -674,12 +673,11 @@ export default function RHPortfolio() {
               <Users className="mx-auto h-8 w-8 text-muted-foreground" />
 
               <p className="mt-3 font-medium">
-                Aucun collaborateur RH identifié
+                Aucun collaborateur rattaché à votre portefeuille
               </p>
 
               <p className="mt-1 text-sm text-muted-foreground">
-                Les profils dont le pôle contient
-                « RH » apparaîtront ici.
+                Les collaborateurs apparaîtront ici après rattachement à votre portefeuille RH.
               </p>
             </div>
           ) : (
