@@ -24,6 +24,7 @@ import {
 import { toast } from 'sonner';
 
 import { supabase } from '@/integrations/supabase/client';
+import { managedDocumentId, openManagedDocument } from '@/lib/driveDocuments';
 
 import {
   type Employee,
@@ -1411,18 +1412,17 @@ export default function EmployeeFiles() {
                                       <Button
                                         variant="outline"
                                         size="sm"
-                                        asChild
+                                        disabled={!managedDocumentId(document.document_url)}
+                                        title={!managedDocumentId(document.document_url)
+                                          ? 'Document externe : importer dans Drive BIB pour une consultation contrôlée'
+                                          : 'Ouvrir dans les documents BIB'}
+                                        onClick={() => {
+                                          try { openManagedDocument(document.document_url); }
+                                          catch (error) { toast.error((error as Error).message); }
+                                        }}
                                       >
-                                        <a
-                                          href={
-                                            document.document_url
-                                          }
-                                          target="_blank"
-                                          rel="noreferrer"
-                                        >
-                                          <ExternalLink className="mr-2 h-4 w-4" />
-                                          Ouvrir
-                                        </a>
+                                        <ExternalLink className="mr-2 h-4 w-4" />
+                                        Ouvrir
                                       </Button>
                                     )}
 
@@ -1622,17 +1622,18 @@ export default function EmployeeFiles() {
 
               <div className="flex flex-wrap justify-between gap-2 pt-2">
                 {selectedDocument.document_url && (
-                  <Button asChild>
-                    <a
-                      href={
-                        selectedDocument.document_url
-                      }
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Ouvrir le document
-                    </a>
+                  <Button
+                    disabled={!managedDocumentId(selectedDocument.document_url)}
+                    title={!managedDocumentId(selectedDocument.document_url)
+                      ? 'Document externe : importer dans Drive BIB pour une consultation contrôlée'
+                      : 'Ouvrir dans les documents BIB'}
+                    onClick={() => {
+                      try { openManagedDocument(selectedDocument.document_url); }
+                      catch (error) { toast.error((error as Error).message); }
+                    }}
+                  >
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Ouvrir le document
                   </Button>
                 )}
 
