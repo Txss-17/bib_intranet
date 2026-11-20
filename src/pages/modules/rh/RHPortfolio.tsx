@@ -141,6 +141,10 @@ export default function RHPortfolio() {
     enabled: rhScope.ready,
 
     queryFn: async () => {
+      if (rhScope.ids.length === 0) {
+        return { profiles: [], assignments: [], roles: [], scopes: [],
+          portfolioTypes: [], portfolios: [], portfolioAssignments: [] };
+      }
       const [
         profilesResult,
         assignmentsResult,
@@ -179,7 +183,7 @@ export default function RHPortfolio() {
               starts_at,
               ends_at
             `,
-          ),
+          ).in('employee_id', rhScope.ids),
 
         supabase
           .from('access_roles')
@@ -244,7 +248,7 @@ export default function RHPortfolio() {
               ends_at,
               reason
             `,
-          ),
+          ).in('employee_id', rhScope.ids),
       ]);
 
       if (profilesResult.error) {
