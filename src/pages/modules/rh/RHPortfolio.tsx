@@ -389,7 +389,9 @@ export default function RHPortfolio() {
 
   const activeAssignments =
     assignments.filter((assignment) =>
-      isActiveStatus(assignment.status),
+      isActiveStatus(assignment.status) &&
+      (roleById.get(assignment.role_id)?.business_pole === 'rh' ||
+       roleById.get(assignment.role_id)?.department === 'rh'),
     );
 
   const activePortfolioAssignments =
@@ -469,11 +471,13 @@ export default function RHPortfolio() {
 
   const rhPortfolioAssignments =
     activePortfolioAssignments.filter(
-      (assignment) =>
-        assignment.access_assignment_id &&
-        rhAccessAssignmentIds.has(
-          assignment.access_assignment_id,
-        ),
+      (assignment) => {
+        const portfolio = portfolioById.get(assignment.portfolio_id);
+        const type = portfolio ? portfolioTypeById.get(portfolio.portfolio_type_id) : undefined;
+        const holder = profileById.get(assignment.employee_id);
+        return type?.business_pole === 'rh' && holder?.poles?.includes('rh') &&
+          assignment.access_assignment_id && rhAccessAssignmentIds.has(assignment.access_assignment_id);
+      },
     );
 
   const portfolioRows: PortfolioAssignmentRow[] =
@@ -587,7 +591,7 @@ export default function RHPortfolio() {
         </p>
       </div>
 
-      <CasePortfolioManager pole="rh" title="Suivi des collaborateurs" entities={profiles.map(p => ({ id: p.id, label: getProfileName(p) }))} />
+      <CasePortfolioManager pole="rh" title="Suivi des collaborateurs" entities={rhProfiles.map(p => ({ id: p.id, label: getProfileName(p) }))} />
 
       {/* KPIs */}
 
