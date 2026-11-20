@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar } from "./TopBar";
 import { ModuleNavigation } from "./ModuleNavigation";
+import { MyAssignedPortfolios } from "@/components/dashboard/MyAssignedPortfolios";
 
 import { RouteAccessGate } from "@/components/operations/RouteAccessGate";
 import { ViewAsBanner } from "@/components/admin/ViewAsBanner";
@@ -104,6 +105,8 @@ export function MainLayout() {
   // -------------------------------------------------------------------------
 
   const showModuleNav = Boolean(extractedPoleId || transversalModule);
+  // Login may redirect directly to a pole overview.
+  const showOwnPortfolios = pathname === "/" || (pathname.startsWith("/pole/") && pathname.split("/").filter(Boolean).length === 2);
 
   // -------------------------------------------------------------------------
   // RENDER
@@ -158,7 +161,10 @@ export function MainLayout() {
         <ViewAsBanner />
 
         <div className="p-6">
-          <RouteAccessGate><Outlet /></RouteAccessGate>
+          <RouteAccessGate>
+            {showOwnPortfolios && <MyAssignedPortfolios />}
+            <Outlet />
+          </RouteAccessGate>
         </div>
       </main>
     </div>
