@@ -469,11 +469,13 @@ export default function RHPortfolio() {
 
   const rhPortfolioAssignments =
     activePortfolioAssignments.filter(
-      (assignment) =>
-        assignment.access_assignment_id &&
-        rhAccessAssignmentIds.has(
-          assignment.access_assignment_id,
-        ),
+      (assignment) => {
+        const portfolio = portfolioById.get(assignment.portfolio_id);
+        const type = portfolio ? portfolioTypeById.get(portfolio.portfolio_type_id) : undefined;
+        const holder = profileById.get(assignment.employee_id);
+        return type?.business_pole === 'rh' && holder?.poles?.includes('rh') &&
+          assignment.access_assignment_id && rhAccessAssignmentIds.has(assignment.access_assignment_id);
+      },
     );
 
   const portfolioRows: PortfolioAssignmentRow[] =
