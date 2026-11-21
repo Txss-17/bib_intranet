@@ -1,13 +1,13 @@
 import { useState, useRef } from 'react';
-import { CloudDownload, X, Loader2, Search } from 'lucide-react';
+import { CloudDownload, FileText, X, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { driveAction, DriveDocument, DriveSource, currentDocumentPage } from '@/lib/driveDocuments';
 import { toast } from 'sonner';
 interface UploadedFile { name: string; url: string; type: string; size: number }
-interface Props { bucket: string; folder: string; accept?: string; multiple?: boolean; maxSizeMB?: number; files: UploadedFile[]; onFilesChange: (files: UploadedFile[]) => void; label?: string }
-export default function FileUploadZone({ folder, multiple = true, maxSizeMB = 20, files, onFilesChange }: Props) {
+interface Props { bucket: string; folder: string; accept?: string; multiple?: boolean; maxSizeMB?: number; files: UploadedFile[]; onFilesChange: (files: UploadedFile[]) => void; label?: string; triggerMode?: 'button' | 'field'; disabled?: boolean }
+export default function FileUploadZone({ folder, multiple = true, maxSizeMB = 20, files, onFilesChange, triggerMode = 'button', label, disabled = false }: Props) {
  const [open, setOpen] = useState(false); const [search, setSearch] = useState(''); const [source, setSource] = useState(''); const [results, setResults] = useState<DriveSource[]>([]); const [next, setNext] = useState<string>(); const [loading, setLoading] = useState(false); const [pending, setPending] = useState(false); const [failure, setFailure] = useState(''); const [key, setKey] = useState(() => crypto.randomUUID());
  const list = async (page?: string) => { setLoading(true); setFailure(''); try { const result = await driveAction<{ files: DriveSource[]; nextPageToken?: string }>({ action: 'list', search, page_token: page }); setResults(page ? [...results, ...result.files] : result.files); setNext(result.nextPageToken); } catch (e) { setFailure((e as Error).message); } finally { setLoading(false); } };
  const requestKeys = useRef(new Map<string, string>());
@@ -24,5 +24,49 @@ export default function FileUploadZone({ folder, multiple = true, maxSizeMB = 20
    onFilesChange(nextFiles); if (s) requestKeys.current.delete(s.id); setKey(crypto.randomUUID()); setOpen(false); setSource(''); toast.success('Document importé depuis Drive BIB');
   } catch (e) { setFailure((e as Error).message); } finally { setPending(false); }
  };
- return <div className="space-y-3"><Button type="button" variant="outline" className="w-full" onClick={() => { setOpen(true); void list(); }}><CloudDownload className="mr-2 h-4 w-4" />Importer depuis Google Drive BIB</Button><p className="text-xs text-muted-foreground">Documents PDF, PNG/JPEG et documents Google Workspace. {folder === 'products' ? 'Les images de catalogue choisies sont destinées à la publication.' : 'Les documents restent dans l’espace professionnel BIB.'}</p>{files.map((f, i) => <div key={`${f.url}-${i}`} className="flex items-center justify-between rounded border p-2 text-sm"><span className="truncate">{f.name}</span><Button type="button" variant="ghost" size="icon" aria-label={`Retirer ${f.name}`} onClick={() => onFilesChange(files.filter((_, n) => i !== n))}><X className="h-4 w-4" /></Button></div>)}<Dialog open={open} onOpenChange={o => !pending && setOpen(o)}><DialogContent className="max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>Importer depuis votre Drive BIB</DialogTitle></DialogHeader><div className="flex gap-2"><Input placeholder="Rechercher un fichier…" value={search} onChange={e => setSearch(e.target.value)} /><Button type="button" variant="outline" disabled={loading || pending} onClick={() => void list()}><Search className="h-4 w-4" /></Button></div>{failure && <p role="alert" className="text-sm text-destructive">{failure}</p>}{loading && <Loader2 className="h-5 w-5 animate-spin" />}<ul className="max-h-64 divide-y overflow-y-auto">{results.map(s => <li key={s.id}><button type="button" disabled={pending} className="w-full p-3 text-left hover:bg-muted" onClick={() => { void importSource(s); }}><span className="block text-sm font-medium">{s.name}</span><span className="text-xs text-muted-foreground">{s.mimeType}</span></button></li>)}</ul>{next && <Button type="button" variant="outline" disabled={loading || pending} onClick={() => void list(next)}>Afficher la suite</Button>}<div className="space-y-2 border-t pt-3"><Input value={source} disabled={pending} onChange={e => { setSource(e.target.value); setKey(crypto.randomUUID()); }} placeholder="Ou collez un lien Google Drive BIB" /><Button type="button" disabled={pending || !source.trim()} onClick={() => void importSource()}>{pending ? 'Import en cours…' : 'Importer ce lien'}</Button></div></DialogContent></Dialog></div>;
+ return <div className="space-y-2">
+ {triggerMode === 'field' ? (
+  <button type="button" disabled={disabled || pending}
+   className="flex h-10 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-left text-sm shadow-sm hover:bg-muted/60 disabled:cursor-not-allowed disabled:opacity-50"
+   aria-label={label || 'Choisir un document dans Drive BIB'}
+   onClick={() => { setOpen(true); void list(); }}>
+   <FileText className="h-4 w-4 shrink-0 text-muted-foreground" />
+   <span className="truncate">{files[0]?.name || label || 'Cliquer pour choisir un document dans Drive BIB'}</span>
+   <CloudDownload className="ml-auto h-4 w-4 shrink-0 text-muted-foreground" />
+  </button>
+ ) : (
+  <Button type="button" variant="outline" className="w-full" disabled={disabled}
+   onClick={() => { setOpen(true); void list(); }}>
+    <CloudDownload className="mr-2 h-4 w-4" />{label || 'Importer depuis Google Drive BIB'}
+  </Button>
+ )}
+ <p className="text-xs text-muted-foreground">
+  {folder === 'products' ? 'Les images de catalogue choisies sont destinées à la publication.' : 'Sélection professionnelle dans Drive BIB. La référence du dossier est créée par BIB, jamais par Google Drive.'}
+ </p>
+ {files.map((f, i) => (
+  <div key={`${f.url}-${i}`} className="flex items-center justify-between gap-2 rounded border p-2 text-xs">
+   <span className="truncate">{f.name}</span>
+   <Button type="button" variant="ghost" size="icon" disabled={disabled}
+    aria-label={`Retirer ${f.name}`}
+    onClick={() => onFilesChange(files.filter((_, n) => i !== n))}>
+    <X className="h-4 w-4" />
+   </Button>
+  </div>
+ ))}<Dialog open={open} onOpenChange={o => !pending && setOpen(o)}><DialogContent className="max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>Choisir un fichier dans votre Drive BIB</DialogTitle></DialogHeader>
+ {(folder.startsWith('rh-') || folder === 'leadership-evidence') && (
+  <p role="note" className="rounded-md border border-amber-500/40 p-2 text-xs text-muted-foreground">
+   Ne sélectionnez pas de copie de pièce d’identité, de fichier médical, de paie ou disciplinaire.
+   Ces documents nécessitent un coffre RH privé. Une attestation de contrôle sans copie peut suffire
+   lorsqu’aucun texte n’impose de conserver le justificatif.
+  </p>
+ )}<div className="flex gap-2"><Input placeholder="Rechercher un fichier…" value={search} onChange={e => setSearch(e.target.value)} /><Button type="button" variant="outline" disabled={loading || pending} onClick={() => void list()}><Search className="h-4 w-4" /></Button></div>{failure && <p role="alert" className="text-sm text-destructive">{failure}</p>}{loading && <Loader2 className="h-5 w-5 animate-spin" />}<ul className="max-h-64 divide-y overflow-y-auto">{results.map(s => <li key={s.id}><button type="button" disabled={pending} className="w-full p-3 text-left hover:bg-muted" onClick={() => { void importSource(s); }}><span className="block text-sm font-medium">{s.name}</span><span className="text-xs text-muted-foreground">{s.mimeType}</span></button></li>)}</ul>{next && <Button type="button" variant="outline" disabled={loading || pending} onClick={() => void list(next)}>Afficher la suite</Button>}{!(folder.startsWith('rh-') || folder === 'leadership-evidence') && (
+  <div className="space-y-2 border-t pt-3">
+   <Input value={source} disabled={pending}
+    onChange={e => { setSource(e.target.value); setKey(crypto.randomUUID()); }}
+    placeholder="Ou collez un lien Google Drive BIB" />
+   <Button type="button" disabled={pending || !source.trim()} onClick={() => void importSource()}>
+    {pending ? 'Import en cours…' : 'Importer ce lien'}
+   </Button>
+  </div>
+ )}</DialogContent></Dialog></div>;
 }

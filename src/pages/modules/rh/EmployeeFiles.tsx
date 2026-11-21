@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { managedDocumentId, openManagedDocument } from '@/lib/driveDocuments';
 import { normalizeHrManagedDocumentUrl } from '@/lib/hrEmployeeMutations';
+import FileUploadZone from '@/components/FileUploadZone';
 
 import {
   type Employee,
@@ -146,6 +147,11 @@ const documentTypeLabels: Record<DocumentType, string> = {
   disciplinary: 'Disciplinaire',
   other: 'Autre',
 };
+
+// Restrict highly sensitive personnel records until the dedicated private
+// BIB identity vault, with independent reviewer access and retention, is live.
+const restrictedRhDocumentTypes: ReadonlySet<DocumentType> =
+  new Set(['identity', 'medical', 'payroll', 'disciplinary']);
 
 const documentSourceLabels: Record<DocumentSource, string> = {
   onboarding: 'Onboarding RH',
@@ -619,6 +625,11 @@ export default function EmployeeFiles() {
       return;
     }
 
+    if (restrictedRhDocumentTypes.has(form.document_type)) {
+      toast.error('Document sensible : le dépôt en Drive BIB est désactivé. Le coffre RH privé doit être activé avant tout enregistrement.');
+      return;
+    }
+
     // An RH document reference must never persist a raw shareable Drive or
     // external URL: access to those URLs bypasses BIB's document authorization.
     // A reference without a link remains possible while import is pending.
@@ -644,7 +655,7 @@ export default function EmployeeFiles() {
         );
       }
 
-      const { error } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from('rh_employee_documents')
         .insert({
           employee_id: selectedEmployee.id,
@@ -659,15 +670,19 @@ export default function EmployeeFiles() {
           expires_at:
             form.expires_at || null,
           created_by: user.id,
-        });
+        })
+        .select('document_reference')
+        .single();
 
       if (error) {
         throw error;
       }
 
-      toast.success(
-        'Document ajouté au dossier RH.',
-      );
+      if (!data?.document_reference) {
+        throw new Error('La référence BIB du document n’a pas été confirmée.');
+      }
+
+      toast.success(`Document ${data.document_reference} enregistré dans le dossier RH.`);
 
       setDocumentDialogOpen(false);
 
@@ -1750,8 +1765,8 @@ export default function EmployeeFiles() {
                   onValueChange={(value) =>
                     setForm({
                       ...form,
-                      document_type:
-                        value as DocumentType,
+                      document_type: value as DocumentType,
+                      document_url: restrictedRhDocumentTypes.has(value as DocumentType) ? '' : form.document_url,
                     })
                   }
                 >
@@ -1783,44 +1798,12 @@ export default function EmployeeFiles() {
 
 
               <div>
-                <Label>
-                  Source
-                </Label>
-
-                <Select
-                  value={form.source}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      source:
-                        value as DocumentSource,
-                    })
-                  }
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {(
-                      Object.entries(
-                        documentSourceLabels,
-                      ) as [
-                        DocumentSource,
-                        string,
-                      ][]
-                    ).map(
-                      ([value, label]) => (
-                        <SelectItem
-                          key={value}
-                          value={value}
-                        >
-                          {label}
-                        </SelectItem>
-                      ),
-                    )}
-                  </SelectContent>
-                </Select>
+                <Label>Mode d’enregistrement</Label>
+                <div className="mt-1 flex min-h-10 items-center rounded-md border bg-muted/40 px-3 text-xs text-muted-foreground">
+                  {restrictedRhDocumentTypes.has(form.document_type)
+                    ? 'Coffre RH privé requis'
+                    : 'Sélection contrôlée : Drive BIB professionnel'}
+                </div>
               </div>
             </div>
 
@@ -1832,24 +1815,31 @@ export default function EmployeeFiles() {
                 Référence du document
               </Label>
 
-              <Input
-                className="mt-1"
-                type="url"
-                placeholder="Lien Google Drive BIB ou référence documentaire"
-                value={form.document_url}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    document_url:
-                      event.target.value,
-                  })
-                }
-              />
-
+              {restrictedRhDocumentTypes.has(form.document_type) ? (
+                <p role="status" className="mt-1 rounded-md border border-amber-500/50 p-3 text-sm text-amber-700">
+                  Pièce sensible (identité, données médicales, paie ou disciplinaire) :
+                  aucun import dans Drive BIB. Ces fichiers devront être déposés
+                  directement dans un coffre RH privé, sans copie dans un compte Drive.
+                  Le formulaire reste bloqué pour ce type en attendant le coffre sécurisé.
+                </p>
+              ) : (
+                <FileUploadZone bucket="managed-drive" folder="rh-employee-record"
+                  triggerMode="field" multiple={false}
+                  label="Cliquer pour choisir une pièce dans Drive BIB"
+                  files={form.document_url ? [{
+                    name: form.name || 'Document BIB sélectionné',
+                    url: form.document_url, type: 'application/pdf', size: 0,
+                  }] : []}
+                  onFilesChange={files => setForm(current => ({
+                    ...current,
+                    name: current.name || files[0]?.name || '',
+                    document_url: files[0]?.url || '',
+                    source: 'drive',
+                  }))} />
+              )}
               <p className="mt-1 text-xs text-muted-foreground">
-                Le fichier lui-même n’est pas stocké
-                dans cette table. Cette valeur référence
-                son emplacement documentaire.
+                Le numéro documentaire BIB sera généré par le serveur après
+                l’enregistrement. Le fichier reste dans son espace de stockage contrôlé.
               </p>
             </div>
 
