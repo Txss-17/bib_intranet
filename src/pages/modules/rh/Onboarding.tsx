@@ -1147,7 +1147,7 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
             <p className="text-xs text-muted-foreground">
               {mutation
                 ? 'Les documents retenus apparaîtront dans Paramètres → Ressources après l’application de la mutation.'
-                : 'Ces documents apparaîtront dans Paramètres → Ressources du collaborateur dès la création du compte.'}
+                : 'À la création de l’onboarding, BIB attribue automatiquement une référence au registre et à chaque pièce. Aucune référence à saisir ; le numéro réservé ne prouve pas qu’un fichier a été déposé dans Drive.'}
             </p>
             {attachedDocs.map((doc, i) => (
               <div key={i} className="flex items-center justify-between rounded-md border border-border p-2 text-sm">
@@ -1360,6 +1360,22 @@ function RequestSheet({
         </SheetHeader>
 
         <div className="mt-4 space-y-5">
+          {!isMutation && (
+            <section className="rounded-lg border border-border p-3" aria-label="Références documentaires automatiques">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Registre documentaire d’onboarding
+              </p>
+              <p className="mt-1 break-all font-mono text-sm font-semibold">
+                {request.document_register_reference ?? 'Référence non attribuée — contrôle nécessaire'}
+              </p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Référence générée par le serveur dès la création du dossier.
+                Chaque charte ou politique jointe reçoit sa référence propre.
+                Une référence réservée ne constitue pas un fichier Drive ni une preuve de signature.
+              </p>
+            </section>
+          )}
+
           {/* PROGRESSION */}
           <div>
             <Progress
@@ -1511,9 +1527,17 @@ function RequestSheet({
               {Array.isArray(request.attached_documents) && request.attached_documents.length > 0 ? (
                 <ul className="space-y-1">
                   {request.attached_documents.map((doc, index) => (
-                    <li key={index} className="rounded-md border border-border/60 px-3 py-2 text-xs">
+                    <li key={doc.document_entry_id ?? index} className="rounded-md border border-border/60 px-3 py-2 text-xs">
                       <span className="font-medium">{doc.name || 'Document sans nom'}</span>
                       <span className="ml-2 text-muted-foreground">({doc.document_type || 'Autre'})</span>
+                      {!isMutation && (
+                        <span className="mt-1 block break-all font-mono text-xs text-muted-foreground">
+                          Réf. BIB : {doc.document_reference ?? 'En attente d’attribution'}
+                        </span>
+                      )}
+                      <span className="mt-1 block text-xs text-muted-foreground">
+                        {doc.document_url ? 'Lien documentaire renseigné — accès à contrôler' : 'Référence réservée — fichier non déposé'}
+                      </span>
                       {doc.document_url && (managedDocumentId(doc.document_url) ? (
                         <ManagedDocumentLink url={doc.document_url}
                           className="ml-2 underline underline-offset-2">Consulter la pièce</ManagedDocumentLink>
