@@ -612,6 +612,17 @@ export default function EmployeeFiles() {
       return;
     }
 
+    // An RH document reference must never persist a raw shareable Drive or
+    // external URL: access to those URLs bypasses BIB's document authorization.
+    // A reference without a link remains possible while import is pending.
+    const controlledDocumentUrl = form.document_url.trim();
+    if (controlledDocumentUrl && !managedDocumentId(controlledDocumentUrl)) {
+      toast.error(
+        'Importez d’abord ce fichier dans Documents BIB, puis utilisez son lien interne /documents?document=…',
+      );
+      return;
+    }
+
     try {
       const {
         data: {
@@ -633,7 +644,7 @@ export default function EmployeeFiles() {
           document_type: form.document_type,
           source: form.source,
           document_url:
-            form.document_url.trim() || null,
+            controlledDocumentUrl || null,
           description:
             form.description.trim() || null,
           document_date:
