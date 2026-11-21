@@ -20,10 +20,14 @@ AS $rh_employee_doc$
 DECLARE
   linked boolean;
 BEGIN
-  IF TG_OP='UPDATE' AND OLD.document_reference IS NOT NULL THEN
-    NEW.document_reference := OLD.document_reference;
+  IF TG_OP='UPDATE' THEN
+    -- The originating workflow and its reference must never be reassigned.
+    NEW.source := OLD.source;
     NEW.onboarding_request_id := OLD.onboarding_request_id;
-    RETURN NEW;
+    IF OLD.document_reference IS NOT NULL THEN
+      NEW.document_reference := OLD.document_reference;
+      RETURN NEW;
+    END IF;
   END IF;
 
   IF NEW.source='onboarding' AND NEW.onboarding_request_id IS NOT NULL THEN
@@ -66,7 +70,7 @@ REVOKE ALL ON FUNCTION public.rh_assign_employee_document_reference()
 
 DROP TRIGGER IF EXISTS trg_rh_employee_document_reference ON public.rh_employee_documents;
 CREATE TRIGGER trg_rh_employee_document_reference
-  BEFORE INSERT OR UPDATE OF document_reference, onboarding_request_id
+  BEFORE INSERT OR UPDATE OF document_reference, onboarding_request_id, source
   ON public.rh_employee_documents
   FOR EACH ROW EXECUTE FUNCTION public.rh_assign_employee_document_reference();
 
