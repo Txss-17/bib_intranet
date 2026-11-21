@@ -11,25 +11,25 @@ LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path TO ''
 AS $proof$
 DECLARE
-  reference text := btrim(coalesce(p_reference,''));
+  v_reference text := btrim(coalesce(p_reference,''));
 BEGIN
-  IF p_subject IS NULL OR char_length(reference) NOT BETWEEN 8 AND 160
+  IF p_subject IS NULL OR char_length(v_reference) NOT BETWEEN 8 AND 160
     OR p_step NOT IN ('identity','assignment','documents','hr_review',
                        'independent_review','access_security','integration')
-    OR lower(reference) IN ('aucun','néant','neant','none','n/a','na','non renseigné',
+    OR lower(v_reference) IN ('aucun','néant','neant','none','n/a','na','non renseigné',
                             'non renseigne','sans objet','non applicable','inconnu') THEN
     RETURN false;
   END IF;
 
-  -- An HR onboarding reference can demonstrate the identity of an existing
+  -- An HR onboarding v_reference can demonstrate the identity of an existing
   -- account only if the recorded identity is this exact subject, and the
   -- onboarding is neither rejected nor merely submitted.
   IF p_step='identity'
-     AND (reference ~ '^HR-[0-9]{8}-[0-9]{4}$'
-       OR reference ~ '^BIB-RH-ONB-[0-9]{4}-[0-9]{6,}$') THEN
+     AND (v_reference ~ '^HR-[0-9]{8}-[0-9]{4}$'
+       OR v_reference ~ '^BIB-RH-ONB-[0-9]{4}-[0-9]{6,}$') THEN
     RETURN EXISTS (
       SELECT 1 FROM public.hr_employee_requests r
-      WHERE (r.reference=reference OR r.document_register_reference=reference)
+      WHERE (r.reference=v_reference OR r.document_register_reference=v_reference)
         AND r.created_user_id=p_subject
         AND r.request_kind='onboarding'
         AND r.status IN ('account_created','completed')
@@ -39,11 +39,11 @@ BEGIN
   -- Assignment proof refers to an actual ACTIVE, current assignment to this
   -- very subject, never a role label or arbitrary scope typed in a textbox.
   IF p_step='assignment'
-    AND reference ~* '^ACCESS:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+    AND v_reference ~* '^ACCESS:[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
     RETURN EXISTS (
       SELECT 1 FROM public.access_assignments a
       JOIN public.access_roles role ON role.id=a.role_id
-      WHERE a.id=substring(reference from 8)::uuid
+      WHERE a.id=substring(v_reference from 8)::uuid
         AND a.employee_id=p_subject AND a.status='active'
         AND role.status='active'
         AND (a.starts_at IS NULL OR a.starts_at<=now())
@@ -57,7 +57,7 @@ BEGIN
   -- signature or acceptance: the reviewer must check the file and record
   -- their observations on document, HR and independent-review stages.
   IF p_step IN ('identity','documents','hr_review','independent_review','access_security','integration')
-     AND reference ~ '^BIB-RH-DOC-[0-9]{4}-[0-9]{6,}$' THEN
+     AND v_reference ~ '^BIB-RH-DOC-[0-9]{4}-[0-9]{6,}$' THEN
     RETURN EXISTS (
       SELECT 1
       FROM public.rh_employee_documents d
@@ -68,7 +68,7 @@ BEGIN
           ELSE NULL::uuid
         END
       WHERE d.employee_id=p_subject
-        AND d.document_reference=reference
+        AND d.document_reference=v_reference
         AND d.status IN ('active','valid')
         AND (p_step<>'documents' OR d.document_type IN ('charter','policy','contract','regulatory'))
         AND file.test_account IS FALSE AND file.size_bytes>0
