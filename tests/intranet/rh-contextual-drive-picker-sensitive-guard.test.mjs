@@ -27,6 +27,8 @@ test('RH onboarding and employee records select documents from Drive, not raw UR
   assert.match(files,/FileUploadZone bucket="managed-drive" folder="rh-employee-record"/);
   assert.match(files,/triggerMode="field"/);
   assert.match(files,/source: 'drive'/);
+  assert.match(files,/\.select\('document_reference'\)/);
+  assert.match(files,/Document \$\{data.document_reference\} enregistré dans le dossier RH/);
   assert.match(files,/document_url: files\[0\]\?\.url \|\| ''/);
   assert.doesNotMatch(files,/placeholder="Lien Google Drive BIB ou référence documentaire"/);
 });
