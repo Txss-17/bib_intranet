@@ -54,7 +54,7 @@ test('available proof choices are backed by the same server verifier and restric
 test('RH reviewer receives registered references, cannot validate Aucun and sees reopening reason', () => {
   assert.match(ui, /rh_leadership_evidence_options/);
   assert.match(ui, /registeredEvidenceOptions\.filter/);
-  assert.match(ui, /'Aucune référence justificative disponible/);
+  assert.match(ui, /Aucune référence justificative disponible/);
   assert.match(ui, /hasPossibleReferenceFormat/);
   assert.match(ui, /Contrôle rouvert/);
   assert.match(ui, /independentReviewerConflict/);
