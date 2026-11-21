@@ -1295,6 +1295,10 @@ function RequestSheet({
   const { user } = useAuth();
   const isMutation = request.request_kind === 'mutation';
   const actionPending = setStatus.isPending || provisionAccount.isPending || mutationStatus.isPending || applyMutation.isPending || completeOnboarding.isPending;
+  // Mirror the server-side two-person rule to avoid offering an action that must fail.
+  const independentCompletionReviewer = Boolean(user?.id) &&
+    ![request.created_user_id, request.created_by, request.hr_validated_by, request.account_created_by]
+      .some((participant) => participant != null && participant === user?.id);
   const mayValidate = canValidate && (!isMutation || request.target_user_id !== user?.id);
   const mayApply = canProvision && (!isMutation || request.target_user_id !== user?.id);
   const statusAction = (status: 'hr_validated' | 'rejected') => {
@@ -1636,7 +1640,13 @@ function RequestSheet({
               <Button type="button" size="sm" variant="outline" disabled={activation.isFetching}
                 onClick={() => void activation.refetch()}>Actualiser les contrôles</Button>
 
-              {canValidate && (
+              {canValidate && !independentCompletionReviewer && (
+                <p role="status" className="text-xs text-amber-700">
+                  Une autre personne habilitée doit effectuer la revue indépendante de ce dossier.
+                  Le créateur, le validateur RH, l’opérateur de provisionnement et le collaborateur concerné ne peuvent pas le clôturer.
+                </p>
+              )}
+              {canValidate && independentCompletionReviewer && (
                 <div className="space-y-2 border-t pt-3">
                   <h4 className="text-sm font-semibold">Revue indépendante et clôture RH</h4>
                   <p className="text-xs text-muted-foreground">Vérifiez la réception de l’invitation et les écrans métiers avec le collaborateur. Le validateur, créateur du dossier ou opérateur ayant provisionné le compte ne peut pas clôturer sa propre opération. Le serveur revérifie ces conditions.</p>
