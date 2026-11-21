@@ -47,6 +47,6 @@ test('UI distinguishes management approval from actual account revocation', () =
   assert.match(panel, /Révocation des sessions/);
   assert.match(panel, /rh_departure_prepare/);
   assert.match(panel, /rh_departure_direction_review/);
-  assert.match(panel, /rh_departure_list/);
+  assert.match(panel, /rh_departure_lifecycle_list/);
   assert.doesNotMatch(panel, /deleteUser\(|ban_duration/);
 });
