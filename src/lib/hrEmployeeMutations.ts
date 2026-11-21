@@ -22,6 +22,28 @@ export interface HrMutationSubmission {
 export interface HrOnboardingPermissions { read:boolean; create:boolean; validate:boolean; apply:boolean }
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const knownPoles=["direction","finance","ops","supplier","marketplace","support","marketing","rh","audit","compliance","rse","product","data","security"];
+// One canonical route is accepted for new RH document references.
+// A browser may paste an absolute link, but only to the CURRENT origin;
+// persisted references are always relative, and therefore portable between
+// Vercel previews, staging and the BIB custom domain.
+const rhManagedPath = /^\/documents\?document=([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/i;
+export function normalizeHrManagedDocumentUrl(value: string | null | undefined, origin?: string): string | null {
+  if (typeof value !== 'string' || !value.trim()) return null;
+  const input = value.trim();
+  let path = input;
+  if (input.startsWith('https://')) {
+    const expectedOrigin = origin ?? (typeof window === 'undefined' ? null : window.location.origin);
+    if (!expectedOrigin) return null;
+    try {
+      const url = new URL(input);
+      if (url.origin !== expectedOrigin || url.username || url.password || url.hash) return null;
+      path = url.pathname + url.search;
+    } catch { return null; }
+  }
+  const match = rhManagedPath.exec(path);
+  return match ? `/documents?document=${match[1].toLowerCase()}` : null;
+}
+
 function clean(value:unknown,max:number,required=false):string|null {
   if(value==null&&!required)return null;
   if(typeof value!=="string"||value.trim().length>max||(required&&!value.trim()))throw new Error("Vérifiez les champs obligatoires et leur longueur.");
@@ -52,9 +74,9 @@ export function hrMutationPayload(input:HrMutationSubmission) {
     throw new Error("Vérifiez les documents joints (50 maximum).");
   const documents=payload.attached_documents.map(doc=>{
     const name=clean(doc.name,200,true)!,type=clean(doc.document_type,50,true)!,url=clean(doc.document_url,2048);
-    if(url){let parsed:URL;try{parsed=new URL(url);}catch{throw new Error("Les documents doivent utiliser une adresse HTTPS valide.");}
-      if(parsed.protocol!=="https:"||parsed.username||parsed.password)throw new Error("Les documents doivent utiliser une adresse HTTPS valide.");}
-    return {name,document_type:type,document_url:url};
+    const managedUrl = url ? normalizeHrManagedDocumentUrl(url) : null;
+    if (url && !managedUrl) throw new Error("Importez les documents RH dans Documents BIB et utilisez leur lien interne.");
+    return {name,document_type:type,document_url:managedUrl};
   });
   return {
     p_target_user_id:input.targetUserId,p_creation_key:input.creationKey,

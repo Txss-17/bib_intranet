@@ -19,7 +19,9 @@ test('account settings render in request detail sheet, not only new-employee dia
 test('document links open safely and missing values do not crash rejected dossiers',()=>{
  assert.match(page,/Array\.isArray\(request\.attached_documents\)/);
  assert.match(page,/request\.subsidiary\?\.trim\(\) \|\| 'Non renseignée'/);
- assert.match(page,/rel="noopener noreferrer"/);
- assert.match(page,/\^https:/);
+ assert.match(page,/ManagedDocumentLink url=\{doc\.document_url\}/);
+ assert.match(page,/managedDocumentId\(doc\.document_url\)/);
+ assert.doesNotMatch(page,/href=\{doc\.document_url\}/);
+ assert.match(page,/Ancien lien externe : réimport dans Documents BIB requis/);
  assert.match(types,/attached_documents\?:/);
 });

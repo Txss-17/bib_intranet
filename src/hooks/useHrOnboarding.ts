@@ -122,6 +122,9 @@ export interface HrEmployeeRequest {
   notes: string | null;
 
   created_user_id: string | null;
+  created_by?: string | null;
+  hr_validated_by?: string | null;
+  account_created_by?: string | null;
   request_kind?: 'onboarding' | 'mutation';
   target_user_id?: string | null;
   mutation_snapshot?: unknown;

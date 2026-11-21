@@ -1,5 +1,7 @@
 import { useMyAcceptedRhCandidates } from '@/hooks/useMyAcceptedRhCandidates';
+import { normalizeHrManagedDocumentUrl } from '@/lib/hrEmployeeMutations';
 import { managedDocumentId } from '@/lib/driveDocuments';
+import { ManagedDocumentLink } from '@/components/operations/ManagedDocumentLink';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ExistingLeadershipOnboarding from '@/components/hr/ExistingLeadershipOnboarding';
 import { format } from 'date-fns';
@@ -1170,11 +1172,11 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
               <Button type="button" variant="outline" disabled={!docDraft.name.trim()}
                 onClick={() => {
                   const enteredUrl = docDraft.document_url.trim();
-                  if (enteredUrl && !managedDocumentId(enteredUrl)) {
+                  const managedUrl = normalizeHrManagedDocumentUrl(enteredUrl);
+                  if (enteredUrl && !managedUrl) {
                     setSubmitError('Les documents RH doivent être importés dans Documents BIB avant leur rattachement. Les liens Drive ou externes directs ne sont pas autorisés.');
                     return;
                   }
-                  const managedUrl = enteredUrl ? new URL(enteredUrl, window.location.origin).href : null;
                   setSubmitError('');
                   setAttachedDocs((d) => [...d, { name: docDraft.name.trim(), document_type: docDraft.document_type, document_url: managedUrl }]);
                   setDocDraft({ name: '', document_type: 'charter', document_url: '' });
@@ -1293,6 +1295,10 @@ function RequestSheet({
   const { user } = useAuth();
   const isMutation = request.request_kind === 'mutation';
   const actionPending = setStatus.isPending || provisionAccount.isPending || mutationStatus.isPending || applyMutation.isPending || completeOnboarding.isPending;
+  // Mirror the server-side two-person rule to avoid offering an action that must fail.
+  const independentCompletionReviewer = Boolean(user?.id) &&
+    ![request.created_user_id, request.created_by, request.hr_validated_by, request.account_created_by]
+      .some((participant) => participant != null && participant === user?.id);
   const mayValidate = canValidate && (!isMutation || request.target_user_id !== user?.id);
   const mayApply = canProvision && (!isMutation || request.target_user_id !== user?.id);
   const statusAction = (status: 'hr_validated' | 'rejected') => {
@@ -1508,10 +1514,12 @@ function RequestSheet({
                     <li key={index} className="rounded-md border border-border/60 px-3 py-2 text-xs">
                       <span className="font-medium">{doc.name || 'Document sans nom'}</span>
                       <span className="ml-2 text-muted-foreground">({doc.document_type || 'Autre'})</span>
-                      {doc.document_url && /^https:\/\//i.test(doc.document_url) && (
-                        <a href={doc.document_url} target="_blank" rel="noopener noreferrer"
-                          className="ml-2 underline underline-offset-2">Consulter la pièce</a>
-                      )}
+                      {doc.document_url && (managedDocumentId(doc.document_url) ? (
+                        <ManagedDocumentLink url={doc.document_url}
+                          className="ml-2 underline underline-offset-2">Consulter la pièce</ManagedDocumentLink>
+                      ) : (
+                        <span className="ml-2 text-amber-700">Ancien lien externe : réimport dans Documents BIB requis</span>
+                      ))}
                     </li>
                   ))}
                 </ul>
@@ -1632,7 +1640,13 @@ function RequestSheet({
               <Button type="button" size="sm" variant="outline" disabled={activation.isFetching}
                 onClick={() => void activation.refetch()}>Actualiser les contrôles</Button>
 
-              {canValidate && (
+              {canValidate && !independentCompletionReviewer && (
+                <p role="status" className="text-xs text-amber-700">
+                  Une autre personne habilitée doit effectuer la revue indépendante de ce dossier.
+                  Le créateur, le validateur RH, l’opérateur de provisionnement et le collaborateur concerné ne peuvent pas le clôturer.
+                </p>
+              )}
+              {canValidate && independentCompletionReviewer && (
                 <div className="space-y-2 border-t pt-3">
                   <h4 className="text-sm font-semibold">Revue indépendante et clôture RH</h4>
                   <p className="text-xs text-muted-foreground">Vérifiez la réception de l’invitation et les écrans métiers avec le collaborateur. Le validateur, créateur du dossier ou opérateur ayant provisionné le compte ne peut pas clôturer sa propre opération. Le serveur revérifie ces conditions.</p>

@@ -8,10 +8,10 @@ const source = readFileSync(
 );
 
 test('RH employee files reject unmanageable external document links before insertion', () => {
-  assert.ok(source.includes('const controlledDocumentUrl = form.document_url.trim();'));
-  assert.ok(source.includes('if (controlledDocumentUrl && !managedDocumentId(controlledDocumentUrl))'));
-  assert.ok(source.includes('controlledDocumentUrl || null'));
-  assert.ok(source.indexOf('if (controlledDocumentUrl && !managedDocumentId(controlledDocumentUrl))') <
+  assert.ok(source.includes('const enteredDocumentUrl = form.document_url.trim();'));
+  assert.ok(source.includes('if (enteredDocumentUrl && !controlledDocumentUrl)'));
+  assert.ok(source.includes('document_url: controlledDocumentUrl,'));
+  assert.ok(source.indexOf('if (enteredDocumentUrl && !controlledDocumentUrl)') <
     source.indexOf(".from('rh_employee_documents')\n        .insert("));
 });
 
@@ -27,9 +27,9 @@ test('onboarding / mobility documents allow only managed BIB references', () => 
     new URL('../../src/pages/modules/rh/Onboarding.tsx', import.meta.url),
     'utf8',
   );
-  assert.ok(onboarding.includes("import { managedDocumentId } from '@/lib/driveDocuments'"));
-  assert.ok(onboarding.includes('if (enteredUrl && !managedDocumentId(enteredUrl))'));
-  assert.ok(onboarding.includes('new URL(enteredUrl, window.location.origin).href'));
+  assert.ok(onboarding.includes("import { normalizeHrManagedDocumentUrl } from '@/lib/hrEmployeeMutations'"));
+  assert.ok(onboarding.includes('if (enteredUrl && !managedUrl)'));
+  assert.ok(onboarding.includes('normalizeHrManagedDocumentUrl(enteredUrl)'));
   assert.ok(onboarding.includes('document_url: managedUrl'));
   assert.ok(onboarding.includes('Les liens Drive ou externes directs ne sont pas autorisés.'));
 });
