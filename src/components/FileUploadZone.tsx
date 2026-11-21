@@ -52,7 +52,14 @@ export default function FileUploadZone({ folder, multiple = true, maxSizeMB = 20
     <X className="h-4 w-4" />
    </Button>
   </div>
- ))}<Dialog open={open} onOpenChange={o => !pending && setOpen(o)}><DialogContent className="max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>Importer depuis votre Drive BIB</DialogTitle></DialogHeader><div className="flex gap-2"><Input placeholder="Rechercher un fichier…" value={search} onChange={e => setSearch(e.target.value)} /><Button type="button" variant="outline" disabled={loading || pending} onClick={() => void list()}><Search className="h-4 w-4" /></Button></div>{failure && <p role="alert" className="text-sm text-destructive">{failure}</p>}{loading && <Loader2 className="h-5 w-5 animate-spin" />}<ul className="max-h-64 divide-y overflow-y-auto">{results.map(s => <li key={s.id}><button type="button" disabled={pending} className="w-full p-3 text-left hover:bg-muted" onClick={() => { void importSource(s); }}><span className="block text-sm font-medium">{s.name}</span><span className="text-xs text-muted-foreground">{s.mimeType}</span></button></li>)}</ul>{next && <Button type="button" variant="outline" disabled={loading || pending} onClick={() => void list(next)}>Afficher la suite</Button>}{!(folder.startsWith('rh-') || folder === 'leadership-evidence') && (
+ ))}<Dialog open={open} onOpenChange={o => !pending && setOpen(o)}><DialogContent className="max-h-[85vh] overflow-y-auto"><DialogHeader><DialogTitle>Choisir un fichier dans votre Drive BIB</DialogTitle></DialogHeader>
+ {(folder.startsWith('rh-') || folder === 'leadership-evidence') && (
+  <p role="note" className="rounded-md border border-amber-500/40 p-2 text-xs text-muted-foreground">
+   Ne sélectionnez pas de copie de pièce d’identité, de fichier médical, de paie ou disciplinaire.
+   Ces documents nécessitent un coffre RH privé. Une attestation de contrôle sans copie peut suffire
+   lorsqu’aucun texte n’impose de conserver le justificatif.
+  </p>
+ )}<div className="flex gap-2"><Input placeholder="Rechercher un fichier…" value={search} onChange={e => setSearch(e.target.value)} /><Button type="button" variant="outline" disabled={loading || pending} onClick={() => void list()}><Search className="h-4 w-4" /></Button></div>{failure && <p role="alert" className="text-sm text-destructive">{failure}</p>}{loading && <Loader2 className="h-5 w-5 animate-spin" />}<ul className="max-h-64 divide-y overflow-y-auto">{results.map(s => <li key={s.id}><button type="button" disabled={pending} className="w-full p-3 text-left hover:bg-muted" onClick={() => { void importSource(s); }}><span className="block text-sm font-medium">{s.name}</span><span className="text-xs text-muted-foreground">{s.mimeType}</span></button></li>)}</ul>{next && <Button type="button" variant="outline" disabled={loading || pending} onClick={() => void list(next)}>Afficher la suite</Button>}{!(folder.startsWith('rh-') || folder === 'leadership-evidence') && (
   <div className="space-y-2 border-t pt-3">
    <Input value={source} disabled={pending}
     onChange={e => { setSource(e.target.value); setKey(crypto.randomUUID()); }}
