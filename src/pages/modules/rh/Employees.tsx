@@ -1,4 +1,5 @@
 import { useMyRhEmployeePortfolioScope } from '@/hooks/useMyRhEmployeePortfolioScope';
+import DepartureCasesPanel from '@/components/hr/DepartureCasesPanel';
 import {
   useMemo,
   useState,
@@ -571,6 +572,8 @@ export default function Employees() {
         </div>
       </div>
 
+
+      <DepartureCasesPanel employees={employees} />
 
       {/* KPI */}
 
