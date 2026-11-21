@@ -15,6 +15,7 @@
 - [x] Permissions page saves now control access. [ ] Remove fake data in RH (Publications), Security, Product poles; browser check per role; remove fake data in RH (Publications), Security, Product poles.
 - [ ] Allow an existing account to go through onboarding again when changing role or pole (mutation), updating settings and documents.
 - [ ] Sign in as RH, submit a complete collaborator file (subsidiary, work mode, charters), verify account settings and documents appear.
+- [ ] On the published site as HR, create a complete verification employee (clearly marked, address we control, deactivated afterwards), then check their HR files and alerts. Blocked: Cloud database paused (no Cloud credits).
 
 ## Publications RH
 
