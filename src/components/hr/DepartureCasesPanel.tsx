@@ -69,6 +69,8 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
   const [justification, setJustification] = useState('');
   const [reviewCaseId, setReviewCaseId] = useState<string | null>(null);
   const [decisionNote, setDecisionNote] = useState('');
+  const [authBlockCaseId, setAuthBlockCaseId] = useState<string | null>(null);
+  const [authBlockConfirmation, setAuthBlockConfirmation] = useState('');
 
   const eligibleEmployees = useMemo(
     () => employees.filter((employee) =>
@@ -139,6 +141,30 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
         throw new Error('Résultat du précontrôle RH incohérent : clôture interdite.');
       }
       return data as SecurityPreflight;
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const suspendSignins = useMutation({
+    mutationFn: async (caseId: string) => {
+      const { data, error } = await supabase.functions.invoke('rh-offboarding-auth-block', {
+        body: { caseId },
+      });
+      if (error || !data || data.signins_blocked_verified !== true ||
+        data.sessions_revoked !== false || data.departure_closed !== false) {
+        throw new Error('Le blocage Auth ne peut pas être confirmé. Vérifiez le précontrôle et les journaux.');
+      }
+      return data as {
+        signins_blocked_verified: true;
+        sessions_revoked: false;
+        departure_closed: false;
+      };
+    },
+    onSuccess: () => {
+      toast.success('Nouvelles connexions bloquées et vérifiées. Les sessions et autres accès restent à révoquer.');
+      setAuthBlockCaseId(null);
+      setAuthBlockConfirmation('');
+      void refresh();
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -224,6 +250,41 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
                     onClick={() => securityPreflight.mutate(c.id)}>
                     Examiner les accès — lecture seule
                   </Button>
+                  {authBlockCaseId === c.id ? (
+                    <div className="space-y-2 rounded border border-destructive/40 p-3">
+                      <p className="text-sm font-medium">Confirmation de suspension du compte</p>
+                      <p className="text-xs text-muted-foreground">
+                        Après approbation RH/Direction et date d'effet, le CEO peut bloquer
+                        les nouvelles connexions du collaborateur. Les sessions déjà ouvertes
+                        et les jetons JWT ne sont PAS immédiatement révoqués.
+                        Saisissez BLOQUER pour confirmer cette opération.
+                      </p>
+                      <Label htmlFor={'rh-auth-ban-' + c.id}>Confirmation « BLOQUER »</Label>
+                      <Input id={'rh-auth-ban-' + c.id} autoComplete="off"
+                        value={authBlockConfirmation}
+                        onChange={event => setAuthBlockConfirmation(event.target.value)}
+                        placeholder="BLOQUER" />
+                      <div className="flex flex-wrap gap-2">
+                        <Button type="button" variant="destructive" size="sm"
+                          disabled={authBlockConfirmation !== 'BLOQUER' || suspendSignins.isPending ||
+                            c.planned_at > new Date().toISOString().slice(0, 10)}
+                          onClick={() => suspendSignins.mutate(c.id)}>
+                          {suspendSignins.isPending ? 'Vérification…' : 'Bloquer les nouvelles connexions'}
+                        </Button>
+                        <Button type="button" size="sm" variant="outline"
+                          disabled={suspendSignins.isPending}
+                          onClick={() => { setAuthBlockCaseId(null); setAuthBlockConfirmation(''); }}>
+                          Annuler
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button size="sm" type="button" variant="destructive"
+                      disabled={c.planned_at > new Date().toISOString().slice(0, 10)}
+                      onClick={() => { setAuthBlockCaseId(c.id); setAuthBlockConfirmation(''); }}>
+                      Préparer le blocage Auth
+                    </Button>
+                  )}
                   {securityPreflight.data && securityPreflight.variables === c.id && (
                     <div role="status" className="space-y-2 rounded-md border border-amber-500/40 p-3 text-sm">
                       <p className="font-medium">Précontrôle uniquement — aucun accès révoqué</p>
