@@ -93,7 +93,7 @@ BEGIN
 
   RETURN false;
 END;
-$function$
+$function$;
 
 REVOKE ALL ON FUNCTION public.rh_leadership_evidence_verifiable(uuid,text,text) FROM PUBLIC,anon,authenticated;
 
