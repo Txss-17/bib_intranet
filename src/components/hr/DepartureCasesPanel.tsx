@@ -1,0 +1,230 @@
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import type { Employee } from '@/hooks/useEmployees';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+interface DepartureCase {
+  id: string;
+  employee_id: string;
+  employee_name: string;
+  planned_at: string;
+  status: 'pending_direction' | 'approved' | 'rejected' | 'cancelled';
+  requested_by: string;
+  decided_at: string | null;
+  tasks_pending: number;
+}
+
+const statusText: Record<DepartureCase['status'], string> = {
+  pending_direction: 'En attente de la Direction',
+  approved: 'Approuvé — exécution technique requise',
+  rejected: 'Refusé',
+  cancelled: 'Annulé',
+};
+
+const technicalChecklist = [
+  'Passation des dossiers, tâches et portefeuilles',
+  'Restitution des équipements',
+  'Révocation effective des rôles et habilitations',
+  'Blocage des nouvelles connexions Supabase Auth',
+  'Révocation des sessions et vérification des JWT encore valides',
+  'Retrait des partages documentaires',
+  'Révocation des services et intégrations externes',
+];
+
+type ReviewDecision = 'approved' | 'rejected';
+
+/** RH planning and Direction decision only.
+ * Technical controls are never marked complete by this component. */
+export default function DepartureCasesPanel({ employees }: { employees: Employee[] }) {
+  const { user, profile } = useAuth();
+  const queryClient = useQueryClient();
+  const [employeeId, setEmployeeId] = useState('');
+  const [plannedAt, setPlannedAt] = useState('');
+  const [justification, setJustification] = useState('');
+  const [reviewCaseId, setReviewCaseId] = useState<string | null>(null);
+  const [decisionNote, setDecisionNote] = useState('');
+
+  const eligibleEmployees = useMemo(
+    () => employees.filter((employee) =>
+      employee.id !== user?.id &&
+      employee.position !== 'ceo' &&
+      employee.test_account === false &&
+      ['active', 'onboarding', 'leave'].includes(employee.hr_status)),
+    [employees, user?.id],
+  );
+
+  const cases = useQuery({
+    queryKey: ['rh-departure-cases', user?.id],
+    enabled: Boolean(user?.id),
+    queryFn: async (): Promise<DepartureCase[]> => {
+      const { data, error } = await (supabase as any).rpc('rh_departure_list');
+      if (error) throw error;
+      return (data ?? []) as DepartureCase[];
+    },
+    retry: 1,
+  });
+
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['rh-departure-cases'] });
+
+  const prepare = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase as any).rpc('rh_departure_prepare', {
+        p_employee: employeeId,
+        p_planned_at: plannedAt,
+        p_justification: justification.trim(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Demande transmise à la Direction. Aucun accès n’a été révoqué.');
+      setEmployeeId('');
+      setPlannedAt('');
+      setJustification('');
+      void refresh();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const review = useMutation({
+    mutationFn: async (decision: ReviewDecision) => {
+      const { error } = await (supabase as any).rpc('rh_departure_direction_review', {
+        p_case: reviewCaseId,
+        p_decision: decision,
+        p_note: decisionNote.trim(),
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success('Décision Direction enregistrée et journalisée.');
+      setReviewCaseId(null);
+      setDecisionNote('');
+      void refresh();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const isDirection = profile?.position === 'ceo' && profile?.test_account === false;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Départs et révocation des accès</CardTitle>
+        <CardDescription>
+          Demande RH puis validation indépendante de la Direction.
+          L’approbation ne désactive pas le compte : sept contrôles techniques doivent encore être exécutés et prouvés.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <section className="space-y-3 rounded-lg border p-4" aria-label="Préparer un départ">
+          <h3 className="text-sm font-semibold">Préparer une demande de départ</h3>
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="rh-departure-employee">Collaborateur de votre portefeuille</Label>
+              <Select value={employeeId} onValueChange={setEmployeeId}>
+                <SelectTrigger id="rh-departure-employee">
+                  <SelectValue placeholder="Choisir un collaborateur éligible" />
+                </SelectTrigger>
+                <SelectContent>
+                  {eligibleEmployees.map(employee => (
+                    <SelectItem key={employee.id} value={employee.id}>
+                      {employee.first_name} {employee.last_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="rh-departure-date">Date de départ envisagée</Label>
+              <Input id="rh-departure-date" type="date" value={plannedAt}
+                min={new Date().toISOString().slice(0, 10)}
+                onChange={event => setPlannedAt(event.target.value)} />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="rh-departure-reason">Justification professionnelle (20 à 1 000 caractères)</Label>
+            <Textarea id="rh-departure-reason" value={justification} maxLength={1000}
+              onChange={event => setJustification(event.target.value)}
+              placeholder="Motif, échéance, passation attendue et approbations à organiser" />
+          </div>
+          <Button type="button" disabled={prepare.isPending || !employeeId || !plannedAt ||
+            justification.trim().length < 20}
+            onClick={() => prepare.mutate()}>
+            {prepare.isPending ? 'Enregistrement…' : 'Soumettre à la Direction'}
+          </Button>
+        </section>
+
+        <section className="space-y-3" aria-label="Suivi des départs">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold">Dossiers suivis</h3>
+            <Button variant="outline" size="sm" disabled={cases.isFetching}
+              onClick={() => void cases.refetch()}>Actualiser</Button>
+          </div>
+          {cases.isLoading && <p role="status" className="text-sm">Chargement des demandes…</p>}
+          {cases.isError && <p role="alert" className="text-sm text-destructive">
+            Le suivi est indisponible. Aucun départ n’est considéré comme validé.
+          </p>}
+          {!cases.isLoading && !cases.isError && !cases.data?.length &&
+            <p className="text-sm text-muted-foreground">Aucun départ enregistré dans votre périmètre.</p>}
+          {(cases.data ?? []).map(c => (
+            <div key={c.id} className="space-y-2 rounded-lg border p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="font-medium">{c.employee_name}</p>
+                  <p className="text-xs text-muted-foreground">Départ proposé : {c.planned_at}</p>
+                </div>
+                <Badge variant={c.status === 'rejected' ? 'destructive' : 'outline'}>{statusText[c.status]}</Badge>
+              </div>
+              {c.status === 'approved' && <p className="text-xs text-amber-700">
+                {c.tasks_pending} contrôles techniques restent ouverts. Aucune confirmation de révocation ni clôture automatique.
+              </p>}
+              {isDirection && c.status === 'pending_direction' && c.requested_by !== user?.id &&
+                c.employee_id !== user?.id && (
+                  <div className="space-y-2 border-t pt-2">
+                    {reviewCaseId === c.id ? (
+                      <>
+                        <Label htmlFor={'rh-departure-decision-' + c.id}>Motivation de la décision (20 caractères minimum)</Label>
+                        <Textarea id={'rh-departure-decision-' + c.id}
+                          value={decisionNote} maxLength={2000}
+                          onChange={event => setDecisionNote(event.target.value)} />
+                        <div className="flex flex-wrap gap-2">
+                          <Button size="sm" disabled={review.isPending || decisionNote.trim().length < 20}
+                            onClick={() => review.mutate('approved')}>Approuver le plan</Button>
+                          <Button size="sm" variant="destructive"
+                            disabled={review.isPending || decisionNote.trim().length < 20}
+                            onClick={() => review.mutate('rejected')}>Refuser</Button>
+                          <Button size="sm" variant="outline" disabled={review.isPending}
+                            onClick={() => { setReviewCaseId(null); setDecisionNote(''); }}>Annuler</Button>
+                        </div>
+                      </>
+                    ) : (
+                      <Button size="sm" variant="outline" onClick={() => setReviewCaseId(c.id)}>
+                        Examiner pour la Direction
+                      </Button>
+                    )}
+                  </div>
+                )}
+            </div>
+          ))}
+        </section>
+
+        <details className="rounded-lg border p-3">
+          <summary className="cursor-pointer text-sm font-medium">
+            Contrôles nécessaires avant toute clôture — aucun n’est validé automatiquement
+          </summary>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            {technicalChecklist.map(item => <li key={item}>{item}</li>)}
+          </ul>
+        </details>
+      </CardContent>
+    </Card>
+  );
+}
