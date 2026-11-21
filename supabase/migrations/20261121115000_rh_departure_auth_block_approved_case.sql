@@ -44,6 +44,7 @@ BEGIN
     OR v_case.planned_at > current_date
     OR v_case.decided_by IS DISTINCT FROM actor
     OR v_case.requested_by=actor OR v_case.employee_id=actor
+    OR v_case.requested_by=v_case.employee_id
     OR v_case.decided_by=v_case.requested_by
     OR v_case.decided_by=v_case.employee_id THEN
     RAISE EXCEPTION 'rh_auth_block_case_not_eligible' USING ERRCODE='42501';
