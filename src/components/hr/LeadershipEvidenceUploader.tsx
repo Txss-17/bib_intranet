@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import FileUploadZone from '@/components/FileUploadZone';
+import RhPrivateVault from '@/components/hr/RhPrivateVault';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -120,10 +121,12 @@ export default function LeadershipEvidenceUploader({ subjectId }: { subjectId: s
         </select>
       </div>
       {type === 'identity' ? (
-        <p role="status" className="rounded-md border border-amber-500/50 p-3 text-sm text-amber-700">
-          Copie d’identité : import Drive désactivé. Contrôle visuel attesté sans copie conservée
-          lorsque cela suffit ; sinon coffre documentaire RH privé (non encore activé).
-        </p>
+        <div role="status" className="space-y-3 rounded-md border border-amber-500/50 p-3 text-sm text-amber-700">
+          <p>Copie d’identité : import Drive désactivé. Privilégiez une vérification
+            en présence, attestée sans conserver de copie, lorsque cela suffit.
+          </p>
+          <RhPrivateVault subjectId={subjectId} category="identity" />
+        </div>
       ) : (
         <FileUploadZone bucket="managed-drive" folder="leadership-evidence"
           triggerMode="field" label="Cliquer pour choisir une pièce dans Drive BIB"
