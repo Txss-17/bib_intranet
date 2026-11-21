@@ -6,6 +6,7 @@ const read = (path) => readFileSync(new URL('../../'+path, import.meta.url),'utf
 const registry=read('supabase/migrations/20261121161500_rh_identity_attestation_no_copy.sql');
 const integration=read('supabase/migrations/20261121162000_rh_identity_attestation_leadership_integration.sql');
 const manage=read('supabase/migrations/20261121162500_rh_identity_attestation_manage.sql');
+const cascade=read('supabase/migrations/20261121163000_rh_reopen_after_identity_revocation.sql');
 const form=read('src/components/hr/LeadershipIdentityAttestation.tsx');
 const leadership=read('src/components/hr/ExistingLeadershipOnboarding.tsx');
 
@@ -65,4 +66,18 @@ test('reviewer must confirm real-world in-person checks, and filing never auto-v
   assert.match(leadership,/subject\.id!==user\?\.id/);
   assert.match(leadership,/const registeredIdentity = \^?\/\^BIB-RH-IDV-/);
   assert.doesNotMatch(leadership,/registeredOnboarding\.test\(ref\)/);
+});
+
+test('identity revocation reopens all dependent approvals while preserving their original reviewer trail',()=>{
+  assert.match(cascade,/rh_reopen_leadership_after_identity_revocation/);
+  assert.match(cascade,/AFTER UPDATE OF status ON public\.hr_leadership_identity_attestations/);
+  assert.match(cascade,/OLD\.status='verified' AND NEW\.status='revoked'/);
+  assert.match(cascade,/INSERT INTO public\.hr_existing_onboarding_evidence_reconciliation/);
+  assert.match(cascade,/previous_evidence_ref/);
+  assert.match(cascade,/previous_reviewer_id/);
+  assert.match(cascade,/correction_source/);
+  assert.match(cascade,/identity_attestation_revoked/);
+  assert.match(cascade,/UPDATE public\.hr_existing_account_onboarding_steps s/);
+  assert.match(cascade,/SET status='pending',evidence_ref=NULL,reviewer_id=NULL,reviewed_at=NULL/);
+  assert.doesNotMatch(cascade,/DELETE FROM public\.hr_existing_account_onboarding_events/);
 });
