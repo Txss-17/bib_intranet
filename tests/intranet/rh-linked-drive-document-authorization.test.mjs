@@ -39,3 +39,11 @@ test('the document read RPCs are only executable by signed-in accounts',()=>{
  assert.ok(grants.includes('GRANT EXECUTE ON FUNCTION public.list_intranet_documents(text,text) TO authenticated,service_role'));
  assert.ok(!grants.includes('GRANT ALL'));
 });
+
+test('a transferred RH file can be opened by its new portfolio owner, not an unrelated manager',()=>{
+ const handoff=readFileSync(new URL('../../ops/release/rh-linked-drive-owner-handoff-20261121.sql',import.meta.url),'utf8');
+ assert.ok(handoff.includes('public.can_intranet_action(p.page_id,\'read\')'));
+ assert.ok(handoff.includes('EXISTS (SELECT 1 FROM public.rh_drive_document_bindings b'));
+ assert.ok(handoff.includes('public.rh_may_read_linked_drive_document(p.id)'));
+ assert.ok(handoff.includes('AND public.rh_may_read_linked_drive_document(p.id)'));
+});
