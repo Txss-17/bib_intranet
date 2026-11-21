@@ -4,6 +4,7 @@ import { managedDocumentId } from '@/lib/driveDocuments';
 import { ManagedDocumentLink } from '@/components/operations/ManagedDocumentLink';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ExistingLeadershipOnboarding from '@/components/hr/ExistingLeadershipOnboarding';
+import FileUploadZone from '@/components/FileUploadZone';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
@@ -1167,8 +1168,18 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
                   <SelectItem value="policy">Politique interne</SelectItem>
                 </SelectContent>
               </Select>
-              <Input aria-label="Lien du document" placeholder="Lien (facultatif)" value={docDraft.document_url}
-                onChange={(e) => setDocDraft((d) => ({ ...d, document_url: e.target.value }))} />
+              <FileUploadZone bucket="managed-drive" folder="rh-onboarding"
+                triggerMode="field" multiple={false}
+                label="Choisir une pièce dans votre Drive BIB professionnel"
+                files={docDraft.document_url ? [{
+                  name: docDraft.name || 'Pièce Drive BIB sélectionnée',
+                  url: docDraft.document_url, type: 'application/pdf', size: 0,
+                }] : []}
+                onFilesChange={files => setDocDraft(current => ({
+                  ...current,
+                  name: current.name || files[0]?.name || '',
+                  document_url: files[0]?.url || '',
+                }))} />
               <Button type="button" variant="outline" disabled={!docDraft.name.trim()}
                 onClick={() => {
                   const enteredUrl = docDraft.document_url.trim();
