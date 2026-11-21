@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useAuth } from '@/hooks/useAuth';
 
 type Step = {subject_id:string;display_name:string;position:string;step_key:string;status:string;evidence_ref:string|null;note:string|null;reviewed_at:string|null;reviewer_id:string|null};
+type ProofOption = {subject_id:string;step_key:string;evidence_ref:string;label:string};
 const keys = ['identity','assignment','documents','hr_review','independent_review','access_security','integration'] as const;
 const labels:Record<string,string> = {
  identity:'Identité et dossier nominatif',assignment:'Poste, pôle et rattachement',documents:'Documents obligatoires et signatures',
@@ -51,6 +52,15 @@ export default function ExistingLeadershipOnboarding() {
    return (data??[]) as Step[];
   }
  });
+ const {data:registeredEvidenceOptions=[],isError:proofOptionsError,refetch:refetchProofOptions}=useQuery({
+  queryKey:['leadership-evidence-options'],
+  enabled:permissions.data?.read===true,
+  queryFn:async():Promise<ProofOption[]>=>{
+   const {data,error}=await supabase.rpc('rh_leadership_evidence_options' as never);
+   if(error)throw error;
+   return (data??[]) as ProofOption[];
+  }
+ });
  const review=useMutation({
   mutationFn:async({step,decision}:{step:Step;decision:'validated'|'rejected'})=>{
    const id=step.subject_id+':'+step.step_key;
@@ -90,6 +100,7 @@ export default function ExistingLeadershipOnboarding() {
         previousOk&&step.status!=='validated'&&!independentReviewerConflict;
       const referenceReady=hasPossibleReferenceFormat(step.step_key,evidence[id]??'');
       const noteReady=!requiresReviewNote(step.step_key)||(notes[id]??'').trim().length>=30;
+      const availableReferences=registeredEvidenceOptions.filter(opt=>opt.subject_id===subject.id&&opt.step_key===step.step_key);
       return <div className="space-y-2 border-t pt-3" key={step.step_key}>
        <div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-sm">{index+1}. {labels[step.step_key]}</strong>
         <Badge variant={step.status==='validated'?'default':step.status==='rejected'?'destructive':'outline'}>{step.status==='validated'?'Validé':step.status==='rejected'?'Refusé':'À vérifier'}</Badge></div>
@@ -97,6 +108,22 @@ export default function ExistingLeadershipOnboarding() {
         {step.note?.startsWith('Contrôle rouvert') && <p role="alert" className="rounded border border-amber-500/50 p-2 text-xs text-amber-700">{step.note}</p>}
         {independentReviewerConflict && <p role="status" className="text-xs text-amber-700">Ce visa nécessite une personne habilitée différente de celle qui a réalisé le contrôle RH.</p>}
         <p className="text-xs text-muted-foreground">{proofGuidance[step.step_key]}. Une mention « Aucun », un nom de poste ou un lien externe ne constituent pas une preuve.</p>
+        {availableReferences.length>0&&
+         <div className="space-y-1">
+          <label className="text-xs font-medium" htmlFor={'rh-proof-option-'+id}>Preuves enregistrées et rattachées au compte</label>
+          <select id={'rh-proof-option-'+id} className="h-10 w-full rounded-md border bg-background px-2 text-sm"
+           value={availableReferences.some(o=>o.evidence_ref===(evidence[id]??''))?(evidence[id]??''):''}
+           disabled={!canReview} onChange={e=>setEvidence(v=>({...v,[id]:e.target.value}))}>
+           <option value="">Choisir une référence BIB vérifiée</option>
+           {availableReferences.map(opt=><option key={opt.evidence_ref} value={opt.evidence_ref}>{opt.label}</option>)}
+          </select>
+         </div>}
+        {!proofOptionsError&&availableReferences.length===0&&
+         <p className="text-xs text-amber-700">Aucune référence justificative disponible pour cette étape et ce compte. Enregistrez d’abord la pièce réelle dans Documents BIB / Dossiers collaborateurs, ou vérifiez les affectations du compte.</p>}
+        {proofOptionsError&&<div role="alert" className="flex items-center gap-2 text-xs text-destructive">
+          <span>Impossible de charger les références justificatives.</span>
+          <Button type="button" variant="outline" size="sm" onClick={()=>void refetchProofOptions()}>Réessayer</Button>
+        </div>}
         <Input aria-label={'Référence de preuve — '+labels[step.step_key]} placeholder={proofGuidance[step.step_key]} value={evidence[id]??''} maxLength={160} onChange={e=>setEvidence(v=>({...v,[id]:e.target.value}))} disabled={!canReview}/>
         {canReview&&(evidence[id]??'').trim()&&!referenceReady&&<p role="status" className="text-xs text-destructive">Format de référence invalide. Sélectionnez une référence attribuée par BIB et associée à ce compte.</p>}
         <Textarea aria-label={'Note de contrôle — '+labels[step.step_key]} placeholder={requiresReviewNote(step.step_key)?'Préciser la pièce vérifiée, les contrôles effectués et, le cas échéant, la signature constatée (30 caractères minimum)':'Observations et motif de décision'} value={notes[id]??''} onChange={e=>setNotes(v=>({...v,[id]:e.target.value}))} disabled={!canReview}/>
