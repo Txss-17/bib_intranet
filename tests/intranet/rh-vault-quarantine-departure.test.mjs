@@ -63,7 +63,7 @@ test('approved effective departure denies leaver access with old JWT without del
  assert.match(grants, /NOT public\.rh_departure_access_blocked\(p_reviewer\)/);
  assert.match(grants, /NOT public\.rh_departure_access_blocked\(\(SELECT auth\.uid\(\)\)\)/);
  assert.match(grants, /rh_departure_revoke_bib_review_shares/);
- assert.match(grants, /rh_leadership_document_review_events/);
+ assert.match(grants, /hr_leadership_document_review_events/);
  assert.match(grants, /revoked_at=now\(\)/);
  assert.doesNotMatch(departure, /DELETE FROM public\.rh_private_vault_documents/);
 });
