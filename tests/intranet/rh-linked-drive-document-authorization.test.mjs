@@ -30,3 +30,12 @@ test('no client bypass of the binding table is authorized',()=>{
  assert.ok(sql.includes('REVOKE ALL ON TABLE public.rh_drive_document_bindings FROM PUBLIC,anon,authenticated'));
  assert.ok(!/GRANT (?:ALL|SELECT) ON TABLE public\.rh_drive_document_bindings TO authenticated/.test(sql));
 });
+
+test('the document read RPCs are only executable by signed-in accounts',()=>{
+ const grants=readFileSync(new URL('../../ops/release/rh-guarded-drive-read-rpc-execute-20261121.sql',import.meta.url),'utf8');
+ assert.ok(grants.includes('REVOKE ALL ON FUNCTION public.get_intranet_document_access(uuid) FROM PUBLIC,anon'));
+ assert.ok(grants.includes('REVOKE ALL ON FUNCTION public.list_intranet_documents(text,text) FROM PUBLIC,anon'));
+ assert.ok(grants.includes('GRANT EXECUTE ON FUNCTION public.get_intranet_document_access(uuid) TO authenticated,service_role'));
+ assert.ok(grants.includes('GRANT EXECUTE ON FUNCTION public.list_intranet_documents(text,text) TO authenticated,service_role'));
+ assert.ok(!grants.includes('GRANT ALL'));
+});
