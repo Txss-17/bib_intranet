@@ -1,5 +1,7 @@
 import { useMyAcceptedRhCandidates } from '@/hooks/useMyAcceptedRhCandidates';
 import { normalizeHrManagedDocumentUrl } from '@/lib/hrEmployeeMutations';
+import { managedDocumentId } from '@/lib/driveDocuments';
+import { ManagedDocumentLink } from '@/components/operations/ManagedDocumentLink';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ExistingLeadershipOnboarding from '@/components/hr/ExistingLeadershipOnboarding';
 import { format } from 'date-fns';
@@ -1508,10 +1510,12 @@ function RequestSheet({
                     <li key={index} className="rounded-md border border-border/60 px-3 py-2 text-xs">
                       <span className="font-medium">{doc.name || 'Document sans nom'}</span>
                       <span className="ml-2 text-muted-foreground">({doc.document_type || 'Autre'})</span>
-                      {doc.document_url && /^https:\/\//i.test(doc.document_url) && (
-                        <a href={doc.document_url} target="_blank" rel="noopener noreferrer"
-                          className="ml-2 underline underline-offset-2">Consulter la pièce</a>
-                      )}
+                      {doc.document_url && (managedDocumentId(doc.document_url) ? (
+                        <ManagedDocumentLink url={doc.document_url}
+                          className="ml-2 underline underline-offset-2">Consulter la pièce</ManagedDocumentLink>
+                      ) : (
+                        <span className="ml-2 text-amber-700">Ancien lien externe : réimport dans Documents BIB requis</span>
+                      ))}
                     </li>
                   ))}
                 </ul>
