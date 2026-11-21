@@ -70,6 +70,7 @@ export default function LeadershipEvidenceUploader({ subjectId }: { subjectId: s
         toast.info(`Cette pièce est déjà référencée : ${existing.document_reference ?? 'numéro à vérifier'}`);
         setSelected([]);
         void queryClient.invalidateQueries({ queryKey: ['leadership-evidence-options'] });
+      void queryClient.invalidateQueries({ queryKey: ['leadership-evidence-files', subjectId] });
         return;
       }
       const { data, error } = await (supabase as any)
@@ -91,6 +92,7 @@ export default function LeadershipEvidenceUploader({ subjectId }: { subjectId: s
       setSelected([]);
       setDescription('');
       void queryClient.invalidateQueries({ queryKey: ['leadership-evidence-options'] });
+      void queryClient.invalidateQueries({ queryKey: ['leadership-evidence-files', subjectId] });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Le dépôt documentaire n’a pas été confirmé.');
     } finally {
