@@ -21,6 +21,8 @@ interface DepartureCase {
   requested_by: string;
   decided_at: string | null;
   tasks_pending: number;
+  departure_reference: string | null;
+  onboarding_reference: string | null;
 }
 
 const statusText: Record<DepartureCase['status'], string> = {
@@ -85,7 +87,7 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
     queryKey: ['rh-departure-cases', user?.id],
     enabled: Boolean(user?.id),
     queryFn: async (): Promise<DepartureCase[]> => {
-      const { data, error } = await (supabase as any).rpc('rh_departure_list');
+      const { data, error } = await (supabase as any).rpc('rh_departure_lifecycle_list');
       if (error) throw error;
       return (data ?? []) as DepartureCase[];
     },
@@ -174,10 +176,11 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Départs et révocation des accès</CardTitle>
+        <CardTitle>Départs et clôture des comptes</CardTitle>
         <CardDescription>
           Demande RH puis validation indépendante de la Direction.
-          L’approbation ne désactive pas le compte : sept contrôles techniques doivent encore être exécutés et prouvés.
+          L’approbation ne clôture pas le compte créé à l’arrivée : sept contrôles techniques doivent encore être exécutés et prouvés.
+          Chaque départ reçoit une référence BIB et, lorsqu'il existe, un lien vérifié au dossier d’onboarding initial.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -237,11 +240,21 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
                 <div>
                   <p className="font-medium">{c.employee_name}</p>
                   <p className="text-xs text-muted-foreground">Départ proposé : {c.planned_at}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Dossier de départ : <span className="font-mono">{c.departure_reference ?? 'Référence non attribuée'}</span>
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Dossier d’entrée : {c.onboarding_reference
+                      ? <span className="font-mono">{c.onboarding_reference}</span>
+                      : 'Aucun dossier d’onboarding lié au compte (compte antérieur ou dossier à rapprocher)'}
+                  </p>
                 </div>
                 <Badge variant={c.status === 'rejected' ? 'destructive' : 'outline'}>{statusText[c.status]}</Badge>
               </div>
               {c.status === 'approved' && <p className="text-xs text-amber-700">
-                {c.tasks_pending} contrôles techniques restent ouverts. Aucune confirmation de révocation ni clôture automatique.
+                {c.tasks_pending} contrôle(s) technique(s) encore en attente.
+                Même si tous sont vérifiés, une validation finale indépendante est nécessaire avant la clôture du compte.
+                Le compte n’est pas déclaré clôturé.
               </p>}
               {isDirection && c.status === 'approved' && (
                 <div className="space-y-2 border-t pt-2">
