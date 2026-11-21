@@ -94,6 +94,7 @@ export interface HrEmployeeRequest {
   id: string;
   candidate_id?: string | null;
   reference: string;
+  document_register_reference?: string | null;
 
   first_name: string;
   last_name: string;
@@ -132,7 +133,7 @@ export interface HrEmployeeRequest {
   mutation_result_assignment_id?: string | null;
   work_mode?: string | null;
   subsidiary?: string | null;
-  attached_documents?: { name: string; document_type: string; document_url: string | null }[];
+  attached_documents?: { name: string; document_type: string; document_url: string | null; document_entry_id?: string; document_reference?: string }[];
 
   created_at: string;
   updated_at: string;
@@ -608,31 +609,19 @@ export const useHrOnboardingActions = () => {
           user?.id ?? null,
       };
 
-      const {
-        data,
-        error,
-      } = await db
-        .from('hr_employee_requests')
-        .insert(normalizedPayload)
-        .select('*')
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      await logEvent(
-        data.id,
-        'Dossier collaborateur créé',
-        {
-          to: 'submitted',
-          note: `Type : ${
-            COLLABORATOR_TYPE_LABELS[
-              data.collaborator_type as CollaboratorType
-            ] ?? data.collaborator_type
-          }`,
-        },
+      // The server atomically creates the onboarding, its document register,
+      // individual attachment references and the initial audit event.
+      // Direct inserts into hr_employee_requests are intentionally not granted
+      // to authenticated users.
+      const { data, error } = await supabase.rpc(
+        'rh_create_onboarding_request' as any,
+        { p_payload: normalizedPayload } as any,
       );
+
+      if (error) throw error;
+      if (!data || !(data as any).document_register_reference) {
+        throw new Error('Le serveur n’a pas confirmé la référence documentaire du dossier.');
+      }
 
       return data as HrEmployeeRequest;
     },
@@ -643,8 +632,8 @@ export const useHrOnboardingActions = () => {
       toast({
         title: 'Dossier créé',
         description:
-          `${request.reference} · ` +
-          `${request.first_name} ${request.last_name}`,
+          `${request.document_register_reference ?? request.reference} · ` +
+          `${request.first_name} ${request.last_name} · Références de pièces attribuées automatiquement`,
       });
     },
 
