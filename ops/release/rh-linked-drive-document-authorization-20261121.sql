@@ -6,9 +6,9 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS public.rh_drive_document_bindings (
   document_id uuid NOT NULL REFERENCES public.intranet_drive_documents(id) ON DELETE CASCADE,
   employee_id uuid NOT NULL REFERENCES public.profiles(id) ON DELETE RESTRICT,
-  source_document_id uuid NOT NULL REFERENCES public.rh_employee_documents(id) ON DELETE RESTRICT,
+  source_document_id uuid REFERENCES public.rh_employee_documents(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
-  PRIMARY KEY(document_id,employee_id,source_document_id)
+  PRIMARY KEY(document_id,employee_id)
 );
 CREATE INDEX IF NOT EXISTS rh_drive_document_bindings_employee_idx
   ON public.rh_drive_document_bindings(employee_id);
@@ -41,7 +41,8 @@ BEGIN
   END IF;
   INSERT INTO public.rh_drive_document_bindings(document_id,employee_id,source_document_id)
   VALUES(doc_id,NEW.employee_id,NEW.id)
-  ON CONFLICT DO NOTHING;
+  ON CONFLICT(document_id,employee_id) DO UPDATE
+    SET source_document_id=EXCLUDED.source_document_id;
   RETURN NEW;
 END;
 $bind$;
@@ -59,7 +60,7 @@ FROM public.rh_employee_documents r
 JOIN public.intranet_drive_documents d
  ON d.id=public.rh_extract_managed_drive_id(r.document_url)
 WHERE public.rh_extract_managed_drive_id(r.document_url) IS NOT NULL
-ON CONFLICT DO NOTHING;
+ON CONFLICT(document_id,employee_id) DO NOTHING;
 
 CREATE OR REPLACE FUNCTION public.rh_may_read_linked_drive_document(p_document_id uuid)
 RETURNS boolean
