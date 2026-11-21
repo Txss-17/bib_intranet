@@ -115,7 +115,7 @@ BEGIN
     -- A real BIB document number is not evidence the reviewer actually
     -- inspected the contents. The controlled reader records a 'view' event.
     IF NEW.evidence_ref ~ '^BIB-RH-DOC-[0-9]{4}-[0-9]{6,}$' THEN
-      SELECT f.*,d.created_at INTO v_file,v_document_created_at
+      SELECT f.* INTO v_file
       FROM public.rh_employee_documents d
       JOIN public.intranet_drive_documents f
         ON f.id=public.rh_extract_managed_drive_id(d.document_url)
@@ -125,6 +125,11 @@ BEGIN
         AND f.test_account IS FALSE
         AND f.size_bytes>0
       LIMIT 1;
+      SELECT d.created_at INTO v_document_created_at
+      FROM public.rh_employee_documents d
+      WHERE d.employee_id=NEW.subject_id
+        AND d.document_reference=NEW.evidence_ref
+      ORDER BY d.created_at DESC LIMIT 1;
 
       v_file_id := v_file.id;
       -- An expired or revoked grant cannot authorize a later signature based
