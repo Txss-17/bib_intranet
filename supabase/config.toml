@@ -29,3 +29,7 @@ verify_jwt = false
 # Browser CORS preflight is unauthenticated; handler validates user JWT and role.
 [functions.pull-talent-applications]
 verify_jwt = false
+
+# Browser preflight is unauthenticated; function verifies caller JWT and canonical CEO in PostgreSQL.
+[functions.rh-offboarding-auth-block]
+verify_jwt = false
