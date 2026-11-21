@@ -27,5 +27,10 @@ test('RH frontend stores only origin-independent BIB-managed references', () => 
   assert.match(mutation, /document_url:managedUrl/);
   assert.match(employeeFiles, /document_url: controlledDocumentUrl/);
   assert.match(onboarding, /normalizeHrManagedDocumentUrl\(enteredUrl\)/);
+  assert.match(onboarding, /ManagedDocumentLink url=\{doc\.document_url\}/);
+  assert.match(onboarding, /Ancien lien externe : réimport dans Documents BIB requis/);
+  assert.doesNotMatch(onboarding, /href=\{doc\.document_url\}/);
+  assert.match(onboarding, /independentCompletionReviewer/);
+  assert.match(onboarding, /Une autre personne habilitée doit effectuer la revue indépendante/);
   assert.doesNotMatch(onboarding, /new URL\(enteredUrl, window\.location\.origin\)\.href/);
 });
