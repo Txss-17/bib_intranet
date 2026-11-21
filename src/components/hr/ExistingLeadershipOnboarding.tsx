@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
 import LeadershipEvidenceUploader from '@/components/hr/LeadershipEvidenceUploader';
+import LeadershipEvidenceReviewAccess from '@/components/hr/LeadershipEvidenceReviewAccess';
+import { openManagedDocument } from '@/lib/driveDocuments';
 
 type Step = {subject_id:string;display_name:string;position:string;step_key:string;status:string;evidence_ref:string|null;note:string|null;reviewed_at:string|null;reviewer_id:string|null};
 type ProofOption = {subject_id:string;step_key:string;evidence_ref:string;label:string};
@@ -44,6 +46,7 @@ export default function ExistingLeadershipOnboarding() {
  const cache=useQueryClient();
  const [evidence,setEvidence]=useState<Record<string,string>>({});
  const [notes,setNotes]=useState<Record<string,string>>({});
+ const [resolvedProof,setResolvedProof]=useState<{subjectId:string;reference:string;documentId:string}|null>(null);
  const {data:steps=[],isLoading,isError,refetch}=useQuery({
   queryKey:['leadership-onboarding'],
   enabled:permissions.data?.read===true,
@@ -61,6 +64,17 @@ export default function ExistingLeadershipOnboarding() {
    if(error)throw error;
    return (data??[]) as ProofOption[];
   }
+ });
+ const resolveProof=useMutation({
+  mutationFn:async({subjectId,reference}:{subjectId:string;reference:string})=>{
+   const {data,error}=await supabase.rpc('rh_open_leadership_evidence' as never,{
+    p_subject_id:subjectId,p_evidence_ref:reference
+   } as never);
+   if(error)throw error;
+   if(typeof data!=='string')throw new Error('Pièce BIB non disponible.');
+   return {subjectId,reference,documentId:data};
+  },
+  onSuccess:(value)=>setResolvedProof(value)
  });
  const review=useMutation({
   mutationFn:async({step,decision}:{step:Step;decision:'validated'|'rejected'})=>{
@@ -93,6 +107,7 @@ export default function ExistingLeadershipOnboarding() {
      <h3 className="font-semibold">{subject.name} — {subject.position==='ceo'?'CEO':'Responsable RH'}</h3>
      <p className="text-sm text-muted-foreground">{rows.filter(s=>s.status==='validated').length} / {rows.length} étapes validées</p>
      {subject.id===user?.id&&<LeadershipEvidenceUploader subjectId={subject.id} />}
+     {subject.id===user?.id&&<LeadershipEvidenceReviewAccess subjectId={subject.id} />}
      {rows.map((step,index)=>{
       const id=step.subject_id+':'+step.step_key;
       const previousOk=rows.slice(0,index).every(s=>s.status==='validated');
@@ -128,6 +143,28 @@ export default function ExistingLeadershipOnboarding() {
         </div>}
         <Input aria-label={'Référence de preuve — '+labels[step.step_key]} placeholder={proofGuidance[step.step_key]} value={evidence[id]??''} maxLength={160} onChange={e=>setEvidence(v=>({...v,[id]:e.target.value}))} disabled={!canReview}/>
         {canReview&&(evidence[id]??'').trim()&&!referenceReady&&<p role="status" className="text-xs text-destructive">Format de référence invalide. Sélectionnez une référence attribuée par BIB et associée à ce compte.</p>}
+        {canReview&&referenceReady&&registeredDocument.test((evidence[id]??'').trim())&&
+         <div className="space-y-1 rounded-md border p-2">
+          <p className="text-xs text-muted-foreground">
+           Pour les pièces BIB, le relecteur doit avoir le droit nominatif de consultation
+           et ouvrir la pièce avant de valider l'étape. Cette consultation est enregistrée dans l’historique documentaire.
+          </p>
+          <div className="flex flex-wrap gap-2">
+           <Button type="button" size="sm" variant="outline" disabled={resolveProof.isPending}
+            onClick={()=>{setResolvedProof(null);resolveProof.mutate({subjectId:subject.id,reference:(evidence[id]??'').trim()});}}>
+            Vérifier mon accès à la pièce
+           </Button>
+           {resolvedProof?.subjectId===subject.id&&resolvedProof.reference===(evidence[id]??'').trim()&&
+            <Button type="button" size="sm" variant="outline"
+             onClick={()=>openManagedDocument('/documents?document='+resolvedProof.documentId)}>
+             Ouvrir la pièce dans Documents BIB
+            </Button>}
+          </div>
+          {resolveProof.isError&&<p role="alert" className="text-xs text-destructive">
+           Pièce inaccessible. Le titulaire doit autoriser nominativement votre consultation ou vérifier le rattachement du fichier.
+          </p>}
+         </div>}
+
         <Textarea aria-label={'Note de contrôle — '+labels[step.step_key]} placeholder={requiresReviewNote(step.step_key)?'Préciser la pièce vérifiée, les contrôles effectués et, le cas échéant, la signature constatée (30 caractères minimum)':'Observations et motif de décision'} value={notes[id]??''} onChange={e=>setNotes(v=>({...v,[id]:e.target.value}))} disabled={!canReview}/>
         <div className="flex gap-2"><Button size="sm" disabled={!canReview||!referenceReady||!noteReady||review.isPending} onClick={()=>review.mutate({step,decision:'validated'})}>Valider avec preuve vérifiable</Button>
         <Button size="sm" variant="outline" disabled={!canReview||(notes[id]??'').trim().length<20||review.isPending} onClick={()=>review.mutate({step,decision:'rejected'})}>Refuser</Button></div>
@@ -139,6 +176,8 @@ export default function ExistingLeadershipOnboarding() {
    {review.isError&&<p role="alert" className="text-sm text-destructive">{
      review.error instanceof Error && review.error.message.includes('leadership_evidence_not_verifiable')
        ? 'La référence fournie n’est pas retrouvée dans le registre RH/BIB du titulaire ou ne pointe pas vers une pièce documentaire contrôlée.'
+       : review.error instanceof Error && review.error.message.includes('leadership_evidence_not_opened_by_reviewer')
+         ? 'Ouvrez la pièce via Documents BIB avec votre propre compte avant de valider ; une référence seule ne suffit pas.'
        : review.error instanceof Error && review.error.message.includes('Previous onboarding steps')
          ? 'Les étapes précédentes doivent posséder une preuve vérifiable avant de poursuivre.'
          : review.error instanceof Error?review.error.message:'Validation refusée'
