@@ -12,9 +12,9 @@ DECLARE
   actor_profile public.profiles%ROWTYPE;
   result public.hr_employee_requests%ROWTYPE;
   requested_poles text[];
-  primary_pole text;
-  position_key text;
-  requested_role text;
+  v_primary_pole text;
+  v_position_key text;
+  v_requested_role text;
   manager uuid;
   applicant uuid;
   docs jsonb;
@@ -63,10 +63,10 @@ BEGIN
   END IF;
   SELECT array_agg(value) INTO requested_poles
     FROM jsonb_array_elements_text(p_payload->'poles') AS a(value);
-  primary_pole:=nullif(btrim(coalesce(p_payload->>'primary_pole','')),'');
-  position_key:=nullif(btrim(coalesce(p_payload->>'position_key','')),'');
-  requested_role:=nullif(btrim(coalesce(p_payload->>'requested_role','')),'');
-  IF primary_pole IS NULL OR NOT primary_pole=ANY(requested_poles)
+  v_primary_pole:=nullif(btrim(coalesce(p_payload->>'primary_pole','')),'');
+  v_position_key:=nullif(btrim(coalesce(p_payload->>'position_key','')),'');
+  v_requested_role:=nullif(btrim(coalesce(p_payload->>'requested_role','')),'');
+  IF v_primary_pole IS NULL OR NOT v_primary_pole=ANY(requested_poles)
     OR (SELECT count(DISTINCT v) FROM unnest(requested_poles) v)<>cardinality(requested_poles)
     OR EXISTS (SELECT 1 FROM unnest(requested_poles) v
       WHERE v IS NULL OR v NOT IN (
@@ -77,9 +77,9 @@ BEGIN
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM public.rh_position_catalog c
-     WHERE c.position_key=position_key AND c.pole_id=primary_pole AND c.active=true)
+     WHERE c.position_key=v_position_key AND c.pole_id=v_primary_pole AND c.active=true)
     OR NOT EXISTS (SELECT 1 FROM public.access_roles ar
-     WHERE ar.role_key=requested_role AND ar.status='active'
+     WHERE ar.role_key=v_requested_role AND ar.status='active'
        AND (ar.business_pole IS NULL OR ar.business_pole=ANY(requested_poles))) THEN
     RAISE EXCEPTION 'rh_onboarding_role_invalid' USING ERRCODE='22023';
   END IF;
@@ -91,12 +91,12 @@ BEGIN
     RAISE EXCEPTION 'rh_onboarding_classification_invalid' USING ERRCODE='22023';
   END IF;
 
-  IF position_key='ceo' AND NOT public.is_canonical_bib_ceo(actor) THEN
+  IF v_position_key='ceo' AND NOT public.is_canonical_bib_ceo(actor) THEN
     RAISE EXCEPTION 'rh_onboarding_ceo_reserved' USING ERRCODE='42501';
   END IF;
 
   manager := NULLIF(p_payload->>'manager_id','')::uuid;
-  IF position_key<>'ceo' AND (
+  IF v_position_key<>'ceo' AND (
     manager IS NULL OR NOT EXISTS (
       SELECT 1 FROM public.profiles m WHERE m.id=manager
         AND m.app_origin='connect' AND m.test_account IS FALSE
@@ -123,7 +123,7 @@ BEGIN
     nullif(btrim(coalesce(p_payload->>'personal_email','')),''),
     work_mail, p_payload->>'collaborator_type',
     NULLIF(p_payload->>'position','')::public.employee_position,
-    position_key,primary_pole,requested_poles,p_payload->>'seniority',requested_role,
+    v_position_key,v_primary_pole,requested_poles,p_payload->>'seniority',v_requested_role,
     nullif(btrim(coalesce(p_payload->>'contract_type','')),''),
     nullif(p_payload->>'start_date','')::date,manager,
     nullif(btrim(coalesce(p_payload->>'notes','')),''),
