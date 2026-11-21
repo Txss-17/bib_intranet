@@ -16,6 +16,26 @@ const labels:Record<string,string> = {
  hr_review:'Contrôle administratif RH',independent_review:'Visa indépendant',access_security:'Accès, périmètre et sécurité',
  integration:'Intégration et formations'
 };
+const registeredDocument = /^BIB-RH-DOC-[0-9]{4}-[0-9]{6,}$/;
+const registeredOnboarding = /^(?:HR-[0-9]{8}-[0-9]{4}|BIB-RH-ONB-[0-9]{4}-[0-9]{6,})$/;
+const assignmentReference = /^ACCESS:[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+const requiresReviewNote = (stepKey:string) =>
+ ['documents','hr_review','independent_review','access_security','integration'].includes(stepKey);
+const hasPossibleReferenceFormat = (stepKey:string, value:string) => {
+ const ref=value.trim();
+ if(stepKey==='identity')return registeredOnboarding.test(ref)||registeredDocument.test(ref);
+ if(stepKey==='assignment')return assignmentReference.test(ref);
+ return registeredDocument.test(ref);
+};
+const proofGuidance:Record<string,string> = {
+ identity:'Référence HR-… ou BIB-RH-ONB-… liée à ce compte, ou BIB-RH-DOC-… avec fichier BIB enregistré',
+ assignment:'Référence ACCESS:<UUID> de l’affectation RBAC active de ce compte',
+ documents:'Référence BIB-RH-DOC-… d’un document réellement importé et lié au titulaire ; contrôler la signature',
+ hr_review:'Référence BIB-RH-DOC-… d’un contrôle RH documenté ; observations de 30 caractères minimum',
+ independent_review:'Référence BIB-RH-DOC-… et second validateur distinct du contrôleur RH',
+ access_security:'Référence BIB-RH-DOC-… du contrôle des accès et périmètres',
+ integration:'Référence BIB-RH-DOC-… de la formation ou intégration vérifiée'
+};
 export default function ExistingLeadershipOnboarding() {
  const {user}=useAuth();
  const permissions=useHrOnboardingPermissions();
@@ -40,7 +60,12 @@ export default function ExistingLeadershipOnboarding() {
    } as never);
    if(error)throw error;
   },
-  onSuccess:()=>void cache.invalidateQueries({queryKey:['leadership-onboarding']})
+  onSuccess:(_data,variables)=>{
+   const id=variables.step.subject_id+':'+variables.step.step_key;
+   setEvidence(current=>({...current,[id]:''}));
+   setNotes(current=>({...current,[id]:''}));
+   void cache.invalidateQueries({queryKey:['leadership-onboarding']});
+  }
  });
  if(permissions.isLoading)return <p role="status">Vérification des habilitations RH…</p>;
  if(permissions.isError||!permissions.data?.read)return null;
@@ -59,21 +84,36 @@ export default function ExistingLeadershipOnboarding() {
      {rows.map((step,index)=>{
       const id=step.subject_id+':'+step.step_key;
       const previousOk=rows.slice(0,index).every(s=>s.status==='validated');
-      const canReview=permissions.data?.validate===true&&user?.id!==subject.id&&previousOk&&step.status!=='validated';
+      const independentReviewerConflict=step.step_key==='independent_review' &&
+        rows.find(s=>s.step_key==='hr_review')?.reviewer_id===user?.id;
+      const canReview=permissions.data?.validate===true&&user?.id!==subject.id&&
+        previousOk&&step.status!=='validated'&&!independentReviewerConflict;
+      const referenceReady=hasPossibleReferenceFormat(step.step_key,evidence[id]??'');
+      const noteReady=!requiresReviewNote(step.step_key)||(notes[id]??'').trim().length>=30;
       return <div className="space-y-2 border-t pt-3" key={step.step_key}>
        <div className="flex flex-wrap items-center justify-between gap-2"><strong className="text-sm">{index+1}. {labels[step.step_key]}</strong>
         <Badge variant={step.status==='validated'?'default':step.status==='rejected'?'destructive':'outline'}>{step.status==='validated'?'Validé':step.status==='rejected'?'Refusé':'À vérifier'}</Badge></div>
-       {step.status==='validated'?<p className="text-xs text-muted-foreground">Preuve : {step.evidence_ref} · Validé le {step.reviewed_at?new Date(step.reviewed_at).toLocaleString('fr-FR'):'—'}</p>:<>
-        <Input aria-label={'Référence de preuve — '+labels[step.step_key]} placeholder="Référence documentaire ou justificatif vérifiable" value={evidence[id]??''} onChange={e=>setEvidence(v=>({...v,[id]:e.target.value}))} disabled={!canReview}/>
-        <Textarea aria-label={'Note de contrôle — '+labels[step.step_key]} placeholder="Observations et motif de décision" value={notes[id]??''} onChange={e=>setNotes(v=>({...v,[id]:e.target.value}))} disabled={!canReview}/>
-        <div className="flex gap-2"><Button size="sm" disabled={!canReview||!(evidence[id]??'').trim()||review.isPending} onClick={()=>review.mutate({step,decision:'validated'})}>Valider avec preuve</Button>
-        <Button size="sm" variant="outline" disabled={!canReview||!(notes[id]??'').trim()||review.isPending} onClick={()=>review.mutate({step,decision:'rejected'})}>Refuser</Button></div>
+       {step.status==='validated'?<p className="text-xs text-muted-foreground">Preuve enregistrée : <span className="font-mono">{step.evidence_ref}</span> · Revue le {step.reviewed_at?new Date(step.reviewed_at).toLocaleString('fr-FR'):'—'}</p>:<>
+        {step.note?.startsWith('Contrôle rouvert') && <p role="alert" className="rounded border border-amber-500/50 p-2 text-xs text-amber-700">{step.note}</p>}
+        {independentReviewerConflict && <p role="status" className="text-xs text-amber-700">Ce visa nécessite une personne habilitée différente de celle qui a réalisé le contrôle RH.</p>}
+        <p className="text-xs text-muted-foreground">{proofGuidance[step.step_key]}. Une mention « Aucun », un nom de poste ou un lien externe ne constituent pas une preuve.</p>
+        <Input aria-label={'Référence de preuve — '+labels[step.step_key]} placeholder={proofGuidance[step.step_key]} value={evidence[id]??''} maxLength={160} onChange={e=>setEvidence(v=>({...v,[id]:e.target.value}))} disabled={!canReview}/>
+        {canReview&&(evidence[id]??'').trim()&&!referenceReady&&<p role="status" className="text-xs text-destructive">Format de référence invalide. Sélectionnez une référence attribuée par BIB et associée à ce compte.</p>}
+        <Textarea aria-label={'Note de contrôle — '+labels[step.step_key]} placeholder={requiresReviewNote(step.step_key)?'Préciser la pièce vérifiée, les contrôles effectués et, le cas échéant, la signature constatée (30 caractères minimum)':'Observations et motif de décision'} value={notes[id]??''} onChange={e=>setNotes(v=>({...v,[id]:e.target.value}))} disabled={!canReview}/>
+        <div className="flex gap-2"><Button size="sm" disabled={!canReview||!referenceReady||!noteReady||review.isPending} onClick={()=>review.mutate({step,decision:'validated'})}>Valider avec preuve vérifiable</Button>
+        <Button size="sm" variant="outline" disabled={!canReview||(notes[id]??'').trim().length<20||review.isPending} onClick={()=>review.mutate({step,decision:'rejected'})}>Refuser</Button></div>
        </>}
       </div>;
      })}
     </section>;
    })}
-   {review.isError&&<p role="alert" className="text-sm text-destructive">{review.error instanceof Error?review.error.message:'Validation refusée'}</p>}
+   {review.isError&&<p role="alert" className="text-sm text-destructive">{
+     review.error instanceof Error && review.error.message.includes('leadership_evidence_not_verifiable')
+       ? 'La référence fournie n’est pas retrouvée dans le registre RH/BIB du titulaire ou ne pointe pas vers une pièce documentaire contrôlée.'
+       : review.error instanceof Error && review.error.message.includes('Previous onboarding steps')
+         ? 'Les étapes précédentes doivent posséder une preuve vérifiable avant de poursuivre.'
+         : review.error instanceof Error?review.error.message:'Validation refusée'
+   }</p>}
    {!isLoading&&!isError&&!subjects.length&&<p className="text-sm text-muted-foreground">Aucun compte CEO ou Responsable RH éligible visible.</p>}
   </CardContent>
  </Card>;
