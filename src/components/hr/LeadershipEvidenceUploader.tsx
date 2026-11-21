@@ -42,7 +42,7 @@ export default function LeadershipEvidenceUploader({ subjectId }: { subjectId: s
   const { user, profile } = useAuth();
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<ImportedFile[]>([]);
-  const [type, setType] = useState<EvidenceType>('identity');
+  const [type, setType] = useState<EvidenceType>('charter');
   const [description, setDescription] = useState('');
   const [pending, setPending] = useState(false);
 
@@ -51,6 +51,10 @@ export default function LeadershipEvidenceUploader({ subjectId }: { subjectId: s
   const save = async () => {
     const file = selected[0];
     if (!file || !user) return;
+    if (type === 'identity') {
+      toast.error('Les copies d’identité ne doivent pas être importées dans Drive BIB. Privilégiez une attestation de contrôle ou le coffre RH privé.');
+      return;
+    }
     const url = managedReference(file.url);
     if (!url) {
       toast.error('Fichier BIB non contrôlé : importez le document avant de l’enregistrer.');
@@ -104,16 +108,24 @@ export default function LeadershipEvidenceUploader({ subjectId }: { subjectId: s
     <section className="space-y-3 rounded-md border p-3" aria-label="Déposer une preuve pour mon onboarding">
       <h4 className="text-sm font-semibold">Mes justificatifs — dépôt documentaire</h4>
       <p className="text-xs text-muted-foreground">
-        Importez une pièce réelle depuis Google Drive BIB, puis enregistrez-la dans votre propre dossier RH.
-        BIB attribue automatiquement son numéro documentaire. Ce dépôt ne constitue ni une signature
-        vérifiée ni la validation de l’étape : un autre responsable habilité doit examiner la pièce.
+        Sélectionnez une charte, une politique, un contrat ou une attestation dans le Drive BIB professionnel.
+        BIB attribue automatiquement la référence. N'importez jamais de copie de pièce d’identité ou
+        de document médical dans Drive. Un autre responsable doit vérifier le contenu et les signatures.
       </p>
-      <FileUploadZone bucket="managed-drive" folder="leadership-evidence"
-        multiple={false} files={selected} onFilesChange={setSelected} />
+      {type === 'identity' ? (
+        <p role="status" className="rounded-md border border-amber-500/50 p-3 text-sm text-amber-700">
+          Copie d’identité : import Drive désactivé. Contrôle visuel attesté sans copie conservée
+          lorsque cela suffit ; sinon coffre documentaire RH privé (non encore activé).
+        </p>
+      ) : (
+        <FileUploadZone bucket="managed-drive" folder="leadership-evidence"
+          triggerMode="field" label="Cliquer pour choisir une pièce dans Drive BIB"
+          multiple={false} files={selected} onFilesChange={setSelected} />
+      )}
       <div className="space-y-1">
         <Label htmlFor={'leadership-file-type-' + subjectId}>Nature du justificatif</Label>
         <select id={'leadership-file-type-' + subjectId} className="h-10 w-full rounded-md border bg-background px-2 text-sm"
-          value={type} disabled={pending} onChange={(event) => setType(event.target.value as EvidenceType)}>
+          value={type} disabled={pending} onChange={(event) => { setType(event.target.value as EvidenceType); setSelected([]); }}>
           {types.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
         </select>
       </div>
@@ -124,7 +136,7 @@ export default function LeadershipEvidenceUploader({ subjectId }: { subjectId: s
           onChange={event => setDescription(event.target.value)}
           placeholder="Nature du document, version et date éventuelle" />
       </div>
-      <Button type="button" size="sm" disabled={pending || selected.length !== 1}
+      <Button type="button" size="sm" disabled={pending || selected.length !== 1 || type === 'identity'}
         onClick={() => void save()}>{pending ? 'Enregistrement…' : 'Référencer cette pièce dans mon dossier RH'}</Button>
     </section>
   );
