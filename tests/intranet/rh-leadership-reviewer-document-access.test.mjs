@@ -23,6 +23,7 @@ test('CEO/RH evidence grants are explicit, time bounded, revocable and audited',
   assert.match(permissions, /grant_\.subject_id=b\.employee_id/);
   assert.match(permissions, /grant_\.reviewer_id=\(SELECT auth\.uid\(\)\)/);
   assert.match(permissions, /grant_\.revoked_at IS NULL AND grant_\.expires_at>now\(\)/);
+  assert.match(permissions, /public\.rh_leadership_evidence_reviewer_allowed\(grant_\.subject_id\)/);
   assert.match(permissions, /public\.rh_revoke_leadership_evidence_review/);
   assert.match(permissions, /public\.hr_leadership_document_review_events/);
   assert.match(permissions, /'granted'/);
