@@ -112,6 +112,13 @@ export default function LeadershipEvidenceUploader({ subjectId }: { subjectId: s
         BIB attribue automatiquement la référence. N'importez jamais de copie de pièce d’identité ou
         de document médical dans Drive. Un autre responsable doit vérifier le contenu et les signatures.
       </p>
+      <div className="space-y-1">
+        <Label htmlFor={'leadership-file-type-' + subjectId}>Nature du justificatif</Label>
+        <select id={'leadership-file-type-' + subjectId} className="h-10 w-full rounded-md border bg-background px-2 text-sm"
+          value={type} disabled={pending} onChange={(event) => { setType(event.target.value as EvidenceType); setSelected([]); }}>
+          {types.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
+        </select>
+      </div>
       {type === 'identity' ? (
         <p role="status" className="rounded-md border border-amber-500/50 p-3 text-sm text-amber-700">
           Copie d’identité : import Drive désactivé. Contrôle visuel attesté sans copie conservée
@@ -122,13 +129,6 @@ export default function LeadershipEvidenceUploader({ subjectId }: { subjectId: s
           triggerMode="field" label="Cliquer pour choisir une pièce dans Drive BIB"
           multiple={false} files={selected} onFilesChange={setSelected} />
       )}
-      <div className="space-y-1">
-        <Label htmlFor={'leadership-file-type-' + subjectId}>Nature du justificatif</Label>
-        <select id={'leadership-file-type-' + subjectId} className="h-10 w-full rounded-md border bg-background px-2 text-sm"
-          value={type} disabled={pending} onChange={(event) => { setType(event.target.value as EvidenceType); setSelected([]); }}>
-          {types.map(item => <option key={item.value} value={item.value}>{item.label}</option>)}
-        </select>
-      </div>
       <div className="space-y-1">
         <Label htmlFor={'leadership-file-note-' + subjectId}>Description (facultative)</Label>
         <Textarea id={'leadership-file-note-' + subjectId} value={description}
