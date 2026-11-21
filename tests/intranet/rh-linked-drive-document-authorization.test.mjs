@@ -47,3 +47,18 @@ test('a transferred RH file can be opened by its new portfolio owner, not an unr
  assert.ok(handoff.includes('public.rh_may_read_linked_drive_document(p.id)'));
  assert.ok(handoff.includes('AND public.rh_may_read_linked_drive_document(p.id)'));
 });
+
+test('linking a Drive file requires the RH actor to own the file or be an explicit recipient',()=>{
+ const source=readFileSync(new URL('../../ops/release/rh-drive-document-link-ownership-20261121.sql',import.meta.url),'utf8');
+ assert.ok(source.includes('public.is_canonical_bib_ceo((SELECT auth.uid()))'));
+ assert.ok(source.includes('d.owner_id=(SELECT auth.uid())'));
+ assert.ok(source.includes('public.is_intranet_document_recipient(doc_id)'));
+ assert.ok(source.includes('rh_managed_drive_source_not_readable'));
+ assert.ok(!source.includes('public.can_read_intranet_drive_document(d)'));
+});
+test('the RH records editor receives only missing write grants, with portfolio RLS already enforced',()=>{
+ const source=readFileSync(new URL('../../ops/release/rh-document-metadata-managed-writes-20261121.sql',import.meta.url),'utf8');
+ assert.ok(source.includes('GRANT INSERT,UPDATE,DELETE ON TABLE public.rh_employee_documents TO authenticated'));
+ assert.ok(!source.includes('GRANT ALL'));
+ assert.ok(!source.includes('GRANT SELECT'));
+});
