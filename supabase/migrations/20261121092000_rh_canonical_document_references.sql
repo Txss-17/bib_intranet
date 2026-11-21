@@ -81,18 +81,12 @@ BEGIN
         OR jsonb_typeof(item->'name') IS DISTINCT FROM 'string' OR char_length(btrim(item->>'name')) NOT BETWEEN 1 AND 200
         OR jsonb_typeof(item->'document_type') IS DISTINCT FROM 'string' OR char_length(item->>'document_type') NOT BETWEEN 1 AND 50
         OR coalesce(jsonb_typeof(item->'document_url'),'missing') NOT IN ('string','null') OR (item->>'document_url' IS NOT NULL
-          AND (char_length(item->>'document_url')>2048 OR item->>'document_url' !~ '^/documents[?]document=[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})) THEN
+          AND (char_length(item->>'document_url')>2048 OR item->>'document_url' !~ '^/documents[?]document=[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$')) THEN
       RAISE EXCEPTION 'invalid_hr_mutation_documents' USING ERRCODE='22023'; END IF;
   END LOOP;
   RETURN p_payload;
 END;
-$function$
-)) THEN
-      RAISE EXCEPTION 'invalid_hr_mutation_documents' USING ERRCODE='22023'; END IF;
-  END LOOP;
-  RETURN p_payload;
-END;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.rh_guard_canonical_document_links()
 RETURNS trigger
