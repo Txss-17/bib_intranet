@@ -389,77 +389,33 @@ export const useUpdateEmployee = () => {
     }: Partial<Employee> & {
       id: string;
     }) => {
-
-      // ------------------------------------------------------
-      // VÉRIFICATION DU COMPTE
-      // ------------------------------------------------------
-
-      const {
-        data: existing,
-        error: existingError,
-      } = await from('profiles')
-        .select(`
-          id,
-          test_account
-        `)
-        .eq(
-          'id',
-          id,
-        )
-        .single();
-
-      if (existingError) {
-        throw existingError;
+      // Editing the directory is NOT an alternative to a reviewed RH mutation.
+      // Account email is owned by Supabase Auth; position, role, scope,
+      // employment category and lifecycle status have dedicated workflows.
+      const keys = Object.keys(updates);
+      if (keys.length === 0 || keys.some((key) => !['first_name', 'last_name'].includes(key))) {
+        throw new Error('Seules les corrections de prénom et nom sont autorisées ici. Utilisez le parcours RH pour toute mutation métier.');
+      }
+      if (keys.some((key) => typeof updates[key as 'first_name' | 'last_name'] !== 'string' ||
+          !updates[key as 'first_name' | 'last_name']?.trim())) {
+        throw new Error('Le prénom et le nom doivent être renseignés.');
       }
 
-      if (
-        existing?.test_account === true
-      ) {
-        throw new Error(
-          'Les comptes de test ne peuvent pas être modifiés depuis le référentiel RH.',
-        );
+      // Never widen UPDATE privileges on profiles: the privileged function
+      // validates the RH page permission, ownership of the employee's RH
+      // portfolio and employee identity, then records the change in HR audit.
+      const { data, error } = await (supabase as any).rpc(
+        'rh_correct_employee_name',
+        {
+          p_employee_id: id,
+          p_first_name: updates.first_name ?? null,
+          p_last_name: updates.last_name ?? null,
+        },
+      );
+      if (error) throw error;
+      if (!data || data.id !== id) {
+        throw new Error('La correction de la fiche n’a pas pu être confirmée.');
       }
-
-      // ------------------------------------------------------
-      // UPDATE
-      // ------------------------------------------------------
-
-      const {
-        data,
-        error,
-      } = await from('profiles')
-        .update(updates)
-        .eq(
-          'id',
-          id,
-        )
-        .eq(
-          'test_account',
-          false,
-        )
-        .select(`
-          id,
-          first_name,
-          last_name,
-          email,
-          position,
-          poles,
-          seniority,
-          work_mode,
-          subsidiary,
-          manager_id,
-          collaborator_type,
-          hr_status,
-          test_account,
-          created_at,
-          updated_at
-        `)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
       return data as Employee;
     },
 
