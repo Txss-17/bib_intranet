@@ -58,7 +58,7 @@ export default function LeadershipEvidenceUploader({ subjectId }: { subjectId: s
     }
     setPending(true);
     try {
-      const { data: existing, error: existingError } = await supabase
+      const { data: existing, error: existingError } = await (supabase as any)
         .from('rh_employee_documents')
         .select('document_reference')
         .eq('employee_id', user.id)
@@ -72,7 +72,7 @@ export default function LeadershipEvidenceUploader({ subjectId }: { subjectId: s
         void queryClient.invalidateQueries({ queryKey: ['leadership-evidence-options'] });
         return;
       }
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('rh_employee_documents')
         .insert({
           employee_id: user.id,
