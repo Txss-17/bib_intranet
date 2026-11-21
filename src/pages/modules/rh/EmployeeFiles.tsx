@@ -1761,8 +1761,8 @@ export default function EmployeeFiles() {
                   onValueChange={(value) =>
                     setForm({
                       ...form,
-                      document_type:
-                        value as DocumentType,
+                      document_type: value as DocumentType,
+                      document_url: restrictedRhDocumentTypes.has(value as DocumentType) ? '' : form.document_url,
                     })
                   }
                 >
@@ -1794,44 +1794,12 @@ export default function EmployeeFiles() {
 
 
               <div>
-                <Label>
-                  Source
-                </Label>
-
-                <Select
-                  value={form.source}
-                  onValueChange={(value) =>
-                    setForm({
-                      ...form,
-                      source:
-                        value as DocumentSource,
-                    })
-                  }
-                >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue />
-                  </SelectTrigger>
-
-                  <SelectContent>
-                    {(
-                      Object.entries(
-                        documentSourceLabels,
-                      ) as [
-                        DocumentSource,
-                        string,
-                      ][]
-                    ).map(
-                      ([value, label]) => (
-                        <SelectItem
-                          key={value}
-                          value={value}
-                        >
-                          {label}
-                        </SelectItem>
-                      ),
-                    )}
-                  </SelectContent>
-                </Select>
+                <Label>Mode d’enregistrement</Label>
+                <div className="mt-1 flex min-h-10 items-center rounded-md border bg-muted/40 px-3 text-xs text-muted-foreground">
+                  {restrictedRhDocumentTypes.has(form.document_type)
+                    ? 'Coffre RH privé requis'
+                    : 'Sélection contrôlée : Drive BIB professionnel'}
+                </div>
               </div>
             </div>
 
