@@ -21,7 +21,7 @@ RETURNS uuid
 LANGUAGE sql IMMUTABLE SET search_path=''
 AS $parse$
  SELECT CASE
-   WHEN p_url ~ '^(/documents[?]document=|https://workspace[.]brand-in-a-box[.]space/documents[?]document=)[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(&.*)?$'
+   WHEN p_url ~ '^(/documents[?]document=|https://[^/?#]+/documents[?]document=)[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(&.*)?$'
    THEN split_part(split_part(p_url,'document=',2),'&',1)::uuid
    ELSE NULL::uuid
  END;
