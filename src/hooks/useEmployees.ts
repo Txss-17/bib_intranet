@@ -401,76 +401,21 @@ export const useUpdateEmployee = () => {
         throw new Error('Le prénom et le nom doivent être renseignés.');
       }
 
-      // ------------------------------------------------------
-      // VÉRIFICATION DU COMPTE
-      // ------------------------------------------------------
-
-      const {
-        data: existing,
-        error: existingError,
-      } = await from('profiles')
-        .select(`
-          id,
-          test_account
-        `)
-        .eq(
-          'id',
-          id,
-        )
-        .single();
-
-      if (existingError) {
-        throw existingError;
+      // Never widen UPDATE privileges on profiles: the privileged function
+      // validates the RH page permission, ownership of the employee's RH
+      // portfolio and employee identity, then records the change in HR audit.
+      const { data, error } = await (supabase as any).rpc(
+        'rh_correct_employee_name',
+        {
+          p_employee_id: id,
+          p_first_name: updates.first_name ?? null,
+          p_last_name: updates.last_name ?? null,
+        },
+      );
+      if (error) throw error;
+      if (!data || data.id !== id) {
+        throw new Error('La correction de la fiche n’a pas pu être confirmée.');
       }
-
-      if (
-        existing?.test_account === true
-      ) {
-        throw new Error(
-          'Les comptes de test ne peuvent pas être modifiés depuis le référentiel RH.',
-        );
-      }
-
-      // ------------------------------------------------------
-      // UPDATE
-      // ------------------------------------------------------
-
-      const {
-        data,
-        error,
-      } = await from('profiles')
-        .update(updates)
-        .eq(
-          'id',
-          id,
-        )
-        .eq(
-          'test_account',
-          false,
-        )
-        .select(`
-          id,
-          first_name,
-          last_name,
-          email,
-          position,
-          poles,
-          seniority,
-          work_mode,
-          subsidiary,
-          manager_id,
-          collaborator_type,
-          hr_status,
-          test_account,
-          created_at,
-          updated_at
-        `)
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
       return data as Employee;
     },
 
