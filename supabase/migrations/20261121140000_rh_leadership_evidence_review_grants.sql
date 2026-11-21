@@ -229,6 +229,7 @@ AS $can_read$
            AND grant_.subject_id=b.employee_id
            AND grant_.reviewer_id=(SELECT auth.uid())
            AND grant_.revoked_at IS NULL AND grant_.expires_at>now()
+           AND public.rh_leadership_evidence_reviewer_allowed(grant_.subject_id)
            AND public.rh_leadership_evidence_reviewer_allowed((SELECT auth.uid()))
        )
      )
