@@ -14,6 +14,19 @@ AS $blocked$
 $blocked$;
 REVOKE ALL ON FUNCTION public.rh_departure_access_blocked(uuid)
  FROM PUBLIC,anon,authenticated;
+-- Browser RLS needs a callable current-user wrapper. Keep the parameterized
+-- cross-account departure lookup internal to privileged, audited RPCs only.
+CREATE OR REPLACE FUNCTION public.rh_departure_access_blocked_current()
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO ''
+AS $self$
+ SELECT (SELECT auth.uid()) IS NOT NULL
+   AND public.rh_departure_access_blocked((SELECT auth.uid()));
+$self$;
+REVOKE ALL ON FUNCTION public.rh_departure_access_blocked_current()
+ FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.rh_departure_access_blocked_current()
+ TO authenticated;
+
 
 CREATE OR REPLACE FUNCTION public.rh_private_vault_guard_departure()
 RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path TO ''
@@ -87,26 +100,26 @@ DROP POLICY IF EXISTS rh_departure_stop_documents_select ON public.rh_employee_d
 CREATE POLICY rh_departure_stop_documents_select
  ON public.rh_employee_documents AS RESTRICTIVE
  FOR SELECT TO authenticated
- USING (NOT public.rh_departure_access_blocked((SELECT auth.uid())));
+ USING (NOT public.rh_departure_access_blocked_current());
 
 DROP POLICY IF EXISTS rh_departure_stop_documents_insert ON public.rh_employee_documents;
 CREATE POLICY rh_departure_stop_documents_insert
  ON public.rh_employee_documents AS RESTRICTIVE
  FOR INSERT TO authenticated
- WITH CHECK(NOT public.rh_departure_access_blocked((SELECT auth.uid())));
+ WITH CHECK(NOT public.rh_departure_access_blocked_current());
 
 DROP POLICY IF EXISTS rh_departure_stop_documents_update ON public.rh_employee_documents;
 CREATE POLICY rh_departure_stop_documents_update
  ON public.rh_employee_documents AS RESTRICTIVE
  FOR UPDATE TO authenticated
- USING(NOT public.rh_departure_access_blocked((SELECT auth.uid())))
- WITH CHECK(NOT public.rh_departure_access_blocked((SELECT auth.uid())));
+ USING(NOT public.rh_departure_access_blocked_current())
+ WITH CHECK(NOT public.rh_departure_access_blocked_current());
 
 DROP POLICY IF EXISTS rh_departure_stop_documents_delete ON public.rh_employee_documents;
 CREATE POLICY rh_departure_stop_documents_delete
  ON public.rh_employee_documents AS RESTRICTIVE
  FOR DELETE TO authenticated
- USING(NOT public.rh_departure_access_blocked((SELECT auth.uid())));
+ USING(NOT public.rh_departure_access_blocked_current());
 
 -- CEO/security lead view: only counts, no document bytes, file names, IDs or
 -- file paths. An approved case does NOT authorize automatic legal deletion.
