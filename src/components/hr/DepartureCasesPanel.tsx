@@ -38,6 +38,8 @@ const technicalChecklist = [
   'Révocation des sessions et vérification des JWT encore valides',
   'Retrait des partages documentaires',
   'Révocation des services et intégrations externes',
+  'Inventaire des archives RH et règles de conservation applicables, sans suppression automatique',
+  'Révocation des partages nominatifs et gel des nouveaux dépôts dans le coffre personnel',
 ];
 
 type ReviewDecision = 'approved' | 'rejected';
@@ -232,7 +234,7 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
         <CardTitle>Départs et révocation des accès</CardTitle>
         <CardDescription>
           Demande RH puis validation indépendante de la Direction.
-          L’approbation ne désactive pas le compte : sept contrôles techniques doivent encore être exécutés et prouvés.
+          L’approbation ne désactive pas le compte : sept contrôles techniques et une revue de conservation documentaire restent nécessaires. La clôture ne supprime aucune archive automatiquement.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
