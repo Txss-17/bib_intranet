@@ -1,0 +1,32 @@
+import {readFileSync} from 'node:fs';
+import assert from 'node:assert/strict';
+import {test} from 'node:test';
+const sql=readFileSync(new URL('../../ops/release/rh-linked-drive-document-authorization-20261121.sql',import.meta.url),'utf8');
+
+test('managed RH documents are persistently bound to the employee they concern',()=>{
+ assert.ok(sql.includes('CREATE TABLE IF NOT EXISTS public.rh_drive_document_bindings'));
+ assert.ok(sql.includes('ON DELETE SET NULL'));
+ assert.ok(sql.includes('AFTER INSERT OR UPDATE OF document_url,employee_id'));
+ assert.ok(sql.includes('rh_extract_managed_drive_id'));
+ assert.ok(sql.includes('rh_managed_drive_document_not_found'));
+ assert.ok(sql.includes('ON CONFLICT(document_id,employee_id)'));
+ assert.ok(!sql.includes('DROP TABLE public.rh_drive_document_bindings'));
+});
+test('the existing BIB Drive read permission additionally checks RH portfolio ownership',()=>{
+ assert.ok(sql.includes('public.can_intranet_action(\'app.documents\',\'read\')'));
+ assert.ok(sql.includes('public.can_read_intranet_record(r)'));
+ assert.ok(sql.includes('public.can_read_quality_alert(a)'));
+ assert.ok(sql.includes('public.can_read_ops_anomaly(a)'));
+ assert.ok(sql.includes('AND public.rh_may_read_linked_drive_document(p.id)'));
+ assert.ok(sql.includes("m.entity_kind='employee'"));
+ assert.ok(sql.includes("p.owner_id=(SELECT auth.uid())"));
+ assert.ok(sql.includes("m.ended_at IS NULL"));
+ assert.ok(sql.includes("p.status='active'"));
+ assert.ok(sql.includes('public.is_canonical_bib_ceo'));
+ assert.ok(sql.includes('b.employee_id=(SELECT auth.uid())'));
+});
+test('no client bypass of the binding table is authorized',()=>{
+ assert.ok(sql.includes('ENABLE ROW LEVEL SECURITY'));
+ assert.ok(sql.includes('REVOKE ALL ON TABLE public.rh_drive_document_bindings FROM PUBLIC,anon,authenticated'));
+ assert.ok(!/GRANT (?:ALL|SELECT) ON TABLE public\.rh_drive_document_bindings TO authenticated/.test(sql));
+});
