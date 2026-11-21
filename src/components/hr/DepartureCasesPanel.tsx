@@ -42,6 +42,23 @@ const technicalChecklist = [
 
 type ReviewDecision = 'approved' | 'rejected';
 
+interface SecurityPreflight {
+  case_id: string;
+  approved: boolean;
+  effective_date_reached: boolean;
+  auth_account_exists: boolean;
+  auth_banned_for_new_signins: boolean;
+  possible_session_records: number;
+  active_role_assignments: number;
+  active_portfolio_memberships: number;
+  active_owned_portfolios: number;
+  technical_tasks_pending: number;
+  session_token_revocation_verified: false;
+  document_acl_independently_verified: false;
+  external_services_independently_verified: false;
+  ready_for_closure: false;
+}
+
 /** RH planning and Direction decision only.
  * Technical controls are never marked complete by this component. */
 export default function DepartureCasesPanel({ employees }: { employees: Employee[] }) {
@@ -108,6 +125,20 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
       setReviewCaseId(null);
       setDecisionNote('');
       void refresh();
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const securityPreflight = useMutation({
+    mutationFn: async (caseId: string): Promise<SecurityPreflight> => {
+      const { data, error } = await (supabase as any).rpc('rh_departure_security_preflight', {
+        p_case: caseId,
+      });
+      if (error) throw error;
+      if (!data || data.case_id !== caseId || data.ready_for_closure !== false) {
+        throw new Error('Résultat du précontrôle RH incohérent : clôture interdite.');
+      }
+      return data as SecurityPreflight;
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -186,6 +217,33 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
               {c.status === 'approved' && <p className="text-xs text-amber-700">
                 {c.tasks_pending} contrôles techniques restent ouverts. Aucune confirmation de révocation ni clôture automatique.
               </p>}
+              {isDirection && c.status === 'approved' && (
+                <div className="space-y-2 border-t pt-2">
+                  <Button size="sm" type="button" variant="outline"
+                    disabled={securityPreflight.isPending}
+                    onClick={() => securityPreflight.mutate(c.id)}>
+                    Examiner les accès — lecture seule
+                  </Button>
+                  {securityPreflight.data && securityPreflight.variables === c.id && (
+                    <div role="status" className="space-y-2 rounded-md border border-amber-500/40 p-3 text-sm">
+                      <p className="font-medium">Précontrôle uniquement — aucun accès révoqué</p>
+                      <p>Décision indépendante valide : {securityPreflight.data.approved ? 'Oui' : 'Non'}</p>
+                      <p>Date d’effet atteinte : {securityPreflight.data.effective_date_reached ? 'Oui' : 'Non'}</p>
+                      <p>Compte Auth présent : {securityPreflight.data.auth_account_exists ? 'Oui' : 'Non'}</p>
+                      <p>Blocage des nouvelles connexions constaté : {securityPreflight.data.auth_banned_for_new_signins ? 'Oui' : 'Non'}</p>
+                      <p>Enregistrements de sessions potentiellement actives : {securityPreflight.data.possible_session_records}</p>
+                      <p>Rôles encore actifs : {securityPreflight.data.active_role_assignments}</p>
+                      <p>Affectations actives à des portefeuilles : {securityPreflight.data.active_portfolio_memberships}</p>
+                      <p>Portefeuilles encore détenus : {securityPreflight.data.active_owned_portfolios}</p>
+                      <p>Contrôles techniques en attente : {securityPreflight.data.technical_tasks_pending}</p>
+                      <p className="font-medium text-amber-700">
+                        Les JWT existants, les ACL Drive et les accès tiers ne sont pas vérifiés.
+                        Ce bilan ne peut jamais clôturer un départ.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
               {isDirection && c.status === 'pending_direction' && c.requested_by !== user?.id &&
                 c.employee_id !== user?.id && (
                   <div className="space-y-2 border-t pt-2">
