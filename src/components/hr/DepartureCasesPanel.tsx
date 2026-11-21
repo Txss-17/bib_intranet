@@ -40,9 +40,29 @@ const technicalChecklist = [
   'Révocation des sessions et vérification des JWT encore valides',
   'Retrait des partages documentaires',
   'Révocation des services et intégrations externes',
+  'Inventaire des archives RH et règles de conservation applicables, sans suppression automatique',
+  'Révocation des partages nominatifs et gel des nouveaux dépôts dans le coffre personnel',
 ];
 
 type ReviewDecision = 'approved' | 'rejected';
+
+interface DocumentaryPreflight {
+  case_id: string;
+  status: string;
+  effective_date_reached: boolean;
+  ordinary_rh_documents: number;
+  private_vault_documents: number;
+  private_vault_quarantined: number;
+  private_vault_unreleased_or_failed: number;
+  private_vault_under_retention: number;
+  active_leadership_document_shares: number;
+  active_leadership_identity_attestations: number;
+  unapproved_retention_categories: number;
+  documents_deleted: false;
+  sessions_revoked: false;
+  safe_to_close: false;
+  warning: string;
+}
 
 interface SecurityPreflight {
   case_id: string;
@@ -73,6 +93,8 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
   const [decisionNote, setDecisionNote] = useState('');
   const [authBlockCaseId, setAuthBlockCaseId] = useState<string | null>(null);
   const [authBlockConfirmation, setAuthBlockConfirmation] = useState('');
+  const [revokeSharesCaseId, setRevokeSharesCaseId] = useState<string | null>(null);
+  const [shareRevokeConfirmation, setShareRevokeConfirmation] = useState('');
 
   const eligibleEmployees = useMemo(
     () => employees.filter((employee) =>
@@ -171,6 +193,41 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const documentaryPreflight = useMutation({
+    mutationFn: async (caseId: string): Promise<DocumentaryPreflight> => {
+      const { data, error } = await (supabase as any).rpc('rh_departure_documentary_preflight', {
+        p_case: caseId,
+      });
+      if (error) throw error;
+      if (!data || data.case_id !== caseId || data.safe_to_close !== false ||
+        data.documents_deleted !== false || data.sessions_revoked !== false) {
+        throw new Error('Inventaire documentaire incohérent. Aucun dossier ne peut être clôturé.');
+      }
+      return data as DocumentaryPreflight;
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const revokeBibShares = useMutation({
+    mutationFn: async (caseId: string): Promise<number> => {
+      const { data, error } = await (supabase as any).rpc('rh_departure_revoke_bib_review_shares', {
+        p_case: caseId,
+      });
+      if (error) throw error;
+      if (typeof data !== 'number' || data < 0)
+        throw new Error('Aucune preuve de révocation reçue.');
+      return data;
+    },
+    onSuccess: count => {
+      toast.success(`${count} partage(s) nominatif(s) RH BIB révoqué(s). Les ACL Drive et services tiers restent à contrôler.`);
+      setRevokeSharesCaseId(null);
+      setShareRevokeConfirmation('');
+      void refresh();
+      if (documentaryPreflight.variables) documentaryPreflight.mutate(documentaryPreflight.variables);
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   const isDirection = profile?.position === 'ceo' && profile?.test_account === false;
 
   return (
@@ -181,6 +238,7 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
           Demande RH puis validation indépendante de la Direction.
           L’approbation ne clôture pas le compte créé à l’arrivée : sept contrôles techniques doivent encore être exécutés et prouvés.
           Chaque départ reçoit une référence BIB et, lorsqu'il existe, un lien vérifié au dossier d’onboarding initial.
+          Les archives RH exigent une revue de conservation ; aucune archive n’est supprimée automatiquement.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -263,6 +321,61 @@ export default function DepartureCasesPanel({ employees }: { employees: Employee
                     onClick={() => securityPreflight.mutate(c.id)}>
                     Examiner les accès — lecture seule
                   </Button>
+                  <Button size="sm" type="button" variant="outline"
+                    disabled={documentaryPreflight.isPending}
+                    onClick={() => documentaryPreflight.mutate(c.id)}>
+                    Inventaire des archives et droits documentaires
+                  </Button>
+                  {documentaryPreflight.data && documentaryPreflight.variables === c.id && (
+                    <div role="status" className="space-y-1 rounded-md border border-amber-500/40 p-3 text-sm">
+                      <p className="font-semibold">Inventaire uniquement — aucune suppression ni clôture</p>
+                      <p>Pièces RH ordinaires : {documentaryPreflight.data.ordinary_rh_documents}</p>
+                      <p>Coffre privé : {documentaryPreflight.data.private_vault_documents} pièce(s), dont {documentaryPreflight.data.private_vault_quarantined} en quarantaine</p>
+                      <p>Pièces en attente de contrôle ou en échec : {documentaryPreflight.data.private_vault_unreleased_or_failed}</p>
+                      <p>Pièces sous durée de conservation : {documentaryPreflight.data.private_vault_under_retention}</p>
+                      <p>Partages nominatifs RH BIB non révoqués : {documentaryPreflight.data.active_leadership_document_shares}</p>
+                      <p>Attestations d’identité actives impliquant le compte : {documentaryPreflight.data.active_leadership_identity_attestations}</p>
+                      <p>Catégories sans politique de conservation validée : {documentaryPreflight.data.unapproved_retention_categories}</p>
+                      <p className="font-medium text-amber-700">
+                        La clôture reste interdite : sessions, habilitations, passations,
+                        partages Drive et services tiers exigent des contrôles indépendants.
+                        Aucune archive ne doit être supprimée automatiquement au départ.
+                      </p>
+                    </div>
+                  )}
+                  {revokeSharesCaseId === c.id ? (
+                    <div className="space-y-2 rounded border border-destructive/40 p-3">
+                      <p className="text-sm font-medium">Révocation des partages nominatifs RH BIB</p>
+                      <p className="text-xs text-muted-foreground">
+                        Uniquement après approbation et date d’effet. Cette action n’efface aucun
+                        dossier et ne révoque ni les ACL Google Drive ni les sessions externes.
+                        Saisissez REVOQUER pour confirmer.
+                      </p>
+                      <Label htmlFor={'rh-departure-revoke-shares-' + c.id}>Confirmation « REVOQUER »</Label>
+                      <Input id={'rh-departure-revoke-shares-' + c.id} autoComplete="off"
+                        value={shareRevokeConfirmation}
+                        onChange={event => setShareRevokeConfirmation(event.target.value)}
+                        placeholder="REVOQUER" />
+                      <div className="flex gap-2">
+                        <Button type="button" variant="destructive" size="sm"
+                          disabled={shareRevokeConfirmation !== 'REVOQUER' ||
+                            revokeBibShares.isPending || c.planned_at > new Date().toISOString().slice(0, 10)}
+                          onClick={() => revokeBibShares.mutate(c.id)}>
+                          Révoquer les partages BIB
+                        </Button>
+                        <Button type="button" variant="outline" size="sm"
+                          onClick={() => { setRevokeSharesCaseId(null); setShareRevokeConfirmation(''); }}>
+                          Annuler
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <Button type="button" variant="outline" size="sm"
+                      disabled={c.planned_at > new Date().toISOString().slice(0, 10)}
+                      onClick={() => { setRevokeSharesCaseId(c.id); setShareRevokeConfirmation(''); }}>
+                      Préparer la révocation des partages RH BIB
+                    </Button>
+                  )}
                   {authBlockCaseId === c.id ? (
                     <div className="space-y-2 rounded border border-destructive/40 p-3">
                       <p className="text-sm font-medium">Confirmation de suspension du compte</p>
