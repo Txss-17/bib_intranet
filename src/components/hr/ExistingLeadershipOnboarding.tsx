@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth } from '@/hooks/useAuth';
+import LeadershipEvidenceUploader from '@/components/hr/LeadershipEvidenceUploader';
 
 type Step = {subject_id:string;display_name:string;position:string;step_key:string;status:string;evidence_ref:string|null;note:string|null;reviewed_at:string|null;reviewer_id:string|null};
 type ProofOption = {subject_id:string;step_key:string;evidence_ref:string;label:string};
@@ -91,6 +92,7 @@ export default function ExistingLeadershipOnboarding() {
     return <section key={subject.id} className="space-y-3 rounded-md border p-4">
      <h3 className="font-semibold">{subject.name} — {subject.position==='ceo'?'CEO':'Responsable RH'}</h3>
      <p className="text-sm text-muted-foreground">{rows.filter(s=>s.status==='validated').length} / {rows.length} étapes validées</p>
+     {subject.id===user?.id&&<LeadershipEvidenceUploader subjectId={subject.id} />}
      {rows.map((step,index)=>{
       const id=step.subject_id+':'+step.step_key;
       const previousOk=rows.slice(0,index).every(s=>s.status==='validated');
