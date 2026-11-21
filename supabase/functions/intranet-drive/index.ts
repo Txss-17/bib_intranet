@@ -37,6 +37,19 @@ export async function handleDriveRequest(request: Request) {
    if (['text/csv','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'].includes(d.mime_type)) return json({ message: 'Ce tableau est enregistré dans Drive BIB. Pour une consultation ou une diffusion dans l’intranet, utilisez une version PDF.', drive_url: d.owner_id === profile.id ? `https://drive.google.com/file/d/${d.file_id}/view` : undefined });
    const file = await drive.metadata(config.custodian, d.file_id); const raw = await drive.bytes(config.custodian, file);
    const pdf = await documentAsPdf(raw, d.mime_type); const data = await watermarkDocument(pdf, email, new Date().toISOString(), crypto.randomUUID());
+   // Only the trusted Edge runtime can attest that the file bytes were
+   // retrieved and a protected PDF was prepared. The earlier 'view' event
+   // only means an access request was authorized, not that bytes existed.
+   const auditKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+   if (!auditKey) throw new DriveError('Audit de consultation BIB indisponible.', 503);
+   const audit = createClient(url, auditKey, { auth: { persistSession: false } });
+   const { error: previewAuditError } = await audit.from('intranet_document_events').insert({
+     document_id: d.id,
+     actor_id: identity.user.id,
+     action: 'pdf_prepared',
+     details: { source: 'intranet-drive', evidence: 'server-pdf-generated' },
+   });
+   if (previewAuditError) throw new DriveError('Le contrôle de réception du document n’a pas été enregistré.', 503);
    return new Response(data, { headers: { ...headers, 'Content-Type': 'application/pdf', 'Content-Disposition': 'inline; filename="document-bib.pdf"' } });
   }
   if (typeof body.action !== 'string' || !['import', 'export', 'share'].includes(body.action)) throw new DriveError('Action documentaire inconnue.');
