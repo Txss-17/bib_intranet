@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const read = (path) => readFileSync(new URL('../../' + path, import.meta.url), 'utf8');
-const guard = read('supabase/migrations/20261121114000_rh_leadership_proof_integrity.sql');
-const options = read('supabase/migrations/20261121114500_rh_leadership_evidence_options.sql');
+const guard = read('supabase/migrations/20261121130000_rh_leadership_proof_integrity.sql');
+const options = read('supabase/migrations/20261121130100_rh_leadership_evidence_options.sql');
 const ui = read('src/components/hr/ExistingLeadershipOnboarding.tsx');
 
 test('leadership evidence is subject-bound to a real onboarding, active RBAC or managed BIB file', () => {
