@@ -27,6 +27,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { managedDocumentId, openManagedDocument } from '@/lib/driveDocuments';
 import { normalizeHrManagedDocumentUrl } from '@/lib/hrEmployeeMutations';
 import FileUploadZone from '@/components/FileUploadZone';
+import RhPrivateVault from '@/components/hr/RhPrivateVault';
+import { useAuth } from '@/hooks/useAuth';
 
 import {
   type Employee,
@@ -273,6 +275,7 @@ function isExpired(value: string | null) {
 // ============================================================
 
 export default function EmployeeFiles() {
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const selectedEmployeeId =
@@ -1820,7 +1823,9 @@ export default function EmployeeFiles() {
                   Pièce sensible (identité, données médicales, paie ou disciplinaire) :
                   aucun import dans Drive BIB. Ces fichiers devront être déposés
                   directement dans un coffre RH privé, sans copie dans un compte Drive.
-                  Le formulaire reste bloqué pour ce type en attendant le coffre sécurisé.
+                  L'enregistrement dans le dossier RH est séparé du coffre privé.
+                  Le déposant doit être le titulaire ; le coffre reste verrouillé
+                  jusqu'à validation des règles de conservation et du contrôle anti-malware.
                 </p>
               ) : (
                 <FileUploadZone bucket="managed-drive" folder="rh-employee-record"
@@ -1841,6 +1846,20 @@ export default function EmployeeFiles() {
                 Le numéro documentaire BIB sera généré par le serveur après
                 l’enregistrement. Le fichier reste dans son espace de stockage contrôlé.
               </p>
+              {restrictedRhDocumentTypes.has(form.document_type) && selectedEmployee &&
+                selectedEmployee.id === user?.id && (
+                  <div className="mt-3">
+                    <RhPrivateVault subjectId={selectedEmployee.id}
+                      category={form.document_type as 'identity' | 'medical' | 'payroll' | 'disciplinary'} />
+                  </div>
+                )}
+              {restrictedRhDocumentTypes.has(form.document_type) && selectedEmployee &&
+                selectedEmployee.id !== user?.id && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Dépôt par le titulaire exclusivement ; aucun gestionnaire RH
+                    ne peut charger une pièce sensible pour le compte d’un autre utilisateur.
+                  </p>
+                )}
             </div>
 
 
