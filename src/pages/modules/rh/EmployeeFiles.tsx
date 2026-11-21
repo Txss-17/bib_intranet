@@ -26,6 +26,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { managedDocumentId, openManagedDocument } from '@/lib/driveDocuments';
 import { normalizeHrManagedDocumentUrl } from '@/lib/hrEmployeeMutations';
+import FileUploadZone from '@/components/FileUploadZone';
 
 import {
   type Employee,
@@ -146,6 +147,11 @@ const documentTypeLabels: Record<DocumentType, string> = {
   disciplinary: 'Disciplinaire',
   other: 'Autre',
 };
+
+// Restrict highly sensitive personnel records until the dedicated private
+// BIB identity vault, with independent reviewer access and retention, is live.
+const restrictedRhDocumentTypes: ReadonlySet<DocumentType> =
+  new Set(['identity', 'medical', 'payroll', 'disciplinary']);
 
 const documentSourceLabels: Record<DocumentSource, string> = {
   onboarding: 'Onboarding RH',
@@ -616,6 +622,11 @@ export default function EmployeeFiles() {
         'Le nom du document est obligatoire.',
       );
 
+      return;
+    }
+
+    if (restrictedRhDocumentTypes.has(form.document_type)) {
+      toast.error('Document sensible : le dépôt en Drive BIB est désactivé. Le coffre RH privé doit être activé avant tout enregistrement.');
       return;
     }
 
@@ -1832,24 +1843,31 @@ export default function EmployeeFiles() {
                 Référence du document
               </Label>
 
-              <Input
-                className="mt-1"
-                type="url"
-                placeholder="Lien Google Drive BIB ou référence documentaire"
-                value={form.document_url}
-                onChange={(event) =>
-                  setForm({
-                    ...form,
-                    document_url:
-                      event.target.value,
-                  })
-                }
-              />
-
+              {restrictedRhDocumentTypes.has(form.document_type) ? (
+                <p role="status" className="mt-1 rounded-md border border-amber-500/50 p-3 text-sm text-amber-700">
+                  Pièce sensible (identité, données médicales, paie ou disciplinaire) :
+                  aucun import dans Drive BIB. Ces fichiers devront être déposés
+                  directement dans un coffre RH privé, sans copie dans un compte Drive.
+                  Le formulaire reste bloqué pour ce type en attendant le coffre sécurisé.
+                </p>
+              ) : (
+                <FileUploadZone bucket="managed-drive" folder="rh-employee-record"
+                  triggerMode="field" multiple={false}
+                  label="Cliquer pour choisir une pièce dans Drive BIB"
+                  files={form.document_url ? [{
+                    name: form.name || 'Document BIB sélectionné',
+                    url: form.document_url, type: 'application/pdf', size: 0,
+                  }] : []}
+                  onFilesChange={files => setForm(current => ({
+                    ...current,
+                    name: current.name || files[0]?.name || '',
+                    document_url: files[0]?.url || '',
+                    source: 'drive',
+                  }))} />
+              )}
               <p className="mt-1 text-xs text-muted-foreground">
-                Le fichier lui-même n’est pas stocké
-                dans cette table. Cette valeur référence
-                son emplacement documentaire.
+                Le numéro documentaire BIB sera généré par le serveur après
+                l’enregistrement. Le fichier reste dans son espace de stockage contrôlé.
               </p>
             </div>
 
