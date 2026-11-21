@@ -389,6 +389,17 @@ export const useUpdateEmployee = () => {
     }: Partial<Employee> & {
       id: string;
     }) => {
+      // Editing the directory is NOT an alternative to a reviewed RH mutation.
+      // Account email is owned by Supabase Auth; position, role, scope,
+      // employment category and lifecycle status have dedicated workflows.
+      const keys = Object.keys(updates);
+      if (keys.length === 0 || keys.some((key) => !['first_name', 'last_name'].includes(key))) {
+        throw new Error('Seules les corrections de prénom et nom sont autorisées ici. Utilisez le parcours RH pour toute mutation métier.');
+      }
+      if (keys.some((key) => typeof updates[key as 'first_name' | 'last_name'] !== 'string' ||
+          !updates[key as 'first_name' | 'last_name']?.trim())) {
+        throw new Error('Le prénom et le nom doivent être renseignés.');
+      }
 
       // ------------------------------------------------------
       // VÉRIFICATION DU COMPTE
