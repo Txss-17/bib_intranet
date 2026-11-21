@@ -42,9 +42,11 @@ BEGIN
   -- Never let an HR user claim a confidential document merely by guessing
   -- its UUID. Check the ORIGINAL document rights before registering any new
   -- RH-owned binding (the newly inserted link cannot authorize itself).
-  IF (SELECT auth.uid()) IS NOT NULL AND NOT EXISTS(
-    SELECT 1 FROM public.intranet_drive_documents d
-    WHERE d.id=doc_id AND public.can_read_intranet_drive_document(d)
+  IF (SELECT auth.uid()) IS NOT NULL AND NOT (
+    public.is_canonical_bib_ceo((SELECT auth.uid()))
+    OR EXISTS (SELECT 1 FROM public.intranet_drive_documents d
+       WHERE d.id=doc_id AND d.owner_id=(SELECT auth.uid()))
+    OR public.is_intranet_document_recipient(doc_id)
   ) THEN
     RAISE EXCEPTION 'rh_managed_drive_source_not_readable' USING ERRCODE='42501';
   END IF;
