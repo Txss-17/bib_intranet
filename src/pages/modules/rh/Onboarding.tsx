@@ -1,4 +1,5 @@
 import { useMyAcceptedRhCandidates } from '@/hooks/useMyAcceptedRhCandidates';
+import { managedDocumentId } from '@/lib/driveDocuments';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import ExistingLeadershipOnboarding from '@/components/hr/ExistingLeadershipOnboarding';
 import { format } from 'date-fns';
@@ -1168,7 +1169,14 @@ function NewEmployeeDialog({ mutation = false }: { mutation?: boolean }) {
                 onChange={(e) => setDocDraft((d) => ({ ...d, document_url: e.target.value }))} />
               <Button type="button" variant="outline" disabled={!docDraft.name.trim()}
                 onClick={() => {
-                  setAttachedDocs((d) => [...d, { name: docDraft.name.trim(), document_type: docDraft.document_type, document_url: docDraft.document_url.trim() || null }]);
+                  const enteredUrl = docDraft.document_url.trim();
+                  if (enteredUrl && !managedDocumentId(enteredUrl)) {
+                    setSubmitError('Les documents RH doivent être importés dans Documents BIB avant leur rattachement. Les liens Drive ou externes directs ne sont pas autorisés.');
+                    return;
+                  }
+                  const managedUrl = enteredUrl ? new URL(enteredUrl, window.location.origin).href : null;
+                  setSubmitError('');
+                  setAttachedDocs((d) => [...d, { name: docDraft.name.trim(), document_type: docDraft.document_type, document_url: managedUrl }]);
                   setDocDraft({ name: '', document_type: 'charter', document_url: '' });
                 }}>
                 Rattacher
