@@ -113,7 +113,7 @@ BEGIN
     END IF;
 
     -- A real BIB document number is not evidence the reviewer actually
-    -- inspected the contents. The controlled reader records a 'view' event.
+    -- inspected the contents. The trusted Drive Edge handler records 'pdf_prepared' only after file bytes are fetched and watermarked.
     IF NEW.evidence_ref ~ '^BIB-RH-DOC-[0-9]{4}-[0-9]{6,}$' THEN
       SELECT f.* INTO v_file
       FROM public.rh_employee_documents d
@@ -144,7 +144,7 @@ BEGIN
         SELECT 1 FROM public.intranet_document_events event
         WHERE event.document_id=v_file_id
           AND event.actor_id=NEW.reviewer_id
-          AND event.action='view'
+          AND event.action='pdf_prepared'
           AND event.created_at>=v_document_created_at
           AND event.created_at>=now()-interval '30 days'
       ) THEN
