@@ -275,21 +275,9 @@ export default function Employees() {
   ] =
     useState(false);
 
-  const [
-    editForm,
-    setEditForm,
-  ] = useState({
+  const [editForm, setEditForm] = useState({
     first_name: '',
     last_name: '',
-    email: '',
-    position: '',
-    seniority: '',
-    work_mode: '',
-    subsidiary: '',
-    collaborator_type:
-      'internal' as CollaboratorType,
-    hr_status:
-      'active' as HrStatus,
   });
 
   // ----------------------------------------------------------
@@ -403,39 +391,8 @@ export default function Employees() {
     );
 
     setEditForm({
-      first_name:
-        employee.first_name ??
-        '',
-
-      last_name:
-        employee.last_name ??
-        '',
-
-      email:
-        employee.email ??
-        '',
-
-      position:
-        employee.position ??
-        '',
-
-      seniority:
-        employee.seniority ??
-        '',
-
-      work_mode:
-        employee.work_mode ??
-        '',
-
-      subsidiary:
-        employee.subsidiary ??
-        '',
-
-      collaborator_type:
-        employee.collaborator_type,
-
-      hr_status:
-        employee.hr_status,
+      first_name: employee.first_name ?? '',
+      last_name: employee.last_name ?? '',
     });
 
     setEditDialogOpen(true);
@@ -461,54 +418,21 @@ export default function Employees() {
 
       if (
         !editForm.first_name.trim() ||
-        !editForm.last_name.trim() ||
-        !editForm.email.trim()
+        !editForm.last_name.trim()
       ) {
         toast.error(
-          'Le prénom, le nom et l’adresse e-mail sont obligatoires.',
+          'Le prénom et le nom sont obligatoires.',
         );
 
         return;
       }
 
       try {
-        await updateEmployee.mutateAsync(
-          {
-            id:
-              selectedEmployee.id,
-
-            first_name:
-              editForm.first_name.trim(),
-
-            last_name:
-              editForm.last_name.trim(),
-
-            email:
-              editForm.email.trim(),
-
-            position:
-              editForm.position.trim() ||
-              null,
-
-            seniority:
-              editForm.seniority.trim() ||
-              null,
-
-            work_mode:
-              editForm.work_mode.trim() ||
-              null,
-
-            subsidiary:
-              editForm.subsidiary.trim() ||
-              null,
-
-            collaborator_type:
-              editForm.collaborator_type,
-
-            hr_status:
-              editForm.hr_status,
-          },
-        );
+        await updateEmployee.mutateAsync({
+          id: selectedEmployee.id,
+          first_name: editForm.first_name.trim(),
+          last_name: editForm.last_name.trim(),
+        });
 
         toast.success(
           'Collaborateur mis à jour.',
@@ -1372,233 +1296,29 @@ export default function Employees() {
             </div>
 
 
-            {/* Email */}
-
-            <div className="md:col-span-2">
-              <Label>
-                E-mail
-              </Label>
-
-              <Input
-                className="mt-1"
-                type="email"
-                value={
-                  editForm.email
-                }
-                onChange={(event) =>
-                  setEditForm(
-                    (current) => ({
-                      ...current,
-                      email:
-                        event.target.value,
-                    }),
-                  )
-                }
-              />
-            </div>
-
-
-            {/* Poste */}
-
-            <div>
-              <Label>
-                Poste
-              </Label>
-
-              <Input
-                className="mt-1"
-                placeholder="Poste actuel"
-                value={
-                  editForm.position
-                }
-                onChange={(event) =>
-                  setEditForm(
-                    (current) => ({
-                      ...current,
-                      position:
-                        event.target.value,
-                    }),
-                  )
-                }
-              />
-            </div>
-
-
-            {/* Ancienneté */}
-
-            <div>
-              <Label>
-                Ancienneté
-              </Label>
-
-              <Input
-                className="mt-1"
-                placeholder="Ex. 2 ans"
-                value={
-                  editForm.seniority
-                }
-                onChange={(event) =>
-                  setEditForm(
-                    (current) => ({
-                      ...current,
-                      seniority:
-                        event.target.value,
-                    }),
-                  )
-                }
-              />
-            </div>
-
-
-            {/* Mode de travail */}
-
-            <div>
-              <Label>
-                Mode de travail
-              </Label>
-
-              <Input
-                className="mt-1"
-                placeholder="Ex. Hybride"
-                value={
-                  editForm.work_mode
-                }
-                onChange={(event) =>
-                  setEditForm(
-                    (current) => ({
-                      ...current,
-                      work_mode:
-                        event.target.value,
-                    }),
-                  )
-                }
-              />
-            </div>
-
-
-            {/* Filiale */}
-
-            <div>
-              <Label>
-                Filiale / entité
-              </Label>
-
-              <Input
-                className="mt-1"
-                placeholder="Ex. BIB"
-                value={
-                  editForm.subsidiary
-                }
-                onChange={(event) =>
-                  setEditForm(
-                    (current) => ({
-                      ...current,
-                      subsidiary:
-                        event.target.value,
-                    }),
-                  )
-                }
-              />
-            </div>
-
-
-            {/* Type */}
-
-            <div>
-              <Label>
-                Type de collaborateur
-              </Label>
-
-              <Select
-                value={
-                  editForm.collaborator_type
-                }
-                onValueChange={(
-                  value,
-                ) =>
-                  setEditForm(
-                    (current) => ({
-                      ...current,
-                      collaborator_type:
-                        value as CollaboratorType,
-                    }),
-                  )
-                }
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {(
-                    Object.entries(
-                      collaboratorTypeLabels,
-                    ) as [
-                      CollaboratorType,
-                      string,
-                    ][]
-                  ).map(
-                    ([value, label]) => (
-                      <SelectItem
-                        key={value}
-                        value={value}
-                      >
-                        {label}
-                      </SelectItem>
-                    ),
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-
-
-            {/* Statut */}
-
-            <div>
-              <Label>
-                Statut RH
-              </Label>
-
-              <Select
-                value={
-                  editForm.hr_status
-                }
-                onValueChange={(
-                  value,
-                ) =>
-                  setEditForm(
-                    (current) => ({
-                      ...current,
-                      hr_status:
-                        value as HrStatus,
-                    }),
-                  )
-                }
-              >
-                <SelectTrigger className="mt-1">
-                  <SelectValue />
-                </SelectTrigger>
-
-                <SelectContent>
-                  {(
-                    Object.entries(
-                      statusLabels,
-                    ) as [
-                      HrStatus,
-                      string,
-                    ][]
-                  ).map(
-                    ([value, label]) => (
-                      <SelectItem
-                        key={value}
-                        value={value}
-                      >
-                        {label}
-                      </SelectItem>
-                    ),
-                  )}
-                </SelectContent>
-              </Select>
+            <div className="space-y-3 rounded-md border border-border p-4 md:col-span-2">
+              <p className="text-sm font-medium">Données métier protégées</p>
+              <p className="text-xs text-muted-foreground">
+                Cet écran permet uniquement de corriger le prénom et le nom.
+                Toute mutation de poste, rôle, pôle, classification, mode de travail
+                ou entité doit suivre le circuit RH avec validation et date d’effet.
+              </p>
+              <dl className="grid gap-2 text-sm sm:grid-cols-2">
+                <div><dt className="text-muted-foreground">E-mail du compte</dt><dd>{selectedEmployee?.email ?? '—'}</dd></div>
+                <div><dt className="text-muted-foreground">Poste</dt><dd>{selectedEmployee?.position ?? '—'}</dd></div>
+                <div><dt className="text-muted-foreground">Statut RH</dt><dd>{selectedEmployee ? statusLabels[selectedEmployee.hr_status] : '—'}</dd></div>
+                <div><dt className="text-muted-foreground">Entité déclarée</dt><dd>{selectedEmployee?.subsidiary ?? '—'}</dd></div>
+              </dl>
+              <p className="text-xs text-amber-700">
+                Un statut « sortant » ou « archivé » n’atteste pas la révocation
+                de Supabase Auth, des sessions et des accès tiers.
+                Le départ nécessite une procédure RH/Direction/Technique vérifiée.
+              </p>
+              <Button asChild type="button" variant="outline" size="sm">
+                <Link to="/pole/rh/onboarding" onClick={() => setEditDialogOpen(false)}>
+                  Préparer une mutation RH
+                </Link>
+              </Button>
             </div>
 
           </div>
