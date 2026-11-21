@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useAuth } from '@/hooks/useAuth';
 import LeadershipEvidenceUploader from '@/components/hr/LeadershipEvidenceUploader';
 import LeadershipEvidenceReviewAccess from '@/components/hr/LeadershipEvidenceReviewAccess';
+import LeadershipIdentityAttestation from '@/components/hr/LeadershipIdentityAttestation';
 import { openManagedDocument } from '@/lib/driveDocuments';
 
 type Step = {subject_id:string;display_name:string;position:string;step_key:string;status:string;evidence_ref:string|null;note:string|null;reviewed_at:string|null;reviewer_id:string|null};
@@ -21,18 +22,18 @@ const labels:Record<string,string> = {
  integration:'Intégration et formations'
 };
 const registeredDocument = /^BIB-RH-DOC-[0-9]{4}-[0-9]{6,}$/;
-const registeredOnboarding = /^(?:HR-[0-9]{8}-[0-9]{4}|BIB-RH-ONB-[0-9]{4}-[0-9]{6,})$/;
+const registeredIdentity = /^BIB-RH-IDV-[0-9]{4}-[0-9]{6,}$/;
 const assignmentReference = /^ACCESS:[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
 const requiresReviewNote = (stepKey:string) =>
  ['documents','hr_review','independent_review','access_security','integration'].includes(stepKey);
 const hasPossibleReferenceFormat = (stepKey:string, value:string) => {
  const ref=value.trim();
- if(stepKey==='identity')return registeredOnboarding.test(ref)||registeredDocument.test(ref);
+ if(stepKey==='identity')return registeredIdentity.test(ref);
  if(stepKey==='assignment')return assignmentReference.test(ref);
  return registeredDocument.test(ref);
 };
 const proofGuidance:Record<string,string> = {
- identity:'Référence HR-… ou BIB-RH-ONB-… liée à ce compte, ou BIB-RH-DOC-… avec fichier BIB enregistré',
+ identity:'Référence BIB-RH-IDV-… créée par un responsable habilité après contrôle en présence, sans conserver de copie d’identité',
  assignment:'Référence ACCESS:<UUID> de l’affectation RBAC active de ce compte',
  documents:'Référence BIB-RH-DOC-… d’un document réellement importé et lié au titulaire ; contrôler la signature',
  hr_review:'Référence BIB-RH-DOC-… d’un contrôle RH documenté ; observations de 30 caractères minimum',
@@ -108,6 +109,9 @@ export default function ExistingLeadershipOnboarding() {
      <p className="text-sm text-muted-foreground">{rows.filter(s=>s.status==='validated').length} / {rows.length} étapes validées</p>
      {subject.id===user?.id&&<LeadershipEvidenceUploader subjectId={subject.id} />}
      {subject.id===user?.id&&<LeadershipEvidenceReviewAccess subjectId={subject.id} />}
+     {subject.id!==user?.id&&permissions.data?.validate===true&&
+       rows.find(step=>step.step_key==='identity')?.status!=='validated'&&
+       <LeadershipIdentityAttestation subjectId={subject.id} subjectName={subject.name} />}
      {rows.map((step,index)=>{
       const id=step.subject_id+':'+step.step_key;
       const previousOk=rows.slice(0,index).every(s=>s.status==='validated');
@@ -136,7 +140,7 @@ export default function ExistingLeadershipOnboarding() {
           </select>
          </div>}
         {!proofOptionsError&&availableReferences.length===0&&
-         <p className="text-xs text-amber-700">Aucune référence justificative disponible pour cette étape et ce compte. Enregistrez d’abord la pièce réelle dans Documents BIB / Dossiers collaborateurs, ou vérifiez les affectations du compte.</p>}
+         <p className="text-xs text-amber-700">Aucune référence justificative disponible pour cette étape et ce compte. Pour l’identité, faites réaliser une attestation sans copie par un responsable habilité ; pour les autres étapes, enregistrez la pièce professionnelle dans Documents BIB ou vérifiez les affectations du compte.</p>}
         {proofOptionsError&&<div role="alert" className="flex items-center gap-2 text-xs text-destructive">
           <span>Impossible de charger les références justificatives.</span>
           <Button type="button" variant="outline" size="sm" onClick={()=>void refetchProofOptions()}>Réessayer</Button>
