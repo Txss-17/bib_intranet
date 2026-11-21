@@ -9,7 +9,7 @@ const id=n=>"20000000-0000-4000-8000-"+String(n).padStart(12,"0");
 const input=()=>({targetUserId:id(3),creationKey:id(4),expectedTargetRevision:"a".repeat(32),replaceAssignmentIds:[id(7)],
  payload:{position:"custom_ops_job",primary_pole:"ops",poles:["ops","data"],seniority:"mid",requested_role:"new_ops",
  contract_type:" CDI ",start_date:"2026-10-28",manager_id:id(1),work_mode:"hybrid",subsidiary:" BIB FR ",notes:"Note",
- attached_documents:[{name:" Charte ",document_type:"charter",document_url:"https://bib.test/charte"}]}});
+ attached_documents:[{name:" Charte ",document_type:"charter",document_url:`/documents?document=${id(99)}`}]}});
 test("submission binds account UUID, source revision and exact replacement IDs without email authority",()=>{
  const payload=hrMutationPayload(input());
  assert.equal(payload.p_target_user_id,id(3));assert.equal(payload.p_expected_target_revision,"a".repeat(32));
@@ -32,10 +32,18 @@ test("requires known poles, actual field choices, a valid date and distinct mana
  for(const patch of [{poles:["unknown"]},{primary_pole:"rh"},{seniority:"superuser"},{work_mode:"anything"},{start_date:"2026-02-30"},{manager_id:id(3)},{subsidiary:""}])
   assert.throws(()=>hrMutationPayload({...input(),payload:{...input().payload,...patch}}));
 });
-test("documents require bounded text and credential-free HTTPS addresses",()=>{
+test("documents require a canonical managed BIB path (never an external HTTPS link)",()=>{
  for(const doc of [{name:"",document_type:"charter",document_url:null},{name:"Doc",document_type:"charter",document_url:"http://bib.test/doc"},{name:"Doc",document_type:"charter",document_url:"https://user:pass@bib.test/doc"}])
   assert.throws(()=>hrMutationPayload({...input(),payload:{...input().payload,attached_documents:[doc]}}));
  assert.equal(hrMutationPayload({...input(),payload:{...input().payload,attached_documents:[{name:"Doc",document_type:"other",document_url:null}]}}).p_payload.attached_documents[0].document_url,null);
+// No raw shareable Drive link or attacker-controlled HTTPS host may reach the RPC.
+ for(const link of ["https://drive.google.com/file/d/test","https://evil.test/documents?document="+id(88),
+                   "/documents?document="+id(88)+"&download=1","/documents?document=not-uuid",
+                   "//evil.test/documents?document="+id(88)]) {
+  assert.throws(()=>hrMutationPayload({...input(),payload:{...input().payload,attached_documents:[{name:"Doc",document_type:"charter",document_url:link}]}}));
+ }
+ const canonical=hrMutationPayload({...input(),payload:{...input().payload,attached_documents:[{name:"Doc",document_type:"charter",document_url:"/documents?document="+id(88)}]}}).p_payload.attached_documents[0].document_url;
+ assert.equal(canonical,"/documents?document="+id(88));
 });
 test("failure messages distinguish stale data and do not leak internal database text",()=>{
  assert.match(hrMutationError({message:"hr_mutation_target_changed",code:"40001"}),/Rien n’a été appliqué/);
