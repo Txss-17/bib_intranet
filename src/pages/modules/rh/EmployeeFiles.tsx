@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 
 import { supabase } from '@/integrations/supabase/client';
 import { managedDocumentId, openManagedDocument } from '@/lib/driveDocuments';
+import { normalizeHrManagedDocumentUrl } from '@/lib/hrEmployeeMutations';
 
 import {
   type Employee,
@@ -615,8 +616,9 @@ export default function EmployeeFiles() {
     // An RH document reference must never persist a raw shareable Drive or
     // external URL: access to those URLs bypasses BIB's document authorization.
     // A reference without a link remains possible while import is pending.
-    const controlledDocumentUrl = form.document_url.trim();
-    if (controlledDocumentUrl && !managedDocumentId(controlledDocumentUrl)) {
+    const enteredDocumentUrl = form.document_url.trim();
+    const controlledDocumentUrl = normalizeHrManagedDocumentUrl(enteredDocumentUrl);
+    if (enteredDocumentUrl && !controlledDocumentUrl) {
       toast.error(
         'Importez d’abord ce fichier dans Documents BIB, puis utilisez son lien interne /documents?document=…',
       );
@@ -643,8 +645,7 @@ export default function EmployeeFiles() {
           name: form.name.trim(),
           document_type: form.document_type,
           source: form.source,
-          document_url:
-            controlledDocumentUrl || null,
+          document_url: controlledDocumentUrl,
           description:
             form.description.trim() || null,
           document_date:
