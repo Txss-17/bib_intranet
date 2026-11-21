@@ -812,21 +812,38 @@ Deno.serve(
       /*
        * Chartes, politiques et documents rattachés au dossier.
        */
-      const attachedDocs: Array<{ name?: string; document_type?: string; document_url?: string | null }> =
-        Array.isArray(request.attached_documents) ? request.attached_documents : [];
+      const attachedDocs: Array<{
+        name?: string;
+        document_type?: string;
+        document_url?: string | null;
+        document_reference?: string | null;
+      }> = Array.isArray(request.attached_documents) ? request.attached_documents : [];
       if (attachedDocs.length > 0) {
-        const { data: existingDocs } = await admin
+        const { data: existingDocs, error: existingDocsError } = await admin
           .from('rh_employee_documents')
-          .select('name')
+          .select('name,document_reference')
           .eq('employee_id', userId);
-        const existingNames = new Set((existingDocs ?? []).map((d: { name: string }) => d.name));
+        if (existingDocsError) {
+          return json({ error: 'Impossible de vérifier les références des documents RH existants.' }, 500);
+        }
+        const existingRefs = new Set(
+          (existingDocs ?? []).map((d: { document_reference: string | null }) => d.document_reference).filter(Boolean),
+        );
+        const legacyNames = new Set(
+          (existingDocs ?? []).filter((d: { document_reference: string | null }) => !d.document_reference)
+            .map((d: { name: string }) => d.name),
+        );
         const docRows = attachedDocs
-          .filter((d) => d?.name && !existingNames.has(d.name))
+          .filter((d) => d?.name && (d.document_reference
+            ? !existingRefs.has(d.document_reference)
+            : !legacyNames.has(d.name)))
           .map((d) => ({
             employee_id: userId,
             name: String(d.name).slice(0, 200),
-            document_type: d.document_type ?? 'charte',
+            document_type: d.document_type ?? 'charter',
             source: 'onboarding',
+            onboarding_request_id: requestId,
+            document_reference: d.document_reference ?? null,
             document_url: d.document_url ?? null,
             description: 'Rattaché lors de l’onboarding RH — à prendre connaissance',
             document_date: new Date().toISOString().slice(0, 10),
@@ -835,7 +852,7 @@ Deno.serve(
           }));
         if (docRows.length) {
           const { error: docsError } = await admin.from('rh_employee_documents').insert(docRows);
-          if (docsError) console.error('attach documents failed:', docsError.message);
+          if (docsError) return json({ error: 'Compte créé, mais les documents RH et leurs références n’ont pas été rattachés. Reprenez la vérification du dossier.' }, 500);
         }
       }
 

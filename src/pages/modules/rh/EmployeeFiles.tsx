@@ -103,6 +103,7 @@ type DocumentType =
   | 'other';
 
 type DocumentSource =
+  | 'onboarding'
   | 'drive'
   | 'upload'
   | 'external'
@@ -115,6 +116,8 @@ interface EmployeeDocument {
   document_type: DocumentType;
   source: DocumentSource;
   document_url: string | null;
+  document_reference: string | null;
+  onboarding_request_id: string | null;
   description: string | null;
   document_date: string | null;
   expires_at: string | null;
@@ -145,6 +148,7 @@ const documentTypeLabels: Record<DocumentType, string> = {
 };
 
 const documentSourceLabels: Record<DocumentSource, string> = {
+  onboarding: 'Onboarding RH',
   drive: 'Google Drive BIB',
   upload: 'Import BIB',
   external: 'Source externe',
@@ -429,6 +433,8 @@ export default function EmployeeFiles() {
           document_type,
           source,
           document_url,
+          document_reference,
+          onboarding_request_id,
           description,
           document_date,
           expires_at,
@@ -1370,6 +1376,9 @@ export default function EmployeeFiles() {
                                       <p className="font-medium hover:underline">
                                         {document.name}
                                       </p>
+                                      <p className="max-w-xs break-all font-mono text-xs text-muted-foreground">
+                                        {document.document_reference ?? 'Référence documentaire à vérifier'}
+                                      </p>
 
                                       {document.description && (
                                         <p className="max-w-xs truncate text-xs text-muted-foreground">
@@ -1553,6 +1562,14 @@ export default function EmployeeFiles() {
                 <p className="font-medium">
                   {selectedDocument.name}
                 </p>
+                <p className="mt-1 break-all font-mono text-xs text-muted-foreground">
+                  Référence BIB : {selectedDocument.document_reference ?? 'Non attribuée'}
+                </p>
+                {selectedDocument.onboarding_request_id && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Pièce liée au dossier d’onboarding d’origine.
+                  </p>
+                )}
               </div>
 
 
