@@ -29,7 +29,7 @@ ALTER TABLE public.hr_existing_account_onboarding_events ENABLE ROW LEVEL SECURI
 REVOKE ALL ON public.hr_existing_account_onboarding_events FROM anon, authenticated;
 
 CREATE OR REPLACE FUNCTION public.list_existing_leadership_onboarding()
-RETURNS TABLE(subject_id uuid, display_name text, position text, step_key text, status text, evidence_ref text, note text, reviewed_at timestamptz, reviewer_id uuid)
+RETURNS TABLE(subject_id uuid, display_name text, "position" text, step_key text, status text, evidence_ref text, note text, reviewed_at timestamptz, reviewer_id uuid)
 LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path=public,pg_temp AS $$
 DECLARE v_actor uuid := auth.uid(); v_rights jsonb;
 BEGIN
