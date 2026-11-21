@@ -147,7 +147,7 @@ export default function ExistingLeadershipOnboarding() {
          <div className="space-y-1 rounded-md border p-2">
           <p className="text-xs text-muted-foreground">
            Pour les pièces BIB, le relecteur doit avoir le droit nominatif de consultation
-           et ouvrir la pièce avant de valider l'étape. Cette consultation est enregistrée dans l’historique documentaire.
+           et ouvrir le PDF avant de valider l’étape. Sa préparation est tracée côté serveur ; le relecteur doit encore vérifier le contenu et consigner ses observations.
           </p>
           <div className="flex flex-wrap gap-2">
            <Button type="button" size="sm" variant="outline" disabled={resolveProof.isPending}
