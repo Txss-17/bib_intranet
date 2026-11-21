@@ -94,6 +94,7 @@ SET search_path TO ''
 AS $guard$
 DECLARE
   v_file_id uuid;
+  v_file public.intranet_drive_documents%ROWTYPE;
   v_document_created_at timestamptz;
 BEGIN
   IF NEW.status='validated' THEN
@@ -114,7 +115,7 @@ BEGIN
     -- A real BIB document number is not evidence the reviewer actually
     -- inspected the contents. The controlled reader records a 'view' event.
     IF NEW.evidence_ref ~ '^BIB-RH-DOC-[0-9]{4}-[0-9]{6,}$' THEN
-      SELECT f.id,d.created_at INTO v_file_id,v_document_created_at
+      SELECT f.*,d.created_at INTO v_file,v_document_created_at
       FROM public.rh_employee_documents d
       JOIN public.intranet_drive_documents f
         ON f.id=public.rh_extract_managed_drive_id(d.document_url)
@@ -125,7 +126,16 @@ BEGIN
         AND f.size_bytes>0
       LIMIT 1;
 
-      IF v_file_id IS NULL OR NOT EXISTS (
+      v_file_id := v_file.id;
+      -- An expired or revoked grant cannot authorize a later signature based
+      -- solely on a prior viewing event.
+      IF v_file_id IS NULL OR (SELECT auth.uid()) IS DISTINCT FROM NEW.reviewer_id
+         OR NOT public.can_read_intranet_drive_document(v_file) THEN
+        RAISE EXCEPTION 'leadership_evidence_review_access_required'
+          USING ERRCODE='42501';
+      END IF;
+
+      IF NOT EXISTS (
         SELECT 1 FROM public.intranet_document_events event
         WHERE event.document_id=v_file_id
           AND event.actor_id=NEW.reviewer_id
