@@ -15,6 +15,7 @@ test('document picker opens the existing authorized BIB Drive import dialog when
   assert.match(picker,/onClick=\{\(\) => \{ setOpen\(true\); void list\(\); \}\}/);
   assert.match(picker,/action: 'list'/);
   assert.match(picker,/action: 'import'/);
+  assert.match(picker,/folder.startsWith\('rh-'\) \|\| folder === 'leadership-evidence'/);
   assert.match(picker,/new URL\(result.url, window.location.origin\)/);
   assert.match(picker,/onFilesChange\(nextFiles\)/);
 });
