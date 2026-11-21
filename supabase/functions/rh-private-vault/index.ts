@@ -1,4 +1,4 @@
-import { createClient } from 'npm:@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2.58.0';
 
 const BUCKET = 'rh-personnel-vault';
 const MAX_BYTES = 5 * 1024 * 1024;
