@@ -74,10 +74,11 @@ export default function LeadershipEvidenceReviewAccess({ subjectId }: { subjectI
   });
   const revoke = useMutation({
     mutationFn: async (item: Grant) => {
-      const { error } = await (supabase as any).rpc('rh_revoke_leadership_evidence_review', {
+      const { data, error } = await (supabase as any).rpc('rh_revoke_leadership_evidence_review', {
         p_document_id: item.document_id, p_reviewer_id: item.reviewer_id,
       });
       if (error) throw error;
+      if (data !== true) throw new Error('Ce partage n’est plus actif ou ne vous appartient pas.');
     },
     onSuccess: () => {
       toast.success('Droit de consultation retiré.');
