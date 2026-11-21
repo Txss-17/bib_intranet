@@ -655,7 +655,7 @@ export default function EmployeeFiles() {
         );
       }
 
-      const { error } = await (supabase as any)
+      const { data, error } = await (supabase as any)
         .from('rh_employee_documents')
         .insert({
           employee_id: selectedEmployee.id,
@@ -670,15 +670,19 @@ export default function EmployeeFiles() {
           expires_at:
             form.expires_at || null,
           created_by: user.id,
-        });
+        })
+        .select('document_reference')
+        .single();
 
       if (error) {
         throw error;
       }
 
-      toast.success(
-        'Document ajouté au dossier RH.',
-      );
+      if (!data?.document_reference) {
+        throw new Error('La référence BIB du document n’a pas été confirmée.');
+      }
+
+      toast.success(`Document ${data.document_reference} enregistré dans le dossier RH.`);
 
       setDocumentDialogOpen(false);
 
